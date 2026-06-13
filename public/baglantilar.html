@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ERLENBOX ERP — Güncel Bağlantılar</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1419;
+      --card: #1a2332;
+      --border: rgba(100, 116, 139, 0.35);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.15);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0%, var(--bg) 55%);
+      color: var(--text);
+      padding: 2rem 1rem 3rem;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    h1 { margin: 0 0 0.35rem; font-size: 1.75rem; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+    .origin {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: var(--card);
+      margin-bottom: 1.25rem;
+    }
+    .origin code {
+      flex: 1;
+      min-width: 12rem;
+      font-size: 0.95rem;
+      color: #93c5fd;
+      word-break: break-all;
+    }
+    button, a.btn {
+      appearance: none;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      background: var(--accent-soft);
+      color: #bfdbfe;
+      border-radius: 0.65rem;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    button:hover, a.btn:hover { background: rgba(59, 130, 246, 0.25); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 0.65rem;
+    }
+    .link-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.75rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 0.85rem;
+      background: rgba(26, 35, 50, 0.85);
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .link-card:hover {
+      border-color: rgba(59, 130, 246, 0.45);
+      background: rgba(30, 41, 59, 0.95);
+    }
+    .link-card span { font-size: 0.88rem; font-weight: 700; }
+    .link-card small { color: var(--muted); font-size: 0.72rem; }
+    .meta {
+      margin-top: 1.25rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>ERLENBOX ERP</h1>
+    <p class="sub">Güncel geliştirme bağlantıları — adres otomatik algılanır.</p>
+
+    <div class="origin">
+      <code id="origin-url">…</code>
+      <button type="button" id="copy-origin">Kopyala</button>
+      <a class="btn" id="open-app" href="/">Uygulamayı aç</a>
+    </div>
+
+    <div class="grid" id="links"></div>
+
+    <p class="meta" id="updated-at"></p>
+  </div>
+
+  <script>
+    const routes = [
+      { path: '/', label: 'Dashboard' },
+      { path: '/musteriler', label: 'Müşteriler' },
+      { path: '/crm', label: 'CRM' },
+      { path: '/teklifler', label: 'Teklifler' },
+      { path: '/siparisler', label: 'Siparişler' },
+      { path: '/uretim', label: 'Üretim' },
+      { path: '/depo', label: 'Depo' },
+      { path: '/teslim-edilenler', label: 'Teslim Edilenler' },
+      { path: '/kasa', label: 'Kasa' },
+      { path: '/personel', label: 'Personel' },
+      { path: '/mesajlar', label: 'Mesaj Merkezi' },
+      { path: '/stok/urunler', label: 'Stok · Ürünler' },
+      { path: '/ayarlar', label: 'Ayarlar' },
+      { path: '/ayarlar/etiketler', label: 'Ayarlar · Etiketler' },
+    ]
+
+    const origin = window.location.origin
+    const originEl = document.getElementById('origin-url')
+    const linksEl = document.getElementById('links')
+    const updatedEl = document.getElementById('updated-at')
+
+    originEl.textContent = origin
+    document.getElementById('open-app').href = origin + '/'
+    updatedEl.textContent = 'Son güncelleme: ' + new Date().toLocaleString('tr-TR')
+
+    routes.forEach(({ path, label }) => {
+      const href = origin + path
+      const card = document.createElement('a')
+      card.className = 'link-card'
+      card.href = href
+      card.innerHTML = '<span>' + label + '</span><small>' + path + '</small>'
+      linksEl.appendChild(card)
+    })
+
+    document.getElementById('copy-origin').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(origin)
+        const btn = document.getElementById('copy-origin')
+        btn.textContent = 'Kopyalandı'
+        setTimeout(() => { btn.textContent = 'Kopyala' }, 1400)
+      } catch {
+        window.prompt('Bağlantıyı kopyalayın:', origin)
+      }
+    })
+  </script>
+</body>
+</html>

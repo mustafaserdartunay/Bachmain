@@ -1,0 +1,579 @@
+import { useEffect, useMemo, useState } from 'react'
+import { X } from 'lucide-react'
+import EditableDropdownPill from '../EditableDropdownPill'
+import CrmCustomerSearchField from './CrmCustomerSearchField'
+import {
+  appointmentStatusOptions,
+  appointmentTypeOptions,
+  LIST_PILL_CLASS,
+  noteColorOptions,
+  priorityOptions,
+} from '../../utils/crmMeta'
+import {
+  getCrmTemplateCategoryOptions,
+  getCrmTemplateStageOptions,
+  resolveTaskFormStatus,
+} from '../../utils/crmProcessHelpers'
+import { resolveCustomerRepresentative, readOptionLists } from '../../utils/customerMeta'
+import { BTN_PRIMARY } from '../../utils/buttonStyles'
+
+const FIELD_LABEL = 'mb-1.5 block text-[10px] font-black uppercase tracking-wider text-gray-500'
+
+function Modal({ title, onClose, children, wide, fullPage }) {
+  if (fullPage) {
+    return (
+      <div className={`flex h-full min-h-[520px] flex-col ${wide ? '' : ''}`}>
+        <div className="flex items-center justify-between border-b border-dark-500/45 px-5 py-3.5">
+          <h2 className="text-base font-bold text-white">{title}</h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-dark-700 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5">{children}</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+      <div className={`max-h-[92vh] w-full overflow-y-auto rounded-2xl border border-dark-500/50 bg-dark-800 shadow-card ${wide ? 'max-w-2xl' : 'max-w-lg'}`}>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-dark-500/45 bg-dark-800 px-5 py-3.5">
+          <h2 className="text-base font-bold text-white">{title}</h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-dark-700 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+function DropdownField({ label, value, onChange, options, openKey, activeMenu, setActiveMenu, placeholder }) {
+  return (
+    <div>
+      <label className={FIELD_LABEL}>{label}</label>
+      <EditableDropdownPill
+        value={value}
+        onChange={onChange}
+        options={options}
+        openKey={openKey}
+        activeMenu={activeMenu}
+        setActiveMenu={setActiveMenu}
+        placeholder={placeholder}
+        editable={false}
+        buttonClassName={LIST_PILL_CLASS}
+      />
+    </div>
+  )
+}
+
+export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false }) {
+  const [form, setForm] = useState(initial)
+  const [activeMenu, setActiveMenu] = useState(null)
+  const [assigneeTouched, setAssigneeTouched] = useState(false)
+  const [representativeOptions, setRepresentativeOptions] = useState(() => readOptionLists().representative)
+  const [categoryOptions, setCategoryOptions] = useState(() => getCrmTemplateCategoryOptions())
+  const isEdit = Boolean(form.id)
+
+  const statusOptions = useMemo(
+    () => getCrmTemplateStageOptions(form.category || categoryOptions[0]?.label || 'Genel'),
+    [form.category, categoryOptions],
+  )
+
+  useEffect(() => {
+    function refreshTemplates() {
+      setCategoryOptions(getCrmTemplateCategoryOptions())
+    }
+    window.addEventListener('bach:crm-process-templates-updated', refreshTemplates)
+    return () => window.removeEventListener('bach:crm-process-templates-updated', refreshTemplates)
+  }, [])
+
+  useEffect(() => {
+    if (!statusOptions.length) return
+    if (statusOptions.some((option) => option.label === form.status)) return
+    setForm((current) => ({ ...current, status: statusOptions[0].label }))
+  }, [form.status, statusOptions])
+
+  useEffect(() => {
+    function refreshRepresentatives() {
+      setRepresentativeOptions(readOptionLists().representative)
+    }
+    window.addEventListener('bach:option-lists-updated', refreshRepresentatives)
+    window.addEventListener('bach:customer-meta-updated', refreshRepresentatives)
+    return () => {
+      window.removeEventListener('bach:option-lists-updated', refreshRepresentatives)
+      window.removeEventListener('bach:customer-meta-updated', refreshRepresentatives)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!activeMenu) return undefined
+    function close() { setActiveMenu(null) }
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [activeMenu])
+
+  useEffect(() => {
+    if (isEdit || assigneeTouched || !form.customer?.trim()) return
+    const representative = resolveCustomerRepresentative(form.customer)
+    if (!representative) return
+    setForm((current) => (
+      current.assignee === representative ? current : { ...current, assignee: representative }
+    ))
+  }, [form.customer, isEdit, assigneeTouched])
+
+  useEffect(() => {
+    if (isEdit || assigneeTouched || !form.customer?.trim()) return undefined
+    function syncRepresentative() {
+      const representative = resolveCustomerRepresentative(form.customer)
+      if (!representative) return
+      setForm((current) => (
+        current.assignee === representative ? current : { ...current, assignee: representative }
+      ))
+    }
+    window.addEventListener('bach:customer-meta-updated', syncRepresentative)
+    return () => window.removeEventListener('bach:customer-meta-updated', syncRepresentative)
+  }, [form.customer, isEdit, assigneeTouched])
+
+  function handleCustomerChange(next) {
+    setAssigneeTouched(false)
+    setForm((current) => {
+      const customer = next.customer ?? current.customer
+      if (next.representative) {
+        return {
+          ...current,
+          customer,
+          ...(next.contact !== undefined ? { contact: next.contact } : {}),
+          assignee: next.representative,
+        }
+      }
+      return {
+        ...current,
+        customer,
+        ...(next.contact !== undefined ? { contact: next.contact } : {}),
+        assignee: customer.trim() ? current.assignee : '',
+      }
+    })
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    if (!form.title.trim()) return
+    onSubmit(form)
+  }
+
+  return (
+    <Modal title={isEdit ? 'Görev Düzenle' : 'Görev Oluştur'} onClose={onClose} wide fullPage={fullPage}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className={FIELD_LABEL}>Görev Başlığı</label>
+          <input
+            value={form.title}
+            onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+            placeholder="Örn. Teklif revizyonu gönder"
+            className="form-input text-sm"
+            required
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <CrmCustomerSearchField
+            value={form.customer}
+            onChange={handleCustomerChange}
+          />
+          <DropdownField
+            label="Müşteri temsilcisi"
+            value={form.assignee}
+            onChange={(value) => {
+              setAssigneeTouched(true)
+              setForm((current) => ({ ...current, assignee: value }))
+            }}
+            options={representativeOptions}
+            openKey="task-assignee"
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+            placeholder="Sorumlu seçin"
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <DropdownField
+            label="Öncelik"
+            value={form.priority}
+            onChange={(value) => setForm((current) => ({ ...current, priority: value }))}
+            options={priorityOptions}
+            openKey="task-priority"
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+          />
+          <DropdownField
+            label="Durum"
+            value={form.status}
+            onChange={(value) => setForm((current) => ({ ...current, status: value }))}
+            options={statusOptions}
+            openKey="task-status"
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+          />
+          <DropdownField
+            label="Kategori"
+            value={form.category || categoryOptions[0]?.label || 'Genel'}
+            onChange={(value) => setForm((current) => {
+              const nextStatusOptions = getCrmTemplateStageOptions(value)
+              const nextStatus = nextStatusOptions.some((option) => option.label === current.status)
+                ? current.status
+                : nextStatusOptions[0]?.label || ''
+              return { ...current, category: value, status: nextStatus }
+            })}
+            options={categoryOptions}
+            openKey="task-category"
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </div>
+
+        <div>
+          <label className={FIELD_LABEL}>Termin Tarihi</label>
+          <input
+            type="date"
+            value={form.dueDate}
+            onChange={(event) => setForm((current) => ({ ...current, dueDate: event.target.value }))}
+            className="form-input text-sm"
+          />
+        </div>
+
+        <div>
+          <label className={FIELD_LABEL}>Detaylı Açıklama</label>
+          <textarea
+            value={form.description}
+            onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
+            placeholder="Görev kapsamı, beklenen çıktı ve notlar..."
+            className="form-input min-h-28 resize-none text-sm"
+          />
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <button type="button" onClick={onClose} className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300">
+            Vazgeç
+          </button>
+          <button type="submit" className={`${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}>
+            {isEdit ? 'Güncelle' : 'Görev Oluştur'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+export function AppointmentFormModal({ initial, onClose, onSubmit, fullPage = false }) {
+  const [form, setForm] = useState(initial)
+  const [activeMenu, setActiveMenu] = useState(null)
+  const [assigneeTouched, setAssigneeTouched] = useState(false)
+  const [representativeOptions, setRepresentativeOptions] = useState(() => readOptionLists().representative)
+  const isEdit = Boolean(form.id)
+
+  useEffect(() => {
+    function refreshRepresentatives() {
+      setRepresentativeOptions(readOptionLists().representative)
+    }
+    window.addEventListener('bach:option-lists-updated', refreshRepresentatives)
+    window.addEventListener('bach:customer-meta-updated', refreshRepresentatives)
+    return () => {
+      window.removeEventListener('bach:option-lists-updated', refreshRepresentatives)
+      window.removeEventListener('bach:customer-meta-updated', refreshRepresentatives)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!activeMenu) return undefined
+    function close() { setActiveMenu(null) }
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [activeMenu])
+
+  useEffect(() => {
+    if (isEdit || assigneeTouched || !form.customer?.trim()) return
+    const representative = resolveCustomerRepresentative(form.customer)
+    if (!representative) return
+    setForm((current) => (
+      current.assignee === representative ? current : { ...current, assignee: representative }
+    ))
+  }, [form.customer, isEdit, assigneeTouched])
+
+  useEffect(() => {
+    if (isEdit || assigneeTouched || !form.customer?.trim()) return undefined
+    function syncRepresentative() {
+      const representative = resolveCustomerRepresentative(form.customer)
+      if (!representative) return
+      setForm((current) => (
+        current.assignee === representative ? current : { ...current, assignee: representative }
+      ))
+    }
+    window.addEventListener('bach:customer-meta-updated', syncRepresentative)
+    return () => window.removeEventListener('bach:customer-meta-updated', syncRepresentative)
+  }, [form.customer, isEdit, assigneeTouched])
+
+  function handleCustomerChange(next) {
+    setAssigneeTouched(false)
+    setForm((current) => {
+      const customer = next.customer ?? current.customer
+      if (next.representative) {
+        return {
+          ...current,
+          customer,
+          contact: next.contact ?? current.contact,
+          assignee: next.representative,
+        }
+      }
+      return {
+        ...current,
+        customer,
+        contact: next.contact ?? current.contact,
+        assignee: customer.trim() ? current.assignee : '',
+      }
+    })
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    if (!form.title.trim()) return
+    onSubmit(form)
+  }
+
+  return (
+    <Modal title={isEdit ? 'Randevu Düzenle' : 'Randevu Oluştur'} onClose={onClose} wide fullPage={fullPage}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className={FIELD_LABEL}>Randevu Başlığı</label>
+          <input
+            value={form.title}
+            onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+            placeholder="Örn. Teklif sunumu"
+            className="form-input text-sm"
+            required
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <CrmCustomerSearchField
+            value={form.customer}
+            onChange={handleCustomerChange}
+          />
+          <div>
+            <label className={FIELD_LABEL}>İlgili Kişi</label>
+            <input
+              value={form.contact}
+              onChange={(event) => setForm((current) => ({ ...current, contact: event.target.value }))}
+              placeholder="Yetkili adı"
+              className="form-input text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <DropdownField
+            label="Tür"
+            value={form.type}
+            onChange={(value) => setForm((current) => ({ ...current, type: value }))}
+            options={appointmentTypeOptions}
+            openKey="apt-type"
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+          />
+          <DropdownField
+            label="Durum"
+            value={form.status}
+            onChange={(value) => setForm((current) => ({ ...current, status: value }))}
+            options={appointmentStatusOptions}
+            openKey="apt-status"
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+          />
+          <DropdownField
+            label="Müşteri temsilcisi"
+            value={form.assignee}
+            onChange={(value) => {
+              setAssigneeTouched(true)
+              setForm((current) => ({ ...current, assignee: value }))
+            }}
+            options={representativeOptions}
+            openKey="apt-assignee"
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className={FIELD_LABEL}>Tarih</label>
+            <input type="date" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="form-input text-sm" />
+          </div>
+          <div>
+            <label className={FIELD_LABEL}>Başlangıç</label>
+            <input type="time" value={form.startTime} onChange={(event) => setForm((current) => ({ ...current, startTime: event.target.value }))} className="form-input text-sm" />
+          </div>
+          <div>
+            <label className={FIELD_LABEL}>Bitiş</label>
+            <input type="time" value={form.endTime} onChange={(event) => setForm((current) => ({ ...current, endTime: event.target.value }))} className="form-input text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label className={FIELD_LABEL}>Konum / Bağlantı</label>
+          <input
+            value={form.location}
+            onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))}
+            placeholder="Ofis, fabrika, Teams linki..."
+            className="form-input text-sm"
+          />
+        </div>
+
+        <div>
+          <label className={FIELD_LABEL}>Randevu Notları</label>
+          <textarea
+            value={form.notes}
+            onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
+            placeholder="Gündem maddeleri, hazırlık notları..."
+            className="form-input min-h-24 resize-none text-sm"
+          />
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <button type="button" onClick={onClose} className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300">
+            Vazgeç
+          </button>
+          <button type="submit" className={`${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}>
+            {isEdit ? 'Güncelle' : 'Randevu Oluştur'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+export function NoteFormModal({ initial, onClose, onSubmit, fullPage = false }) {
+  const [form, setForm] = useState(initial)
+  const [activeMenu, setActiveMenu] = useState(null)
+  const isEdit = Boolean(form.id)
+
+  useEffect(() => {
+    if (!activeMenu) return undefined
+    function close() { setActiveMenu(null) }
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [activeMenu])
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    if (!form.title.trim()) return
+    onSubmit(form)
+  }
+
+  return (
+    <Modal title={isEdit ? 'Not Düzenle' : 'Not Oluştur'} onClose={onClose} wide fullPage={fullPage}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className={FIELD_LABEL}>Not Başlığı</label>
+          <input
+            value={form.title}
+            onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+            placeholder="Kısa başlık"
+            className="form-input text-sm"
+            required
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="sm:col-span-1">
+            <label className={FIELD_LABEL}>Tarih</label>
+            <input type="date" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="form-input text-sm" />
+          </div>
+          <div className="sm:col-span-1">
+            <label className={FIELD_LABEL}>Saat (opsiyonel)</label>
+            <input type="time" value={form.time} onChange={(event) => setForm((current) => ({ ...current, time: event.target.value }))} className="form-input text-sm" />
+          </div>
+          <DropdownField
+            label="Renk"
+            value={form.color}
+            onChange={(value) => setForm((current) => ({ ...current, color: value }))}
+            options={noteColorOptions}
+            openKey="note-color"
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </div>
+
+        <div>
+          <label className={FIELD_LABEL}>Not İçeriği</label>
+          <textarea
+            value={form.content}
+            onChange={(event) => setForm((current) => ({ ...current, content: event.target.value }))}
+            placeholder="Ajandaya eklenecek detaylı not..."
+            className="form-input min-h-24 resize-none text-sm"
+          />
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <button type="button" onClick={onClose} className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300">
+            Vazgeç
+          </button>
+          <button type="submit" className={`${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}>
+            {isEdit ? 'Güncelle' : 'Not Ekle'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+export function emptyTaskForm() {
+  const categories = getCrmTemplateCategoryOptions()
+  const category = categories[0]?.label || 'Genel'
+  const statusOptions = getCrmTemplateStageOptions(category)
+  return {
+    title: '',
+    description: '',
+    customer: '',
+    assignee: '',
+    priority: 'Normal',
+    status: statusOptions[0]?.label || 'Beklemede',
+    category,
+    dueDate: new Date().toISOString().slice(0, 10),
+  }
+}
+
+export function normalizeTaskForm(task) {
+  const category = task.category || getCrmTemplateCategoryOptions()[0]?.label || 'Genel'
+  return {
+    ...task,
+    category,
+    status: resolveTaskFormStatus(task, category),
+  }
+}
+
+export function emptyAppointmentForm() {
+  return {
+    title: '',
+    customer: '',
+    contact: '',
+    type: 'Toplantı',
+    date: new Date().toISOString().slice(0, 10),
+    startTime: '10:00',
+    endTime: '11:00',
+    location: '',
+    notes: '',
+    status: 'Planlandı',
+    assignee: '',
+  }
+}
+
+export function emptyNoteForm(date) {
+  return {
+    title: '',
+    content: '',
+    date: date || new Date().toISOString().slice(0, 10),
+    time: '',
+    color: 'Mavi',
+  }
+}

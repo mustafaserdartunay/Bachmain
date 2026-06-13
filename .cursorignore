@@ -1,0 +1,7 @@
+# Keep Cursor's indexer fast: exclude heavy / generated / duplicate content
+node_modules/
+dist/
+dist-static/
+restore-backups/
+*.log
+.DS_Store

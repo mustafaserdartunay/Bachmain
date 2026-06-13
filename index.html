@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      /* Son kullanılan görünüm modunu React yüklenmeden önce uygula (flash önleme).
+         Anahtar: erlenbox-theme — PC yeniden açılsa bile aynı mod kalır. */
+      (function () {
+        var key = 'erlenbox-theme';
+        var saved = localStorage.getItem(key) || 'dark';
+        var root = document.documentElement;
+        root.classList.remove('light', 'morning', 'evening', 'space', 'special');
+        if (saved === 'light') root.classList.add('light');
+        else if (saved === 'morning') root.classList.add('morning');
+        else if (saved === 'evening') root.classList.add('evening');
+        else if (saved === 'space') root.classList.add('space');
+        else if (saved === 'special') root.classList.add('special');
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ERLENBOX ERP - CRM & Muhasebe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

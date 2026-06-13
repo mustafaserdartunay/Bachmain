@@ -1,0 +1,410 @@
+import { useEffect, useRef, useState } from 'react'
+import {
+  Landmark,
+  Mail,
+  MapPin,
+  Phone,
+  Plus,
+  UserRound,
+  Warehouse,
+} from 'lucide-react'
+import { customers as customerData } from '../../data/mockData'
+import { findCustomerProfileByReference, getCustomerProfiles } from '../../data/customerProfiles'
+import { getCustomerDisplay } from '../../utils/customerDisplay'
+import { resolveCustomerContactInfo } from '../../utils/customerContacts'
+import {
+  getCustomerMetaSelection,
+  getDefaultCustomerScoring,
+  getDefaultCustomerType,
+  readCustomerMeta,
+  readOptionLists,
+} from '../../utils/customerMeta'
+import {
+  formatTreasuryCurrency,
+  getCustomerBalanceColor,
+  getCustomerLiveBalance,
+  getTreasuryMovements,
+} from '../../utils/treasuryStore'
+import { BTN_PRIMARY } from '../../utils/buttonStyles'
+import CustomerQuickEditModal from './CustomerQuickEditModal'
+import { DocumentField } from './DocumentField'
+
+function resolveCustomerWarehouse(customer) {
+  if (!customer) return ''
+  if (customer.warehouse) return customer.warehouse
+  const city = String(customer.city || '').toLowerCase()
+  if (city.includes('bursa')) return 'Bursa Depo'
+  if (city.includes('izmir')) return 'İzmir Depo'
+  return 'Merkez Depo'
+}
+
+function findDocumentCustomer(customerName) {
+  return findCustomerProfileByReference(customerName)
+    || (customerData.list || []).find((customer) => {
+      const normalized = String(customerName || '').trim().toLowerCase()
+      if (!normalized) return false
+      const display = getCustomerDisplay(customer)
+      return customer.company?.toLowerCase() === normalized
+        || display.brandShortName.toLowerCase() === normalized
+        || display.companyTitle.toLowerCase() === normalized
+    })
+    || null
+}
+
+function customerSearchTexts(customer) {
+  const display = getCustomerDisplay(customer)
+  const contactInfo = resolveCustomerContactInfo(customer)
+  const savedContacts = (customer.contacts || []).flatMap((row) => [row.name, row.phone, row.email])
+  return [
+    customer.company,
+    customer.companyTitle,
+    display.brandShortName,
+    display.companyTitle,
+    customer.contact,
+    customer.email,
+    customer.phone,
+    contactInfo.contactName,
+    contactInfo.email,
+    contactInfo.phone,
+    ...savedContacts,
+  ]
+}
+
+function getCustomerRepresentative(customer) {
+  if (!customer) return ''
+  return getCustomerMetaSelection(customer, readCustomerMeta()[customer.id] || {}).representative
+    || customer.representative
+    || customer.assignedTo
+    || customer.owner
+    || ''
+}
+
+function buildMetaPills(customer) {
+  const savedMeta = readCustomerMeta()[customer.id] || {}
+  const meta = getCustomerMetaSelection(customer, savedMeta)
+  const lists = readOptionLists()
+  const entries = [
+    ['type', meta.type || getDefaultCustomerType(customer), 'Tip'],
+    ['scoring', meta.scoring || getDefaultCustomerScoring(customer), 'Puantaj'],
+    ['category', savedMeta.category, 'Kategori'],
+  ]
+
+  return entries
+    .filter(([, label]) => Boolean(label))
+    .map(([key, label, title]) => ({
+      title,
+      label,
+      color: lists[key]?.find((option) => option.label === label)?.color || 'bg-slate-500',
+    }))
+}
+
+function buildBalancePill(customer) {
+  const liveBalance = getCustomerLiveBalance(customer, getTreasuryMovements())
+  return {
+    title: 'Bakiye',
+    label: formatTreasuryCurrency(liveBalance),
+    color: getCustomerBalanceColor(liveBalance),
+  }
+}
+
+function getCustomerScoreColor(score) {
+  const value = Number(score) || 0
+  if (value >= 90) return 'bg-emerald-500'
+  if (value >= 80) return 'bg-blue-500'
+  if (value >= 65) return 'bg-amber-500'
+  if (value > 0) return 'bg-orange-500'
+  return 'bg-slate-500'
+}
+
+function buildScorePill(customer) {
+  const score = Number(customer.score) || 0
+  return {
+    title: 'Skor',
+    label: String(score),
+    color: getCustomerScoreColor(score),
+  }
+}
+
+function buildRepresentativePill(owner) {
+  if (!owner) return null
+  const lists = readOptionLists()
+  const match = lists.representative.find((option) => option.label === owner)
+  return {
+    title: 'Temsilci',
+    label: owner,
+    color: match?.color || 'bg-blue-500',
+  }
+}
+
+function CustomerInfoStrip({ customer, record }) {
+  const display = getCustomerDisplay(customer)
+  const contactInfo = resolveCustomerContactInfo(customer)
+  const pills = buildMetaPills(customer)
+  const scorePill = buildScorePill(customer)
+  const balancePill = buildBalancePill(customer)
+  const representativePill = buildRepresentativePill(record.owner)
+  const metaItems = [
+    scorePill,
+    balancePill,
+    representativePill,
+    ...pills,
+  ].filter(Boolean)
+
+  const contact = record.contact || contactInfo.contactName
+  const email = record.email || contactInfo.email || customer.email
+  const phone = record.phone || contactInfo.phone || customer.phone
+  const detailedAddress = customer.address?.trim() || customer.city || ''
+  const warehouse = resolveCustomerWarehouse(customer)
+
+  const contactLine = [
+    contact && { icon: UserRound, text: contact },
+    phone && { icon: Phone, text: phone, href: `tel:${phone.replace(/\s/g, '')}` },
+    email && { icon: Mail, text: email, href: `mailto:${email}` },
+  ].filter(Boolean)
+
+  const detailLine = [
+    warehouse && { icon: Warehouse, text: warehouse },
+    detailedAddress && { icon: MapPin, text: detailedAddress },
+  ].filter(Boolean)
+
+  const taxLine = [
+    customer.taxNumber && { label: 'Vergi No', text: customer.taxNumber },
+    customer.taxOffice && { label: 'Vergi Dairesi', text: customer.taxOffice },
+  ].filter(Boolean)
+
+  return (
+    <div className="mt-2 rounded-xl border border-dark-500/30 bg-dark-800/35 px-3 py-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="text-sm font-black text-white">{display.brandShortName || record.customer}</span>
+        {display.companyTitle && display.companyTitle !== display.brandShortName && (
+          <>
+            <span className="text-[10px] text-gray-600">·</span>
+            <span className="min-w-0 truncate text-xs font-semibold text-gray-400">{display.companyTitle}</span>
+          </>
+        )}
+        {metaItems.length > 0 && (
+          <span className="ml-auto flex flex-wrap items-end justify-end gap-2">
+            {metaItems.map((item) => (
+              <div key={`${item.title}-${item.label}`} className="flex flex-col items-center gap-0.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{item.title}</span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[10px] font-bold text-gray-300">
+                  <span className={`h-1.5 w-1.5 rounded-full ${item.color}`} />
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </span>
+        )}
+      </div>
+
+      {taxLine.length > 0 && (
+        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
+          {taxLine.map(({ label, text }) => (
+            <span key={label} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] text-gray-500">
+              <Landmark className="h-3 w-3 shrink-0 text-gray-600" />
+              <span className="truncate">
+                <span className="font-semibold text-gray-400">{label}:</span>
+                {' '}
+                {text}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {contactLine.length > 0 && (
+        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
+          {contactLine.map(({ icon: Icon, text, href }) => (
+            <span key={text} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] text-gray-400">
+              <Icon className="h-3 w-3 shrink-0 text-gray-600" />
+              {href ? (
+                <a href={href} className="truncate transition-colors hover:text-blue-300">{text}</a>
+              ) : (
+                <span className="truncate">{text}</span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {detailLine.length > 0 && (
+        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-dark-500/20 pt-1">
+          {detailLine.map(({ icon: Icon, text, href }) => (
+            <span key={text} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] text-gray-500">
+              <Icon className="h-3 w-3 shrink-0 text-gray-600" />
+              {href ? (
+                <a href={href} className="truncate transition-colors hover:text-blue-300">{text}</a>
+              ) : (
+                <span className="truncate">{text}</span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
+    </div>
+  )
+}
+
+export const DOCUMENT_SIDE_ACTION_WIDTH = 'w-[155px] shrink-0'
+
+function CustomerFieldActionRow({ children, actions }) {
+  return (
+    <div className="flex gap-3">
+      <div className="relative min-w-0 flex-1">{children}</div>
+      {actions}
+    </div>
+  )
+}
+
+export default function CustomerPicker({ record, quote, onPatch }) {
+  const doc = record || quote
+  const [isOpen, setIsOpen] = useState(false)
+  const [isQuickEditOpen, setIsQuickEditOpen] = useState(false)
+  const [profileVersion, setProfileVersion] = useState(0)
+  const pickerRef = useRef(null)
+  const customerOptions = getCustomerProfiles()
+  const query = doc.customer || ''
+  const normalizedQuery = query.trim().toLowerCase()
+  const filteredCustomers = normalizedQuery
+    ? customerOptions.filter((customer) => customerSearchTexts(customer)
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(normalizedQuery)))
+    : customerOptions
+  const matchedCustomer = findDocumentCustomer(query)
+
+  useEffect(() => {
+    function refreshProfiles() {
+      setProfileVersion((value) => value + 1)
+    }
+    window.addEventListener('bach:customers-updated', refreshProfiles)
+    return () => window.removeEventListener('bach:customers-updated', refreshProfiles)
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    function handleOutsideClick(event) {
+      if (!pickerRef.current?.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [isOpen])
+
+  function selectCustomer(customer) {
+    const display = getCustomerDisplay(customer)
+    const contactInfo = resolveCustomerContactInfo(customer)
+    onPatch({
+      customer: customer.companyTitle || customer.company || display.companyTitle,
+      contact: contactInfo.contactName,
+      email: contactInfo.email,
+      phone: contactInfo.phone,
+      owner: getCustomerRepresentative(customer),
+    })
+    setIsOpen(false)
+  }
+
+  function addNewCustomer() {
+    const company = window.prompt('Yeni müşteri adı')
+    const customerName = company?.trim()
+    if (!customerName) return
+    onPatch({ customer: customerName, contact: '', email: '', phone: '' })
+    setIsOpen(false)
+  }
+
+  function handleCustomerSaved(customer) {
+    const display = getCustomerDisplay(customer)
+    const contactInfo = resolveCustomerContactInfo(customer)
+    onPatch({
+      customer: customer.companyTitle || customer.company || display.companyTitle,
+      contact: contactInfo.contactName,
+      email: contactInfo.email,
+      phone: contactInfo.phone,
+      owner: getCustomerRepresentative(customer),
+    })
+    setIsQuickEditOpen(false)
+    setProfileVersion((value) => value + 1)
+  }
+
+  return (
+    <div ref={pickerRef} className="col-span-2">
+      <DocumentField label="Müşteri">
+        <CustomerFieldActionRow
+          actions={(
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                disabled={!matchedCustomer}
+                onClick={() => setIsQuickEditOpen(true)}
+                className={`${BTN_PRIMARY} h-[38px] shrink-0 gap-2 px-4 text-xs disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                <Plus className="h-3.5 w-3.5" /> Hızlı Müşteri Düzenle
+              </button>
+              <button
+                type="button"
+                onClick={addNewCustomer}
+                className={`${BTN_PRIMARY} ${DOCUMENT_SIDE_ACTION_WIDTH} h-[38px] gap-2 px-4 text-xs`}
+              >
+                <Plus className="h-3.5 w-3.5" /> Yeni Müşteri Ekle
+              </button>
+            </div>
+          )}
+        >
+          <input
+            value={query}
+            onChange={(event) => {
+              onPatch({ customer: event.target.value })
+              setIsOpen(true)
+            }}
+            onFocus={() => setIsOpen(true)}
+            placeholder="Müşteri adı, yetkili veya e-posta ile ara..."
+            className="form-input"
+          />
+          {isOpen && (
+            <div className="absolute left-0 right-0 top-11 z-40 rounded-2xl border border-dark-500 bg-dark-900 p-2 shadow-card">
+              <div className="max-h-64 space-y-1 overflow-y-auto">
+                {filteredCustomers.map((customer) => {
+                  const display = getCustomerDisplay(customer)
+                  return (
+                    <button
+                      key={customer.id || customer.company}
+                      type="button"
+                      onClick={() => selectCustomer(customer)}
+                      className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-dark-700"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-white">{display.brandShortName}</p>
+                        <p className="truncate text-xs text-gray-500">{display.companyTitle} · {customer.email}</p>
+                      </div>
+                      <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[10px] font-bold text-blue-300">
+                        Seç
+                      </span>
+                    </button>
+                  )
+                })}
+                {filteredCustomers.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-xs font-semibold text-gray-500">
+                    Eşleşen müşteri bulunamadı.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </CustomerFieldActionRow>
+      </DocumentField>
+      {matchedCustomer && <CustomerInfoStrip key={`${matchedCustomer.id}-${profileVersion}`} customer={matchedCustomer} record={doc} />}
+      {isQuickEditOpen && matchedCustomer && (
+        <CustomerQuickEditModal
+          customer={matchedCustomer}
+          onClose={() => setIsQuickEditOpen(false)}
+          onSaved={handleCustomerSaved}
+        />
+      )}
+    </div>
+  )
+}
+
+export { findDocumentCustomer }
