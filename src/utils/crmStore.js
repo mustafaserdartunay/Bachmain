@@ -2,6 +2,7 @@ import { customers } from '../data/mockData'
 import { applyTaskStatusToProcessTrack, isTaskCompleted, normalizeProcessTrack } from './crmProcessHelpers'
 import { normalizeStagePhotos } from './productionStagePhotos'
 import { getLoggedInUserDisplayName } from './userProfile'
+import { appendActivityEntry } from './activityArchiveStore'
 
 const TASKS_KEY = 'bach-crm-tasks'
 const APPOINTMENTS_KEY = 'bach-crm-appointments'
@@ -40,156 +41,15 @@ function offsetDate(days) {
 }
 
 function seedTasks() {
-  const list = customers.list
-  return [
-    {
-      id: 'task-1',
-      title: 'Teklif revizyonu gönder',
-      description: 'ABC Ambalaj 5000 adet kraft kutu teklif revizyonu',
-      customer: list[0]?.company || '',
-      assignee: 'Ayşe Demir',
-      priority: 'Acil',
-      status: 'Devam Ediyor',
-      category: 'Teklif',
-      dueDate: offsetDate(0),
-      createdAt: offsetDate(-2),
-    },
-    {
-      id: 'task-2',
-      title: 'Numune teslim takibi',
-      description: 'Delta Kozmetik numune onayı',
-      customer: list[2]?.company || '',
-      assignee: 'Mehmet Kaya',
-      priority: 'Normal',
-      status: 'Bekliyor',
-      category: 'Numune',
-      dueDate: offsetDate(1),
-      createdAt: offsetDate(-1),
-    },
-    {
-      id: 'task-3',
-      title: 'Tahsilat hatırlatması',
-      description: 'Prime Lojistik vadesi geçen bakiye',
-      customer: 'Prime Lojistik',
-      assignee: 'Serdar Tünay',
-      priority: 'Yüksek',
-      status: 'Bekliyor',
-      category: 'Tahsilat',
-      dueDate: offsetDate(-1),
-      createdAt: offsetDate(-3),
-    },
-    {
-      id: 'task-4',
-      title: 'Bayi sözleşme yenileme',
-      description: 'İstanbul bayi yıllık sözleşme',
-      customer: list[3]?.company || '',
-      assignee: 'Ayşe Demir',
-      priority: 'Düşük',
-      status: 'Tamamlandı',
-      category: 'Genel',
-      dueDate: offsetDate(-2),
-      createdAt: offsetDate(-5),
-    },
-  ]
+  return []
 }
 
 function seedAgendaNotes() {
-  return [
-    {
-      id: 'note-1',
-      title: 'Haftalık satış toplantısı hazırlığı',
-      content: 'KPI raporları ve pipeline güncellemesi',
-      date: offsetDate(0),
-      time: '09:00',
-      color: 'Mavi',
-      createdAt: offsetDate(-1),
-    },
-    {
-      id: 'note-2',
-      title: 'Prime Lojistik tahsilat takibi',
-      content: 'Vadesi geçen bakiye için arama yapılacak',
-      date: offsetDate(0),
-      time: '',
-      color: 'Turuncu',
-      createdAt: offsetDate(0),
-    },
-  ]
+  return []
 }
 
 function seedAppointments() {
-  const list = customers.list
-  return [
-    {
-      id: 'apt-1',
-      title: 'Teklif sunumu',
-      customer: list[0]?.company || '',
-      contact: list[0]?.contact || '',
-      type: 'Toplantı',
-      date: offsetDate(0),
-      startTime: '10:00',
-      endTime: '11:00',
-      location: 'Ofis · Toplantı Odası A',
-      notes: 'Kraft kutu fiyatlandırması',
-      status: 'Onaylandı',
-      assignee: 'Ayşe Demir',
-    },
-    {
-      id: 'apt-2',
-      title: 'Numune teslimi',
-      customer: list[2]?.company || '',
-      contact: list[2]?.contact || '',
-      type: 'Numune',
-      date: offsetDate(1),
-      startTime: '14:30',
-      endTime: '15:30',
-      location: 'Delta Kozmetik · Gebze',
-      notes: 'Premium kutu numunesi',
-      status: 'Planlandı',
-      assignee: 'Mehmet Kaya',
-    },
-    {
-      id: 'apt-3',
-      title: 'Telefon görüşmesi',
-      customer: list[1]?.company || '',
-      contact: list[1]?.contact || '',
-      type: 'Telefon',
-      date: offsetDate(0),
-      startTime: '16:00',
-      endTime: '16:30',
-      location: 'Telefon',
-      notes: 'Teslim tarihi netleştirme',
-      status: 'Planlandı',
-      assignee: 'Serdar Tünay',
-    },
-    {
-      id: 'apt-4',
-      title: 'Teklif sunumu',
-      customer: 'Star Gıda',
-      contact: 'Burak Yılmaz',
-      type: 'Teklif Sunumu',
-      date: offsetDate(2),
-      startTime: '11:00',
-      endTime: '12:00',
-      location: 'Online · Teams',
-      notes: 'Aylık tedarik anlaşması',
-      status: 'Planlandı',
-      assignee: 'Ayşe Demir',
-    },
-    {
-      id: 'apt-5',
-      title: 'Fabrika ziyareti',
-      customer: list[4]?.company || '',
-      contact: list[4]?.contact || '',
-      type: 'Ziyaret',
-      date: offsetDate(3),
-      startTime: '09:30',
-      endTime: '11:30',
-      location: 'Nova Elektronik · Tuzla',
-      notes: 'Üretim kapasitesi tanıtımı',
-      status: 'Onaylandı',
-      assignee: 'Mehmet Kaya',
-    },
-  ]
+  return []
 }
 
 export function loadTasks() {
@@ -291,11 +151,39 @@ export function upsertAppointment(appointment) {
 }
 
 export function deleteTask(taskId) {
-  saveTasks(loadTasks().filter((item) => item.id !== taskId))
+  const tasks = loadTasks()
+  const task = tasks.find((item) => item.id === taskId)
+  if (task) {
+    appendActivityEntry({
+      module: 'crm',
+      action: 'delete',
+      entityType: 'task',
+      entityId: task.id,
+      entityLabel: task.title || 'CRM görevi',
+      description: `${task.title || 'CRM görevi'} silindi.`,
+      snapshot: task,
+      undo: { type: 'crm.restoreTask' },
+    })
+  }
+  saveTasks(tasks.filter((item) => item.id !== taskId))
 }
 
 export function deleteAppointment(appointmentId) {
-  saveAppointments(loadAppointments().filter((item) => item.id !== appointmentId))
+  const appointments = loadAppointments()
+  const appointment = appointments.find((item) => item.id === appointmentId)
+  if (appointment) {
+    appendActivityEntry({
+      module: 'crm',
+      action: 'delete',
+      entityType: 'appointment',
+      entityId: appointment.id,
+      entityLabel: appointment.title || 'CRM randevusu',
+      description: `${appointment.title || 'CRM randevusu'} silindi.`,
+      snapshot: appointment,
+      undo: { type: 'crm.restoreAppointment' },
+    })
+  }
+  saveAppointments(appointments.filter((item) => item.id !== appointmentId))
 }
 
 export function loadAgendaNotes() {
@@ -321,7 +209,41 @@ export function upsertAgendaNote(note) {
 }
 
 export function deleteAgendaNote(noteId) {
-  saveAgendaNotes(loadAgendaNotes().filter((item) => item.id !== noteId))
+  const notes = loadAgendaNotes()
+  const note = notes.find((item) => item.id === noteId)
+  if (note) {
+    appendActivityEntry({
+      module: 'crm',
+      action: 'delete',
+      entityType: 'note',
+      entityId: note.id,
+      entityLabel: note.title || 'CRM notu',
+      description: `${note.title || 'CRM notu'} silindi.`,
+      snapshot: note,
+      undo: { type: 'crm.restoreNote' },
+    })
+  }
+  saveAgendaNotes(notes.filter((item) => item.id !== noteId))
+}
+
+export function restoreCrmEntry(entryType, snapshot) {
+  if (!snapshot?.id) return false
+  if (entryType === 'task') {
+    const tasks = loadTasks()
+    if (!tasks.some((item) => item.id === snapshot.id)) saveTasks([snapshot, ...tasks])
+    return true
+  }
+  if (entryType === 'appointment') {
+    const appointments = loadAppointments()
+    if (!appointments.some((item) => item.id === snapshot.id)) saveAppointments([snapshot, ...appointments])
+    return true
+  }
+  if (entryType === 'note') {
+    const notes = loadAgendaNotes()
+    if (!notes.some((item) => item.id === snapshot.id)) saveAgendaNotes([snapshot, ...notes])
+    return true
+  }
+  return false
 }
 
 export function getCrmSummary() {
@@ -381,7 +303,12 @@ export function getAgendaItems() {
     title: note.title,
     customer: '',
     date: note.date,
-    time: note.time,
+    time: note.timeFrom || note.time,
+    dateFrom: note.dateFrom,
+    dateTo: note.dateTo,
+    timeFrom: note.timeFrom,
+    timeTo: note.timeTo,
+    includeTime: note.includeTime,
     content: note.content,
     color: note.color,
     status: 'Not',

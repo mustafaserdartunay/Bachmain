@@ -93,7 +93,7 @@ function parseMinutes(value) {
 
 export function getCrmBoardEntryTime(entry) {
   const { kind, record } = entry
-  if (kind === 'note') return record.time || ''
+  if (kind === 'note') return record.timeFrom || record.time || ''
   if (kind === 'task') return ''
   return record.startTime || record.time || ''
 }
@@ -128,7 +128,7 @@ function matchesDate(entry, filters) {
 
 export function getCrmBoardEntryDate(entry) {
   const { kind, record } = entry
-  if (kind === 'note') return record.date || ''
+  if (kind === 'note') return record.dateFrom || record.date || ''
   if (kind === 'task') return record.dueDate || ''
   return record.date || ''
 }
@@ -138,7 +138,8 @@ export function isCrmBoardEntryOverdue(entry) {
   const today = new Date().toISOString().slice(0, 10)
 
   if (kind === 'note') {
-    return Boolean(record.date && record.date < today)
+    const date = record.dateFrom || record.date
+    return Boolean(date && date < today)
   }
 
   if (kind === 'task') {
@@ -166,7 +167,7 @@ export function buildCrmNoteBoardEntries(notes = []) {
     kind: 'note',
     record,
     template: { id: 'note', label: 'Not' },
-    sortKey: `${record.date || ''}${record.time || ''}`,
+    sortKey: `${record.dateFrom || record.date || ''}${record.timeFrom || record.time || ''}`,
   }))
 }
 

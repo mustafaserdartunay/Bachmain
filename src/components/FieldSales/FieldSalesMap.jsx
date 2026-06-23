@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { getCustomerBranchDisplay, getCustomerDisplay } from '../../utils/customerDisplay'
+import { getCustomerBranchDisplay } from '../../utils/customerDisplay'
+import { getCustomerCoordinates } from '../../utils/customerGeo'
 
 let leafletPromise = null
 

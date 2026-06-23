@@ -69,9 +69,11 @@ import {
   saveCustomerPortalSettings,
 } from '../utils/customerPortalSettings'
 import { readCompanySettings } from '../utils/companySettings'
+import { appendActivityEntry } from '../utils/activityArchiveStore'
 import {
   emptyCollectionForm,
   formatCollectionDate,
+  movementAccountOptions,
   patchMovementForm,
 } from '../utils/customerMovementForm'
 
@@ -173,12 +175,32 @@ export default function CustomerDetailPage() {
 
   function handleArchive() {
     appendActivity(customer.id, 'Arşivlendi', 'Müşteri arşive taşındı, verileri korunuyor')
+    appendActivityEntry({
+      module: 'customers',
+      action: 'archive',
+      entityType: 'customer',
+      entityId: customer.id,
+      entityLabel: customerDisplay.brandShortName,
+      description: `${customerDisplay.brandShortName} arşive taşındı.`,
+      snapshot: customer,
+      undo: { type: 'customer.restoreArchive' },
+    })
     archiveCustomer(customer.id)
     setActiveMenu(null)
     navigate('/musteriler')
   }
 
   function handleDelete() {
+    appendActivityEntry({
+      module: 'customers',
+      action: 'delete',
+      entityType: 'customer',
+      entityId: customer.id,
+      entityLabel: customerDisplay.brandShortName,
+      description: `${customerDisplay.brandShortName} silindi. Geri alınabilir kayıt olarak saklandı.`,
+      snapshot: customer,
+      undo: { type: 'customer.restoreDeleted' },
+    })
     deleteCustomer(customer.id)
     setActiveMenu(null)
     navigate('/musteriler')
@@ -259,12 +281,25 @@ export default function CustomerDetailPage() {
     },
   ]
 
+  const movementAccounts = useMemo(
+    () => movementAccountOptions(accounts, optionLists),
+    [accounts, optionLists],
+  )
+
   function updateCollection(field, value) {
-    patchMovementForm(setCollectionForm, field, value, optionLists)
+    patchMovementForm(setCollectionForm, field, value, {
+      cashAccount: movementAccounts.cash,
+      bankAccount: movementAccounts.bank,
+      chequeAccount: movementAccounts.cheque,
+    })
   }
 
   function updatePayment(field, value) {
-    patchMovementForm(setPaymentForm, field, value, optionLists)
+    patchMovementForm(setPaymentForm, field, value, {
+      cashAccount: movementAccounts.cash,
+      bankAccount: movementAccounts.bank,
+      chequeAccount: movementAccounts.cheque,
+    })
   }
 
   function updatePortalSettings(partial) {
@@ -320,10 +355,6 @@ export default function CustomerDetailPage() {
     })
   }
 
-  function resolveAccountId(accountName) {
-    return accounts.find((account) => account.name === accountName)?.id || accounts[0]?.id
-  }
-
   function submitCollection(event) {
     event.preventDefault()
     const amount = Number(collectionForm.amount)
@@ -335,8 +366,6 @@ export default function CustomerDetailPage() {
     createCustomerCollection({
       ...collectionForm,
       customerName: customer.company,
-      accountId: resolveAccountId(collectionForm.accountName),
-      accountName: collectionForm.accountName,
       amount,
       date: formatCollectionDate(collectionForm.transactionDate),
       description: collectionForm.description || `${customer.company} tahsilatı`,
@@ -358,8 +387,6 @@ export default function CustomerDetailPage() {
     createCustomerPayment({
       ...paymentForm,
       customerName: customer.company,
-      accountId: resolveAccountId(paymentForm.accountName),
-      accountName: paymentForm.accountName,
       amount,
       date: formatCollectionDate(paymentForm.transactionDate),
       description: paymentForm.description || `${customer.company} ödemesi`,
@@ -601,10 +628,12 @@ export default function CustomerDetailPage() {
                   setCollectionForm(emptyCollectionForm(accounts, optionLists))
                   setCollectionOpen(false)
                 }}
-                cashAccountOptions={optionLists.cashAccount}
-                bankAccountOptions={optionLists.bankAccount}
+                cashAccountOptions={movementAccounts.cash}
+                bankAccountOptions={movementAccounts.bank}
+                chequeAccountOptions={movementAccounts.cheque}
                 onCashOptionsChange={(next) => updateOptionList('cashAccount', next)}
                 onBankOptionsChange={(next) => updateOptionList('bankAccount', next)}
+                onChequeOptionsChange={(next) => updateOptionList('chequeAccount', next)}
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
               />
@@ -631,10 +660,12 @@ export default function CustomerDetailPage() {
                   setPaymentForm(emptyCollectionForm(accounts, optionLists))
                   setPaymentOpen(false)
                 }}
-                cashAccountOptions={optionLists.cashAccount}
-                bankAccountOptions={optionLists.bankAccount}
+                cashAccountOptions={movementAccounts.cash}
+                bankAccountOptions={movementAccounts.bank}
+                chequeAccountOptions={movementAccounts.cheque}
                 onCashOptionsChange={(next) => updateOptionList('cashAccount', next)}
                 onBankOptionsChange={(next) => updateOptionList('bankAccount', next)}
+                onChequeOptionsChange={(next) => updateOptionList('chequeAccount', next)}
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
               />

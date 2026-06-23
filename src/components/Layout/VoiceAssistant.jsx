@@ -228,7 +228,7 @@ export default function VoiceAssistant() {
                 <input
                   value={textInput}
                   onChange={(event) => setTextInput(event.target.value)}
-                  placeholder="Örn: ABC Ambalaj için 5000 adet kraft kutu teklifi oluştur"
+                  placeholder="Örn: Yeni müşteri için teklif oluştur"
                   className="form-input min-w-0 flex-1"
                   disabled={loading || processing}
                 />

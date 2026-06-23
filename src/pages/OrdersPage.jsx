@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -330,6 +331,8 @@ function createOrderDraft(baseOrders = []) {
 }
 
 export default function OrdersPage() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [orders, setOrders] = useState(loadOrders)
   const [workflowStages, setWorkflowStages] = useState(loadWorkflowStages)
   const [draftOrder, setDraftOrder] = useState(null)
@@ -382,6 +385,17 @@ export default function OrdersPage() {
       setViewMode('prepare')
     }
   }, [])
+
+  useEffect(() => {
+    if (searchParams.get('yeni') !== '1') return
+    const freshOrders = loadOrders()
+    const next = createOrderDraft(freshOrders)
+    setOrders(freshOrders)
+    setDraftOrder(next)
+    setSelectedId(next.id)
+    setViewMode('prepare')
+    navigate('/siparisler', { replace: true })
+  }, [searchParams, navigate])
 
   useEffect(() => {
     function refresh() {

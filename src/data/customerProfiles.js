@@ -4,30 +4,7 @@ import { resolvePrimaryContact } from '../utils/customerContacts'
 
 const CREATED_CUSTOMERS_KEY = 'erlenbox-created-customers'
 
-export const customerProfiles = customers.list.map((customer, index) => {
-  const stages = ['Teklif', 'Sipariş', 'Numune', 'Tahsilat', 'Takip']
-  const segments = ['Premium', 'Aktif', 'Takipte', 'Bayi Adayı', 'Riskli']
-  const cities = ['İstanbul / Tuzla', 'Ankara / Ostim', 'İzmir / Kemalpaşa', 'Bursa / Nilüfer', 'Kocaeli / Gebze']
-  const revenue = [840000, 620000, 310000, 480000, 260000][index] || 180000
-  const score = [92, 86, 74, 81, 68][index] || 72
-
-  return {
-    id: `MST-${String(index + 1).padStart(3, '0')}`,
-    ...customer,
-    shortBrandName: customer.shortBrandName || getBrandShortName(customer.company),
-    companyTitle: customer.companyTitle || customer.company,
-    segment: segments[index % segments.length],
-    stage: stages[index % stages.length],
-    city: cities[index % cities.length],
-    revenue,
-    score,
-    openQuotes: [3, 2, 1, 4, 1][index] || 1,
-    activeOrders: [2, 3, 1, 2, 0][index] || 1,
-    balance: [145000, 78500, 32000, 118000, 42000][index] || 24000,
-    owner: ['Ayşe Demir', 'Mehmet Kaya', 'Selin Arslan', 'Fatma Öztürk', 'Ali Çelik'][index] || 'Satış Ekibi',
-    nextAction: ['Teklif revizyonu', 'Teslim tarihi onayı', 'Numune takibi', 'Bayi iskonto görüşmesi', 'Tahsilat hatırlatma'][index] || 'Takip araması',
-  }
-})
+export const customerProfiles = []
 
 const ARCHIVED_CUSTOMERS_KEY = 'erlenbox-archived-customers'
 const DELETED_CUSTOMERS_KEY = 'erlenbox-deleted-customers'
@@ -109,6 +86,16 @@ export function restoreCustomer(customerId) {
   writeArchivedMap(map)
 }
 
+export function restoreDeletedCustomer(customer) {
+  if (!customer?.id) return null
+  const deleted = readDeletedIds().filter((id) => id !== customer.id)
+  writeDeletedIds(deleted)
+  const map = readArchivedMap()
+  delete map[customer.id]
+  writeArchivedMap(map)
+  return saveCustomerProfile(customer)
+}
+
 export function deleteCustomer(customerId) {
   const created = readCreatedCustomers().filter((customer) => customer.id !== customerId)
   writeCreatedCustomers(created)
@@ -140,6 +127,9 @@ export function saveCustomerProfile(profile) {
     address: profile.address ?? existing.address ?? '',
     lat: profile.lat ?? existing.lat ?? null,
     lng: profile.lng ?? existing.lng ?? null,
+    website: profile.website ?? existing.website ?? '',
+    googleMapsUrl: profile.googleMapsUrl ?? existing.googleMapsUrl ?? '',
+    googlePlaceId: profile.googlePlaceId ?? existing.googlePlaceId ?? '',
     taxOffice: profile.taxOffice ?? existing.taxOffice ?? '',
     taxNumber: profile.taxNumber ?? existing.taxNumber ?? '',
     warehouse: profile.warehouse ?? existing.warehouse ?? '',

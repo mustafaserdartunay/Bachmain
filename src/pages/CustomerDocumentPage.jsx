@@ -14,6 +14,8 @@ import {
 import { findCustomerProfile } from '../data/customerProfiles'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import { getTreasuryAccounts, createCustomerSalesInvoice } from '../utils/treasuryStore'
+import { createSalesInvoice } from '../utils/salesInvoicesStore'
+import { updateDepoItem } from '../utils/depoStore'
 import { formatCollectionDate } from '../utils/customerMovementForm'
 import { appendActivity } from '../utils/customerActivity'
 import { formatTL } from '../utils/productPricing'
@@ -81,6 +83,7 @@ export default function CustomerDocumentPage() {
     toAccount: accounts[1]?.id || accounts[0]?.id || '',
     amount: 0,
   }))
+  const [sourceDraft, setSourceDraft] = useState(null)
   const [successVisible, setSuccessVisible] = useState(false)
   const successTimer = useRef(null)
 
@@ -93,6 +96,7 @@ export default function CustomerDocumentPage() {
       const draft = JSON.parse(raw)
       sessionStorage.removeItem('erlenbox-depo-document-draft')
       sessionStorage.removeItem('erlenbox-production-document-draft')
+      setSourceDraft(draft)
       if (draft.invoiceNo) setDocNo(draft.invoiceNo)
       if (draft.description) setDescription(draft.description)
       if (draft.date) setDate(draft.date)
@@ -173,11 +177,33 @@ export default function CustomerDocumentPage() {
         dueDate: dueDate ? formatCollectionDate(dueDate) : '',
         description: description || `${docNo} satış faturası`,
       })
+      createSalesInvoice({
+        title: description?.trim() || 'Satış Faturaları',
+        invoiceNo: docNo,
+        customerId: customer.id,
+        customerName: customer.company,
+        issueDate: date,
+        dueDate: dueDate || date,
+        totalAmount: grandTotal,
+        invoiceKind: 'e-fatura',
+        status: 'approved',
+        description: description || `${docNo} satış faturası`,
+        syncTreasury: false,
+      })
+      if (sourceDraft?.depoItemId) {
+        const invoicedQuantity = lines.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0)
+        updateDepoItem(sourceDraft.depoItemId, {
+          invoiceNo: docNo,
+          invoiceAt: formatCollectionDate(date),
+          invoicedQuantity,
+        })
+      }
     }
 
     appendActivity(customer.id, `${config.title} Oluşturuldu`, detail)
     showSaved()
-    setTimeout(() => navigate(`/musteriler/${customer.id}`), 800)
+    const nextPath = docType === 'satis-faturasi' ? '/musteriler/faturalar' : `/musteriler/${customer.id}`
+    setTimeout(() => navigate(nextPath), 800)
   }
 
   const Icon = config.icon

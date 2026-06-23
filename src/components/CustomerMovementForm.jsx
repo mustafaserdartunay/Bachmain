@@ -15,8 +15,10 @@ export default function CustomerMovementForm({
   onCancel,
   cashAccountOptions,
   bankAccountOptions,
+  chequeAccountOptions = [],
   onCashOptionsChange,
   onBankOptionsChange,
+  onChequeOptionsChange,
   activeMenu,
   setActiveMenu,
   title,
@@ -35,10 +37,23 @@ export default function CustomerMovementForm({
   const amountLabel = isPayment ? 'Ödeme Tutarı' : 'Tahsilat Tutarı'
   const resolvedSubmitLabel = submitLabel || (isPayment ? 'Ödeme Ekle' : 'Tahsilat Ekle')
   const isCashMethod = form.method === 'Nakit'
-  const activeAccountOptions = isCashMethod ? cashAccountOptions : bankAccountOptions
-  const accountLabel = isCashMethod ? 'Kasa Yeri' : form.method === 'Çek' ? 'Banka Yeri (Çek)' : 'Banka Yeri'
-  const accountOpenKey = `${variant}-${isCashMethod ? 'cash' : 'bank'}-account`
-  const onAccountOptionsChange = isCashMethod ? onCashOptionsChange : onBankOptionsChange
+  const isChequeMethod = form.method === 'Çek'
+  const activeAccountOptions = isCashMethod
+    ? cashAccountOptions
+    : isChequeMethod
+      ? chequeAccountOptions
+      : bankAccountOptions
+  const accountLabel = isCashMethod
+    ? 'Kasa Yeri'
+    : isChequeMethod
+      ? 'Çek Kasası'
+      : 'Banka Yeri'
+  const accountOpenKey = `${variant}-${isCashMethod ? 'cash' : isChequeMethod ? 'cheque' : 'bank'}-account`
+  const onAccountOptionsChange = isCashMethod
+    ? onCashOptionsChange
+    : isChequeMethod
+      ? onChequeOptionsChange
+      : onBankOptionsChange
 
   const methodTiles = [
     {

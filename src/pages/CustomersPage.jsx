@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Archive, CheckCircle2, ChevronDown, Link2, Plus, RotateCcw, Search, Users, WalletCards } from 'lucide-react'
+import { CheckCircle2, Link2, Plus, Search, Users, WalletCards } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
-import { getArchivedCustomers, getCustomerProfiles, restoreCustomer } from '../data/customerProfiles'
-import { appendActivity, formatActivityStamp } from '../utils/customerActivity'
+import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
+import { getCustomerProfiles, restoreCustomer, restoreDeletedCustomer } from '../data/customerProfiles'
+import { appendActivity } from '../utils/customerActivity'
 import {
   formatTreasuryCurrency,
   getCustomerLedgerBalance,
@@ -14,7 +15,9 @@ import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
   CUSTOMER_META_KEY,
   getCustomerMetaSelection,
+  matchesPartyListFilter,
   notifyCustomerMetaUpdated,
+  SUPPLIER_TYPE_LABEL,
   readCustomerMeta,
   readOptionLists,
   saveOptionList,
@@ -64,7 +67,17 @@ function balanceClass(balance) {
 const LIST_PILL_CLASS =
   'flex w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold transition-colors hover:bg-dark-700/80'
 
-export default function CustomersPage() {
+export default function CustomersPage({
+  pageTitle = 'Müşteriler',
+  createLabel = 'Yeni Müşteri Oluştur',
+  listTitle = 'Müşteriler Listesi',
+  totalLabel = 'Toplam Müşteri',
+  columnLabel = 'Müşteri',
+  emptyTitle = 'Müşteri bulunamadı.',
+  archiveModule = 'customers',
+  listKind = 'customer',
+  createPath = '/musteriler/yeni',
+}) {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState({
@@ -75,8 +88,6 @@ export default function CustomersPage() {
   })
   const [movements] = useState(() => getTreasuryMovements())
   const [customerProfiles, setCustomerProfiles] = useState(() => getCustomerProfiles())
-  const [archivedCustomers, setArchivedCustomers] = useState(() => getArchivedCustomers())
-  const [archiveOpen, setArchiveOpen] = useState(false)
   const [customerSettings, setCustomerSettings] = useState(readCustomerMeta)
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
@@ -102,6 +113,19 @@ export default function CustomersPage() {
   }, [])
 
   useEffect(() => {
+    function refreshProfiles() {
+      setCustomerProfiles(getCustomerProfiles())
+      setCustomerSettings(readCustomerMeta())
+    }
+    window.addEventListener('bach:customers-updated', refreshProfiles)
+    window.addEventListener('bach:customer-meta-updated', refreshProfiles)
+    return () => {
+      window.removeEventListener('bach:customers-updated', refreshProfiles)
+      window.removeEventListener('bach:customer-meta-updated', refreshProfiles)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!activeMenu) return undefined
 
     function closeActiveMenu() {
@@ -112,9 +136,24 @@ export default function CustomersPage() {
     return () => document.removeEventListener('click', closeActiveMenu)
   }, [activeMenu])
 
+  const scopedProfiles = useMemo(() => (
+    customerProfiles.filter((customer) => {
+      const settings = customerSettings[customer.id] || {}
+      const selected = getCustomerMetaSelection(customer, settings)
+      return matchesPartyListFilter(selected.type, listKind)
+    })
+  ), [customerProfiles, customerSettings, listKind])
+
+  const typeOptions = useMemo(() => {
+    if (listKind === 'supplier') {
+      return optionLists.type.filter((option) => option.label === SUPPLIER_TYPE_LABEL)
+    }
+    return optionLists.type.filter((option) => option.label !== SUPPLIER_TYPE_LABEL)
+  }, [listKind, optionLists.type])
+
   const filteredCustomers = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase('tr-TR')
-    return customerProfiles.filter((customer) => {
+    return scopedProfiles.filter((customer) => {
       const settings = customerSettings[customer.id] || {}
       const selected = getCustomerMetaSelection(customer, settings)
       const balance = currentBalance(customer, movements)
@@ -131,10 +170,10 @@ export default function CustomersPage() {
         || (filters.balance === 'Sıfır' && balance === 0)
       return matchesQuery && matchesType && matchesRepresentative && matchesScoring && matchesBalance
     })
-  }, [customerProfiles, customerSettings, filters, movements, searchQuery])
+  }, [scopedProfiles, customerSettings, filters, movements, searchQuery])
 
-  const totalReceivable = customerProfiles.reduce((sum, customer) => Math.max(currentBalance(customer, movements), 0) + sum, 0)
-  const totalPayable = customerProfiles.reduce((sum, customer) => Math.abs(Math.min(currentBalance(customer, movements), 0)) + sum, 0)
+  const totalReceivable = scopedProfiles.reduce((sum, customer) => Math.max(currentBalance(customer, movements), 0) + sum, 0)
+  const totalPayable = scopedProfiles.reduce((sum, customer) => Math.abs(Math.min(currentBalance(customer, movements), 0)) + sum, 0)
 
   function grantB2bAccess(event, customerId) {
     event.stopPropagation()
@@ -162,31 +201,36 @@ export default function CustomersPage() {
     setFilters((current) => ({ ...current, [field]: value }))
   }
 
-  function handleRestore(entry) {
-    restoreCustomer(entry.customer.id)
-    appendActivity(entry.customer.id, 'Arşivden Geri Alındı', 'Müşteri arşivden listeye geri getirildi')
+  function handleRestoreArchiveEntry(entry) {
+    const snapshot = entry.snapshot
+    if (!snapshot?.id) return false
+    if (entry.action === 'archive') {
+      restoreCustomer(snapshot.id)
+    } else if (entry.action === 'delete') {
+      restoreDeletedCustomer(snapshot)
+    } else {
+      return false
+    }
+    appendActivity(snapshot.id, 'Geri Alındı', `${entry.entityLabel || 'Kayıt'} ${entry.action === 'archive' ? 'arşivden' : 'silinmeden'} geri alındı`)
     setCustomerProfiles(getCustomerProfiles())
-    setArchivedCustomers(getArchivedCustomers())
+    return true
   }
 
   return (
     <div className="space-y-5">
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <Link to="/" className="absolute left-5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500 transition-colors hover:text-gray-300">
-          Dashboard
-        </Link>
         <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Müşteri Yönetimi</h1>
+          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">{pageTitle}</h1>
         </div>
-        <Link to="/musteriler/yeni" className="btn-primary absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-1.5 px-4 py-2.5 text-sm">
-          <Plus className="h-4 w-4" /> Yeni Müşteri Oluştur
+        <Link to={createPath} className="btn-primary absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-1.5 px-4 py-2.5 text-sm">
+          <Plus className="h-4 w-4" /> {createLabel}
         </Link>
       </section>
 
       <SummaryMetrics
         columns={4}
         items={[
-          { title: 'Toplam Müşteri', value: customerProfiles.length, icon: Users },
+          { title: totalLabel, value: scopedProfiles.length, icon: Users },
           { title: 'Aktif Cari', value: filteredCustomers.length, icon: CheckCircle2, tone: 'emerald', valueTone: 'emerald' },
           { title: 'Toplam Ödenecek', value: formatTreasuryCurrency(totalPayable), icon: WalletCards, tone: 'purple', valueTone: 'red' },
           { title: 'Toplam Tahsil Edilecek', value: formatTreasuryCurrency(totalReceivable), icon: WalletCards, tone: 'orange', valueTone: 'emerald' },
@@ -194,8 +238,7 @@ export default function CustomersPage() {
       />
 
       <Panel
-        title="Müşteriler Listesi"
-        description="Buton yok; müşteri satırının herhangi bir yerine tıklayınca detay sayfasına girilir."
+        title={listTitle}
         action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{filteredCustomers.length} kayıt</span>}
       >
         <div className="mb-4 space-y-3">
@@ -213,7 +256,7 @@ export default function CustomersPage() {
               <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Tipi</p>
               <EditableDropdownPill
                 value={filters.type}
-                options={[filterAllOption, ...optionLists.type]}
+                options={[filterAllOption, ...typeOptions]}
                 includePlaceholderOption={false}
                 editable={false}
                 buttonClassName={LIST_PILL_CLASS}
@@ -271,7 +314,7 @@ export default function CustomersPage() {
         <ListHeaderRow
           gridTemplate={listGrid}
           columns={[
-            'Müşteri',
+            columnLabel,
             'Tipi',
             'Temsilci',
             'Puantaj',
@@ -308,7 +351,7 @@ export default function CustomersPage() {
                 </div>
                 <EditableDropdownPill
                   value={resolveListColumnLabel(meta.type, optionLists.type)}
-                  options={optionLists.type}
+                  options={typeOptions}
                   onOptionsChange={(next) => updateOptionList('type', next)}
                   buttonClassName={LIST_PILL_CLASS}
                   openKey={`${customer.id}-type`}
@@ -367,63 +410,18 @@ export default function CustomersPage() {
         {filteredCustomers.length === 0 && (
           <div className="mt-4 rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-8 text-center">
             <Users className="mx-auto mb-3 h-8 w-8 text-gray-600" />
-            <p className="text-sm font-bold text-white">Müşteri bulunamadı.</p>
+            <p className="text-sm font-bold text-white">{emptyTitle}</p>
             <p className="mt-1 text-xs text-gray-500">Arama veya segment filtresini değiştirin.</p>
           </div>
         )}
       </Panel>
 
-      <section className="card overflow-hidden p-0">
-        <button
-          type="button"
-          onClick={() => setArchiveOpen((open) => !open)}
-          className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-dark-700/30"
-        >
-          <span className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 text-amber-300">
-              <Archive className="h-4 w-4" />
-            </span>
-            <span className="text-sm font-black uppercase tracking-wide text-gray-200">Arşiv</span>
-            <span className="rounded-lg bg-dark-700/70 px-2 py-0.5 text-[11px] font-black text-gray-400">{archivedCustomers.length}</span>
-          </span>
-          <ChevronDown className={`h-4 w-4 shrink-0 text-gray-500 transition-transform ${archiveOpen ? 'rotate-180' : ''}`} />
-        </button>
-        {archiveOpen && (
-          <div className="border-t border-dark-500/40 p-5">
-            {archivedCustomers.length === 0 ? (
-              <div className="flex items-center justify-center rounded-2xl border border-dashed border-dark-500/50 bg-dark-700/25 px-4 py-8 text-center text-xs font-semibold text-gray-500">
-                Arşivlenmiş müşteri bulunmuyor. Arşivlenen müşterilerin verileri silinmez, buradan geri alınabilir.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {archivedCustomers.map((entry) => {
-                  const display = getCustomerDisplay(entry.customer)
-                  return (
-                    <div key={entry.customer.id} className="flex items-center gap-3 rounded-2xl border border-dark-500/40 bg-dark-700/35 px-4 py-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-dark-700/70 text-sm font-black text-gray-300">
-                        {display.brandShortName.slice(0, 1)}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-gray-200">{display.brandShortName}</p>
-                        <p className="truncate text-xs font-semibold text-gray-500">
-                          {display.companyTitle} · Arşivlendi: {formatActivityStamp(entry.archivedAt)}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRestore(entry)}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-emerald-300 transition-colors hover:bg-emerald-500/20"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" /> Geri Al
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )}
-      </section>
+      <ActivityArchivePanel
+        title="Arşiv ve İşlem Geçmişi"
+        modules={[archiveModule]}
+        onRestore={handleRestoreArchiveEntry}
+        emptyMessage="Henüz arşiv veya silme kaydı yok."
+      />
     </div>
   )
 }

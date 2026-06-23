@@ -32,11 +32,59 @@ import NumericInput from './NumericInput'
 import PriceFieldWithFx, { FxHint } from './PriceFieldWithFx'
 import PriceSummary from './PriceSummary'
 import ProductFilesUpload from './ProductFilesUpload'
+import ProcessPanelModule from '../DocumentEditor/ProcessPanelModule'
+import {
+  isReservedPlaceholderLabel,
+  mapProcessOptions,
+  matchProcessOption,
+  optionsToProcessRecord,
+  processRecordToOptions,
+} from '../DocumentEditor/processPanelUtils'
+import { stageColors } from '../DocumentEditor/stageColors'
 
 const DISCOUNT_RATES = [10, 15, 20, 25, 30, 35, 40]
 
 function generateId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+}
+
+function normalizeOptionLabel(label) {
+  return String(label || '').trim().toLocaleLowerCase('tr-TR')
+}
+
+function createOptionId(prefix = 'opt') {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
+}
+
+function buildCopyLabel(label, options, fallback = 'Seçenek') {
+  const base = `${String(label || fallback).trim()} Kopya`
+  const used = new Set((options || []).map((option) => normalizeOptionLabel(option.label)))
+  if (!used.has(normalizeOptionLabel(base))) return base
+  let index = 2
+  while (used.has(normalizeOptionLabel(`${base} ${index}`))) index += 1
+  return `${base} ${index}`
+}
+
+function createUnitValue(label, units = []) {
+  const base = normalizeOptionLabel(label)
+    .replace(/[^a-z0-9ğüşöçıİĞÜŞÖÇ]+/gi, '-')
+    .replace(/^-+|-+$/g, '') || 'birim'
+  const used = new Set((units || []).map((unit) => unit.value))
+  if (!used.has(base)) return base
+  let index = 2
+  while (used.has(`${base}-${index}`)) index += 1
+  return `${base}-${index}`
+}
+
+function normalizeUnitOption(unit, index = 0) {
+  const value = unit.value || createUnitValue(unit.label, [])
+  return {
+    ...unit,
+    id: unit.id || value,
+    value,
+    label: unit.label || value,
+    color: unit.color || stageColors[index % stageColors.length],
+  }
 }
 
 function fileToDataUrl(file) {
@@ -633,15 +681,15 @@ export default function ProductForm({ product, onChange, isNew }) {
   const [unitOpen, setUnitOpen] = useState(false)
   const [stockAdjustment, setStockAdjustment] = useState({ type: 'in', quantity: 0, note: '' })
   const [previewMedia, setPreviewMedia] = useState(null)
-  const [categories, setCategories] = useState(() => readOptionLists().productCategory.map((option) => option.label))
-  const [tagSuggestions, setTagSuggestions] = useState(() => readOptionLists().tags)
-  const [units, setUnits] = useState(unitOptions)
+  const [pendingCategoryDeleteId, setPendingCategoryDeleteId] = useState(null)
+  const [pendingUnitDeleteId, setPendingUnitDeleteId] = useState(null)
+  const [categoryOptions, setCategoryOptions] = useState(() => readOptionLists().productCategory)
+  const [units, setUnits] = useState(() => unitOptions.map(normalizeUnitOption))
 
   useEffect(() => {
     function syncLists() {
       const lists = readOptionLists()
-      setCategories(lists.productCategory.map((option) => option.label))
-      setTagSuggestions(lists.tags)
+      setCategoryOptions(lists.productCategory)
     }
     window.addEventListener('bach:option-lists-updated', syncLists)
     return () => window.removeEventListener('bach:option-lists-updated', syncLists)
@@ -665,6 +713,16 @@ export default function ProductForm({ product, onChange, isNew }) {
     const laborCost = getLaborCostTotal(product.laborRows || [])
     return materialCost + laborCost
   }, [product.costRows, product.costColumns, product.laborRows])
+
+  const categoryRecord = useMemo(
+    () => optionsToProcessRecord(categoryOptions, product.category),
+    [categoryOptions, product.category],
+  )
+
+  const unitRecord = useMemo(
+    () => optionsToProcessRecord(units.map((unit, index) => normalizeUnitOption(unit, index)), product.salesUnit),
+    [units, product.salesUnit],
+  )
 
   const cartonResult = useMemo(() => {
     const qty = Number(product.unitQuantities?.koli) || 0
@@ -733,24 +791,64 @@ export default function ProductForm({ product, onChange, isNew }) {
     onChange(next)
   }
 
-  function addCategory() {
-    const value = categoryInput.trim()
-    if (!value || categories.some((cat) => cat.toLowerCase() === value.toLowerCase())) return
-    setCategories([...categories, value])
+  function persistCategoryOptions(nextOptions) {
+    setCategoryOptions(nextOptions)
+    saveOptionList('productCategory', nextOptions)
+  }
+
+  function addCategory(chosenColor, inputLabel) {
+    const value = (inputLabel || categoryInput).trim()
+    if (!value || isReservedPlaceholderLabel(value)) return
     const lists = readOptionLists()
-    if (!lists.productCategory.some((item) => item.label.toLocaleLowerCase('tr-TR') === value.toLocaleLowerCase('tr-TR'))) {
-      const color = OPTION_COLOR_PALETTE[lists.productCategory.length % OPTION_COLOR_PALETTE.length]
-      saveOptionList('productCategory', [...lists.productCategory, { label: value, color }])
-    }
+    const existing = lists.productCategory
+    if (existing.some((item) => normalizeOptionLabel(item.label) === normalizeOptionLabel(value))) return
+    const color = chosenColor || stageColors[existing.length % stageColors.length] || OPTION_COLOR_PALETTE[existing.length % OPTION_COLOR_PALETTE.length]
+    const nextOptions = [...existing, { id: createOptionId('cat'), label: value, color }]
+    persistCategoryOptions(nextOptions)
     update('category', value)
     setCategoryInput('')
   }
 
+  function selectCategory(stage) {
+    update('category', stage?.label || '')
+  }
+
+  function updateCategoryColor(stage, color) {
+    persistCategoryOptions(mapProcessOptions(categoryOptions, stage, (option) => ({ ...option, color })))
+  }
+
+  function updateCategoryLabel(stage, label) {
+    const clean = label.trim()
+    if (!clean || isReservedPlaceholderLabel(clean)) return
+    if (categoryOptions.some((option) => !matchProcessOption(option, stage) && normalizeOptionLabel(option.label) === normalizeOptionLabel(clean))) return
+    const nextOptions = mapProcessOptions(categoryOptions, stage, (option) => ({ ...option, label: clean }))
+    persistCategoryOptions(nextOptions)
+    if (product.category === stage.label) update('category', clean)
+  }
+
+  function copyCategory(stage) {
+    const sourceIndex = categoryOptions.findIndex((option) => matchProcessOption(option, stage))
+    if (sourceIndex < 0) return
+    const copy = {
+      ...categoryOptions[sourceIndex],
+      id: createOptionId('cat'),
+      label: buildCopyLabel(stage.label, categoryOptions, 'Kategori'),
+      color: stageColors[(categoryOptions.length + 1) % stageColors.length],
+    }
+    const nextOptions = [...categoryOptions]
+    nextOptions.splice(sourceIndex + 1, 0, copy)
+    persistCategoryOptions(nextOptions)
+    update('category', copy.label)
+    setPendingCategoryDeleteId(null)
+  }
+
+  function reorderCategories(stages) {
+    persistCategoryOptions(processRecordToOptions(stages))
+  }
+
   function removeCategory(value) {
-    if (!window.confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) return
-    setCategories(categories.filter((cat) => cat !== value))
-    const lists = readOptionLists()
-    saveOptionList('productCategory', lists.productCategory.filter((item) => item.label !== value))
+    const nextOptions = categoryOptions.filter((item) => item.label !== value && item.id !== value)
+    persistCategoryOptions(nextOptions)
     if (product.category === value) update('category', '')
   }
 
@@ -758,18 +856,7 @@ export default function ProductForm({ product, onChange, isNew }) {
     const tag = tagInput.trim().toLowerCase()
     if (!tag || product.tags.includes(tag)) return
     update('tags', [...product.tags, tag])
-    const lists = readOptionLists()
-    if (!lists.tags.some((item) => item.label.toLocaleLowerCase('tr-TR') === tag)) {
-      const color = OPTION_COLOR_PALETTE[lists.tags.length % OPTION_COLOR_PALETTE.length]
-      saveOptionList('tags', [...lists.tags, { label: tag, color }])
-    }
     setTagInput('')
-  }
-
-  function addSuggestedTag(tag) {
-    const normalized = String(tag).trim().toLowerCase()
-    if (!normalized || product.tags.includes(normalized)) return
-    update('tags', [...product.tags, normalized])
   }
 
   function getProducerSuppliers() {
@@ -794,17 +881,59 @@ export default function ProductForm({ product, onChange, isNew }) {
     })
   }
 
-  function addUnit() {
-    const label = unitInput.trim()
-    if (!label || units.some((unit) => unit.label.toLowerCase() === label.toLowerCase())) return
-    const value = label.toLowerCase().replace(/\s+/g, '-')
-    setUnits([...units, { value, label }])
+  function addUnit(chosenColor, inputLabel) {
+    const label = (inputLabel || unitInput).trim()
+    if (!label || isReservedPlaceholderLabel(label) || units.some((unit) => normalizeOptionLabel(unit.label) === normalizeOptionLabel(label))) return
+    const value = createUnitValue(label, units)
+    const nextUnits = [...units, normalizeUnitOption({ value, label, color: chosenColor }, units.length)]
+    setUnits(nextUnits)
     update('unitQuantities', { ...(product.unitQuantities || {}), [value]: 0 })
     setUnitInput('')
   }
 
+  function selectUnit(stage) {
+    const unit = stage ? units.find((item) => item.value === stage.id || item.label === stage.label) : null
+    patchProduct({ salesUnit: unit?.value || '', purchaseUnit: unit?.value || '' })
+  }
+
+  function updateUnitColor(stage, color) {
+    setUnits(units.map((unit) => (unit.value === stage.id ? { ...unit, color } : unit)))
+  }
+
+  function updateUnitLabel(stage, label) {
+    const clean = label.trim()
+    if (!clean || isReservedPlaceholderLabel(clean)) return
+    if (units.some((unit) => unit.value !== stage.id && normalizeOptionLabel(unit.label) === normalizeOptionLabel(clean))) return
+    setUnits(units.map((unit) => (unit.value === stage.id ? { ...unit, label: clean } : unit)))
+  }
+
+  function copyUnit(stage) {
+    const sourceIndex = units.findIndex((unit) => unit.value === stage.id)
+    if (sourceIndex < 0) return
+    const source = units[sourceIndex]
+    const label = buildCopyLabel(source.label, units, 'Birim')
+    const value = createUnitValue(label, units)
+    const nextUnit = normalizeUnitOption({ ...source, id: value, value, label, color: stageColors[(units.length + 1) % stageColors.length] }, units.length)
+    const nextUnits = [...units]
+    nextUnits.splice(sourceIndex + 1, 0, nextUnit)
+    setUnits(nextUnits)
+    patchProduct({
+      salesUnit: value,
+      purchaseUnit: value,
+      unitQuantities: { ...(product.unitQuantities || {}), [value]: 0 },
+    })
+    setPendingUnitDeleteId(null)
+  }
+
+  function reorderUnits(stages) {
+    const nextUnits = stages.map((stage) => {
+      const current = units.find((unit) => unit.value === stage.id) || {}
+      return normalizeUnitOption({ ...current, value: stage.id, label: stage.label, color: stage.color }, 0)
+    })
+    setUnits(nextUnits)
+  }
+
   function removeUnit(value) {
-    if (!window.confirm('Bu birimi silmek istediğinize emin misiniz?')) return
     const nextUnits = units.filter((unit) => unit.value !== value)
     const nextQuantities = { ...(product.unitQuantities || {}) }
     delete nextQuantities[value]
@@ -928,114 +1057,60 @@ export default function ProductForm({ product, onChange, isNew }) {
               <input value={product.gtipCode} onChange={(e) => update('gtipCode', e.target.value)} className="form-input" />
             </Field>
             <Field label="Birim Seçenekleri">
-              <div className="flex gap-2">
-                <div className="relative w-[42%] shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setUnitOpen((open) => !open)}
-                    className="form-input flex items-center justify-between text-left"
-                  >
-                    <span>{units.find((unit) => unit.value === product.salesUnit)?.label || 'Birim seçmeden devam et'}</span>
-                    <span className="text-xs text-gray-500">▼</span>
-                  </button>
-                  {unitOpen && (
-                    <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto rounded-xl border border-dark-500/60 bg-dark-800 p-2 shadow-2xl">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          patchProduct({ salesUnit: '', purchaseUnit: '' })
-                          setUnitOpen(false)
-                        }}
-                        className="mb-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-gray-300 hover:bg-dark-700"
-                      >
-                        Birim seçmeden devam et
-                      </button>
-                      {units.map((unit) => (
-                        <div key={unit.value} className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-dark-700">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              patchProduct({ salesUnit: unit.value, purchaseUnit: unit.value })
-                              setUnitOpen(false)
-                            }}
-                            className="flex-1 px-1 py-1 text-left text-sm text-gray-300"
-                          >
-                            {unit.label}
-                          </button>
-                          {!['adet', 'paket', 'koli', 'palet'].includes(unit.value) && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                removeUnit(unit.value)
-                              }}
-                              className="rounded-lg px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
-                            >
-                              Sil
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <input value={unitInput} onChange={(e) => setUnitInput(e.target.value)} className="form-input flex-1" />
-                <div className="shrink-0"><MiniButton onClick={addUnit}>Ekle</MiniButton></div>
-              </div>
+              <ProcessPanelModule
+                activeLabel="Aktif Birim"
+                countSuffix="birim tanımlı"
+                emptyMessage="Henüz birim eklenmedi."
+                addPlaceholder="Yeni birim adı..."
+                record={unitRecord}
+                isOpen={unitOpen}
+                onToggle={() => {
+                  setUnitOpen((open) => !open)
+                  setPendingUnitDeleteId(null)
+                }}
+                stageInput={unitInput}
+                setStageInput={setUnitInput}
+                onAddStage={addUnit}
+                onSelectStage={selectUnit}
+                onUpdateStageColor={updateUnitColor}
+                onUpdateStageLabel={updateUnitLabel}
+                onCopyStage={copyUnit}
+                onReorderStages={reorderUnits}
+                pendingStageDeleteId={pendingUnitDeleteId}
+                setPendingStageDeleteId={setPendingUnitDeleteId}
+                onRemoveStage={(stage) => removeUnit(stage.id)}
+                activeDisplayLabel={units.find((unit) => unit.value === product.salesUnit)?.label || ''}
+                emptySelectionLabel="Birim seçmeden devam et"
+                compact
+              />
             </Field>
             <Field label="Kategori">
-              <div className="flex gap-2">
-                <div className="relative w-[42%] shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setCategoryOpen((open) => !open)}
-                    className="form-input flex items-center justify-between text-left"
-                  >
-                    <span>{product.category || 'Kategori seçmeden devam et'}</span>
-                    <span className="text-xs text-gray-500">▼</span>
-                  </button>
-                  {categoryOpen && (
-                    <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto rounded-xl border border-dark-500/60 bg-dark-800 p-2 shadow-2xl">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          update('category', '')
-                          setCategoryOpen(false)
-                        }}
-                        className="mb-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-gray-300 hover:bg-dark-700"
-                      >
-                        Kategori seçmeden devam et
-                      </button>
-                      {categories.map((cat) => (
-                        <div key={cat} className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-dark-700">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              update('category', cat)
-                              setCategoryOpen(false)
-                            }}
-                            className="flex-1 px-1 py-1 text-left text-sm text-gray-300"
-                          >
-                            {cat}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              removeCategory(cat)
-                            }}
-                            className="rounded-lg px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
-                          >
-                            Sil
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <input value={categoryInput} onChange={(e) => setCategoryInput(e.target.value)} className="form-input flex-1" />
-                <div className="shrink-0"><MiniButton onClick={addCategory}>Ekle</MiniButton></div>
-              </div>
+              <ProcessPanelModule
+                activeLabel="Aktif Kategori"
+                countSuffix="kategori tanımlı"
+                emptyMessage="Henüz kategori eklenmedi."
+                addPlaceholder="Yeni kategori adı..."
+                record={categoryRecord}
+                isOpen={categoryOpen}
+                onToggle={() => {
+                  setCategoryOpen((open) => !open)
+                  setPendingCategoryDeleteId(null)
+                }}
+                stageInput={categoryInput}
+                setStageInput={setCategoryInput}
+                onAddStage={addCategory}
+                onSelectStage={selectCategory}
+                onUpdateStageColor={updateCategoryColor}
+                onUpdateStageLabel={updateCategoryLabel}
+                onCopyStage={copyCategory}
+                onReorderStages={reorderCategories}
+                pendingStageDeleteId={pendingCategoryDeleteId}
+                setPendingStageDeleteId={setPendingCategoryDeleteId}
+                onRemoveStage={(stage) => removeCategory(stage.label)}
+                activeDisplayLabel={product.category}
+                emptySelectionLabel="Kategori seçmeden devam et"
+                compact
+              />
             </Field>
             <Field label="Etiketler">
               <div className="flex gap-2">
@@ -1057,23 +1132,6 @@ export default function ProductForm({ product, onChange, isNew }) {
                   </span>
                 ))}
               </div>
-              {tagSuggestions.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5 pt-2">
-                  {tagSuggestions
-                    .filter((item) => !(product.tags || []).includes(item.label.toLocaleLowerCase('tr-TR')))
-                    .slice(0, 8)
-                    .map((item) => (
-                      <button
-                        key={item.label}
-                        type="button"
-                        onClick={() => addSuggestedTag(item.label)}
-                        className="rounded-full border border-dark-500/50 bg-dark-700/60 px-2.5 py-1 text-[10px] font-bold text-gray-300 transition-colors hover:border-blue-500/40 hover:text-white"
-                      >
-                        + {item.label}
-                      </button>
-                    ))}
-                </div>
-              )}
             </Field>
             <Field label="Üretici ve Tedarikçi">
               <div className="flex gap-2">

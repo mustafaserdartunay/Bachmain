@@ -64,50 +64,10 @@ function seedProductionForOrder(order) {
 }
 
 function ensureSeedData() {
-  const access = readJson(ACCESS_KEY, {})
-  const orders = readJson(ORDERS_KEY, [])
-  if (orders.length > 0) return
-
-  const customer = getAllCustomerProfiles()[0]
-  if (!customer) return
-
-  const token = createToken()
-  access[customer.id] = {
-    enabled: true,
-    accessToken: token,
-    enabledAt: new Date().toISOString(),
-    customPrices: { 'PRD-001': 10.5 },
-  }
-  writeJson(ACCESS_KEY, access)
-
-  const order = {
-    id: createId('ORD'),
-    customerId: customer.id,
-    customerName: customer.company,
-    status: 'Üretimde',
-    createdAt: new Date().toISOString(),
-    lines: [
-      { productId: 'PRD-001', productName: 'Kraft Kutu 30x20', quantity: 500, unitPrice: 10.5 },
-      { productId: 'PRD-002', productName: 'Premium Hediye Kutusu', quantity: 120, unitPrice: 28 },
-    ],
-    note: 'Numune onayı sonrası seri üretim',
-  }
-  writeJson(ORDERS_KEY, [order])
-
-  const quote = {
-    id: createId('QTE'),
-    customerId: customer.id,
-    customerName: customer.company,
-    status: 'Bekliyor',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    lines: [{ productId: 'PRD-001', productName: 'Kraft Kutu 30x20', quantity: 1000, unitPrice: 10.8 }],
-    total: 10800,
-  }
-  writeJson(QUOTES_KEY, [quote])
-  writeJson(PRODUCTION_KEY, seedProductionForOrder(order))
+  // Demo portal records are intentionally not seeded.
 }
 
-ensureSeedData()
+
 
 export function readB2bAccessMap() {
   return readJson(ACCESS_KEY, {})

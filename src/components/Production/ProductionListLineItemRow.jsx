@@ -73,6 +73,7 @@ function ProcessMetricsRow({
   setPendingUndoDepoRowId,
   splitBaseRemaining = null,
   orderLineQuantity = null,
+  productionCode = '',
 }) {
   const rowOrdered = getQuantityRowOrdered(row, lineItem, rowIndex)
   const isSplitRow = rowIndex > 0
@@ -205,6 +206,11 @@ function ProcessMetricsRow({
                   <Package className="h-3 w-3" />
                 </div>
                 <span className="whitespace-nowrap text-[10px] font-bold text-orange-300">Depoya gönderildi</span>
+                {productionCode && (
+                  <span className="whitespace-nowrap rounded-md border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-black tabular-nums text-blue-300">
+                    {productionCode}
+                  </span>
+                )}
                 {typeof onUndoSendToDepo === 'function' && (
                   <button
                     type="button"
@@ -224,10 +230,15 @@ function ProcessMetricsRow({
               onClick={() => setPendingDepoRowId?.(row.id)}
               disabled={columnsLocked || !(depoSendQuantity > 0)}
               className={depoSendBtnClass}
-              title={splitKalan?.isExcess ? 'Fazla adedi depoya gönder' : 'Depoya gönder'}
+              title={productionCode ? `${productionCode} koduyla depoya gönder` : (splitKalan?.isExcess ? 'Fazla adedi depoya gönder' : 'Depoya gönder')}
             >
               <Package className="h-3 w-3 shrink-0" />
               <span className="whitespace-nowrap">Depoya gönder</span>
+              {productionCode && (
+                <span className="rounded-md border border-orange-500/25 bg-orange-500/10 px-1 py-0.5 text-[9px] font-black tabular-nums">
+                  {productionCode}
+                </span>
+              )}
             </button>
           )}
         </div>
@@ -248,6 +259,7 @@ export default function ProductionListLineItemRow({
   lineItem,
   lineIndex,
   lineCount,
+  productionJobId = '',
   productionStages,
   fulfillmentOptions = [],
   fulfillmentOpenKey,
@@ -286,6 +298,7 @@ export default function ProductionListLineItemRow({
         {quantityRows.map((row, rowIndex) => {
           const rowSteps = getQuantityRowMinimalSteps(row, productionStages)
           const isFirstRow = rowIndex === 0
+          const productionCode = row.productionCode || (productionJobId ? `${productionJobId}-${rowIndex + 1}` : '')
 
           return (
             <div
@@ -298,6 +311,11 @@ export default function ProductionListLineItemRow({
                     className="flex h-7 min-w-0 flex-1 items-center truncate text-sm font-black text-white"
                     title={lineItem.product || 'Ürün'}
                   >
+                    {productionCode && (
+                      <span className="mr-2 shrink-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[10px] font-black tabular-nums text-blue-300">
+                        {productionCode}
+                      </span>
+                    )}
                     {lineCount > 1 && (
                       <span className="mr-1 text-[10px] font-black tabular-nums text-gray-500">
                         #{lineIndex + 1}
@@ -306,7 +324,17 @@ export default function ProductionListLineItemRow({
                     {lineItem.product || 'Ürün adı yok'}
                   </p>
                 ) : (
-                  <div className="min-w-0 flex-1" />
+                  <p
+                    className="flex h-7 min-w-0 flex-1 items-center truncate text-sm font-black text-white"
+                    title={lineItem.product || 'Ürün'}
+                  >
+                    {productionCode && (
+                      <span className="mr-2 shrink-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[10px] font-black tabular-nums text-blue-300">
+                        {productionCode}
+                      </span>
+                    )}
+                    <span className="truncate">{lineItem.product || 'Ürün adı yok'}</span>
+                  </p>
                 )}
 
                 <ProcessMetricsRow
@@ -330,6 +358,7 @@ export default function ProductionListLineItemRow({
                   setPendingUndoDepoRowId={setPendingUndoDepoRowId}
                   splitBaseRemaining={splitBaseRemaining}
                   orderLineQuantity={orderLineQuantity}
+                  productionCode={productionCode}
                 />
 
                 {(typeof onAddQuantityRow === 'function' || typeof onRemoveLineItem === 'function' || typeof onRemoveQuantityRow === 'function') && (

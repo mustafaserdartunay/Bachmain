@@ -37,11 +37,21 @@ function formatShortDate(iso) {
   return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function buildDisplayLabel({ dateFrom, dateTo, timeFrom, timeTo, includeTime }) {
+function formatNumericDate(iso) {
+  const date = parseIso(iso)
+  if (!date) return ''
+  return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+function buildDisplayLabel({ dateFrom, dateTo, timeFrom, timeTo, includeTime, dateLabelFormat, showTimeInLabel }) {
   if (!dateFrom && !dateTo) return 'Tarih aralığı seçin'
-  const fromLabel = formatShortDate(dateFrom) || '...'
-  const toLabel = formatShortDate(dateTo) || '...'
-  if (includeTime && (timeFrom || timeTo)) {
+  const formatLabel = dateLabelFormat === 'numeric' ? formatNumericDate : formatShortDate
+  const fromLabel = formatLabel(dateFrom) || '...'
+  if (dateFrom && !dateTo) {
+    return showTimeInLabel && includeTime && timeFrom ? `${fromLabel} ${timeFrom}` : fromLabel
+  }
+  const toLabel = formatLabel(dateTo) || '...'
+  if (showTimeInLabel && includeTime && (timeFrom || timeTo)) {
     return `${fromLabel}${timeFrom ? ` ${timeFrom}` : ''} – ${toLabel}${timeTo ? ` ${timeTo}` : ''}`
   }
   return `${fromLabel} – ${toLabel}`
@@ -72,6 +82,8 @@ export default function DateRangePicker({
   includeTime = false,
   onChange,
   className = '',
+  dateLabelFormat = 'short',
+  showTimeInLabel = true,
 }) {
   const rootRef = useRef(null)
   const [open, setOpen] = useState(false)
@@ -80,7 +92,15 @@ export default function DateRangePicker({
   const [localTimeFrom, setLocalTimeFrom] = useState(timeFrom)
   const [localTimeTo, setLocalTimeTo] = useState(timeTo)
 
-  const displayLabel = buildDisplayLabel({ dateFrom, dateTo, timeFrom, timeTo, includeTime })
+  const displayLabel = buildDisplayLabel({
+    dateFrom,
+    dateTo,
+    timeFrom,
+    timeTo,
+    includeTime,
+    dateLabelFormat,
+    showTimeInLabel,
+  })
   const monthCells = useMemo(() => buildMonthGrid(viewDate), [viewDate])
   const selectingEnd = Boolean(dateFrom && !dateTo)
 

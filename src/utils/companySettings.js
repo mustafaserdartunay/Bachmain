@@ -10,22 +10,7 @@ export const defaultCompanySettings = {
   email: 'info@erlenbox.com',
   website: 'www.erlenbox.com',
   logoDataUrl: '',
-  bankAccounts: [
-    {
-      id: 'bank-1',
-      bankName: 'İş Bankası',
-      branch: 'Kadıköy',
-      iban: 'TR64 0006 4000 0011 2345 6789 01',
-      label: 'Ticari Hesap',
-    },
-    {
-      id: 'bank-2',
-      bankName: 'Garanti BBVA',
-      branch: 'Merkez',
-      iban: 'TR12 0006 2000 1234 0006 7890 12',
-      label: 'Tahsilat Hesabı',
-    },
-  ],
+  bankAccounts: [],
 }
 
 function readJson(key, fallback) {

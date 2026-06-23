@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
   Calendar,
@@ -7,6 +8,7 @@ import {
   Plus,
 } from 'lucide-react'
 import SummaryMetrics from '../Common/SummaryMetrics'
+import ActivityArchivePanel from '../Common/ActivityArchivePanel'
 import CrmProcessBoardPanel from './CrmProcessBoardPanel'
 import CrmProcessNotesPanel from './CrmProcessNotesPanel'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../Layout/AppPageLayout'
@@ -18,6 +20,7 @@ import {
   loadAgendaNotes,
   loadAppointments,
   loadTasks,
+  restoreCrmEntry,
   upsertAgendaNote,
   upsertAppointment,
   upsertTask,
@@ -25,6 +28,7 @@ import {
 import {
   advanceCrmProcessStage,
   buildCrmProcessRecords,
+  getCrmRecordCreatedSortValue,
   recordCrmProcessNotification,
 } from '../../utils/crmProcessHelpers'
 import {
@@ -35,17 +39,9 @@ import {
 } from '../../utils/crmProcessFilterUtils'
 import { openCrmProcessWhatsApp } from '../../utils/crmWhatsAppNotify'
 import { openCrmProcessEmail } from '../../utils/crmEmailNotify'
-import {
-  AppointmentFormModal,
-  emptyAppointmentForm,
-  emptyNoteForm,
-  emptyTaskForm,
-  normalizeTaskForm,
-  NoteFormModal,
-  TaskFormModal,
-} from './CrmForms'
 
 export default function CrmHome() {
+  const navigate = useNavigate()
   const [processFilter, setProcessFilter] = useState(readCrmProcessFilter)
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState(createDefaultCrmProcessFilters)
@@ -53,9 +49,6 @@ export default function CrmHome() {
   const [tasks, setTasks] = useState(loadTasks)
   const [appointments, setAppointments] = useState(loadAppointments)
   const [notes, setNotes] = useState(loadAgendaNotes)
-  const [noteModal, setNoteModal] = useState(null)
-  const [taskModal, setTaskModal] = useState(null)
-  const [appointmentModal, setAppointmentModal] = useState(null)
 
   useEffect(() => {
     function refresh() {
@@ -84,9 +77,12 @@ export default function CrmHome() {
   )
 
   const filteredNotes = useMemo(() => {
-    const idOrder = new Map(notes.map((note, index) => [note.id, index]))
     return filterCrmBoardEntries(noteEntries, filters, { searchQuery, processFilter: 'all' })
-      .sort((left, right) => (idOrder.get(left.id) ?? 0) - (idOrder.get(right.id) ?? 0))
+      .sort((left, right) => {
+        const rightCreated = getCrmRecordCreatedSortValue(right.record, right.sortKey)
+        const leftCreated = getCrmRecordCreatedSortValue(left.record, left.sortKey)
+        return rightCreated.localeCompare(leftCreated)
+      })
   }, [noteEntries, notes, filters, searchQuery])
 
   function refresh() {
@@ -139,14 +135,14 @@ export default function CrmHome() {
 
   function handleProcessEdit(entry) {
     if (entry.kind === 'note') {
-      setNoteModal({ ...entry.record })
+      navigate(`/crm/not/${entry.id}/duzenle`)
       return
     }
     if (entry.kind === 'task') {
-      setTaskModal(normalizeTaskForm(entry.record))
+      navigate(`/crm/gorev/${entry.id}/duzenle`)
       return
     }
-    setAppointmentModal({ ...entry.record })
+    navigate(`/crm/randevu/${entry.id}/duzenle`)
   }
 
   function handleProcessDelete(entry) {
@@ -156,36 +152,39 @@ export default function CrmHome() {
     refresh()
   }
 
+  function handleRestoreArchiveEntry(entry) {
+    const restored = restoreCrmEntry(entry.entityType, entry.snapshot)
+    if (restored) refresh()
+    return restored
+  }
+
   return (
     <AppPageShell className="flex min-h-[calc(100vh-2rem)] flex-col">
       <AppPageHeader
         title="CRM Yönetimi"
         actions={(
           <>
-            <button
-              type="button"
-              onClick={() => setTaskModal(emptyTaskForm())}
+            <Link
+              to="/crm/gorev-yeni"
               className="btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 text-sm"
             >
               <Plus className="h-4 w-4" />
-              Görev ekle
-            </button>
-            <button
-              type="button"
-              onClick={() => setAppointmentModal(emptyAppointmentForm())}
+              Görev Oluştur
+            </Link>
+            <Link
+              to="/crm/randevu-yeni"
               className="btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 text-sm"
             >
               <Plus className="h-4 w-4" />
-              Randevu ekle
-            </button>
-            <button
-              type="button"
-              onClick={() => setNoteModal(emptyNoteForm())}
+              Randevu Oluştur
+            </Link>
+            <Link
+              to="/crm/not-yeni"
               className="btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 text-sm"
             >
               <Plus className="h-4 w-4" />
-              Not Ekle
-            </button>
+              Not Oluştur
+            </Link>
           </>
         )}
       />
@@ -233,7 +232,7 @@ export default function CrmHome() {
               </span>
               <button
                 type="button"
-                onClick={() => setNoteModal(emptyNoteForm())}
+                onClick={() => navigate('/crm/not-yeni')}
                 className="inline-flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-1.5 text-xs font-black text-purple-200 transition-colors hover:bg-purple-500/15"
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -245,48 +244,18 @@ export default function CrmHome() {
           <CrmProcessNotesPanel
             variant="stack"
             entries={filteredNotes}
-            onAdd={() => setNoteModal(emptyNoteForm())}
+            onAdd={() => navigate('/crm/not-yeni')}
             onEdit={handleProcessEdit}
             onDelete={handleProcessDelete}
           />
         </AppPagePanel>
       </div>
-
-      {appointmentModal && (
-        <AppointmentFormModal
-          initial={appointmentModal}
-          onClose={() => setAppointmentModal(null)}
-          onSubmit={(form) => {
-            upsertAppointment(form)
-            refresh()
-            setAppointmentModal(null)
-          }}
-        />
-      )}
-
-      {taskModal && (
-        <TaskFormModal
-          initial={taskModal}
-          onClose={() => setTaskModal(null)}
-          onSubmit={(form) => {
-            upsertTask(form)
-            refresh()
-            setTaskModal(null)
-          }}
-        />
-      )}
-
-      {noteModal && (
-        <NoteFormModal
-          initial={noteModal}
-          onClose={() => setNoteModal(null)}
-          onSubmit={(form) => {
-            upsertAgendaNote(form)
-            refresh()
-            setNoteModal(null)
-          }}
-        />
-      )}
+      <ActivityArchivePanel
+        title="CRM Arşiv ve İşlem Geçmişi"
+        modules={['crm']}
+        onRestore={handleRestoreArchiveEntry}
+        emptyMessage="Henüz CRM arşiv veya silme kaydı yok."
+      />
     </AppPageShell>
   )
 }

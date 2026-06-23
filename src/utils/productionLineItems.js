@@ -76,6 +76,7 @@ export function createQuantityRow(defaults = {}) {
     producedUpdatedAt: timestamps.producedUpdatedAt,
     deliveredUpdatedAt: timestamps.deliveredUpdatedAt,
     stageUpdatedAt: defaults?.stageUpdatedAt || '',
+    productionCode: defaults?.productionCode || '',
     invoiceNo: defaults?.invoiceNo || '',
     invoiceAt: defaults?.invoiceAt || '',
     depoItemId: defaults?.depoItemId || '',

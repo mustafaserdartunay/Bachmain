@@ -15,13 +15,21 @@ import {
   resolveProductionClosedStatus,
   withDerivedQuantityRowFulfillmentStatus,
 } from './productionQuantityMetrics'
-import { removeDepoItemByProductionLine, removeDepoItemByProductionRow, removeDepoItemById, createDepoItemFromRow, addDepoItem, getDepoItemByProductionRow, syncDepoFromProduction } from './depoStore'
+import { removeDepoItemByProductionLine, removeDepoItemByProductionRow, removeDepoItemById, createDepoItemFromRow, addDepoItem, getDepoItemByProductionRow, syncDepoFromProduction, updateDepoItem } from './depoStore'
 import { findCustomerProfileByReference } from '../data/customerProfiles'
 import { buildProductionInvoiceDraft, saveProductionInvoiceDraft } from './productionInvoiceDraft'
 import { getProductionJobById, updateProductionJob, updateProductionLineItem } from './productionStore'
 
 function createActivityId() {
   return `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+}
+
+function assignProductionRowCodes(rows = [], jobId = '') {
+  if (!jobId) return rows
+  return rows.map((row, index) => ({
+    ...row,
+    productionCode: `${jobId}-${index + 1}`,
+  }))
 }
 
 export function createProductionLineItemActions({
@@ -167,12 +175,12 @@ export function createProductionLineItemActions({
       currentStageId: firstStage?.id || lineItem.currentStageId || '',
       stageUpdatedAt: now,
     })
-    const nextRows = [
+    const nextRows = assignProductionRowCodes([
       ...rows.slice(0, resolvedIndex),
       nextSource,
       newRow,
       ...rows.slice(resolvedIndex + 1),
-    ]
+    ], job.id)
 
     const reopenPatch = lineItem.productionClosed
       ? {
@@ -220,9 +228,17 @@ export function createProductionLineItemActions({
     if (!job || lineItem.productionClosed) return null
     const rows = getLineQuantityRows(lineItem)
     const rowIndex = rows.findIndex((entry) => entry.id === rowId)
-    const row = rowIndex >= 0 ? rows[rowIndex] : null
+    const codedRows = assignProductionRowCodes(rows, job.id)
+    const row = rowIndex >= 0 ? codedRows[rowIndex] : null
     if (!row) return null
-    if (row.depoItemId) return { depoItemId: row.depoItemId }
+    if (row.depoItemId) {
+      const existing = getDepoItemByProductionRow(job.id, lineItem.id, rowId)
+      if (existing && row.productionCode && existing.productionCode !== row.productionCode) {
+        updateDepoItem(existing.id, { productionCode: row.productionCode })
+      }
+      patchLineQuantityRows(lineItem, codedRows)
+      return { depoItemId: row.depoItemId }
+    }
 
     const depoQuantity = resolveDepoSendQuantity(row, rowIndex, lineItem, orderLineQuantity)
     if (depoQuantity <= 0) {
@@ -233,7 +249,10 @@ export function createProductionLineItemActions({
     const existing = getDepoItemByProductionRow(job.id, lineItem.id, rowId)
     if (existing) {
       const syncedRow = { ...row, depoItemId: existing.id, depoSentAt: existing.depoSentAt || existing.createdAt }
-      patchLineQuantityRows(lineItem, rows.map((entry) => (entry.id === rowId ? syncedRow : entry)))
+      if (row.productionCode && existing.productionCode !== row.productionCode) {
+        updateDepoItem(existing.id, { productionCode: row.productionCode })
+      }
+      patchLineQuantityRows(lineItem, codedRows.map((entry) => (entry.id === rowId ? syncedRow : entry)))
       return { depoItemId: existing.id }
     }
 
@@ -241,7 +260,7 @@ export function createProductionLineItemActions({
     addDepoItem(depoItem)
     const now = createQuantityRowTimestamp()
     const nextRow = { ...row, depoItemId: depoItem.id, depoSentAt: now }
-    patchLineQuantityRows(lineItem, rows.map((entry) => (entry.id === rowId ? nextRow : entry)))
+    patchLineQuantityRows(lineItem, codedRows.map((entry) => (entry.id === rowId ? nextRow : entry)))
     appendActivity(`"${lineItem.product}" · ${formatQty(depoQuantity)} adet depoya gönderildi.`)
     return { depoItemId: depoItem.id }
   }

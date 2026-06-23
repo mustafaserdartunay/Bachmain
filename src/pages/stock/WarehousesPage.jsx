@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
   AlertTriangle,
   ArrowLeftRight,
@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom'
 import NumericInput from '../../components/Products/NumericInput'
 import { formatTL } from '../../utils/productPricing'
 import { initialWarehouses, warehouseMovements, warehouseStatuses } from '../../data/warehousesData'
+import { getWarehouses, saveWarehouses } from '../../utils/stockStore'
 import { BTN_PRIMARY, BTN_SUCCESS } from '../../utils/buttonStyles'
 
 const statusClasses = {
@@ -262,14 +263,34 @@ function WarehouseForm({ draft, onChange, onSave, onCancel, isNew }) {
 }
 
 export default function WarehousesPage() {
-  const [warehouses, setWarehouses] = useState(initialWarehouses)
-  const [selectedId, setSelectedId] = useState(initialWarehouses[0]?.id)
+  const [warehouses, setWarehouses] = useState(() => {
+    const stored = getWarehouses()
+    return stored.length ? stored : initialWarehouses
+  })
+  const [selectedId, setSelectedId] = useState(() => getWarehouses()[0]?.id || initialWarehouses[0]?.id)
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('Tümü')
   const [showForm, setShowForm] = useState(false)
   const [isNew, setIsNew] = useState(false)
   const [draft, setDraft] = useState(emptyWarehouse())
   const [toast, setToast] = useState('')
+
+  function persistWarehouses(next) {
+    setWarehouses(next)
+    saveWarehouses(next)
+  }
+
+  useEffect(() => {
+    function syncWarehouses() {
+      const next = getWarehouses()
+      if (next.length) {
+        setWarehouses(next)
+        setSelectedId((current) => (next.some((item) => item.id === current) ? current : next[0]?.id))
+      }
+    }
+    window.addEventListener('erlenbox:stock-updated', syncWarehouses)
+    return () => window.removeEventListener('erlenbox:stock-updated', syncWarehouses)
+  }, [])
 
   const selected = warehouses.find((warehouse) => warehouse.id === selectedId) || warehouses[0]
 
@@ -326,11 +347,11 @@ export default function WarehousesPage() {
     if (isNew) {
       const id = `WH-${String(warehouses.length + 1).padStart(3, '0')}`
       const next = { ...draft, id }
-      setWarehouses([next, ...warehouses])
+      persistWarehouses([next, ...warehouses])
       setSelectedId(id)
       showToast('Depo oluşturuldu')
     } else {
-      setWarehouses(warehouses.map((warehouse) => (warehouse.id === draft.id ? draft : warehouse)))
+      persistWarehouses(warehouses.map((warehouse) => (warehouse.id === draft.id ? draft : warehouse)))
       setSelectedId(draft.id)
       showToast('Depo kaydedildi')
     }
@@ -344,7 +365,7 @@ export default function WarehousesPage() {
     }
     if (!window.confirm('Bu depoyu silmek istediğinize emin misiniz?')) return
     const next = warehouses.filter((warehouse) => warehouse.id !== id)
-    setWarehouses(next)
+    persistWarehouses(next)
     setSelectedId(next[0]?.id)
     showToast('Depo silindi')
   }

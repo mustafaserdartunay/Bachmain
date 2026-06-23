@@ -1,10 +1,4 @@
-export const productionStageOptions = [
-  { label: 'Kesim', color: 'bg-blue-500' },
-  { label: 'Baskı', color: 'bg-purple-500' },
-  { label: 'Montaj', color: 'bg-orange-500' },
-  { label: 'Kalite Kontrol', color: 'bg-cyan-500' },
-  { label: 'Sevkiyat', color: 'bg-emerald-500' },
-]
+export const productionStageOptions = []
 
 export function productionStageId(label) {
   return `prod-${String(label || '')
@@ -18,9 +12,4 @@ export function productionStageId(label) {
     .replace(/[^a-z0-9]+/g, '-')}`
 }
 
-export const defaultProductionStages = productionStageOptions.map((option) => ({
-  id: productionStageId(option.label),
-  label: option.label,
-  color: option.color,
-  note: `${option.label} aşaması`,
-}))
+export const defaultProductionStages = []

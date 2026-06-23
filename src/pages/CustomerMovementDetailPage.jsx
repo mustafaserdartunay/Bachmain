@@ -12,6 +12,7 @@ import { appendActivity } from '../utils/customerActivity'
 import {
   formatCollectionDatePreserveTime,
   formatOpeningDisplayDate,
+  movementAccountOptions,
   movementToForm,
   openingBalanceToForm,
   patchMovementForm,
@@ -24,6 +25,7 @@ import {
   formatTreasuryCurrency,
   getTreasuryAccounts,
   getTreasuryMovementById,
+  resolveTreasuryAccountForMovement,
   syncCustomerOpeningBalanceMovement,
   updateTreasuryMovement,
 } from '../utils/treasuryStore'
@@ -141,16 +143,21 @@ export default function CustomerMovementDetailPage() {
     return () => window.removeEventListener('bach:option-lists-updated', refreshOptionLists)
   }, [])
 
+  const movementAccounts = useMemo(
+    () => movementAccountOptions(accounts, optionLists),
+    [accounts, optionLists],
+  )
+
   function updateForm(field, value) {
     if (isOpening) {
       setForm((current) => ({ ...current, [field]: value }))
       return
     }
-    patchMovementForm(setForm, field, value, optionLists)
-  }
-
-  function resolveAccountId(accountName) {
-    return accounts.find((account) => account.name === accountName)?.id || accounts[0]?.id
+    patchMovementForm(setForm, field, value, {
+      cashAccount: movementAccounts.cash,
+      bankAccount: movementAccounts.bank,
+      chequeAccount: movementAccounts.cheque,
+    })
   }
 
   function handleOpeningSave(event) {
@@ -197,10 +204,11 @@ export default function CustomerMovementDetailPage() {
       return
     }
 
+    const account = resolveTreasuryAccountForMovement(form.method, form.accountName, accounts)
     const updated = updateTreasuryMovement(movement.id, {
       method: form.method,
-      accountId: resolveAccountId(form.accountName),
-      accountName: form.accountName,
+      accountId: account?.id || movement.accountId,
+      accountName: account?.name || form.accountName,
       amount,
       date: formatCollectionDatePreserveTime(form.transactionDate, movement.date),
       description: form.description || `${customer.company} ${isPayment ? 'ödemesi' : 'tahsilatı'}`,
@@ -368,10 +376,12 @@ export default function CustomerMovementDetailPage() {
                 setForm(movementToForm(movement))
                 setIsEditing(false)
               }}
-              cashAccountOptions={optionLists.cashAccount}
-              bankAccountOptions={optionLists.bankAccount}
+              cashAccountOptions={movementAccounts.cash}
+              bankAccountOptions={movementAccounts.bank}
+              chequeAccountOptions={movementAccounts.cheque}
               onCashOptionsChange={(next) => updateOptionList('cashAccount', next)}
               onBankOptionsChange={(next) => updateOptionList('bankAccount', next)}
+              onChequeOptionsChange={(next) => updateOptionList('chequeAccount', next)}
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
               title="Hareket Düzenle"

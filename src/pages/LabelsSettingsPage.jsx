@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Tags } from 'lucide-react'
+import { Workflow } from 'lucide-react'
 import OptionListPanel from '../components/Settings/OptionListPanel'
 import CrmProcessTemplatesSettingsPanel from '../components/Settings/CrmProcessTemplatesSettingsPanel'
+import NoteProcessTemplatesSettingsPanel from '../components/Settings/NoteProcessTemplatesSettingsPanel'
 import WorkflowStagesSettingsPanel from '../components/Settings/WorkflowStagesSettingsPanel'
+import SalesRepProcessSettingsPanel from '../components/Settings/SalesRepProcessSettingsPanel'
+import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
 import { readOptionLists, saveOptionList } from '../utils/customerMeta'
+import { appendActivityEntry } from '../utils/activityArchiveStore'
 
 export default function LabelsSettingsPage() {
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
@@ -17,8 +21,37 @@ export default function LabelsSettingsPage() {
   }, [])
 
   function updateList(field, nextOptions) {
+    const currentOptions = optionLists[field] || []
+    currentOptions
+      .filter((option) => !nextOptions.some((nextOption) => nextOption.id === option.id || nextOption.label === option.label))
+      .forEach((option) => {
+        appendActivityEntry({
+          module: 'workflow',
+          action: 'delete',
+          entityType: 'option',
+          entityId: option.id || option.label,
+          entityLabel: option.label,
+          description: `${option.label} seçeneği silindi.`,
+          snapshot: { field, option },
+          undo: { type: 'settings.restoreOption' },
+        })
+      })
     setOptionLists((current) => ({ ...current, [field]: nextOptions }))
     saveOptionList(field, nextOptions)
+  }
+
+  function handleRestoreArchiveEntry(entry) {
+    const field = entry.snapshot?.field
+    const option = entry.snapshot?.option
+    if (!field || !option) return false
+    const current = readOptionLists()
+    const list = current[field] || []
+    if (!list.some((item) => item.id === option.id || item.label === option.label)) {
+      const next = [...list, option]
+      saveOptionList(field, next)
+      setOptionLists((state) => ({ ...state, [field]: next }))
+    }
+    return true
   }
 
   return (
@@ -26,12 +59,12 @@ export default function LabelsSettingsPage() {
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 text-blue-300">
-            <Tags className="h-5 w-5" />
+            <Workflow className="h-5 w-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Etiketler</h1>
+            <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Süreçler Yönetimi</h1>
             <p className="mt-1 text-xs font-semibold text-gray-500">
-              Süreç, durum, tip, puantaj, etiket ve kategori listelerini merkezi olarak yönetin.
+              Süreç, durum, tip, puantaj ve kategori listelerini merkezi olarak yönetin.
             </p>
           </div>
         </div>
@@ -40,6 +73,10 @@ export default function LabelsSettingsPage() {
       <WorkflowStagesSettingsPanel />
 
       <CrmProcessTemplatesSettingsPanel />
+
+      <NoteProcessTemplatesSettingsPanel />
+
+      <SalesRepProcessSettingsPanel />
 
       <section className="card space-y-4">
         <div>
@@ -82,7 +119,7 @@ export default function LabelsSettingsPage() {
 
       <section className="card space-y-4">
         <div>
-          <h2 className="text-base font-black text-white">Müşteri Meta</h2>
+          <h2 className="text-base font-black text-white">Müşteri Süreçleri</h2>
           <p className="mt-1 text-xs font-semibold text-gray-500">Müşteri tipi ve puantaj değerlendirmesi.</p>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
@@ -109,22 +146,9 @@ export default function LabelsSettingsPage() {
         </div>
       </section>
 
-      <section className="card">
-        <OptionListPanel
-          title="Etiketler"
-          description="Teklif ve ürünlerde kullanılabilecek etiket önerileri."
-          options={optionLists.tags}
-          onChange={(next) => updateList('tags', next)}
-          placeholder="Yeni etiket adı..."
-          activeLabel="Aktif Etiket"
-          countSuffix="etiket tanımlı"
-          emptyMessage="Henüz etiket eklenmedi."
-        />
-      </section>
-
       <section className="card space-y-4">
         <div>
-          <h2 className="text-base font-black text-white">Kategoriler</h2>
+          <h2 className="text-base font-black text-white">Kategori Süreçleri</h2>
           <p className="mt-1 text-xs font-semibold text-gray-500">Müşteri sektör kategorileri ve stok ürün kategorileri.</p>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
@@ -148,6 +172,49 @@ export default function LabelsSettingsPage() {
           />
         </div>
       </section>
+
+      <section className="card space-y-4">
+        <div>
+          <h2 className="text-base font-black text-white">Kasa Oluşturma Süreçleri</h2>
+          <p className="mt-1 text-xs font-semibold text-gray-500">Kasa, banka ve çek kasası oluşturma seçenekleri.</p>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <OptionListPanel
+            title="Kasa Türleri"
+            description="Kasa oluşturma formundaki tür seçenekleri."
+            options={optionLists.account}
+            onChange={(next) => updateList('account', next)}
+            placeholder="Yeni kasa türü..."
+            activeLabel="Aktif Kasa Türü"
+            countSuffix="tür tanımlı"
+            emptyMessage="Henüz kasa türü eklenmedi."
+          />
+        </div>
+      </section>
+
+      <section className="card space-y-4">
+        <div>
+          <h2 className="text-base font-black text-white">Etiketler</h2>
+          <p className="mt-1 text-xs font-semibold text-gray-500">Teklif ve ürünlerde kullanılabilecek etiket önerileri.</p>
+        </div>
+        <OptionListPanel
+          title="Etiketler"
+          description="Teklif ve ürünlerde kullanılabilecek etiket önerileri."
+          options={optionLists.tags}
+          onChange={(next) => updateList('tags', next)}
+          placeholder="Yeni etiket adı..."
+          activeLabel="Aktif Etiket"
+          countSuffix="etiket tanımlı"
+          emptyMessage="Henüz etiket eklenmedi."
+        />
+      </section>
+
+      <ActivityArchivePanel
+        title="Süreçler Arşiv ve İşlem Geçmişi"
+        modules={['workflow']}
+        onRestore={handleRestoreArchiveEntry}
+        emptyMessage="Henüz süreç veya seçenek silme kaydı yok."
+      />
     </div>
   )
 }

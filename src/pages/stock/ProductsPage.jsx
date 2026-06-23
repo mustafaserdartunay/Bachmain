@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react'
-import { ChevronRight, Plus, ArrowLeft, Trash2, Pencil, CheckCircle2, Send, ChevronDown } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { ChevronRight, Plus, ArrowLeft, Trash2, Pencil, CheckCircle2, Send, ChevronDown, Package, Boxes, AlertTriangle, WalletCards } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import ProductsTable from '../../components/Products/ProductsTable'
 import ProductForm from '../../components/Products/ProductForm'
 import { emptyProduct, sampleProducts } from '../../data/productsData'
 import { DeleteTrashButton } from '../../components/Common/ListDeleteConfirmPanel'
-import { BTN_PRIMARY, BTN_SUCCESS } from '../../utils/buttonStyles'
+import SummaryMetrics from '../../components/Common/SummaryMetrics'
+import ActivityArchivePanel from '../../components/Common/ActivityArchivePanel'
+import { appendActivityEntry } from '../../utils/activityArchiveStore'
+import { BTN_SUCCESS } from '../../utils/buttonStyles'
+import { formatTL, getProductPricing } from '../../utils/productPricing'
 
 const PRODUCT_STORAGE_KEY = 'erlenbox-products'
 const PRODUCT_DB_NAME = 'erlenbox-product-storage'
@@ -134,7 +138,35 @@ function loadProducts() {
   }
 }
 
+function createNextProductId(products = []) {
+  const usedIds = new Set(products.map((product) => product.id).filter(Boolean))
+  let index = products.length + 1
+  let nextId = `PRD-${String(index).padStart(3, '0')}`
+  while (usedIds.has(nextId)) {
+    index += 1
+    nextId = `PRD-${String(index).padStart(3, '0')}`
+  }
+  return nextId
+}
+
+function Panel({ title, description, children, action }) {
+  return (
+    <section className="card">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-bold text-white">{title}</h2>
+          {description && <p className="mt-1 text-xs text-gray-500">{description}</p>}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  )
+}
+
 export default function ProductsPage() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [products, setProducts] = useState(loadProducts)
   const [storageReady, setStorageReady] = useState(false)
   const [view, setView] = useState('list')
@@ -147,6 +179,30 @@ export default function ProductsPage() {
 
   const selectedProduct = products.find((p) => p.id === selectedId)
   const isNew = view === 'create'
+
+  const productSummary = useMemo(() => {
+    return products.reduce((summary, product) => {
+      const stock = product.stockTracking ? Number(product.initialStock) || 0 : 0
+      const pricing = getProductPricing(product)
+      const isCritical = product.stockTracking
+        && Number(product.criticalStock) > 0
+        && Number(product.initialStock) <= Number(product.criticalStock)
+
+      return {
+        stockTracked: summary.stockTracked + (product.stockTracking ? 1 : 0),
+        totalStock: summary.totalStock + stock,
+        critical: summary.critical + (isCritical ? 1 : 0),
+        salesIncl: summary.salesIncl + stock * (Number(pricing.finalSalesPriceIncl) || 0),
+        cost: summary.cost + stock * (Number(product.costPrice) || 0),
+      }
+    }, {
+      stockTracked: 0,
+      totalStock: 0,
+      critical: 0,
+      salesIncl: 0,
+      cost: 0,
+    })
+  }, [products])
 
   useEffect(() => {
     let cancelled = false
@@ -206,6 +262,14 @@ export default function ProductsPage() {
     setView('create')
   }
 
+  useEffect(() => {
+    if (searchParams.get('yeni') !== '1') return
+    setSelectedId(null)
+    setDraft(cloneProduct(emptyProduct))
+    setView('create')
+    navigate('/stok/urunler', { replace: true })
+  }, [searchParams, navigate])
+
   function handleEdit(id) {
     const product = products.find((p) => p.id === id)
     if (product) {
@@ -239,7 +303,7 @@ export default function ProductsPage() {
     }
 
     if (isNew) {
-      const newId = `PRD-${String(products.length + 1).padStart(3, '0')}`
+      const newId = createNextProductId(products)
       const newProduct = { ...productToSave, id: newId }
       setProducts((prev) => [newProduct, ...prev])
       showToast('Ürün kaydedildi')
@@ -271,8 +335,41 @@ export default function ProductsPage() {
     persistProduct({ createAnother: true })
   }
 
+  function handleCopyAndCreate() {
+    if (!draft.name.trim()) {
+      alert('Ürün adı zorunludur.')
+      return
+    }
+
+    const newId = createNextProductId(products)
+    const copiedProduct = {
+      ...cloneProduct(draft),
+      id: newId,
+    }
+
+    setProducts((prev) => [copiedProduct, ...prev])
+    setSelectedId(newId)
+    setDraft(cloneProduct(copiedProduct))
+    setView('edit')
+    setSaveMenuOpen(false)
+    showToast('Ürün kopyalandı ve açıldı')
+  }
+
   function handleDelete() {
     if (!selectedId) return
+    const product = products.find((item) => item.id === selectedId)
+    if (product) {
+      appendActivityEntry({
+        module: 'products',
+        action: 'delete',
+        entityType: 'product',
+        entityId: product.id,
+        entityLabel: product.name || product.stockCode || 'Ürün',
+        description: `${product.name || 'Ürün'} silindi. Geri alınabilir kayıt olarak saklandı.`,
+        snapshot: product,
+        undo: { type: 'product.restoreDeleted' },
+      })
+    }
     setProducts((prev) => prev.filter((p) => p.id !== selectedId))
     showToast('Ürün silindi')
     setPendingProductDelete(false)
@@ -280,6 +377,19 @@ export default function ProductsPage() {
   }
 
   function handleDeleteFromList(id) {
+    const product = products.find((item) => item.id === id)
+    if (product) {
+      appendActivityEntry({
+        module: 'products',
+        action: 'delete',
+        entityType: 'product',
+        entityId: product.id,
+        entityLabel: product.name || product.stockCode || 'Ürün',
+        description: `${product.name || 'Ürün'} silindi. Geri alınabilir kayıt olarak saklandı.`,
+        snapshot: product,
+        undo: { type: 'product.restoreDeleted' },
+      })
+    }
     setProducts((prev) => prev.filter((item) => item.id !== id))
     if (selectedId === id) {
       setSelectedId(null)
@@ -296,48 +406,36 @@ export default function ProductsPage() {
     }
   }
 
+  function handleRestoreArchiveEntry(entry) {
+    const product = entry.snapshot
+    if (!product?.id) return false
+    setProducts((prev) => (
+      prev.some((item) => item.id === product.id)
+        ? prev
+        : [cloneProduct(product), ...prev]
+    ))
+    showToast('Ürün geri alındı')
+    return true
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
-            <Link to="/" className="hover:text-gray-300 transition-colors">Dashboard</Link>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-gray-400">Stok Yönetimi</span>
-            <ChevronRight className="w-3 h-3" />
-            {view === 'list' ? (
-              <span className="text-gray-300">Hizmet ve Ürünler</span>
-            ) : (
-              <>
-                <button onClick={handleBack} className="hover:text-gray-300 transition-colors">
-                  Hizmet ve Ürünler
-                </button>
-                <ChevronRight className="w-3 h-3" />
-                <span className="text-gray-300">{isNew ? 'Yeni Ürün' : 'Düzenle'}</span>
-              </>
-            )}
-          </div>
-          <h1 className="text-xl font-bold text-white">Hizmet ve Ürünler</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {view === 'list'
-              ? 'Tüm ürün ve hizmet tanımlarını görüntüleyin'
-              : isNew
-                ? 'Yeni ürün veya hizmet tanımı oluşturun'
-                : `${draft.name} — düzenleme`}
-          </p>
+    <div className="space-y-5">
+      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
+        <div className="mx-auto max-w-2xl">
+          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Hizmet ve Ürünler</h1>
         </div>
 
         {view === 'list' ? (
-          <div className="flex gap-2">
+          <div className="absolute right-5 top-1/2 flex -translate-y-1/2 gap-2">
             <button
               onClick={handleNew}
-              className={`${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}
+              className="btn-primary flex items-center gap-1.5 px-4 py-2.5 text-sm"
             >
-              <Plus className="w-4 h-4" /> Yeni
+              <Plus className="h-4 w-4" /> Yeni ürün oluştur
             </button>
           </div>
         ) : (
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="absolute right-5 top-1/2 flex -translate-y-1/2 flex-wrap justify-end gap-2">
             <button
               onClick={handleBack}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm text-gray-400 border border-dark-500/50 hover:bg-dark-700 hover:text-gray-200 transition-colors"
@@ -401,21 +499,53 @@ export default function ProductsPage() {
                   >
                     Kaydet ve yeni ürün oluştur
                   </button>
+                  <button
+                    onClick={handleCopyAndCreate}
+                    className="block w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-dark-700"
+                  >
+                    Kopyala ve Oluştur
+                  </button>
                 </div>
               )}
             </div>
           </div>
         )}
-      </div>
+      </section>
+
+      {view === 'list' && (
+        <SummaryMetrics
+          columns={5}
+          items={[
+            { title: 'Toplam Kayıt', value: products.length, icon: Package },
+            { title: 'Stok Takipli', value: productSummary.stockTracked, icon: CheckCircle2, tone: 'blue', valueTone: 'blue' },
+            { title: 'Toplam Stok', value: productSummary.totalStock.toLocaleString('tr-TR'), icon: Boxes, tone: 'emerald', valueTone: 'emerald' },
+            { title: 'Kritik Ürün', value: productSummary.critical, icon: AlertTriangle, tone: 'red', valueTone: 'red' },
+            { title: 'Stok Toplam Maliyeti', value: formatTL(productSummary.cost), icon: WalletCards, tone: 'purple', valueTone: 'red' },
+          ]}
+        />
+      )}
 
       {view === 'list' ? (
-        <ProductsTable
-          products={products}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onEdit={handleEdit}
-          onDelete={handleDeleteFromList}
-        />
+        <>
+          <Panel
+            title="Detaylı Ürün ve Hizmet Listesi"
+            action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{products.length} kayıt</span>}
+          >
+            <ProductsTable
+              products={products}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onEdit={handleEdit}
+              onDelete={handleDeleteFromList}
+            />
+          </Panel>
+          <ActivityArchivePanel
+            title="Arşiv ve İşlem Geçmişi"
+            modules={['products']}
+            onRestore={handleRestoreArchiveEntry}
+            emptyMessage="Henüz ürün arşiv veya silme kaydı yok."
+          />
+        </>
       ) : (
         <ProductForm
           product={draft}

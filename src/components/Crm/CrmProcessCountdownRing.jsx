@@ -6,27 +6,26 @@ const RADIUS = (SIZE - STROKE) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 function formatRemainingLabel(ms) {
-  if (ms <= 0) return { primary: '00:00', secondary: 'bitti' }
+  if (ms <= 0) return { primary: '0g 0s', secondary: 'gecikti' }
 
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000))
   const days = Math.floor(totalSeconds / 86400)
   const hours = Math.floor((totalSeconds % 86400) / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
 
-  if (days > 0) {
-    return { primary: `${days}g ${hours}s`, secondary: 'kaldı' }
-  }
-  if (hours > 0) {
-    return {
-      primary: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`,
-      secondary: 'saat',
-    }
-  }
   return {
-    primary: `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
-    secondary: 'dk:sn',
+    primary: `${days}g ${hours}s`,
+    secondary: days === 0 && hours === 0 ? `${minutes}dk kaldı` : 'kaldı',
   }
+}
+
+function resolveCountdownTone({ completed, isOverdue, elapsedRatio }) {
+  if (completed) return 'completed'
+  if (isOverdue) return 'overdue'
+  if (elapsedRatio >= 0.75) return 'critical'
+  if (elapsedRatio >= 0.5) return 'danger'
+  if (elapsedRatio >= 0.25) return 'warning'
+  return 'safe'
 }
 
 export default function CrmProcessCountdownRing({ window, completed = false }) {
@@ -41,12 +40,15 @@ export default function CrmProcessCountdownRing({ window, completed = false }) {
     const total = end.getTime() - start.getTime()
     const remaining = end.getTime() - now
     const remainingRatio = Math.min(1, Math.max(0, remaining / total))
+    const elapsedRatio = Math.min(1, Math.max(0, (now - start.getTime()) / total))
 
     if (completed) {
       return {
         primary: 'Bitti',
         secondary: '✓',
         remainingRatio: 1,
+        elapsedRatio: 0,
+        isOverdue: false,
         tickMs: 60000,
       }
     }
@@ -57,6 +59,8 @@ export default function CrmProcessCountdownRing({ window, completed = false }) {
         primary,
         secondary: 'başlayacak',
         remainingRatio: 1,
+        elapsedRatio: 0,
+        isOverdue: false,
         tickMs: remaining < 3600000 ? 1000 : 30000,
       }
     }
@@ -66,6 +70,8 @@ export default function CrmProcessCountdownRing({ window, completed = false }) {
         primary: 'Gecikti',
         secondary: '',
         remainingRatio: 1,
+        elapsedRatio: 1,
+        isOverdue: true,
         tickMs: 60000,
       }
     }
@@ -78,6 +84,8 @@ export default function CrmProcessCountdownRing({ window, completed = false }) {
       primary,
       secondary,
       remainingRatio,
+      elapsedRatio,
+      isOverdue: false,
       tickMs,
     }
   }, [window, now, completed])
@@ -88,12 +96,15 @@ export default function CrmProcessCountdownRing({ window, completed = false }) {
   }, [state.tickMs])
 
   const dashOffset = CIRCUMFERENCE * (1 - state.remainingRatio)
-  const isOverdue = state.primary === 'Gecikti'
+  const tone = resolveCountdownTone({
+    completed,
+    isOverdue: state.isOverdue,
+    elapsedRatio: state.elapsedRatio || 0,
+  })
   const ringClassName = [
     'crm-countdown-ring',
     'relative flex h-[72px] w-[72px] shrink-0 items-center justify-center',
-    completed ? 'crm-countdown-ring--completed' : '',
-    isOverdue ? 'crm-countdown-ring--overdue' : '',
+    `crm-countdown-ring--${tone}`,
   ].filter(Boolean).join(' ')
 
   return (

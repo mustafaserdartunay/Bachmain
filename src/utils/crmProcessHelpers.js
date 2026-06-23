@@ -36,9 +36,9 @@ function normalizeCrmDateTimeLabel(value) {
 }
 
 function formatScheduleAt(record) {
-  const date = record?.date || record?.dueDate
+  const date = record?.dateFrom || record?.date || record?.dueDate
   if (!date) return ''
-  const time = record?.startTime || record?.time || ''
+  const time = record?.timeFrom || record?.startTime || record?.time || ''
   const dayLabel = new Date(`${date}T12:00:00`).toLocaleDateString('tr-TR', {
     day: 'numeric',
     month: 'long',
@@ -235,10 +235,10 @@ function formatCrmIsoDate(value) {
 }
 
 function formatCrmScheduleEnd(record) {
-  const date = record?.date || record?.dueDate
+  const date = record?.dateTo || record?.dateFrom || record?.date || record?.dueDate
   if (!date) return ''
   const dayLabel = formatCrmIsoDate(date)
-  const time = record?.endTime || record?.startTime || ''
+  const time = record?.timeTo || record?.endTime || ''
   return time ? `${dayLabel}${CRM_DATETIME_SEPARATOR}${time}` : dayLabel
 }
 
@@ -252,9 +252,9 @@ function parseTurkishDateTime(value) {
 }
 
 function parseScheduleDateTime(record) {
-  const date = record?.date || record?.dueDate
+  const date = record?.dateTo || record?.dateFrom || record?.date || record?.dueDate
   if (!date) return null
-  const time = record?.endTime || record?.startTime || '23:59'
+  const time = record?.timeTo || record?.endTime || '23:59'
   const [hour = '23', minute = '59'] = time.split(':')
   return new Date(`${date}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`)
 }
@@ -263,9 +263,11 @@ function parseScheduleDateTime(record) {
 export function getCrmProcessStartDate(record, kind = 'appointment') {
   const fromLabel = parseTurkishDateTime(getCrmProcessStartLabel(record, kind))
   if (fromLabel) return fromLabel
-  if (record?.date && record?.startTime) {
-    const [hour, minute = '0'] = record.startTime.split(':')
-    return new Date(`${record.date}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`)
+  const date = record?.dateFrom || record?.date || record?.dueDate
+  const time = record?.timeFrom || record?.startTime || record?.time
+  if (date && time) {
+    const [hour, minute = '0'] = time.split(':')
+    return new Date(`${date}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`)
   }
   if (record?.createdAt) return new Date(`${record.createdAt}T00:00:00`)
   return null
@@ -381,6 +383,13 @@ export function applyTaskStatusToProcessTrack(record) {
   }
 }
 
+export function getCrmRecordCreatedSortValue(record, fallback = '') {
+  const createdDate = record?.createdAt || fallback || ''
+  const timestampMatch = String(record?.id || '').match(/-(\d{10,})-/)
+  const timestamp = timestampMatch ? Number(timestampMatch[1]) : 0
+  return `${createdDate}-${String(timestamp).padStart(16, '0')}`
+}
+
 export function buildCrmProcessRecords(tasks = [], appointments = []) {
   const records = [
     ...appointments
@@ -402,8 +411,8 @@ export function buildCrmProcessRecords(tasks = [], appointments = []) {
   ]
 
   return records.sort((left, right) => {
-    const leftCreated = left.record.createdAt || left.sortKey || ''
-    const rightCreated = right.record.createdAt || right.sortKey || ''
+    const leftCreated = getCrmRecordCreatedSortValue(left.record, left.sortKey)
+    const rightCreated = getCrmRecordCreatedSortValue(right.record, right.sortKey)
     const createdCompare = rightCreated.localeCompare(leftCreated)
     if (createdCompare !== 0) return createdCompare
     const leftTerminal = getCrmActiveProcessStep(left.record, left.kind)?.isTerminal

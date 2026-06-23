@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import FieldSalesMap from '../components/FieldSales/FieldSalesMap'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
+import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import { getCustomerProfiles } from '../data/customerProfiles'
 import { readCompanySettings } from '../utils/companySettings'
@@ -33,6 +34,7 @@ import {
   getRepSchedule,
   loadFieldSalesTasks,
   removeFieldSalesTask,
+  restoreFieldSalesTask,
   saveLastRoute,
   toggleRepDayCustomer,
   updateFieldSalesTask,
@@ -75,7 +77,7 @@ function filterCustomersByCategory(customerList, meta, categoryFilter) {
 export default function FieldSalesPage() {
   const [customers, setCustomers] = useState(() => getCustomerProfiles())
   const [meta, setMeta] = useState(() => readCustomerMeta())
-  const [reps] = useState(() => getFieldSalesReps())
+  const [reps, setReps] = useState(() => getFieldSalesReps())
   const [selectedRep, setSelectedRep] = useState(() => getFieldSalesReps()[0]?.label || '')
   const [selectedDay, setSelectedDay] = useState('monday')
   const [planKind, setPlanKind] = useState('representative')
@@ -103,8 +105,14 @@ export default function FieldSalesPage() {
     function refresh() {
       setCustomers(getCustomerProfiles())
       setMeta(readCustomerMeta())
-      setTasks(loadFieldSalesTasks(selectedRep))
-      setSchedule(getRepSchedule(selectedRep))
+      const nextReps = getFieldSalesReps()
+      setReps(nextReps)
+      const nextRep = nextReps.some((rep) => rep.label === selectedRep)
+        ? selectedRep
+        : (nextReps[0]?.label || '')
+      setSelectedRep(nextRep)
+      setTasks(loadFieldSalesTasks(nextRep))
+      setSchedule(getRepSchedule(nextRep))
     }
     function refreshOptions() {
       setCategoryOptions(readOptionLists().category)
@@ -119,11 +127,13 @@ export default function FieldSalesPage() {
     window.addEventListener('bach:field-sales-updated', refresh)
     window.addEventListener('bach:option-lists-updated', refreshOptions)
     window.addEventListener('bach:option-lists-updated', refresh)
+    window.addEventListener('bach:personnel-updated', refresh)
     window.addEventListener('erlenbox:company-settings-updated', refreshCompany)
     return () => {
       window.removeEventListener('bach:field-sales-updated', refresh)
       window.removeEventListener('bach:option-lists-updated', refreshOptions)
       window.removeEventListener('bach:option-lists-updated', refresh)
+      window.removeEventListener('bach:personnel-updated', refresh)
       window.removeEventListener('erlenbox:company-settings-updated', refreshCompany)
     }
   }, [selectedRep, locationMode])
@@ -329,6 +339,12 @@ export default function FieldSalesPage() {
     setTasks(loadFieldSalesTasks(selectedRep))
   }
 
+  function handleRestoreArchiveEntry(entry) {
+    const restored = restoreFieldSalesTask(entry.snapshot)
+    if (restored) setTasks(loadFieldSalesTasks(selectedRep))
+    return restored
+  }
+
   function scrollToTasks() {
     tasksSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -336,7 +352,7 @@ export default function FieldSalesPage() {
   return (
     <AppPageShell>
       <AppPageHeader
-        title="Saha Satış Sistemi"
+        title="Saha Satış Planlama"
         actions={(
           <>
             <Link
@@ -530,6 +546,16 @@ export default function FieldSalesPage() {
               ))}
             </div>
           </div>
+
+          {isRepPlan && !reps.length && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-[11px] font-semibold text-amber-200">
+              Henüz satış temsilcisi tanımlı değil.{' '}
+              <Link to="/ik/personeller" className="font-black text-amber-100 underline">Personel</Link>
+              {' '}veya{' '}
+              <Link to="/ayarlar/etiketler" className="font-black text-amber-100 underline">Süreçler Yönetimi</Link>
+              {' '}üzerinden temsilci ekleyin. Alternatif olarak Bayi veya Müşteri Türü planını kullanabilirsiniz.
+            </div>
+          )}
 
           {isRepPlan && (
           <div>
@@ -936,6 +962,13 @@ export default function FieldSalesPage() {
         )}
       </AppPagePanel>
       </div>
+
+      <ActivityArchivePanel
+        title="Saha Satış Arşiv ve İşlem Geçmişi"
+        modules={['fieldSales']}
+        onRestore={handleRestoreArchiveEntry}
+        emptyMessage="Henüz saha satış arşiv veya silme kaydı yok."
+      />
     </AppPageShell>
   )
 }

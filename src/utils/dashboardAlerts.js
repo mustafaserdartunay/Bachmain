@@ -64,20 +64,8 @@ function formatDateLabel(dateIso) {
   return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
 }
 
-const recurringObligations = [
-  { id: 'rec-1', title: 'Fabrika kira ödemesi', subtitle: 'Aylık tekrarlayan', amount: 85000, dueDate: offsetDate(2), type: 'odeme' },
-  { id: 'rec-2', title: 'ERP lisans yenileme', subtitle: 'Yıllık abonelik', amount: 24000, dueDate: offsetDate(-3), type: 'odeme' },
-  { id: 'rec-3', title: 'Bayi komisyon ödemesi', subtitle: 'Çeyreklik tekrar', amount: 62000, dueDate: offsetDate(5), type: 'odeme' },
-  { id: 'rec-4', title: 'ABC Ambalaj aylık tedarik', subtitle: 'Tekrarlayan tahsilat planı', amount: 120000, dueDate: offsetDate(-1), type: 'tahsilat' },
-]
-
-const paymentObligations = [
-  { id: 'due-1', customer: 'ABC Ambalaj Ltd.', title: 'Kapora tahsilatı bekliyor', amount: 45000, dueDate: offsetDate(-2), type: 'tahsilat', orderId: '10001' },
-  { id: 'due-2', customer: 'Mega Tekstil', title: 'Vadesi geçmiş cari bakiye', amount: 118000, dueDate: offsetDate(-5), type: 'tahsilat' },
-  { id: 'due-3', customer: 'Karton Tedarik A.Ş.', title: 'Hammadde ödemesi', amount: 28500, dueDate: offsetDate(-1), type: 'odeme' },
-  { id: 'due-4', customer: 'Delta Kozmetik', title: 'Sipariş bakiyesi tahsilatı', amount: 32000, dueDate: offsetDate(1), type: 'tahsilat', orderId: '10006' },
-  { id: 'due-5', customer: 'Prime Lojistik', title: 'Proforma ödeme bekleniyor', amount: 89000, dueDate: offsetDate(0), type: 'tahsilat' },
-]
+const recurringObligations = []
+const paymentObligations = []
 
 export function getActionTimeline() {
   const today = todayIso()

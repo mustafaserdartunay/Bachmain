@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   BadgeCheck,
   Briefcase,
@@ -7,6 +8,7 @@ import {
   Clock3,
   Coins,
   Plus,
+  QrCode,
   Search,
   UserMinus,
   UserPlus,
@@ -14,6 +16,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import SummaryMetrics from '../Common/SummaryMetrics'
+import ActivityArchivePanel from '../Common/ActivityArchivePanel'
 import {
   ABSENCE_REASONS,
   EMPLOYMENT_STATUSES,
@@ -37,8 +40,13 @@ import {
   addEmployee,
   appendEmployeeRecord,
   loadPersonnel,
+  restoreEmployeeRecord,
+  restoreEmployeeStatus,
   terminateEmployee,
+  updateEmployee,
 } from '../../utils/personnelStore'
+import { buildEmployeeQrPayload, getEmployeeShift, getShifts } from '../../utils/pdksStore'
+import { getLiveEmployeeStatus, qrImageUrl, statusBadgeClass } from '../../utils/pdksUtils'
 
 const TABS = [
   { id: 'overview', label: 'Genel Bakış', icon: Users },
@@ -163,6 +171,9 @@ export default function PersonnelWorkspace() {
       manager: '',
       contractType: 'Belirsiz Süreli',
       workSchedule: 'Hafta içi 08:30 – 18:00',
+      shiftId: 'shift-1',
+      active: true,
+      photoUrl: '',
       salary: { base, currency: 'TRY', paymentDay: 5, bankName: '', iban: '' },
     })
     setSelectedId(created.id)
@@ -179,6 +190,14 @@ export default function PersonnelWorkspace() {
       terminationReason: terminationReason?.trim() || '',
     })
     setEmployees(loadPersonnel())
+  }
+
+  function handleRestoreArchiveEntry(entry) {
+    const restored = entry.entityType === 'employee'
+      ? restoreEmployeeStatus(entry.snapshot)
+      : restoreEmployeeRecord(entry.snapshot)
+    if (restored) setEmployees(loadPersonnel())
+    return restored
   }
 
   function handleAddAttendance() {
@@ -237,6 +256,36 @@ export default function PersonnelWorkspace() {
     setEmployees(loadPersonnel())
   }
 
+  function handleChangeShift() {
+    if (!selected) return
+    const shifts = getShifts()
+    const options = shifts.map((item, index) => `${index + 1}. ${item.name}`).join('\n')
+    const pick = window.prompt(`Vardiya seçin:\n${options}`, '1')
+    const index = Number(pick) - 1
+    if (!Number.isFinite(index) || index < 0 || index >= shifts.length) return
+    updateEmployee(selected.id, { shiftId: shifts[index].id, workSchedule: shifts[index].name })
+    setEmployees(loadPersonnel())
+  }
+
+  function handleToggleActive() {
+    if (!selected) return
+    const next = selected.active === false
+    updateEmployee(selected.id, { active: next })
+    setEmployees(loadPersonnel())
+  }
+
+  const selectedPdks = useMemo(() => {
+    if (!selected) return null
+    const shift = getEmployeeShift(selected)
+    const liveStatus = getLiveEmployeeStatus(selected)
+    const qrPayload = buildEmployeeQrPayload(selected.id)
+    return {
+      shift,
+      liveStatus,
+      qrUrl: qrPayload ? qrImageUrl(qrPayload) : '',
+    }
+  }, [selected, employees])
+
   function handleAddBonus() {
     if (!selected) return
     const label = window.prompt('Prim türü', 'Performans Primi')
@@ -292,7 +341,6 @@ export default function PersonnelWorkspace() {
         <div className="flex justify-center">
           <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Personel & İK</h1>
         </div>
-        <p className="mt-2 text-xs text-gray-500">İşe giriş–çıkış, maaş, prim, puantaj, izin ve devamsızlık yönetimi</p>
       </div>
 
       <SummaryMetrics
@@ -398,6 +446,45 @@ export default function PersonnelWorkspace() {
                 </button>
               ) : null}
             >
+              <div className="mb-4 flex flex-wrap items-start gap-4 rounded-2xl border border-dark-500/40 bg-dark-900/40 p-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dark-500/50 bg-dark-800 text-xl font-black text-blue-300">
+                  {selected.photoUrl
+                    ? <img src={selected.photoUrl} alt={fullName(selected)} className="h-full w-full object-cover" />
+                    : fullName(selected).slice(0, 1).toLocaleUpperCase('tr-TR')}
+                </div>
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-lg font-black text-white">{fullName(selected)}</h3>
+                    {selectedPdks?.liveStatus && (
+                      <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${statusBadgeClass(selectedPdks.liveStatus.tone)}`}>
+                        PDKS: {selectedPdks.liveStatus.label}
+                      </span>
+                    )}
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${selected.active === false ? 'border-gray-500/40 text-gray-400' : 'border-emerald-500/40 text-emerald-300'}`}>
+                      {selected.active === false ? 'Pasif' : 'Aktif'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500">{selected.employeeNo} · {selected.department} · {selected.position}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={handleChangeShift} className="rounded-lg border border-dark-500/50 px-2.5 py-1 text-[10px] font-bold text-gray-300 hover:bg-dark-700/60">
+                      Vardiya: {selectedPdks?.shift?.name || '—'}
+                    </button>
+                    <button type="button" onClick={handleToggleActive} className="rounded-lg border border-dark-500/50 px-2.5 py-1 text-[10px] font-bold text-gray-300 hover:bg-dark-700/60">
+                      {selected.active === false ? 'Aktifleştir' : 'Pasifleştir'}
+                    </button>
+                    <Link to="/ik/ayarlar" className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold text-blue-300 hover:bg-blue-500/20">
+                      <QrCode className="h-3 w-3" /> PDKS Ayarları
+                    </Link>
+                  </div>
+                </div>
+                {selectedPdks?.qrUrl && (
+                  <div className="rounded-2xl border border-dark-500/40 bg-white p-2 text-center">
+                    <img src={selectedPdks.qrUrl} alt="Personel QR" className="h-24 w-24" />
+                    <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-gray-600">Kişisel QR</p>
+                  </div>
+                )}
+              </div>
+
               <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Field label="Sicil No" value={selected.employeeNo} mono />
                 <Field label="Departman" value={selected.department} />
@@ -408,7 +495,8 @@ export default function PersonnelWorkspace() {
                 <Field label="E-posta" value={selected.email} />
                 <Field label="Adres" value={selected.address} />
                 <Field label="Sözleşme" value={selected.contractType} />
-                <Field label="Çalışma Saati" value={selected.workSchedule} />
+                <Field label="İşe Giriş Tarihi" value={selected.hireDate} />
+                <Field label="Vardiya" value={selectedPdks?.shift?.name || selected.workSchedule} />
                 <Field label="Kıdem" value={tenureLabel(selected.hireDate, selected.terminationDate)} />
                 <Field label="Durum" value={selected.status} />
               </div>
@@ -625,6 +713,12 @@ export default function PersonnelWorkspace() {
           )}
         </div>
       </div>
+      <ActivityArchivePanel
+        title="Personel Arşiv ve İşlem Geçmişi"
+        modules={['personnel']}
+        onRestore={handleRestoreArchiveEntry}
+        emptyMessage="Henüz personel arşiv veya silme kaydı yok."
+      />
     </div>
   )
 }

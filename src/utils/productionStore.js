@@ -1,5 +1,6 @@
 import { productionOrders as seedProductionOrders } from '../data/mockData'
 import { syncQuoteFromProduction } from './quoteWorkflowSync'
+import { nextDocumentCode } from './documentCodes'
 import {
   deriveJobSummary,
   ensureLineItems,
@@ -146,6 +147,42 @@ export function createProductionFromOrder(order) {
 
   saveProductionJobs([job, ...jobs])
   syncQuoteFromProduction(job)
+  return job
+}
+
+export function createStandaloneProductionJob() {
+  const jobs = loadProductionJobs()
+  const stages = loadWorkflowStages()
+  const productionStages = getProductionStageOptions(stages)
+  const entryStage = findWorkflowStage(stages, PRODUCTION_ENTRY_STAGE_ID)
+  const initialStage = productionStages[0] || entryStage
+  const id = nextDocumentCode(jobs.flatMap((job) => [job.id, job.orderId]))
+
+  const job = normalizeProductionJob({
+    id,
+    orderId: '',
+    customer: '',
+    title: '',
+    product: '',
+    quantity: 0,
+    stage: initialStage?.label || '',
+    currentStageId: initialStage?.id || '',
+    stages,
+    lineItems: [],
+    status: 'Devam Ediyor',
+    priority: 'Normal',
+    createdAt: new Date().toISOString().slice(0, 10),
+    deliveryDate: '',
+    endDate: '',
+    items: [],
+    activities: [{
+      id: createId('act'),
+      date: new Date().toLocaleString('tr-TR'),
+      text: 'Yeni üretim kaydı oluşturuldu.',
+    }],
+  })
+
+  saveProductionJobs([job, ...jobs])
   return job
 }
 

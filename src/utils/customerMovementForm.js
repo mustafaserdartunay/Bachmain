@@ -21,8 +21,28 @@ export function formatCollectionDatePreserveTime(dateInput, existingDate) {
   return formatCollectionDate(dateInput, timePart)
 }
 
+function treasuryOptionsForType(accounts, type, fallbackColor) {
+  return accounts
+    .filter((account) => account.type === type)
+    .map((account) => ({ label: account.name, color: fallbackColor }))
+}
+
+export function movementAccountOptions(accounts, optionLists = {}) {
+  const cash = optionLists.cashAccount?.length
+    ? optionLists.cashAccount
+    : treasuryOptionsForType(accounts, 'Nakit Kasa', 'bg-emerald-500')
+  const bank = optionLists.bankAccount?.length
+    ? optionLists.bankAccount
+    : treasuryOptionsForType(accounts, 'Banka Hesabı', 'bg-blue-500')
+  const cheque = optionLists.chequeAccount?.length
+    ? optionLists.chequeAccount
+    : treasuryOptionsForType(accounts, 'Çek Kasası', 'bg-purple-500')
+
+  return { cash, bank, cheque }
+}
+
 export function emptyCollectionForm(accounts, optionLists = {}) {
-  const cash = optionLists.cashAccount || []
+  const { cash, bank, cheque } = movementAccountOptions(accounts, optionLists)
   return {
     accountName: cash[0]?.label || accounts[0]?.name || '',
     method: 'Nakit',
@@ -61,9 +81,14 @@ export function movementToForm(movement) {
 export function patchMovementForm(setter, field, value, lists) {
   if (field === 'method') {
     setter((current) => {
-      const accountName = value === 'Nakit'
-        ? (lists.cashAccount?.[0]?.label || '')
-        : (lists.bankAccount?.[0]?.label || '')
+      let accountName = ''
+      if (value === 'Nakit') {
+        accountName = lists.cashAccount?.[0]?.label || ''
+      } else if (value === 'Çek') {
+        accountName = lists.chequeAccount?.[0]?.label || ''
+      } else {
+        accountName = lists.bankAccount?.[0]?.label || ''
+      }
       return { ...current, method: value, accountName }
     })
     return

@@ -1,10 +1,27 @@
 import { useEffect, useState } from 'react'
 import { Check, ChevronRight, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { DeleteConfirmPopover } from './Common/ListDeleteConfirmPanel'
+import { dropdownMenuShellClass, DROPDOWN_MENU_ITEM_CLASS } from './Common/DropdownMenu'
 import { OPTION_COLOR_PALETTE } from '../utils/customerMeta'
 
 const DEFAULT_BUTTON_CLASS =
   'flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-xs font-bold transition-colors hover:bg-dark-700/80'
+
+function OptionLeading({ option, empty = false, isLightMenu = false }) {
+  if (empty) {
+    return <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-gray-500" />
+  }
+  if (option?.icon) {
+    const Icon = option.icon
+    const shellClass = isLightMenu ? 'bg-[var(--surface-muted)]' : 'bg-dark-700/70'
+    return (
+      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${shellClass} ${option.iconTone || 'text-gray-400'}`}>
+        <Icon className="h-3.5 w-3.5" />
+      </span>
+    )
+  }
+  return <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${option?.color || 'bg-gray-500'}`} />
+}
 
 export default function EditableDropdownPill({
   value,
@@ -23,6 +40,9 @@ export default function EditableDropdownPill({
   menuMatchWidth = true,
   menuInline = false,
   menuPlacement = 'below',
+  searchable = false,
+  searchPlaceholder = 'Ara...',
+  menuMaxHeight = '',
 }) {
   const selected = options.find((option) => option.label === value)
   const hasSelection = Boolean(selected)
@@ -35,6 +55,7 @@ export default function EditableDropdownPill({
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
   const [confirmIndex, setConfirmIndex] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     if (!isOpen) {
@@ -43,8 +64,16 @@ export default function EditableDropdownPill({
       setAdding(false)
       setNewName('')
       setConfirmIndex(null)
+      setSearchTerm('')
     }
   }, [isOpen])
+
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase('tr-TR')
+  const visibleOptions = options
+    .map((option, index) => ({ option, index }))
+    .filter(({ option }) => (
+      !normalizedSearch || String(option.label || '').toLocaleLowerCase('tr-TR').includes(normalizedSearch)
+    ))
 
   function startEdit(index) {
     setAdding(false)
@@ -99,13 +128,13 @@ export default function EditableDropdownPill({
   const menuShellClass = menuInline
     ? isLightMenu
       ? `relative mt-1 w-full ${lightMenuShell}`
-      : 'relative z-30 mt-1 w-full rounded-2xl border border-dark-500 bg-dark-800 p-2 shadow-2xl shadow-black/40'
+      : dropdownMenuShellClass({ matchWidth: true, inline: true })
     : isLightMenu
       ? `absolute left-0 ${menuPositionClass} ${lightMenuShell} min-w-[210px] w-max max-w-[260px]${menuMatchWidth ? ' w-full max-w-none' : ''}`
-      : `absolute left-0 ${menuPositionClass} z-50 min-w-[210px] rounded-2xl border border-dark-500 bg-dark-800 p-2 shadow-2xl shadow-black/40${menuMatchWidth ? ' w-full' : ' w-max max-w-[260px]'}`
+      : `${dropdownMenuShellClass({ matchWidth: menuMatchWidth, positionClass: `absolute left-0 ${menuPositionClass}` })}`
   const optionButtonClass = isLightMenu
     ? 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[11px] font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]'
-    : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-gray-200 transition-colors hover:text-white'
+    : DROPDOWN_MENU_ITEM_CLASS
   const placeholderButtonClass = isLightMenu
     ? `${optionButtonClass} text-[var(--text-muted)]`
     : `${optionButtonClass} text-gray-400 hover:bg-blue-500/15`
@@ -122,7 +151,7 @@ export default function EditableDropdownPill({
         className={`${buttonClassName} ${disabled ? 'cursor-default opacity-90' : ''}`}
       >
         <span className="flex min-w-0 items-center gap-2">
-          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${hasSelection ? selected.color : 'bg-gray-500'}`} />
+          <OptionLeading option={selected} empty={!hasSelection} isLightMenu={isLightMenu} />
           <span className={`truncate ${selectedTextClass}`}>
             {selected?.label || placeholder}
           </span>
@@ -133,23 +162,38 @@ export default function EditableDropdownPill({
       </button>
       {isOpen && isInteractive && (
         <div className={menuShellClass}>
-          {includePlaceholderOption && (
-            <button
-              type="button"
-              onClick={() => {
-                onChange('')
-                setActiveMenu(null)
-              }}
-              className={placeholderButtonClass}
-            >
-              <span className="h-2.5 w-2.5 rounded-full bg-gray-500" />
-              {placeholder}
-            </button>
+          {searchable && (
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder={searchPlaceholder}
+              className={`mb-1.5 w-full rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none ${
+                isLightMenu
+                  ? 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-strong)] placeholder:text-[var(--text-muted)] focus:border-blue-400/60'
+                  : 'border-dark-500/60 bg-dark-900 text-gray-100 placeholder:text-gray-600 focus:border-blue-500/60'
+              }`}
+              autoFocus
+            />
           )}
+          <div className={menuMaxHeight ? `${menuMaxHeight} overflow-y-auto pr-1` : ''}>
+            {includePlaceholderOption && (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange('')
+                  setActiveMenu(null)
+                }}
+                className={placeholderButtonClass}
+              >
+                <OptionLeading empty isLightMenu={isLightMenu} />
+                {placeholder}
+              </button>
+            )}
 
-          {options.map((option, index) =>
-            confirmIndex === index ? (
+            {visibleOptions.map(({ option, index }) =>
+              confirmIndex === index ? (
               <DeleteConfirmPopover
+                key={`confirm-${option.label}`}
                 title={`"${option.label}" silinsin mi?`}
                 description="Bu işlem geri alınamaz."
                 confirmLabel="Evet, Sil"
@@ -159,7 +203,7 @@ export default function EditableDropdownPill({
               />
             ) : editingIndex === index ? (
               <div key={`edit-${index}`} className="flex items-center gap-1.5 rounded-xl bg-dark-700/60 px-2 py-1.5">
-                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${option.color}`} />
+                <OptionLeading option={option} isLightMenu={isLightMenu} />
                 <input
                   autoFocus
                   value={draftName}
@@ -198,7 +242,7 @@ export default function EditableDropdownPill({
                   }}
                   className={isLightMenu ? optionButtonClass : `${optionButtonClass} hover:bg-blue-500/10`}
                 >
-                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${option.color}`} />
+                  <OptionLeading option={option} isLightMenu={isLightMenu} />
                   <span className="truncate">{option.label}</span>
                 </button>
                 {canEdit && (
@@ -212,8 +256,14 @@ export default function EditableDropdownPill({
                   </span>
                 )}
               </div>
-            ),
-          )}
+              ),
+            )}
+            {visibleOptions.length === 0 && (
+              <p className={`px-3 py-2 text-xs font-bold ${isLightMenu ? 'text-[var(--text-muted)]' : 'text-gray-500'}`}>
+                Sonuç bulunamadı.
+              </p>
+            )}
+          </div>
 
           {canEdit && (
             <div className="mt-1 border-t border-dark-500/40 pt-1">

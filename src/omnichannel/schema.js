@@ -44,9 +44,9 @@ export const CHANNELS = {
 export const MESSAGE_TYPES = ['text', 'image', 'file', 'audio', 'video']
 
 export const DEPARTMENTS = [
-  { id: 'dep-sales', name: 'Satış', channels: ['whatsapp', 'instagram', 'facebook', 'tiktok'], defaultAssignee: 'Serdar Tünay' },
-  { id: 'dep-support', name: 'Destek', channels: ['whatsapp', 'email', 'facebook'], defaultAssignee: 'Ayşe Demir' },
-  { id: 'dep-finance', name: 'Finans', channels: ['email'], defaultAssignee: 'Mehmet Kaya' },
+  { id: 'dep-sales', name: 'Satış', channels: ['whatsapp', 'instagram', 'facebook', 'tiktok'], defaultAssignee: '' },
+  { id: 'dep-support', name: 'Destek', channels: ['whatsapp', 'email', 'facebook'], defaultAssignee: '' },
+  { id: 'dep-finance', name: 'Finans', channels: ['email'], defaultAssignee: '' },
 ]
 
 export const STORAGE_KEYS = {
@@ -56,4 +56,6 @@ export const STORAGE_KEYS = {
   channelConfig: 'bach-omni-channel-config',
   webhookLog: 'bach-omni-webhook-log',
   assignments: 'bach-omni-assignments',
+  aiSettings: 'bach-omni-ai-settings',
+  aiLearning: 'bach-omni-ai-learning-v1',
 }

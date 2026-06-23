@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url'
 import { getOpenAiApiKey } from './env.js'
 import { handleVoiceChatRequest } from './voiceChat.js'
 import { handleVoiceTranscribeRequest } from './voiceTranscribe.js'
+import { handleOmniAnalyzeRequest } from './omniChat.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -36,6 +37,23 @@ app.post('/api/voice/chat', async (req, res) => {
     res.json(result)
   } catch (error) {
     res.status(500).json({ error: error.message || 'Sesli asistan hatası' })
+  }
+})
+
+app.get('/api/omni/health', (_req, res) => {
+  res.json({
+    ok: true,
+    hasApiKey: Boolean(getOpenAiApiKey()),
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+  })
+})
+
+app.post('/api/omni/analyze', async (req, res) => {
+  try {
+    const result = await handleOmniAnalyzeRequest(req.body, req.headers)
+    res.json(result)
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Omnichannel AI hatası' })
   }
 })
 

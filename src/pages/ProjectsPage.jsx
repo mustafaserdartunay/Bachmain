@@ -11,37 +11,11 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import NumericInput from '../components/Products/NumericInput'
+import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
 import { formatTL } from '../utils/productPricing'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
 
-const initialProjects = [
-  {
-    id: 'PRJ-2026-001',
-    name: 'ABC Ambalaj Premium Kutu Serisi',
-    customer: 'ABC Ambalaj Ltd.',
-    manager: 'Mehmet Kaya',
-    status: 'Planlama',
-    priority: 'Yüksek',
-    startDate: '31.05.2026',
-    deadline: '15.06.2026',
-    budget: 185000,
-    progress: 22,
-    note: 'Premium kutu serisi için numune ve üretim planı hazırlanacak.',
-  },
-  {
-    id: 'PRJ-2026-002',
-    name: 'Delta Kozmetik Lansman Ambalajları',
-    customer: 'Delta Kozmetik',
-    manager: 'Ayşe Demir',
-    status: 'Tasarım',
-    priority: 'Normal',
-    startDate: '28.05.2026',
-    deadline: '20.06.2026',
-    budget: 96000,
-    progress: 48,
-    note: 'Lansman seti için 9:16 reklam görselleri de hazırlanacak.',
-  },
-]
+const initialProjects = []
 
 const statusStyles = {
   Planlama: 'badge-blue',
@@ -276,6 +250,12 @@ export default function ProjectsPage() {
           </table>
         </div>
       </div>
+
+      <ActivityArchivePanel
+        title="Proje Arşiv ve İşlem Geçmişi"
+        modules={['projects']}
+        emptyMessage="Henüz proje arşiv veya silme kaydı yok."
+      />
 
       {toast && (
         <div className="fixed right-6 bottom-6 z-[120] flex items-center gap-2 rounded-xl bg-emerald-500/95 px-4 py-3 text-sm font-medium text-white shadow-2xl">

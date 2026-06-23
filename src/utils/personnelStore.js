@@ -1,4 +1,5 @@
 import { personnelSeed } from '../data/personnelSeed'
+import { appendActivityEntry } from './activityArchiveStore'
 
 const STORAGE_KEY = 'erlenbox-personnel'
 
@@ -84,16 +85,60 @@ export function updateEmployeeRecord(employeeId, field, recordId, patch) {
 export function removeEmployeeRecord(employeeId, field, recordId) {
   const employee = getEmployeeById(employeeId)
   if (!employee) return null
+  const record = (employee[field] || []).find((item) => item.id === recordId)
+  if (record) {
+    appendActivityEntry({
+      module: 'personnel',
+      action: 'delete',
+      entityType: field,
+      entityId: recordId,
+      entityLabel: `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Personel kaydı',
+      description: `Personel ${field} kaydı silindi.`,
+      snapshot: { employeeId, field, record },
+      undo: { type: 'personnel.restoreRecord' },
+    })
+  }
   const list = (employee[field] || []).filter((item) => item.id !== recordId)
   return updateEmployee(employeeId, { [field]: list })
 }
 
 export function terminateEmployee(employeeId, { terminationDate, terminationReason }) {
+  const employee = getEmployeeById(employeeId)
+  if (employee) {
+    appendActivityEntry({
+      module: 'personnel',
+      action: 'archive',
+      entityType: 'employee',
+      entityId: employee.id,
+      entityLabel: `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Personel',
+      description: `Personel ayrıldı olarak arşivlendi: ${terminationReason || 'Sebep belirtilmedi'}.`,
+      snapshot: employee,
+      undo: { type: 'personnel.restoreEmployeeStatus' },
+    })
+  }
   return updateEmployee(employeeId, {
     status: 'Ayrıldı',
     terminationDate,
     terminationReason,
   })
+}
+
+export function restoreEmployeeRecord(snapshot) {
+  const { employeeId, field, record } = snapshot || {}
+  if (!employeeId || !field || !record?.id) return false
+  const employee = getEmployeeById(employeeId)
+  if (!employee) return false
+  const list = employee[field] || []
+  if (!list.some((item) => item.id === record.id)) {
+    updateEmployee(employeeId, { [field]: [record, ...list] })
+  }
+  return true
+}
+
+export function restoreEmployeeStatus(employee) {
+  if (!employee?.id) return false
+  updateEmployee(employee.id, employee)
+  return true
 }
 
 export function rehireEmployee(employeeId, { hireDate, department, position, salary }) {

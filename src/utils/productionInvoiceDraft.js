@@ -28,14 +28,16 @@ export function buildProductionInvoiceDraft(job, lineItem, row) {
   const customerName = customerProfile?.company || job?.customer || ''
   const productName = lineItem?.product || 'Ürün'
   const productCode = resolveLineProductCode(job, lineItem)
+  const productionCode = row?.productionCode || job?.id || ''
   const invoiceAt = row?.invoiceAt || createQuantityRowTimestamp()
   const pricing = resolveLinePricingFromOrder(job, lineItem)
-  const codePrefix = productCode ? `${productCode} · ` : ''
+  const codePrefix = [productionCode, productCode].filter(Boolean).join(' · ')
 
   return {
     description: [
       customerName,
       productName,
+      productionCode,
       productCode,
       `${quantity} adet`,
       invoiceAt,
@@ -43,11 +45,12 @@ export function buildProductionInvoiceDraft(job, lineItem, row) {
     customerName,
     productName,
     productCode,
+    productionCode,
     deliveredQuantity: quantity,
     invoiceAt,
     date: draftDateInput(invoiceAt),
     lines: [{
-      description: `${codePrefix}${productName}`,
+      description: `${codePrefix ? `${codePrefix} · ` : ''}${productName}`,
       quantity: quantity || 1,
       unitPrice: pricing.unitPrice,
       vat: pricing.vatRate,

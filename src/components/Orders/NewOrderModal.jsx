@@ -1,22 +1,8 @@
 import { X } from 'lucide-react'
 import { BTN_SUCCESS } from '../../utils/buttonStyles'
 
-const customers = [
-  'ABC Ambalaj Ltd.',
-  'XYZ Gıda A.Ş.',
-  'Delta Kozmetik',
-  'Mega Tekstil',
-  'Nova Elektronik',
-  'Prime Lojistik',
-]
-
-const products = [
-  { name: 'Kraft Kutu 30x20', price: 9 },
-  { name: 'Oluklu Kutu 40x30', price: 9 },
-  { name: 'Premium Hediye Kutusu', price: 18 },
-  { name: 'E-Ticaret Kutusu L', price: 8.5 },
-  { name: 'Gıda Kraft Kutu 25x15', price: 12.5 },
-]
+const customers = []
+const products = []
 
 export default function NewOrderModal({ onClose }) {
   return (

@@ -73,7 +73,7 @@ export default function NotificationDropdown() {
         <div className="absolute right-0 top-12 z-50 w-96 overflow-hidden rounded-2xl border border-dark-500 bg-dark-800 shadow-2xl shadow-black/35">
           <div className="border-b border-dark-500/55 px-4 py-3">
             <p className="text-sm font-black text-white">CRM Bildirimleri</p>
-            <p className="text-[11px] font-medium text-gray-500">
+            <p className="text-[11px] font-semibold text-slate-950">
               Zamanı gelen görevler, randevular ve ajanda notları
             </p>
           </div>
@@ -82,7 +82,7 @@ export default function NotificationDropdown() {
             {preview.length === 0 ? (
               <div className="px-3 py-8 text-center">
                 <p className="text-sm font-bold text-white">Bildirim yok</p>
-                <p className="mt-1 text-xs text-gray-500">Bugün veya geciken CRM kaydı bulunmuyor.</p>
+                <p className="mt-1 text-xs font-semibold text-slate-950">Bugün veya geciken CRM kaydı bulunmuyor.</p>
               </div>
             ) : (
               preview.map((item) => {
@@ -105,9 +105,9 @@ export default function NotificationDropdown() {
                           {badge.label}
                         </span>
                       </span>
-                      <span className="mt-0.5 block truncate text-[10px] font-bold text-gray-400">{item.subtitle}</span>
+                      <span className="mt-0.5 block truncate text-[10px] font-bold text-slate-950">{item.subtitle}</span>
                       {item.detail && (
-                        <span className="mt-0.5 block truncate text-[10px] text-gray-500">{item.detail}</span>
+                        <span className="mt-0.5 block truncate text-[10px] font-medium text-slate-950">{item.detail}</span>
                       )}
                     </span>
                   </button>

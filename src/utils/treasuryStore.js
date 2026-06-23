@@ -1,63 +1,10 @@
+import { appendActivityEntry } from './activityArchiveStore'
+
 const ACCOUNTS_KEY = 'erlenbox-treasury-accounts'
 const MOVEMENTS_KEY = 'erlenbox-treasury-movements'
 
-export const defaultTreasuryAccounts = [
-  {
-    id: 'cash-main',
-    name: 'Merkez Nakit Kasa',
-    type: 'Nakit Kasa',
-    currency: 'TRY',
-    openingBalance: 185000,
-    color: 'text-emerald-300',
-  },
-  {
-    id: 'bank-is',
-    name: 'İş Bankası Ticari Hesap',
-    type: 'Banka Hesabı',
-    currency: 'TRY',
-    openingBalance: 420000,
-    iban: 'TR00 0000 0000 0000 0000 0000 01',
-    color: 'text-blue-300',
-  },
-  {
-    id: 'bank-garanti',
-    name: 'Garanti BBVA Tahsilat Hesabı',
-    type: 'Banka Hesabı',
-    currency: 'TRY',
-    openingBalance: 268000,
-    iban: 'TR00 0000 0000 0000 0000 0000 02',
-    color: 'text-purple-300',
-  },
-]
-
-export const defaultTreasuryMovements = [
-  {
-    id: 'TRX-SEED-001',
-    accountId: 'cash-main',
-    accountName: 'Merkez Nakit Kasa',
-    direction: 'in',
-    type: 'Müşteri Tahsilatı',
-    customerName: 'ABC Ambalaj Ltd.',
-    method: 'Nakit',
-    amount: 45000,
-    date: '03.06.2026 10:15',
-    description: 'Sipariş kapora tahsilatı',
-    status: 'İşlendi',
-  },
-  {
-    id: 'TRX-SEED-002',
-    accountId: 'bank-is',
-    accountName: 'İş Bankası Ticari Hesap',
-    direction: 'out',
-    type: 'Gider Ödemesi',
-    vendorName: 'Karton Tedarik A.Ş.',
-    method: 'Banka',
-    amount: 28500,
-    date: '03.06.2026 12:40',
-    description: 'Hammadde avans ödemesi',
-    status: 'İşlendi',
-  },
-]
+export const defaultTreasuryAccounts = []
+export const defaultTreasuryMovements = []
 
 export function formatTreasuryCurrency(value) {
   const amount = new Intl.NumberFormat('tr-TR', {
@@ -129,6 +76,68 @@ export function createTreasuryId(prefix = 'TRX') {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
 }
 
+const ACCOUNT_TYPE_BY_METHOD = {
+  Nakit: 'Nakit Kasa',
+  Banka: 'Banka Hesabı',
+  Çek: 'Çek Kasası',
+}
+
+export function resolveTreasuryAccountForMovement(method, accountName, accounts = getTreasuryAccounts()) {
+  const label = String(accountName || '').trim()
+  if (label) {
+    const exact = accounts.find((account) => account.name === label)
+    if (exact) return exact
+  }
+
+  const targetType = ACCOUNT_TYPE_BY_METHOD[method] || ''
+  const typedAccounts = targetType
+    ? accounts.filter((account) => account.type === targetType)
+    : accounts
+
+  if (label) {
+    const normalized = label.toLocaleLowerCase('tr-TR')
+    const partial = typedAccounts.find((account) => {
+      const accountNameNormalized = String(account.name || '').toLocaleLowerCase('tr-TR')
+      return accountNameNormalized.includes(normalized) || normalized.includes(accountNameNormalized)
+    })
+    if (partial) return partial
+  }
+
+  return typedAccounts[0] || accounts[0] || null
+}
+
+function appendChequeEntryToAccount(accountId, entry) {
+  const accounts = getTreasuryAccounts()
+  const amount = Number(entry.amount) || 0
+  const signedAmount = entry.direction === 'out' ? -amount : amount
+  const nextAccounts = accounts.map((account) => {
+    if (account.id !== accountId) return account
+
+    const nextDetail = {
+      id: entry.id || createTreasuryId('cheque'),
+      chequeNo: entry.chequeNo || '',
+      chequeBank: entry.chequeBank || '',
+      chequeBranch: entry.chequeBranch || '',
+      chequeDueDate: entry.chequeDueDate || '',
+      chequeOwner: entry.chequeOwner || '',
+      partyId: entry.partyId || '',
+      partyName: entry.partyName || '',
+      partyType: entry.partyType || 'Müşteri',
+      amount: signedAmount,
+      direction: entry.direction || 'in',
+    }
+
+    return {
+      ...account,
+      chequeBaseAmount: account.chequeBaseAmount ?? (Number(account.openingBalance) || 0),
+      openingBalance: (Number(account.openingBalance) || 0) + signedAmount,
+      chequeEntries: [nextDetail, ...(Array.isArray(account.chequeEntries) ? account.chequeEntries : [])],
+    }
+  })
+
+  saveTreasuryAccounts(nextAccounts)
+}
+
 export function calculateAccountBalance(account, movements = getTreasuryMovements()) {
   const movementTotal = movements
     .filter((movement) => movement.accountId === account.id)
@@ -159,12 +168,33 @@ export function addTreasuryMovement(movement) {
 }
 
 export function createCustomerCollection(collection) {
-  return addTreasuryMovement({
+  const account = resolveTreasuryAccountForMovement(collection.method, collection.accountName)
+  const amount = Number(collection.amount) || 0
+  const movement = addTreasuryMovement({
     direction: 'in',
     type: 'Müşteri Tahsilatı',
     description: collection.description || `${collection.customerName} tahsilatı`,
     ...collection,
+    accountId: account?.id || collection.accountId || '',
+    accountName: account?.name || collection.accountName || 'Kasa',
+    amount,
   })
+
+  if (collection.method === 'Çek' && account?.type === 'Çek Kasası') {
+    appendChequeEntryToAccount(account.id, {
+      amount,
+      direction: 'in',
+      chequeNo: collection.chequeNo,
+      chequeBank: collection.chequeBank,
+      chequeBranch: collection.chequeBranch,
+      chequeDueDate: collection.chequeDueDate,
+      chequeOwner: collection.chequeOwner || collection.customerName,
+      partyName: collection.customerName,
+      partyType: 'Müşteri',
+    })
+  }
+
+  return movement
 }
 
 export function createExpensePayment(payment) {
@@ -177,18 +207,62 @@ export function createExpensePayment(payment) {
 }
 
 export function createCustomerPayment(payment) {
-  return addTreasuryMovement({
+  const account = resolveTreasuryAccountForMovement(payment.method, payment.accountName)
+  const amount = Number(payment.amount) || 0
+  const movement = addTreasuryMovement({
     direction: 'out',
     type: 'Müşteri Ödemesi',
     description: payment.description || `${payment.customerName} ödemesi`,
     ...payment,
+    accountId: account?.id || payment.accountId || '',
+    accountName: account?.name || payment.accountName || 'Kasa',
+    amount,
   })
+
+  if (payment.method === 'Çek' && account?.type === 'Çek Kasası') {
+    appendChequeEntryToAccount(account.id, {
+      amount,
+      direction: 'out',
+      chequeNo: payment.chequeNo,
+      chequeBank: payment.chequeBank,
+      chequeBranch: payment.chequeBranch,
+      chequeDueDate: payment.chequeDueDate,
+      chequeOwner: payment.chequeOwner || payment.customerName,
+      partyName: payment.customerName,
+      partyType: 'Müşteri',
+    })
+  }
+
+  return movement
 }
 
 export function deleteTreasuryMovement(id) {
-  const nextMovements = getTreasuryMovements().filter((movement) => movement.id !== id)
+  const movements = getTreasuryMovements()
+  const movement = movements.find((item) => item.id === id)
+  if (movement) {
+    appendActivityEntry({
+      module: 'treasury',
+      action: 'delete',
+      entityType: 'treasuryMovement',
+      entityId: movement.id,
+      entityLabel: movement.description || movement.type || 'Kasa hareketi',
+      description: `${movement.description || movement.type || 'Kasa hareketi'} silindi.`,
+      snapshot: movement,
+      undo: { type: 'treasury.restoreMovement' },
+    })
+  }
+  const nextMovements = movements.filter((movement) => movement.id !== id)
   saveTreasuryMovements(nextMovements)
   return nextMovements
+}
+
+export function restoreTreasuryMovement(snapshot) {
+  if (!snapshot?.id) return false
+  const movements = getTreasuryMovements()
+  if (!movements.some((movement) => movement.id === snapshot.id)) {
+    saveTreasuryMovements([snapshot, ...movements])
+  }
+  return true
 }
 
 export function getTreasuryMovementById(id) {
@@ -203,6 +277,7 @@ export function updateTreasuryMovement(id, patch) {
 
   const current = movements[index]
   const account = accounts.find((item) => item.id === patch.accountId)
+    || resolveTreasuryAccountForMovement(patch.method || current.method, patch.accountName || current.accountName, accounts)
     || accounts.find((item) => item.name === patch.accountName)
     || accounts.find((item) => item.id === current.accountId)
 
@@ -234,7 +309,7 @@ export function syncCustomerOpeningBalanceMovement(customerId, customerName, amo
   const nextMovement = {
     id: movementId,
     accountId: account?.id || 'cash-main',
-    accountName: account?.name || 'Merkez Nakit Kasa',
+    accountName: account?.name || 'Kasa',
     direction: 'in',
     type: 'Açılış Bakiyesi',
     customerName,
@@ -327,4 +402,103 @@ export function getCustomerBalanceColor(balance) {
   if (balance > 0) return 'bg-emerald-500'
   if (balance < 0) return 'bg-red-500'
   return 'bg-orange-500'
+}
+
+const ARCHIVED_TREASURY_ACCOUNTS_KEY = 'erlenbox-treasury-archived-accounts'
+
+function readArchivedTreasuryAccounts() {
+  return readJson(ARCHIVED_TREASURY_ACCOUNTS_KEY, {})
+}
+
+function writeArchivedTreasuryAccounts(map) {
+  writeJson(ARCHIVED_TREASURY_ACCOUNTS_KEY, map)
+}
+
+function buildTreasuryAccountSnapshot(accountId) {
+  const accounts = getTreasuryAccounts()
+  const account = accounts.find((item) => item.id === accountId)
+  if (!account) return null
+  const movements = getTreasuryMovements().filter((movement) => movement.accountId === accountId)
+  return { account, movements }
+}
+
+export function archiveTreasuryAccount(accountId) {
+  const snapshot = buildTreasuryAccountSnapshot(accountId)
+  if (!snapshot) return false
+
+  appendActivityEntry({
+    module: 'treasury',
+    action: 'archive',
+    entityType: 'treasuryAccount',
+    entityId: accountId,
+    entityLabel: snapshot.account.name,
+    description: `${snapshot.account.name} arşivlendi.`,
+    snapshot,
+    undo: { type: 'treasury.restoreAccount' },
+  })
+
+  const archived = readArchivedTreasuryAccounts()
+  archived[accountId] = { ...snapshot, archivedAt: new Date().toISOString() }
+  writeArchivedTreasuryAccounts(archived)
+  saveTreasuryAccounts(getTreasuryAccounts().filter((item) => item.id !== accountId))
+  return true
+}
+
+export function deleteTreasuryAccount(accountId) {
+  const snapshot = buildTreasuryAccountSnapshot(accountId)
+  if (!snapshot) return false
+
+  appendActivityEntry({
+    module: 'treasury',
+    action: 'delete',
+    entityType: 'treasuryAccount',
+    entityId: accountId,
+    entityLabel: snapshot.account.name,
+    description: `${snapshot.account.name} silindi.`,
+    snapshot,
+    undo: { type: 'treasury.restoreAccount' },
+  })
+
+  const archived = readArchivedTreasuryAccounts()
+  delete archived[accountId]
+  writeArchivedTreasuryAccounts(archived)
+  saveTreasuryAccounts(getTreasuryAccounts().filter((item) => item.id !== accountId))
+  return true
+}
+
+export function restoreTreasuryAccount(snapshot) {
+  if (!snapshot?.account?.id) return false
+
+  const accounts = getTreasuryAccounts()
+  if (!accounts.some((item) => item.id === snapshot.account.id)) {
+    saveTreasuryAccounts([snapshot.account, ...accounts])
+  }
+
+  const archived = readArchivedTreasuryAccounts()
+  delete archived[snapshot.account.id]
+  writeArchivedTreasuryAccounts(archived)
+  return true
+}
+
+export function fixTreasuryAccountBalance(accountId, targetBalance, extra = {}) {
+  const accounts = getTreasuryAccounts()
+  const account = accounts.find((item) => item.id === accountId)
+  if (!account) return null
+
+  const movements = getTreasuryMovements()
+  const current = calculateAccountBalance(account, movements)
+  const target = Number(targetBalance) || 0
+  const diff = Math.round((target - current) * 100) / 100
+  if (Math.abs(diff) < 0.005) return null
+
+  return addTreasuryMovement({
+    accountId,
+    accountName: account.name,
+    direction: diff > 0 ? 'in' : 'out',
+    type: 'Bakiye Sabitleme',
+    description: extra.description?.trim() || `Bakiye ${formatTreasuryCurrency(target)} olarak sabitlendi`,
+    method: account.type === 'Banka Hesabı' ? 'Banka' : account.type === 'Çek Kasası' ? 'Çek' : 'Nakit',
+    amount: Math.abs(diff),
+    date: extra.date || todayForTreasury(),
+  })
 }

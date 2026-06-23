@@ -20,6 +20,7 @@ export default function ProcessPanelModule({
   onSelectStage,
   onUpdateStageColor,
   onUpdateStageLabel,
+  onCopyStage,
   onReorderStages,
   pendingStageDeleteId,
   setPendingStageDeleteId,
@@ -77,6 +78,7 @@ export default function ProcessPanelModule({
             onSelectStage={onSelectStage}
             onUpdateStageColor={onUpdateStageColor}
             onUpdateStageLabel={onUpdateStageLabel}
+            onCopyStage={onCopyStage}
             onReorderStages={onReorderStages}
             pendingStageDeleteId={pendingStageDeleteId}
             setPendingStageDeleteId={setPendingStageDeleteId}

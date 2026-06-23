@@ -1,140 +1,158 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  AlertTriangle,
   ArrowRight,
-  Calendar,
-  CheckSquare,
+  Building2,
   CreditCard,
-  RefreshCw,
   Repeat,
+  UsersRound,
   Wallet,
 } from 'lucide-react'
-import { getActionTimeline, formatCurrency } from '../../utils/dashboardAlerts'
+import { getPaymentActionTimeline, formatCurrency } from '../../utils/paymentTimeline'
+import { RECURRING_PAYMENTS_EVENT } from '../../utils/recurringPaymentsStore'
 
 const categoryIcon = {
-  Tahsilat: Wallet,
-  Ödeme: CreditCard,
-  'Tekrarlayan Tahsilat': Repeat,
   'Tekrarlayan Ödeme': Repeat,
-  Görev: CheckSquare,
-  Randevu: Calendar,
-  'Teklif Süresi': AlertTriangle,
-  'Üretim Termin': RefreshCw,
-  'Sipariş Ödemesi': CreditCard,
-  'Cari Risk': AlertTriangle,
+  'Tedarikçi Ödemesi': Building2,
+  'Maaş Ödemesi': UsersRound,
+  'Genel Gider': Wallet,
+  'Çek Ödemesi': CreditCard,
+  Ödeme: CreditCard,
 }
 
-function urgencyStyles(urgency, overdue) {
-  if (overdue) {
+function urgencyStyles(item) {
+  if (item.overdue || item.dueToday) {
     return {
-      dot: 'bg-red-500 ring-red-500/30',
-      card: 'border-red-500/40 bg-red-500/10',
-      badge: 'bg-red-500/20 text-red-300',
-      label: 'GECİKTİ',
-      title: 'text-red-100',
-      meta: 'text-red-300/80',
+      dot: 'bg-red-400 ring-red-400/20',
+      card: 'border-red-400/25 bg-red-500/10 shadow-[inset_3px_0_0_rgba(248,113,113,0.65)]',
+      badge: 'border-red-400/25 bg-red-500/15 text-red-300',
+      label: item.overdue ? 'GECİKTİ' : 'BUGÜN',
+      title: 'text-gray-100',
+      meta: 'text-gray-400',
+      date: 'text-red-300',
+      amount: 'text-red-300',
     }
   }
-  if (urgency === 'today') {
+  if (item.urgency === 'soon') {
     return {
-      dot: 'bg-amber-400 ring-amber-400/30',
-      card: 'border-amber-500/35 bg-amber-500/8',
-      badge: 'bg-amber-500/20 text-amber-200',
-      label: 'BUGÜN',
-      title: 'text-amber-50',
-      meta: 'text-amber-200/80',
-    }
-  }
-  if (urgency === 'soon') {
-    return {
-      dot: 'bg-blue-400 ring-blue-400/30',
-      card: 'border-blue-500/25 bg-blue-500/5',
-      badge: 'bg-blue-500/15 text-blue-200',
+      dot: 'bg-orange-400 ring-orange-400/20',
+      card: 'border-orange-400/25 bg-orange-500/10 shadow-[inset_3px_0_0_rgba(251,146,60,0.6)]',
+      badge: 'border-orange-400/25 bg-orange-500/15 text-orange-200',
       label: 'YAKIN',
       title: 'text-gray-100',
       meta: 'text-gray-400',
+      date: 'text-orange-200',
+      amount: 'text-orange-200',
     }
   }
   return {
     dot: 'bg-emerald-400 ring-emerald-400/20',
-    card: 'border-dark-500/40 bg-dark-700/25',
-    badge: 'bg-dark-600 text-gray-400',
+    card: 'border-dark-500/50 bg-dark-700/25 shadow-[inset_3px_0_0_rgba(52,211,153,0.42)]',
+    badge: 'border-dark-500/50 bg-dark-600/70 text-gray-300',
     label: 'PLANLI',
     title: 'text-gray-200',
-    meta: 'text-gray-500',
+    meta: 'text-gray-400',
+    date: 'text-gray-400',
+    amount: 'text-emerald-300',
   }
 }
 
 export default function ActionTimeline() {
-  const items = getActionTimeline()
-  const overdueCount = items.filter((i) => i.overdue).length
+  const [revision, setRevision] = useState(0)
+
+  useEffect(() => {
+    function refresh() {
+      setRevision((current) => current + 1)
+    }
+    window.addEventListener('erlenbox:treasury-updated', refresh)
+    window.addEventListener('bach:personnel-updated', refresh)
+    window.addEventListener(RECURRING_PAYMENTS_EVENT, refresh)
+    return () => {
+      window.removeEventListener('erlenbox:treasury-updated', refresh)
+      window.removeEventListener('bach:personnel-updated', refresh)
+      window.removeEventListener(RECURRING_PAYMENTS_EVENT, refresh)
+    }
+  }, [])
+
+  void revision
+
+  const items = getPaymentActionTimeline()
+  const overdueCount = items.filter((item) => item.overdue || item.dueToday).length
 
   return (
-    <aside className="rounded-2xl border border-dark-500/50 bg-dark-800/70 shadow-card lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto">
-      <div className="border-b border-dark-500/45 p-4">
+    <aside className="flex h-full min-h-[42rem] flex-col rounded-3xl border border-dark-500/55 bg-dark-800/75 shadow-card">
+      <div className="border-b border-dark-500/45 px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-black uppercase tracking-wide text-white">Aksiyon Zaman Çizelgesi</h2>
-            <p className="mt-0.5 text-[10px] text-gray-500">Ödeme · tekrarlayan · görev · randevu</p>
+            <h2 className="text-sm font-black uppercase tracking-wide text-blue-300">Aksiyon Zaman Çizelgesi</h2>
+            <p className="mt-0.5 text-[11px] font-semibold text-gray-400">Tekrarlayan · tedarikçi · maaş · gider</p>
           </div>
           {overdueCount > 0 && (
-            <span className="rounded-lg bg-red-500/20 px-2 py-1 text-[10px] font-black text-red-300">
-              {overdueCount} gecikmiş
+            <span className="shrink-0 rounded-full border border-red-400/25 bg-red-500/10 px-2.5 py-1 text-[10px] font-black text-red-300">
+              {overdueCount} ödeme
             </span>
           )}
         </div>
       </div>
 
-      <div className="relative p-4">
-        <div className="absolute bottom-4 left-[27px] top-4 w-px bg-dark-500/60" />
-        <div className="space-y-3">
-          {items.map((item) => {
-            const styles = urgencyStyles(item.urgency, item.overdue)
-            const Icon = categoryIcon[item.category] || AlertTriangle
-            return (
-              <Link
-                key={item.id}
-                to={item.link || '/crm'}
-                className={`relative ml-0 block rounded-xl border p-3 pl-10 transition-colors hover:brightness-110 ${styles.card}`}
-              >
-                <span className={`absolute left-3 top-4 z-10 h-3 w-3 rounded-full ring-4 ${styles.dot}`} />
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                      <span className={`rounded px-1.5 py-0.5 text-[9px] font-black uppercase ${styles.badge}`}>{styles.label}</span>
-                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-gray-500">
-                        <Icon className="h-3 w-3" /> {item.category}
+      <div className="relative min-h-0 flex-1 overflow-y-auto p-3">
+        {items.length === 0 ? (
+          <div className="rounded-2xl border border-dark-500/45 bg-dark-700/25 px-4 py-8 text-center text-xs font-semibold text-gray-500">
+            Planlı ödeme bulunamadı.
+          </div>
+        ) : (
+          <>
+            <div className="absolute bottom-4 left-[23px] top-4 w-px bg-dark-500/45" />
+            <div className="space-y-2.5">
+              {items.map((item) => {
+                const styles = urgencyStyles(item)
+                const Icon = categoryIcon[item.category] || CreditCard
+                return (
+                  <Link
+                    key={item.id}
+                    to={item.link || '/kasa'}
+                    className={`relative ml-0 block rounded-2xl border px-3 py-3 pl-9 transition-colors hover:border-blue-400/35 hover:bg-dark-700/45 ${styles.card}`}
+                  >
+                    <span className={`absolute left-3 top-4 z-10 h-2.5 w-2.5 rounded-full ring-[5px] ${styles.dot}`} />
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                          <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${styles.badge}`}>{styles.label}</span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-gray-400">
+                            <Icon className="h-3 w-3" /> {item.category}
+                          </span>
+                          {item.recurring && (
+                            <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-2 py-0.5 text-[9px] font-bold text-purple-300">Tekrarlayan</span>
+                          )}
+                        </div>
+                        <p className={`truncate text-sm font-black ${styles.title}`}>{item.title}</p>
+                        <p className={`mt-1 truncate text-xs font-semibold ${styles.meta}`}>{item.subtitle}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2.5 flex items-center justify-between gap-2">
+                      <span className={`text-[11px] font-black ${styles.date}`}>
+                        {item.dateLabel}
+                        {item.overdue && ` · ${Math.abs(item.daysUntil)} gün gecikti`}
+                        {item.dueToday && !item.overdue && ' · Bugün'}
+                        {!item.overdue && !item.dueToday && item.daysUntil > 0 && ` · ${item.daysUntil} gün`}
                       </span>
-                      {item.recurring && (
-                        <span className="rounded bg-purple-500/15 px-1.5 py-0.5 text-[9px] font-bold text-purple-300">Tekrarlayan</span>
+                      {item.amount > 0 && (
+                        <span className={`shrink-0 text-sm font-black ${styles.amount}`}>
+                          {formatCurrency(item.amount)}
+                        </span>
                       )}
                     </div>
-                    <p className={`truncate text-xs font-bold ${styles.title}`}>{item.title}</p>
-                    <p className={`mt-0.5 truncate text-[10px] ${styles.meta}`}>{item.subtitle}</p>
-                  </div>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className={`text-[10px] font-semibold ${item.overdue ? 'text-red-400' : 'text-gray-500'}`}>
-                    {item.dateLabel}
-                    {item.overdue && ` · ${Math.abs(item.daysUntil)} gün gecikti`}
-                    {item.dueToday && ' · Bugün'}
-                    {!item.overdue && !item.dueToday && item.daysUntil > 0 && ` · ${item.daysUntil} gün`}
-                  </span>
-                  {item.amount > 0 && (
-                    <span className={`shrink-0 text-xs font-black ${item.overdue ? 'text-red-300' : 'text-emerald-300'}`}>
-                      {formatCurrency(item.amount)}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            )
-          })}
-        </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="border-t border-dark-500/45 p-3 text-center">
-        <Link to="/crm" className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-400 hover:text-blue-300">
-          Tüm takip merkezi <ArrowRight className="h-3 w-3" />
+        <Link to="/kasa" className="inline-flex items-center gap-1 text-[11px] font-black text-blue-400 hover:text-blue-300">
+          Kasa ve ödemeler <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
     </aside>

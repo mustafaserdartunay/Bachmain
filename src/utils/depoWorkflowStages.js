@@ -1,12 +1,6 @@
 const STORAGE_KEY = 'erlenbox-depo-workflow-stages'
 
-export const DEFAULT_DEPO_STAGES = [
-  { id: 'depo-stage-1', label: 'Beklemede', color: 'bg-amber-500', note: 'Depoya yeni giren kalemler', requiresPhoto: false, requiresTransport: false, isTerminal: false },
-  { id: 'depo-stage-2', label: 'Paketlendi', color: 'bg-cyan-500', note: 'Paketleme tamamlandı', requiresPhoto: false, requiresTransport: false, isTerminal: false },
-  { id: 'depo-stage-3', label: 'Teslime Hazır', color: 'bg-blue-500', note: 'Araç ve şoför ataması', requiresPhoto: false, requiresTransport: true, isTerminal: false },
-  { id: 'depo-stage-4', label: 'Araç Teslim', color: 'bg-purple-500', note: 'Araç teslim fotoğrafı zorunlu', requiresPhoto: true, requiresTransport: false, isTerminal: false },
-  { id: 'depo-stage-5', label: 'Teslim Edildi', color: 'bg-emerald-500', note: 'Müşteri teslimi', requiresPhoto: true, requiresTransport: false, isTerminal: true },
-]
+export const DEFAULT_DEPO_STAGES = []
 
 const LEGACY_STATUS_TO_LABEL = {
   Beklemede: 'Beklemede',

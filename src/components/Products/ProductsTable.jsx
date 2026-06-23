@@ -1,7 +1,21 @@
 import { useMemo, useState } from 'react'
-import { Search, Package, Pencil, Boxes, Tag, Warehouse, SlidersHorizontal, X, Trash2, ChevronDown } from 'lucide-react'
+import { Search, Package, Pencil, Boxes, Tag, Warehouse, X, Trash2, ChevronDown } from 'lucide-react'
 import { formatPrice, formatTL, getProductPricing } from '../../utils/productPricing'
 import { ListInlineDeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
+import EditableDropdownPill from '../EditableDropdownPill'
+
+const LIST_PILL_CLASS =
+  'flex w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold transition-colors hover:bg-dark-700/80'
+
+const ALL_CATEGORY_LABEL = 'Tüm kategoriler'
+const ALL_STATUS_LABEL = 'Tüm durumlar'
+const statusFilterOptions = [
+  { label: ALL_STATUS_LABEL, color: 'bg-gray-500' },
+  { label: 'Aktif stoklu', color: 'bg-emerald-500' },
+  { label: 'Kritik stok', color: 'bg-red-500' },
+  { label: 'Stok takibi açık', color: 'bg-blue-500' },
+  { label: 'Hizmet / stok takibi kapalı', color: 'bg-purple-500' },
+]
 
 export default function ProductsTable({
   products,
@@ -13,9 +27,10 @@ export default function ProductsTable({
   const [failedImages, setFailedImages] = useState(() => new Set())
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
+  const [activeMenu, setActiveMenu] = useState(null)
   const [filters, setFilters] = useState({
-    category: 'all',
-    status: 'all',
+    category: ALL_CATEGORY_LABEL,
+    status: ALL_STATUS_LABEL,
     minPrice: '',
     maxPrice: '',
   })
@@ -23,6 +38,14 @@ export default function ProductsTable({
   const categories = useMemo(() => {
     return [...new Set(products.map((product) => product.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr'))
   }, [products])
+
+  const categoryFilterOptions = useMemo(() => [
+    { label: ALL_CATEGORY_LABEL, color: 'bg-gray-500' },
+    ...categories.map((category, index) => ({
+      label: category,
+      color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-orange-500', 'bg-cyan-500'][index % 5],
+    })),
+  ], [categories])
 
   const filtered = products.filter((p) => {
     if (!searchQuery.trim()) return true
@@ -42,42 +65,25 @@ export default function ProductsTable({
     const minPrice = Number(filters.minPrice) || 0
     const maxPrice = Number(filters.maxPrice) || 0
 
-    if (filters.category !== 'all' && product.category !== filters.category) return false
-    if (filters.status === 'stock-tracked' && !product.stockTracking) return false
-    if (filters.status === 'service' && product.stockTracking) return false
-    if (filters.status === 'critical' && !isCritical) return false
-    if (filters.status === 'active' && (!product.stockTracking || isCritical)) return false
+    if (filters.category !== ALL_CATEGORY_LABEL && product.category !== filters.category) return false
+    if (filters.status === 'Stok takibi açık' && !product.stockTracking) return false
+    if (filters.status === 'Hizmet / stok takibi kapalı' && product.stockTracking) return false
+    if (filters.status === 'Kritik stok' && !isCritical) return false
+    if (filters.status === 'Aktif stoklu' && (!product.stockTracking || isCritical)) return false
     if (minPrice && price < minPrice) return false
     if (maxPrice && price > maxPrice) return false
     return true
   })
 
-  const hasActiveFilters = filters.category !== 'all' || filters.status !== 'all' || filters.minPrice || filters.maxPrice
+  const hasActiveFilters = filters.category !== ALL_CATEGORY_LABEL || filters.status !== ALL_STATUS_LABEL || filters.minPrice || filters.maxPrice
 
   function resetFilters() {
-    setFilters({ category: 'all', status: 'all', minPrice: '', maxPrice: '' })
+    setFilters({ category: ALL_CATEGORY_LABEL, status: ALL_STATUS_LABEL, minPrice: '', maxPrice: '' })
   }
 
   function markImageFailed(id) {
     setFailedImages((current) => new Set(current).add(id))
   }
-
-  const activeCount = filtered.filter((product) => product.stockTracking).length
-  const criticalCount = filtered.filter((product) => (
-    product.stockTracking
-    && product.criticalStock > 0
-    && product.initialStock <= product.criticalStock
-  )).length
-  const totalStock = filtered.reduce((sum, product) => sum + (Number(product.initialStock) || 0), 0)
-  const stockTotals = filtered.reduce((totals, product) => {
-    const stock = product.stockTracking ? Number(product.initialStock) || 0 : 0
-    const pricing = getProductPricing(product)
-    return {
-      salesExcl: totals.salesExcl + stock * (Number(pricing.finalSalesPriceExcl) || 0),
-      salesIncl: totals.salesIncl + stock * (Number(pricing.finalSalesPriceIncl) || 0),
-      cost: totals.cost + stock * (Number(product.costPrice) || 0),
-    }
-  }, { salesExcl: 0, salesIncl: 0, cost: 0 })
 
   function getPriceDetail(product, pricing) {
     const cost = Number(product.costPrice) || 0
@@ -122,86 +128,58 @@ export default function ProductsTable({
   }
 
   return (
-    <div className="card">
-      <div className="mb-4 grid grid-cols-7 gap-2">
-        <div className="rounded-xl border border-dark-500/50 bg-dark-700/40 p-3">
-          <p className="text-xs text-gray-500">Toplam Kayıt</p>
-          <p className="text-xl font-semibold text-white">{filtered.length}</p>
-        </div>
-        <div className="rounded-xl border border-dark-500/50 bg-dark-700/40 p-3">
-          <p className="text-xs text-gray-500">Stok Takipli</p>
-          <p className="text-xl font-semibold text-blue-300">{activeCount}</p>
-        </div>
-        <div className="rounded-xl border border-dark-500/50 bg-dark-700/40 p-3">
-          <p className="text-xs text-gray-500">Toplam Stok</p>
-          <p className="text-xl font-semibold text-emerald-300">{totalStock.toLocaleString('tr-TR')}</p>
-        </div>
-        <div className="rounded-xl border border-dark-500/50 bg-dark-700/40 p-3">
-          <p className="text-xs text-gray-500">Kritik Ürün</p>
-          <p className="text-xl font-semibold text-red-300">{criticalCount}</p>
-        </div>
-        <div className="rounded-xl border border-dark-500/50 bg-emerald-500/10 p-3">
-          <p className="text-xs text-gray-500">Stok Satış KDV Hariç</p>
-          <p className="text-sm font-semibold text-emerald-300">{formatTL(stockTotals.salesExcl)}</p>
-        </div>
-        <div className="rounded-xl border border-dark-500/50 bg-green-500/10 p-3">
-          <p className="text-xs text-gray-500">Stok Satış KDV Dahil</p>
-          <p className="text-sm font-semibold text-green-300">{formatTL(stockTotals.salesIncl)}</p>
-        </div>
-        <div className="rounded-xl border border-dark-500/50 bg-red-500/10 p-3">
-          <p className="text-xs text-gray-500">Stok Toplam Maliyeti</p>
-          <p className="text-sm font-semibold text-red-300">{formatTL(stockTotals.cost)}</p>
-        </div>
-      </div>
-
-      <div className="mb-3 flex items-center justify-between gap-4">
-        <div className="relative w-full max-w-md">
+    <div>
+      <div className="mb-4 space-y-3">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
             placeholder="Ürün adı, stok kodu, barkod veya kategori ara..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-dark-700 border border-dark-500/50 rounded-lg pl-10 pr-4 py-2 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-accent-blue/50"
+            className="form-input pl-10"
           />
         </div>
-        <h3 className="shrink-0 text-sm font-semibold text-white">Detaylı Ürün ve Hizmet Listesi</h3>
-      </div>
 
-      <div className="mb-4 rounded-xl border border-dark-500/50 bg-dark-700/25 p-3">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="h-3.5 w-3.5 text-accent-blue" />
-            <h4 className="text-xs font-semibold text-white">Filtreleme</h4>
-          </div>
-          {hasActiveFilters && (
+      <div className="mb-4 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3">
+        {hasActiveFilters && (
+          <div className="mb-2 flex justify-end">
             <button type="button" onClick={resetFilters} className="flex items-center gap-1 rounded-lg border border-dark-500/60 px-2 py-1 text-[10px] font-semibold text-gray-400 hover:bg-dark-700 hover:text-gray-200">
               <X className="h-3.5 w-3.5" /> Temizle
             </button>
-          )}
-        </div>
+          </div>
+        )}
         <div className="grid grid-cols-4 gap-2">
           <div>
-            <label className="form-label">Kategori</label>
-            <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })} className="form-input">
-              <option value="all">Tüm kategoriler</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+            <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Kategori</label>
+            <EditableDropdownPill
+              value={filters.category}
+              options={categoryFilterOptions}
+              includePlaceholderOption={false}
+              editable={false}
+              buttonClassName={LIST_PILL_CLASS}
+              openKey="product-filter-category"
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              onChange={(value) => setFilters({ ...filters, category: value })}
+            />
           </div>
           <div>
-            <label className="form-label">Durum</label>
-            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="form-input">
-              <option value="all">Tüm durumlar</option>
-              <option value="active">Aktif stoklu</option>
-              <option value="critical">Kritik stok</option>
-              <option value="stock-tracked">Stok takibi açık</option>
-              <option value="service">Hizmet / stok takibi kapalı</option>
-            </select>
+            <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Durum</label>
+            <EditableDropdownPill
+              value={filters.status}
+              options={statusFilterOptions}
+              includePlaceholderOption={false}
+              editable={false}
+              buttonClassName={LIST_PILL_CLASS}
+              openKey="product-filter-status"
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              onChange={(value) => setFilters({ ...filters, status: value })}
+            />
           </div>
           <div>
-            <label className="form-label">Min. Satış Fiyatı</label>
+            <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Min. Satış Fiyatı</label>
             <input
               type="number"
               min="0"
@@ -211,7 +189,7 @@ export default function ProductsTable({
             />
           </div>
           <div>
-            <label className="form-label">Maks. Satış Fiyatı</label>
+            <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Maks. Satış Fiyatı</label>
             <input
               type="number"
               min="0"
@@ -221,6 +199,7 @@ export default function ProductsTable({
             />
           </div>
         </div>
+      </div>
       </div>
 
       <div className="space-y-3">
@@ -275,7 +254,7 @@ export default function ProductsTable({
 
                 <div className="text-right">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">KDV Dahil</p>
-                  <p className="mt-1 text-sm font-black text-green-300">{formatTL(pricing.finalSalesPriceIncl)}</p>
+                  <p className="mt-1 text-sm font-black text-blue-300">{formatTL(pricing.finalSalesPriceIncl)}</p>
                 </div>
 
                 <div className="text-right">
@@ -425,7 +404,7 @@ export default function ProductsTable({
                       </PriceGroup>
                       <PriceGroup title="Satış Fiyatları" dot="bg-emerald-400">
                         <PriceMiniCard label="KDV Hariç" value={pricing.finalSalesPriceExcl} tone="text-emerald-300" />
-                        <PriceMiniCard label="KDV Dahil" value={pricing.finalSalesPriceIncl} tone="text-green-300" />
+                        <PriceMiniCard label="KDV Dahil" value={pricing.finalSalesPriceIncl} tone="text-blue-300" />
                       </PriceGroup>
                       <PriceGroup title="Bayi Kar Yüzdesi" dot="bg-fuchsia-400">
                         <PriceMiniCard label="KDV Hariç" value={priceDetail.dealerProfitRate} tone="text-purple-300" prefix="" suffix="%" />

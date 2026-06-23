@@ -451,6 +451,7 @@ export default function ProductionPage() {
                         lineItem={lineItem}
                         lineIndex={lineIndex}
                         lineCount={lineItems.length}
+                        productionJobId={job.id}
                         productionStages={productionStageOptions}
                         fulfillmentOptions={productionStatusListOptions}
                         fulfillmentOpenKey={`${job.id}-${lineItem.id}-fulfillment`}

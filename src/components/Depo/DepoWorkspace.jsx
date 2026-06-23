@@ -40,7 +40,7 @@ import { getDepoItemStatusLabel, isDepoItemDelivered } from '../../utils/depoSta
 import { getDepoStageFilterOptions, loadDepoWorkflowStages } from '../../utils/depoWorkflowStages'
 
 const depoListGrid =
-  '96px 76px minmax(140px,1fr) minmax(200px,1.5fr) 62px 108px'
+  '96px 76px minmax(140px,1fr) minmax(200px,1.5fr) 96px 136px'
 
 const DEPO_PAGE_CONFIG = {
   order: {
@@ -62,12 +62,14 @@ function buildDepoDocumentDraft(item) {
   const totals = computeDepoLineTotals(item)
   const quantity = Math.max(0, Number(item.deliveredQuantity) || totals.quantity)
   const productCode = item.productCode || ''
-  const codePrefix = productCode ? `${productCode} · ` : ''
+  const productionCode = item.productionCode || item.productionJobId || ''
+  const codePrefix = [productionCode, productCode].filter(Boolean).join(' · ')
   const invoiceAt = item.invoiceAt || item.depoSentAt || item.createdAt || ''
   return {
     description: [
       item.customer,
       item.product,
+      productionCode,
       productCode,
       `${quantity} adet`,
       invoiceAt,
@@ -75,10 +77,11 @@ function buildDepoDocumentDraft(item) {
     customerName: item.customer || '',
     productName: item.product || '',
     productCode,
+    productionCode,
     deliveredQuantity: quantity,
     invoiceAt,
     lines: [{
-      description: `${codePrefix}${item.product}`,
+      description: `${codePrefix ? `${codePrefix} · ` : ''}${item.product}`,
       quantity,
       unitPrice: totals.unitPriceExcl,
       vat: totals.vatRate,
@@ -230,11 +233,10 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
 
   return (
     <div className="space-y-5">
-      <div className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
+      <div className="relative flex min-h-[64px] items-center justify-center rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
         <div className="flex justify-center">
           <h1 className={`text-2xl font-black uppercase tracking-wide ${pageConfig.titleClass}`}>{pageConfig.title}</h1>
         </div>
-        <p className="mt-2 text-xs text-gray-500">{pageConfig.subtitle}</p>
       </div>
 
       <SummaryMetrics
@@ -366,6 +368,16 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
               : { brandShortName: item.customer, companyTitle: '' }
             const isExpanded = expandedId === item.id
             const docsReady = canIssueDocuments(item)
+            const incomingQuantity = Math.max(
+              0,
+              Number(item.deliveredQuantity) || Number(item.quantity) || Number(item.producedQuantity) || 0,
+            )
+            const invoicedQuantity = item.invoiceNo
+              ? Math.max(0, Number(item.invoicedQuantity) || incomingQuantity)
+              : 0
+            const remainingInDepo = item.invoiceNo
+              ? Math.max(0, incomingQuantity - invoicedQuantity)
+              : 0
 
             return (
               <div
@@ -384,7 +396,9 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
                     <p className="text-xs font-semibold text-gray-500">{formatListDateTime(item.createdAt)}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-black tabular-nums text-blue-300">{item.orderId || item.productionJobId}</p>
+                    <p className="text-xs font-black tabular-nums text-blue-300">
+                      {item.productionCode || item.productionJobId || item.orderId}
+                    </p>
                   </div>
                   <div className="min-w-0">
                     <p className="flex min-w-0 items-center gap-1.5 text-sm font-black text-white">
@@ -404,11 +418,25 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
                       compact
                     />
                   </div>
-                  <p className="min-w-0 pr-1 text-right text-sm font-black tabular-nums text-white">
-                    {formatQty(item.producedQuantity)}
-                  </p>
+                  <div className="min-w-0 pr-1 text-right">
+                    <p className="text-sm font-black tabular-nums text-white">{formatQty(incomingQuantity)}</p>
+                    <p className="mt-0.5 text-[9px] font-black uppercase tracking-wide text-gray-500">Gelen</p>
+                    {remainingInDepo > 0 && (
+                      <p className="mt-0.5 text-[10px] font-black text-amber-300">
+                        Kalan {formatQty(remainingInDepo)}
+                      </p>
+                    )}
+                  </div>
                   <div className="relative z-10 flex items-center justify-end gap-1">
-                    {docsReady && !item.invoiceNo && (
+                    {item.invoiceNo ? (
+                      <span
+                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[10px] font-black text-emerald-300"
+                        title={`Fatura: ${item.invoiceNo}`}
+                      >
+                        <Receipt className="h-3.5 w-3.5" />
+                        {remainingInDepo > 0 ? 'Kısmi' : 'Fatura'}
+                      </span>
+                    ) : docsReady && (
                       <button
                         type="button"
                         onClick={() => handleIssueInvoice(item)}

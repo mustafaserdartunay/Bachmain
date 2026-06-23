@@ -5,17 +5,22 @@ export const CUSTOMER_META_KEY = 'erlenbox-customer-list-settings'
 export const customerTypeOptions = [
   { label: 'Müşteri', color: 'bg-blue-500' },
   { label: 'Bayi', color: 'bg-emerald-500' },
+  { label: 'Tedarikçi', color: 'bg-orange-500' },
 ]
 
-export const representativeOptions = [
-  { label: 'Ayşe Demir', color: 'bg-purple-500' },
-  { label: 'Mehmet Kaya', color: 'bg-blue-500' },
-  { label: 'Selin Arslan', color: 'bg-emerald-500' },
-  { label: 'Fatma Öztürk', color: 'bg-orange-500' },
-  { label: 'Ali Çelik', color: 'bg-cyan-500' },
-  { label: 'Satış Ekibi', color: 'bg-gray-500' },
-  { label: 'Serdar', color: 'bg-fuchsia-500' },
-]
+export const SUPPLIER_TYPE_LABEL = 'Tedarikçi'
+
+export function isSupplierPartyType(type) {
+  return String(type || '').trim() === SUPPLIER_TYPE_LABEL
+}
+
+export function matchesPartyListFilter(type, listKind = 'customer') {
+  if (listKind === 'supplier') return isSupplierPartyType(type)
+  if (listKind === 'customer') return !isSupplierPartyType(type)
+  return true
+}
+
+export const representativeOptions = []
 
 export const scoringOptions = [
   { label: 'Kötü', color: 'bg-red-500' },
@@ -79,20 +84,21 @@ export const productCategoryOptions = [
 ]
 
 export const accountOptions = [
-  { label: 'Merkez Nakit Kasa', color: 'bg-emerald-500' },
-  { label: 'İş Bankası Ticari Hesap', color: 'bg-blue-500' },
-  { label: 'Garanti BBVA Tahsilat Hesabı', color: 'bg-purple-500' },
+  { label: 'Nakit Kasa', color: 'bg-emerald-500' },
+  { label: 'Banka Hesabı', color: 'bg-blue-500' },
+  { label: 'Çek Kasası', color: 'bg-purple-500' },
 ]
 
 export const cashAccountOptions = [
-  { label: 'Merkez Nakit Kasa', color: 'bg-emerald-500' },
-  { label: 'Şube Nakit Kasa', color: 'bg-teal-500' },
+  { label: 'Merkez Kasa', color: 'bg-emerald-500' },
 ]
 
 export const bankAccountOptions = [
-  { label: 'İş Bankası Ticari Hesap', color: 'bg-blue-500' },
-  { label: 'Garanti BBVA Tahsilat Hesabı', color: 'bg-purple-500' },
-  { label: 'Akbank Ticari Hesap', color: 'bg-cyan-500' },
+  { label: 'Ticari Banka Hesabı', color: 'bg-blue-500' },
+]
+
+export const chequeAccountOptions = [
+  { label: 'Merkez Çek Kasası', color: 'bg-purple-500' },
 ]
 
 export const OPTION_LISTS_KEY = 'erlenbox-customer-option-lists'
@@ -123,10 +129,15 @@ const defaultOptionLists = {
   account: accountOptions,
   cashAccount: cashAccountOptions,
   bankAccount: bankAccountOptions,
+  chequeAccount: chequeAccountOptions,
 }
 
 function pickList(list, field) {
   return Array.isArray(list) ? list : defaultOptionLists[field]
+}
+
+function pickDefaultWhenEmpty(list, field) {
+  return Array.isArray(list) && list.length ? list : defaultOptionLists[field]
 }
 
 function createOptionId(label, index) {
@@ -170,9 +181,10 @@ export function readOptionLists() {
       priority: pickList(saved.priority, 'priority'),
       tags: pickList(saved.tags, 'tags'),
       productCategory: pickList(saved.productCategory, 'productCategory'),
-      account: pickList(saved.account, 'account'),
+      account: pickDefaultWhenEmpty(saved.account, 'account'),
       cashAccount: pickList(saved.cashAccount, 'cashAccount'),
       bankAccount: pickList(saved.bankAccount, 'bankAccount'),
+      chequeAccount: pickList(saved.chequeAccount, 'chequeAccount'),
     })
   } catch {
     return normalizeOptionLists({ ...defaultOptionLists })

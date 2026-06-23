@@ -144,16 +144,7 @@ export default function CrmProcessCard({
 
   return (
     <article
-      role="button"
-      tabIndex={0}
-      onClick={onEdit}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          onEdit?.()
-        }
-      }}
-      className="group relative flex w-full cursor-pointer items-stretch gap-3 overflow-hidden rounded-xl border border-dark-500/40 bg-dark-800/55 px-3 py-3 transition-all hover:border-dark-500/60 hover:bg-dark-700/50 hover:shadow-[0_8px_24px_rgba(15,23,42,0.18)]"
+      className="group relative flex w-full items-stretch gap-3 overflow-hidden rounded-xl border border-dark-500/40 bg-dark-800/55 px-3 py-3 transition-all hover:border-dark-500/60 hover:bg-dark-700/50 hover:shadow-[0_8px_24px_rgba(15,23,42,0.18)]"
     >
       <ProcessDatesColumn
         creator={creatorName}

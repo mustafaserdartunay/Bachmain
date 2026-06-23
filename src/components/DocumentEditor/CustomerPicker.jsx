@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  Instagram,
   Landmark,
   Mail,
   MapPin,
@@ -11,7 +12,7 @@ import {
 import { customers as customerData } from '../../data/mockData'
 import { findCustomerProfileByReference, getCustomerProfiles } from '../../data/customerProfiles'
 import { getCustomerDisplay } from '../../utils/customerDisplay'
-import { resolveCustomerContactInfo } from '../../utils/customerContacts'
+import { getCustomerContacts, resolveContactLinkHref, resolveCustomerContactInfo } from '../../utils/customerContacts'
 import {
   getCustomerMetaSelection,
   getDefaultCustomerScoring,
@@ -54,7 +55,7 @@ function findDocumentCustomer(customerName) {
 function customerSearchTexts(customer) {
   const display = getCustomerDisplay(customer)
   const contactInfo = resolveCustomerContactInfo(customer)
-  const savedContacts = (customer.contacts || []).flatMap((row) => [row.name, row.phone, row.email])
+  const savedContacts = (customer.contacts || []).flatMap((row) => [row.name, row.phone, row.email, row.instagram])
   return [
     customer.company,
     customer.companyTitle,
@@ -136,9 +137,43 @@ function buildRepresentativePill(owner) {
   }
 }
 
+function buildCustomerContactRows(customer, record) {
+  const contacts = getCustomerContacts(customer)
+  const priorityIds = ['owner', 'authorized', 'other']
+  const orderedContacts = [
+    ...priorityIds.map((id) => contacts.find((row) => row.id === id)).filter(Boolean),
+    ...contacts.filter((row) => !priorityIds.includes(row.id)),
+  ]
+
+  const rows = orderedContacts
+    .map((row) => ({
+      key: row.id || row.title || row.name,
+      title: row.title || 'İletişim',
+      name: row.name,
+      phone: row.phone,
+      email: row.email,
+      instagram: row.instagram,
+    }))
+    .filter((row) => row.name || row.phone || row.email || row.instagram)
+
+  if (rows.length) return rows
+
+  const contact = record.contact || customer.contact || ''
+  const phone = record.phone || customer.phone || ''
+  const email = record.email || customer.email || ''
+  if (!contact && !phone && !email) return []
+
+  return [{
+    key: 'primary',
+    title: 'Yetkili',
+    name: contact,
+    phone,
+    email,
+  }]
+}
+
 function CustomerInfoStrip({ customer, record }) {
   const display = getCustomerDisplay(customer)
-  const contactInfo = resolveCustomerContactInfo(customer)
   const pills = buildMetaPills(customer)
   const scorePill = buildScorePill(customer)
   const balancePill = buildBalancePill(customer)
@@ -150,17 +185,9 @@ function CustomerInfoStrip({ customer, record }) {
     ...pills,
   ].filter(Boolean)
 
-  const contact = record.contact || contactInfo.contactName
-  const email = record.email || contactInfo.email || customer.email
-  const phone = record.phone || contactInfo.phone || customer.phone
+  const contactRows = buildCustomerContactRows(customer, record)
   const detailedAddress = customer.address?.trim() || customer.city || ''
   const warehouse = resolveCustomerWarehouse(customer)
-
-  const contactLine = [
-    contact && { icon: UserRound, text: contact },
-    phone && { icon: Phone, text: phone, href: `tel:${phone.replace(/\s/g, '')}` },
-    email && { icon: Mail, text: email, href: `mailto:${email}` },
-  ].filter(Boolean)
 
   const detailLine = [
     warehouse && { icon: Warehouse, text: warehouse },
@@ -212,18 +239,41 @@ function CustomerInfoStrip({ customer, record }) {
         </div>
       )}
 
-      {contactLine.length > 0 && (
-        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
-          {contactLine.map(({ icon: Icon, text, href }) => (
-            <span key={text} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] text-gray-400">
-              <Icon className="h-3 w-3 shrink-0 text-gray-600" />
-              {href ? (
-                <a href={href} className="truncate transition-colors hover:text-blue-300">{text}</a>
-              ) : (
-                <span className="truncate">{text}</span>
-              )}
-            </span>
-          ))}
+      {contactRows.length > 0 && (
+        <div className="mt-1 space-y-1">
+          {contactRows.map((row) => {
+            const items = [
+              row.name && { icon: UserRound, text: row.name },
+              row.phone && { icon: Phone, text: row.phone, href: `tel:${row.phone.replace(/\s/g, '')}` },
+              row.email && { icon: Mail, text: row.email, href: `mailto:${row.email}` },
+              row.instagram && { icon: Instagram, text: row.instagram, href: resolveContactLinkHref(row.instagram, { instagram: true }), external: true },
+            ].filter(Boolean)
+
+            return (
+              <div key={row.key} className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
+                <span className="inline-flex min-w-[88px] shrink-0 items-center text-[10px] font-black uppercase tracking-wide text-gray-500">
+                  {row.title}
+                </span>
+                {items.map(({ icon: Icon, text, href, external }) => (
+                  <span key={`${row.key}-${text}`} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] text-gray-400">
+                    <Icon className="h-3 w-3 shrink-0 text-gray-600" />
+                    {href ? (
+                      <a
+                        href={href}
+                        target={external ? '_blank' : undefined}
+                        rel={external ? 'noopener noreferrer' : undefined}
+                        className="truncate transition-colors hover:text-blue-300"
+                      >
+                        {text}
+                      </a>
+                    ) : (
+                      <span className="truncate">{text}</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            )
+          })}
         </div>
       )}
 

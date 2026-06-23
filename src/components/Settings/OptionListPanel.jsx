@@ -11,6 +11,15 @@ function createOptionId() {
   return `opt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
 }
 
+function buildCopyLabel(label, options) {
+  const base = `${String(label || 'Seçenek').trim()} Kopya`
+  const used = new Set((options || []).map((option) => normalizeLabel(option.label)))
+  if (!used.has(normalizeLabel(base))) return base
+  let index = 2
+  while (used.has(normalizeLabel(`${base} ${index}`))) index += 1
+  return `${base} ${index}`
+}
+
 export default function OptionListPanel({
   title,
   description,
@@ -82,6 +91,23 @@ export default function OptionListPanel({
     onChange(mapProcessOptions(options, stage, (option) => ({ ...option, label: clean })))
   }
 
+  function copyStage(stage) {
+    const sourceIndex = options.findIndex((option) => matchProcessOption(option, stage))
+    if (sourceIndex < 0) return
+    const source = options[sourceIndex]
+    const nextOption = {
+      ...source,
+      id: createOptionId(),
+      label: buildCopyLabel(source.label || stage.label, options),
+      color: source.color || stage.color || stageColors[(options.length + 1) % stageColors.length],
+    }
+    const next = [...options]
+    next.splice(sourceIndex + 1, 0, nextOption)
+    onChange(next)
+    setPreviewId(nextOption.id)
+    setPendingDeleteId(null)
+  }
+
   function reorderStages(nextStages) {
     onChange(processRecordToOptions(nextStages))
   }
@@ -113,6 +139,7 @@ export default function OptionListPanel({
         onSelectStage={selectStage}
         onUpdateStageColor={updateStageColor}
         onUpdateStageLabel={updateStageLabel}
+        onCopyStage={copyStage}
         onReorderStages={reorderStages}
         pendingStageDeleteId={pendingDeleteId}
         setPendingStageDeleteId={setPendingDeleteId}

@@ -4,6 +4,26 @@ const DEFAULT_CONTACT_TITLES = [
   { id: 'other', title: 'Diğer Sorumlu', locked: true },
 ]
 
+export function resolveContactLinkHref(value = '', { instagram = false } = {}) {
+  const clean = String(value).trim()
+  if (!clean) return ''
+
+  if (/^https?:\/\//i.test(clean)) {
+    return clean.replace(/^https?:\/\//i, (match) => match.toLowerCase())
+  }
+
+  if (clean.includes('.') || clean.includes('/')) {
+    return `https://${clean.replace(/^\/+/, '')}`
+  }
+
+  if (instagram || clean.startsWith('@')) {
+    const handle = clean.replace(/^@/, '')
+    if (handle) return `https://instagram.com/${handle}`
+  }
+
+  return ''
+}
+
 function normalizeContactRow(row = {}) {
   return {
     id: String(row.id || ''),
@@ -11,6 +31,7 @@ function normalizeContactRow(row = {}) {
     name: String(row.name || '').trim(),
     phone: String(row.phone || '').trim(),
     email: String(row.email || '').trim(),
+    instagram: String(row.instagram || '').trim(),
   }
 }
 
@@ -22,8 +43,9 @@ export function parseContactsFromFormPayload(payload, contactRows = []) {
       name: payload[`contactName-${row.id}`] || '',
       phone: payload[`contactPhone-${row.id}`] || '',
       email: payload[`contactEmail-${row.id}`] || '',
+      instagram: payload[`contactInstagram-${row.id}`] || '',
     }))
-    .filter((row) => row.name || row.phone || row.email)
+    .filter((row) => row.name || row.phone || row.email || row.instagram)
 }
 
 export function initialContactRowsFromCustomer(customer) {
@@ -41,6 +63,7 @@ export function initialContactRowsFromCustomer(customer) {
         defaultName: saved.name,
         defaultPhone: saved.phone,
         defaultEmail: saved.email,
+        defaultInstagram: saved.instagram,
       }
     }
     if (row.id === 'authorized') {
@@ -63,6 +86,7 @@ export function initialContactRowsFromCustomer(customer) {
         defaultName: row.name,
         defaultPhone: row.phone,
         defaultEmail: row.email,
+        defaultInstagram: row.instagram,
       })
     })
 
@@ -71,10 +95,10 @@ export function initialContactRowsFromCustomer(customer) {
 
 function pickContactByPriority(contacts, priorityIds) {
   for (const id of priorityIds) {
-    const match = contacts.find((row) => row.id === id && (row.name || row.phone || row.email))
+    const match = contacts.find((row) => row.id === id && (row.name || row.phone || row.email || row.instagram))
     if (match) return match
   }
-  return contacts.find((row) => row.name || row.phone || row.email) || null
+  return contacts.find((row) => row.name || row.phone || row.email || row.instagram) || null
 }
 
 export function resolvePrimaryContact(contacts = [], fallback = {}) {

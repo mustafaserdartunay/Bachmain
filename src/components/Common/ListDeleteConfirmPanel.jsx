@@ -8,7 +8,7 @@ export const EDIT_PENCIL_BUTTON_CLASS = DUZENLEME_KALEMI_BUTTON_CLASS
 export const DELETE_TRASH_BUTTON_HIDDEN_CLASS = 'pointer-events-none invisible'
 
 export const DELETE_CONFIRM_POPOVER_PANEL_CLASS =
-  'flex items-center gap-2 rounded-2xl border border-red-500/35 bg-dark-900 p-2 shadow-2xl ring-1 ring-red-500/15'
+  'flex flex-wrap items-center gap-2 rounded-2xl border border-red-500/35 bg-dark-900 p-2 shadow-2xl ring-1 ring-red-500/15'
 
 export const DELETE_CONFIRM_POPOVER_ANCHOR_CLASS = 'absolute right-0 top-12 z-40'
 
@@ -26,27 +26,29 @@ export function DeleteConfirmPopover({
       className={`${DELETE_CONFIRM_POPOVER_PANEL_CLASS} ${className}`}
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-red-300">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-500/15 text-red-300">
         <Trash2 className="h-4 w-4" />
       </div>
-      <div className="min-w-0">
-        <p className="whitespace-nowrap text-xs font-black text-white">{title}</p>
-        <p className="whitespace-nowrap text-[10px] font-medium text-gray-500">{description}</p>
+      <div className="min-w-[8rem] flex-1">
+        <p className="break-words text-xs font-black leading-tight text-white">{title}</p>
+        <p className="mt-0.5 break-words text-[10px] font-medium leading-tight text-gray-500">{description}</p>
       </div>
-      <button
-        type="button"
-        onClick={onConfirm}
-        className="rounded-lg bg-red-500 px-2.5 py-1.5 text-[10px] font-black text-white transition-colors hover:bg-red-400"
-      >
-        {confirmLabel}
-      </button>
-      <button
-        type="button"
-        onClick={onCancel}
-        className="rounded-lg border border-dark-500/60 bg-dark-700 px-2.5 py-1.5 text-[10px] font-bold text-gray-200 transition-colors hover:bg-dark-600"
-      >
-        {cancelLabel}
-      </button>
+      <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="rounded-lg bg-red-500 px-2.5 py-1.5 text-[10px] font-black text-white transition-colors hover:bg-red-400"
+        >
+          {confirmLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-lg border border-dark-500/60 bg-dark-700 px-2.5 py-1.5 text-[10px] font-bold text-gray-200 transition-colors hover:bg-dark-600"
+        >
+          {cancelLabel}
+        </button>
+      </div>
     </div>
   )
 }

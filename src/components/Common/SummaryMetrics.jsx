@@ -19,7 +19,7 @@ export function SummaryMetricCard({ title, value, icon: Icon, tone = 'blue', val
   const valueToneClass = resolveToneClass(valueTone, TONE_CLASSES.white)
 
   return (
-    <div className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-4 shadow-card">
+    <div className="min-h-[94px] rounded-2xl border border-dark-500/50 bg-dark-800/70 p-4 shadow-card">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs font-medium text-gray-500">{title}</span>
         {Icon && (

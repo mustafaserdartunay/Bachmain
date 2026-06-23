@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { GripVertical, Pencil, Plus, X } from 'lucide-react'
+import { Copy, GripVertical, Pencil, Plus, X } from 'lucide-react'
 import InlineDeleteConfirm from '../Common/InlineDeleteConfirm'
 import { BTN_PRIMARY } from '../../utils/buttonStyles'
 import StageColorSwatches from './StageColorSwatches'
@@ -14,6 +14,7 @@ export default function WorkflowStageEditor({
   onSelectStage,
   onUpdateStageColor,
   onUpdateStageLabel,
+  onCopyStage,
   onReorderStages,
   pendingStageDeleteId,
   setPendingStageDeleteId,
@@ -303,6 +304,27 @@ export default function WorkflowStageEditor({
                             }`}
                           >
                             {stage.label}
+                          </button>
+                        )}
+                        {typeof onCopyStage === 'function' && (
+                          <button
+                            type="button"
+                            onMouseDown={(event) => {
+                              event.preventDefault()
+                              event.stopPropagation()
+                            }}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              if (isEditingLabel) commitLabelEdit(stage.id)
+                              onCopyStage(stage)
+                            }}
+                            className={`rounded-md p-2 text-gray-500 transition-all hover:bg-emerald-500/15 hover:text-emerald-300 ${
+                              isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                            }`}
+                            title="Kopyala"
+                            aria-label={`${stage.label} kopyala`}
+                          >
+                            <Copy className="h-3 w-3" />
                           </button>
                         )}
                         <button

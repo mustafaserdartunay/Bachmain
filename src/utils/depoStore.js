@@ -73,6 +73,17 @@ function normalizeDepoItem(item, stages = loadDepoWorkflowStages()) {
     || ''
   const stage = findDepoStageById(currentStageId, stages) || firstStage
   let stagePhotos = normalizeStagePhotos(item.stagePhotos)
+  let productionCode = item.productionCode || ''
+
+  if (!productionCode && item.productionJobId && item.lineItemId && item.quantityRowId) {
+    const job = loadProductionJobs().find((entry) => entry.id === item.productionJobId)
+    const line = job?.lineItems?.find((entry) => entry.id === item.lineItemId)
+    const rowIndex = Array.isArray(line?.quantityRows)
+      ? line.quantityRows.findIndex((row) => row.id === item.quantityRowId)
+      : -1
+    const row = rowIndex >= 0 ? line.quantityRows[rowIndex] : null
+    productionCode = row?.productionCode || (rowIndex >= 0 && line.quantityRows.length > 1 ? `${item.productionJobId}-${rowIndex + 1}` : '')
+  }
 
   const aracStage = stages.find((entry) => (
     entry.label === 'Araç Teslim' || entry.label === 'Araçta'
@@ -109,6 +120,7 @@ function normalizeDepoItem(item, stages = loadDepoWorkflowStages()) {
     ...item,
     currentStageId: stage?.id || currentStageId,
     status: stage?.label || item.status || firstStage?.label || 'Beklemede',
+    productionCode,
     stagePhotos,
   }
 }
@@ -282,6 +294,9 @@ export function createDepoItemFromRow(job, line, row, { quantity } = {}) {
     orderId: job.orderId || '',
     lineItemId: line.id,
     quantityRowId: row.id,
+    source: 'production',
+    sourceLabel: 'Üretim takibi',
+    productionCode: row.productionCode || '',
     customer: job.customer || '',
     product: line.product || job.product || 'Ürün',
     productCode: pricing.productCode,
@@ -405,9 +420,11 @@ export function issueDepoInvoice(depoItemId) {
   if (item.invoiceNo) return item
 
   const invoiceNo = `SF-${Date.now().toString().slice(-8)}`
+  const invoicedQuantity = Math.max(0, Number(item.deliveredQuantity) || Number(item.quantity) || Number(item.producedQuantity) || 0)
   return updateDepoItem(depoItemId, {
     invoiceNo,
     invoiceAt: nowStamp(),
+    invoicedQuantity,
   })
 }
 

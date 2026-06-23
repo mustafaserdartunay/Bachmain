@@ -4,17 +4,17 @@ import {
   Building2,
   CheckCircle2,
   ChevronDown,
+  ExternalLink,
   Landmark,
   MapPin,
   Phone,
   Plus,
   Save,
   Tags,
-  Trash2,
   UserRound,
   WalletCards,
 } from 'lucide-react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
 import { getTreasuryAccounts, getTreasuryMovements, saveTreasuryMovements } from '../utils/treasuryStore'
@@ -22,10 +22,13 @@ import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
   initialContactRowsFromCustomer,
   parseContactsFromFormPayload,
+  resolveContactLinkHref,
   resolvePrimaryContact,
 } from '../utils/customerContacts'
 import {
   CUSTOMER_META_KEY,
+  SUPPLIER_TYPE_LABEL,
+  notifyCustomerMetaUpdated,
   readCustomerMeta,
   readOptionLists,
   saveOptionList,
@@ -38,22 +41,32 @@ const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 const CREATE_PILL_CLASS =
   'flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-dark-500/50 bg-dark-700 px-3 text-xs font-bold transition-colors hover:bg-dark-700/80'
 
-function emptyMeta() {
-  return { type: '', representative: '', scoring: '', category: '' }
+function emptyMeta(defaultType = '') {
+  return { type: defaultType, representative: '', scoring: '', category: '' }
 }
 
-function readMetaFor(customerId) {
-  if (!customerId) return emptyMeta()
+function readMetaFor(customerId, defaultType = '') {
+  if (!customerId) return emptyMeta(defaultType)
   const saved = readCustomerMeta()[customerId] || {}
   return {
-    type: saved.type || '',
+    type: saved.type || defaultType,
     representative: saved.representative || '',
     scoring: saved.scoring || '',
     category: saved.category || '',
   }
 }
 
-function initialContactRows(customer) {
+function initialContactRows(customer, draft) {
+  if (!customer && draft && (draft.phone || draft.email)) {
+    return [{
+      id: 0,
+      title: 'Google Maps',
+      locked: false,
+      defaultName: '',
+      defaultPhone: draft.phone || '',
+      defaultEmail: draft.email || '',
+    }]
+  }
   return initialContactRowsFromCustomer(customer)
 }
 
@@ -69,28 +82,42 @@ function formatDateTime() {
 
 export default function CustomerCreatePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
   const formRouteKey = searchParams.toString()
   const editingCustomer = searchParams.get('edit') ? findCustomerProfile(searchParams.get('edit')) : null
+  const isSupplierForm = searchParams.get('kind') === 'supplier'
+  const defaultPartyType = isSupplierForm ? SUPPLIER_TYPE_LABEL : 'Müşteri'
+  const backPath = isSupplierForm ? '/suppliers' : '/musteriler'
+  const pageHeading = editingCustomer
+    ? (isSupplierForm ? 'Tedarikçi Düzenle' : 'Müşteri Düzenle')
+    : (isSupplierForm ? 'Yeni Tedarikçi' : 'Yeni Müşteri')
+  const incomingDraft = !editingCustomer ? location.state?.customerDraft : null
   const [actionMenuOpen, setActionMenuOpen] = useState(false)
   const [openingEnabled, setOpeningEnabled] = useState(false)
   const [addressRows, setAddressRows] = useState([{ id: 0 }])
-  const [contactRows, setContactRows] = useState(() => initialContactRows(editingCustomer))
+  const [contactRows, setContactRows] = useState(() => initialContactRows(editingCustomer, incomingDraft))
   const [deleteDialog, setDeleteDialog] = useState(null)
   const [successVisible, setSuccessVisible] = useState(false)
-  const [meta, setMeta] = useState(() => readMetaFor(editingCustomer?.id))
+  const [meta, setMeta] = useState(() => (
+    incomingDraft?.category
+      ? { ...emptyMeta(defaultPartyType), category: incomingDraft.category }
+      : readMetaFor(editingCustomer?.id, defaultPartyType)
+  ))
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const successTimer = useRef(null)
 
   useEffect(() => {
     setAddressRows([{ id: 0 }])
-    setContactRows(initialContactRows(editingCustomer))
+    setContactRows(initialContactRows(editingCustomer, incomingDraft))
     setOpeningEnabled(false)
     setActionMenuOpen(false)
     setDeleteDialog(null)
-    setMeta(readMetaFor(editingCustomer?.id))
-  }, [editingCustomer?.id, formRouteKey])
+    setMeta(incomingDraft?.category
+      ? { ...emptyMeta(defaultPartyType), category: incomingDraft.category }
+      : readMetaFor(editingCustomer?.id, defaultPartyType))
+  }, [defaultPartyType, editingCustomer?.id, formRouteKey, incomingDraft])
 
   useEffect(() => {
     if (!activeMenu) return undefined
@@ -127,13 +154,14 @@ export default function CustomerCreatePage() {
       ...current,
       [customerId]: {
         ...(current[customerId] || {}),
-        type: meta.type,
+        type: meta.type || defaultPartyType,
         representative: meta.representative,
         scoring: meta.scoring,
         category: meta.category,
       },
     }
     localStorage.setItem(CUSTOMER_META_KEY, JSON.stringify(next))
+    notifyCustomerMetaUpdated({ customerId, field: 'type' })
   }
 
   function showSavedMessage() {
@@ -172,6 +200,12 @@ export default function CustomerCreatePage() {
       phone: primary.phone,
       contacts,
       city: [city, district].filter(Boolean).join(' / '),
+      address: payload[`address-${addressId}`] || incomingDraft?.address || editingCustomer?.address || '',
+      lat: incomingDraft?.lat ?? editingCustomer?.lat ?? null,
+      lng: incomingDraft?.lng ?? editingCustomer?.lng ?? null,
+      website: incomingDraft?.website || editingCustomer?.website || '',
+      googleMapsUrl: incomingDraft?.mapsUrl || editingCustomer?.googleMapsUrl || '',
+      googlePlaceId: incomingDraft?.placeId || editingCustomer?.googlePlaceId || '',
       taxOffice: payload.taxOffice || editingCustomer?.taxOffice || '',
       taxNumber: payload.taxNumber || editingCustomer?.taxNumber || '',
       balance: payload.hasOpeningBalance ? Number(payload.openingBalanceAmount || 0) : Number(editingCustomer?.balance || 0),
@@ -194,7 +228,7 @@ export default function CustomerCreatePage() {
       {
         id: movementId,
         accountId: account?.id || 'cash-main',
-        accountName: account?.name || 'Merkez Nakit Kasa',
+        accountName: account?.name || 'Kasa',
         direction: 'in',
         type: 'Açılış Bakiyesi',
         customerName: payload.companyTitle || editingCustomer?.company || payload.shortBrandName,
@@ -219,9 +253,9 @@ export default function CustomerCreatePage() {
     syncOpeningBalance(payload)
     event.currentTarget.reset()
     setAddressRows([{ id: 0 }])
-    setContactRows(initialContactRows(null))
+    setContactRows(initialContactRows(null, null))
     setOpeningEnabled(false)
-    setMeta(emptyMeta())
+    setMeta(emptyMeta(defaultPartyType))
     showSavedMessage()
     setTimeout(() => navigate(-1), 900)
   }
@@ -238,9 +272,9 @@ export default function CustomerCreatePage() {
     syncOpeningBalance(payload)
     form.reset()
     setAddressRows([{ id: 0 }])
-    setContactRows(initialContactRows(null))
+    setContactRows(initialContactRows(null, null))
     setOpeningEnabled(false)
-    setMeta(emptyMeta())
+    setMeta(emptyMeta(defaultPartyType))
     setActionMenuOpen(false)
     showSavedMessage()
   }
@@ -269,18 +303,18 @@ export default function CustomerCreatePage() {
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(backPath)}
           className="absolute left-5 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Müşteriler
+          <ArrowLeft className="h-3.5 w-3.5" /> {isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'}
         </button>
         <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Müşteri Düzenle</h1>
+          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">{pageHeading}</h1>
         </div>
         <div className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2">
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(backPath)}
             className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-5 py-2.5 text-xs font-black uppercase text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
           >
             Vazgeç
@@ -373,8 +407,8 @@ export default function CustomerCreatePage() {
 
           <SectionPanel icon={Building2} title="Ünvan Bilgileri">
             <div className="max-w-4xl space-y-4">
-              <FieldLine icon={Building2} label="Kısa Marka Adı" name="shortBrandName" defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : ''} />
-              <FieldLine icon={Building2} label="Firma Ünvanı" name="companyTitle" defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : ''} />
+              <FieldLine icon={Building2} label="Kısa Marka Adı" name="shortBrandName" defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''} />
+              <FieldLine icon={Building2} label="Firma Ünvanı" name="companyTitle" defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''} />
               <FieldLine icon={Landmark} label="Vergi Dairesi" name="taxOffice" defaultValue={editingCustomer?.taxOffice || ''} />
               <FieldLine icon={Landmark} label="Vergi Numarası" name="taxNumber" defaultValue={editingCustomer?.taxNumber || ''} />
             </div>
@@ -387,7 +421,8 @@ export default function CustomerCreatePage() {
                   key={row.id}
                   id={row.id}
                   defaultTitle={index === 0 && editingCustomer ? 'Merkez Adres' : ''}
-                  defaultLocation={index === 0 && editingCustomer ? editingCustomer.city || '' : ''}
+                  defaultAddress={index === 0 ? incomingDraft?.address || editingCustomer?.address || '' : ''}
+                  defaultLocation={index === 0 ? incomingDraft ? [incomingDraft.city, incomingDraft.district].filter(Boolean).join(' / ') : editingCustomer?.city || '' : ''}
                   deleteState={deleteDialog?.key === `address-${row.id}` ? deleteDialog : null}
                   onDelete={() => confirmTwoStepDelete('Adres', () => setAddressRows((rows) => rows.filter((item) => item.id !== row.id)), `address-${row.id}`)}
                   onCancel={closeDeleteDialog}
@@ -415,6 +450,7 @@ export default function CustomerCreatePage() {
                   defaultValue={row.defaultName || ''}
                   phoneDefault={row.defaultPhone || ''}
                   emailDefault={row.defaultEmail || ''}
+                  instagramDefault={row.defaultInstagram || ''}
                   deleteState={deleteDialog?.key === `contact-${row.id}` ? deleteDialog : null}
                   onDelete={() => confirmTwoStepDelete('İletişim satırı', () => setContactRows((rows) => rows.filter((item) => item.id !== row.id)), `contact-${row.id}`)}
                   onCancel={closeDeleteDialog}
@@ -544,7 +580,7 @@ function DeleteConfirmInline({ deleteState, onDelete, onCancel, onApprove, title
   )
 }
 
-function AddressLine({ id, defaultTitle = '', defaultLocation = '', deleteState, onDelete, onCancel, onApprove }) {
+function AddressLine({ id, defaultTitle = '', defaultAddress = '', defaultLocation = '', deleteState, onDelete, onCancel, onApprove }) {
   const [city = '', district = ''] = String(defaultLocation).split('/').map((part) => part.trim())
 
   return (
@@ -552,7 +588,7 @@ function AddressLine({ id, defaultTitle = '', defaultLocation = '', deleteState,
       <div className="space-y-4">
         <div className="grid grid-cols-[180px_minmax(0,1fr)] gap-4">
           <input name={`addressTitle-${id}`} defaultValue={defaultTitle} placeholder="Adres başlığı..." className="form-input" />
-          <textarea name={`address-${id}`} placeholder="Adres..." className="form-input h-10 min-h-0 resize-none" />
+          <textarea name={`address-${id}`} defaultValue={defaultAddress} placeholder="Adres..." className="form-input h-10 min-h-0 resize-none" />
         </div>
         <div className="grid grid-cols-[180px_minmax(0,1fr)] gap-4">
           <span />
@@ -581,9 +617,37 @@ function SelectLine({ icon: Icon, label, name, options }) {
   )
 }
 
-function ContactLine({ id, defaultTitle = '', lockedTitle = false, defaultValue = '', phoneDefault = '', emailDefault = '', deleteState, onDelete, onCancel, onApprove }) {
+function ContactLinkInput({ name, defaultValue = '', placeholder }) {
+  const [value, setValue] = useState(defaultValue)
+  const href = resolveContactLinkHref(value, { instagram: true })
+
   return (
-    <div className="grid grid-cols-[170px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_32px] items-center gap-4">
+    <div className="flex min-w-0 items-center gap-1">
+      <input
+        name={name}
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        placeholder={placeholder}
+        className="form-input min-w-0 flex-1"
+      />
+      {href && (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-[38px] w-9 shrink-0 items-center justify-center rounded-lg border border-dark-500/50 bg-dark-700/70 text-gray-400 transition-colors hover:border-blue-500/35 hover:text-blue-300"
+          title="Sayfaya git"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      )}
+    </div>
+  )
+}
+
+function ContactLine({ id, defaultTitle = '', lockedTitle = false, defaultValue = '', phoneDefault = '', emailDefault = '', instagramDefault = '', deleteState, onDelete, onCancel, onApprove }) {
+  return (
+    <div className="grid grid-cols-[170px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_32px] items-center gap-4">
       {lockedTitle ? (
         <div className="flex h-10 items-center rounded-lg border border-dark-500/50 bg-dark-700/45 px-3 text-[11px] font-black uppercase tracking-wider text-gray-500">
           {defaultTitle}
@@ -595,6 +659,7 @@ function ContactLine({ id, defaultTitle = '', lockedTitle = false, defaultValue 
       <input name={`contactName-${id}`} defaultValue={defaultValue} placeholder="İsim..." className="form-input" />
       <input name={`contactPhone-${id}`} defaultValue={phoneDefault} placeholder="Telefon..." className="form-input" />
       <input name={`contactEmail-${id}`} defaultValue={emailDefault} placeholder="E-posta..." className="form-input" />
+      <ContactLinkInput name={`contactInstagram-${id}`} defaultValue={instagramDefault} placeholder="Instagram..." />
       <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
     </div>
   )

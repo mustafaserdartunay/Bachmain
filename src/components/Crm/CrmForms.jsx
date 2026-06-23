@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import EditableDropdownPill from '../EditableDropdownPill'
+import DateRangePicker from '../Common/DateRangePicker'
 import CrmCustomerSearchField from './CrmCustomerSearchField'
 import {
   appointmentStatusOptions,
@@ -19,7 +20,7 @@ import { BTN_PRIMARY } from '../../utils/buttonStyles'
 
 const FIELD_LABEL = 'mb-1.5 block text-[10px] font-black uppercase tracking-wider text-gray-500'
 
-function Modal({ title, onClose, children, wide, fullPage }) {
+function Modal({ title, onClose, children, wide, large, fullPage, panelClassName = '' }) {
   if (fullPage) {
     return (
       <div className={`flex h-full min-h-[520px] flex-col ${wide ? '' : ''}`}>
@@ -36,7 +37,7 @@ function Modal({ title, onClose, children, wide, fullPage }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
-      <div className={`max-h-[92vh] w-full overflow-y-auto rounded-2xl border border-dark-500/50 bg-dark-800 shadow-card ${wide ? 'max-w-2xl' : 'max-w-lg'}`}>
+      <div className={`max-h-[92vh] w-full overflow-y-auto rounded-2xl border border-dark-500/50 bg-dark-800 shadow-card ${large ? 'max-w-4xl' : wide ? 'max-w-2xl' : 'max-w-lg'} ${panelClassName}`}>
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-dark-500/45 bg-dark-800 px-5 py-3.5">
           <h2 className="text-base font-bold text-white">{title}</h2>
           <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-dark-700 hover:text-white">
@@ -69,7 +70,14 @@ function DropdownField({ label, value, onChange, options, openKey, activeMenu, s
 }
 
 export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false }) {
-  const [form, setForm] = useState(initial)
+  const [form, setForm] = useState(() => ({
+    ...initial,
+    dateFrom: initial.dateFrom || initial.dueDate || '',
+    dateTo: initial.dateTo || '',
+    timeFrom: initial.timeFrom || '',
+    timeTo: initial.timeTo || '',
+    includeTime: Boolean(initial.includeTime || initial.timeFrom || initial.timeTo),
+  }))
   const [activeMenu, setActiveMenu] = useState(null)
   const [assigneeTouched, setAssigneeTouched] = useState(false)
   const [representativeOptions, setRepresentativeOptions] = useState(() => readOptionLists().representative)
@@ -160,7 +168,10 @@ export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false }) 
   function handleSubmit(event) {
     event.preventDefault()
     if (!form.title.trim()) return
-    onSubmit(form)
+    onSubmit({
+      ...form,
+      dueDate: form.dateFrom || form.dueDate || new Date().toISOString().slice(0, 10),
+    })
   }
 
   return (
@@ -234,12 +245,18 @@ export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false }) 
         </div>
 
         <div>
-          <label className={FIELD_LABEL}>Termin Tarihi</label>
-          <input
-            type="date"
-            value={form.dueDate}
-            onChange={(event) => setForm((current) => ({ ...current, dueDate: event.target.value }))}
-            className="form-input text-sm"
+          <label className={FIELD_LABEL}>Başlangıç / Bitiş Tarihi</label>
+          <DateRangePicker
+            dateFrom={form.dateFrom || form.dueDate || ''}
+            dateTo={form.dateTo || ''}
+            timeFrom={form.timeFrom || ''}
+            timeTo={form.timeTo || ''}
+            includeTime={Boolean(form.includeTime)}
+            onChange={(value) => setForm((current) => ({
+              ...current,
+              ...value,
+              dueDate: value.dateFrom || current.dueDate,
+            }))}
           />
         </div>
 
@@ -267,7 +284,14 @@ export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false }) 
 }
 
 export function AppointmentFormModal({ initial, onClose, onSubmit, fullPage = false }) {
-  const [form, setForm] = useState(initial)
+  const [form, setForm] = useState(() => ({
+    ...initial,
+    dateFrom: initial.dateFrom || initial.date || '',
+    dateTo: initial.dateTo || (initial.id ? initial.date : '') || '',
+    timeFrom: initial.timeFrom || initial.startTime || '',
+    timeTo: initial.timeTo || (initial.id ? initial.endTime : '') || '',
+    includeTime: initial.includeTime ?? Boolean(initial.startTime || initial.endTime),
+  }))
   const [activeMenu, setActiveMenu] = useState(null)
   const [assigneeTouched, setAssigneeTouched] = useState(false)
   const [representativeOptions, setRepresentativeOptions] = useState(() => readOptionLists().representative)
@@ -338,11 +362,24 @@ export function AppointmentFormModal({ initial, onClose, onSubmit, fullPage = fa
   function handleSubmit(event) {
     event.preventDefault()
     if (!form.title.trim()) return
-    onSubmit(form)
+    const dateFrom = form.dateFrom || form.date || new Date().toISOString().slice(0, 10)
+    const dateTo = form.dateTo || ''
+    const timeFrom = form.includeTime ? form.timeFrom || form.startTime || '' : ''
+    const timeTo = form.includeTime ? form.timeTo || form.endTime || '' : ''
+    onSubmit({
+      ...form,
+      date: dateFrom,
+      dateFrom,
+      dateTo,
+      timeFrom,
+      timeTo,
+      startTime: timeFrom,
+      endTime: timeTo,
+    })
   }
 
   return (
-    <Modal title={isEdit ? 'Randevu Düzenle' : 'Randevu Oluştur'} onClose={onClose} wide fullPage={fullPage}>
+    <Modal title={isEdit ? 'Randevu Düzenle' : 'Randevu Oluştur'} onClose={onClose} wide fullPage={fullPage} panelClassName="h-[593px]">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className={FIELD_LABEL}>Randevu Başlığı</label>
@@ -404,19 +441,24 @@ export function AppointmentFormModal({ initial, onClose, onSubmit, fullPage = fa
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <label className={FIELD_LABEL}>Tarih</label>
-            <input type="date" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="form-input text-sm" />
-          </div>
-          <div>
-            <label className={FIELD_LABEL}>Başlangıç</label>
-            <input type="time" value={form.startTime} onChange={(event) => setForm((current) => ({ ...current, startTime: event.target.value }))} className="form-input text-sm" />
-          </div>
-          <div>
-            <label className={FIELD_LABEL}>Bitiş</label>
-            <input type="time" value={form.endTime} onChange={(event) => setForm((current) => ({ ...current, endTime: event.target.value }))} className="form-input text-sm" />
-          </div>
+        <div>
+          <label className={FIELD_LABEL}>Başlangıç / Bitiş Tarihi</label>
+          <DateRangePicker
+            dateFrom={form.dateFrom || form.date || ''}
+            dateTo={form.dateTo || ''}
+            timeFrom={form.timeFrom || form.startTime || ''}
+            timeTo={form.timeTo || ''}
+            includeTime={Boolean(form.includeTime)}
+            dateLabelFormat="numeric"
+            showTimeInLabel={false}
+            onChange={(value) => setForm((current) => ({
+              ...current,
+              ...value,
+              date: value.dateFrom || current.date,
+              startTime: value.includeTime ? value.timeFrom || '' : '',
+              endTime: value.includeTime ? value.timeTo || '' : '',
+            }))}
+          />
         </div>
 
         <div>
@@ -453,7 +495,15 @@ export function AppointmentFormModal({ initial, onClose, onSubmit, fullPage = fa
 }
 
 export function NoteFormModal({ initial, onClose, onSubmit, fullPage = false }) {
-  const [form, setForm] = useState(initial)
+  const [form, setForm] = useState(() => ({
+    ...initial,
+    date: initial.date || new Date().toISOString().slice(0, 10),
+    dateFrom: initial.dateFrom || initial.date || new Date().toISOString().slice(0, 10),
+    dateTo: initial.dateTo || '',
+    timeFrom: initial.timeFrom || initial.time || '',
+    timeTo: initial.timeTo || '',
+    includeTime: Boolean(initial.includeTime || initial.timeFrom || initial.timeTo || initial.time),
+  }))
   const [activeMenu, setActiveMenu] = useState(null)
   const isEdit = Boolean(form.id)
 
@@ -467,11 +517,15 @@ export function NoteFormModal({ initial, onClose, onSubmit, fullPage = false }) 
   function handleSubmit(event) {
     event.preventDefault()
     if (!form.title.trim()) return
-    onSubmit(form)
+    onSubmit({
+      ...form,
+      date: form.date || new Date().toISOString().slice(0, 10),
+      time: form.includeTime ? form.timeFrom || '' : '',
+    })
   }
 
   return (
-    <Modal title={isEdit ? 'Not Düzenle' : 'Not Oluştur'} onClose={onClose} wide fullPage={fullPage}>
+    <Modal title={isEdit ? 'Not Düzenle' : 'Not Oluştur'} onClose={onClose} wide fullPage={fullPage} panelClassName="h-[593px]">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className={FIELD_LABEL}>Not Başlığı</label>
@@ -486,12 +540,8 @@ export function NoteFormModal({ initial, onClose, onSubmit, fullPage = false }) 
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-1">
-            <label className={FIELD_LABEL}>Tarih</label>
-            <input type="date" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="form-input text-sm" />
-          </div>
-          <div className="sm:col-span-1">
-            <label className={FIELD_LABEL}>Saat (opsiyonel)</label>
-            <input type="time" value={form.time} onChange={(event) => setForm((current) => ({ ...current, time: event.target.value }))} className="form-input text-sm" />
+            <label className={FIELD_LABEL}>Oluşturulma Tarihi</label>
+            <input type="date" value={form.date || ''} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="form-input text-sm" />
           </div>
           <DropdownField
             label="Renk"
@@ -501,6 +551,24 @@ export function NoteFormModal({ initial, onClose, onSubmit, fullPage = false }) 
             openKey="note-color"
             activeMenu={activeMenu}
             setActiveMenu={setActiveMenu}
+          />
+        </div>
+
+        <div>
+          <label className={FIELD_LABEL}>Başlangıç / Bitiş Tarihi</label>
+          <DateRangePicker
+            dateFrom={form.dateFrom || form.date || ''}
+            dateTo={form.dateTo || ''}
+            timeFrom={form.timeFrom || ''}
+            timeTo={form.timeTo || ''}
+            includeTime={Boolean(form.includeTime)}
+            dateLabelFormat="numeric"
+            showTimeInLabel={false}
+            onChange={(value) => setForm((current) => ({
+              ...current,
+              ...value,
+              date: value.dateFrom || current.date,
+            }))}
           />
         </div>
 
@@ -574,6 +642,11 @@ export function emptyNoteForm(date) {
     content: '',
     date: date || new Date().toISOString().slice(0, 10),
     time: '',
+    dateFrom: '',
+    dateTo: '',
+    timeFrom: '',
+    timeTo: '',
+    includeTime: false,
     color: 'Mavi',
   }
 }

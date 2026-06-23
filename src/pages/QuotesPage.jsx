@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import {
@@ -217,6 +218,16 @@ function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 }
 
+function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function defaultValidUntilDate(fromDate = todayIsoDate()) {
+  const base = new Date(`${fromDate}T12:00:00`)
+  base.setDate(base.getDate() + 3)
+  return base.toISOString().slice(0, 10)
+}
+
 function createEmptyQuoteItem() {
   return {
     id: createId('item'),
@@ -285,8 +296,8 @@ function sanitizeQuoteForSave(quote) {
     phone: safeText(quote.phone),
     email: safeText(quote.email),
     status: getOptionLabels('status').includes(quote.status) ? quote.status : (getOptionLabels('status')[0] || 'Taslak'),
-    createdAt: quote.createdAt || new Date().toISOString().slice(0, 10),
-    validUntil: quote.validUntil || quote.createdAt || new Date().toISOString().slice(0, 10),
+    createdAt: quote.createdAt || todayIsoDate(),
+    validUntil: quote.validUntil || defaultValidUntilDate(quote.createdAt || todayIsoDate()),
     tags: Array.isArray(quote.tags) ? quote.tags.map(safeText).filter(Boolean) : [],
     termsDescription: String(quote.termsDescription || '').trim(),
     terms: Array.isArray(quote.terms) ? quote.terms.map(safeText).filter(Boolean) : [],
@@ -679,105 +690,6 @@ function ProductSearchSelect({ item, onSelect, onTextChange }) {
   )
 }
 
-function QuoteStatusEditor({
-  quote,
-  onPatch,
-  optionLists,
-  updateOptionList,
-  compact = false,
-}) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [statusInput, setStatusInput] = useState('')
-  const [pendingDeleteId, setPendingDeleteId] = useState(null)
-
-  const statusLabels = optionLists.status.map((option) => option.label)
-  const statusValue = statusLabels.includes(quote.status) ? quote.status : ''
-
-  const record = useMemo(
-    () => optionsToProcessRecord(optionLists.status, statusValue),
-    [optionLists.status, statusValue],
-  )
-
-  function toggleStatusEditor() {
-    setIsOpen((current) => !current)
-    setPendingDeleteId(null)
-  }
-
-  function addStatusStage(chosenColor, inputLabel) {
-    const label = (inputLabel || statusInput).trim()
-    if (!label || optionLists.status.some((option) => option.label === label)) return
-    const next = [
-      ...optionLists.status,
-      {
-        label,
-        color: chosenColor || processStageColors[optionLists.status.length % processStageColors.length],
-      },
-    ]
-    updateOptionList('status', next)
-    onPatch({ status: label })
-    setStatusInput('')
-  }
-
-  function selectStatusStage(stage) {
-    if (!stage) {
-      onPatch({ status: '' })
-      return
-    }
-    if (quote.status === stage.label) {
-      onPatch({ status: '' })
-      return
-    }
-    onPatch({ status: stage.label })
-  }
-
-  function updateStatusColor(stage, color) {
-    updateOptionList('status', mapProcessOptions(optionLists.status, stage, (option) => ({ ...option, color })))
-  }
-
-  function updateStatusLabel(stage, label) {
-    const clean = label.trim()
-    if (!clean || isReservedPlaceholderLabel(clean)) return
-    updateOptionList('status', mapProcessOptions(optionLists.status, stage, (option) => ({ ...option, label: clean })))
-    if (quote.status === stage.label) onPatch({ status: clean })
-  }
-
-  function reorderStatusStages(nextStages) {
-    updateOptionList('status', processRecordToOptions(nextStages))
-  }
-
-  function removeStatusStage(stage) {
-    const ok = window.confirm(`Son onay: "${stage.label}" durumu kaldırılacak. Devam edilsin mi?`)
-    if (!ok) return
-    const next = optionLists.status.filter((option) => !matchProcessOption(option, stage))
-    updateOptionList('status', next)
-    if (quote.status === stage.label) onPatch({ status: '' })
-    setPendingDeleteId(null)
-  }
-
-  return (
-    <ProcessPanelModule
-      activeLabel="Aktif Durum"
-      countSuffix="durum tanımlı"
-      emptyMessage="Henüz durum eklenmedi."
-      addPlaceholder="Yeni durum adı..."
-      record={record}
-      isOpen={isOpen}
-      onToggle={toggleStatusEditor}
-      stageInput={statusInput}
-      setStageInput={setStatusInput}
-      onAddStage={addStatusStage}
-      onSelectStage={selectStatusStage}
-      onUpdateStageColor={updateStatusColor}
-      onUpdateStageLabel={updateStatusLabel}
-      onReorderStages={reorderStatusStages}
-      pendingStageDeleteId={pendingDeleteId}
-      setPendingStageDeleteId={setPendingDeleteId}
-      onRemoveStage={removeStatusStage}
-      compact={compact}
-    />
-  )
-}
-
 function QuotePriorityEditor({
   quote,
   onPatch,
@@ -897,21 +809,10 @@ function QuoteProcessManagement({
   return (
     <div className="space-y-3">
       <h2 className="text-base font-bold text-white">Süreçler</h2>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
           <div className="min-w-0 space-y-1">
             <h3 className="text-xs font-bold text-white">Öncelik</h3>
             <QuotePriorityEditor
-              quote={quote}
-              onPatch={onPatch}
-              optionLists={optionLists}
-              updateOptionList={updateOptionList}
-              compact
-            />
-          </div>
-
-          <div className="min-w-0 space-y-1">
-            <h3 className="text-xs font-bold text-white">Teklif Durumu</h3>
-            <QuoteStatusEditor
               quote={quote}
               onPatch={onPatch}
               optionLists={optionLists}
@@ -1172,6 +1073,8 @@ function StageTracker({ quote, onUpdateStages }) {
 }
 
 export default function QuotesPage() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [quotes, setQuotes] = useState(loadQuotes)
   const [workflowStages, setWorkflowStages] = useState(loadWorkflowStages)
   const [draftQuote, setDraftQuote] = useState(null)
@@ -1599,6 +1502,7 @@ export default function QuotesPage() {
   function createQuoteDraft(baseQuotes = quotes) {
     const stages = loadWorkflowStages()
     const bankAccounts = readCompanySettings().bankAccounts || []
+    const createdAt = todayIsoDate()
     return {
       ...initialQuotes[0],
       id: nextQuoteCode(baseQuotes.map((quote) => quote.id)),
@@ -1615,6 +1519,8 @@ export default function QuotesPage() {
       notes: '',
       termsDescription: '',
       terms: [],
+      createdAt,
+      validUntil: defaultValidUntilDate(createdAt),
       currentStageId: getQuoteStageOptions(stages)[0]?.id || '',
       stages,
       items: [createEmptyQuoteItem()],
@@ -1633,6 +1539,17 @@ export default function QuotesPage() {
     setSelectedId(next.id)
     setViewMode('prepare')
   }
+
+  useEffect(() => {
+    if (searchParams.get('yeni') !== '1') return
+    const freshQuotes = loadQuotes()
+    const next = createQuoteDraft(freshQuotes)
+    setQuotes(freshQuotes)
+    setDraftQuote(next)
+    setSelectedId(next.id)
+    setViewMode('prepare')
+    navigate('/teklifler', { replace: true })
+  }, [searchParams, navigate])
 
   function saveCurrentQuote({ startNew = false, returnToList = false } = {}) {
     if (!selectedQuote) return
@@ -2422,8 +2339,8 @@ export default function QuotesPage() {
                       </div>
                     </div>
                     <CustomerPicker quote={selectedQuote} onPatch={patchSelected} />
-                    <Field label="Oluşturma Tarihi"><input type="date" value={selectedQuote.createdAt} onChange={(e) => patchSelected({ createdAt: e.target.value })} className="form-input" /></Field>
-                    <Field label="Geçerlilik Tarihi"><input type="date" value={selectedQuote.validUntil} onChange={(e) => patchSelected({ validUntil: e.target.value })} className="form-input" /></Field>
+                    <Field label="Oluşturma Tarihi"><input type="date" value={selectedQuote.createdAt || todayIsoDate()} onChange={(e) => patchSelected({ createdAt: e.target.value })} className="form-input" /></Field>
+                    <Field label="Geçerlilik Tarihi"><input type="date" value={selectedQuote.validUntil || defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())} onChange={(e) => patchSelected({ validUntil: e.target.value })} className="form-input" /></Field>
                   </div>
                 </section>
               </div>

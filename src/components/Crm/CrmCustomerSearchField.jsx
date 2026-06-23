@@ -9,7 +9,7 @@ const FIELD_LABEL = 'mb-1.5 block text-[10px] font-black uppercase tracking-wide
 function customerSearchTexts(customer) {
   const display = getCustomerDisplay(customer)
   const contactInfo = resolveCustomerContactInfo(customer)
-  const savedContacts = (customer.contacts || []).flatMap((row) => [row.name, row.phone, row.email])
+  const savedContacts = (customer.contacts || []).flatMap((row) => [row.name, row.phone, row.email, row.instagram])
   return [
     customer.company,
     customer.companyTitle,

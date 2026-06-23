@@ -1,5 +1,6 @@
 import { loadPersonnel } from './personnelStore'
 import { readOptionLists } from './customerMeta'
+import { appendActivityEntry } from './activityArchiveStore'
 
 const STORAGE_KEY = 'erlenbox-field-sales'
 const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
@@ -120,7 +121,7 @@ export function loadFieldSalesTasks(repLabel) {
   return tasks.filter((task) => task.repLabel === repLabel)
 }
 
-export function addFieldSalesTask({ repLabel, customerId, title, dueDate, notes = '' }) {
+export function addFieldSalesTask({ repLabel, customerId, title, dueDate, notes = '', stageId = '', assignedBy = '', priority = 'Normal' }) {
   const state = readState()
   const task = {
     id: createId('fst'),
@@ -129,6 +130,9 @@ export function addFieldSalesTask({ repLabel, customerId, title, dueDate, notes 
     title: String(title || '').trim(),
     dueDate: dueDate || '',
     notes,
+    stageId: stageId || '',
+    assignedBy: assignedBy || '',
+    priority,
     status: 'open',
     createdAt: new Date().toISOString(),
   }
@@ -146,10 +150,31 @@ export function updateFieldSalesTask(taskId, patch) {
 
 export function removeFieldSalesTask(taskId) {
   const state = readState()
+  const task = state.tasks.find((item) => item.id === taskId)
+  if (task) {
+    appendActivityEntry({
+      module: 'fieldSales',
+      action: 'delete',
+      entityType: 'fieldSalesTask',
+      entityId: task.id,
+      entityLabel: task.title || 'Saha satış görevi',
+      description: `${task.title || 'Saha satış görevi'} silindi.`,
+      snapshot: task,
+      undo: { type: 'fieldSales.restoreTask' },
+    })
+  }
   return writeState({
     ...state,
     tasks: state.tasks.filter((task) => task.id !== taskId),
   })
+}
+
+export function restoreFieldSalesTask(snapshot) {
+  if (!snapshot?.id) return false
+  const state = readState()
+  if (state.tasks.some((task) => task.id === snapshot.id)) return true
+  writeState({ ...state, tasks: [snapshot, ...state.tasks] })
+  return true
 }
 
 export function saveLastRoute(route) {

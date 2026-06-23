@@ -33,68 +33,7 @@ function createStage(id, label, index, extra = {}) {
 }
 
 export function getDefaultRawCrmProcessTemplates() {
-  return {
-    numune: {
-      id: 'numune',
-      label: 'Numune',
-      stages: [
-        createStage('wait', 'Beklemede', 0, { whatsappKey: 'waiting' }),
-        createStage('planned', 'Planlandı', 1, { whatsappKey: 'planned', showsSchedule: true }),
-        createStage('started', 'Başladı', 2, { whatsappKey: 'started' }),
-        createStage('ready', 'Hazır', 3, { whatsappKey: 'ready', isTerminal: true }),
-      ],
-    },
-    teklif: {
-      id: 'teklif',
-      label: 'Teklif',
-      stages: [
-        createStage('wait', 'Beklemede', 0, { whatsappKey: 'waiting' }),
-        createStage('preparing', 'Hazırlanıyor', 1, { whatsappKey: 'preparing' }),
-        createStage('presented', 'Sunuldu', 2, { whatsappKey: 'presented' }),
-        createStage('done', 'Tamamlandı', 3, { whatsappKey: 'ready', isTerminal: true }),
-      ],
-    },
-    ziyaret: {
-      id: 'ziyaret',
-      label: 'Ziyaret',
-      stages: [
-        createStage('wait', 'Beklemede', 0, { whatsappKey: 'waiting' }),
-        createStage('planned', 'Planlandı', 1, { whatsappKey: 'planned', showsSchedule: true }),
-        createStage('started', 'Başladı', 2, { whatsappKey: 'started' }),
-        createStage('done', 'Tamamlandı', 3, { whatsappKey: 'ready', isTerminal: true }),
-      ],
-    },
-    toplanti: {
-      id: 'toplanti',
-      label: 'Toplantı',
-      stages: [
-        createStage('wait', 'Beklemede', 0, { whatsappKey: 'waiting' }),
-        createStage('planned', 'Planlandı', 1, { whatsappKey: 'planned', showsSchedule: true }),
-        createStage('started', 'Başladı', 2, { whatsappKey: 'started' }),
-        createStage('done', 'Tamamlandı', 3, { whatsappKey: 'ready', isTerminal: true }),
-      ],
-    },
-    tahsilat: {
-      id: 'tahsilat',
-      label: 'Tahsilat',
-      stages: [
-        createStage('wait', 'Beklemede', 0, { whatsappKey: 'waiting' }),
-        createStage('planned', 'Planlandı', 1, { whatsappKey: 'planned', showsSchedule: true }),
-        createStage('started', 'Takipte', 2, { whatsappKey: 'started' }),
-        createStage('done', 'Tamamlandı', 3, { whatsappKey: 'ready', isTerminal: true }),
-      ],
-    },
-    genel: {
-      id: 'genel',
-      label: 'Genel',
-      stages: [
-        createStage('wait', 'Beklemede', 0, { whatsappKey: 'waiting' }),
-        createStage('planned', 'Planlandı', 1, { whatsappKey: 'planned', showsSchedule: true }),
-        createStage('started', 'Başladı', 2, { whatsappKey: 'started' }),
-        createStage('done', 'Bitti', 3, { whatsappKey: 'ready', isTerminal: true }),
-      ],
-    },
-  }
+  return {}
 }
 
 function inferStageMeta(stage, index, total) {
