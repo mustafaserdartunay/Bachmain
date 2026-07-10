@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BACH — Business Operating System | Tüm Süreçler Tek Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#173B8F;--navy-d:#0D2566;--navy-dd:#071840;
+  --red:#FF4D5A;--white:#fff;--gray:#F5F7FB;--gray2:#E8ECF4;
+  --gt:#6B7280;--dark:#0F172A;--gold:#FFC62A;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,sans-serif;background:#fff;color:var(--dark);overflow-x:hidden;line-height:1.6}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(23,59,143,.07);transition:box-shadow .3s}
+nav.scrolled{box-shadow:0 4px 32px rgba(23,59,143,.1)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-box{width:36px;height:36px;background:var(--navy);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff;letter-spacing:-1px}
+.nav-brand{display:flex;flex-direction:column;line-height:1.1}
+.nav-brand b{font-size:15px;font-weight:800;color:var(--navy);letter-spacing:-.5px}
+.nav-brand small{font-size:9px;font-weight:500;color:var(--gt);letter-spacing:.8px;text-transform:uppercase}
+.nav-links{display:flex;list-style:none}
+.nav-links a{display:block;padding:0 14px;font-size:13.5px;font-weight:500;color:#374151;text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--navy)}
+.nav-acts{display:flex;gap:10px;align-items:center}
+.btn-ghost{padding:8px 18px;font-size:13.5px;font-weight:500;color:var(--dark);background:transparent;border:1.5px solid var(--gray2);border-radius:8px;cursor:pointer;text-decoration:none;transition:all .2s}
+.btn-ghost:hover{border-color:var(--navy);color:var(--navy)}
+.btn-primary{padding:8px 18px;font-size:13.5px;font-weight:600;color:#fff;background:var(--navy);border:none;border-radius:8px;cursor:pointer;text-decoration:none;transition:all .2s}
+.btn-primary:hover{background:var(--navy-d);transform:translateY(-1px);box-shadow:0 4px 16px rgba(23,59,143,.3)}
+
+/* HERO */
+.hero{min-height:100vh;background:var(--navy-dd);position:relative;overflow:hidden;display:flex;align-items:center;padding-top:64px}
+.hero-bg{position:absolute;inset:0;pointer-events:none}
+.hl{position:absolute;border-radius:50%;filter:blur(90px);opacity:.22}
+.hl1{width:700px;height:700px;background:var(--navy);top:-150px;left:-150px;animation:fl1 9s ease-in-out infinite}
+.hl2{width:500px;height:500px;background:#1D4ED8;bottom:-100px;left:25%;animation:fl2 11s ease-in-out infinite}
+.hl3{width:350px;height:350px;background:var(--red);top:15%;right:5%;opacity:.1;animation:fl3 13s ease-in-out infinite}
+@keyframes fl1{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,35px)}}
+@keyframes fl2{0%,100%{transform:translate(0,0)}50%{transform:translate(-35px,-25px)}}
+@keyframes fl3{0%,100%{transform:translate(0,0)}50%{transform:translate(25px,45px)}}
+.hero-c{position:relative;z-index:1;width:100%;max-width:1280px;margin:0 auto;padding:80px 2rem;display:grid;grid-template-columns:1fr 1.1fr;gap:5rem;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:100px;font-size:12px;font-weight:500;color:rgba(255,255,255,.75);margin-bottom:24px;backdrop-filter:blur(10px)}
+.badge-dot{width:6px;height:6px;background:var(--gold);border-radius:50%;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.hero-eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:12px}
+.hero-brand{font-size:80px;font-weight:900;color:#fff;letter-spacing:-4px;line-height:.9;margin-bottom:6px}
+.hero-bsub{font-size:13px;font-weight:500;color:rgba(255,255,255,.35);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:28px}
+.hero-h1{font-size:52px;font-weight:800;color:#fff;letter-spacing:-2.5px;line-height:1.08;margin-bottom:20px}
+.hero-h1 .ac{background:linear-gradient(135deg,#93C5FD,#3B82F6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-p{font-size:17px;color:rgba(255,255,255,.58);line-height:1.75;max-width:500px;margin-bottom:40px}
+.hero-btns{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn-red{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;font-size:15px;font-weight:700;color:#fff;background:var(--red);border:none;border-radius:12px;cursor:pointer;text-decoration:none;transition:all .25s;box-shadow:0 8px 32px rgba(255,77,90,.32)}
+.btn-red:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(255,77,90,.46)}
+.btn-outline-w{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;font-size:15px;font-weight:600;color:#fff;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.18);border-radius:12px;cursor:pointer;text-decoration:none;transition:all .25s;backdrop-filter:blur(10px)}
+.btn-outline-w:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);transform:translateY(-2px)}
+
+/* Dashboard mockup */
+.db-wrap{transform:perspective(1200px) rotateX(2deg) rotateY(-8deg);transition:transform .5s ease}
+.browser{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;box-shadow:0 50px 100px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04)}
+.bbar{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)}
+.bdots{display:flex;gap:6px}
+.bdots span{width:10px;height:10px;border-radius:50%}
+.bdots span:nth-child(1){background:#FF5F57}
+.bdots span:nth-child(2){background:#FFBD2E}
+.bdots span:nth-child(3){background:#28C840}
+.burl{flex:1;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border-radius:6px;padding:5px 12px;font-size:11.5px;color:rgba(255,255,255,.35)}
+.db-inner{display:grid;grid-template-columns:170px 1fr;height:400px;overflow:hidden}
+.db-sidebar{background:#071840;padding:16px 12px;border-right:1px solid rgba(255,255,255,.05)}
+.db-sl{font-size:16px;font-weight:900;color:#fff;padding:4px 8px 16px;letter-spacing:-1px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:10px}
+.db-sl span{color:#60A5FA}
+.db-nav{display:flex;flex-direction:column;gap:2px}
+.dbi{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:11px;color:rgba(255,255,255,.4);cursor:default}
+.dbi.on{background:rgba(59,130,246,.15);color:#93C5FD}
+.dbi-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.db-main{background:#0F172A;padding:16px;overflow:hidden}
+.db-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.db-title{font-size:13px;font-weight:700;color:#fff}
+.db-date{font-size:10px;color:rgba(255,255,255,.3)}
+.db-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.db-kpi{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px;position:relative;overflow:hidden}
+.db-kpi::after{content:'';position:absolute;top:-10px;right:-10px;width:50px;height:50px;border-radius:50%;filter:blur(18px);opacity:.4}
+.db-kpi.b::after{background:#3B82F6}.db-kpi.g::after{background:#10B981}.db-kpi.go::after{background:var(--gold)}.db-kpi.r::after{background:var(--red)}
+.db-kl{font-size:9px;color:rgba(255,255,255,.3);margin-bottom:3px}
+.db-kv{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.db-kc{font-size:9px;color:#34D399;margin-top:2px}
+.db-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.db-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px}
+.db-ct{font-size:9.5px;color:rgba(255,255,255,.35);margin-bottom:10px}
+.db-bars{display:flex;align-items:flex-end;gap:4px;height:65px}
+.db-bar{flex:1;border-radius:3px 3px 0 0;background:#1E3A8A}
+.db-bar.hi{background:#3B82F6}
+.db-rows{display:flex;flex-direction:column;gap:7px}
+.db-row{display:flex;align-items:center;gap:6px}
+.dr-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dr-name{flex:1;font-size:9.5px;color:rgba(255,255,255,.55)}
+.dr-badge{padding:2px 6px;border-radius:4px;font-size:8.5px;font-weight:600}
+
+/* STATS */
+.stats-s{background:var(--gray);padding:52px 0;border-bottom:1px solid var(--gray2)}
+.stats-c{max-width:1280px;margin:0 auto;padding:0 2rem;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;text-align:center}
+.stat-n{font-size:46px;font-weight:900;color:var(--navy);letter-spacing:-2.5px;line-height:1}
+.stat-l{font-size:14px;color:var(--gt);font-weight:500;margin-top:6px}
+
+/* SHARED */
+.s-pad{padding:100px 0}
+.s-c{max-width:1280px;margin:0 auto;padding:0 2rem}
+.s-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:rgba(23,59,143,.09);border-radius:100px;font-size:11.5px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:14px}
+.s-title{font-size:44px;font-weight:800;color:var(--dark);letter-spacing:-2px;line-height:1.12;margin-bottom:14px}
+.s-desc{font-size:17px;color:var(--gt);line-height:1.75;max-width:560px}
+.s-head{text-align:center;margin-bottom:64px}
+.s-head .s-desc{margin:0 auto}
+.dark-s .s-title{color:#fff}.dark-s .s-desc{color:rgba(255,255,255,.5)}.dark-s .s-badge{background:rgba(255,255,255,.08);color:rgba(255,255,255,.65)}
+
+/* MODULES */
+.modules-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.mod-card{background:var(--gray);border:1.5px solid var(--gray2);border-radius:18px;padding:28px 24px;cursor:default;transition:all .3s cubic-bezier(.25,.46,.45,.94);transform-style:preserve-3d;position:relative;overflow:hidden}
+.mod-card::after{content:'';position:absolute;inset:0;border-radius:18px;background:linear-gradient(135deg,rgba(23,59,143,.05),transparent);opacity:0;transition:opacity .3s}
+.mod-card:hover{transform:translateY(-14px) rotateX(-3deg);border-color:rgba(23,59,143,.22);box-shadow:0 28px 56px rgba(23,59,143,.13);background:#fff}
+.mod-card:hover::after{opacity:1}
+.mod-icon{width:54px;height:54px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px;transition:transform .3s}
+.mod-card:hover .mod-icon{transform:scale(1.12) translateY(-2px)}
+.mod-name{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:6px}
+.mod-desc{font-size:13px;color:var(--gt);line-height:1.55}
+.ic-b{background:rgba(59,130,246,.11)}.ic-g{background:rgba(16,185,129,.11)}.ic-p{background:rgba(139,92,246,.11)}.ic-o{background:rgba(249,115,22,.11)}.ic-t{background:rgba(20,184,166,.11)}.ic-r{background:rgba(239,68,68,.11)}.ic-y{background:rgba(245,158,11,.11)}.ic-pk{background:rgba(236,72,153,.11)}.ic-n{background:rgba(23,59,143,.11)}.ic-go{background:rgba(255,198,42,.15)}.ic-c{background:rgba(6,182,212,.11)}.ic-i{background:rgba(99,102,241,.11)}
+
+/* DASHBOARD ZOOM */
+.zoom-s{background:var(--navy-dd);padding:120px 0;overflow:hidden}
+.zoom-inner{max-width:1100px;margin:64px auto 0;padding:0 2rem}
+.zoom-db{transform:scale(.88);transition:transform .08s linear;transform-origin:top center}
+.full-db{background:#0F172A;border-radius:20px;border:1px solid rgba(255,255,255,.08);overflow:hidden;box-shadow:0 60px 120px rgba(0,0,0,.6)}
+.fbb{display:flex;align-items:center;gap:12px;padding:14px 20px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)}
+.fdb-inner{display:grid;grid-template-columns:220px 1fr;height:520px}
+.fdb-sidebar{background:#071840;padding:24px 16px;border-right:1px solid rgba(255,255,255,.06);overflow:hidden}
+.fdb-logo{font-size:20px;font-weight:900;color:#fff;padding:4px 8px 22px;letter-spacing:-1px}
+.fdb-logo span{color:#60A5FA}
+.fsec{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.22);padding:10px 8px 5px;font-weight:700}
+.fsi{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:12.5px;color:rgba(255,255,255,.42);cursor:default;transition:all .2s}
+.fsi.on{background:rgba(59,130,246,.15);color:#93C5FD}
+.fsi:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.65)}
+.fsi-ico{font-size:14px;width:18px;text-align:center}
+.fdb-main{background:#0F172A;padding:24px;overflow:hidden}
+.fmh{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.fmh-title{font-size:18px;font-weight:700;color:#fff}
+.fmh-right{display:flex;gap:8px}
+.fb{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:500;cursor:default}
+.fb-o{background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45)}
+.fb-p{background:#2563EB;border:none;color:#fff}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.kpi{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:50%;filter:blur(22px);opacity:.3}
+.kpi.kb::after{background:#3B82F6}.kpi.kg::after{background:#10B981}.kpi.kgo::after{background:var(--gold)}.kpi.kr::after{background:var(--red)}
+.kpi-l{font-size:11px;color:rgba(255,255,255,.38);margin-bottom:7px}
+.kpi-v{font-size:24px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1;margin-bottom:5px}
+.kpi-c{font-size:11.5px;display:flex;align-items:center;gap:3px}
+.kpi-c.up{color:#34D399}.kpi-c.dn{color:#F87171}
+.chart-row{display:grid;grid-template-columns:1fr 300px;gap:14px;height:300px}
+.chart-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;overflow:hidden}
+.chart-title{font-size:12px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:14px}
+.chart-area-svg{width:100%;height:calc(100% - 36px)}
+.act-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;overflow:hidden}
+.act-title{font-size:12px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:14px}
+.act-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.act-dot{width:8px;height:8px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.act-main{font-size:11.5px;color:rgba(255,255,255,.68);margin-bottom:2px}
+.act-sub{font-size:10.5px;color:rgba(255,255,255,.28)}
+
+/* PROCESS FLOW */
+.proc-s{background:var(--gray)}
+.proc-flow{display:flex;align-items:center;justify-content:center;gap:0;padding:50px 0;overflow-x:auto;flex-wrap:nowrap}
+.proc-step{display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0}
+.proc-ico{width:74px;height:74px;border-radius:20px;background:#fff;border:2px solid var(--gray2);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 4px 14px rgba(23,59,143,.07);transition:all .3s;animation:pstep 3s ease-in-out infinite}
+.proc-step:nth-child(1) .proc-ico{animation-delay:0s}.proc-step:nth-child(3) .proc-ico{animation-delay:.3s}.proc-step:nth-child(5) .proc-ico{animation-delay:.6s}.proc-step:nth-child(7) .proc-ico{animation-delay:.9s}.proc-step:nth-child(9) .proc-ico{animation-delay:1.2s}.proc-step:nth-child(11) .proc-ico{animation-delay:1.5s}.proc-step:nth-child(13) .proc-ico{animation-delay:1.8s}
+@keyframes pstep{0%,100%{transform:translateY(0);opacity:.65}50%{transform:translateY(-6px);opacity:1}}
+.proc-step.hi .proc-ico{background:var(--navy);border-color:var(--navy);box-shadow:0 10px 32px rgba(23,59,143,.3)}
+.proc-label{font-size:12px;font-weight:600;color:var(--dark);text-align:center}
+.proc-arrow{font-size:20px;color:var(--gray2);flex-shrink:0;margin:0 4px;padding-bottom:28px}
+
+/* FIELD SALES */
+.field-layout{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.field-features{display:flex;flex-direction:column;gap:16px;margin-top:36px}
+.field-feat{display:flex;align-items:flex-start;gap:16px;padding:20px;background:var(--gray);border-radius:14px;border:1.5px solid transparent;transition:all .3s}
+.field-feat:hover{border-color:rgba(23,59,143,.16);background:#fff;box-shadow:0 8px 24px rgba(23,59,143,.08);transform:translateX(8px)}
+.ffeat-ico{width:44px;height:44px;border-radius:12px;background:rgba(23,59,143,.09);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ffeat-name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px}
+.ffeat-desc{font-size:13px;color:var(--gt)}
+.map-mock{background:#1A2744;border-radius:22px;overflow:hidden;position:relative;height:480px;border:1px solid rgba(255,255,255,.08);box-shadow:0 36px 72px rgba(23,59,143,.2)}
+.map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:42px 42px}
+.map-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 20%,#071840 100%)}
+.mpin{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;animation:mpb 3s ease-in-out infinite}
+@keyframes mpb{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.mpin:nth-child(2){animation-delay:.4s}.mpin:nth-child(3){animation-delay:.8s}.mpin:nth-child(4){animation-delay:1.2s}.mpin:nth-child(5){animation-delay:1.6s}
+.pin-head{width:38px;height:38px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.pin-e{transform:rotate(45deg);font-size:16px}
+.pin-pulse{position:absolute;width:56px;height:56px;border-radius:50%;border:2px solid rgba(59,130,246,.4);animation:pp 2s ease-out infinite}
+@keyframes pp{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.6);opacity:0}}
+.pb{background:#3B82F6}.pg{background:#10B981}.pr{background:var(--red)}.pgo{background:var(--gold)}
+.map-panel{position:absolute;bottom:20px;left:20px;right:20px;background:rgba(7,24,64,.88);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px;display:flex;gap:16px}
+.mp-stat{flex:1;text-align:center}
+.mp-val{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.5px}
+.mp-lab{font-size:10px;color:rgba(255,255,255,.38);margin-top:2px}
+.mp-div{width:1px;background:rgba(255,255,255,.08)}
+
+/* MESSAGING */
+.msg-s{background:var(--navy-dd);padding:100px 0;overflow:hidden}
+.msg-layout{display:grid;grid-template-columns:1fr 1.1fr;gap:80px;align-items:center}
+.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px}
+.ch-badge{display:flex;align-items:center;gap:10px;padding:14px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;transition:all .3s;cursor:default}
+.ch-badge:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);transform:translateY(-2px)}
+.ch-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.ch-name{font-size:13px;font-weight:600;color:#fff}
+.ch-cnt{font-size:11px;color:rgba(255,255,255,.38)}
+.phone{width:280px;margin:0 auto;background:#16162A;border-radius:42px;padding:10px;box-shadow:0 40px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08)}
+.pscreen{background:#0F172A;border-radius:34px;overflow:hidden;height:580px;display:flex;flex-direction:column}
+.pnotch{width:100px;height:30px;background:#16162A;border-radius:0 0 20px 20px;margin:0 auto;flex-shrink:0}
+.ph-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.ph-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.ph-name{font-size:13px;font-weight:600;color:#fff}
+.ph-msgs{padding:12px;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.pm{display:flex;gap:8px}
+.pm.r{flex-direction:row-reverse}
+.pm-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
+.pm-bub{max-width:76%;padding:8px 12px;border-radius:14px;font-size:12px;line-height:1.45}
+.pm.l .pm-bub{background:rgba(255,255,255,.08);color:rgba(255,255,255,.78);border-bottom-left-radius:4px}
+.pm.r .pm-bub{background:#2563EB;color:#fff;border-bottom-right-radius:4px}
+.pm-src{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;margin-left:5px;vertical-align:middle}
+
+/* PRODUCTION TIMELINE */
+.tl-s{background:var(--gray)}
+.tl-wrap{max-width:820px;margin:0 auto;position:relative;display:flex;flex-direction:column}
+.tl-wrap::before{content:'';position:absolute;left:40px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--navy),rgba(23,59,143,.08))}
+.tl-item{display:flex;align-items:center;gap:24px;padding:18px 0;opacity:0;transform:translateX(-24px);transition:all .55s ease}
+.tl-item.vis{opacity:1;transform:translateX(0)}
+.tl-ico{width:80px;height:80px;border-radius:20px;background:#fff;border:2px solid var(--gray2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;z-index:1;box-shadow:0 4px 14px rgba(0,0,0,.06);transition:all .3s}
+.tl-item.act .tl-ico{background:var(--navy);border-color:var(--navy);box-shadow:0 10px 32px rgba(23,59,143,.3)}
+.tl-content{flex:1;padding:20px 24px;background:#fff;border-radius:16px;border:1.5px solid var(--gray2);transition:all .3s}
+.tl-item.act .tl-content{border-color:rgba(23,59,143,.2);box-shadow:0 8px 24px rgba(23,59,143,.07)}
+.tl-name{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:4px}
+.tl-desc{font-size:13px;color:var(--gt)}
+.tl-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-top:8px}
+
+/* COMPARISON */
+.cmp-table{width:100%;border-radius:18px;overflow:hidden;border:1.5px solid var(--gray2);border-collapse:separate;border-spacing:0}
+.cmp-table thead{background:var(--navy)}
+.cmp-table thead th{padding:18px 26px;font-size:14px;font-weight:700;color:#fff;text-align:left}
+.cmp-table thead th.hi{background:rgba(255,255,255,.15);color:var(--gold);text-align:center}
+.cmp-table thead th.oth{text-align:center;color:rgba(255,255,255,.55)}
+.cmp-table tbody tr{border-bottom:1px solid var(--gray2);transition:background .2s}
+.cmp-table tbody tr:last-child td{border-bottom:none}
+.cmp-table tbody tr:hover{background:var(--gray)}
+.cmp-table tbody td{padding:16px 26px;font-size:14px;color:var(--dark);font-weight:500}
+.cmp-table tbody td.c{text-align:center;font-size:19px}
+.cy{color:#10B981}.cn{color:#EF4444}.cw{color:#F59E0B}
+
+/* PRICING */
+.pricing-s{background:var(--gray)}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:start}
+.p-card{background:#fff;border:1.5px solid var(--gray2);border-radius:22px;padding:38px;transition:all .3s cubic-bezier(.25,.46,.45,.94);position:relative}
+.p-card:hover{transform:translateY(-10px);box-shadow:0 28px 56px rgba(23,59,143,.1)}
+.p-card.feat{background:var(--navy);border-color:var(--navy);transform:scale(1.05);box-shadow:0 36px 72px rgba(23,59,143,.32)}
+.p-card.feat:hover{transform:scale(1.05) translateY(-10px)}
+.p-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--dark);padding:5px 18px;border-radius:100px;font-size:11px;font-weight:800;letter-spacing:.5px;white-space:nowrap}
+.p-plan{font-size:12.5px;font-weight:700;color:var(--gt);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.p-card.feat .p-plan{color:rgba(255,255,255,.55)}
+.p-price{font-size:46px;font-weight:900;color:var(--dark);letter-spacing:-2.5px;line-height:1;margin-bottom:4px}
+.p-card.feat .p-price{color:#fff}
+.p-per{font-size:13px;color:var(--gt);margin-bottom:28px}
+.p-card.feat .p-per{color:rgba(255,255,255,.45)}
+.p-feats{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.p-feat{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--dark)}
+.p-card.feat .p-feat{color:rgba(255,255,255,.82)}
+.p-ck{width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,.12);color:#10B981;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.p-card.feat .p-ck{background:rgba(255,255,255,.15);color:#fff}
+.btn-pout{display:block;width:100%;padding:14px;text-align:center;font-size:14px;font-weight:600;border-radius:11px;cursor:pointer;text-decoration:none;background:transparent;border:1.5px solid var(--gray2);color:var(--dark);transition:all .2s}
+.btn-pout:hover{border-color:var(--navy);color:var(--navy)}
+.btn-pw{display:block;width:100%;padding:14px;text-align:center;font-size:14px;font-weight:700;border-radius:11px;cursor:pointer;text-decoration:none;background:#fff;color:var(--navy);border:none;transition:all .2s}
+.btn-pw:hover{background:var(--gold);color:var(--dark)}
+.btn-pent{display:block;width:100%;padding:14px;text-align:center;font-size:14px;font-weight:600;border-radius:11px;cursor:pointer;text-decoration:none;background:var(--navy);color:#fff;border:none;transition:all .2s}
+.btn-pent:hover{background:var(--navy-d)}
+
+/* MARQUEE */
+.marquee-s{background:#fff;padding:64px 0;border-top:1px solid var(--gray2);border-bottom:1px solid var(--gray2);overflow:hidden}
+.mq-title{text-align:center;font-size:12px;font-weight:700;color:var(--gt);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:32px}
+.mq-track{display:flex;gap:48px;animation:mq 25s linear infinite;width:max-content}
+.mq-track:hover{animation-play-state:paused}
+@keyframes mq{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.mq-logo{display:flex;align-items:center;gap:10px;padding:12px 24px;background:var(--gray);border-radius:10px;border:1px solid var(--gray2);font-size:14px;font-weight:700;color:var(--gt);white-space:nowrap;transition:all .2s;user-select:none}
+.mq-logo:hover{color:var(--navy);border-color:rgba(23,59,143,.2)}
+
+/* TESTIMONIALS */
+.test-s{background:var(--gray)}
+.test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.test-card{background:#fff;border:1.5px solid var(--gray2);border-radius:22px;padding:32px;transition:all .35s}
+.test-card:hover{transform:translateY(-8px) rotate(.4deg);box-shadow:0 22px 44px rgba(23,59,143,.1);border-color:rgba(23,59,143,.15)}
+.test-stars{color:var(--gold);font-size:15px;letter-spacing:2px;margin-bottom:14px}
+.test-q{font-size:15px;color:var(--dark);line-height:1.72;margin-bottom:24px;font-style:italic}
+.test-auth{display:flex;align-items:center;gap:12px}
+.test-av{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
+.test-name{font-size:14px;font-weight:700;color:var(--dark)}
+.test-role{font-size:12px;color:var(--gt)}
+
+/* FAQ */
+.faq-s{background:#fff}
+.faq-list{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.faq-item{border:1.5px solid var(--gray2);border-radius:14px;overflow:hidden;transition:all .3s}
+.faq-item:hover{border-color:rgba(23,59,143,.2)}
+.faq-item.open{border-color:var(--navy);box-shadow:0 4px 20px rgba(23,59,143,.1)}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;cursor:pointer;font-size:15px;font-weight:600;color:var(--dark);user-select:none;transition:color .2s}
+.faq-item.open .faq-q{color:var(--navy)}
+.faq-ico{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--gray2);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gt);transition:all .3s;flex-shrink:0}
+.faq-item.open .faq-ico{background:var(--navy);border-color:var(--navy);color:#fff;transform:rotate(45deg)}
+.faq-ans{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.faq-item.open .faq-ans{max-height:200px}
+.faq-ans-in{padding:0 24px 20px;font-size:14px;color:var(--gt);line-height:1.72;border-top:1px solid var(--gray2);padding-top:16px}
+
+/* GLOW CARDS */
+.glow-s{background:var(--navy-dd);padding:100px 0}
+.glow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:56px}
+.glow-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:24px;position:relative;overflow:hidden;transition:all .3s}
+.glow-card::before{content:'';position:absolute;top:-30px;right:-30px;width:110px;height:110px;border-radius:50%;filter:blur(32px);animation:gp 3s ease-in-out infinite}
+@keyframes gp{0%,100%{opacity:.28;transform:scale(1)}50%{opacity:.55;transform:scale(1.2)}}
+.gc1::before{background:#3B82F6}.gc2::before{background:#10B981}.gc3::before{background:var(--gold)}.gc4::before{background:var(--red)}.gc5::before{background:#8B5CF6}.gc6::before{background:#06B6D4}.gc7::before{background:#EC4899}.gc8::before{background:#F97316}
+.glow-card:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);transform:translateY(-5px)}
+.gc-ico{font-size:26px;margin-bottom:12px}
+.gc-lbl{font-size:12px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:4px}
+.gc-val{font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1}
+.gc-trend{font-size:11px;color:#34D399;margin-top:5px}
+
+/* CTA */
+.cta-s{background:var(--navy);padding:80px 0;position:relative;overflow:hidden}
+.cta-s::before{content:'';position:absolute;top:-120px;right:-120px;width:520px;height:520px;border-radius:50%;background:rgba(255,255,255,.03)}
+.cta-s::after{content:'';position:absolute;bottom:-80px;left:-80px;width:350px;height:350px;border-radius:50%;background:rgba(255,198,42,.05)}
+.cta-c{max-width:1280px;margin:0 auto;padding:0 2rem;text-align:center;position:relative;z-index:1}
+.cta-title{font-size:52px;font-weight:900;color:#fff;letter-spacing:-2.5px;margin-bottom:14px}
+.cta-desc{font-size:18px;color:rgba(255,255,255,.55);max-width:480px;margin:0 auto 40px;line-height:1.65}
+.cta-btns{display:flex;align-items:center;justify-content:center;gap:14px}
+
+/* FOOTER */
+footer{background:var(--navy-dd);padding:80px 0 40px}
+.ft-c{max-width:1280px;margin:0 auto;padding:0 2rem}
+.ft-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:56px;margin-bottom:56px;padding-bottom:56px;border-bottom:1px solid rgba(255,255,255,.06)}
+.ft-brand{font-size:30px;font-weight:900;color:#fff;letter-spacing:-1.5px;margin-bottom:4px}
+.ft-brand span{color:#60A5FA}
+.ft-sub{font-size:11px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:18px}
+.ft-desc{font-size:13.5px;color:rgba(255,255,255,.38);line-height:1.7;margin-bottom:22px}
+.ft-soc{display:flex;gap:10px}
+.soc-a{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:15px;color:rgba(255,255,255,.45);text-decoration:none;transition:all .2s}
+.soc-a:hover{background:rgba(255,255,255,.12);color:#fff}
+.ft-col-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1.8px;margin-bottom:18px}
+.ft-links{list-style:none;display:flex;flex-direction:column;gap:11px}
+.ft-links a{font-size:13.5px;color:rgba(255,255,255,.38);text-decoration:none;transition:color .2s}
+.ft-links a:hover{color:#fff}
+.ft-bottom{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.22)}
+
+/* ANIMATIONS */
+.fi{opacity:0;transform:translateY(30px);transition:opacity .65s ease,transform .65s ease}
+.fi.vis{opacity:1;transform:translateY(0)}
+.fi-d1{transition-delay:.1s}.fi-d2{transition-delay:.2s}.fi-d3{transition-delay:.3s}.fi-d4{transition-delay:.4s}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-box">B</div>
+    <div class="nav-brand"><b>BACH</b><small>Business Operating System</small></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#ozellikler">Özellikler</a></li>
+    <li><a href="#moduller">Modüller</a></li>
+    <li><a href="#fiyatlar">Fiyatlar</a></li>
+    <li><a href="#referanslar">Referanslar</a></li>
+    <li><a href="#blog">Blog</a></li>
+    <li><a href="#iletisim">İletişim</a></li>
+  </ul>
+  <div class="nav-acts">
+    <a href="#" class="btn-ghost">Giriş</a>
+    <a href="#" class="btn-primary">Üye Ol</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hl hl1"></div><div class="hl hl2"></div><div class="hl hl3"></div>
+  </div>
+  <div class="hero-c">
+    <div>
+      <div class="hero-badge"><span class="badge-dot"></span>Yeni · AI Modülü Yayında ✨</div>
+      <div class="hero-eyebrow">Business Operating System</div>
+      <div class="hero-brand">BACH</div>
+      <div class="hero-bsub">Business Operating System</div>
+      <h1 class="hero-h1">Tüm Süreçler<br><span class="ac">Tek Panel</span></h1>
+      <p class="hero-p">CRM, ERP, Muhasebe, Üretim, Saha Satış, İnsan Kaynakları, B2B, E-Fatura, Yapay Zekâ ve daha fazlasını tek platformdan yönetin.</p>
+      <div class="hero-btns">
+        <a href="#" class="btn-red">🚀 Ücretsiz Dene</a>
+        <a href="#" class="btn-outline-w">📋 Demo Talep Et</a>
+      </div>
+    </div>
+    <div>
+      <div class="db-wrap" id="dbWrap">
+        <div class="browser">
+          <div class="bbar"><div class="bdots"><span></span><span></span><span></span></div><div class="burl">🔒 app.bach.io/dashboard</div></div>
+          <div class="db-inner">
+            <div class="db-sidebar">
+              <div class="db-sl">BACH<span>.</span>io</div>
+              <div class="db-nav">
+                <div class="dbi on"><div class="dbi-dot" style="background:#3B82F6"></div>Dashboard</div>
+                <div class="dbi"><div class="dbi-dot" style="background:rgba(255,255,255,.15)"></div>CRM</div>
+                <div class="dbi"><div class="dbi-dot" style="background:rgba(255,255,255,.15)"></div>ERP</div>
+                <div class="dbi"><div class="dbi-dot" style="background:rgba(255,255,255,.15)"></div>Muhasebe</div>
+                <div class="dbi"><div class="dbi-dot" style="background:rgba(255,255,255,.15)"></div>Üretim</div>
+                <div class="dbi"><div class="dbi-dot" style="background:rgba(255,255,255,.15)"></div>İnsan Kaynakları</div>
+                <div class="dbi"><div class="dbi-dot" style="background:rgba(255,255,255,.15)"></div>Saha Satış</div>
+                <div class="dbi"><div class="dbi-dot" style="background:rgba(255,255,255,.15)"></div>Raporlar</div>
+              </div>
+            </div>
+            <div class="db-main">
+              <div class="db-topbar"><div class="db-title">Genel Bakış</div><div class="db-date">27 Haz 2026</div></div>
+              <div class="db-kpis">
+                <div class="db-kpi b"><div class="db-kl">Gelir</div><div class="db-kv">₺284K</div><div class="db-kc">+12%</div></div>
+                <div class="db-kpi g"><div class="db-kl">Siparişler</div><div class="db-kv">1.847</div><div class="db-kc">+8%</div></div>
+                <div class="db-kpi go"><div class="db-kl">Müşteriler</div><div class="db-kv">4.291</div><div class="db-kc">+5%</div></div>
+                <div class="db-kpi r"><div class="db-kl">Üretim</div><div class="db-kv">%93</div><div class="db-kc">▲</div></div>
+              </div>
+              <div class="db-cards">
+                <div class="db-card"><div class="db-ct">Aylık Gelir</div><div class="db-bars"><div class="db-bar" style="height:38%"></div><div class="db-bar" style="height:54%"></div><div class="db-bar" style="height:46%"></div><div class="db-bar" style="height:68%"></div><div class="db-bar" style="height:58%"></div><div class="db-bar" style="height:79%"></div><div class="db-bar hi" style="height:94%"></div></div></div>
+                <div class="db-card"><div class="db-ct">Son Aktiviteler</div><div class="db-rows">
+                  <div class="db-row"><div class="dr-dot" style="background:#3B82F6"></div><div class="dr-name">Sipariş #4521</div><div class="dr-badge" style="background:rgba(16,185,129,.15);color:#34D399">Onaylandı</div></div>
+                  <div class="db-row"><div class="dr-dot" style="background:#F59E0B"></div><div class="dr-name">Teklif #892</div><div class="dr-badge" style="background:rgba(245,158,11,.15);color:#FCD34D">Beklemede</div></div>
+                  <div class="db-row"><div class="dr-dot" style="background:#10B981"></div><div class="dr-name">Fatura #2219</div><div class="dr-badge" style="background:rgba(16,185,129,.15);color:#34D399">Ödendi</div></div>
+                  <div class="db-row"><div class="dr-dot" style="background:#EF4444"></div><div class="dr-name">İade #44</div><div class="dr-badge" style="background:rgba(239,68,68,.15);color:#FCA5A5">İşlemde</div></div>
+                </div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-s">
+  <div class="stats-c">
+    <div class="stat-item fi"><div class="stat-n" data-target="120" data-suffix="+">0+</div><div class="stat-l">Modül</div></div>
+    <div class="stat-item fi fi-d1"><div class="stat-n" data-target="40000" data-suffix="+">0+</div><div class="stat-l">Aktif Kullanıcı</div></div>
+    <div class="stat-item fi fi-d2"><div class="stat-n" data-target="12" data-suffix=" Milyon">0</div><div class="stat-l">İşlem</div></div>
+    <div class="stat-item fi fi-d3"><div class="stat-n" data-target="99.99" data-suffix="%" data-decimal="true">0%</div><div class="stat-l">Uptime</div></div>
+  </div>
+</div>
+
+<!-- MODULES -->
+<section class="s-pad" id="moduller">
+  <div class="s-c">
+    <div class="s-head">
+      <div class="s-badge fi">12 Temel Modül</div>
+      <h2 class="s-title fi fi-d1">Her Süreç İçin<br>Bir Çözüm</h2>
+      <p class="s-desc fi fi-d2">İşletmenizin tüm departmanlarını tek platformda yönetin. Entegrasyon yok, veri kaybı yok, lisans karmaşası yok.</p>
+    </div>
+    <div class="modules-grid">
+      <div class="mod-card fi"><div class="mod-icon ic-b">👥</div><div class="mod-name">CRM</div><div class="mod-desc">Müşteri ilişkilerini, teklifleri ve satış süreçlerini merkezi panelden yönetin.</div></div>
+      <div class="mod-card fi fi-d1"><div class="mod-icon ic-n">🏢</div><div class="mod-name">ERP</div><div class="mod-desc">Tüm kurumsal operasyonlarınızı tek ekranda görün ve yönetin.</div></div>
+      <div class="mod-card fi fi-d2"><div class="mod-icon ic-g">💰</div><div class="mod-name">Muhasebe</div><div class="mod-desc">Gelir-gider takibi, fatura yönetimi ve finansal raporlama.</div></div>
+      <div class="mod-card fi fi-d3"><div class="mod-icon ic-o">📦</div><div class="mod-name">Stok</div><div class="mod-desc">Gerçek zamanlı stok takibi, kritik seviye uyarıları ve depo yönetimi.</div></div>
+      <div class="mod-card fi"><div class="mod-icon ic-t">🏭</div><div class="mod-name">Depo</div><div class="mod-desc">Depo düzeni, raf yönetimi ve envanter optimizasyonu.</div></div>
+      <div class="mod-card fi fi-d1"><div class="mod-icon ic-p">⚙️</div><div class="mod-name">Üretim</div><div class="mod-desc">Üretim planlaması, iş emirleri ve kalite kontrol süreçleri.</div></div>
+      <div class="mod-card fi fi-d2"><div class="mod-icon ic-y">👨‍💼</div><div class="mod-name">İnsan Kaynakları</div><div class="mod-desc">İşe alım, özlük işleri, izin ve performans yönetimi.</div></div>
+      <div class="mod-card fi fi-d3"><div class="mod-icon ic-r">🕓</div><div class="mod-name">Personel Takip</div><div class="mod-desc">Vardiya planlaması, devam takibi ve mesai hesaplama.</div></div>
+      <div class="mod-card fi"><div class="mod-icon ic-go">💳</div><div class="mod-name">Canlı Kasa</div><div class="mod-desc">Anlık kasa takibi, tahsilat yönetimi ve ödeme geçmişi.</div></div>
+      <div class="mod-card fi fi-d1"><div class="mod-icon ic-c">🌍</div><div class="mod-name">B2B Portal</div><div class="mod-desc">Müşterileriniz üretim, numune ve siparişlerini kendi panelinden yönetir.</div></div>
+      <div class="mod-card fi fi-d2"><div class="mod-icon ic-i">📄</div><div class="mod-name">E-Fatura</div><div class="mod-desc">GİB entegrasyonlu e-fatura, e-arşiv ve e-irsaliye otomasyonu.</div></div>
+      <div class="mod-card fi fi-d3"><div class="mod-icon ic-pk">✨</div><div class="mod-name">Yapay Zekâ</div><div class="mod-desc">AI destekli tahmin, anomali tespiti ve otomatik raporlama.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD ZOOM -->
+<section class="zoom-s dark-s" id="ozellikler">
+  <div class="s-c">
+    <div class="s-head">
+      <div class="s-badge fi">Tam Kontrol</div>
+      <h2 class="s-title fi fi-d1">Herşey Tek Ekranda</h2>
+      <p class="s-desc fi fi-d2">Gerçek zamanlı KPI'lar, akıllı grafikler ve anlık aktivite akışı ile işletmenizi her an kontrol altında tutun.</p>
+    </div>
+  </div>
+  <div class="zoom-inner">
+    <div class="zoom-db" id="zoomDb">
+      <div class="full-db">
+        <div class="fbb"><div class="bdots"><span></span><span></span><span></span></div><div class="burl" style="flex:1;font-size:12px;color:rgba(255,255,255,.35)">🔒 app.bach.io/dashboard</div></div>
+        <div class="fdb-inner">
+          <div class="fdb-sidebar">
+            <div class="fdb-logo">BACH<span>.</span>io</div>
+            <div class="fsec">Ana Menü</div>
+            <div class="fsi on"><span class="fsi-ico">📊</span>Dashboard</div>
+            <div class="fsi"><span class="fsi-ico">👥</span>CRM</div>
+            <div class="fsi"><span class="fsi-ico">🏢</span>ERP</div>
+            <div class="fsi"><span class="fsi-ico">💰</span>Muhasebe</div>
+            <div class="fsec">Operasyon</div>
+            <div class="fsi"><span class="fsi-ico">📦</span>Stok &amp; Depo</div>
+            <div class="fsi"><span class="fsi-ico">⚙️</span>Üretim</div>
+            <div class="fsi"><span class="fsi-ico">🚛</span>Lojistik</div>
+            <div class="fsi"><span class="fsi-ico">📍</span>Saha Satış</div>
+            <div class="fsec">İK &amp; Personel</div>
+            <div class="fsi"><span class="fsi-ico">👨‍💼</span>İnsan Kaynakları</div>
+            <div class="fsi"><span class="fsi-ico">🕓</span>Personel Takip</div>
+            <div class="fsec">Satış</div>
+            <div class="fsi"><span class="fsi-ico">🌍</span>B2B Portal</div>
+            <div class="fsi"><span class="fsi-ico">📄</span>E-Fatura</div>
+            <div class="fsi"><span class="fsi-ico">✨</span>Yapay Zekâ</div>
+          </div>
+          <div class="fdb-main">
+            <div class="fmh"><div class="fmh-title">Genel Bakış — Haziran 2026</div><div class="fmh-right"><div class="fb fb-o">Bu Ay</div><div class="fb fb-p">+ Yeni Rapor</div></div></div>
+            <div class="kpi-row">
+              <div class="kpi kb"><div class="kpi-l">Toplam Gelir</div><div class="kpi-v">₺2.84M</div><div class="kpi-c up">↑ %12 geçen aya göre</div></div>
+              <div class="kpi kg"><div class="kpi-l">Aktif Siparişler</div><div class="kpi-v">1.847</div><div class="kpi-c up">↑ %8 büyüme</div></div>
+              <div class="kpi kgo"><div class="kpi-l">Müşteri Sayısı</div><div class="kpi-v">4.291</div><div class="kpi-c up">↑ 214 yeni</div></div>
+              <div class="kpi kr"><div class="kpi-l">Üretim Verimi</div><div class="kpi-v">%93.4</div><div class="kpi-c dn">↓ %1.2 hedef altı</div></div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-box">
+                <div class="chart-title">Aylık Gelir Trendi (₺)</div>
+                <svg class="chart-area-svg" viewBox="0 0 500 220" preserveAspectRatio="none">
+                  <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3B82F6" stop-opacity=".3"/><stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/></linearGradient></defs>
+                  <path d="M0,180 C80,160 160,130 240,95 C320,60 400,40 500,18 L500,220 L0,220 Z" fill="url(#cg)"/>
+                  <path d="M0,180 C80,160 160,130 240,95 C320,60 400,40 500,18" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+                  <circle cx="120" cy="140" r="4" fill="#3B82F6"/><circle cx="240" cy="95" r="4" fill="#3B82F6"/><circle cx="380" cy="38" r="4" fill="#3B82F6"/><circle cx="500" cy="18" r="5" fill="#60A5FA"/>
+                  <line x1="0" y1="220" x2="500" y2="220" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+                </svg>
+              </div>
+              <div class="act-box">
+                <div class="act-title">Canlı Aktiviteler</div>
+                <div class="act-item"><div class="act-dot" style="background:#3B82F6"></div><div><div class="act-main">Sipariş #4521 onaylandı</div><div class="act-sub">Zorlu Holding — 2 dk önce</div></div></div>
+                <div class="act-item"><div class="act-dot" style="background:#10B981"></div><div><div class="act-main">Fatura #2219 ödendi</div><div class="act-sub">₺48.500 tahsilat — 5 dk önce</div></div></div>
+                <div class="act-item"><div class="act-dot" style="background:#F59E0B"></div><div><div class="act-main">Teklif #892 gönderildi</div><div class="act-sub">Sabancı Grubu — 12 dk önce</div></div></div>
+                <div class="act-item"><div class="act-dot" style="background:#8B5CF6"></div><div><div class="act-main">Üretim emri tamamlandı</div><div class="act-sub">1.200 adet — 18 dk önce</div></div></div>
+                <div class="act-item"><div class="act-dot" style="background:#EC4899"></div><div><div class="act-main">Yeni müşteri kaydı</div><div class="act-sub">Koç Sistem A.Ş. — 22 dk önce</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS FLOW -->
+<section class="s-pad proc-s">
+  <div class="s-c">
+    <div class="s-head">
+      <div class="s-badge fi">Uçtan Uca</div>
+      <h2 class="s-title fi fi-d1">CRM'den Tahsilata Kesintisiz Akış</h2>
+      <p class="s-desc fi fi-d2">Bir müşteri adayından tahsilata kadar her adım BACH'ta entegre ve otomatik.</p>
+    </div>
+  </div>
+  <div class="proc-flow">
+    <div class="proc-step"><div class="proc-ico hi">👥</div><div class="proc-label">CRM</div></div>
+    <div class="proc-arrow">→</div>
+    <div class="proc-step"><div class="proc-ico">📋</div><div class="proc-label">Teklif</div></div>
+    <div class="proc-arrow">→</div>
+    <div class="proc-step"><div class="proc-ico hi">🛒</div><div class="proc-label">Sipariş</div></div>
+    <div class="proc-arrow">→</div>
+    <div class="proc-step"><div class="proc-ico">⚙️</div><div class="proc-label">Üretim</div></div>
+    <div class="proc-arrow">→</div>
+    <div class="proc-step"><div class="proc-ico hi">✅</div><div class="proc-label">Kalite</div></div>
+    <div class="proc-arrow">→</div>
+    <div class="proc-step"><div class="proc-ico">📦</div><div class="proc-label">Paketleme</div></div>
+    <div class="proc-arrow">→</div>
+    <div class="proc-step"><div class="proc-ico hi">🚛</div><div class="proc-label">Sevkiyat</div></div>
+    <div class="proc-arrow">→</div>
+    <div class="proc-step"><div class="proc-ico">📄</div><div class="proc-label">Fatura</div></div>
+    <div class="proc-arrow">→</div>
+    <div class="proc-step"><div class="proc-ico hi">💳</div><div class="proc-label">Tahsilat</div></div>
+  </div>
+</section>
+
+<!-- FIELD SALES -->
+<section class="s-pad" style="background:#fff">
+  <div class="s-c">
+    <div class="field-layout">
+      <div>
+        <div class="s-badge fi">Saha Satış</div>
+        <h2 class="s-title fi fi-d1">Sahayı Haritadan Yönetin</h2>
+        <p class="s-desc fi fi-d2">Temsilcilerinizin gerçek zamanlı konumunu, ziyaret geçmişini ve performansını anlık görün.</p>
+        <div class="field-features">
+          <div class="field-feat fi"><div class="ffeat-ico">🗺️</div><div><div class="ffeat-name">Rota Planlama</div><div class="ffeat-desc">Akıllı rota önerileri ile yakıt ve zaman tasarrufu</div></div></div>
+          <div class="field-feat fi fi-d1"><div class="ffeat-ico">📍</div><div><div class="ffeat-name">GPS Takip</div><div class="ffeat-desc">Temsilcilerin anlık ve geçmiş konum geçmişi</div></div></div>
+          <div class="field-feat fi fi-d2"><div class="ffeat-ico">📅</div><div><div class="ffeat-name">Günlük Plan</div><div class="ffeat-desc">Otomatik oluşturulan günlük ziyaret programı</div></div></div>
+          <div class="field-feat fi fi-d3"><div class="ffeat-ico">🏪</div><div><div class="ffeat-name">Bayi Ziyaretleri</div><div class="ffeat-desc">Ziyaret kayıtları, fotoğraf ve notlar ile raporlama</div></div></div>
+          <div class="field-feat fi"><div class="ffeat-ico">📊</div><div><div class="ffeat-name">Performans Analizi</div><div class="ffeat-desc">Temsilci bazlı satış, ziyaret ve dönüşüm raporları</div></div></div>
+        </div>
+      </div>
+      <div class="map-mock fi fi-d2">
+        <div class="map-grid"></div>
+        <div class="map-overlay"></div>
+        <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" viewBox="0 0 400 480">
+          <path d="M80,390 Q160,290 200,210 Q240,140 290,110 Q330,90 350,130" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-dasharray="8,5" opacity=".5"/>
+        </svg>
+        <div class="mpin" style="top:18%;left:42%"><div class="pin-pulse"></div><div class="pin-head pb"><span class="pin-e">📍</span></div></div>
+        <div class="mpin" style="top:36%;left:24%"><div class="pin-head pg"><span class="pin-e">✅</span></div></div>
+        <div class="mpin" style="top:27%;left:63%"><div class="pin-head pr"><span class="pin-e">⏳</span></div></div>
+        <div class="mpin" style="top:53%;left:51%"><div class="pin-head pgo"><span class="pin-e">🏪</span></div></div>
+        <div class="mpin" style="top:63%;left:30%"><div class="pin-head pb"><span class="pin-e">📋</span></div></div>
+        <div class="map-panel">
+          <div class="mp-stat"><div class="mp-val">12</div><div class="mp-lab">Temsilci Aktif</div></div>
+          <div class="mp-div"></div>
+          <div class="mp-stat"><div class="mp-val">84</div><div class="mp-lab">Ziyaret Bugün</div></div>
+          <div class="mp-div"></div>
+          <div class="mp-stat"><div class="mp-val">₺1.2M</div><div class="mp-lab">Günlük Satış</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MESSAGING -->
+<section class="msg-s dark-s">
+  <div class="s-c">
+    <div class="msg-layout">
+      <div>
+        <div class="s-badge fi">Mesaj Merkezi</div>
+        <h2 class="s-title fi fi-d1">Tüm Kanallar<br>Tek Ekranda</h2>
+        <p class="s-desc fi fi-d2">Instagram, WhatsApp, Facebook, TikTok, Messenger, E-posta ve Telegram'dan gelen tüm mesajlar tek panelde. Gerçek zamanlı.</p>
+        <div class="ch-grid">
+          <div class="ch-badge fi"><div class="ch-ico" style="background:linear-gradient(135deg,#F77737,#E1306C)">📸</div><div><div class="ch-name">Instagram</div><div class="ch-cnt">1.2K mesaj</div></div></div>
+          <div class="ch-badge fi fi-d1"><div class="ch-ico" style="background:#25D366">💬</div><div><div class="ch-name">WhatsApp</div><div class="ch-cnt">3.4K mesaj</div></div></div>
+          <div class="ch-badge fi fi-d2"><div class="ch-ico" style="background:#1877F2">👤</div><div><div class="ch-name">Facebook</div><div class="ch-cnt">842 mesaj</div></div></div>
+          <div class="ch-badge fi fi-d3"><div class="ch-ico" style="background:#010101">🎵</div><div><div class="ch-name">TikTok</div><div class="ch-cnt">518 mesaj</div></div></div>
+          <div class="ch-badge fi"><div class="ch-ico" style="background:#0084FF">✉️</div><div><div class="ch-name">Messenger</div><div class="ch-cnt">1.1K mesaj</div></div></div>
+          <div class="ch-badge fi fi-d1"><div class="ch-ico" style="background:var(--navy)">📧</div><div><div class="ch-name">E-Mail</div><div class="ch-cnt">2.8K mesaj</div></div></div>
+          <div class="ch-badge fi fi-d2"><div class="ch-ico" style="background:#229ED9">✈️</div><div><div class="ch-name">Telegram</div><div class="ch-cnt">674 mesaj</div></div></div>
+          <div class="ch-badge fi fi-d3"><div class="ch-ico" style="background:var(--gold)">✨</div><div><div class="ch-name">AI Yanıtla</div><div class="ch-cnt">Otomatik</div></div></div>
+        </div>
+      </div>
+      <div class="phone fi fi-d2">
+        <div class="pscreen">
+          <div class="pnotch"></div>
+          <div class="ph-header">
+            <div class="ph-ico" style="background:linear-gradient(135deg,#F77737,#E1306C)">📸</div>
+            <div class="ph-name">Instagram DM <span style="font-size:10px;opacity:.5;font-weight:400">· bach.main</span></div>
+          </div>
+          <div class="ph-msgs">
+            <div class="pm l"><div class="pm-av" style="background:rgba(255,255,255,.1)">👤</div><div><div class="pm-bub">Merhaba, ürünleriniz hakkında bilgi alabilir miyim? <span class="pm-src" style="background:rgba(248,113,113,.15);color:#FCA5A5">IG</span></div></div></div>
+            <div class="pm r"><div><div class="pm-bub">Merhaba! BACH platformunu tanıtmaktan memnuniyet duyarım. Hangi modül ilginizi çekiyor?</div></div><div class="pm-av" style="background:var(--navy)">B</div></div>
+            <div class="pm l"><div class="pm-av" style="background:rgba(255,255,255,.1)">👤</div><div><div class="pm-bub">CRM ve ERP modülleri, 50 kişilik şirketiz</div></div></div>
+            <div class="pm r"><div><div class="pm-bub">Size özel demo ayarlayabiliriz! Ücretsiz 30 dk demo için tarih belirleyelim mi? 🚀</div></div><div class="pm-av" style="background:var(--navy)">B</div></div>
+            <div class="pm l"><div class="pm-av" style="background:rgba(255,255,255,.1)">💬</div><div><div class="pm-bub">WhatsApp'tan da yazdım <span class="pm-src" style="background:rgba(37,211,102,.15);color:#34D399">WA</span></div></div></div>
+            <div class="pm r"><div><div class="pm-bub">Gördüm! Tüm mesajlarınız tek ekranda ✅</div></div><div class="pm-av" style="background:var(--navy)">B</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTION TIMELINE -->
+<section class="s-pad tl-s">
+  <div class="s-c">
+    <div class="s-head">
+      <div class="s-badge fi">Üretim Takip</div>
+      <h2 class="s-title fi fi-d1">Üretimi Anlık İzleyin</h2>
+      <p class="s-desc fi fi-d2">Siparişten sevkiyata her aşamayı gerçek zamanlı takip edin. Gecikme yok, sürpriz yok.</p>
+    </div>
+    <div class="tl-wrap">
+      <div class="tl-item act"><div class="tl-ico">📋</div><div class="tl-content"><div class="tl-name">Teklif &amp; Sipariş</div><div class="tl-desc">Müşteri onaylı sipariş sisteme girer, üretim planı otomatik oluşur</div><div class="tl-tag" style="background:rgba(16,185,129,.1);color:#10B981">✓ Tamamlandı</div></div></div>
+      <div class="tl-item act"><div class="tl-ico">📦</div><div class="tl-content"><div class="tl-name">Malzeme &amp; Stok</div><div class="tl-desc">Gerekli malzemeler stoktan rezerve edilir, eksik varsa otomatik sipariş açılır</div><div class="tl-tag" style="background:rgba(16,185,129,.1);color:#10B981">✓ Tamamlandı</div></div></div>
+      <div class="tl-item act"><div class="tl-ico">⚙️</div><div class="tl-content"><div class="tl-name">Üretim Başladı</div><div class="tl-desc">Üretim hattı atandı, operatörler iş emirlerini panellerinde görür</div><div class="tl-tag" style="background:rgba(59,130,246,.1);color:#3B82F6">🔄 Devam Ediyor</div></div></div>
+      <div class="tl-item"><div class="tl-ico">✅</div><div class="tl-content"><div class="tl-name">Kalite Kontrol</div><div class="tl-desc">QC ekibi onay/ret kaydeder, fire oranı otomatik hesaplanır</div><div class="tl-tag" style="background:rgba(245,158,11,.1);color:#F59E0B">⏳ Bekliyor</div></div></div>
+      <div class="tl-item"><div class="tl-ico">🏷️</div><div class="tl-content"><div class="tl-name">Paketleme</div><div class="tl-desc">Barkod, etiket ve palet optimizasyonu otomatik yapılır</div><div class="tl-tag" style="background:rgba(245,158,11,.1);color:#F59E0B">⏳ Bekliyor</div></div></div>
+      <div class="tl-item"><div class="tl-ico">🚛</div><div class="tl-content"><div class="tl-name">Sevkiyat</div><div class="tl-desc">Kurye atandı, müşteriye otomatik bildirim gönderilir</div><div class="tl-tag" style="background:rgba(245,158,11,.1);color:#F59E0B">⏳ Bekliyor</div></div></div>
+      <div class="tl-item"><div class="tl-ico">📄</div><div class="tl-content"><div class="tl-name">E-Fatura &amp; Tahsilat</div><div class="tl-desc">GİB'e otomatik iletilir, ödeme takibi başlar</div><div class="tl-tag" style="background:rgba(245,158,11,.1);color:#F59E0B">⏳ Bekliyor</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GLOW LIVE DASHBOARD -->
+<section class="glow-s dark-s">
+  <div class="s-c">
+    <div class="s-head">
+      <div class="s-badge fi">Canlı Veriler</div>
+      <h2 class="s-title fi fi-d1">Anlık Dashboard</h2>
+      <p class="s-desc fi fi-d2">İşletmenizin nabzını gerçek zamanlı hissediyorsunuz. Tüm metrikler canlı güncellenir.</p>
+    </div>
+    <div class="glow-grid">
+      <div class="glow-card gc1 fi"><div class="gc-ico">💰</div><div class="gc-lbl">Günlük Gelir</div><div class="gc-val">₺284K</div><div class="gc-trend">↑ %12 dün</div></div>
+      <div class="glow-card gc2 fi fi-d1"><div class="gc-ico">🛒</div><div class="gc-lbl">Aktif Sipariş</div><div class="gc-val">1.847</div><div class="gc-trend">↑ %8 büyüme</div></div>
+      <div class="glow-card gc3 fi fi-d2"><div class="gc-ico">👥</div><div class="gc-lbl">Yeni Müşteri</div><div class="gc-val">214</div><div class="gc-trend">Bu ay</div></div>
+      <div class="glow-card gc4 fi fi-d3"><div class="gc-ico">⚙️</div><div class="gc-lbl">Üretim Verimi</div><div class="gc-val">%93</div><div class="gc-trend">Hedef: %95</div></div>
+      <div class="glow-card gc5 fi"><div class="gc-ico">📍</div><div class="gc-lbl">Saha Ziyareti</div><div class="gc-val">84</div><div class="gc-trend">Bugün aktif</div></div>
+      <div class="glow-card gc6 fi fi-d1"><div class="gc-ico">💬</div><div class="gc-lbl">Mesaj Cevaplanma</div><div class="gc-val">%98</div><div class="gc-trend">Avg 3 dk</div></div>
+      <div class="glow-card gc7 fi fi-d2"><div class="gc-ico">📦</div><div class="gc-lbl">Stok Devir Hızı</div><div class="gc-val">4.2x</div><div class="gc-trend">Aylık oran</div></div>
+      <div class="glow-card gc8 fi fi-d3"><div class="gc-ico">✨</div><div class="gc-lbl">AI Tahmin Doğr.</div><div class="gc-val">%94</div><div class="gc-trend">Son 30 gün</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="s-pad" style="background:#fff">
+  <div class="s-c">
+    <div class="s-head">
+      <div class="s-badge fi">Neden BACH?</div>
+      <h2 class="s-title fi fi-d1">Fark Ortada</h2>
+      <p class="s-desc fi fi-d2">Rakip ERP sistemlerinin yapamadığını BACH yapar. Karşılaştırın ve görün.</p>
+    </div>
+    <table class="cmp-table fi fi-d1">
+      <thead><tr><th>Özellik</th><th class="hi">⭐ BACH</th><th class="oth">Diğer ERP</th></tr></thead>
+      <tbody>
+        <tr><td>CRM — Müşteri Yönetimi</td><td class="c cy">✅</td><td class="c cy">✅</td></tr>
+        <tr><td>ERP — Kurumsal Kaynak Planlaması</td><td class="c cy">✅</td><td class="c cy">✅</td></tr>
+        <tr><td>Muhasebe &amp; E-Fatura</td><td class="c cy">✅</td><td class="c cy">✅</td></tr>
+        <tr><td>B2B Müşteri Portalı</td><td class="c cy">✅</td><td class="c cw">⚠️</td></tr>
+        <tr><td>Yapay Zekâ Modülü</td><td class="c cy">✅</td><td class="c cn">❌</td></tr>
+        <tr><td>WhatsApp &amp; Toplu Mesaj</td><td class="c cy">✅</td><td class="c cn">❌</td></tr>
+        <tr><td>Instagram &amp; TikTok Entegrasyonu</td><td class="c cy">✅</td><td class="c cn">❌</td></tr>
+        <tr><td>GPS &amp; Saha Satış Takibi</td><td class="c cy">✅</td><td class="c cn">❌</td></tr>
+        <tr><td>Kurye &amp; Lojistik Yönetimi</td><td class="c cy">✅</td><td class="c cn">❌</td></tr>
+        <tr><td>Palet &amp; Koli Sığma Hesaplama</td><td class="c cy">✅</td><td class="c cn">❌</td></tr>
+        <tr><td>Araç Takip Sistemi</td><td class="c cy">✅</td><td class="c cn">❌</td></tr>
+        <tr><td>Tek Platform, Sıfır Entegrasyon</td><td class="c cy">✅</td><td class="c cn">❌</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="s-pad pricing-s" id="fiyatlar">
+  <div class="s-c">
+    <div class="s-head">
+      <div class="s-badge fi">Fiyatlandırma</div>
+      <h2 class="s-title fi fi-d1">Her Ölçeğe Uygun</h2>
+      <p class="s-desc fi fi-d2">Küçükten büyüğe tüm şirketler için esnek planlar. Gizli ücret yok.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="p-card fi">
+        <div class="p-plan">Starter</div>
+        <div class="p-price">₺1.490</div>
+        <div class="p-per">/ ay · KDV dahil</div>
+        <ul class="p-feats">
+          <li class="p-feat"><span class="p-ck">✓</span>CRM &amp; ERP Modülü</li>
+          <li class="p-feat"><span class="p-ck">✓</span>Muhasebe &amp; E-Fatura</li>
+          <li class="p-feat"><span class="p-ck">✓</span>Stok &amp; Depo Yönetimi</li>
+          <li class="p-feat"><span class="p-ck">✓</span>5 Kullanıcı</li>
+          <li class="p-feat"><span class="p-ck">✓</span>E-posta Desteği</li>
+        </ul>
+        <a href="#" class="btn-pout">Ücretsiz Başla</a>
+      </div>
+      <div class="p-card feat fi fi-d1">
+        <div class="p-badge">⭐ En Popüler</div>
+        <div class="p-plan">Professional</div>
+        <div class="p-price">₺2.990</div>
+        <div class="p-per">/ ay · KDV dahil</div>
+        <ul class="p-feats">
+          <li class="p-feat"><span class="p-ck">✓</span>Tüm Starter Özellikleri</li>
+          <li class="p-feat"><span class="p-ck">✓</span>WhatsApp &amp; Mesaj Merkezi</li>
+          <li class="p-feat"><span class="p-ck">✓</span>Saha Satış &amp; GPS Takip</li>
+          <li class="p-feat"><span class="p-ck">✓</span>B2B Müşteri Portalı</li>
+          <li class="p-feat"><span class="p-ck">✓</span>Üretim Takip</li>
+          <li class="p-feat"><span class="p-ck">✓</span>25 Kullanıcı</li>
+          <li class="p-feat"><span class="p-ck">✓</span>7/24 Öncelikli Destek</li>
+        </ul>
+        <a href="#" class="btn-pw">Hemen Başla</a>
+      </div>
+      <div class="p-card fi fi-d2">
+        <div class="p-plan">Enterprise</div>
+        <div class="p-price" style="font-size:32px;letter-spacing:-1px">Teklif Al</div>
+        <div class="p-per">Sınırsız kullanıcı</div>
+        <ul class="p-feats">
+          <li class="p-feat"><span class="p-ck">✓</span>Tüm Professional Özellikleri</li>
+          <li class="p-feat"><span class="p-ck">✓</span>AI &amp; Tahmin Motoru</li>
+          <li class="p-feat"><span class="p-ck">✓</span>Özel Entegrasyon &amp; API</li>
+          <li class="p-feat"><span class="p-ck">✓</span>On-premise veya Özel Cloud</li>
+          <li class="p-feat"><span class="p-ck">✓</span>SLA Garantisi</li>
+          <li class="p-feat"><span class="p-ck">✓</span>Dedicated Destek Ekibi</li>
+        </ul>
+        <a href="#" class="btn-pent">İletişime Geç</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-s" id="referanslar">
+  <div class="mq-title">400'den Fazla Şirket BACH Kullanıyor</div>
+  <div class="mq-track">
+    <div class="mq-logo">🏗️ Zorlu Holding</div><div class="mq-logo">🚗 Doğuş Grup</div><div class="mq-logo">🏪 Migros</div><div class="mq-logo">🏭 Vestel</div><div class="mq-logo">✈️ THY Tedarik</div><div class="mq-logo">💊 Eczacıbaşı</div><div class="mq-logo">🏦 İş Bankası</div><div class="mq-logo">🚛 Aras Kargo</div><div class="mq-logo">🔧 Arçelik</div><div class="mq-logo">🏬 LC Waikiki</div>
+    <div class="mq-logo">🏗️ Zorlu Holding</div><div class="mq-logo">🚗 Doğuş Grup</div><div class="mq-logo">🏪 Migros</div><div class="mq-logo">🏭 Vestel</div><div class="mq-logo">✈️ THY Tedarik</div><div class="mq-logo">💊 Eczacıbaşı</div><div class="mq-logo">🏦 İş Bankası</div><div class="mq-logo">🚛 Aras Kargo</div><div class="mq-logo">🔧 Arçelik</div><div class="mq-logo">🏬 LC Waikiki</div>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<section class="s-pad test-s">
+  <div class="s-c">
+    <div class="s-head">
+      <div class="s-badge fi">Müşteri Yorumları</div>
+      <h2 class="s-title fi fi-d1">Sonuçlar Konuşuyor</h2>
+    </div>
+    <div class="test-grid">
+      <div class="test-card fi"><div class="test-stars">★★★★★</div><p class="test-q">"6 farklı yazılım kullanıyorduk. BACH'a geçtikten sonra ilk ayda veri girişi zamanımız %60 azaldı. Saha ekibimiz artık gerçek zamanlı sipariş alıyor."</p><div class="test-auth"><div class="test-av" style="background:rgba(23,59,143,.12);color:var(--navy)">M</div><div><div class="test-name">Murat Kaya</div><div class="test-role">Operasyon Müdürü · Kaya Lojistik A.Ş.</div></div></div></div>
+      <div class="test-card fi fi-d1"><div class="test-stars">★★★★★</div><p class="test-q">"B2B Portal ile müşterilerimiz artık bizi aramıyor — siparişlerini, numune durumlarını ve faturalarını kendileri görüyor. Müşteri hizmetleri iş yükümüz %70 düştü."</p><div class="test-auth"><div class="test-av" style="background:rgba(16,185,129,.12);color:#10B981">A</div><div><div class="test-name">Ayşe Demir</div><div class="test-role">Genel Müdür · Demir Tekstil</div></div></div></div>
+      <div class="test-card fi fi-d2"><div class="test-stars">★★★★★</div><p class="test-q">"WhatsApp ve Instagram mesajlarımız tek ekranda. AI otomatik yanıt veriyor, biz sadece kritik müşterilere odaklanıyoruz. Satışlar %35 arttı."</p><div class="test-auth"><div class="test-av" style="background:rgba(255,77,90,.12);color:var(--red)">E</div><div><div class="test-name">Emre Şahin</div><div class="test-role">Satış Direktörü · Şahin Teknoloji</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="s-pad faq-s">
+  <div class="s-c">
+    <div class="s-head">
+      <div class="s-badge fi">SSS</div>
+      <h2 class="s-title fi fi-d1">Sık Sorulan Sorular</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item fi" onclick="toggleFaq(this)"><div class="faq-q">BACH'ı kurmak ne kadar sürer?<span class="faq-ico">+</span></div><div class="faq-ans"><div class="faq-ans-in">Standart kurulum 1-3 iş günü içinde tamamlanır. Veri aktarımı ve ekip eğitimiyle birlikte ilk hafta tam olarak kullanmaya başlayabilirsiniz. Kurulum sürecinde size atanan bir danışman eşlik eder.</div></div></div>
+      <div class="faq-item fi fi-d1" onclick="toggleFaq(this)"><div class="faq-q">Mevcut Excel ve ERP verilerimi aktarabilir miyim?<span class="faq-ico">+</span></div><div class="faq-ans"><div class="faq-ans-in">Evet. Excel, CSV ve çoğu ERP sisteminden (SAP, Netsis, Logo, Mikro) veri aktarımı yapabiliyoruz. Veri temizleme ve migrasyon hizmetimiz kurulum paketine dahildir.</div></div></div>
+      <div class="faq-item fi fi-d2" onclick="toggleFaq(this)"><div class="faq-q">WhatsApp entegrasyonu nasıl çalışıyor?<span class="faq-ico">+</span></div><div class="faq-ans"><div class="faq-ans-in">WhatsApp Business API üzerinden çalışır. Müşterilerinizin mesajları BACH Mesaj Merkezi'ne düşer, AI önce otomatik yanıt verir, gerekirse ekibinize iletir. Şablon mesajlar ve toplu bildirimler de desteklenir.</div></div></div>
+      <div class="faq-item fi fi-d3" onclick="toggleFaq(this)"><div class="faq-q">Verilerim güvende mi? Nerede saklanıyor?<span class="faq-ico">+</span></div><div class="faq-ans"><div class="faq-ans-in">Verileriniz Türkiye'de bulunan ISO 27001 sertifikalı veri merkezlerinde saklanır. 256-bit SSL şifreleme, günlük yedekleme ve %99.99 uptime SLA garantisi sunuyoruz. KVKK uyumluluğu tam olarak sağlanmaktadır.</div></div></div>
+      <div class="faq-item fi" onclick="toggleFaq(this)"><div class="faq-q">Kaç kullanıcı ekleyebilirim?<span class="faq-ico">+</span></div><div class="faq-ans"><div class="faq-ans-in">Starter pakette 5, Professional pakette 25 kullanıcı bulunur. Enterprise pakette sınırsız kullanıcı ekleyebilirsiniz. Kullanıcı başına rol ve yetki tanımlaması detaylı olarak yapılabilir.</div></div></div>
+      <div class="faq-item fi fi-d1" onclick="toggleFaq(this)"><div class="faq-q">Sözleşme süresi var mı?<span class="faq-ico">+</span></div><div class="faq-ans"><div class="faq-ans-in">Hayır. BACH aylık veya yıllık (2 ay ücretsiz) olarak abone olunabilir. İstediğiniz zaman iptal edebilirsiniz. Yıllık ödemelerde veriler 60 gün boyunca saklanır ve dışa aktarılabilir.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-s">
+  <div class="cta-c">
+    <h2 class="cta-title fi">İşletmenizi<br>Tek Panele Taşıyın</h2>
+    <p class="cta-desc fi fi-d1">14 gün ücretsiz deneyin. Kredi kartı gerekmez.</p>
+    <div class="cta-btns fi fi-d2">
+      <a href="#" class="btn-red">🚀 Ücretsiz Başla</a>
+      <a href="#" class="btn-outline-w">📋 Demo Talep Et</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="iletisim">
+  <div class="ft-c">
+    <div class="ft-top">
+      <div>
+        <div class="ft-brand">BACH<span>.</span></div>
+        <div class="ft-sub">Business Operating System</div>
+        <p class="ft-desc">CRM, ERP, Muhasebe, Üretim, İK, Saha Satış, B2B ve AI — tüm süreçler tek platformda.</p>
+        <div class="ft-soc">
+          <a href="https://instagram.com/bach.main" class="soc-a">📸</a>
+          <a href="#" class="soc-a">💼</a>
+          <a href="#" class="soc-a">🐦</a>
+          <a href="#" class="soc-a">📘</a>
+          <a href="#" class="soc-a">▶️</a>
+        </div>
+      </div>
+      <div>
+        <div class="ft-col-title">Ürün</div>
+        <ul class="ft-links"><li><a href="#">CRM</a></li><li><a href="#">ERP</a></li><li><a href="#">Muhasebe</a></li><li><a href="#">Stok &amp; Depo</a></li><li><a href="#">B2B Portal</a></li><li><a href="#">AI Modülü</a></li></ul>
+      </div>
+      <div>
+        <div class="ft-col-title">Çözümler</div>
+        <ul class="ft-links"><li><a href="#">İnsan Kaynakları</a></li><li><a href="#">Saha Satış</a></li><li><a href="#">Kurye Takip</a></li><li><a href="#">Lojistik</a></li><li><a href="#">Araç Takip</a></li><li><a href="#">E-Fatura</a></li></ul>
+      </div>
+      <div>
+        <div class="ft-col-title">Şirket</div>
+        <ul class="ft-links"><li><a href="#">Hakkımızda</a></li><li><a href="#">Blog</a></li><li><a href="#">Kariyer</a></li><li><a href="#">Basın</a></li><li><a href="#">İş Ortakları</a></li></ul>
+      </div>
+      <div>
+        <div class="ft-col-title">Destek</div>
+        <ul class="ft-links"><li><a href="#">Dokümanlar</a></li><li><a href="#">API</a></li><li><a href="#">Durum</a></li><li><a href="#">İletişim</a></li><li><a href="#">KVKK</a></li><li><a href="#">Gizlilik</a></li></ul>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <span>© 2026 BACH Business Operating System. Tüm hakları saklıdır.</span>
+      <span>🇹🇷 Türkiye'de Üretildi</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Navbar scroll
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>40));
+
+// Intersection Observer
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    e.target.classList.add('vis');
+    io.unobserve(e.target);
+  });
+},{threshold:0.15});
+document.querySelectorAll('.fi').forEach(el=>io.observe(el));
+
+// Counter animation
+function animCount(el){
+  const target=parseFloat(el.dataset.target);
+  const suffix=el.dataset.suffix||'';
+  const dec=el.dataset.decimal==='true';
+  const dur=2000,start=performance.now();
+  function tick(now){
+    const p=Math.min((now-start)/dur,1);
+    const e=1-Math.pow(1-p,3);
+    const v=target*e;
+    if(target>=10000)el.textContent=Math.floor(v).toLocaleString('tr-TR')+suffix;
+    else if(dec)el.textContent=v.toFixed(2)+suffix;
+    else el.textContent=Math.floor(v)+suffix;
+    if(p<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+const statIo=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    e.target.querySelectorAll('[data-target]').forEach(n=>animCount(n));
+    statIo.unobserve(e.target);
+  });
+},{threshold:0.5});
+document.querySelectorAll('.stat-item').forEach(el=>statIo.observe(el));
+
+// Dashboard zoom
+const zdb=document.getElementById('zoomDb');
+if(zdb){
+  let scrollActive=false;
+  const zio=new IntersectionObserver(e=>{
+    if(e[0].isIntersecting&&!scrollActive){
+      scrollActive=true;
+      window.addEventListener('scroll',()=>{
+        const r=zdb.parentElement.getBoundingClientRect();
+        const prog=Math.max(0,Math.min(1,(window.innerHeight/2-r.top)/r.height));
+        zdb.style.transform=`scale(${0.86+prog*0.16})`;
+      },{passive:true});
+    }
+  },{threshold:0.1});
+  zio.observe(zdb);
+}
+
+// Timeline
+const tlIo=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){
+      setTimeout(()=>e.target.classList.add('vis'),i*130);
+      tlIo.unobserve(e.target);
+    }
+  });
+},{threshold:0.2});
+document.querySelectorAll('.tl-item').forEach(el=>tlIo.observe(el));
+
+// FAQ
+function toggleFaq(item){
+  const open=item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i=>i.classList.remove('open'));
+  if(!open)item.classList.add('open');
+}
+
+// Hero parallax
+const heroEl=document.querySelector('.hero');
+const dbWrap=document.getElementById('dbWrap');
+if(heroEl&&dbWrap){
+  heroEl.addEventListener('mousemove',e=>{
+    const{left,top,width,height}=heroEl.getBoundingClientRect();
+    const x=(e.clientX-left)/width-.5,y=(e.clientY-top)/height-.5;
+    dbWrap.style.transform=`perspective(1200px) rotateX(${-y*6}deg) rotateY(${-x*10-3}deg) translateY(-5px)`;
+  });
+  heroEl.addEventListener('mouseleave',()=>{
+    dbWrap.style.transform='perspective(1200px) rotateX(2deg) rotateY(-8deg)';
+  });
+}
+</script>
+</body>
+</html>

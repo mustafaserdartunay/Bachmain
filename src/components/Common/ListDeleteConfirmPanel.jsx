@@ -10,7 +10,29 @@ export const DELETE_TRASH_BUTTON_HIDDEN_CLASS = 'pointer-events-none invisible'
 export const DELETE_CONFIRM_POPOVER_PANEL_CLASS =
   'flex flex-wrap items-center gap-2 rounded-2xl border border-red-500/35 bg-dark-900 p-2 shadow-2xl ring-1 ring-red-500/15'
 
+export const DELETE_CONFIRM_POPOVER_WARM_PANEL_CLASS =
+  'flex flex-wrap items-center gap-2 rounded-2xl border border-white/35 bg-gradient-to-br from-amber-400 to-orange-500 p-2 shadow-2xl ring-1 ring-amber-300/25'
+
 export const DELETE_CONFIRM_POPOVER_ANCHOR_CLASS = 'absolute right-0 top-12 z-40'
+
+const DELETE_CONFIRM_VARIANTS = {
+  dark: {
+    panel: DELETE_CONFIRM_POPOVER_PANEL_CLASS,
+    icon: 'bg-red-500/15 text-red-300',
+    title: 'text-white',
+    description: 'text-gray-500',
+    confirm: 'bg-red-500 text-white hover:bg-red-400',
+    cancel: 'border-dark-500/60 bg-dark-700 text-gray-200 hover:bg-dark-600',
+  },
+  warm: {
+    panel: DELETE_CONFIRM_POPOVER_WARM_PANEL_CLASS,
+    icon: 'bg-white/25 text-white',
+    title: 'text-white',
+    description: 'text-white/85',
+    confirm: 'bg-white text-orange-600 hover:bg-white/90',
+    cancel: 'border-white/40 bg-white/15 text-white hover:bg-white/25',
+  },
+}
 
 export function DeleteConfirmPopover({
   title = 'Silinsin mi?',
@@ -19,32 +41,35 @@ export function DeleteConfirmPopover({
   cancelLabel = 'Vazgeç',
   onConfirm,
   onCancel,
+  variant = 'dark',
   className = '',
 }) {
+  const styles = DELETE_CONFIRM_VARIANTS[variant] || DELETE_CONFIRM_VARIANTS.dark
+
   return (
     <div
-      className={`${DELETE_CONFIRM_POPOVER_PANEL_CLASS} ${className}`}
+      className={`${styles.panel} ${className}`}
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-500/15 text-red-300">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${styles.icon}`}>
         <Trash2 className="h-4 w-4" />
       </div>
       <div className="min-w-[8rem] flex-1">
-        <p className="break-words text-xs font-black leading-tight text-white">{title}</p>
-        <p className="mt-0.5 break-words text-[10px] font-medium leading-tight text-gray-500">{description}</p>
+        <p className={`break-words text-xs font-black leading-tight ${styles.title}`}>{title}</p>
+        <p className={`mt-0.5 break-words text-[12px] font-medium leading-tight ${styles.description}`}>{description}</p>
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
         <button
           type="button"
           onClick={onConfirm}
-          className="rounded-lg bg-red-500 px-2.5 py-1.5 text-[10px] font-black text-white transition-colors hover:bg-red-400"
+          className={`rounded-lg px-2.5 py-1.5 text-[12px] font-black transition-colors ${styles.confirm}`}
         >
           {confirmLabel}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-dark-500/60 bg-dark-700 px-2.5 py-1.5 text-[10px] font-bold text-gray-200 transition-colors hover:bg-dark-600"
+          className={`rounded-lg border px-2.5 py-1.5 text-[12px] font-bold transition-colors ${styles.cancel}`}
         >
           {cancelLabel}
         </button>
@@ -127,19 +152,19 @@ export function ListInlineActionConfirm({
       className={`min-w-[118px] rounded-xl border p-1 shadow-lg shadow-black/30 ring-1 ${styles.panel} ${className}`}
       onClick={(event) => event.stopPropagation()}
     >
-      <p className={`mb-1 px-0.5 text-center text-[9px] font-black leading-tight ${styles.message}`}>{message}</p>
+      <p className={`mb-1 px-0.5 text-center text-[11px] font-black leading-tight ${styles.message}`}>{message}</p>
       <div className="grid grid-cols-2 gap-1">
         <button
           type="button"
           onClick={onConfirm}
-          className={`flex items-center justify-center gap-1 rounded-lg px-1.5 py-1 text-[9px] font-black ${styles.confirm}`}
+          className={`flex items-center justify-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-black ${styles.confirm}`}
         >
           <Check className="h-3 w-3 shrink-0" /> Evet
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-dark-500/50 bg-dark-700 px-1.5 py-1 text-[9px] font-bold text-gray-200 hover:bg-dark-600 hover:text-white"
+          className="rounded-lg border border-dark-500/50 bg-dark-700 px-1.5 py-1 text-[11px] font-bold text-gray-200 hover:bg-dark-600 hover:text-white"
         >
           Vazgeç
         </button>
@@ -210,5 +235,4 @@ export default function ListDeleteConfirmPanel({
   )
 }
 
-export const LIST_PILL_CLASS =
-  'flex w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold transition-colors hover:bg-dark-700/80'
+export const LIST_PILL_CLASS = 'glass-pill'

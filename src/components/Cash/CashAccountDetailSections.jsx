@@ -1,5 +1,6 @@
 import { Archive, FileSpreadsheet, ImagePlus, Minus, Pencil, Plus, Scale, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import SearchInput from '../Common/SearchInput'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import { DropdownMenuItem } from '../Common/DropdownMenu'
 import EditableDropdownPill from '../EditableDropdownPill'
@@ -46,13 +47,13 @@ function TablePagerExportFooter({
             {pageNumber}
           </button>
         )) : (
-          <span className="text-[11px] font-semibold text-gray-500">Tüm kayıtlar listeleniyor</span>
+          <span className="text-[13px] font-semibold text-gray-500">Tüm kayıtlar listeleniyor</span>
         )}
       </div>
       <button
         type="button"
         onClick={onExport}
-        className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-emerald-300 transition-colors hover:border-emerald-500/45 hover:bg-emerald-500/15"
+        className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[13px] font-black uppercase tracking-wide text-emerald-300 transition-colors hover:border-emerald-500/45 hover:bg-emerald-500/15"
       >
         <FileSpreadsheet className="h-4 w-4" />
         Dışa Aktar
@@ -104,7 +105,7 @@ export function CashMovementHistoryTable({
 
   return (
     <div className="flex min-h-[32rem] flex-col overflow-visible rounded-xl border border-dark-500/40">
-      <div className={`grid shrink-0 ${MOVEMENT_TABLE_GRID} gap-3 border-b border-dark-500/40 bg-dark-800/70 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-500`}>
+      <div className={`grid shrink-0 ${MOVEMENT_TABLE_GRID} gap-3 border-b border-dark-500/40 bg-dark-800/70 px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-gray-500`}>
         <span>İşlem Türü</span>
         <span>İşlem Tarihi</span>
         <span>İlgili Hesap</span>
@@ -183,7 +184,7 @@ export function CashChequeHistoryTable({
 }) {
   return (
     <div className="overflow-visible rounded-xl border border-dark-500/40">
-      <div className={`grid ${gridClass} gap-3 border-b border-dark-500/40 bg-dark-800/70 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-500`}>
+      <div className={`grid ${gridClass} gap-3 border-b border-dark-500/40 bg-dark-800/70 px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-gray-500`}>
         <span>Banka</span>
         <span>Şube</span>
         <span>Çek No</span>
@@ -247,7 +248,7 @@ export function CashChequeHistoryTable({
                     type="button"
                     onClick={() => onSettlement(detail, 'collection')}
                     disabled={detail.collected}
-                    className={`inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border px-2.5 text-[10px] font-black transition-colors ${
+                    className={`inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border px-2.5 text-[12px] font-black transition-colors ${
                       detail.collected
                         ? 'cursor-default border-blue-500/25 bg-blue-500/10 text-blue-300'
                         : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300 hover:border-emerald-500/35 hover:bg-emerald-500/15'
@@ -259,7 +260,7 @@ export function CashChequeHistoryTable({
                     type="button"
                     onClick={() => onSettlement(detail, 'payment')}
                     disabled={detail.paid}
-                    className={`inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border px-2.5 text-[10px] font-black transition-colors ${
+                    className={`inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border px-2.5 text-[12px] font-black transition-colors ${
                       detail.paid
                         ? 'cursor-default border-blue-500/25 bg-blue-500/10 text-blue-300'
                         : 'border-blue-500/25 bg-blue-500/10 text-blue-300 hover:border-blue-500/35 hover:bg-blue-500/15'
@@ -301,7 +302,7 @@ function CashAccountOpsConfirm({ type, accountName, onConfirm, onCancel }) {
   return (
     <div className={`rounded-2xl border p-3 shadow-card ${isArchive ? 'border-amber-500/35 bg-dark-900/90 ring-1 ring-amber-500/15' : 'border-red-500/35 bg-dark-900/90 ring-1 ring-red-500/15'}`}>
       <p className="text-xs font-black text-white">{isArchive ? 'Arşivlensin mi?' : 'Silinsin mi?'}</p>
-      <p className="mt-1 text-[11px] leading-relaxed text-gray-500">
+      <p className="mt-1 text-[13px] leading-relaxed text-gray-500">
         <span className="font-semibold text-gray-300">{accountName}</span>
         {isArchive ? ' arşive taşınacak. Hareketler korunur.' : ' kalıcı olarak kaldırılacak.'}
       </p>
@@ -309,14 +310,14 @@ function CashAccountOpsConfirm({ type, accountName, onConfirm, onCancel }) {
         <button
           type="button"
           onClick={onConfirm}
-          className={`flex-1 rounded-xl px-3 py-2 text-[11px] font-black ${isArchive ? 'bg-amber-500/20 text-amber-200 hover:bg-amber-500/30' : 'bg-red-500 text-white hover:bg-red-400'}`}
+          className={`flex-1 rounded-xl px-3 py-2 text-[13px] font-black ${isArchive ? 'bg-amber-500/20 text-amber-200 hover:bg-amber-500/30' : 'bg-red-500 text-white hover:bg-red-400'}`}
         >
           Evet
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-xl border border-dark-500/50 bg-dark-700 px-3 py-2 text-[11px] font-bold text-gray-200 hover:bg-dark-600"
+          className="flex-1 rounded-xl border border-dark-500/50 bg-dark-700 px-3 py-2 text-[13px] font-bold text-gray-200 hover:bg-dark-600"
         >
           Vazgeç
         </button>
@@ -540,10 +541,10 @@ export function CashDetailSidebar({
                 {chequeSettlementForm.partyName ? (
                   <div className="flex items-center justify-between gap-2 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2">
                     <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-wide text-blue-300">Seçili Cari</p>
+                      <p className="text-[12px] font-black uppercase tracking-wide text-blue-300">Seçili Cari</p>
                       <p className="truncate text-xs font-black text-gray-100">{chequeSettlementForm.partyName}</p>
                     </div>
-                    <button type="button" onClick={onToggleSettlementPartyMenu} className="text-[10px] font-black text-blue-300">Değiştir</button>
+                    <button type="button" onClick={onToggleSettlementPartyMenu} className="text-[12px] font-black text-blue-300">Değiştir</button>
                   </div>
                 ) : (
                   <button type="button" onClick={onToggleSettlementPartyMenu} className="flex h-9 w-full items-center justify-center rounded-xl border border-dashed border-blue-500/30 bg-blue-500/5 text-xs font-black text-blue-300">
@@ -552,7 +553,7 @@ export function CashDetailSidebar({
                 )}
                 {settlementPartyMenuOpen ? (
                   <div className="rounded-xl border border-dark-500/50 bg-dark-900/95 p-2">
-                    <input value={chequePartySearch} onChange={(event) => onChequePartySearchChange(event.target.value)} className="form-input h-9 text-xs" placeholder="Ara..." autoFocus />
+                    <SearchInput size="sm" value={chequePartySearch} onChange={(event) => onChequePartySearchChange(event.target.value)} placeholder="Ara..." autoFocus />
                     <div className="mt-2 max-h-44 space-y-1 overflow-y-auto">
                       {chequePartyOptions.map((option) => (
                         <button key={option.id} type="button" onClick={() => onSelectSettlementParty(option)} className="flex w-full rounded-lg px-2.5 py-2 text-left text-xs font-black text-gray-100 hover:bg-blue-500/10">
@@ -648,7 +649,7 @@ export function CashDetailSidebar({
             </div>
             {chequePartyMenuOpen ? (
               <div className="rounded-xl border border-dark-500/50 bg-dark-900/95 p-2">
-                <input value={chequePartySearch} onChange={(event) => onChequePartySearchChange(event.target.value)} className="form-input h-9 text-xs" placeholder="Cari ara..." autoFocus />
+                <SearchInput size="sm" value={chequePartySearch} onChange={(event) => onChequePartySearchChange(event.target.value)} placeholder="Cari ara..." autoFocus />
                 <div className="mt-2 max-h-44 space-y-1 overflow-y-auto">
                   {chequePartyOptions.map((option) => (
                     <button key={option.id} type="button" onClick={() => onSelectChequeParty(option)} className="flex w-full rounded-lg px-2.5 py-2 text-left text-xs font-black text-gray-100 hover:bg-blue-500/10">

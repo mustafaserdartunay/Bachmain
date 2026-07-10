@@ -73,7 +73,7 @@ function CategoryPieCard({ title, data }) {
 
   return (
     <div className="rounded-2xl border border-dark-500/45 bg-dark-900/40 p-4">
-      <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-gray-500">{title}</p>
+      <p className="mb-3 text-[12px] font-black uppercase tracking-widest text-gray-500">{title}</p>
       <div className="flex flex-col items-center gap-4 xl:flex-row xl:items-start">
         <div className="relative h-[140px] w-[140px] shrink-0">
           <ResponsiveContainer width="100%" height="100%">
@@ -104,8 +104,8 @@ function CategoryPieCard({ title, data }) {
           ) : data.map((item) => (
             <div key={item.name} className="flex items-center gap-2">
               <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="min-w-0 flex-1 truncate text-[11px] text-gray-400">{item.name}</span>
-              <span className="shrink-0 text-[11px] font-bold text-gray-200">{formatTL(item.value)}</span>
+              <span className="min-w-0 flex-1 truncate text-[13px] text-gray-400">{item.name}</span>
+              <span className="shrink-0 text-[13px] font-bold text-gray-200">{formatTL(item.value)}</span>
             </div>
           ))}
         </div>
@@ -213,7 +213,7 @@ export default function SalesReportPage() {
               <button
                 type="button"
                 onClick={() => setTaxMenuOpen((open) => !open)}
-                className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-gray-300"
+                className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-[12px] font-black uppercase tracking-wide text-gray-300"
               >
                 {includeVat ? 'Vergiler Dahil' : 'Vergiler Hariç'}
                 <ChevronDown className="h-3.5 w-3.5" />
@@ -253,7 +253,7 @@ export default function SalesReportPage() {
               key={item.id}
               type="button"
               onClick={() => setGranularity(item.id)}
-              className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wide ${
+              className={`rounded-lg px-3 py-1.5 text-[12px] font-black uppercase tracking-wide ${
                 granularity === item.id
                   ? 'bg-blue-500/20 text-blue-300'
                   : 'text-gray-500 hover:bg-dark-700 hover:text-gray-300'
@@ -294,7 +294,7 @@ export default function SalesReportPage() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wide ${
+                className={`rounded-lg px-3 py-1.5 text-[12px] font-black uppercase tracking-wide ${
                   activeTab === tab.id
                     ? 'bg-dark-700 text-white'
                     : 'text-gray-500 hover:text-gray-300'
@@ -330,7 +330,7 @@ export default function SalesReportPage() {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate text-sm font-black text-white">{invoice.title}</p>
-                          <span className={`rounded-md border px-1.5 py-0.5 text-[9px] font-black ${kindBadgeClass(invoice.invoiceKind)}`}>
+                          <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black ${kindBadgeClass(invoice.invoiceKind)}`}>
                             {INVOICE_KIND_LABELS[invoice.invoiceKind]}
                           </span>
                         </div>
@@ -345,13 +345,13 @@ export default function SalesReportPage() {
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-gray-200">{formatInvoiceDate(invoice.issueDate)}</p>
-                      <p className="mt-1 text-[10px] text-gray-500">
+                      <p className="mt-1 text-[12px] text-gray-500">
                         Satış Faturaları{invoice.invoiceNo ? ` / ${invoice.invoiceNo}` : ''}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-black text-red-300">{formatTL(displayAmount)}</p>
-                      <p className="mt-1 text-[10px] text-gray-500">Genel Toplam {formatTL(displayAmount)}</p>
+                      <p className="mt-1 text-[12px] text-gray-500">Genel Toplam {formatTL(displayAmount)}</p>
                     </div>
                   </div>
                 )

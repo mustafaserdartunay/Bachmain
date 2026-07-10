@@ -16,7 +16,7 @@ import { BTN_SUCCESS } from '../utils/buttonStyles'
 function Field({ label, children }) {
   return (
     <label className="block space-y-2">
-      <span className="text-[11px] font-black uppercase tracking-wider text-gray-500">{label}</span>
+      <span className="text-[13px] font-black uppercase tracking-wider text-gray-500">{label}</span>
       {children}
     </label>
   )
@@ -251,10 +251,10 @@ function TreasuryAccountRow({
     return (
       <div className="flex items-center gap-2 rounded-2xl border border-red-500/35 bg-red-500/10 p-4">
         <span className="text-xs font-black text-white">Bu hesap silinsin mi?</span>
-        <button type="button" onClick={() => onRemove(account)} className="rounded-md bg-red-500 px-2 py-1 text-[10px] font-black text-white">
+        <button type="button" onClick={() => onRemove(account)} className="rounded-md bg-red-500 px-2 py-1 text-[12px] font-black text-white">
           Evet
         </button>
-        <button type="button" onClick={() => onDeleteRequest(null)} className="rounded-md bg-dark-600 px-2 py-1 text-[10px] font-bold text-gray-200">
+        <button type="button" onClick={() => onDeleteRequest(null)} className="rounded-md bg-dark-600 px-2 py-1 text-[12px] font-bold text-gray-200">
           Hayır
         </button>
       </div>

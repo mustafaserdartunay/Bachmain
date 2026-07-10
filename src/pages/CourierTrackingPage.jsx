@@ -41,7 +41,7 @@ function DetailTimeline({ timeline = [] }) {
             <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${meta.bg.replace('/10', '')}`} style={{ background: 'currentColor' }} />
             <div>
               <p className={`text-xs font-bold ${meta.tone}`}>{item.label}</p>
-              <p className="text-[11px] text-gray-500">{formatTimelineTime(item.at)}</p>
+              <p className="text-[13px] text-gray-500">{formatTimelineTime(item.at)}</p>
             </div>
           </div>
         )
@@ -182,21 +182,21 @@ export default function CourierTrackingPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-3">
-                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Müşteri</p>
+                      <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Müşteri</p>
                       <p className="mt-1 text-sm font-bold text-white">{activeDispatch.customerName}</p>
                       <p className="text-xs text-gray-500">{activeDispatch.customerPhone}</p>
                     </div>
                     <div className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-3">
-                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Kurye</p>
+                      <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Kurye</p>
                       <p className="mt-1 text-sm font-bold text-white">{activeDispatch.courierName}</p>
                       <p className="text-xs text-gray-500">{activeDispatch.courierPhone}</p>
                     </div>
                     <div className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-3">
-                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Tahmini Varış</p>
+                      <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Tahmini Varış</p>
                       <p className="mt-1 text-sm font-bold text-emerald-300">{formatEta(activeDispatch.estimatedArrival)}</p>
                     </div>
                     <div className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-3">
-                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Durum</p>
+                      <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Durum</p>
                       <p className={`mt-1 text-sm font-bold ${getDispatchStatusMeta(activeDispatch.status).tone}`}>
                         {getDispatchStatusMeta(activeDispatch.status).label}
                       </p>
@@ -215,7 +215,7 @@ export default function CourierTrackingPage() {
                   )}
                 </div>
                 <div>
-                  <p className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Zaman Çizelgesi</p>
+                  <p className="mb-3 text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Zaman Çizelgesi</p>
                   <DetailTimeline timeline={activeDispatch.timeline} />
                 </div>
               </div>
@@ -238,7 +238,7 @@ export default function CourierTrackingPage() {
                     key={tab.id}
                     type="button"
                     onClick={() => setSidebarTab(tab.id)}
-                    className={`rounded-lg px-3 py-1.5 text-[11px] font-bold ${
+                    className={`rounded-lg px-3 py-1.5 text-[13px] font-bold ${
                       sidebarTab === tab.id ? 'bg-dark-700 text-white' : 'text-gray-500 hover:text-gray-300'
                     }`}
                   >

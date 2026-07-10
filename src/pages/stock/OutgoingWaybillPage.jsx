@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, Truck } from 'lucide-react'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
+import SearchInput from '../../components/Common/SearchInput'
 import ListHeaderRow from '../../components/Common/ListHeaderRow'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import { getCatalogProducts } from '../../utils/productCatalog'
@@ -103,11 +104,11 @@ export default function OutgoingWaybillPage() {
       />
 
       <AppPagePanel title="Giden İrsaliye Listesi">
-        <input
+        <SearchInput
+          wrapperClassName="mb-4 w-full max-w-md"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="İrsaliye no, müşteri veya depo ara..."
-          className="form-input mb-4 w-full max-w-md text-sm"
         />
 
         <ListHeaderRow
@@ -127,13 +128,13 @@ export default function OutgoingWaybillPage() {
               <p className="text-xs font-semibold text-gray-300">{formatStockDate(row.date)}</p>
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-white">{row.waybillNo}</p>
-                <p className="truncate text-[11px] text-gray-500">
+                <p className="truncate text-[13px] text-gray-500">
                   {(row.items || []).map((item) => `${item.productName} (${item.quantity})`).join(', ')}
                 </p>
               </div>
               <p className="truncate text-xs text-gray-400">{row.customerName || '—'}</p>
               <p className="truncate text-xs text-gray-400">{row.warehouseName}</p>
-              <span className="rounded-lg bg-orange-500/10 px-2 py-1 text-[10px] font-bold text-orange-300">{row.status}</span>
+              <span className="rounded-lg bg-orange-500/10 px-2 py-1 text-[12px] font-bold text-orange-300">{row.status}</span>
             </div>
           ))}
         </div>

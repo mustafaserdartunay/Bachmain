@@ -19,10 +19,10 @@ export default function ProductionListJobPreview({
   return (
     <div className="border-t border-dark-500/40 bg-gradient-to-b from-dark-900/50 to-dark-900/20 px-4 py-3">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">
+        <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">
           Kalem önizleme · {lineItems.length} ürün
         </p>
-        <p className="text-[10px] font-semibold text-gray-600">
+        <p className="text-[12px] font-semibold text-gray-600">
           {productionStages.length} süreç
         </p>
       </div>

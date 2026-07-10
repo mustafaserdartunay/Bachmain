@@ -79,7 +79,7 @@ export default function CourierDispatchForm({ fleet = [], onSubmit, submitting =
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Araç Tipi</p>
+        <p className="mb-2 text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Araç Tipi</p>
         <div className="grid grid-cols-3 gap-2">
           {VEHICLE_TYPES.map((type) => {
             const active = form.vehicleType === type.id
@@ -96,8 +96,8 @@ export default function CourierDispatchForm({ fleet = [], onSubmit, submitting =
                 }`}
               >
                 <div className="text-lg">{type.emoji}</div>
-                <div className="mt-1 text-[10px] font-bold">{type.shortLabel}</div>
-                <div className="mt-0.5 text-[9px] text-gray-500">{count} müsait</div>
+                <div className="mt-1 text-[12px] font-bold">{type.shortLabel}</div>
+                <div className="mt-0.5 text-[11px] text-gray-500">{count} müsait</div>
               </button>
             )
           })}
@@ -106,7 +106,7 @@ export default function CourierDispatchForm({ fleet = [], onSubmit, submitting =
 
       <div className="grid gap-3">
         <label className="block">
-          <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Müşteri</span>
+          <span className="mb-1.5 block text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Müşteri</span>
           <EditableDropdownPill
             value={selectedCustomerOption?.label || ''}
             options={customerOptions}
@@ -120,7 +120,7 @@ export default function CourierDispatchForm({ fleet = [], onSubmit, submitting =
         </label>
 
         <label className="block">
-          <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Kurye / Araç</span>
+          <span className="mb-1.5 block text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Kurye / Araç</span>
           <EditableDropdownPill
             value={selectedVehicleOption?.label || ''}
             options={vehicleOptions}
@@ -135,7 +135,7 @@ export default function CourierDispatchForm({ fleet = [], onSubmit, submitting =
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Referans No</span>
+            <span className="mb-1.5 block text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Referans No</span>
             <input
               value={form.referenceNo}
               onChange={(event) => setForm((current) => ({ ...current, referenceNo: event.target.value }))}
@@ -144,7 +144,7 @@ export default function CourierDispatchForm({ fleet = [], onSubmit, submitting =
             />
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Öncelik</span>
+            <span className="mb-1.5 block text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Öncelik</span>
             <EditableDropdownPill
               value={form.priority}
               options={PRIORITY_OPTIONS}
@@ -155,7 +155,7 @@ export default function CourierDispatchForm({ fleet = [], onSubmit, submitting =
         </div>
 
         <label className="block">
-          <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Paket Notu</span>
+          <span className="mb-1.5 block text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Paket Notu</span>
           <textarea
             value={form.packageNote}
             onChange={(event) => setForm((current) => ({ ...current, packageNote: event.target.value }))}

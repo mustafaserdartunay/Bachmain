@@ -24,11 +24,11 @@ function FleetRow({ vehicle, selected, onSelect }) {
           </span>
           <div>
             <p className="text-sm font-bold text-white">{vehicle.name}</p>
-            <p className="text-[11px] text-gray-500">{meta.label} · {vehicle.plate}</p>
+            <p className="text-[13px] text-gray-500">{meta.label} · {vehicle.plate}</p>
             <p className="mt-0.5 text-xs font-semibold text-gray-300">{vehicle.courierName}</p>
           </div>
         </div>
-        <span className={`rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wide ${
+        <span className={`rounded-lg px-2 py-1 text-[12px] font-black uppercase tracking-wide ${
           busy ? 'bg-orange-500/15 text-orange-300' : 'bg-emerald-500/15 text-emerald-300'
         }`}>
           {busy ? 'Görevde' : 'Müsait'}

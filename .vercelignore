@@ -1,0 +1,8 @@
+bach-crm-ios
+BACHMAIN_INSTAGRAM
+.cursor
+restore-backups
+*.backup
+.env
+.env.local
+node_modules

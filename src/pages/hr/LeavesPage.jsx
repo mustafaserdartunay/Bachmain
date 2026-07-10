@@ -53,11 +53,11 @@ export default function LeavesPage() {
                   <p className="text-xs text-gray-500">{row.startDate} → {row.endDate} ({row.days} gün)</p>
                 </div>
                 <div className="flex gap-2">
-                  <button type="button" className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300" onClick={() => { updateLeaveRequest(row.id, { managerApproval: 'Onaylandı', hrApproval: 'Onaylandı', status: 'Onaylandı' }); refresh() }}>Onayla</button>
-                  <button type="button" className="rounded-lg bg-red-500/10 px-2 py-1 text-[10px] font-bold text-red-300" onClick={() => { updateLeaveRequest(row.id, { status: 'Reddedildi' }); refresh() }}>Reddet</button>
+                  <button type="button" className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-bold text-emerald-300" onClick={() => { updateLeaveRequest(row.id, { managerApproval: 'Onaylandı', hrApproval: 'Onaylandı', status: 'Onaylandı' }); refresh() }}>Onayla</button>
+                  <button type="button" className="rounded-lg bg-red-500/10 px-2 py-1 text-[12px] font-bold text-red-300" onClick={() => { updateLeaveRequest(row.id, { status: 'Reddedildi' }); refresh() }}>Reddet</button>
                 </div>
               </div>
-              <p className="mt-2 text-[11px] text-gray-400">Yönetici: {row.managerApproval} · İK: {row.hrApproval}</p>
+              <p className="mt-2 text-[13px] text-gray-400">Yönetici: {row.managerApproval} · İK: {row.hrApproval}</p>
             </div>
           ))}
         </div>

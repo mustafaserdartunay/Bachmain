@@ -10,11 +10,12 @@ import {
 import SummaryMetrics from '../Common/SummaryMetrics'
 import ActivityArchivePanel from '../Common/ActivityArchivePanel'
 import CrmProcessBoardPanel from './CrmProcessBoardPanel'
-import CrmProcessNotesPanel from './CrmProcessNotesPanel'
-import { AppPageHeader, AppPagePanel, AppPageShell } from '../Layout/AppPageLayout'
+import { getAgendaNoteStamp } from './AgendaNoteBoard'
+import { AppPageHeader, AppPageShell } from '../Layout/AppPageLayout'
 import {
   deleteAppointment,
   deleteAgendaNote,
+  deleteCompletedAgendaNotes,
   deleteTask,
   getCrmSummary,
   loadAgendaNotes,
@@ -61,29 +62,20 @@ export default function CrmHome() {
   }, [])
 
   const summary = useMemo(() => getCrmSummary(), [tasks, appointments])
-  const processEntries = useMemo(
-    () => buildCrmProcessRecords(tasks, appointments),
-    [tasks, appointments],
-  )
+  const boardEntries = useMemo(() => {
+    const processes = buildCrmProcessRecords(tasks, appointments)
+    const noteEntries = buildCrmNoteBoardEntries(notes)
+    return [...processes, ...noteEntries].sort((left, right) => {
+      const leftCreated = getCrmRecordCreatedSortValue(left.record, left.sortKey)
+      const rightCreated = getCrmRecordCreatedSortValue(right.record, right.sortKey)
+      return rightCreated.localeCompare(leftCreated)
+    })
+  }, [tasks, appointments, notes])
 
-  const noteEntries = useMemo(
-    () => buildCrmNoteBoardEntries(notes),
-    [notes],
+  const filteredEntries = useMemo(
+    () => filterCrmBoardEntries(boardEntries, filters, { searchQuery, processFilter }),
+    [boardEntries, filters, searchQuery, processFilter],
   )
-
-  const filteredProcesses = useMemo(
-    () => filterCrmBoardEntries(processEntries, filters, { searchQuery, processFilter }),
-    [processEntries, filters, searchQuery, processFilter],
-  )
-
-  const filteredNotes = useMemo(() => {
-    return filterCrmBoardEntries(noteEntries, filters, { searchQuery, processFilter: 'all' })
-      .sort((left, right) => {
-        const rightCreated = getCrmRecordCreatedSortValue(right.record, right.sortKey)
-        const leftCreated = getCrmRecordCreatedSortValue(left.record, left.sortKey)
-        return rightCreated.localeCompare(leftCreated)
-      })
-  }, [noteEntries, notes, filters, searchQuery])
 
   function refresh() {
     setTasks(loadTasks())
@@ -133,9 +125,45 @@ export default function CrmHome() {
     refresh()
   }
 
+  function handleSaveNote(content) {
+    const stamp = getAgendaNoteStamp()
+    const title = content.split('\n').find((line) => line.trim())?.trim().slice(0, 80) || 'Not'
+    upsertAgendaNote({
+      title,
+      content,
+      date: stamp.date,
+      time: stamp.time,
+      completed: false,
+      color: 'Mavi',
+    })
+    refresh()
+  }
+
+  function handleToggleNoteComplete(note) {
+    upsertAgendaNote({
+      ...note,
+      completed: !note.completed,
+    })
+    refresh()
+  }
+
+  function handleEditNote(note) {
+    navigate(`/crm/not/${note.id}/duzenle`)
+  }
+
+  function handleDeleteNote(noteId) {
+    deleteAgendaNote(noteId)
+    refresh()
+  }
+
+  function handleDeleteCompletedNotes() {
+    deleteCompletedAgendaNotes()
+    refresh()
+  }
+
   function handleProcessEdit(entry) {
     if (entry.kind === 'note') {
-      navigate(`/crm/not/${entry.id}/duzenle`)
+      handleEditNote(entry.record)
       return
     }
     if (entry.kind === 'task') {
@@ -199,57 +227,30 @@ export default function CrmHome() {
         ]}
       />
 
-      <div className="crm-home-split">
-        <div className="min-w-0">
-          <CrmProcessBoardPanel
-            entries={filteredProcesses}
-            processFilter={processFilter}
-            onProcessFilterChange={setProcessFilter}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            filters={filters}
-            onFilterChange={setFilters}
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-            onStageClick={handleProcessStageClick}
-            onStagePhotosChange={handleProcessStagePhotosChange}
-            onMailClick={handleProcessMail}
-            onWhatsAppClick={handleProcessWhatsApp}
-            onEdit={handleProcessEdit}
-            onDelete={handleProcessDelete}
-          />
-        </div>
-
-        <AppPagePanel
-          title="Not Defteri"
-          description="CRM notlarını ayrı panelde görüntüleyin ve düzenleyin."
-          className="crm-notes-panel"
-          fill
-          action={(
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-xl bg-purple-500/10 px-3 py-1.5 text-xs font-black text-purple-200">
-                {filteredNotes.length} kayıt
-              </span>
-              <button
-                type="button"
-                onClick={() => navigate('/crm/not-yeni')}
-                className="inline-flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-1.5 text-xs font-black text-purple-200 transition-colors hover:bg-purple-500/15"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Not ekle
-              </button>
-            </div>
-          )}
-        >
-          <CrmProcessNotesPanel
-            variant="stack"
-            entries={filteredNotes}
-            onAdd={() => navigate('/crm/not-yeni')}
-            onEdit={handleProcessEdit}
-            onDelete={handleProcessDelete}
-          />
-        </AppPagePanel>
-      </div>
+      <CrmProcessBoardPanel
+        entries={filteredEntries}
+        notes={notes}
+        noteCount={notes.length}
+        processFilter={processFilter}
+        onProcessFilterChange={setProcessFilter}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={filters}
+        onFilterChange={setFilters}
+        activeMenu={activeMenu}
+        setActiveMenu={setActiveMenu}
+        onStageClick={handleProcessStageClick}
+        onStagePhotosChange={handleProcessStagePhotosChange}
+        onMailClick={handleProcessMail}
+        onWhatsAppClick={handleProcessWhatsApp}
+        onEdit={handleProcessEdit}
+        onDelete={handleProcessDelete}
+        onNoteSave={handleSaveNote}
+        onNoteToggleComplete={handleToggleNoteComplete}
+        onNoteEdit={handleEditNote}
+        onNoteDelete={handleDeleteNote}
+        onNoteDeleteCompleted={handleDeleteCompletedNotes}
+      />
       <ActivityArchivePanel
         title="CRM Arşiv ve İşlem Geçmişi"
         modules={['crm']}

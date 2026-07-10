@@ -56,7 +56,7 @@ export default function WhatsAppNotifyButton({
         <WhatsAppBusinessIcon className="h-3 w-3 text-current" />
       </button>
       {showSentLabel && sent && (
-        <p className="truncate px-0.5 text-center text-[8px] font-bold leading-tight text-cyan-500">
+        <p className="truncate px-0.5 text-center text-[10px] font-bold leading-tight text-cyan-500">
           Gönderildi
         </p>
       )}

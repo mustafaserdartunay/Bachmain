@@ -82,7 +82,7 @@ export default function CustomerMovementForm({
   return (
     <form onSubmit={onSubmit} className={`space-y-3 rounded-3xl border ${borderClass} bg-gradient-to-br from-dark-700/60 to-dark-800/90 p-4 shadow-inner`}>
       <div>
-        <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${accent}`}>{resolvedTitle}</p>
+        <p className={`text-[12px] font-black uppercase tracking-[0.2em] ${accent}`}>{resolvedTitle}</p>
         <p className="mt-1 text-xs font-semibold text-gray-500">{resolvedSubtitle}</p>
       </div>
       <div className="grid grid-cols-3 gap-2">
@@ -103,14 +103,14 @@ export default function CustomerMovementForm({
 
       {form.method === 'Çek' && (
         <div className="rounded-2xl border border-purple-500/25 bg-purple-500/10 p-3">
-          <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-purple-300">Çek Bilgileri</p>
+          <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-purple-300">Çek Bilgileri</p>
           <div className="grid grid-cols-2 gap-2">
             <input value={form.chequeNo} onChange={(event) => onUpdate('chequeNo', event.target.value)} placeholder="Çek no" className="form-input" />
             <input value={form.chequeOwner} onChange={(event) => onUpdate('chequeOwner', event.target.value)} placeholder="Çek sahibi" className="form-input" />
             <input value={form.chequeBank} onChange={(event) => onUpdate('chequeBank', event.target.value)} placeholder="Banka" className="form-input" />
             <input value={form.chequeBranch} onChange={(event) => onUpdate('chequeBranch', event.target.value)} placeholder="Şube" className="form-input" />
             <label className="col-span-2 flex flex-col gap-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Vade Tarihi</span>
+              <span className="text-[12px] font-black uppercase tracking-wider text-gray-500">Vade Tarihi</span>
               <input value={form.chequeDueDate} onChange={(event) => onUpdate('chequeDueDate', event.target.value)} type="date" className="form-input" />
             </label>
           </div>
@@ -118,7 +118,7 @@ export default function CustomerMovementForm({
       )}
 
       <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">{accountLabel}</label>
+        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">{accountLabel}</label>
         <EditableDropdownPill
           value={form.accountName}
           options={activeAccountOptions}
@@ -132,20 +132,20 @@ export default function CustomerMovementForm({
       </div>
 
       <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">{amountLabel}</label>
+        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">{amountLabel}</label>
         <input value={form.amount} onChange={(event) => onUpdate('amount', event.target.value)} type="number" className="form-input" />
       </div>
 
       <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">İşlem Tarihi</label>
+        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">İşlem Tarihi</label>
         <input value={form.transactionDate} onChange={(event) => onUpdate('transactionDate', event.target.value)} type="date" className="form-input" />
-        <p className="mt-2 text-[10px] font-semibold text-gray-500">
+        <p className="mt-2 text-[12px] font-semibold text-gray-500">
           {preserveTimeHint ? 'Mevcut saat korunur.' : 'Saat otomatik olarak kaydedilir.'}
         </p>
       </div>
 
       <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Açıklama</label>
+        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">Açıklama</label>
         <textarea
           value={form.description}
           onChange={(event) => onUpdate('description', event.target.value)}

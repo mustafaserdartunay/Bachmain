@@ -47,13 +47,13 @@ export default function MessageComposer({ onSend, disabled, suggestedText = '' }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-dark-500/45 bg-dark-800/95 p-3">
+    <form onSubmit={handleSubmit} className="shrink-0 border-t border-white/40 bg-white/20 p-3">
       <div className="flex items-end gap-2">
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={disabled}
-          className="rounded-xl border border-dark-500/50 p-2.5 text-gray-400 transition-colors hover:bg-dark-700 hover:text-white disabled:opacity-40"
+          className="icon-btn flex h-10 w-10 items-center justify-center !rounded-[12px] disabled:opacity-40"
         >
           <Paperclip className="h-4 w-4" />
         </button>
@@ -63,8 +63,10 @@ export default function MessageComposer({ onSend, disabled, suggestedText = '' }
           type="button"
           onClick={toggleRecording}
           disabled={disabled}
-          className={`rounded-xl border p-2.5 transition-colors disabled:opacity-40 ${
-            recording ? 'border-red-500/40 bg-red-500/15 text-red-300' : 'border-dark-500/50 text-gray-400 hover:bg-dark-700 hover:text-white'
+          className={`flex h-10 w-10 items-center justify-center rounded-[12px] border transition-colors disabled:opacity-40 ${
+            recording
+              ? 'border-rose-400/50 bg-rose-500/15 text-rose-600'
+              : 'icon-btn !rounded-[12px]'
           }`}
         >
           {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -76,7 +78,7 @@ export default function MessageComposer({ onSend, disabled, suggestedText = '' }
           placeholder="Mesaj yazın..."
           rows={1}
           disabled={disabled}
-          className="form-input max-h-28 min-h-[42px] flex-1 resize-none py-2.5 text-sm"
+          className="form-input max-h-28 min-h-[40px] flex-1 resize-none py-2.5 text-xs"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
@@ -88,12 +90,16 @@ export default function MessageComposer({ onSend, disabled, suggestedText = '' }
         <button
           type="submit"
           disabled={disabled || !text.trim()}
-          className={`${BTN_SUCCESS} p-2.5 disabled:opacity-40`}
+          className={`${BTN_SUCCESS} flex h-10 w-10 items-center justify-center !p-0 disabled:opacity-40`}
         >
           <Send className="h-4 w-4" />
         </button>
       </div>
-      {recording && <p className="mt-2 text-[11px] font-semibold text-red-300">Kayıt yapılıyor... Durdurmak için tekrar basın.</p>}
+      {recording && (
+        <p className="mt-2 text-[12px] font-semibold text-rose-600">
+          Kayıt yapılıyor... Durdurmak için tekrar basın.
+        </p>
+      )}
     </form>
   )
 }

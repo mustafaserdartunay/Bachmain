@@ -8,13 +8,14 @@ import {
   getActivityModuleLabel,
   markActivityEntryRestored,
 } from '../../utils/activityArchiveStore'
+import { APP_ICON_WRAP_CLASS, APP_LABEL_CLASS, APP_METRIC_ROW_CLASS, APP_SUBLABEL_CLASS } from '../../utils/dashboardDesign'
 
 export default function ActivityArchivePanel({
   title = 'Arşiv ve İşlem Geçmişi',
   modules = [],
   actions = ['archive', 'delete', 'restore'],
   onRestore,
-  emptyMessage = 'Henüz arşiv veya işlem kaydı yok.',
+  emptyMessage = 'Henüz arşiv veya silme kaydı yok.',
 }) {
   const [open, setOpen] = useState(false)
   const [version, setVersion] = useState(0)
@@ -45,58 +46,54 @@ export default function ActivityArchivePanel({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-dark-700/30"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-white/35"
       >
-        <span className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 text-amber-300">
-            <Archive className="h-4 w-4" />
+        <span className="flex min-w-0 items-center gap-2">
+          <span className={`${APP_ICON_WRAP_CLASS} text-amber-600`}>
+            <Archive className="h-3.5 w-3.5" />
           </span>
-          <span className="text-sm font-black uppercase tracking-wide text-gray-200">{title}</span>
-          <span className="rounded-lg bg-dark-700/70 px-2 py-0.5 text-[11px] font-black text-gray-400">{entries.length}</span>
+          <span className={APP_LABEL_CLASS}>{title}</span>
+          <span className="badge badge-orange shrink-0 !px-2 !py-0.5 !text-[12px]">{entries.length}</span>
         </span>
-        <ChevronDown className={`h-4 w-4 shrink-0 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="border-t border-dark-500/40 p-5">
+        <div className="border-t border-white/50 px-4 py-3">
           {entries.length === 0 ? (
-            <div className="flex items-center justify-center rounded-2xl border border-dashed border-dark-500/50 bg-dark-700/25 px-4 py-8 text-center text-xs font-semibold text-gray-500">
+            <div className="glass-inset px-4 py-8 text-center text-[12px] font-semibold text-[var(--muted)]">
               {emptyMessage}
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {entries.map((entry) => {
                 const canRestore = Boolean(entry.snapshot) && !entry.restoredAt && typeof onRestore === 'function'
                 return (
-                  <div key={entry.id} className="flex items-center gap-3 rounded-2xl border border-dark-500/40 bg-dark-700/35 px-4 py-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-dark-700/70 text-amber-300">
-                      <Clock3 className="h-4 w-4" />
+                  <div key={entry.id} className={`${APP_METRIC_ROW_CLASS} items-start`}>
+                    <span className={`${APP_ICON_WRAP_CLASS} text-amber-600`}>
+                      <Clock3 className="h-3.5 w-3.5" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-gray-200">
+                      <p className={`${APP_LABEL_CLASS} text-[var(--ink)]`}>
                         {entry.entityLabel || getActivityActionLabel(entry.action)}
                       </p>
-                      <p className="truncate text-xs font-semibold text-gray-500">
+                      <p className={APP_SUBLABEL_CLASS}>
                         {getActivityModuleLabel(entry.module)} · {getActivityActionLabel(entry.action)} · {formatActivityArchiveDate(entry.at)}
                       </p>
-                      {entry.description && (
-                        <p className="mt-0.5 line-clamp-2 text-xs font-medium text-gray-500">{entry.description}</p>
-                      )}
-                      {entry.restoredAt && (
-                        <p className="mt-0.5 text-[11px] font-black text-emerald-300">
-                          Geri alındı: {formatActivityArchiveDate(entry.restoredAt)}
-                        </p>
-                      )}
+                      {entry.restoredAt ? (
+                        <p className={`${APP_SUBLABEL_CLASS} text-emerald-600`}>Geri alındı</p>
+                      ) : null}
                     </div>
-                    {canRestore && (
+                    {canRestore ? (
                       <button
                         type="button"
                         onClick={() => handleRestore(entry)}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-emerald-300 transition-colors hover:bg-emerald-500/20"
+                        className="btn-ghost shrink-0 !px-2.5 !py-1.5 text-[12px] font-bold"
                       >
-                        <RotateCcw className="h-3.5 w-3.5" /> Geri Al
+                        <RotateCcw className="mr-1 inline h-3 w-3" />
+                        Geri Al
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 )
               })}

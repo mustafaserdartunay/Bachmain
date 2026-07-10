@@ -25,7 +25,7 @@ export function SelectedBankAccountsPreview({ accounts, compact = false, inline 
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-bold text-white">{displaySummary(account)}</p>
             {account.iban ? (
-              <p className="truncate text-[10px] font-semibold text-gray-400">{account.iban}</p>
+              <p className="truncate text-[12px] font-semibold text-gray-400">{account.iban}</p>
             ) : null}
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function BankAccountsDocumentEditor({
                     {isEditing && (
                       <div className="grid gap-2 border-t border-dark-500/35 p-2 sm:grid-cols-2">
                         <label className="block space-y-1">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Banka</span>
+                          <span className="text-[12px] font-black uppercase tracking-wider text-gray-500">Banka</span>
                           <input
                             value={account.bankName}
                             onChange={(event) => onUpdateAccount(account.id, { bankName: event.target.value })}
@@ -163,7 +163,7 @@ export default function BankAccountsDocumentEditor({
                           />
                         </label>
                         <label className="block space-y-1">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Hesap Etiketi</span>
+                          <span className="text-[12px] font-black uppercase tracking-wider text-gray-500">Hesap Etiketi</span>
                           <input
                             value={account.label}
                             onChange={(event) => onUpdateAccount(account.id, { label: event.target.value })}
@@ -171,7 +171,7 @@ export default function BankAccountsDocumentEditor({
                           />
                         </label>
                         <label className="block space-y-1">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Şube</span>
+                          <span className="text-[12px] font-black uppercase tracking-wider text-gray-500">Şube</span>
                           <input
                             value={account.branch}
                             onChange={(event) => onUpdateAccount(account.id, { branch: event.target.value })}
@@ -179,7 +179,7 @@ export default function BankAccountsDocumentEditor({
                           />
                         </label>
                         <label className="block space-y-1">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">IBAN</span>
+                          <span className="text-[12px] font-black uppercase tracking-wider text-gray-500">IBAN</span>
                           <input
                             value={account.iban}
                             onChange={(event) => onUpdateAccount(account.id, { iban: event.target.value })}

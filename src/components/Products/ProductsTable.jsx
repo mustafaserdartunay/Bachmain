@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Search, Package, Pencil, Boxes, Tag, Warehouse, X, Trash2, ChevronDown } from 'lucide-react'
+import { Package, Pencil, Boxes, Tag, Warehouse, X, Trash2, ChevronDown } from 'lucide-react'
+import SearchInput from '../Common/SearchInput'
 import { formatPrice, formatTL, getProductPricing } from '../../utils/productPricing'
 import { ListInlineDeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../EditableDropdownPill'
 
-const LIST_PILL_CLASS =
-  'flex w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold transition-colors hover:bg-dark-700/80'
+import { LIST_PILL_CLASS } from '../Common/ListDeleteConfirmPanel'
 
 const ALL_CATEGORY_LABEL = 'Tüm kategoriler'
 const ALL_STATUS_LABEL = 'Tüm durumlar'
@@ -108,9 +108,9 @@ export default function ProductsTable({
   function PriceMiniCard({ label, value, tone = 'text-white', sub, prefix = '', suffix = '₺' }) {
     return (
       <div className="rounded-lg border border-dark-500/40 bg-dark-800/70 px-2 py-1.5">
-        <p className="text-[10px] font-medium text-gray-500">{label}</p>
+        <p className="text-[12px] font-medium text-gray-500">{label}</p>
         <p className={`mt-0.5 text-xs font-semibold ${tone}`}>{prefix}{formatPrice(value)}{suffix}</p>
-        {sub && <p className="mt-0.5 text-[9px] text-gray-600">{sub}</p>}
+        {sub && <p className="mt-0.5 text-[11px] text-gray-600">{sub}</p>}
       </div>
     )
   }
@@ -120,7 +120,7 @@ export default function ProductsTable({
       <div className="rounded-xl border border-dark-500/45 bg-dark-800/45 p-2">
         <div className="mb-1.5 flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-          <p className="text-[10px] font-semibold text-gray-300">{title}</p>
+          <p className="text-[12px] font-semibold text-gray-300">{title}</p>
         </div>
         <div className="grid grid-cols-2 gap-1.5">{children}</div>
       </div>
@@ -130,28 +130,23 @@ export default function ProductsTable({
   return (
     <div>
       <div className="mb-4 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Ürün adı, stok kodu, barkod veya kategori ara..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="form-input pl-10"
-          />
-        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Ürün adı, stok kodu, barkod veya kategori ara..."
+        />
 
       <div className="mb-4 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3">
         {hasActiveFilters && (
           <div className="mb-2 flex justify-end">
-            <button type="button" onClick={resetFilters} className="flex items-center gap-1 rounded-lg border border-dark-500/60 px-2 py-1 text-[10px] font-semibold text-gray-400 hover:bg-dark-700 hover:text-gray-200">
+            <button type="button" onClick={resetFilters} className="flex items-center gap-1 rounded-lg border border-dark-500/60 px-2 py-1 text-[12px] font-semibold text-gray-400 hover:bg-dark-700 hover:text-gray-200">
               <X className="h-3.5 w-3.5" /> Temizle
             </button>
           </div>
         )}
         <div className="grid grid-cols-4 gap-2">
           <div>
-            <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Kategori</label>
+            <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">Kategori</label>
             <EditableDropdownPill
               value={filters.category}
               options={categoryFilterOptions}
@@ -165,7 +160,7 @@ export default function ProductsTable({
             />
           </div>
           <div>
-            <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Durum</label>
+            <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">Durum</label>
             <EditableDropdownPill
               value={filters.status}
               options={statusFilterOptions}
@@ -179,7 +174,7 @@ export default function ProductsTable({
             />
           </div>
           <div>
-            <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Min. Satış Fiyatı</label>
+            <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">Min. Satış Fiyatı</label>
             <input
               type="number"
               min="0"
@@ -189,7 +184,7 @@ export default function ProductsTable({
             />
           </div>
           <div>
-            <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Maks. Satış Fiyatı</label>
+            <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">Maks. Satış Fiyatı</label>
             <input
               type="number"
               min="0"
@@ -238,7 +233,7 @@ export default function ProductsTable({
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Stok Kodu</p>
+                  <p className="text-[12px] font-semibold uppercase tracking-wider text-gray-500">Stok Kodu</p>
                   <p className="mt-1 truncate text-sm font-black text-accent-blue">{product.stockCode || '—'}</p>
                 </div>
 
@@ -248,17 +243,17 @@ export default function ProductsTable({
                 </div>
 
                 <div className="text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">KDV Hariç</p>
+                  <p className="text-[12px] font-semibold uppercase tracking-wider text-gray-500">KDV Hariç</p>
                   <p className="mt-1 text-sm font-black text-emerald-300">{formatTL(pricing.finalSalesPriceExcl)}</p>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">KDV Dahil</p>
+                  <p className="text-[12px] font-semibold uppercase tracking-wider text-gray-500">KDV Dahil</p>
                   <p className="mt-1 text-sm font-black text-blue-300">{formatTL(pricing.finalSalesPriceIncl)}</p>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Stok</p>
+                  <p className="text-[12px] font-semibold uppercase tracking-wider text-gray-500">Stok</p>
                   {product.stockTracking ? (
                     <p className={`mt-1 text-sm font-black ${isCritical ? 'text-red-300' : 'text-white'}`}>
                       {Number(product.initialStock || 0).toLocaleString('tr-TR')}
@@ -315,7 +310,7 @@ export default function ProductsTable({
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => onEdit(product.id)}
-                        className="flex items-center justify-center gap-1 rounded-xl border border-blue-500/20 bg-blue-500/10 px-2 py-2 text-[10px] font-semibold text-blue-300 transition-colors hover:bg-blue-500/20"
+                        className="flex items-center justify-center gap-1 rounded-xl border border-blue-500/20 bg-blue-500/10 px-2 py-2 text-[12px] font-semibold text-blue-300 transition-colors hover:bg-blue-500/20"
                         title="Düzenle"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Düzenle
@@ -324,7 +319,7 @@ export default function ProductsTable({
                         <button
                           type="button"
                           onClick={() => setPendingDeleteId(product.id)}
-                          className={`flex w-full items-center justify-center gap-1 rounded-xl border border-red-500/20 bg-red-500/10 px-2 py-2 text-[10px] font-semibold text-red-300 transition-colors hover:bg-red-500/20 ${pendingDeleteId === product.id ? 'pointer-events-none invisible' : ''}`}
+                          className={`flex w-full items-center justify-center gap-1 rounded-xl border border-red-500/20 bg-red-500/10 px-2 py-2 text-[12px] font-semibold text-red-300 transition-colors hover:bg-red-500/20 ${pendingDeleteId === product.id ? 'pointer-events-none invisible' : ''}`}
                           title="Sil"
                         >
                           <Trash2 className="h-3.5 w-3.5" /> Sil
@@ -348,29 +343,29 @@ export default function ProductsTable({
                     <div className="rounded-xl border border-dark-500/40 bg-dark-700/40 p-2">
                       <p className="line-clamp-2 text-xs font-semibold text-white">{product.name || 'İsimsiz ürün'}</p>
                       <div className="mt-1 flex flex-wrap items-center gap-1">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-semibold text-blue-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-semibold text-blue-300">
                           <Tag className="h-3 w-3" /> {product.category || 'Kategori yok'}
                         </span>
-                        <span className="rounded-full bg-dark-800/80 px-2 py-0.5 text-[9px] font-semibold text-gray-400">{product.salesUnit || 'adet'} birim</span>
+                        <span className="rounded-full bg-dark-800/80 px-2 py-0.5 text-[11px] font-semibold text-gray-400">{product.salesUnit || 'adet'} birim</span>
                       </div>
                       {(product.tags || []).length > 0 && (
                         <div className="mt-1 flex flex-wrap gap-1">
                           {product.tags.slice(0, 4).map((tag) => (
-                            <span key={tag} className="rounded-md bg-dark-800/70 px-1.5 py-0.5 text-[9px] text-gray-400">#{tag}</span>
+                            <span key={tag} className="rounded-md bg-dark-800/70 px-1.5 py-0.5 text-[11px] text-gray-400">#{tag}</span>
                           ))}
                         </div>
                       )}
                     </div>
 
                     <div className="rounded-xl border border-dark-500/40 bg-dark-700/40 p-2">
-                      <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-500">Kod Bilgileri</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Kod Bilgileri</p>
                       <p className="mt-0.5 text-xs font-semibold text-accent-blue">{product.stockCode || '—'}</p>
-                      <p className="text-[10px] text-gray-500">Barkod: {product.barcode || '—'}</p>
-                      <p className="text-[10px] text-gray-500">GTIP: {product.gtipCode || '—'}</p>
+                      <p className="text-[12px] text-gray-500">Barkod: {product.barcode || '—'}</p>
+                      <p className="text-[12px] text-gray-500">GTIP: {product.gtipCode || '—'}</p>
                     </div>
 
                     <div className="rounded-xl border border-dark-500/40 bg-dark-700/40 p-2">
-                      <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-500">Stok & Depo</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Stok & Depo</p>
                       <div className="mt-0.5 flex items-center gap-1.5">
                         <Boxes className="h-3.5 w-3.5 text-emerald-300" />
                         {product.stockTracking ? (
@@ -381,17 +376,17 @@ export default function ProductsTable({
                           <span className="text-xs text-gray-500">Stok takibi kapalı</span>
                         )}
                       </div>
-                      <p className="mt-0.5 flex items-center gap-1 text-[10px] text-gray-500">
+                      <p className="mt-0.5 flex items-center gap-1 text-[12px] text-gray-500">
                         <Warehouse className="h-3 w-3" /> {product.warehouseLocation || product.warehouses?.[0]?.name || 'Depo yok'}
                       </p>
-                      <p className="text-[10px] text-gray-500">Raf: {product.shelfLocation || product.warehouses?.[0]?.shelf || '—'} · Kritik: {product.criticalStock?.toLocaleString?.('tr-TR') || 0}</p>
+                      <p className="text-[12px] text-gray-500">Raf: {product.shelfLocation || product.warehouses?.[0]?.shelf || '—'} · Kritik: {product.criticalStock?.toLocaleString?.('tr-TR') || 0}</p>
                     </div>
                   </div>
 
                   <div className="mt-3 rounded-2xl border border-dark-500/50 bg-dark-700/35 p-3">
                     <div className="mb-2 flex items-center justify-between gap-2 border-b border-dark-500/30 pb-1.5">
                       <span className="text-xs font-semibold text-white">Fiyat Özeti</span>
-                      <span className="text-[10px] font-medium text-gray-500">Ürün kartındaki fiyat grupları</span>
+                      <span className="text-[12px] font-medium text-gray-500">Ürün kartındaki fiyat grupları</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       <PriceGroup title="Maliyet ve Oran" dot="bg-red-400">

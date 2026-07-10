@@ -46,19 +46,19 @@ function OpeningBalanceForm({ form, onUpdate, onSubmit, onCancel }) {
   return (
     <form onSubmit={onSubmit} className="space-y-3 rounded-3xl border border-orange-500/20 bg-gradient-to-br from-dark-700/60 to-dark-800/90 p-4 shadow-inner">
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">Açılış Bakiyesi Düzenle</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.2em] text-orange-300">Açılış Bakiyesi Düzenle</p>
         <p className="mt-1 text-xs font-semibold text-gray-500">Müşterinin cari açılış bakiyesini güncelleyin.</p>
       </div>
       <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Açılış Tutarı</label>
+        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">Açılış Tutarı</label>
         <input value={form.amount} onChange={(event) => onUpdate('amount', event.target.value)} type="number" className="form-input" />
       </div>
       <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">İşlem Tarihi</label>
+        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">İşlem Tarihi</label>
         <input value={form.transactionDate} onChange={(event) => onUpdate('transactionDate', event.target.value)} type="date" className="form-input" />
       </div>
       <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-gray-500">Açıklama</label>
+        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">Açıklama</label>
         <textarea
           value={form.description}
           onChange={(event) => onUpdate('description', event.target.value)}
@@ -324,7 +324,7 @@ export default function CustomerMovementDetailPage() {
                 </div>
                 <div className="text-left">
                   <p className="whitespace-nowrap text-xs font-black text-white">Silinsin mi?</p>
-                  <p className="whitespace-nowrap text-[10px] font-medium text-gray-500">Bu işlem geri alınamaz.</p>
+                  <p className="whitespace-nowrap text-[12px] font-medium text-gray-500">Bu işlem geri alınamaz.</p>
                 </div>
                 <button
                   type="button"
@@ -394,7 +394,7 @@ export default function CustomerMovementDetailPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {detailRows.map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-dark-500/40 bg-dark-800/70 px-4 py-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">{label}</p>
+                <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">{label}</p>
                 <p className={`mt-1 text-sm font-bold ${label === 'Tutar' ? amountClass(movement, isOpening) : 'text-white'}`}>{value}</p>
               </div>
             ))}
@@ -408,7 +408,7 @@ export default function CustomerMovementDetailPage() {
                   ['Vade Tarihi', movement.chequeDueDate],
                 ].filter(([, value]) => value).map(([label, value]) => (
                   <div key={label} className="rounded-2xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-purple-300">{label}</p>
+                    <p className="text-[12px] font-black uppercase tracking-wider text-purple-300">{label}</p>
                     <p className="mt-1 text-sm font-bold text-white">{value}</p>
                   </div>
                 ))}

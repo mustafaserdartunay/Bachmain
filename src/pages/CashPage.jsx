@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { CASH_BASE_PATH } from '../data/treasuryMenu'
 import {
   Banknote,
@@ -18,6 +18,7 @@ import {
   CashDetailSidebar,
   CashMovementHistoryTable,
 } from '../components/Cash/CashAccountDetailSections'
+import SearchInput from '../components/Common/SearchInput'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
@@ -559,6 +560,7 @@ function CurrencyTextInput({ value, onChange }) {
 export default function CashPage() {
   const { accountId } = useParams()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [accounts, setAccounts] = useState(() => getTreasuryAccounts())
   const [movements, setMovements] = useState(() => getTreasuryMovements())
   const [selectedAccountId, setSelectedAccountId] = useState(() => accountId || getTreasuryAccounts()[0]?.id)
@@ -946,6 +948,14 @@ export default function CashPage() {
     })
     setAccountMovementPanelOpen(true)
   }
+
+  useEffect(() => {
+    if (!accountId || !detailAccount || detailAccount.type === 'Çek Kasası') return
+    const hareket = searchParams.get('hareket')
+    if (hareket !== 'gelir' && hareket !== 'gider') return
+    openMovementPanel(hareket === 'gider' ? 'out' : 'in')
+    setSearchParams({}, { replace: true })
+  }, [accountId, detailAccount, searchParams, setSearchParams])
 
   function openChequeEntryPanel() {
     if (!detailAccount) return
@@ -1778,10 +1788,10 @@ export default function CashPage() {
           table={isChequeAccount ? (
             <>
               <div className="mb-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3">
-                <input
+                <SearchInput
+                  className="font-semibold"
                   value={chequeFilters.search}
                   onChange={(event) => setChequeFilters({ search: event.target.value })}
-                  className="form-input h-10 text-sm font-semibold"
                   placeholder="Çek ara..."
                 />
               </div>
@@ -1803,10 +1813,10 @@ export default function CashPage() {
           ) : (
             <>
               <div className="mb-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3">
-                <input
+                <SearchInput
+                  className="font-semibold"
                   value={accountMovementSearch}
                   onChange={(event) => setAccountMovementSearch(event.target.value)}
-                  className="form-input h-10 text-sm font-semibold"
                   placeholder="Hareket ara..."
                 />
               </div>
@@ -2052,7 +2062,7 @@ export default function CashPage() {
             {accountForm.type === 'Çek Kasası' && (
               <div className="rounded-xl border border-dark-500/50 bg-dark-700/35 p-3">
                 <div className="mb-3">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">Aktif Çek Bilgileri</p>
+                  <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">Aktif Çek Bilgileri</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                   <div>
@@ -2112,7 +2122,7 @@ export default function CashPage() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold text-white">{account.name}</p>
-                    <p className="text-[11px] font-semibold text-gray-500">{account.type}</p>
+                    <p className="text-[13px] font-semibold text-gray-500">{account.type}</p>
                   </div>
                   <div className="ml-auto flex shrink-0 items-center gap-1.5">
                     <p className={`mr-2 text-xs font-black ${Number(account.balance) < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{formatTreasuryCurrency(account.balance)}</p>

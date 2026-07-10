@@ -150,27 +150,27 @@ export default function OrderDetailPanel({ order, onClose }) {
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Ödeme & Teslimat</h3>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-[10px] text-gray-500 mb-1">Ödeme Yöntemi</p>
+              <p className="text-[12px] text-gray-500 mb-1">Ödeme Yöntemi</p>
               <p className="text-sm text-gray-300">{order.paymentMethod}</p>
             </div>
             <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-[10px] text-gray-500 mb-1">Ödeme Durumu</p>
+              <p className="text-[12px] text-gray-500 mb-1">Ödeme Durumu</p>
               <span className={paymentStatusBadgeMap[order.paymentStatus]}>{order.paymentStatus}</span>
             </div>
             <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-[10px] text-gray-500 mb-1">Sipariş Tarihi</p>
+              <p className="text-[12px] text-gray-500 mb-1">Sipariş Tarihi</p>
               <p className="text-sm text-gray-300">{order.date}</p>
             </div>
             <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-[10px] text-gray-500 mb-1">Teslim Tarihi</p>
+              <p className="text-[12px] text-gray-500 mb-1">Teslim Tarihi</p>
               <p className="text-sm text-gray-300">{order.delivery}</p>
             </div>
             <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-[10px] text-gray-500 mb-1">Kaynak</p>
+              <p className="text-[12px] text-gray-500 mb-1">Kaynak</p>
               <p className="text-sm text-gray-300">{order.source}</p>
             </div>
             <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-[10px] text-gray-500 mb-1">Sorumlu</p>
+              <p className="text-[12px] text-gray-500 mb-1">Sorumlu</p>
               <p className="text-sm text-gray-300">{order.assignedTo}</p>
             </div>
           </div>

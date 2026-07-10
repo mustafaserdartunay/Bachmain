@@ -2,9 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
-import { initThemeOnBoot } from './utils/themeMode'
+import { initAppearanceOnBoot } from './utils/appearanceMode'
 
-initThemeOnBoot()
+initAppearanceOnBoot()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

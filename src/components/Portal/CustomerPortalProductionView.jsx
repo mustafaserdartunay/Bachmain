@@ -14,7 +14,7 @@ const fulfillmentTone = {
 function StatusPill({ label }) {
   const tone = fulfillmentTone[label] || fulfillmentTone['Devam Ediyor']
   return (
-    <span className={`inline-flex h-7 items-center rounded-lg border px-2.5 text-[10px] font-black uppercase tracking-wide ${tone}`}>
+    <span className={`inline-flex h-7 items-center rounded-lg border px-2.5 text-[12px] font-black uppercase tracking-wide ${tone}`}>
       {label}
     </span>
   )
@@ -24,26 +24,26 @@ function LinkageCard({ quoteId, quoteTitle, quoteDateLabel, orderId, orderTitle,
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       <div className="rounded-xl border border-purple-500/25 bg-purple-500/10 px-3 py-2.5">
-        <div className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-purple-300">
+        <div className="mb-1 flex items-center gap-1.5 text-[12px] font-black uppercase tracking-wider text-purple-300">
           <FileText className="h-3.5 w-3.5" />
           Kaynak Teklif
         </div>
         {quoteId ? (
           <>
             <p className="text-sm font-black text-white">{quoteTitle || quoteId}</p>
-            <p className="mt-0.5 text-[11px] font-semibold text-gray-500">Kod: {quoteId} · {quoteDateLabel}</p>
+            <p className="mt-0.5 text-[13px] font-semibold text-gray-500">Kod: {quoteId} · {quoteDateLabel}</p>
           </>
         ) : (
           <p className="text-xs font-semibold text-gray-500">Bu sipariş için teklif bağlantısı yok</p>
         )}
       </div>
       <div className="rounded-xl border border-blue-500/25 bg-blue-500/10 px-3 py-2.5">
-        <div className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-300">
+        <div className="mb-1 flex items-center gap-1.5 text-[12px] font-black uppercase tracking-wider text-blue-300">
           <ShoppingCart className="h-3.5 w-3.5" />
           Sipariş
         </div>
         <p className="text-sm font-black text-white">{orderTitle || 'Sipariş'}</p>
-        <p className="mt-0.5 text-[11px] font-semibold text-gray-500">Kod: {orderId} · Sipariş tarihi: {orderDateLabel}</p>
+        <p className="mt-0.5 text-[13px] font-semibold text-gray-500">Kod: {orderId} · Sipariş tarihi: {orderDateLabel}</p>
       </div>
     </div>
   )
@@ -64,11 +64,11 @@ function LineItemAccordion({ line, isExpanded, onToggle }) {
         className="flex w-full items-center gap-3 px-4 py-3 text-left"
       >
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">
+          <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">
             Kalem #{line.index + 1}
           </p>
           <p className="mt-0.5 truncate text-sm font-black text-white">{line.productName}</p>
-          <p className="mt-0.5 text-[11px] font-semibold text-gray-500">{line.metricsLabel}</p>
+          <p className="mt-0.5 text-[13px] font-semibold text-gray-500">{line.metricsLabel}</p>
         </div>
         <div className="hidden min-w-[120px] sm:block">
           <ProductionLineItemStageTrackInline steps={line.steps} theme="dark" showLabels={false} />
@@ -91,12 +91,12 @@ function LineItemAccordion({ line, isExpanded, onToggle }) {
         <div className="border-t border-dark-500/40 px-4 pb-4 pt-3">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             {line.productionClosed && (
-              <span className="rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] font-black uppercase text-red-300">
+              <span className="rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1 text-[12px] font-black uppercase text-red-300">
                 Üretim kapalı
               </span>
             )}
             {line.depoLabel && (
-              <span className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-black text-cyan-300">
+              <span className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[12px] font-black text-cyan-300">
                 {line.depoLabel}
               </span>
             )}
@@ -109,21 +109,21 @@ function LineItemAccordion({ line, isExpanded, onToggle }) {
               ['Teslim', formatQty(line.deliveredQuantity), 'text-emerald-300'],
             ].map(([label, value, tone]) => (
               <div key={label} className="rounded-lg border border-dark-500/40 bg-dark-900/35 px-3 py-2 text-center">
-                <p className="text-[9px] font-black uppercase text-gray-600">{label}</p>
+                <p className="text-[11px] font-black uppercase text-gray-600">{label}</p>
                 <p className={`text-sm font-black tabular-nums ${tone}`}>{value}</p>
               </div>
             ))}
           </div>
 
           <div className="rounded-xl border border-dark-500/40 bg-dark-900/30 p-3">
-            <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Üretim süreci</p>
+            <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Üretim süreci</p>
             <ProductionLineItemStageTrack
               steps={line.steps}
               stagePhotos={line.stagePhotos}
               readOnly
               theme="dark"
             />
-            <p className="mt-2 text-[10px] font-semibold text-gray-600">
+            <p className="mt-2 text-[12px] font-semibold text-gray-600">
               Bu görünüm yalnızca takip içindir · aşamalara müdahale edilemez
             </p>
           </div>
@@ -159,14 +159,14 @@ function JobAccordion({ job, isExpanded, onToggle, expandedLineId, onToggleLine 
             <StatusPill label={job.jobStatus} />
           </div>
           <p className="truncate text-xs font-semibold text-gray-400">{summaryProducts}</p>
-          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] font-semibold text-gray-500">
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[13px] font-semibold text-gray-500">
             <span>Sipariş: {job.orderDateLabel}</span>
             {job.quoteId && <span>Teklif: {job.quoteId}</span>}
             {job.jobStage && <span>Aşama: {job.jobStage}</span>}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 pt-0.5">
-          <span className="hidden rounded-lg border border-dark-500/45 bg-dark-700/50 px-2 py-1 text-[10px] font-black uppercase text-gray-500 sm:inline-flex">
+          <span className="hidden rounded-lg border border-dark-500/45 bg-dark-700/50 px-2 py-1 text-[12px] font-black uppercase text-gray-500 sm:inline-flex">
             Salt okunur
           </span>
           <span
@@ -247,7 +247,7 @@ export default function CustomerPortalProductionView({ jobs = [] }) {
       <div className="card border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-dark-800/80">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-blue-300">Üretim Takibi</p>
+            <p className="text-[12px] font-black uppercase tracking-wider text-blue-300">Üretim Takibi</p>
             <h2 className="mt-1 text-lg font-black text-white">Siparişlerinizin canlı üretim durumu</h2>
             <p className="mt-1 max-w-2xl text-xs text-gray-500">
               Kayıtları açarak teklif, sipariş ve kalem süreçlerini görüntüleyin. Tüm bilgiler salt okunurdur.

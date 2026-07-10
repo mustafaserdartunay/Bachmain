@@ -42,7 +42,7 @@ export default function ShiftsPage() {
                 <div>
                   <p className="text-sm font-black text-white">{shift.name}</p>
                   <p className="text-xs text-gray-500">{shift.start} - {shift.end}</p>
-                  <p className="mt-1 text-[11px] text-gray-400">Geç kalma toleransı: {shift.lateToleranceMin} dk</p>
+                  <p className="mt-1 text-[13px] text-gray-400">Geç kalma toleransı: {shift.lateToleranceMin} dk</p>
                 </div>
                 <button type="button" onClick={() => { deleteShift(shift.id); refresh() }} className="text-xs text-red-400">Sil</button>
               </div>

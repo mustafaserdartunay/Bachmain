@@ -1,4 +1,7 @@
+import { createPortal } from 'react-dom'
 import { ChevronRight } from 'lucide-react'
+import { DROPDOWN_MENU_PORTAL_CLASS } from '../Common/DropdownMenu'
+import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { OPTION_COLOR_PALETTE } from '../../utils/customerMeta'
 
 export default function ProductionLineItemsPill({
@@ -20,9 +23,12 @@ export default function ProductionLineItemsPill({
       ? menuItems[0]?.label || '1 kalem'
       : `${count} kalem`
   const buttonDotClass = count > 0 ? menuItems[0].color : 'bg-gray-500'
+  const { anchorRef, menuRef, style: menuStyle } = useAnchoredPortal(isOpen && count > 0, {
+    matchWidth: true,
+  })
 
   return (
-    <div className={`relative min-w-0 w-full ${isOpen ? 'z-50' : ''}`} onClick={(event) => event.stopPropagation()}>
+    <div ref={anchorRef} className="relative min-w-0 w-full" onClick={(event) => event.stopPropagation()}>
       <button
         type="button"
         disabled={count === 0}
@@ -42,18 +48,24 @@ export default function ProductionLineItemsPill({
           <ChevronRight className={`h-3.5 w-3.5 shrink-0 text-gray-500 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
         )}
       </button>
-      {isOpen && count > 0 && (
-        <div className="absolute left-0 top-11 z-50 min-w-[210px] w-full rounded-2xl border border-dark-500 bg-dark-800 p-2 shadow-2xl shadow-black/40">
+      {isOpen && count > 0 && menuStyle && createPortal(
+        <div
+          ref={menuRef}
+          style={menuStyle}
+          className={`${DROPDOWN_MENU_PORTAL_CLASS} w-full`}
+          onClick={(event) => event.stopPropagation()}
+        >
           {menuItems.map((item, index) => (
             <div
               key={`${item.label}-${index}`}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-gray-200"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-[var(--ink)]"
             >
               <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${item.color}`} />
               <span className="min-w-0 truncate">{item.label}</span>
             </div>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

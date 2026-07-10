@@ -13,6 +13,18 @@ export function toSentenceCase(value) {
   return value.replace(SENTENCE_BOUNDARY, (_match, prefix, letter) => prefix + letter.toLocaleUpperCase('tr-TR'))
 }
 
+export function toTitleCaseTr(value) {
+  if (!value) return value
+  if (value.includes('@')) return value
+  return String(value)
+    .split(/(\s+)/)
+    .map((part) => {
+      if (!part.trim()) return part
+      return part.charAt(0).toLocaleUpperCase('tr-TR') + part.slice(1).toLocaleLowerCase('tr-TR')
+    })
+    .join('')
+}
+
 function isEligible(element) {
   if (!element) return false
   const tag = element.tagName

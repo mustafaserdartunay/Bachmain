@@ -256,7 +256,7 @@ export default function CrmAppointmentsPage() {
                           : 'hover:bg-dark-700/40'
                     }`}
                   >
-                    <span className="text-[8px] font-bold uppercase text-gray-500">{day.label}</span>
+                    <span className="text-[10px] font-bold uppercase text-gray-500">{day.label}</span>
                     <span className={`mt-0.5 text-sm font-black tabular-nums ${isSelected || isToday ? 'text-white' : 'text-gray-300'}`}>
                       {day.date.slice(8)}
                     </span>
@@ -279,7 +279,7 @@ export default function CrmAppointmentsPage() {
             <div className="rounded-xl border border-dark-500/50 bg-dark-800/40 p-4">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Seçili gün</p>
+                  <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Seçili gün</p>
                   <p className="text-sm font-black capitalize text-white">{formatDateLabel(selectedDate)}</p>
                 </div>
               </div>
@@ -301,14 +301,14 @@ export default function CrmAppointmentsPage() {
                     >
                       <div className="flex items-start gap-3">
                         <div className="flex shrink-0 flex-col items-center rounded-xl border border-blue-500/25 bg-blue-500/10 px-3 py-2 text-center">
-                          <span className="text-[10px] font-black uppercase text-blue-300/80">Saat</span>
+                          <span className="text-[12px] font-black uppercase text-blue-300/80">Saat</span>
                           <span className="text-sm font-black tabular-nums text-white">{apt.startTime}</span>
-                          <span className="text-[10px] font-bold tabular-nums text-gray-500">{apt.endTime}</span>
+                          <span className="text-[12px] font-bold tabular-nums text-gray-500">{apt.endTime}</span>
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="text-sm font-black text-white">{apt.title}</h3>
-                            <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-black text-white ${typeTone[apt.type] || 'bg-blue-500'}`}>
+                            <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-black text-white ${typeTone[apt.type] || 'bg-blue-500'}`}>
                               {apt.type}
                             </span>
                           </div>
@@ -317,7 +317,7 @@ export default function CrmAppointmentsPage() {
                             {apt.contact ? ` · ${apt.contact}` : ''}
                           </p>
                           {apt.location && (
-                            <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-500">
+                            <p className="mt-1 inline-flex items-center gap-1 text-[13px] text-gray-500">
                               <MapPin className="h-3 w-3" />
                               {apt.location}
                             </p>
@@ -351,7 +351,7 @@ export default function CrmAppointmentsPage() {
           <div className="rounded-xl border border-dark-500/50 bg-dark-800/40 p-4">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Gün Notları</p>
+                <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Gün Notları</p>
                 <p className="text-sm font-black text-white">{formatShortDate(selectedDate)}</p>
               </div>
               <Clock className="h-4 w-4 text-gray-600" />
@@ -372,7 +372,7 @@ export default function CrmAppointmentsPage() {
                       <div className="min-w-0">
                         <p className="text-sm font-black text-white">{note.title}</p>
                         {note.time && (
-                          <p className="mt-0.5 text-[10px] font-bold text-gray-400">{note.time}</p>
+                          <p className="mt-0.5 text-[12px] font-bold text-gray-400">{note.time}</p>
                         )}
                         {note.content && (
                           <p className="mt-2 text-xs leading-relaxed text-gray-400">{note.content}</p>

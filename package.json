@@ -1,5 +1,5 @@
 {
-  "name": "erlenbox-erp",
+  "name": "bachmain-crm",
   "private": true,
   "version": "2.1.0",
   "type": "module",
@@ -7,9 +7,12 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "deploy": "vercel --prod"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "html2canvas": "^1.4.1",
@@ -18,7 +21,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.16.0",
-    "recharts": "^2.15.3"
+    "recharts": "^2.15.3",
+    "three": "^0.185.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.4.1",

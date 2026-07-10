@@ -1,5 +1,6 @@
 export const expensesSubMenus = [
   { label: 'Gider Listesi', path: '/giderler/liste', icon: 'list' },
+  { label: 'Kredi Ödemeleri', path: '/giderler/kredi-odemeleri', icon: 'landmark' },
   { label: 'Gelen E-Faturalar', path: '/giderler/gelen-e-faturalar', icon: 'inbox' },
   { label: 'Tedarikçiler', path: '/giderler/tedarikciler', icon: 'handshake' },
   { label: 'Çalışanlar', path: '/giderler/calisanlar', icon: 'users' },

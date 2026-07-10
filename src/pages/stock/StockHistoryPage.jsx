@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { History } from 'lucide-react'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
+import SearchInput from '../../components/Common/SearchInput'
 import ListHeaderRow from '../../components/Common/ListHeaderRow'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import { formatStockDate, getStockHistory } from '../../utils/stockStore'
@@ -56,11 +57,11 @@ export default function StockHistoryPage() {
 
       <AppPagePanel title="Stok Hareketleri">
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <input
+          <SearchInput
+            wrapperClassName="w-full max-w-md"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Ürün, belge no veya depo ara..."
-            className="form-input w-full max-w-md text-sm"
           />
           <div className="flex flex-wrap gap-1">
             {TYPE_OPTIONS.map((item) => (
@@ -101,7 +102,7 @@ export default function StockHistoryPage() {
               </p>
               <div className="min-w-0">
                 <p className="truncate text-xs text-gray-400">{row.documentNo || '—'}</p>
-                <p className="truncate text-[11px] text-gray-500">{row.partyName || row.relatedWarehouseName || row.notes || '—'}</p>
+                <p className="truncate text-[13px] text-gray-500">{row.partyName || row.relatedWarehouseName || row.notes || '—'}</p>
               </div>
             </div>
           ))}

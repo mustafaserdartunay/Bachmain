@@ -90,7 +90,7 @@ export default function PdksSettingsPage() {
             </div>
             <div className="text-xs text-gray-400">
               <p>QR içeriği: personel_id, şifreli_token, oluşturma_tarihi</p>
-              <p className="mt-2 break-all font-mono text-[10px] text-gray-500">{employeeQr.slice(0, 120)}...</p>
+              <p className="mt-2 break-all font-mono text-[12px] text-gray-500">{employeeQr.slice(0, 120)}...</p>
             </div>
           </div>
         )}

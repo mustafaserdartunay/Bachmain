@@ -15,12 +15,12 @@ import { formatDepoDateTime, formatQty, computeDepoLineTotals } from '../../util
 import { formatTL } from '../../utils/productPricing'
 
 const transportSelectClass =
-  'form-input h-8 w-full min-w-0 rounded-lg border border-dark-500/50 bg-dark-800/70 px-2 text-[10px] font-bold text-gray-200'
+  'form-input h-8 w-full min-w-0 rounded-lg border border-dark-500/50 bg-dark-800/70 px-2 text-[12px] font-bold text-gray-200'
 
 function DetailLine({ label, value, valueClassName = 'text-gray-200' }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-1.5">
-      <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</span>
+      <span className="shrink-0 text-[12px] font-bold uppercase tracking-wide text-gray-500">{label}</span>
       <span className={`min-w-0 truncate text-right text-xs font-black tabular-nums ${valueClassName}`}>{value}</span>
     </div>
   )
@@ -118,7 +118,7 @@ export default function DepoItemStagePanel({
         <div className="max-w-xs rounded-xl border border-dark-500/40 bg-dark-800/45 px-3 py-2.5">
           <p className="text-sm font-black leading-snug text-white">{item.product}</p>
           {item.productCode && (
-            <p className="mt-0.5 text-[10px] font-bold text-gray-500">{item.productCode}</p>
+            <p className="mt-0.5 text-[12px] font-bold text-gray-500">{item.productCode}</p>
           )}
           <div className="mt-2 divide-y divide-dark-500/30">
             <DetailLine label="KDV Hariç" value={formatTL(totals.net)} valueClassName="text-red-300" />
@@ -134,10 +134,10 @@ export default function DepoItemStagePanel({
 
       {!expanded && (
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">
+          <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">
             Depo süreci · {warehouseName}
           </p>
-          <span className="rounded-lg border border-dark-500/45 bg-dark-800/60 px-2 py-1 text-[10px] font-black text-orange-300">
+          <span className="rounded-lg border border-dark-500/45 bg-dark-800/60 px-2 py-1 text-[12px] font-black text-orange-300">
             {activeStage?.label || item.status}
           </span>
         </div>
@@ -181,7 +181,7 @@ export default function DepoItemStagePanel({
           <button
             type="button"
             onClick={saveTransport}
-            className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[10px] font-black text-blue-200 hover:bg-blue-500/15"
+            className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[12px] font-black text-blue-200 hover:bg-blue-500/15"
           >
             Nakliyeyi kaydet
           </button>
@@ -190,12 +190,12 @@ export default function DepoItemStagePanel({
 
       <div className="flex flex-wrap items-center gap-2">
         {item.invoiceNo && (
-          <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300">
+          <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[12px] font-bold text-emerald-300">
             Fatura <span className="font-black">{item.invoiceNo}</span>
           </span>
         )}
         {item.waybillNo && (
-          <span className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-1 text-[10px] font-bold text-blue-300">
+          <span className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-1 text-[12px] font-bold text-blue-300">
             İrsaliye <span className="font-black">{item.waybillNo}</span>
           </span>
         )}
@@ -203,7 +203,7 @@ export default function DepoItemStagePanel({
           <button
             type="button"
             onClick={() => onIssueInvoice?.(item)}
-            className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black text-emerald-300 hover:bg-emerald-500/15"
+            className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[12px] font-black text-emerald-300 hover:bg-emerald-500/15"
           >
             Fatura kes
           </button>
@@ -212,7 +212,7 @@ export default function DepoItemStagePanel({
           <button
             type="button"
             onClick={() => onCreateWaybill?.(item)}
-            className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[10px] font-black text-blue-300 hover:bg-blue-500/15"
+            className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[12px] font-black text-blue-300 hover:bg-blue-500/15"
           >
             İrsaliye oluştur
           </button>
@@ -222,19 +222,19 @@ export default function DepoItemStagePanel({
       {!expanded && (
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-lg border border-dark-500/40 bg-dark-800/50 px-3 py-2">
-            <p className="text-[9px] font-black uppercase text-gray-600">Adet</p>
+            <p className="text-[11px] font-black uppercase text-gray-600">Adet</p>
             <p className="text-sm font-bold text-white">{formatQty(item.producedQuantity)}</p>
           </div>
           <div className="rounded-lg border border-dark-500/40 bg-dark-800/50 px-3 py-2">
-            <p className="text-[9px] font-black uppercase text-gray-600">KDV Hariç</p>
+            <p className="text-[11px] font-black uppercase text-gray-600">KDV Hariç</p>
             <p className="text-sm font-black text-red-300">{formatTL(totals.net)}</p>
           </div>
           <div className="rounded-lg border border-dark-500/40 bg-dark-800/50 px-3 py-2">
-            <p className="text-[9px] font-black uppercase text-gray-600">KDV Dahil</p>
+            <p className="text-[11px] font-black uppercase text-gray-600">KDV Dahil</p>
             <p className="text-sm font-black text-emerald-300">{formatTL(totals.gross)}</p>
           </div>
           <div className="rounded-lg border border-dark-500/40 bg-dark-800/50 px-3 py-2">
-            <p className="text-[9px] font-black uppercase text-gray-600">Güncelleme</p>
+            <p className="text-[11px] font-black uppercase text-gray-600">Güncelleme</p>
             <p className="text-xs font-bold text-gray-300">{formatDepoDateTime(item.updatedAt)}</p>
           </div>
         </div>

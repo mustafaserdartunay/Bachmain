@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
+import SearchInput from '../../components/Common/SearchInput'
 import ListHeaderRow from '../../components/Common/ListHeaderRow'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
@@ -53,11 +54,11 @@ export default function ChequesPage() {
       />
 
       <AppPagePanel title="Çek Portföyü">
-        <input
+        <SearchInput
+          wrapperClassName="mb-4 w-full max-w-md"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Çek no, banka veya cari ara..."
-          className="form-input mb-4 w-full max-w-md text-sm"
         />
 
         <ListHeaderRow
@@ -77,7 +78,7 @@ export default function ChequesPage() {
             >
               <div>
                 <p className="text-sm font-bold text-white">{row.chequeBank}</p>
-                <p className="text-[10px] text-gray-500">{row.accountName}</p>
+                <p className="text-[12px] text-gray-500">{row.accountName}</p>
               </div>
               <p className="text-xs font-semibold text-gray-300">{row.chequeNo}</p>
               <p className="text-xs text-gray-400">{formatChequeDate(row.chequeDueDate)}</p>

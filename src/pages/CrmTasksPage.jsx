@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { AlertTriangle, CheckSquare, ListChecks, Plus, Search } from 'lucide-react'
+import { AlertTriangle, CheckSquare, ListChecks, Plus } from 'lucide-react'
+import SearchInput from '../components/Common/SearchInput'
 import { CrmDeleteAction } from '../components/Crm/CrmListActions'
 import { TaskFormModal, emptyTaskForm, normalizeTaskForm } from '../components/Crm/CrmForms'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
@@ -159,15 +160,12 @@ export default function CrmTasksPage() {
       >
         <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
           <div className="rounded-xl border border-dark-500/50 bg-dark-800/40 p-4">
-            <div className="relative mb-3">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Görev veya müşteri ara..."
-                className="form-input pl-9 text-sm"
-              />
-            </div>
+            <SearchInput
+              wrapperClassName="mb-3"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Görev veya müşteri ara..."
+            />
             <div className="max-h-[calc(100vh-380px)] space-y-2 overflow-y-auto pr-1">
               {filteredTasks.map((task) => {
                 const isSelected = selectedId === task.id
@@ -197,17 +195,17 @@ export default function CrmTasksPage() {
                             : 'border-dark-500/60'
                         }`}
                       >
-                        {isTaskCompleted(task) && <span className="text-[10px] font-black">✓</span>}
+                        {isTaskCompleted(task) && <span className="text-[12px] font-black">✓</span>}
                       </button>
                       <div className="min-w-0 flex-1">
                         <p className={`truncate text-sm font-black ${isTaskCompleted(task) ? 'text-gray-500 line-through' : 'text-white'}`}>
                           {task.title}
                         </p>
-                        <p className="mt-1 truncate text-[11px] font-semibold text-gray-500">
+                        <p className="mt-1 truncate text-[13px] font-semibold text-gray-500">
                           {getCustomerDisplay(task.customer).brandShortName} · {formatShortDate(task.dueDate)}
                         </p>
                       </div>
-                      <span className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[9px] font-black ${priorityTone[task.priority]}`}>
+                      <span className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[11px] font-black ${priorityTone[task.priority]}`}>
                         {task.priority}
                       </span>
                     </div>

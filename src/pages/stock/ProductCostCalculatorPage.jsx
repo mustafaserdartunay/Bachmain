@@ -47,10 +47,10 @@ function Field({ label, value, onChange, suffix = '', type = 'text', readOnly = 
 function ComputedField({ label, value, unit }) {
   return (
     <div className="rounded-xl border border-dark-500/40 bg-dark-900/45 px-3 py-2">
-      <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">{label}</p>
+      <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">{label}</p>
       <div className="mt-1 flex items-baseline justify-between gap-2">
         <p className="text-sm font-black text-blue-300">{value}</p>
-        <span className="text-[10px] font-semibold text-gray-500">{unit}</span>
+        <span className="text-[12px] font-semibold text-gray-500">{unit}</span>
       </div>
     </div>
   )
@@ -95,7 +95,7 @@ function NestingPreview({ layout, optimization }) {
         <g key={`${col}-${row}`}>
           <rect x={x} y={y} width={boxW} height={boxH} rx="4" fill="rgba(59,130,246,0.12)" stroke="rgba(96,165,250,0.45)" />
           <rect x={x + bleedInset} y={y + bleedInset} width={Math.max(cutW, 0)} height={Math.max(cutH, 0)} rx="3" fill="rgba(16,185,129,0.18)" stroke="rgba(52,211,153,0.5)" />
-          <text x={x + boxW / 2} y={y + boxH / 2} textAnchor="middle" dominantBaseline="middle" className="fill-gray-300 text-[10px] font-bold">{index}</text>
+          <text x={x + boxW / 2} y={y + boxH / 2} textAnchor="middle" dominantBaseline="middle" className="fill-gray-300 text-[12px] font-bold">{index}</text>
         </g>,
       )
     }
@@ -108,7 +108,7 @@ function NestingPreview({ layout, optimization }) {
         <rect x={mX} y={mY} width={uW} height={uH} fill="rgba(30,41,59,0.55)" stroke="rgba(100,116,139,0.35)" />
         {boxes}
       </svg>
-      <div className="grid gap-2 text-[11px] text-gray-500 sm:grid-cols-2">
+      <div className="grid gap-2 text-[13px] text-gray-500 sm:grid-cols-2">
         <p>Stok üst limit: {formatCm(STANDARD_STOCK_EN)} × {formatCm(STANDARD_STOCK_BOY)}</p>
         <p>Önerilen karton: {formatCm(layout.sheetW)} × {formatCm(layout.sheetH)}</p>
         <p>Baskı payı: En -{formatCm(SHEET_MARGIN_EN)}, Boy -{formatCm(SHEET_MARGIN_BOY)}</p>
@@ -196,7 +196,7 @@ export default function ProductCostCalculatorPage({ variant = 'baklava' }) {
             </p>
           </div>
           <div className="rounded-2xl border border-blue-500/25 bg-blue-500/10 px-5 py-3 text-right">
-            <p className="text-[10px] font-black uppercase tracking-wider text-blue-300">Birim maliyet</p>
+            <p className="text-[12px] font-black uppercase tracking-wider text-blue-300">Birim maliyet</p>
             <p className="mt-1 text-2xl font-black text-white">{formatMoney(result.unitTotal)}</p>
             <p className="mt-1 text-xs font-semibold text-gray-500">{result.urunAdi} · {formatNumber(result.siparisAdeti, 0)} kutu</p>
           </div>
@@ -232,7 +232,7 @@ export default function ProductCostCalculatorPage({ variant = 'baklava' }) {
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-wide text-gray-400">Ürün Bilgisi</h3>
-              <span className="rounded-lg bg-dark-700/70 px-2 py-1 text-[10px] font-black uppercase text-gray-500">Sadece bilgi</span>
+              <span className="rounded-lg bg-dark-700/70 px-2 py-1 text-[12px] font-black uppercase text-gray-500">Sadece bilgi</span>
             </div>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <Field label="Ürün adı" value={form.urunAdi} onChange={(value) => updateForm('urunAdi', value)} />
@@ -245,7 +245,7 @@ export default function ProductCostCalculatorPage({ variant = 'baklava' }) {
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-wide text-gray-400">Karton ebat bilgisi</h3>
-              <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[10px] font-black uppercase text-blue-300">Otomatik önerilir</span>
+              <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[12px] font-black uppercase text-blue-300">Otomatik önerilir</span>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="En" value={form.kartonEn} onChange={(value) => updateForm('kartonEn', value)} suffix="cm" />
@@ -256,7 +256,7 @@ export default function ProductCostCalculatorPage({ variant = 'baklava' }) {
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-wide text-gray-400">Açık Ebat</h3>
-              <span className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase text-emerald-300">Hesaplama için kullanılır</span>
+              <span className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-black uppercase text-emerald-300">Hesaplama için kullanılır</span>
             </div>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <Field label="Kutu açık ebat en" value={form.acikEbatBoy} onChange={(value) => updateForm('acikEbatBoy', value)} suffix="cm" />
@@ -269,13 +269,13 @@ export default function ProductCostCalculatorPage({ variant = 'baklava' }) {
               <div className="rounded-2xl border border-dark-500/45 bg-dark-700/25 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h4 className="text-xs font-black uppercase tracking-wide text-white">Tabaka Yerleşimi</h4>
-                  <span className="text-[10px] font-black uppercase text-blue-300">Otomatik hesap</span>
+                  <span className="text-[12px] font-black uppercase text-blue-300">Otomatik hesap</span>
                 </div>
                 <NestingPreview layout={result.nesting} optimization={result.optimization} />
               </div>
               <div className="space-y-3">
                 <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-blue-300">Tabakadan çıkan kutu</p>
+                  <p className="text-[12px] font-black uppercase tracking-wider text-blue-300">Tabakadan çıkan kutu</p>
                   <p className="mt-2 text-2xl font-black text-white">{formatNumber(result.kutuPerTabaka, 0)} adet</p>
                   <p className="mt-2 text-xs font-semibold text-gray-500">
                     {result.nesting.rotated
@@ -284,7 +284,7 @@ export default function ProductCostCalculatorPage({ variant = 'baklava' }) {
                   </p>
                 </div>
                 <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-purple-300">Almam gereken karton ebatı</p>
+                  <p className="text-[12px] font-black uppercase tracking-wider text-purple-300">Almam gereken karton ebatı</p>
                   <p className="mt-2 text-lg font-black text-white">{formatPurchaseSheet(result.purchaseSheet.en, result.purchaseSheet.boy)}</p>
                   <p className="mt-2 text-xs font-semibold text-gray-500">Önerilen ölçü 5 cm adımına yukarı yuvarlanır.</p>
                 </div>
@@ -415,7 +415,7 @@ export default function ProductCostCalculatorPage({ variant = 'baklava' }) {
 
         <div className="overflow-x-auto rounded-2xl border border-dark-500/45">
           <table className="min-w-full text-sm">
-            <thead className="bg-dark-900/60 text-[10px] font-black uppercase tracking-wider text-gray-500">
+            <thead className="bg-dark-900/60 text-[12px] font-black uppercase tracking-wider text-gray-500">
               <tr>
                 <th className="px-4 py-3 text-left">Kalem</th>
                 <th className="px-4 py-3 text-right">Tabaka / Toplam</th>

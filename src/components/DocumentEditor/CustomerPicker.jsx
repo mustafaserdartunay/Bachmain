@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import SearchInput from '../Common/SearchInput'
 import {
   Instagram,
   Landmark,
@@ -205,7 +206,7 @@ function CustomerInfoStrip({ customer, record }) {
         <span className="text-sm font-black text-white">{display.brandShortName || record.customer}</span>
         {display.companyTitle && display.companyTitle !== display.brandShortName && (
           <>
-            <span className="text-[10px] text-gray-600">·</span>
+            <span className="text-[12px] text-gray-600">·</span>
             <span className="min-w-0 truncate text-xs font-semibold text-gray-400">{display.companyTitle}</span>
           </>
         )}
@@ -213,8 +214,8 @@ function CustomerInfoStrip({ customer, record }) {
           <span className="ml-auto flex flex-wrap items-end justify-end gap-2">
             {metaItems.map((item) => (
               <div key={`${item.title}-${item.label}`} className="flex flex-col items-center gap-0.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{item.title}</span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[10px] font-bold text-gray-300">
+                <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-500">{item.title}</span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[12px] font-bold text-gray-300">
                   <span className={`h-1.5 w-1.5 rounded-full ${item.color}`} />
                   {item.label}
                 </span>
@@ -227,7 +228,7 @@ function CustomerInfoStrip({ customer, record }) {
       {taxLine.length > 0 && (
         <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
           {taxLine.map(({ label, text }) => (
-            <span key={label} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] text-gray-500">
+            <span key={label} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] text-gray-500">
               <Landmark className="h-3 w-3 shrink-0 text-gray-600" />
               <span className="truncate">
                 <span className="font-semibold text-gray-400">{label}:</span>
@@ -251,11 +252,11 @@ function CustomerInfoStrip({ customer, record }) {
 
             return (
               <div key={row.key} className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
-                <span className="inline-flex min-w-[88px] shrink-0 items-center text-[10px] font-black uppercase tracking-wide text-gray-500">
+                <span className="inline-flex min-w-[88px] shrink-0 items-center text-[12px] font-black uppercase tracking-wide text-gray-500">
                   {row.title}
                 </span>
                 {items.map(({ icon: Icon, text, href, external }) => (
-                  <span key={`${row.key}-${text}`} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] text-gray-400">
+                  <span key={`${row.key}-${text}`} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] text-gray-400">
                     <Icon className="h-3 w-3 shrink-0 text-gray-600" />
                     {href ? (
                       <a
@@ -280,7 +281,7 @@ function CustomerInfoStrip({ customer, record }) {
       {detailLine.length > 0 && (
         <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-dark-500/20 pt-1">
           {detailLine.map(({ icon: Icon, text, href }) => (
-            <span key={text} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] text-gray-500">
+            <span key={text} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] text-gray-500">
               <Icon className="h-3 w-3 shrink-0 text-gray-600" />
               {href ? (
                 <a href={href} className="truncate transition-colors hover:text-blue-300">{text}</a>
@@ -403,7 +404,7 @@ export default function CustomerPicker({ record, quote, onPatch }) {
             </div>
           )}
         >
-          <input
+          <SearchInput
             value={query}
             onChange={(event) => {
               onPatch({ customer: event.target.value })
@@ -411,7 +412,6 @@ export default function CustomerPicker({ record, quote, onPatch }) {
             }}
             onFocus={() => setIsOpen(true)}
             placeholder="Müşteri adı, yetkili veya e-posta ile ara..."
-            className="form-input"
           />
           {isOpen && (
             <div className="absolute left-0 right-0 top-11 z-40 rounded-2xl border border-dark-500 bg-dark-900 p-2 shadow-card">
@@ -429,7 +429,7 @@ export default function CustomerPicker({ record, quote, onPatch }) {
                         <p className="truncate text-sm font-bold text-white">{display.brandShortName}</p>
                         <p className="truncate text-xs text-gray-500">{display.companyTitle} · {customer.email}</p>
                       </div>
-                      <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[10px] font-bold text-blue-300">
+                      <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[12px] font-bold text-blue-300">
                         Seç
                       </span>
                     </button>

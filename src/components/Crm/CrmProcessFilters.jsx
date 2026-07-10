@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import SearchInput from '../Common/SearchInput'
 import DateRangePicker from '../Common/DateRangePicker'
 import EditableDropdownPill from '../EditableDropdownPill'
 import { LIST_PILL_CLASS } from '../../utils/crmMeta'
@@ -13,7 +13,7 @@ import {
 function FilterField({ label, children, className = '' }) {
   return (
     <div className={`min-w-0 ${className}`}>
-      <p className="mb-2 whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-gray-500">{label}</p>
+      <p className="mb-2 whitespace-nowrap text-[12px] font-black uppercase tracking-wider text-gray-500">{label}</p>
       {children}
     </div>
   )
@@ -37,15 +37,11 @@ export default function CrmProcessFilters({
 
   return (
     <div className="mb-4 space-y-3">
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-        <input
-          value={searchQuery}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Başlık, müşteri, temsilci veya içerik ara..."
-          className="form-input pl-10"
-        />
-      </div>
+      <SearchInput
+        value={searchQuery}
+        onChange={(event) => onSearchChange(event.target.value)}
+        placeholder="Başlık, müşteri, temsilci veya içerik ara..."
+      />
 
       <div className="grid grid-cols-1 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3 sm:grid-cols-2 lg:grid-cols-6">
         <FilterField label="Tarih Aralığı">

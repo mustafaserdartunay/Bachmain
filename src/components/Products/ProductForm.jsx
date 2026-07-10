@@ -33,6 +33,7 @@ import PriceFieldWithFx, { FxHint } from './PriceFieldWithFx'
 import PriceSummary from './PriceSummary'
 import ProductFilesUpload from './ProductFilesUpload'
 import ProcessPanelModule from '../DocumentEditor/ProcessPanelModule'
+import StoreSalesVisibilityPanel from './StoreSalesVisibilityPanel'
 import {
   isReservedPlaceholderLabel,
   mapProcessOptions,
@@ -378,7 +379,7 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
         <div className="mb-4 rounded-xl border border-dark-500/50 bg-dark-800/50 p-3">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-semibold text-white">Dinamik sütun ve çarpan ayarları</p>
-            <span className="text-[10px] text-gray-500">Boş değerler çarpana dahil edilmez.</span>
+            <span className="text-[12px] text-gray-500">Boş değerler çarpana dahil edilmez.</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {costColumns.map((column) => (
@@ -407,7 +408,7 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
         <div className="overflow-x-auto rounded-xl border border-dark-500/40">
           <div className="min-w-[1180px]">
             <div
-              className="grid gap-2 border-b border-dark-500/40 bg-dark-800/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500"
+              className="grid gap-2 border-b border-dark-500/40 bg-dark-800/50 px-3 py-2 text-[12px] font-semibold uppercase tracking-wide text-gray-500"
               style={{ gridTemplateColumns: productCostGridTemplate }}
             >
               <span>Mamül / Malzeme</span>
@@ -502,7 +503,7 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
       </div>
 
       <div className="space-y-2">
-        <div className="grid grid-cols-12 gap-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+        <div className="grid grid-cols-12 gap-2 px-1 text-[12px] font-semibold uppercase tracking-wide text-gray-500">
           <span className={isProductCost ? 'col-span-3' : 'col-span-4'}>İsim</span>
           <span className={isProductCost ? 'col-span-2' : 'col-span-3'}>Durum</span>
           {isProductCost && <span className="col-span-2">Adet</span>}
@@ -595,7 +596,7 @@ function Product3DPreview({ product, cartonResult }) {
           <h4 className="text-sm font-semibold text-white">3D Koli Yerleşim Önizlemesi</h4>
           <p className="mt-1 text-xs text-gray-500">Ürün görselinden kutu yüzeyi oluşturulur ve koli dizilimi simüle edilir.</p>
         </div>
-        <span className="rounded-full bg-accent-blue/10 px-3 py-1 text-[10px] font-semibold text-accent-blue">
+        <span className="rounded-full bg-accent-blue/10 px-3 py-1 text-[12px] font-semibold text-accent-blue">
           {product.boxDimensions?.orientation === 'dik' ? 'Dik dizilim' : 'Yatay dizilim'}
         </span>
       </div>
@@ -657,7 +658,7 @@ function Product3DPreview({ product, cartonResult }) {
           ['Koli Yükseklik', cartonResult?.height],
         ].map(([label, value]) => (
           <div key={label} className="rounded-xl bg-dark-800/50 p-3 text-center">
-            <p className="text-[10px] text-gray-500">{label}</p>
+            <p className="text-[12px] text-gray-500">{label}</p>
             <p className="mt-1 text-sm font-semibold text-white">{value ? `${value} mm` : '-'}</p>
           </div>
         ))}
@@ -679,6 +680,7 @@ export default function ProductForm({ product, onChange, isNew }) {
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [unitInput, setUnitInput] = useState('')
   const [unitOpen, setUnitOpen] = useState(false)
+  const [storeSalesOpen, setStoreSalesOpen] = useState(false)
   const [stockAdjustment, setStockAdjustment] = useState({ type: 'in', quantity: 0, note: '' })
   const [previewMedia, setPreviewMedia] = useState(null)
   const [pendingCategoryDeleteId, setPendingCategoryDeleteId] = useState(null)
@@ -1112,6 +1114,14 @@ export default function ProductForm({ product, onChange, isNew }) {
                 compact
               />
             </Field>
+            <Field label="Mağaza Satışında Görünsün mü?">
+              <StoreSalesVisibilityPanel
+                visible={Boolean(product.storeSalesVisible)}
+                onChange={(value) => update('storeSalesVisible', value)}
+                isOpen={storeSalesOpen}
+                onToggle={() => setStoreSalesOpen((open) => !open)}
+              />
+            </Field>
             <Field label="Etiketler">
               <div className="flex gap-2">
                 <input
@@ -1218,14 +1228,14 @@ export default function ProductForm({ product, onChange, isNew }) {
                               <button
                                 type="button"
                                 onClick={() => setPreviewMedia(item)}
-                                className="rounded-lg bg-dark-900/90 px-2 py-1 text-[10px] font-semibold text-white hover:bg-accent-blue/80"
+                                className="rounded-lg bg-dark-900/90 px-2 py-1 text-[12px] font-semibold text-white hover:bg-accent-blue/80"
                               >
                                 <Maximize2 className="mr-1 inline h-3 w-3" /> Büyüt
                               </button>
                               <button
                                 type="button"
                                 onClick={() => downloadMedia(item)}
-                                className="rounded-lg bg-dark-900/90 px-2 py-1 text-[10px] font-semibold text-white hover:bg-emerald-600"
+                                className="rounded-lg bg-dark-900/90 px-2 py-1 text-[12px] font-semibold text-white hover:bg-emerald-600"
                               >
                                 <Download className="mr-1 inline h-3 w-3" /> İndir
                               </button>
@@ -1294,7 +1304,7 @@ export default function ProductForm({ product, onChange, isNew }) {
             <div className="mt-4">
               <div className="mb-2 flex items-center justify-between">
                 <h5 className="text-sm font-semibold text-white">Diğer İndirim Yüzdeleri</h5>
-                <span className="text-[10px] text-gray-500">İndirim oranlarına göre bayi fiyatı</span>
+                <span className="text-[12px] text-gray-500">İndirim oranlarına göre bayi fiyatı</span>
               </div>
               <div className="grid grid-cols-7 gap-2">
                 {DISCOUNT_RATES.map((rate) => {
@@ -1308,12 +1318,12 @@ export default function ProductForm({ product, onChange, isNew }) {
                       </div>
                       <div className="space-y-1.5">
                         <div className="rounded-lg bg-dark-700/40 px-2 py-1.5 text-center">
-                          <p className="text-[9px] text-gray-500">Hariç</p>
-                          <p className="text-[11px] font-semibold text-orange-200">{formatTL(excl)}</p>
+                          <p className="text-[11px] text-gray-500">Hariç</p>
+                          <p className="text-[13px] font-semibold text-orange-200">{formatTL(excl)}</p>
                         </div>
                         <div className="rounded-lg bg-dark-700/40 px-2 py-1.5 text-center">
-                          <p className="text-[9px] text-gray-500">Dahil</p>
-                          <p className="text-[11px] font-semibold text-white">{formatTL(incl)}</p>
+                          <p className="text-[11px] text-gray-500">Dahil</p>
+                          <p className="text-[13px] font-semibold text-white">{formatTL(incl)}</p>
                         </div>
                       </div>
                     </div>
@@ -1324,11 +1334,11 @@ export default function ProductForm({ product, onChange, isNew }) {
             <div className="mt-4 flex flex-1 flex-col rounded-2xl border border-dark-500/50 bg-dark-800/40 p-3">
               <div className="mb-3 flex items-center justify-between">
                 <h5 className="text-sm font-semibold text-white">Bayi Satış Geçmişi</h5>
-                <span className="text-[10px] text-gray-500">Ürün bazlı firma satış kayıtları</span>
+                <span className="text-[12px] text-gray-500">Ürün bazlı firma satış kayıtları</span>
               </div>
               <div className="grid flex-1 grid-cols-[1fr_auto] gap-2">
                 <div className="flex min-w-0 flex-col">
-                  <div className="grid grid-cols-12 gap-2 px-3 pb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                  <div className="grid grid-cols-12 gap-2 px-3 pb-2 text-[12px] font-semibold uppercase tracking-wide text-gray-500">
                     <span className="col-span-3">Firma</span>
                     <span className="col-span-2">Tarih</span>
                     <span className="col-span-1 text-right">Adet</span>
@@ -1345,7 +1355,7 @@ export default function ProductForm({ product, onChange, isNew }) {
                       return (
                         <div key={sale.id} className="grid grid-cols-12 items-center gap-2 rounded-xl bg-dark-700/40 px-3 py-2">
                           <p className="col-span-3 truncate text-xs font-semibold text-gray-200">{display.brandShortName}</p>
-                          <p className="col-span-2 text-[10px] text-gray-500">{sale.date}</p>
+                          <p className="col-span-2 text-[12px] text-gray-500">{sale.date}</p>
                           <p className="col-span-1 text-right text-xs text-blue-300">{quantity.toLocaleString('tr-TR')}</p>
                           <p className="col-span-2 text-right text-xs text-emerald-300">{formatTL(exclPrice)}</p>
                           <p className="col-span-2 text-right text-xs text-green-400">{formatTL(inclPrice)}</p>

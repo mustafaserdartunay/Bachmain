@@ -436,7 +436,7 @@ export default function CustomerDetailPage() {
                 <ChevronRight className={`h-5 w-5 transition-transform ${activeMenu === 'edit-actions' ? '-rotate-90' : 'rotate-90'}`} />
               </button>
               {activeMenu === 'edit-actions' && (
-                <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-2xl border border-dark-500 bg-dark-800 shadow-2xl shadow-black/35">
+                <div className="app-dropdown-portal glass-inset absolute right-0 top-12 w-80 overflow-hidden rounded-[16px]">
                   {pendingDelete ? (
                     <div className="p-4">
                       <div className="flex items-start gap-3">
@@ -445,7 +445,7 @@ export default function CustomerDetailPage() {
                         </span>
                         <div className="min-w-0">
                           <p className="text-sm font-black text-white">Müşteri silinsin mi?</p>
-                          <p className="mt-0.5 text-[11px] font-medium text-gray-500">
+                          <p className="mt-0.5 text-[13px] font-medium text-gray-500">
                             Bu işlem geri alınamaz. Tüm müşteri verileri kalıcı olarak silinir.
                           </p>
                         </div>
@@ -515,7 +515,7 @@ export default function CustomerDetailPage() {
 
           <div className="grid grid-cols-[144px_144px_160px_160px] gap-3 border-b border-dark-500/45 px-5 py-3">
             <div>
-              <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-gray-500">Tipi</p>
+              <p className="mb-2 text-[13px] font-black uppercase tracking-wider text-gray-500">Tipi</p>
               <EditableDropdownPill
                 value={selectedCustomerType}
                 options={optionLists.type}
@@ -527,7 +527,7 @@ export default function CustomerDetailPage() {
               />
             </div>
             <div>
-              <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-gray-500">Müşteri temsilcisi</p>
+              <p className="mb-2 text-[13px] font-black uppercase tracking-wider text-gray-500">Müşteri temsilcisi</p>
               <EditableDropdownPill
                 value={selectedRepresentative}
                 options={optionLists.representative}
@@ -539,7 +539,7 @@ export default function CustomerDetailPage() {
               />
             </div>
             <div>
-              <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-gray-500">Puantaj</p>
+              <p className="mb-2 text-[13px] font-black uppercase tracking-wider text-gray-500">Puantaj</p>
               <EditableDropdownPill
                 value={selectedScoring}
                 options={optionLists.scoring}
@@ -551,7 +551,7 @@ export default function CustomerDetailPage() {
               />
             </div>
             <div>
-              <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-gray-500">Kategori</p>
+              <p className="mb-2 text-[13px] font-black uppercase tracking-wider text-gray-500">Kategori</p>
               <EditableDropdownPill
                 value={selectedCategory}
                 options={optionLists.category}
@@ -564,7 +564,7 @@ export default function CustomerDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-[130px_130px_minmax(0,1fr)_120px_110px_110px] border-b border-dark-500/45 px-5 py-3 text-[11px] font-black uppercase tracking-wider text-gray-500">
+          <div className="grid grid-cols-[130px_130px_minmax(0,1fr)_120px_110px_110px] border-b border-dark-500/45 px-5 py-3 text-[13px] font-black uppercase tracking-wider text-gray-500">
             <span>İşlem Türü</span>
             <span>İşlem Yeri</span>
             <span>Açıklama</span>
@@ -673,15 +673,15 @@ export default function CustomerDetailPage() {
 
             <div className="space-y-2">
               <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-300">Kalan Bakiye</p>
+                <p className="text-[12px] font-black uppercase tracking-wider text-emerald-300">Kalan Bakiye</p>
                 <p className={`mt-1 text-sm font-black ${balanceTone(currentBalance)}`}>{formatTreasuryCurrency(currentBalance)}</p>
               </div>
               <div className="rounded-2xl border border-red-500/25 bg-red-500/10 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-red-300">Gecikmiş Tahsilat</p>
+                <p className="text-[12px] font-black uppercase tracking-wider text-red-300">Gecikmiş Tahsilat</p>
                 <p className="mt-1 text-sm font-black text-red-300">{formatTreasuryCurrency(overdueCollection)}</p>
               </div>
               <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-blue-300">Toplam Tahsilat</p>
+                <p className="text-[12px] font-black uppercase tracking-wider text-blue-300">Toplam Tahsilat</p>
                 <p className="mt-1 text-sm font-black text-blue-300">{formatTreasuryCurrency(collectedTotal)}</p>
               </div>
             </div>
@@ -825,7 +825,7 @@ export default function CustomerDetailPage() {
                   {b2bAccess?.enabled && b2bAccess.accessToken && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 rounded-xl border border-dark-500/45 bg-dark-800/80 px-3 py-2">
-                        <p className="min-w-0 flex-1 truncate text-[11px] font-semibold text-gray-400">
+                        <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-400">
                           {getPortalUrl(b2bAccess.accessToken)}
                         </p>
                         <button type="button" onClick={copyPortalLink} className="shrink-0 text-gray-400 hover:text-white">
@@ -835,7 +835,7 @@ export default function CustomerDetailPage() {
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       </div>
-                      {linkCopied && <p className="text-[11px] font-bold text-emerald-300">Link kopyalandı</p>}
+                      {linkCopied && <p className="text-[13px] font-bold text-emerald-300">Link kopyalandı</p>}
                     </div>
                   )}
                 </div>
@@ -867,7 +867,7 @@ function CollapsiblePanel({ icon: Icon, title, count, accent = 'text-blue-300', 
           </span>
           <span className="text-sm font-black uppercase tracking-wide text-gray-200">{title}</span>
           {count != null && (
-            <span className="rounded-lg bg-dark-700/70 px-2 py-0.5 text-[11px] font-black text-gray-400">{count}</span>
+            <span className="rounded-lg bg-dark-700/70 px-2 py-0.5 text-[13px] font-black text-gray-400">{count}</span>
           )}
         </span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -898,12 +898,12 @@ function ActivityHistoryPanel({ activity }) {
               <div className="min-w-0 flex-1 rounded-2xl border border-dark-500/40 bg-dark-700/35 px-4 py-2.5">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs font-black uppercase tracking-wide text-gray-200">{entry.action}</span>
-                  <span className="flex items-center gap-1 whitespace-nowrap text-[11px] font-bold text-gray-500">
+                  <span className="flex items-center gap-1 whitespace-nowrap text-[13px] font-bold text-gray-500">
                     <Clock className="h-3 w-3" /> {formatActivityStamp(entry.at)}
                   </span>
                 </div>
                 <p className="mt-0.5 truncate text-xs font-semibold text-gray-400">{entry.detail}</p>
-                <p className="mt-1 text-[11px] font-bold text-blue-300/80">{entry.user}</p>
+                <p className="mt-1 text-[13px] font-bold text-blue-300/80">{entry.user}</p>
               </div>
             </li>
           ))}
@@ -922,11 +922,11 @@ function EngagementRow({ icon: Icon, title, detail, stamp, badge, badgeClass }) 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="truncate text-sm font-bold text-gray-200">{title}</p>
-          {badge && <span className={`rounded-md px-2 py-0.5 text-[10px] font-black uppercase ${badgeClass}`}>{badge}</span>}
+          {badge && <span className={`rounded-md px-2 py-0.5 text-[12px] font-black uppercase ${badgeClass}`}>{badge}</span>}
         </div>
         <p className="truncate text-xs font-semibold text-gray-500">{detail}</p>
       </div>
-      <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-bold text-gray-500">
+      <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[13px] font-bold text-gray-500">
         <Clock className="h-3 w-3" /> {stamp}
       </span>
     </div>

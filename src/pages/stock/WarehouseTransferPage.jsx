@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowLeftRight, Plus } from 'lucide-react'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
+import SearchInput from '../../components/Common/SearchInput'
 import ListHeaderRow from '../../components/Common/ListHeaderRow'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import { getCatalogProducts } from '../../utils/productCatalog'
@@ -99,11 +100,11 @@ export default function WarehouseTransferPage() {
       />
 
       <AppPagePanel title="Transfer Kayıtları">
-        <input
+        <SearchInput
+          wrapperClassName="mb-4 w-full max-w-md"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Belge no, ürün veya depo ara..."
-          className="form-input mb-4 w-full max-w-md text-sm"
         />
 
         <ListHeaderRow
@@ -123,12 +124,12 @@ export default function WarehouseTransferPage() {
               <p className="text-xs font-semibold text-gray-300">{formatStockDate(row.date)}</p>
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-white">{row.documentNo}</p>
-                <p className="truncate text-[11px] text-gray-500">{row.productName}</p>
+                <p className="truncate text-[13px] text-gray-500">{row.productName}</p>
               </div>
               <p className="truncate text-xs text-gray-400">{row.fromWarehouseName}</p>
               <p className="truncate text-xs text-gray-400">{row.toWarehouseName}</p>
               <p className="text-xs font-black text-blue-300">{row.quantity} {row.unit}</p>
-              <span className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300">{row.status}</span>
+              <span className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-bold text-emerald-300">{row.status}</span>
             </div>
           ))}
         </div>

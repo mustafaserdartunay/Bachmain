@@ -1,14 +1,16 @@
+import { APP_LABEL_CLASS, APP_VALUE_CLASS } from '../../utils/dashboardDesign'
+
 const TONE_CLASSES = {
-  white: 'text-white',
-  blue: 'text-blue-300',
-  cyan: 'text-cyan-300',
-  emerald: 'text-emerald-300',
-  red: 'text-red-300',
-  orange: 'text-orange-300',
-  purple: 'text-purple-300',
+  white: 'text-[var(--ink)]',
+  blue: 'text-blue-600',
+  cyan: 'text-cyan-600',
+  emerald: 'text-emerald-600',
+  red: 'text-red-600',
+  orange: 'text-orange-600',
+  purple: 'text-violet-600',
 }
 
-function resolveToneClass(tone, fallback = 'text-white') {
+function resolveToneClass(tone, fallback = 'text-[var(--ink)]') {
   if (!tone) return fallback
   if (typeof tone === 'string' && tone.startsWith('text-')) return tone
   return TONE_CLASSES[tone] || fallback
@@ -19,17 +21,17 @@ export function SummaryMetricCard({ title, value, icon: Icon, tone = 'blue', val
   const valueToneClass = resolveToneClass(valueTone, TONE_CLASSES.white)
 
   return (
-    <div className="min-h-[94px] rounded-2xl border border-dark-500/50 bg-dark-800/70 p-4 shadow-card">
+    <div className="app-page-metric p-4">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-500">{title}</span>
+        <span className={APP_LABEL_CLASS}>{title}</span>
         {Icon && (
-          <span className={`rounded-xl bg-dark-700 p-2 ${iconToneClass}`}>
+          <span className={`rounded-xl bg-white/45 p-2 ring-1 ring-white/50 ${iconToneClass}`}>
             <Icon className="h-4 w-4" />
           </span>
         )}
       </div>
-      <p className={`text-xl font-bold ${valueToneClass}`}>{value}</p>
-      {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+      <p className={`${APP_VALUE_CLASS} text-xl ${valueToneClass}`}>{value}</p>
+      {subtitle && <p className={`mt-1 ${APP_LABEL_CLASS}`}>{subtitle}</p>}
     </div>
   )
 }

@@ -29,7 +29,7 @@ function kindMeta(kind) {
   return { label: 'Randevu', icon: Calendar, shell: CRM_BADGE_APPOINTMENT }
 }
 
-const META_ROW_BASE_CLASS = 'text-[10px] font-black leading-tight tracking-wider uppercase'
+const META_ROW_BASE_CLASS = 'text-[12px] font-black leading-tight tracking-wider uppercase'
 const META_ROW_LABEL_CLASS = `${META_ROW_BASE_CLASS} shrink-0 whitespace-nowrap text-gray-500`
 const META_ROW_VALUE_CLASS = `${META_ROW_BASE_CLASS} min-w-0 text-left text-black`
 
@@ -57,9 +57,9 @@ function MetaField({ label, value, className = '', clamp = false, row = false })
 
   return (
     <div className={`min-w-0 ${className}`.trim()}>
-      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-gray-600">{label}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-gray-600">{label}</p>
       <p
-        className={`mt-0.5 text-left text-[10px] font-black leading-tight text-white ${clamp ? 'line-clamp-3' : 'truncate'}`}
+        className={`mt-0.5 text-left text-[12px] font-black leading-tight text-white ${clamp ? 'line-clamp-3' : 'truncate'}`}
         title={value}
       >
         {value}
@@ -91,13 +91,13 @@ function ProcessDatesColumn({ creator, startLabel, endLabel, endTitle, countdown
       <div className="flex items-stretch gap-3">
         <div className="flex min-w-[96px] flex-col justify-center gap-2">
           <div className="min-w-0">
-            <p className="text-[8px] font-black uppercase tracking-[0.12em] text-gray-600">Oluşturan</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-gray-600">Oluşturan</p>
             <div
               className="mt-0.5 flex min-w-0 items-center justify-start gap-1 truncate"
               title={creatorName}
             >
               <User className={`h-3 w-3 shrink-0 ${CRM_ASSIGNEE_ICON_CLASS}`} strokeWidth={2.5} />
-              <span className={`truncate text-[9px] font-black ${CRM_ASSIGNEE_TEXT_CLASS}`}>{creatorName}</span>
+              <span className={`truncate text-[11px] font-black ${CRM_ASSIGNEE_TEXT_CLASS}`}>{creatorName}</span>
             </div>
           </div>
           <div className="h-px bg-dark-500/35" aria-hidden />
@@ -157,11 +157,11 @@ export default function CrmProcessCard({
 
       <div className="relative flex min-w-0 flex-1 flex-col self-stretch">
         <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 pb-2 pt-2">
-          <span className={`inline-flex h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-[10px] font-black uppercase ${meta.shell}`}>
+          <span className={`inline-flex h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-[12px] font-black uppercase ${meta.shell}`}>
             <Icon className="h-3.5 w-3.5" />
             {meta.label}
           </span>
-          <span className={`inline-flex h-9 shrink-0 items-center rounded-lg px-2.5 text-[10px] font-black ${templateBadgeClass}`}>
+          <span className={`inline-flex h-9 shrink-0 items-center rounded-lg px-2.5 text-[12px] font-black ${templateBadgeClass}`}>
             {template.label}
           </span>
           <div
@@ -170,7 +170,7 @@ export default function CrmProcessCard({
           >
             {priority ? (
               <span
-                className={`inline-flex h-9 shrink-0 items-center rounded-lg px-2.5 text-[10px] font-black ${
+                className={`inline-flex h-9 shrink-0 items-center rounded-lg px-2.5 text-[12px] font-black ${
                   priorityColor ? `${priorityColor} text-white` : templateBadgeClass
                 }`}
               >

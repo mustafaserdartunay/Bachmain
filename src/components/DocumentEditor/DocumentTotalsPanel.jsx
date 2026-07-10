@@ -30,7 +30,7 @@ function DiscountModeToggle({ mode, onChange }) {
       <button
         type="button"
         onClick={() => onChange('percent')}
-        className={`h-6 min-w-[28px] px-1.5 text-[10px] font-bold transition-colors ${
+        className={`h-6 min-w-[28px] px-1.5 text-[12px] font-bold transition-colors ${
           mode === 'percent' ? 'rounded bg-dark-600 text-gray-200' : 'text-gray-500 hover:text-gray-300'
         }`}
       >
@@ -39,7 +39,7 @@ function DiscountModeToggle({ mode, onChange }) {
       <button
         type="button"
         onClick={() => onChange('amount')}
-        className={`h-6 min-w-[28px] px-1.5 text-[10px] font-bold transition-colors ${
+        className={`h-6 min-w-[28px] px-1.5 text-[12px] font-bold transition-colors ${
           mode === 'amount' ? 'rounded bg-dark-600 text-gray-200' : 'text-gray-500 hover:text-gray-300'
         }`}
       >

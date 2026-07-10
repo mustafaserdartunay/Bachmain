@@ -33,7 +33,67 @@ function createStage(id, label, index, extra = {}) {
 }
 
 export function getDefaultRawCrmProcessTemplates() {
-  return {}
+  return {
+    genel: {
+      id: 'genel',
+      label: 'Genel',
+      stages: [
+        { id: 'g-bekliyor', label: 'Bekliyor', whatsappKey: 'waiting', showsSchedule: false, isTerminal: false },
+        { id: 'g-planlandi', label: 'Planlandı', whatsappKey: 'planned', showsSchedule: true, isTerminal: false },
+        { id: 'g-devam', label: 'Devam Ediyor', whatsappKey: 'started', showsSchedule: false, isTerminal: false },
+        { id: 'g-tamamlandi', label: 'Tamamlandı', whatsappKey: 'ready', showsSchedule: false, isTerminal: true },
+      ],
+    },
+    numune: {
+      id: 'numune',
+      label: 'Numune',
+      stages: [
+        { id: 'n-bekliyor', label: 'Bekliyor', whatsappKey: 'waiting', showsSchedule: false, isTerminal: false },
+        { id: 'n-hazirlaniyor', label: 'Hazırlanıyor', whatsappKey: 'started', showsSchedule: false, isTerminal: false },
+        { id: 'n-gonderildi', label: 'Gönderildi', whatsappKey: 'planned', showsSchedule: false, isTerminal: false },
+        { id: 'n-tamamlandi', label: 'Tamamlandı', whatsappKey: 'ready', showsSchedule: false, isTerminal: true },
+      ],
+    },
+    ziyaret: {
+      id: 'ziyaret',
+      label: 'Ziyaret',
+      stages: [
+        { id: 'z-bekliyor', label: 'Bekliyor', whatsappKey: 'waiting', showsSchedule: false, isTerminal: false },
+        { id: 'z-planlandi', label: 'Planlandı', whatsappKey: 'planned', showsSchedule: true, isTerminal: false },
+        { id: 'z-gidildi', label: 'Gidildi', whatsappKey: 'started', showsSchedule: false, isTerminal: false },
+        { id: 'z-tamamlandi', label: 'Tamamlandı', whatsappKey: 'ready', showsSchedule: false, isTerminal: true },
+      ],
+    },
+    toplanti: {
+      id: 'toplanti',
+      label: 'Toplantı',
+      stages: [
+        { id: 't-bekliyor', label: 'Bekliyor', whatsappKey: 'waiting', showsSchedule: false, isTerminal: false },
+        { id: 't-planlandi', label: 'Planlandı', whatsappKey: 'planned', showsSchedule: true, isTerminal: false },
+        { id: 't-yapildi', label: 'Yapıldı', whatsappKey: 'started', showsSchedule: false, isTerminal: false },
+        { id: 't-tamamlandi', label: 'Tamamlandı', whatsappKey: 'ready', showsSchedule: false, isTerminal: true },
+      ],
+    },
+    teklif: {
+      id: 'teklif',
+      label: 'Teklif',
+      stages: [
+        { id: 'tk-bekliyor', label: 'Bekliyor', whatsappKey: 'waiting', showsSchedule: false, isTerminal: false },
+        { id: 'tk-hazirlaniyor', label: 'Hazırlanıyor', whatsappKey: 'started', showsSchedule: false, isTerminal: false },
+        { id: 'tk-gonderildi', label: 'Gönderildi', whatsappKey: 'planned', showsSchedule: false, isTerminal: false },
+        { id: 'tk-onaylandi', label: 'Onaylandı', whatsappKey: 'ready', showsSchedule: false, isTerminal: true },
+      ],
+    },
+    tahsilat: {
+      id: 'tahsilat',
+      label: 'Tahsilat',
+      stages: [
+        { id: 'th-bekliyor', label: 'Bekliyor', whatsappKey: 'waiting', showsSchedule: false, isTerminal: false },
+        { id: 'th-takipte', label: 'Takipte', whatsappKey: 'started', showsSchedule: false, isTerminal: false },
+        { id: 'th-tamamlandi', label: 'Tamamlandı', whatsappKey: 'ready', showsSchedule: false, isTerminal: true },
+      ],
+    },
+  }
 }
 
 function inferStageMeta(stage, index, total) {

@@ -124,6 +124,11 @@ export function readB2bOrders(customerId) {
   return readJson(ORDERS_KEY, []).filter((order) => order.customerId === customerId)
 }
 
+export function readAllB2bOrders() {
+  return readJson(ORDERS_KEY, [])
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+}
+
 export function readB2bQuotes(customerId) {
   return readJson(QUOTES_KEY, []).filter((quote) => quote.customerId === customerId)
 }

@@ -207,7 +207,7 @@ export default function NoteProcessTemplatesSettingsPanel() {
         <p className="mt-1 text-xs font-semibold text-gray-500">
           Not defteri kayıtlarında kullanılacak süreç türleri ve durum menüsü buradan yönetilir.
         </p>
-        <p className="mt-1 text-[11px] font-bold text-gray-600">
+        <p className="mt-1 text-[13px] font-bold text-gray-600">
           {templateCount} süreç türü · {getActiveStages().length} aktif durum
         </p>
       </div>
@@ -218,7 +218,7 @@ export default function NoteProcessTemplatesSettingsPanel() {
           if (pendingTemplateDeleteId === template.id) {
             return (
               <div key={template.id} className="inline-flex items-center gap-2 rounded-xl border border-red-500/35 bg-red-500/10 px-2 py-1.5">
-                <span className="text-[11px] font-black uppercase tracking-wide text-red-200">{template.label}</span>
+                <span className="text-[13px] font-black uppercase tracking-wide text-red-200">{template.label}</span>
                 <InlineDeleteConfirm onConfirm={() => removeTemplate(template.id)} onCancel={() => setPendingTemplateDeleteId(null)} />
               </div>
             )
@@ -245,7 +245,7 @@ export default function NoteProcessTemplatesSettingsPanel() {
                     onKeyDown={(event) => {
                       if (event.key === 'Escape') cancelEditTemplate()
                     }}
-                    className="h-7 w-32 rounded-lg border border-violet-500/40 bg-dark-900/70 px-2 text-[11px] font-black uppercase text-white outline-none"
+                    className="h-7 w-32 rounded-lg border border-violet-500/40 bg-dark-900/70 px-2 text-[13px] font-black uppercase text-white outline-none"
                     autoFocus
                   />
                   <button type="submit" className="rounded-md p-1 text-emerald-300 hover:bg-emerald-500/15" title="Kaydet">
@@ -266,12 +266,12 @@ export default function NoteProcessTemplatesSettingsPanel() {
                     setStageInput('')
                     cancelEditTemplate()
                   }}
-                  className={`px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition-colors ${
+                  className={`px-3 py-1.5 text-[13px] font-black uppercase tracking-wide transition-colors ${
                     isActive ? 'text-violet-300' : 'text-gray-400 hover:text-white'
                   }`}
                 >
                   {template.label}
-                  <span className="ml-1 text-[10px] font-bold text-gray-500">({template.stages.length})</span>
+                  <span className="ml-1 text-[12px] font-bold text-gray-500">({template.stages.length})</span>
                 </button>
               )}
               {editingTemplateId !== template.id && (

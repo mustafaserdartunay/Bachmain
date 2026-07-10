@@ -20,10 +20,9 @@ import {
   MapPinned,
   Truck,
   Handshake,
-  PanelLeftClose,
-  PanelLeftOpen,
   PieChart,
   CalendarDays,
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
   UserCog,
@@ -45,7 +44,6 @@ import {
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
-import bachLogo from '../../assets/bach-logo.png'
 import { processSubMenus, isProcessRoute } from '../../data/processMenu'
 import { customerSubMenus, isCustomerRoute } from '../../data/customerMenu'
 import { expensesSubMenus, isExpensesRoute } from '../../data/expensesMenu'
@@ -55,18 +53,18 @@ import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '..
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
+import BrandLogo from './BrandLogo'
 
 const baseMenuItems = [
   { icon: Truck, label: 'Kurye Takip', path: '/kurye-takip' },
   { icon: FolderPlus, label: 'Yeni Proje', path: '/projeler/yeni' },
-  { icon: ShoppingBag, label: 'Shopping', path: '/shopping' },
+  { icon: ShoppingBag, label: 'Pos', path: '/shopping' },
   { icon: Store, label: 'Bayi Yönetimi', path: '/bayi' },
   { icon: MessageCircle, label: 'Mesaj Merkezi', path: '/mesajlar' },
   { icon: Receipt, label: 'E-Fatura', path: '/efatura' },
   { icon: BarChart3, label: 'Raporlar', path: '/raporlar' },
 ]
 
-const DEFAULT_BRAND_LOGO = bachLogo
 const customerSubMenuIcons = {
   users: Users,
   'user-search': UserSearch,
@@ -77,6 +75,7 @@ const customerSubMenuIcons = {
 }
 const expensesSubMenuIcons = {
   list: ClipboardList,
+  landmark: Landmark,
   inbox: Inbox,
   handshake: Handshake,
   users: Users,
@@ -118,11 +117,20 @@ const hrSubMenuIcons = {
   smartphone: Smartphone,
   settings: Settings,
 }
-const menuButtonBase = 'sidebar-menu-button w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors'
-const subMenuButtonBase = 'sidebar-menu-button block w-full px-3 py-1.5 rounded-lg text-xs transition-colors'
+const menuButtonBase = 'sidebar-menu-button sidebar-item w-full flex items-center gap-2.5 transition-colors'
+const menuLabelClass = 'sidebar-menu-label flex-1 text-left'
+const subMenuButtonBase = 'sidebar-menu-button block w-full px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-colors whitespace-nowrap'
 
-function resolveBrandLogo(company) {
-  return company?.logoDataUrl || DEFAULT_BRAND_LOGO
+function SubMenuIcon({ children }) {
+  return <span className="submenu-icon-wrap shrink-0">{children}</span>
+}
+
+function MenuIcon({ children, collapsed }) {
+  return (
+    <span className={`icon-wrap ${collapsed ? 'mx-auto' : ''}`}>
+      {children}
+    </span>
+  )
 }
 
 export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, onToggle }) {
@@ -199,9 +207,9 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   }, [])
 
   const menuItems = baseMenuItems
-  const brandLogo = resolveBrandLogo(company)
   const brandLabel = company.companyName || 'Bach'
-  const sidebarWidthClass = collapsed ? 'lg:w-16 w-56' : 'w-56'
+  const sidebarWidthClass = collapsed ? 'lg:w-[4.75rem] w-[17.5rem]' : 'w-[17.5rem]'
+  const sidebarPaddingClass = collapsed ? 'p-4 lg:px-2 lg:py-4' : 'px-3 py-4'
   const mobileStateClass = mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
 
   function handleNavigate() {
@@ -209,42 +217,31 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   }
 
   return (
-    <aside className={`app-sidebar fixed left-0 top-0 z-50 flex h-dvh flex-col bg-dark-800 transition-all duration-300 ${sidebarWidthClass} ${mobileStateClass}`}>
-      <div className={`p-3 flex items-center gap-2 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-        {collapsed ? (
-          <div className="flex flex-col items-center gap-2">
-            <NavLink to="/" onClick={handleNavigate} className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-lg hover:opacity-90 transition-opacity" title={brandLabel}>
-              <img src={brandLogo} alt={brandLabel} className="h-full w-full object-contain" />
-            </NavLink>
-            <button
-              onClick={onToggle}
-              className="p-2 rounded-lg text-gray-500 hover:text-gray-200 hover:bg-dark-700 transition-colors"
-              title="Menüyü aç"
-            >
-              <PanelLeftOpen className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <>
-            <NavLink to="/" onClick={handleNavigate} className="flex min-w-0 items-center gap-2.5 hover:opacity-90 transition-opacity">
-              <img
-                src={brandLogo}
-                alt={brandLabel}
-                className="h-6 max-h-6 w-auto max-w-[108px] shrink-0 object-contain object-left"
-              />
-            </NavLink>
-            <button
-              onClick={onToggle}
-              className="p-1.5 rounded-lg text-gray-500 hover:text-gray-200 hover:bg-dark-700 transition-colors"
-              title="Menüyü daralt"
-            >
-              <PanelLeftClose className="w-4 h-4" />
-            </button>
-          </>
-        )}
+    <aside
+      data-collapsed={collapsed ? 'true' : 'false'}
+      className={`glass-sidebar app-sidebar fixed top-[var(--shell-gap)] bottom-[var(--shell-gap)] left-0 z-50 flex h-[calc(100dvh-(2*var(--shell-gap)))] flex-col transition-all duration-300 lg:left-[var(--shell-gap)] ${sidebarPaddingClass} ${sidebarWidthClass} ${mobileStateClass}`}
+    >
+      <div className={`flex w-full items-center ${collapsed ? 'justify-center px-0 pt-2' : 'justify-center px-3 pt-1 pb-1'}`}>
+        <NavLink
+          to="/"
+          onClick={handleNavigate}
+          className={`flex hover:opacity-90 transition-opacity ${collapsed ? 'items-center justify-center' : 'w-full items-center justify-center'}`}
+          title={brandLabel}
+        >
+          {company?.logoDataUrl ? (
+            <img
+              src={company.logoDataUrl}
+              alt={brandLabel}
+              className={collapsed ? 'h-8 w-8 object-contain' : 'h-9 max-h-9 w-auto max-w-[11.5rem] shrink-0 object-contain object-center'}
+            />
+          ) : (
+            <BrandLogo collapsed={collapsed} />
+          )}
+        </NavLink>
       </div>
 
-      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+      <nav className={`flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 ${collapsed ? 'px-0' : 'px-1'}`}>
+
         {/* 1. Güncel Durum */}
         <NavLink
           to="/"
@@ -256,8 +253,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             }`
           }
         >
-          <Gauge className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Güncel Durum</span>}
+          <MenuIcon collapsed={collapsed}>
+            <Gauge className="w-4 h-4 shrink-0" />
+          </MenuIcon>
+          {!collapsed ? <span className={menuLabelClass}>Güncel Durum</span> : null}
         </NavLink>
 
         {/* 2. Satışlar */}
@@ -269,10 +268,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               isCustomerRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
-            <TrendingUp className="w-4 h-4 shrink-0" />
+            <MenuIcon collapsed={collapsed}>
+              <TrendingUp className="w-4 h-4 shrink-0" />
+            </MenuIcon>
             {!collapsed && (
               <>
-                <span className="flex-1 text-left">Satışlar</span>
+                <span className={menuLabelClass}>Satışlar</span>
                 {customerOpen
                   ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                   : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -297,7 +298,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                       }`
                     }
                   >
-                    {SubIcon && <SubIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />}
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
                     {sub.label}
                   </NavLink>
                 )
@@ -315,10 +320,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               isExpensesRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
-            <Banknote className="w-4 h-4 shrink-0" />
+            <MenuIcon collapsed={collapsed}>
+              <Banknote className="w-4 h-4 shrink-0" />
+            </MenuIcon>
             {!collapsed && (
               <>
-                <span className="flex-1 text-left">Giderler</span>
+                <span className={menuLabelClass}>Giderler</span>
                 {expensesOpen
                   ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                   : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -342,7 +349,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                       }`
                     }
                   >
-                    {SubIcon && <SubIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />}
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
                     {sub.label}
                   </NavLink>
                 )
@@ -360,10 +371,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               isTreasuryRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
-            <Coins className="w-4 h-4 shrink-0" />
+            <MenuIcon collapsed={collapsed}>
+              <Coins className="w-4 h-4 shrink-0" />
+            </MenuIcon>
             {!collapsed && (
               <>
-                <span className="flex-1 text-left">Nakit</span>
+                <span className={menuLabelClass}>Nakit</span>
                 {treasuryOpen
                   ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                   : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -388,7 +401,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                       }`
                     }
                   >
-                    {SubIcon && <SubIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />}
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
                     {sub.label}
                   </NavLink>
                 )
@@ -406,10 +423,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               isStockRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
-            <Boxes className="w-4 h-4 shrink-0" />
+            <MenuIcon collapsed={collapsed}>
+              <Boxes className="w-4 h-4 shrink-0" />
+            </MenuIcon>
             {!collapsed && (
               <>
-                <span className="flex-1 text-left">Stok</span>
+                <span className={menuLabelClass}>Stok</span>
                 {stockOpen
                   ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                   : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -439,7 +458,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                       }`
                     }
                   >
-                    {SubIcon && <SubIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />}
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
                     {sub.label}
                   </NavLink>
                 )
@@ -457,10 +480,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               isProcessRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
-            <Workflow className="w-4 h-4 shrink-0" />
+            <MenuIcon collapsed={collapsed}>
+              <Workflow className="w-4 h-4 shrink-0" />
+            </MenuIcon>
             {!collapsed && (
               <>
-                <span className="flex-1 text-left">Süreç Yönetimi</span>
+                <span className={menuLabelClass}>Süreç Yönetimi</span>
                 {processOpen
                   ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                   : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -499,8 +524,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             }`
           }
         >
-          <CalendarDays className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Crm</span>}
+          <MenuIcon collapsed={collapsed}>
+            <CalendarDays className="w-4 h-4 shrink-0" />
+          </MenuIcon>
+          {!collapsed && <span className={menuLabelClass}>Crm</span>}
         </NavLink>
 
         {/* İnsan Kaynakları / PDKS */}
@@ -512,10 +539,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               isHrRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
-            <UserCog className="w-4 h-4 shrink-0" />
+            <MenuIcon collapsed={collapsed}>
+              <UserCog className="w-4 h-4 shrink-0" />
+            </MenuIcon>
             {!collapsed && (
               <>
-                <span className="flex-1 text-left">İnsan Kaynakları</span>
+                <span className={menuLabelClass}>İnsan Kaynakları</span>
                 {hrOpen
                   ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                   : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -540,7 +569,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                       }`
                     }
                   >
-                    {SubIcon && <SubIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />}
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
                     {sub.label}
                   </NavLink>
                 )
@@ -558,10 +591,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               isFieldSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
-            <MapPinned className="w-4 h-4 shrink-0" />
+            <MenuIcon collapsed={collapsed}>
+              <MapPinned className="w-4 h-4 shrink-0" />
+            </MenuIcon>
             {!collapsed && (
               <>
-                <span className="flex-1 text-left">Saha Satış</span>
+                <span className={menuLabelClass}>Saha Satış</span>
                 {fieldSalesOpen
                   ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                   : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -586,7 +621,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                       }`
                     }
                   >
-                    {SubIcon && <SubIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />}
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
                     {sub.label}
                   </NavLink>
                 )
@@ -611,8 +650,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               }`
             }
           >
-            <item.icon className="w-4 h-4 shrink-0" />
-            {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+            <MenuIcon collapsed={collapsed}>
+              <item.icon className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && <span className={menuLabelClass}>{item.label}</span>}
             {item.path === '/mesajlar' && messageBadge.count > 0 && (
               collapsed ? (
                 <span
@@ -621,7 +662,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 />
               ) : (
                 <span
-                  className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-500 px-1.5 text-[10px] font-black text-white shadow-[0_0_10px_rgba(244,63,94,0.55)]"
+                  className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-500 px-1.5 text-[12px] font-black text-white shadow-[0_0_10px_rgba(244,63,94,0.55)]"
                   title={`${messageBadge.unreadTotal > 0 ? `${messageBadge.unreadTotal} yeni mesaj` : `${messageBadge.unansweredCount} cevaplanmayan konuşma`}`}
                 >
                   {messageBadge.count > 99 ? '99+' : messageBadge.count}
@@ -642,10 +683,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 : ''
             }`}
           >
-            <Settings className="w-4 h-4 shrink-0" />
+            <MenuIcon collapsed={collapsed}>
+              <Settings className="w-4 h-4 shrink-0" />
+            </MenuIcon>
             {!collapsed && (
               <>
-                <span className="flex-1 text-left">Ayarlar</span>
+                <span className={menuLabelClass}>Ayarlar</span>
                 {settingsOpen
                   ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                   : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -678,12 +721,16 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
       </nav>
 
-      <div className="p-3">
-        {!collapsed ? (
-          <p className="sidebar-version-label text-center text-xs font-black leading-none text-[#f8fafc]">BACH v1.0</p>
-        ) : (
-          <p className="sidebar-version-label text-center text-xs font-black leading-none text-[#f8fafc]">v1.0</p>
-        )}
+      <div className={`mt-auto hidden shrink-0 pt-2 lg:flex ${collapsed ? 'justify-center px-0 pb-0.5' : 'justify-end px-2 pb-1'}`}>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
+          title={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
+          aria-label={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
       </div>
     </aside>
   )

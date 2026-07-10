@@ -125,7 +125,7 @@ export default function ProductFilesUpload({
               >
                 <Icon className={`w-6 h-6 ${color} opacity-60 group-hover:opacity-100 transition-opacity`} />
                 <span className="text-xs font-medium text-gray-400 group-hover:text-gray-300">{label}</span>
-                <span className="text-[10px] text-gray-600">Yükle</span>
+                <span className="text-[12px] text-gray-600">Yükle</span>
               </button>
 
               {typeFiles.length > 0 && (
@@ -137,8 +137,8 @@ export default function ProductFilesUpload({
                     >
                       <Icon className={`w-3 h-3 shrink-0 ${color}`} />
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] text-gray-300 truncate" title={file.name}>{file.name}</p>
-                        <p className="text-[9px] text-gray-600">{formatSize(file.size)}</p>
+                        <p className="text-[12px] text-gray-300 truncate" title={file.name}>{file.name}</p>
+                        <p className="text-[11px] text-gray-600">{formatSize(file.size)}</p>
                       </div>
                       <button
                         type="button"
@@ -158,7 +158,7 @@ export default function ProductFilesUpload({
                       {['png', 'jpg'].includes(file.type) && file.url && (
                         <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 hidden w-56 rounded-xl border border-dark-500/70 bg-dark-900 p-2 shadow-2xl group-hover/file:block">
                           <img src={file.url} alt={file.name} className="max-h-56 w-full rounded-lg object-contain" />
-                          <p className="mt-1 truncate text-[10px] text-gray-500">{file.name}</p>
+                          <p className="mt-1 truncate text-[12px] text-gray-500">{file.name}</p>
                         </div>
                       )}
                     </div>
@@ -174,20 +174,20 @@ export default function ProductFilesUpload({
         <div className="mt-4 rounded-xl border border-orange-500/20 bg-orange-500/10 p-3">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-semibold text-orange-200">Son 1 yılda silinen dosyalar</p>
-            <span className="text-[10px] text-orange-200/70">Geri getirilebilir</span>
+            <span className="text-[12px] text-orange-200/70">Geri getirilebilir</span>
           </div>
           <div className="space-y-1">
             {recentlyDeletedFiles.map((file) => (
               <div key={file.id} className="flex items-center gap-2 rounded-lg bg-dark-800/60 px-2 py-1.5">
                 <FileText className="h-3 w-3 shrink-0 text-orange-300" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[10px] text-gray-300" title={file.name}>{file.name}</p>
-                  <p className="text-[9px] text-gray-600">{formatSize(file.size)}</p>
+                  <p className="truncate text-[12px] text-gray-300" title={file.name}>{file.name}</p>
+                  <p className="text-[11px] text-gray-600">{formatSize(file.size)}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => restoreFile(file)}
-                  className="rounded-lg border border-orange-400/30 px-2 py-1 text-[10px] font-semibold text-orange-200 hover:bg-orange-500/10"
+                  className="rounded-lg border border-orange-400/30 px-2 py-1 text-[12px] font-semibold text-orange-200 hover:bg-orange-500/10"
                 >
                   Geri Getir
                 </button>
@@ -198,7 +198,7 @@ export default function ProductFilesUpload({
       )}
 
       {activeFiles.length > 0 && (
-        <p className="text-[10px] text-gray-600 mt-3 pt-3 border-t border-dark-500/30">
+        <p className="text-[12px] text-gray-600 mt-3 pt-3 border-t border-dark-500/30">
           Toplam {activeFiles.length} dosya yüklendi
         </p>
       )}

@@ -2,7 +2,9 @@ import {
   calculateAccountBalance,
   getTreasuryAccounts,
   getTreasuryMovements,
+  isChequeTreasuryAccount,
 } from './treasuryStore'
+import { SUPPLIER_TYPE_LABEL } from './customerMeta'
 
 function parseMovementDate(value) {
   const raw = String(value || '')
@@ -91,6 +93,201 @@ export function collectAllChequeRows() {
     })
 
   return rows.sort((a, b) => String(b.chequeDueDate).localeCompare(String(a.chequeDueDate)))
+}
+
+function isCustomerChequeEntry(entry = {}) {
+  const partyType = String(entry.partyType || '').trim()
+  if (partyType === 'Tedarikçi' || partyType === SUPPLIER_TYPE_LABEL) return false
+  const amount = Number(entry.amount) || 0
+  const direction = entry.direction || (amount < 0 ? 'out' : 'in')
+  return direction !== 'out'
+}
+
+function isChequeInPortfolio(entry = {}) {
+  return !entry.collected && !entry.paid
+}
+
+function normalizeChequeAmount(entry = {}) {
+  return Math.abs(Number(entry.amount) || 0)
+}
+
+function isSenetInstrument(entry = {}) {
+  const instrument = String(entry.instrumentType || entry.instrument || '').trim()
+  return instrument === 'Senet'
+}
+
+function isChequeInstrument(entry = {}) {
+  return !isSenetInstrument(entry)
+}
+
+export function getCustomerPromissoryNotePortfolioRows(accounts = getTreasuryAccounts()) {
+  const rows = []
+
+  accounts
+    .filter(isChequeTreasuryAccount)
+    .forEach((account) => {
+      const entries = Array.isArray(account.chequeEntries) ? account.chequeEntries : []
+      const hasBase = Boolean(
+        account.chequeNo
+        || account.chequeBank
+        || account.chequeBranch
+        || account.chequeDueDate
+        || account.chequeOwner
+        || Number(account.openingBalance),
+      )
+
+      if (
+        hasBase
+        && isSenetInstrument(account)
+        && isChequeInPortfolio({ collected: account.chequeCollected, paid: account.chequePaid })
+      ) {
+        const amount = normalizeChequeAmount({
+          amount: Number(account.chequeBaseAmount ?? account.openingBalance) || 0,
+        })
+        if (amount > 0) {
+          rows.push({
+            id: `${account.id}-base`,
+            accountId: account.id,
+            accountName: account.name,
+            partyName: account.chequeOwner || '',
+            amount,
+          })
+        }
+      }
+
+      entries.forEach((entry) => {
+        if (!isCustomerChequeEntry(entry) || !isSenetInstrument(entry) || !isChequeInPortfolio(entry)) return
+        const amount = normalizeChequeAmount(entry)
+        if (amount <= 0) return
+        rows.push({
+          id: entry.id || `${account.id}-${entry.chequeNo}`,
+          accountId: account.id,
+          accountName: account.name,
+          partyName: entry.partyName || entry.chequeOwner || '',
+          amount,
+        })
+      })
+    })
+
+  return rows
+}
+
+export function getCustomerChequePortfolioRows(accounts = getTreasuryAccounts()) {
+  const rows = []
+
+  accounts
+    .filter(isChequeTreasuryAccount)
+    .forEach((account) => {
+      const entries = Array.isArray(account.chequeEntries) ? account.chequeEntries : []
+      const hasBase = Boolean(
+        account.chequeNo
+        || account.chequeBank
+        || account.chequeBranch
+        || account.chequeDueDate
+        || account.chequeOwner
+        || Number(account.openingBalance),
+      )
+
+      if (
+        hasBase
+        && isChequeInstrument(account)
+        && isChequeInPortfolio({ collected: account.chequeCollected, paid: account.chequePaid })
+      ) {
+        const amount = normalizeChequeAmount({
+          amount: Number(account.chequeBaseAmount ?? account.openingBalance) || 0,
+        })
+        if (amount > 0) {
+          rows.push({
+            id: `${account.id}-base`,
+            accountId: account.id,
+            accountName: account.name,
+            partyName: account.chequeOwner || '',
+            amount,
+          })
+        }
+      }
+
+      entries.forEach((entry) => {
+        if (!isCustomerChequeEntry(entry) || !isChequeInstrument(entry) || !isChequeInPortfolio(entry)) return
+        const amount = normalizeChequeAmount(entry)
+        if (amount <= 0) return
+        rows.push({
+          id: entry.id || `${account.id}-${entry.chequeNo}`,
+          accountId: account.id,
+          accountName: account.name,
+          partyName: entry.partyName || entry.chequeOwner || '',
+          amount,
+        })
+      })
+    })
+
+  return rows
+}
+
+export function getCustomerChequePortfolioTotal(accounts = getTreasuryAccounts()) {
+  return getCustomerChequePortfolioRows(accounts).reduce((sum, row) => sum + row.amount, 0)
+}
+
+export function getCustomerPromissoryNotePortfolioTotal(accounts = getTreasuryAccounts()) {
+  return getCustomerPromissoryNotePortfolioRows(accounts).reduce((sum, row) => sum + row.amount, 0)
+}
+
+function isIncomingChequeEntry(entry = {}) {
+  const amount = Number(entry.amount) || 0
+  const direction = entry.direction || (amount < 0 ? 'out' : 'in')
+  return direction !== 'out'
+}
+
+export function getAllChequePortfolioRows(accounts = getTreasuryAccounts()) {
+  const rows = []
+
+  accounts
+    .filter(isChequeTreasuryAccount)
+    .forEach((account) => {
+      const entries = Array.isArray(account.chequeEntries) ? account.chequeEntries : []
+      const hasBase = Boolean(
+        account.chequeNo
+        || account.chequeBank
+        || account.chequeBranch
+        || account.chequeDueDate
+        || account.chequeOwner
+        || Number(account.openingBalance),
+      )
+
+      if (
+        hasBase
+        && isChequeInstrument(account)
+        && isChequeInPortfolio({ collected: account.chequeCollected, paid: account.chequePaid })
+      ) {
+        const amount = normalizeChequeAmount({
+          amount: Number(account.chequeBaseAmount ?? account.openingBalance) || 0,
+        })
+        if (amount > 0) {
+          rows.push({
+            id: `${account.id}-base`,
+            accountId: account.id,
+            amount,
+          })
+        }
+      }
+
+      entries.forEach((entry) => {
+        if (!isIncomingChequeEntry(entry) || !isChequeInstrument(entry) || !isChequeInPortfolio(entry)) return
+        const amount = normalizeChequeAmount(entry)
+        if (amount <= 0) return
+        rows.push({
+          id: entry.id || `${account.id}-${entry.chequeNo}`,
+          accountId: account.id,
+          amount,
+        })
+      })
+    })
+
+  return rows
+}
+
+export function getAllChequePortfolioTotal(accounts = getTreasuryAccounts()) {
+  return getAllChequePortfolioRows(accounts).reduce((sum, row) => sum + row.amount, 0)
 }
 
 export function getCashFlowTimeline() {

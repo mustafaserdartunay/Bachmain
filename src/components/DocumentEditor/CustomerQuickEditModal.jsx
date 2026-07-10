@@ -12,7 +12,7 @@ import {
 import EditableDropdownPill from '../EditableDropdownPill'
 import { BTN_PRIMARY } from '../../utils/buttonStyles'
 
-const FIELD_LABEL = 'mb-1.5 block text-[10px] font-black uppercase tracking-wider text-gray-500'
+const FIELD_LABEL = 'mb-1.5 block text-[12px] font-black uppercase tracking-wider text-gray-500'
 const PILL_CLASS =
   'flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-dark-500/50 bg-dark-700 px-3 text-xs font-bold transition-colors hover:bg-dark-700/80'
 

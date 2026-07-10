@@ -25,7 +25,7 @@ export default function WhatsAppWidget() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-gray-300">{msg.sender}</p>
-                <span className="text-[10px] text-gray-500">{msg.date}</span>
+                <span className="text-[12px] text-gray-500">{msg.date}</span>
               </div>
               <p className="text-xs text-gray-500 truncate mt-0.5">{msg.message}</p>
             </div>

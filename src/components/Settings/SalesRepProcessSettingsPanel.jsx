@@ -105,7 +105,7 @@ export default function SalesRepProcessSettingsPanel() {
         emptyMessage="Henüz görev aşaması eklenmedi."
       />
 
-      <p className="text-[11px] text-gray-500">
+      <p className="text-[13px] text-gray-500">
         Varsayılan prim: %{DEFAULT_SALES_REP_SETTINGS.baseCommissionRate} · Ay birincisi: %{DEFAULT_SALES_REP_SETTINGS.winnerCommissionRate}
       </p>
     </section>

@@ -48,7 +48,29 @@ Header'daki mikrofon simgesine tıklayın. Konuşun veya yazın; asistan müşte
 
 ## Online Yayın (Production)
 
-Statik hosting yerine Node sunucusu kullanın; API anahtarı tarayıcıya gönderilmez.
+### Vercel + bachmain.com (önerilen)
+
+1. Projeyi GitHub’a push edin.
+2. [Vercel](https://vercel.com) → Import Project → GitHub repo.
+3. Environment Variables ekleyin:
+   - `OPENAI_API_KEY` = `sk-...`
+   - `OPENAI_MODEL` = `gpt-4o-mini` (opsiyonel)
+4. Deploy sonrası Domains → `bachmain.com` ve `www.bachmain.com` ekleyin.
+5. Google Workspace / domain DNS’te Vercel’in verdiği kayıtları ekleyin:
+   - `A` → `76.76.21.21` (apex)
+   - veya Vercel’in gösterdiği `CNAME` → `cname.vercel-dns.com`
+
+CLI ile:
+
+```bash
+npx vercel login
+npx vercel --prod
+npx vercel domains add bachmain.com
+```
+
+SPA rotaları (`/musteriler` vb.) `vercel.json` rewrite ile çalışır. AI API uçları `/api/voice/*` ve `/api/omni/*` serverless fonksiyonlardır.
+
+### Node sunucusu (VPS / Railway / Render)
 
 ```bash
 npm run build
@@ -62,8 +84,6 @@ Varsayılan port: `4173`. Ortam değişkenleri:
 | `OPENAI_API_KEY` | OpenAI API anahtarı (zorunlu) |
 | `OPENAI_MODEL` | Model adı (varsayılan: gpt-4o-mini) |
 | `PORT` | Sunucu portu (varsayılan: 4173) |
-
-Railway, Render, VPS veya benzeri Node destekleyen platformlarda `npm run build && npm start` komutu ile çalıştırın.
 
 ## Teknolojiler
 

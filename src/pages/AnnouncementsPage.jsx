@@ -53,10 +53,10 @@ export default function AnnouncementsPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-sm font-black uppercase tracking-wide text-white">{item.title}</h2>
-                  <span className={`rounded-md px-2 py-0.5 text-[10px] font-black uppercase ${item.badgeClass}`}>{item.badge}</span>
+                  <span className={`rounded-md px-2 py-0.5 text-[12px] font-black uppercase ${item.badgeClass}`}>{item.badge}</span>
                 </div>
                 <p className="mt-2 text-xs font-semibold leading-5 text-gray-400">{item.detail}</p>
-                <p className="mt-3 flex items-center gap-1 text-[11px] font-bold text-gray-500">
+                <p className="mt-3 flex items-center gap-1 text-[13px] font-bold text-gray-500">
                   <Megaphone className="h-3 w-3" />
                   {item.date}
                 </p>

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import ModernDashboard from '../components/Dashboard/ModernDashboard'
 import { buildFinanceMetricCards } from '../components/Dashboard/StatusAnalysisBoard'
+import { DASHBOARD_FINANCE_CARDS_EVENT } from '../utils/dashboardFinanceCards'
 import { formatCurrency } from '../utils/dashboardAlerts'
 import { loadOrders } from '../utils/ordersStore'
 import { documentTotals } from '../utils/documentTotals'
@@ -34,6 +35,12 @@ import { loadRawNoteProcessTemplates, NOTE_PROCESS_TEMPLATES_EVENT } from '../ut
 import { loadDepoItems } from '../utils/depoStore'
 import { getTreasuryMovements } from '../utils/treasuryStore'
 import { calcInclPrice } from '../utils/productPricing'
+import {
+  buildTaxDashboardSummary,
+  readTaxVatSettings,
+  splitGrossAmount,
+  TAX_VAT_SETTINGS_EVENT,
+} from '../utils/taxVatSettingsStore'
 
 const processToneMap = {
   quote: {
@@ -76,6 +83,15 @@ const processToneMap = {
     text: 'text-emerald-300',
     bar: 'bg-emerald-400',
   },
+}
+
+function readIncomingEInvoices() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('erlenbox-incoming-e-invoices') || '[]')
+    return Array.isArray(saved) ? saved : []
+  } catch {
+    return []
+  }
 }
 
 function parseDateIso(value) {
@@ -183,13 +199,14 @@ function buildIssuedInvoiceAnalytics(orders, depoItems) {
     })
 
   const rows = [...treasuryInvoices, ...orderInvoices, ...shoppingInvoices, ...depoInvoices]
-    .filter((row) => Number(row.vat) > 0)
+    .filter((row) => Number(row.total) > 0)
   return { rows, ...summarizeRows(rows) }
 }
 
 function buildSupplierPurchaseAnalytics() {
+  const settings = readTaxVatSettings()
   const products = getCatalogProducts()
-  const rows = products
+  const productRows = products
     .filter((product) => Number(product.initialStock) > 0 || Number(product.purchasePriceExcl) > 0)
     .map((product) => {
       const quantity = Number(product.initialStock) || 0
@@ -212,7 +229,27 @@ function buildSupplierPurchaseAnalytics() {
         lines: [{ product: product.name, quantity, unitPrice: unitNet, vatRate: product.vatRate }],
       }
     })
-    .filter((row) => Number(row.vat) > 0)
+    .filter((row) => Number(row.total) > 0)
+
+  const incomingRows = readIncomingEInvoices()
+    .filter((invoice) => isCurrentMonth(invoice.date))
+    .map((invoice) => {
+      const amounts = splitGrossAmount(invoice.amount, settings.defaultVatRate)
+      return {
+        id: invoice.id,
+        docNo: invoice.invoiceNo || invoice.id,
+        party: invoice.supplier || 'Tedarikçi',
+        source: 'Gelen E-Fatura',
+        date: invoice.date,
+        net: amounts.net,
+        vat: amounts.vat,
+        total: amounts.total,
+        lines: [],
+      }
+    })
+    .filter((row) => Number(row.total) > 0)
+
+  const rows = [...productRows, ...incomingRows]
   return { rows, ...summarizeRows(rows) }
 }
 
@@ -225,7 +262,7 @@ function MiniTaxChart({ net, vat }) {
         <div className="bg-blue-500" style={{ width: `${netPct}%` }} />
         <div className="bg-orange-500" style={{ width: `${100 - netPct}%` }} />
       </div>
-      <div className="mt-1 flex justify-between text-[9px] font-black text-gray-500">
+      <div className="mt-1 flex justify-between text-[11px] font-black text-gray-500">
         <span>KDV Hariç %{netPct}</span>
         <span>KDV %{100 - netPct}</span>
       </div>
@@ -243,7 +280,7 @@ function TaxAnalysisCard({ title, description, icon: Icon, data, tone, onOpen })
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-xs font-black uppercase tracking-wide text-blue-300">{title}</h3>
-          <p className="mt-0.5 line-clamp-1 text-[10px] font-semibold text-gray-500">{description}</p>
+          <p className="mt-0.5 line-clamp-1 text-[12px] font-semibold text-gray-500">{description}</p>
         </div>
         <span className={`flex h-8 w-8 items-center justify-center rounded-lg border border-dark-500/50 bg-dark-700/60 ${tone}`}>
           <Icon className="h-4 w-4" />
@@ -251,20 +288,20 @@ function TaxAnalysisCard({ title, description, icon: Icon, data, tone, onOpen })
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2">
         <div className="rounded-xl border border-dark-500/45 bg-dark-700/35 p-2">
-          <p className="text-[9px] font-black uppercase tracking-wide text-gray-500">KDV Hariç</p>
+          <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">KDV Hariç</p>
           <p className="mt-0.5 text-xs font-black text-white">{formatCurrency(data.net)}</p>
         </div>
         <div className="rounded-xl border border-orange-500/20 bg-orange-500/10 p-2">
-          <p className="text-[9px] font-black uppercase tracking-wide text-orange-300">KDV</p>
+          <p className="text-[11px] font-black uppercase tracking-wide text-orange-300">KDV</p>
           <p className="mt-0.5 text-xs font-black text-orange-300">{formatCurrency(data.vat)}</p>
         </div>
         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2">
-          <p className="text-[9px] font-black uppercase tracking-wide text-emerald-300">KDV Dahil</p>
+          <p className="text-[11px] font-black uppercase tracking-wide text-emerald-300">KDV Dahil</p>
           <p className="mt-0.5 text-xs font-black text-emerald-300">{formatCurrency(data.total)}</p>
         </div>
       </div>
       <MiniTaxChart net={data.net} vat={data.vat} />
-      <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-gray-500">{data.rows.length} detay kaydı görüntüle</p>
+      <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-gray-500">{data.rows.length} detay kaydı görüntüle</p>
     </button>
   )
 }
@@ -285,15 +322,15 @@ function TaxDetailModal({ title, data, onClose }) {
         </div>
         <div className="grid grid-cols-3 gap-3 border-b border-dark-500/50 p-5">
           <div className="rounded-2xl border border-dark-500/45 bg-dark-800/60 p-4">
-            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">KDV Hariç</p>
+            <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">KDV Hariç</p>
             <p className="mt-1 text-lg font-black text-white">{formatCurrency(data.net)}</p>
           </div>
           <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 p-4">
-            <p className="text-[10px] font-black uppercase tracking-wide text-orange-300">KDV</p>
+            <p className="text-[12px] font-black uppercase tracking-wide text-orange-300">KDV</p>
             <p className="mt-1 text-lg font-black text-orange-300">{formatCurrency(data.vat)}</p>
           </div>
           <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-            <p className="text-[10px] font-black uppercase tracking-wide text-emerald-300">KDV Dahil</p>
+            <p className="text-[12px] font-black uppercase tracking-wide text-emerald-300">KDV Dahil</p>
             <p className="mt-1 text-lg font-black text-emerald-300">{formatCurrency(data.total)}</p>
           </div>
         </div>
@@ -308,7 +345,7 @@ function TaxDetailModal({ title, data, onClose }) {
                 <article key={`${row.source}-${row.id}`} className="rounded-2xl border border-dark-500/45 bg-dark-800/55 p-4">
                   <div className="grid gap-3 lg:grid-cols-[150px_minmax(0,1fr)_120px_120px_120px] lg:items-center">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Fatura / Belge</p>
+                      <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Fatura / Belge</p>
                       <p className="mt-1 text-sm font-black text-blue-300">{row.docNo}</p>
                     </div>
                     <div className="min-w-0">
@@ -322,7 +359,7 @@ function TaxDetailModal({ title, data, onClose }) {
                   {row.lines?.length > 0 && (
                     <div className="mt-3 space-y-1 border-t border-dark-500/35 pt-3">
                       {row.lines.slice(0, 5).map((line, index) => (
-                        <div key={`${row.id}-line-${index}`} className="flex justify-between gap-3 text-[11px] font-semibold text-gray-500">
+                        <div key={`${row.id}-line-${index}`} className="flex justify-between gap-3 text-[13px] font-semibold text-gray-500">
                           <span className="truncate">{line.product || line.name || line.description || 'Kalem'} · {Number(line.quantity) || 0} adet · KDV %{Number(line.vatRate ?? line.vat) || 0}</span>
                           <span className="shrink-0 text-gray-300">{formatCurrency((Number(line.quantity) || 0) * (Number(line.unitPrice || line.price) || 0))}</span>
                         </div>
@@ -359,7 +396,7 @@ function ProcessMetricCard({
     <article className={`rounded-2xl border ${config.border} bg-dark-800/75 p-4 shadow-card`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">{config.badge}</p>
+          <p className="truncate text-[12px] font-black uppercase tracking-[0.18em] text-gray-400">{config.badge}</p>
           <h2 className="mt-1 truncate text-sm font-black text-gray-100">{title}</h2>
         </div>
         <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${config.iconBox}`}>
@@ -369,11 +406,11 @@ function ProcessMetricCard({
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Kayıt</p>
+          <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Kayıt</p>
           <p className="mt-1 text-2xl font-black text-gray-100">{value}</p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{amountTitle}</p>
+          <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">{amountTitle}</p>
           <p className={`mt-1 text-sm font-black ${config.text}`}>{amountLabel}</p>
         </div>
       </div>
@@ -382,7 +419,7 @@ function ProcessMetricCard({
         <div className="flex h-2.5 overflow-hidden rounded-full bg-dark-700/55">
           <div className={config.bar} style={{ width: `${filledPct}%` }} />
         </div>
-        <div className="mt-2 flex justify-between text-[10px] font-black text-gray-500">
+        <div className="mt-2 flex justify-between text-[12px] font-black text-gray-500">
           <span>{detailLabel}</span>
           <span>{stages.length} başlık</span>
         </div>
@@ -427,7 +464,7 @@ function CrmOverviewCard() {
           return (
             <article key={tile.label} className="rounded-2xl border border-dark-500/45 bg-dark-700/40 p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">{tile.label}</p>
+                <p className="text-[12px] font-black uppercase tracking-[0.18em] text-gray-400">{tile.label}</p>
                 <Icon className={`h-4 w-4 ${tile.tone}`} />
               </div>
               <p className={`mt-3 text-3xl font-black ${tile.tone}`}>{tile.value}</p>
@@ -593,7 +630,7 @@ function DashboardNotesPanel({ entries, onSubmit, onDelete, onReorder, onToggleC
             <form onSubmit={submitDraft} className="rounded-xl border border-dark-500/45 bg-dark-700/35 p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="mb-1 text-[10px] font-black text-blue-300/80">{formatNoteTimestamp(draft)}</p>
+                  <p className="mb-1 text-[12px] font-black text-blue-300/80">{formatNoteTimestamp(draft)}</p>
                   <textarea
                     autoFocus
                     value={draft.content}
@@ -628,7 +665,7 @@ function DashboardNotesPanel({ entries, onSubmit, onDelete, onReorder, onToggleC
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     {formatNoteTimestamp(entry.record) && (
-                      <p className="mb-1 text-[10px] font-black text-blue-300/80">{formatNoteTimestamp(entry.record)}</p>
+                      <p className="mb-1 text-[12px] font-black text-blue-300/80">{formatNoteTimestamp(entry.record)}</p>
                     )}
                     <p className={`line-clamp-2 text-sm font-black text-white decoration-2 decoration-emerald-300/80 ${isCompleted ? 'text-gray-400 line-through' : ''}`}>
                       {entry.record.content || entry.record.title}
@@ -650,16 +687,16 @@ function DashboardNotesPanel({ entries, onSubmit, onDelete, onReorder, onToggleC
                       <button type="button" onClick={() => setPendingDeleteId(entry.id)} className="rounded-lg p-1 text-red-300 hover:bg-red-500/10"><Trash2 className="h-3.5 w-3.5" /></button>
                       {pendingDeleteId === entry.id && (
                         <div className="absolute right-0 top-7 z-20 w-36 rounded-xl border border-red-500/25 bg-dark-800 p-2 shadow-card">
-                          <p className="text-[10px] font-bold text-gray-300">Not silinsin mi?</p>
+                          <p className="text-[12px] font-bold text-gray-300">Not silinsin mi?</p>
                           <div className="mt-2 flex gap-1">
-                            <button type="button" onClick={() => setPendingDeleteId(null)} className="flex-1 rounded-lg border border-dark-500/50 px-2 py-1 text-[10px] font-black text-gray-400">Hayır</button>
+                            <button type="button" onClick={() => setPendingDeleteId(null)} className="flex-1 rounded-lg border border-dark-500/50 px-2 py-1 text-[12px] font-black text-gray-400">Hayır</button>
                             <button
                               type="button"
                               onClick={() => {
                                 onDelete(entry)
                                 setPendingDeleteId(null)
                               }}
-                              className="flex-1 rounded-lg bg-red-500 px-2 py-1 text-[10px] font-black text-white"
+                              className="flex-1 rounded-lg bg-red-500 px-2 py-1 text-[12px] font-black text-white"
                             >
                               Evet
                             </button>
@@ -680,10 +717,38 @@ function DashboardNotesPanel({ entries, onSubmit, onDelete, onReorder, onToggleC
 
 export default function DashboardPage() {
   const [taxDetail, setTaxDetail] = useState(null)
-  const financeCards = buildFinanceMetricCards()
-  const issuedInvoiceAnalytics = useMemo(() => buildIssuedInvoiceAnalytics(loadOrders(), loadDepoItems()), [])
-  const supplierPurchaseAnalytics = useMemo(() => buildSupplierPurchaseAnalytics(), [])
-  const estimatedVatDue = Math.max(0, issuedInvoiceAnalytics.vat - supplierPurchaseAnalytics.vat)
+  const [financeTick, setFinanceTick] = useState(0)
+  const [taxSettingsTick, setTaxSettingsTick] = useState(0)
+  const financeCards = useMemo(() => buildFinanceMetricCards(), [financeTick])
+  const issuedInvoiceAnalytics = useMemo(() => buildIssuedInvoiceAnalytics(loadOrders(), loadDepoItems()), [financeTick, taxSettingsTick])
+  const supplierPurchaseAnalytics = useMemo(() => buildSupplierPurchaseAnalytics(), [financeTick, taxSettingsTick])
+  const taxSettings = useMemo(() => readTaxVatSettings(), [taxSettingsTick])
+  const taxSummary = useMemo(
+    () => buildTaxDashboardSummary(issuedInvoiceAnalytics, supplierPurchaseAnalytics, taxSettings),
+    [issuedInvoiceAnalytics, supplierPurchaseAnalytics, taxSettings],
+  )
+
+  useEffect(() => {
+    function refreshFinanceCards() {
+      setFinanceTick((current) => current + 1)
+    }
+    function refreshTaxSettings() {
+      setTaxSettingsTick((current) => current + 1)
+    }
+    const events = [
+      DASHBOARD_FINANCE_CARDS_EVENT,
+      'erlenbox:treasury-updated',
+      'bach:customers-updated',
+      'bach:customer-meta-updated',
+      TAX_VAT_SETTINGS_EVENT,
+    ]
+    events.forEach((event) => window.addEventListener(event, refreshFinanceCards))
+    window.addEventListener(TAX_VAT_SETTINGS_EVENT, refreshTaxSettings)
+    return () => {
+      events.forEach((event) => window.removeEventListener(event, refreshFinanceCards))
+      window.removeEventListener(TAX_VAT_SETTINGS_EVENT, refreshTaxSettings)
+    }
+  }, [])
 
   return (
     <>
@@ -691,7 +756,8 @@ export default function DashboardPage() {
         financeCards={financeCards}
         issuedInvoiceAnalytics={issuedInvoiceAnalytics}
         supplierPurchaseAnalytics={supplierPurchaseAnalytics}
-        estimatedVatDue={estimatedVatDue}
+        estimatedVatDue={taxSummary.payableVat}
+        estimatedIncomeTaxDue={taxSummary.incomeTax}
         onOpenIssuedTax={() => setTaxDetail({ title: 'Kesilen Faturalar Detayı', data: issuedInvoiceAnalytics })}
         onOpenSupplierTax={() => setTaxDetail({ title: 'Tedarikçi Alışları Detayı', data: supplierPurchaseAnalytics })}
       />

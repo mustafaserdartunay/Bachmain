@@ -461,7 +461,7 @@ export default function FieldSalesPage() {
       >
         <div className="space-y-4">
           <div>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Plan Türü</p>
+            <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Plan Türü</p>
             <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"
@@ -470,7 +470,7 @@ export default function FieldSalesPage() {
                   setOrderedStops([])
                   setRouteGeometry([])
                 }}
-                className={`rounded-lg border px-1.5 py-1.5 text-[9px] font-black uppercase leading-tight transition-colors ${
+                className={`rounded-lg border px-1.5 py-1.5 text-[11px] font-black uppercase leading-tight transition-colors ${
                   planKind === 'representative'
                     ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
                     : 'border-dark-500/50 text-gray-500 hover:text-white'
@@ -486,7 +486,7 @@ export default function FieldSalesPage() {
                   setOrderedStops([])
                   setRouteGeometry([])
                 }}
-                className={`rounded-lg border px-1.5 py-1.5 text-[9px] font-black uppercase leading-tight transition-colors ${
+                className={`rounded-lg border px-1.5 py-1.5 text-[11px] font-black uppercase leading-tight transition-colors ${
                   planKind === 'customer'
                     ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
                     : 'border-dark-500/50 text-gray-500 hover:text-white'
@@ -502,7 +502,7 @@ export default function FieldSalesPage() {
                   setOrderedStops([])
                   setRouteGeometry([])
                 }}
-                className={`rounded-lg border px-1.5 py-1.5 text-[9px] font-black uppercase leading-tight transition-colors ${
+                className={`rounded-lg border px-1.5 py-1.5 text-[11px] font-black uppercase leading-tight transition-colors ${
                   planKind === 'dealer'
                     ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
                     : 'border-dark-500/50 text-gray-500 hover:text-white'
@@ -517,12 +517,12 @@ export default function FieldSalesPage() {
           </div>
 
           <div>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Müşteri Kategorisi</p>
+            <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Müşteri Kategorisi</p>
             <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
                 onClick={() => handleCategoryChange('all')}
-                className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-black uppercase transition-colors ${
+                className={`rounded-lg border px-2.5 py-1.5 text-[12px] font-black uppercase transition-colors ${
                   selectedCategory === 'all'
                     ? 'border-amber-500/50 bg-amber-500/15 text-amber-300'
                     : 'border-dark-500/50 bg-dark-700/50 text-gray-500 hover:text-white'
@@ -535,7 +535,7 @@ export default function FieldSalesPage() {
                   key={option.id}
                   type="button"
                   onClick={() => handleCategoryChange(option.label)}
-                  className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-black uppercase transition-colors ${
+                  className={`rounded-lg border px-2.5 py-1.5 text-[12px] font-black uppercase transition-colors ${
                     selectedCategory === option.label
                       ? 'border-amber-500/50 bg-amber-500/15 text-amber-300'
                       : 'border-dark-500/50 bg-dark-700/50 text-gray-500 hover:text-white'
@@ -548,7 +548,7 @@ export default function FieldSalesPage() {
           </div>
 
           {isRepPlan && !reps.length && (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-[11px] font-semibold text-amber-200">
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-[13px] font-semibold text-amber-200">
               Henüz satış temsilcisi tanımlı değil.{' '}
               <Link to="/ik/personeller" className="font-black text-amber-100 underline">Personel</Link>
               {' '}veya{' '}
@@ -559,14 +559,14 @@ export default function FieldSalesPage() {
 
           {isRepPlan && (
           <div>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Satış Temsilcisi</p>
+            <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Satış Temsilcisi</p>
             <div className="flex flex-wrap gap-2">
               {reps.map((rep) => (
                 <button
                   key={rep.id}
                   type="button"
                   onClick={() => setSelectedRep(rep.label)}
-                  className={`rounded-xl border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition-colors ${
+                  className={`rounded-xl border px-3 py-1.5 text-[13px] font-black uppercase tracking-wide transition-colors ${
                     selectedRep === rep.label
                       ? 'border-blue-500/50 bg-blue-500/15 text-blue-300'
                       : 'border-dark-500/50 bg-dark-700/50 text-gray-400 hover:text-white'
@@ -581,7 +581,7 @@ export default function FieldSalesPage() {
 
           {isRepPlan && (
           <div>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Haftalık Ziyaret</p>
+            <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Haftalık Ziyaret</p>
             <div className="mb-2 flex flex-wrap gap-1.5">
               {FIELD_SALES_DAYS.map((day) => (
                 <button
@@ -591,14 +591,14 @@ export default function FieldSalesPage() {
                     setSelectedDay(day.id)
                     setViewMode('day')
                   }}
-                  className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-black uppercase transition-colors ${
+                  className={`rounded-lg border px-2.5 py-1.5 text-[12px] font-black uppercase transition-colors ${
                     selectedDay === day.id
                       ? 'border-violet-500/50 bg-violet-500/15 text-violet-300'
                       : 'border-dark-500/50 bg-dark-700/50 text-gray-500 hover:text-white'
                   }`}
                 >
                   {day.short}
-                  <span className="ml-1 text-[9px] text-gray-500">
+                  <span className="ml-1 text-[11px] text-gray-500">
                     ({(schedule[day.id] || []).length})
                   </span>
                 </button>
@@ -608,7 +608,7 @@ export default function FieldSalesPage() {
               <button
                 type="button"
                 onClick={() => setViewMode('day')}
-                className={`flex-1 rounded-lg border px-2 py-1.5 text-[10px] font-black uppercase ${
+                className={`flex-1 rounded-lg border px-2 py-1.5 text-[12px] font-black uppercase ${
                   viewMode === 'day'
                     ? 'border-violet-500/40 bg-violet-500/10 text-violet-300'
                     : 'border-dark-500/50 text-gray-500'
@@ -619,7 +619,7 @@ export default function FieldSalesPage() {
               <button
                 type="button"
                 onClick={() => setViewMode('all')}
-                className={`flex-1 rounded-lg border px-2 py-1.5 text-[10px] font-black uppercase ${
+                className={`flex-1 rounded-lg border px-2 py-1.5 text-[12px] font-black uppercase ${
                   viewMode === 'all'
                     ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
                     : 'border-dark-500/50 text-gray-500'
@@ -632,14 +632,14 @@ export default function FieldSalesPage() {
           )}
 
           {planKind === 'dealer' && (
-            <p className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-[11px] font-semibold text-emerald-200">
+            <p className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-[13px] font-semibold text-emerald-200">
               {mapCustomers.length} bayi cari haritada gösteriliyor
               {selectedCategory !== 'all' ? ` (${selectedCategory})` : ''}.
             </p>
           )}
 
           {planKind === 'customer' && (
-            <p className="rounded-xl border border-blue-500/25 bg-blue-500/10 px-3 py-2 text-[11px] font-semibold text-blue-200">
+            <p className="rounded-xl border border-blue-500/25 bg-blue-500/10 px-3 py-2 text-[13px] font-semibold text-blue-200">
               {mapCustomers.length} müşteri cari haritada gösteriliyor
               {selectedCategory !== 'all' ? ` (${selectedCategory})` : ''}.
             </p>
@@ -673,11 +673,11 @@ export default function FieldSalesPage() {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-black text-white">{branchName}</p>
-                    <p className="truncate text-[10px] text-gray-400">{companyName}</p>
+                    <p className="truncate text-[12px] text-gray-400">{companyName}</p>
                     {category && (
-                      <p className="truncate text-[9px] font-bold uppercase text-amber-400/90">{category}</p>
+                      <p className="truncate text-[11px] font-bold uppercase text-amber-400/90">{category}</p>
                     )}
-                    <p className="truncate text-[10px] text-gray-500">{customer.city}</p>
+                    <p className="truncate text-[12px] text-gray-500">{customer.city}</p>
                   </div>
                   <button
                     type="button"
@@ -771,7 +771,7 @@ export default function FieldSalesPage() {
                     {task.title}
                   </p>
                   {task.dueDate && (
-                    <p className="text-[10px] text-gray-500">{task.dueDate}</p>
+                    <p className="text-[12px] text-gray-500">{task.dueDate}</p>
                   )}
                 </div>
                 <button
@@ -787,7 +787,7 @@ export default function FieldSalesPage() {
               </div>
             ))}
             {!tasks.length && (
-              <p className="text-center text-[11px] text-gray-500">Henüz görev yok.</p>
+              <p className="text-center text-[13px] text-gray-500">Henüz görev yok.</p>
             )}
           </div>
         </AppPagePanel>
@@ -804,7 +804,7 @@ export default function FieldSalesPage() {
               <button
                 type="button"
                 onClick={handleKonumumClick}
-                className={`inline-flex h-9 items-center gap-1.5 px-3 text-[11px] font-black uppercase transition-colors ${
+                className={`inline-flex h-9 items-center gap-1.5 px-3 text-[13px] font-black uppercase transition-colors ${
                   locationMode === 'company'
                     ? 'bg-emerald-500/15 text-emerald-300'
                     : 'bg-dark-700/50 text-gray-300 hover:bg-dark-600'
@@ -831,7 +831,7 @@ export default function FieldSalesPage() {
             </div>
 
             {locationMenuOpen && (
-              <div className="absolute right-0 top-11 z-50 w-64 overflow-hidden rounded-xl border border-dark-500/50 bg-dark-800 shadow-2xl shadow-black/35">
+              <div className="app-dropdown-portal glass-inset absolute right-0 top-11 w-64 overflow-hidden rounded-[16px]">
                 <button
                   type="button"
                   onClick={() => {
@@ -845,7 +845,7 @@ export default function FieldSalesPage() {
                   <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
                   <div className="min-w-0">
                     <p className="text-xs font-black text-white">Firma adresi</p>
-                    <p className="mt-0.5 line-clamp-2 text-[10px] font-semibold text-gray-500">
+                    <p className="mt-0.5 line-clamp-2 text-[12px] font-semibold text-gray-500">
                       {companySettings.address || 'Yönetici ayarlarından adres girin'}
                     </p>
                   </div>
@@ -860,7 +860,7 @@ export default function FieldSalesPage() {
                   <Crosshair className="mt-0.5 h-4 w-4 shrink-0 text-blue-300" />
                   <div>
                     <p className="text-xs font-black text-white">Canlı konum</p>
-                    <p className="mt-0.5 text-[10px] font-semibold text-gray-500">
+                    <p className="mt-0.5 text-[12px] font-semibold text-gray-500">
                       Anlık GPS konumunuz takip edilir
                     </p>
                   </div>
@@ -871,7 +871,7 @@ export default function FieldSalesPage() {
         )}
       >
         {startPoint && (
-          <div className="mb-3 rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2 text-[11px] font-semibold text-gray-400">
+          <div className="mb-3 rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2 text-[13px] font-semibold text-gray-400">
             <span className="font-black uppercase text-gray-300">
               {locationMode === 'live' ? 'Canlı konum aktif' : 'Başlangıç: Firma adresi'}
             </span>
@@ -882,7 +882,7 @@ export default function FieldSalesPage() {
         )}
 
         {routeStats.distanceKm > 0 && (
-          <div className="mb-3 flex flex-wrap gap-3 rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2 text-[11px] font-bold text-gray-300">
+          <div className="mb-3 flex flex-wrap gap-3 rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2 text-[13px] font-bold text-gray-300">
             <span>Toplam: {routeStats.distanceKm} km</span>
             {routeStats.durationMin > 0 && <span>Süre: ~{routeStats.durationMin} dk</span>}
             <span>{orderedStops.length} durak</span>
@@ -926,7 +926,7 @@ export default function FieldSalesPage() {
                 <button
                   type="button"
                   onClick={handleNextStop}
-                  className="rounded-lg bg-blue-500 px-3 py-1.5 text-[10px] font-black uppercase text-white hover:bg-blue-400"
+                  className="rounded-lg bg-blue-500 px-3 py-1.5 text-[12px] font-black uppercase text-white hover:bg-blue-400"
                 >
                   Sonraki Durak ({activeStopIndex + 2}/{orderedStops.length})
                 </button>
@@ -946,13 +946,13 @@ export default function FieldSalesPage() {
                         : 'border-dark-500/40 bg-dark-700/40 hover:bg-dark-700/70'
                     }`}
                   >
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-black text-white">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[12px] font-black text-white">
                       {index + 1}
                     </span>
                     <div className="min-w-0">
                       <p className="truncate text-xs font-black text-white">{branchName}</p>
-                      <p className="truncate text-[10px] text-gray-400">{companyName}</p>
-                      <p className="truncate text-[10px] text-gray-500">{customer.city}</p>
+                      <p className="truncate text-[12px] text-gray-400">{companyName}</p>
+                      <p className="truncate text-[12px] text-gray-500">{customer.city}</p>
                     </div>
                   </button>
                 )

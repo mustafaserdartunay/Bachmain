@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   ArrowLeft,
   Building2,
@@ -16,6 +17,13 @@ import {
 } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
+import {
+  FormSectionPanel,
+  FORM_FIELD_CELL_CLASS,
+  FORM_FIELD_LABEL_CLASS,
+  FORM_FIELD_ROW_CLASS,
+} from '../components/Common/FormSectionPanel'
+import { APP_FILTER_LABEL_CLASS } from '../utils/dashboardDesign'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
 import { getTreasuryAccounts, getTreasuryMovements, saveTreasuryMovements } from '../utils/treasuryStore'
 import { getCustomerDisplay } from '../utils/customerDisplay'
@@ -35,11 +43,12 @@ import {
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
+import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
+import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
 
 const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 
-const CREATE_PILL_CLASS =
-  'flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-dark-500/50 bg-dark-700 px-3 text-xs font-bold transition-colors hover:bg-dark-700/80'
+const CREATE_PILL_CLASS = 'glass-pill !h-10'
 
 function emptyMeta(defaultType = '') {
   return { type: defaultType, representative: '', scoring: '', category: '' }
@@ -107,6 +116,11 @@ export default function CustomerCreatePage() {
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const successTimer = useRef(null)
+  const { anchorRef: actionMenuAnchorRef, menuRef: actionMenuRef, style: actionMenuStyle } = useAnchoredPortal(actionMenuOpen, {
+    align: 'right',
+    width: 224,
+    matchWidth: false,
+  })
 
   useEffect(() => {
     setAddressRows([{ id: 0 }])
@@ -311,7 +325,7 @@ export default function CustomerCreatePage() {
         <div className="mx-auto max-w-2xl">
           <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">{pageHeading}</h1>
         </div>
-        <div className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2">
+        <div ref={actionMenuAnchorRef} className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2">
           <button
             type="button"
             onClick={() => navigate(backPath)}
@@ -330,26 +344,32 @@ export default function CustomerCreatePage() {
           >
             <ChevronDown className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`} />
           </button>
-          {actionMenuOpen && (
-            <div className="absolute right-0 top-12 z-50 w-56 rounded-2xl border border-dark-500 bg-dark-800 p-2 shadow-2xl shadow-black/30">
+          {actionMenuOpen && actionMenuStyle && createPortal(
+            <div
+              ref={actionMenuRef}
+              style={actionMenuStyle}
+              className={`${DROPDOWN_MENU_PORTAL_CLASS} w-56`}
+              onClick={(event) => event.stopPropagation()}
+            >
               <button
                 type="button"
                 onClick={saveAndContinue}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-blue-500/10 hover:text-white"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-black uppercase tracking-wide text-[var(--ink)] transition-colors hover:bg-white/45"
               >
                 <CheckCircle2 className="h-4 w-4 text-emerald-300" /> Kaydet ve Devam Et
               </button>
-            </div>
+            </div>,
+            document.body,
           )}
         </div>
       </section>
 
-      <section className="card overflow-hidden p-0">
+      <section className="card overflow-visible p-0">
         <div className="space-y-6 p-8">
-          <SectionPanel icon={UserRound} title="Müşteri Bilgileri">
-            <div className="grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-4">
-              <div>
-                <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-gray-500">Tipi</p>
+          <FormSectionPanel icon={UserRound} title="Müşteri Bilgileri" dotColor="blue">
+            <div className="grid max-w-5xl grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className={FORM_FIELD_CELL_CLASS}>
+                <p className={APP_FILTER_LABEL_CLASS}>Tipi</p>
                 <EditableDropdownPill
                   value={meta.type}
                   options={optionLists.type}
@@ -361,8 +381,8 @@ export default function CustomerCreatePage() {
                   buttonClassName={CREATE_PILL_CLASS}
                 />
               </div>
-              <div>
-                <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-gray-500">Temsilci</p>
+              <div className={FORM_FIELD_CELL_CLASS}>
+                <p className={APP_FILTER_LABEL_CLASS}>Temsilci</p>
                 <EditableDropdownPill
                   value={meta.representative}
                   options={optionLists.representative}
@@ -374,8 +394,8 @@ export default function CustomerCreatePage() {
                   buttonClassName={CREATE_PILL_CLASS}
                 />
               </div>
-              <div>
-                <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-gray-500">Puantaj</p>
+              <div className={FORM_FIELD_CELL_CLASS}>
+                <p className={APP_FILTER_LABEL_CLASS}>Puantaj</p>
                 <EditableDropdownPill
                   value={meta.scoring}
                   options={optionLists.scoring}
@@ -387,8 +407,8 @@ export default function CustomerCreatePage() {
                   buttonClassName={CREATE_PILL_CLASS}
                 />
               </div>
-              <div>
-                <p className="mb-2 flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-gray-500">
+              <div className={FORM_FIELD_CELL_CLASS}>
+                <p className={`flex items-center gap-1 ${APP_FILTER_LABEL_CLASS}`}>
                   <Tags className="h-3.5 w-3.5" /> Kategori
                 </p>
                 <EditableDropdownPill
@@ -403,19 +423,19 @@ export default function CustomerCreatePage() {
                 />
               </div>
             </div>
-          </SectionPanel>
+          </FormSectionPanel>
 
-          <SectionPanel icon={Building2} title="Ünvan Bilgileri">
-            <div className="max-w-4xl space-y-4">
+          <FormSectionPanel icon={Building2} title="Ünvan Bilgileri" dotColor="violet">
+            <div className="max-w-4xl space-y-3">
               <FieldLine icon={Building2} label="Kısa Marka Adı" name="shortBrandName" defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''} />
               <FieldLine icon={Building2} label="Firma Ünvanı" name="companyTitle" defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''} />
               <FieldLine icon={Landmark} label="Vergi Dairesi" name="taxOffice" defaultValue={editingCustomer?.taxOffice || ''} />
               <FieldLine icon={Landmark} label="Vergi Numarası" name="taxNumber" defaultValue={editingCustomer?.taxNumber || ''} />
             </div>
-          </SectionPanel>
+          </FormSectionPanel>
 
-          <SectionPanel icon={MapPin} title="Adres Bilgileri">
-            <div className="space-y-4">
+          <FormSectionPanel icon={MapPin} title="Adres Bilgileri" dotColor="emerald">
+            <div className="space-y-3">
               {addressRows.map((row, index) => (
                 <AddressLine
                   key={row.id}
@@ -433,14 +453,14 @@ export default function CustomerCreatePage() {
             <button
               type="button"
               onClick={() => setAddressRows((rows) => [...rows, { id: Date.now() }])}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+              className="btn-ghost mt-4 inline-flex items-center gap-2 !px-4 !py-2 text-[12px] font-bold"
             >
               <Plus className="h-4 w-4" /> Yeni Adres Ekle
             </button>
-          </SectionPanel>
+          </FormSectionPanel>
 
-          <SectionPanel icon={Phone} title="İletişim Bilgileri">
-            <div className="space-y-4">
+          <FormSectionPanel icon={Phone} title="İletişim Bilgileri" dotColor="blue">
+            <div className="space-y-3">
               {contactRows.map((row) => (
                 <ContactLine
                   key={row.id}
@@ -461,21 +481,21 @@ export default function CustomerCreatePage() {
             <button
               type="button"
               onClick={() => setContactRows((rows) => [...rows, { id: Date.now(), title: '' }])}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+              className="btn-ghost mt-4 inline-flex items-center gap-2 !px-4 !py-2 text-[12px] font-bold"
             >
               <Plus className="h-4 w-4" /> İletişim Ekle
             </button>
-          </SectionPanel>
+          </FormSectionPanel>
 
-          <SectionPanel icon={WalletCards} title="Finans Ayarları">
-            <div className="max-w-4xl space-y-4">
+          <FormSectionPanel icon={WalletCards} title="Finans Ayarları" dotColor="orange">
+            <div className="max-w-4xl space-y-3">
               <SelectLine icon={WalletCards} label="Fiyat Listesi" name="priceList" options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']} />
               <SelectLine icon={WalletCards} label="Döviz Kuru" name="currencyRate" options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']} />
-              <label className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-4">
-                <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-gray-500">
+              <label className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[180px_minmax(0,1fr)] items-center gap-4`}>
+                <span className={`flex items-center gap-2 ${FORM_FIELD_LABEL_CLASS}`}>
                   <WalletCards className="h-4 w-4" /> Açılış Bakiyesi:
                 </span>
-                <span className="flex items-center gap-3 text-xs font-bold text-gray-300">
+                <span className="flex items-center gap-3 text-[12px] font-semibold text-[var(--muted)]">
                   <input
                     name="hasOpeningBalance"
                     type="checkbox"
@@ -488,7 +508,7 @@ export default function CustomerCreatePage() {
               </label>
               <FieldLine icon={WalletCards} label="Açılış Tutarı" name="openingBalanceAmount" type="number" disabled={!openingEnabled} />
             </div>
-          </SectionPanel>
+          </FormSectionPanel>
 
         </div>
 
@@ -511,24 +531,10 @@ export default function CustomerCreatePage() {
   )
 }
 
-function SectionPanel({ icon: Icon, title, children }) {
-  return (
-    <section className="rounded-3xl border border-dark-500/40 p-6">
-      <div className="mb-5 flex items-center gap-3 text-[11px] font-black uppercase tracking-wider text-gray-500">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 text-blue-300">
-          <Icon className="h-4 w-4" />
-        </span>
-        {title}
-      </div>
-      {children}
-    </section>
-  )
-}
-
 function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', large = false, disabled = false }) {
   return (
-    <label className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-4">
-      <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-gray-500">
+    <label className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[180px_minmax(0,1fr)] items-center gap-4`}>
+      <span className={`flex items-center gap-2 ${FORM_FIELD_LABEL_CLASS}`}>
         <Icon className="h-4 w-4" /> {label}:
       </span>
       <input
@@ -536,7 +542,7 @@ function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', 
         type={type}
         defaultValue={defaultValue}
         disabled={disabled}
-        className={`form-input ${large ? 'py-3 text-base font-black uppercase tracking-wide' : ''} ${disabled ? 'opacity-60' : ''}`}
+        className={`form-input ${large ? 'py-3 text-base font-extrabold uppercase tracking-wide' : ''} ${disabled ? 'opacity-60' : ''}`}
       />
     </label>
   )
@@ -544,8 +550,8 @@ function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', 
 
 function CompactFieldLine({ icon: Icon, label, name, defaultValue = '' }) {
   return (
-    <label className="grid grid-cols-[54px_minmax(0,1fr)] items-center gap-2">
-      <span className="flex items-center justify-end gap-1 text-right text-[11px] font-black uppercase tracking-wider text-gray-500">
+    <label className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[54px_minmax(0,1fr)] items-center gap-2`}>
+      <span className={`flex items-center justify-end gap-1 text-right ${FORM_FIELD_LABEL_CLASS}`}>
         <Icon className="h-4 w-4" /> {label}:
       </span>
       <input name={name} defaultValue={defaultValue} className="form-input" />
@@ -555,8 +561,8 @@ function CompactFieldLine({ icon: Icon, label, name, defaultValue = '' }) {
 
 function TextareaLine({ icon: Icon, label, name, defaultValue = '' }) {
   return (
-    <label className="grid grid-cols-[150px_minmax(0,1fr)] items-start gap-4">
-      <span className="flex items-center gap-2 pt-2 text-[11px] font-black uppercase tracking-wider text-gray-500">
+    <label className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[150px_minmax(0,1fr)] items-start gap-4`}>
+      <span className={`flex items-center gap-2 pt-2 ${FORM_FIELD_LABEL_CLASS}`}>
         <Icon className="h-4 w-4" /> {label}:
       </span>
       <textarea name={name} defaultValue={defaultValue} className="form-input min-h-28 resize-none" />
@@ -584,7 +590,7 @@ function AddressLine({ id, defaultTitle = '', defaultAddress = '', defaultLocati
   const [city = '', district = ''] = String(defaultLocation).split('/').map((part) => part.trim())
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_32px] items-center gap-4 rounded-2xl border border-dark-500/35 p-4">
+    <div className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[minmax(0,1fr)_32px] items-center gap-4 p-4`}>
       <div className="space-y-4">
         <div className="grid grid-cols-[180px_minmax(0,1fr)] gap-4">
           <input name={`addressTitle-${id}`} defaultValue={defaultTitle} placeholder="Adres başlığı..." className="form-input" />
@@ -605,8 +611,8 @@ function AddressLine({ id, defaultTitle = '', defaultAddress = '', defaultLocati
 
 function SelectLine({ icon: Icon, label, name, options }) {
   return (
-    <label className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-4">
-      <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-gray-500">
+    <label className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[180px_minmax(0,1fr)] items-center gap-4`}>
+      <span className={`flex items-center gap-2 ${FORM_FIELD_LABEL_CLASS}`}>
         <Icon className="h-4 w-4" /> {label}:
       </span>
       <select name={name} defaultValue="" className="form-input">
@@ -635,7 +641,7 @@ function ContactLinkInput({ name, defaultValue = '', placeholder }) {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-[38px] w-9 shrink-0 items-center justify-center rounded-lg border border-dark-500/50 bg-dark-700/70 text-gray-400 transition-colors hover:border-blue-500/35 hover:text-blue-300"
+          className="icon-btn flex h-[38px] w-9 shrink-0 items-center justify-center !rounded-lg text-[var(--muted)]"
           title="Sayfaya git"
         >
           <ExternalLink className="h-3.5 w-3.5" />
@@ -647,14 +653,14 @@ function ContactLinkInput({ name, defaultValue = '', placeholder }) {
 
 function ContactLine({ id, defaultTitle = '', lockedTitle = false, defaultValue = '', phoneDefault = '', emailDefault = '', instagramDefault = '', deleteState, onDelete, onCancel, onApprove }) {
   return (
-    <div className="grid grid-cols-[170px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_32px] items-center gap-4">
+    <div className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[170px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_32px] items-center gap-4`}>
       {lockedTitle ? (
-        <div className="flex h-10 items-center rounded-lg border border-dark-500/50 bg-dark-700/45 px-3 text-[11px] font-black uppercase tracking-wider text-gray-500">
+        <div className="flex h-10 items-center rounded-lg bg-white/35 px-3 text-[12px] font-bold uppercase tracking-wider text-[var(--muted)]">
           {defaultTitle}
           <input type="hidden" name={`contactTitle-${id}`} value={defaultTitle} />
         </div>
       ) : (
-        <input name={`contactTitle-${id}`} defaultValue={defaultTitle} placeholder="Başlık..." className="form-input h-10 text-[11px] font-black uppercase tracking-wider text-gray-500 placeholder:text-gray-500" />
+        <input name={`contactTitle-${id}`} defaultValue={defaultTitle} placeholder="Başlık..." className="form-input h-10 text-[12px] font-bold uppercase tracking-wider text-[var(--muted)] placeholder:text-[var(--muted)]" />
       )}
       <input name={`contactName-${id}`} defaultValue={defaultValue} placeholder="İsim..." className="form-input" />
       <input name={`contactPhone-${id}`} defaultValue={phoneDefault} placeholder="Telefon..." className="form-input" />

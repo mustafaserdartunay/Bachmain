@@ -34,16 +34,37 @@ export const THEME_MODES = {
   special: { id: 'special', label: 'Özel', next: 'dark' },
 }
 
-/** Üst panel arama alanı — kontrol butonlarıyla aynı yükseklik */
-export const HEADER_SEARCH_INPUT_CLASS =
-  'header-search-input h-9 w-full rounded-lg border border-dark-500/50 bg-dark-700 py-0 pl-10 pr-4 text-sm text-gray-400 placeholder-gray-500 transition-colors focus:border-accent-blue/50 focus:outline-none'
+/** Standart cam pill arama alanı */
+export const SEARCH_INPUT_MD_CLASS =
+  'search-pill h-10 w-full py-0 pl-10 pr-4 text-sm'
 
-/** Üst panel kontrol butonları — tema, bildirim, profil */
+/** Kompakt cam pill arama alanı */
+export const SEARCH_INPUT_SM_CLASS =
+  'search-pill h-9 w-full py-0 pl-9 pr-3 text-xs'
+
+export const SEARCH_INPUT_ICON_MD_CLASS =
+  'pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]'
+
+export const SEARCH_INPUT_ICON_SM_CLASS =
+  'pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]'
+
+/** Üst panel arama alanı — şeffaf varsayılan, sidebar hover */
+export const HEADER_SEARCH_INPUT_CLASS =
+  'header-search-input search-pill h-10 w-full py-0 pl-10 pr-4 text-sm transition-all focus:outline-none'
+
+/** Ekip paneli form alanları — üst arama ile aynı cam pill */
+export const TEAM_HUB_FIELD_CLASS =
+  'search-pill h-9 w-full py-0 px-3 text-[12px] transition-all focus:outline-none'
+
+export const TEAM_HUB_TEXTAREA_CLASS =
+  'search-pill min-h-[72px] w-full resize-none rounded-[18px] px-3 py-2 text-[12px] transition-all focus:outline-none'
+
+/** Üst panel kontrol butonları — şeffaf varsayılan, sidebar hover */
 export const HEADER_CONTROL_BUTTON_CLASS =
-  'header-control-btn flex h-9 shrink-0 items-center justify-center rounded-lg border border-dark-500/50 text-xs font-semibold text-gray-400 transition-colors hover:bg-dark-600'
+  'header-control-btn icon-btn shrink-0 text-xs font-semibold'
 
 /** Tüm tema modlarında aynı boyut — Gece / Uzay / Akşam / Sabah / Gündüz / Özel */
-export const THEME_TOGGLE_BUTTON_CLASS = `${HEADER_CONTROL_BUTTON_CLASS} w-[100px] gap-1.5`
+export const THEME_TOGGLE_BUTTON_CLASS = `${HEADER_CONTROL_BUTTON_CLASS} !w-auto gap-1.5 px-3`
 
 const THEME_CLASS_NAMES = Object.values(THEME_CLASS_MAP)
 

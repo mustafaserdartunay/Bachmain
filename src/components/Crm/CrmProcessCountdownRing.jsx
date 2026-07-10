@@ -137,7 +137,7 @@ export default function CrmProcessCountdownRing({ window, completed = false }) {
       </svg>
 
       <div className="crm-countdown-ring__inner absolute inset-[8px] flex flex-col items-center justify-center rounded-full leading-none">
-        <span className="crm-countdown-ring__primary text-[11px] font-black tabular-nums tracking-tight">
+        <span className="crm-countdown-ring__primary text-[13px] font-black tabular-nums tracking-tight">
           {state.primary}
         </span>
         {state.secondary && (

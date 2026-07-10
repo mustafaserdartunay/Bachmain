@@ -130,7 +130,7 @@ export default function MobileCheckInPage() {
             </button>
           </div>
 
-          <p className="flex items-center justify-center gap-1 text-center text-[11px] text-gray-500">
+          <p className="flex items-center justify-center gap-1 text-center text-[13px] text-gray-500">
             <MapPin className="h-3.5 w-3.5" /> GPS doğrulaması otomatik yapılır
           </p>
 

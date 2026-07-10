@@ -1,5 +1,6 @@
 import { getCustomerProfiles } from '../data/customerProfiles'
 import { CHANNELS, DEPARTMENTS, STORAGE_KEYS } from './schema'
+import { mergeMessageCenterChannelConfig } from '../utils/messageCenterChannels'
 
 function readJson(key, fallback) {
   try {
@@ -55,13 +56,8 @@ export function appendWebhookLog(entry) {
 }
 
 export function readChannelConfig() {
-  return readJson(STORAGE_KEYS.channelConfig, {
-    whatsapp: { connected: true, phoneNumberId: '', accessToken: '***', webhookVerifyToken: '' },
-    instagram: { connected: true, pageId: '', accessToken: '***' },
-    facebook: { connected: true, pageId: '', accessToken: '***' },
-    email: { connected: true, imapHost: '', smtpHost: '', username: '', password: '***' },
-    tiktok: { connected: false, advertiserId: '', accessToken: '***' },
-  })
+  const saved = readJson(STORAGE_KEYS.channelConfig, {})
+  return mergeMessageCenterChannelConfig(saved)
 }
 
 export function saveChannelConfig(config) {
@@ -140,6 +136,27 @@ export function getMessageCenterBadge() {
   return { count, unreadTotal, unansweredCount }
 }
 
+const SOCIAL_CHANNEL_IDS = ['whatsapp', 'instagram', 'facebook', 'tiktok', 'linkedin', 'pinterest', 'x', 'email']
+
+function normalizeSocialChannel(channel) {
+  const value = String(channel || '').trim().toLowerCase()
+  if (value === 'twitter' || value === 'x') return 'x'
+  return value
+}
+
+export function getChannelUnreadCounts() {
+  const conversations = readConversations()
+  const counts = Object.fromEntries(SOCIAL_CHANNEL_IDS.map((id) => [id, 0]))
+
+  conversations.forEach((conversation) => {
+    const channel = normalizeSocialChannel(conversation.channel)
+    if (!SOCIAL_CHANNEL_IDS.includes(channel)) return
+    counts[channel] += Number(conversation.unreadCount) || 0
+  })
+
+  return counts
+}
+
 export function assignConversation(conversationId, { userId, departmentId }) {
   const conversations = readConversations().map((item) => (
     item.id === conversationId
@@ -154,8 +171,42 @@ export function getDepartments() {
 }
 
 function seedIfEmpty() {
-  // Demo conversations are intentionally not seeded.
+  if (readConversations().length > 0) return
+
+  const conversationId = createId('CONV')
+  const at = new Date().toISOString()
+
+  writeConversations([{
+    id: conversationId,
+    channel: 'whatsapp',
+    externalId: 'demo-whatsapp',
+    contactName: 'Ayşe Yılmaz',
+    contactPhone: '+905551112233',
+    contactEmail: '',
+    contactHandle: '',
+    customerId: null,
+    leadId: null,
+    assignedUserId: null,
+    departmentId: 'dep-sales',
+    lastMessageAt: at,
+    lastMessagePreview: 'Merhaba, teklif hakkında bilgi alabilir miyim?',
+    unreadCount: 2,
+    sentiment: 'neutral',
+    status: 'open',
+  }])
+
+  writeMessages([{
+    id: createId('MSG'),
+    conversationId,
+    direction: 'in',
+    type: 'text',
+    body: 'Merhaba, teklif hakkında bilgi alabilir miyim?',
+    at,
+    senderName: 'Ayşe Yılmaz',
+  }])
 }
+
+seedIfEmpty()
 
 
 

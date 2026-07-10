@@ -1,11 +1,19 @@
 import { Link } from 'react-router-dom'
 import { Building2, ExternalLink, Sparkles, User, UserPlus } from 'lucide-react'
 import { DEPARTMENTS } from '../../omnichannel/schema'
+import { AppPanelDot } from '../Layout/AppPageLayout'
+import {
+  APP_FILTER_LABEL_CLASS,
+  APP_OMNI_COLUMN_CLASS,
+  APP_OMNI_EMPTY_CLASS,
+  APP_OMNI_SECTION_CLASS,
+  APP_SUBLABEL_CLASS,
+} from '../../utils/dashboardDesign'
 
 const sentimentLabels = {
-  positive: { label: 'Olumlu', className: 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30' },
-  negative: { label: 'Olumsuz', className: 'text-red-300 bg-red-500/15 border-red-500/30' },
-  neutral: { label: 'Nötr', className: 'text-gray-300 bg-gray-500/15 border-gray-500/30' },
+  positive: { label: 'Olumlu', className: 'badge badge-green' },
+  negative: { label: 'Olumsuz', className: 'badge badge-red' },
+  neutral: { label: 'Nötr', className: 'glass-pill !h-7 !px-2 !text-[12px]' },
 }
 
 const ASSIGNEES = ['Ahmet Y.', 'Elif K.', 'Mehmet D.', 'Ayşe S.']
@@ -20,8 +28,8 @@ export default function CrmContextPanel({
 }) {
   if (!conversation) {
     return (
-      <aside className="flex h-full items-center justify-center border-l border-dark-500/45 bg-dark-800/40 p-6 text-center">
-        <p className="text-xs text-gray-500">CRM kartı konuşma seçildiğinde görünür</p>
+      <aside className={`${APP_OMNI_COLUMN_CLASS} items-center justify-center p-6`}>
+        <p className={APP_OMNI_EMPTY_CLASS}>CRM kartı konuşma seçildiğinde görünür</p>
       </aside>
     )
   }
@@ -29,71 +37,74 @@ export default function CrmContextPanel({
   const sentiment = sentimentLabels[conversation.sentiment] || sentimentLabels.neutral
 
   return (
-    <aside className="flex h-full flex-col overflow-y-auto border-l border-dark-500/45 bg-dark-800/60">
-      <div className="border-b border-dark-500/45 p-4">
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">CRM Kartı</p>
-        <h2 className="mt-1 text-lg font-black text-white">{conversation.contactName}</h2>
-        <div className={`mt-2 inline-flex rounded-lg border px-2 py-1 text-[10px] font-black uppercase ${sentiment.className}`}>
-          Duygu: {sentiment.label}
+    <aside className={APP_OMNI_COLUMN_CLASS}>
+      <div className="shrink-0 border-b border-white/40 px-4 py-3">
+        <div className="mb-1 flex items-center gap-2">
+          <AppPanelDot color="violet" />
+          <p className={APP_FILTER_LABEL_CLASS}>CRM Kartı</p>
         </div>
+        <h2 className="text-sm font-extrabold text-[var(--ink)]">{conversation.contactName}</h2>
+        <span className={`mt-2 inline-flex ${sentiment.className}`}>
+          Duygu: {sentiment.label}
+        </span>
       </div>
 
-      <div className="space-y-4 p-4">
-        <section className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-3">
-          <p className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+        <section className={APP_OMNI_SECTION_CLASS}>
+          <p className={`mb-2 flex items-center gap-2 ${APP_FILTER_LABEL_CLASS}`}>
             <User className="h-3 w-3" /> Müşteri Eşleşmesi
           </p>
           {customer ? (
             <div>
-              <p className="text-sm font-bold text-gray-200">{customer.contact || customer.company}</p>
-              <p className="text-xs text-gray-500">{customer.company}</p>
-              <p className="text-xs text-gray-500">{customer.phone || customer.email}</p>
+              <p className="text-xs font-extrabold text-[var(--ink)]">{customer.contact || customer.company}</p>
+              <p className={APP_SUBLABEL_CLASS}>{customer.company}</p>
+              <p className={APP_SUBLABEL_CLASS}>{customer.phone || customer.email}</p>
               <Link
                 to={`/musteriler/${customer.id}`}
-                className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-blue-300 hover:text-blue-200"
+                className="mt-2 inline-flex items-center gap-1 text-[12px] font-bold text-blue-600 hover:text-blue-700"
               >
                 Müşteri kartını aç <ExternalLink className="h-3 w-3" />
               </Link>
             </div>
           ) : lead ? (
             <div>
-              <p className="flex items-center gap-1 text-sm font-bold text-amber-200">
+              <p className="flex items-center gap-1 text-xs font-extrabold text-amber-600">
                 <Sparkles className="h-3.5 w-3.5" /> Otomatik Lead
               </p>
-              <p className="text-xs text-gray-500">{lead.source} · {lead.status}</p>
+              <p className={APP_SUBLABEL_CLASS}>{lead.source} · {lead.status}</p>
               <button
                 type="button"
                 onClick={() => onLinkCustomer?.(lead)}
-                className="mt-2 inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs font-bold text-amber-200"
+                className="btn-ghost mt-2 inline-flex items-center gap-1 !px-2 !py-1.5 text-[12px] font-bold text-amber-700"
               >
                 <UserPlus className="h-3 w-3" /> Müşteriye dönüştür
               </button>
             </div>
           ) : (
-            <p className="text-xs text-gray-500">Eşleşme yok</p>
+            <p className={APP_SUBLABEL_CLASS}>Eşleşme yok</p>
           )}
         </section>
 
-        <section className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-3">
-          <p className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500">
+        <section className={APP_OMNI_SECTION_CLASS}>
+          <p className={`mb-2 flex items-center gap-2 ${APP_FILTER_LABEL_CLASS}`}>
             <Building2 className="h-3 w-3" /> Atama
           </p>
-          <label className="mb-2 block text-[11px] font-semibold text-gray-500">Kullanıcı</label>
+          <label className={`mb-2 block ${APP_SUBLABEL_CLASS}`}>Kullanıcı</label>
           <select
             value={conversation.assignedUserId || ''}
             onChange={(e) => onAssignUser(e.target.value)}
-            className="form-input mb-3 w-full text-sm"
+            className="form-input mb-3 w-full text-xs"
           >
             <option value="">Atanmadı</option>
             {ASSIGNEES.map((name) => (
               <option key={name} value={name}>{name}</option>
             ))}
           </select>
-          <label className="mb-2 block text-[11px] font-semibold text-gray-500">Departman</label>
+          <label className={`mb-2 block ${APP_SUBLABEL_CLASS}`}>Departman</label>
           <select
             value={conversation.departmentId || ''}
             onChange={(e) => onAssignDepartment(e.target.value)}
-            className="form-input w-full text-sm"
+            className="form-input w-full text-xs"
           >
             <option value="">Seçin</option>
             {DEPARTMENTS.map((dept) => (
@@ -102,25 +113,25 @@ export default function CrmContextPanel({
           </select>
         </section>
 
-        <section className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-3">
-          <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-gray-500">İletişim</p>
+        <section className={APP_OMNI_SECTION_CLASS}>
+          <p className={`mb-2 ${APP_FILTER_LABEL_CLASS}`}>İletişim</p>
           <dl className="space-y-2 text-xs">
             {conversation.contactPhone && (
               <div>
-                <dt className="text-gray-500">Telefon</dt>
-                <dd className="font-semibold text-gray-300">{conversation.contactPhone}</dd>
+                <dt className={APP_SUBLABEL_CLASS}>Telefon</dt>
+                <dd className="font-semibold text-[var(--ink)]">{conversation.contactPhone}</dd>
               </div>
             )}
             {conversation.contactEmail && (
               <div>
-                <dt className="text-gray-500">E-posta</dt>
-                <dd className="font-semibold text-gray-300">{conversation.contactEmail}</dd>
+                <dt className={APP_SUBLABEL_CLASS}>E-posta</dt>
+                <dd className="font-semibold text-[var(--ink)]">{conversation.contactEmail}</dd>
               </div>
             )}
             {conversation.contactHandle && (
               <div>
-                <dt className="text-gray-500">Kullanıcı adı</dt>
-                <dd className="font-semibold text-gray-300">{conversation.contactHandle}</dd>
+                <dt className={APP_SUBLABEL_CLASS}>Kullanıcı adı</dt>
+                <dd className="font-semibold text-[var(--ink)]">{conversation.contactHandle}</dd>
               </div>
             )}
           </dl>

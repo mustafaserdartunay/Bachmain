@@ -30,9 +30,9 @@ function ModuleToggle({ categoryId, sectionId, module }) {
         <p className="text-sm font-black text-white">{module.label}</p>
         <p className="mt-1 text-xs font-semibold text-gray-500">{module.description}</p>
         {enabled && module.route ? (
-          <p className="mt-2 text-[10px] font-semibold text-emerald-300">Sayfa aktif: {module.route}</p>
+          <p className="mt-2 text-[12px] font-semibold text-emerald-300">Sayfa aktif: {module.route}</p>
         ) : (
-          <p className="mt-2 text-[10px] font-semibold text-gray-600">Onay verilmediğinde menüde görünmez.</p>
+          <p className="mt-2 text-[12px] font-semibold text-gray-600">Onay verilmediğinde menüde görünmez.</p>
         )}
       </div>
       <input

@@ -10,7 +10,7 @@ function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
     <div className="rounded-xl border border-dark-500/50 bg-dark-800 px-3 py-2 shadow-card">
-      <p className="text-[10px] text-gray-500">{label}</p>
+      <p className="text-[12px] text-gray-500">{label}</p>
       <p className="text-xs font-bold text-white">{payload[0].value} sipariş</p>
     </div>
   )

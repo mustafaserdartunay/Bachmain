@@ -86,7 +86,7 @@ export default function CustomerCourierTrackingPage() {
           <div className="flex items-center gap-3">
             <img src={logo} alt="" className="h-9 w-9 rounded-xl object-cover" />
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500">Canlı Teslimat Takibi</p>
+              <p className="text-[12px] font-black uppercase tracking-[0.18em] text-gray-500">Canlı Teslimat Takibi</p>
               <h1 className="text-lg font-black text-blue-300">{company?.companyTitle || 'Bach CRM'}</h1>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function CustomerCourierTrackingPage() {
           <div className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Sipariş / Referans</p>
+                <p className="text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Sipariş / Referans</p>
                 <p className="mt-1 text-2xl font-black text-white">{dispatch.referenceNo || dispatch.trackingToken}</p>
                 <p className="mt-2 text-sm text-gray-400">{dispatch.customerName}</p>
               </div>
@@ -125,7 +125,7 @@ export default function CustomerCourierTrackingPage() {
               <div className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-4">
                 <div className="flex items-center gap-2 text-gray-500">
                   <Clock3 className="h-4 w-4" />
-                  <span className="text-[10px] font-black uppercase tracking-wide">Tahmini Varış</span>
+                  <span className="text-[12px] font-black uppercase tracking-wide">Tahmini Varış</span>
                 </div>
                 <p className="mt-2 text-xl font-black text-emerald-300">
                   {delivered ? 'Teslim edildi' : formatEta(dispatch.estimatedArrival)}
@@ -134,14 +134,14 @@ export default function CustomerCourierTrackingPage() {
               <div className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-4">
                 <div className="flex items-center gap-2 text-gray-500">
                   <Truck className="h-4 w-4" />
-                  <span className="text-[10px] font-black uppercase tracking-wide">Araç Tipi</span>
+                  <span className="text-[12px] font-black uppercase tracking-wide">Araç Tipi</span>
                 </div>
                 <p className="mt-2 text-xl font-black text-white">{typeMeta.emoji} {typeMeta.label}</p>
               </div>
               <div className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-4">
                 <div className="flex items-center gap-2 text-gray-500">
                   <Navigation className="h-4 w-4" />
-                  <span className="text-[10px] font-black uppercase tracking-wide">Hız</span>
+                  <span className="text-[12px] font-black uppercase tracking-wide">Hız</span>
                 </div>
                 <p className="mt-2 text-xl font-black text-white">
                   {dispatch.livePosition?.speed ? `${dispatch.livePosition.speed} km/s` : '—'}
@@ -151,7 +151,7 @@ export default function CustomerCourierTrackingPage() {
           </div>
 
           <div className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Kurye Bilgisi</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Kurye Bilgisi</p>
             <div className="mt-4 flex items-center gap-4">
               <div
                 className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
@@ -171,7 +171,7 @@ export default function CustomerCourierTrackingPage() {
               <div className="flex items-start gap-2 text-sm text-gray-300">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Teslimat Adresi</p>
+                  <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Teslimat Adresi</p>
                   <p className="mt-1">{dispatch.address || 'Adres bilgisi yok'}</p>
                 </div>
               </div>
@@ -222,7 +222,7 @@ export default function CustomerCourierTrackingPage() {
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Son Güncelleme</p>
+                <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Son Güncelleme</p>
                 <p className="mt-1 text-sm font-bold text-white">
                   {dispatch.livePosition?.updatedAt
                     ? new Date(dispatch.livePosition.updatedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -230,7 +230,7 @@ export default function CustomerCourierTrackingPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-dark-500/45 bg-dark-900/50 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Takip Kodu</p>
+                <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Takip Kodu</p>
                 <p className="mt-1 text-sm font-bold text-blue-300">{dispatch.trackingToken}</p>
               </div>
             </div>

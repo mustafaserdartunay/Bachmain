@@ -6,7 +6,7 @@ const FIELD_SHELL = '[&_.form-input]:h-10 [&_.form-input]:rounded-xl [&_.form-in
 export function FormRow({ label, required = false, children }) {
   return (
     <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-2 border-b border-dark-500/35 py-2.5 last:border-b-0">
-      <label className="text-[10px] font-black uppercase tracking-wide text-gray-500">
+      <label className="text-[12px] font-black uppercase tracking-wide text-gray-500">
         {label}
         {required ? ' *' : ''}
       </label>
@@ -18,7 +18,7 @@ export function FormRow({ label, required = false, children }) {
 export function FormRowStacked({ label, required = false, children, className = '' }) {
   return (
     <div className={`space-y-2 py-3.5 ${className}`}>
-      <label className="block text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500">
+      <label className="block text-[12px] font-bold uppercase tracking-[0.16em] text-gray-500">
         {label}
         {required ? <span className="text-blue-400/90"> *</span> : null}
       </label>
@@ -53,7 +53,7 @@ export function SidebarPanelHeader({ icon: Icon, title, subtitle, accent = 'blue
         <div className="min-w-0">
           <h2 className="truncate text-sm font-black tracking-tight text-white">{title}</h2>
           {subtitle ? (
-            <p className="mt-0.5 text-[10px] font-semibold text-gray-500">{subtitle}</p>
+            <p className="mt-0.5 text-[12px] font-semibold text-gray-500">{subtitle}</p>
           ) : null}
         </div>
       </div>
@@ -63,7 +63,7 @@ export function SidebarPanelHeader({ icon: Icon, title, subtitle, accent = 'blue
 
 export function SidebarInfoNote({ children }) {
   return (
-    <p className="mb-4 rounded-xl border border-dark-500/25 bg-dark-900/20 px-3 py-2.5 text-[11px] leading-relaxed text-gray-400">
+    <p className="mb-4 rounded-xl border border-dark-500/25 bg-dark-900/20 px-3 py-2.5 text-[13px] leading-relaxed text-gray-400">
       {children}
     </p>
   )
@@ -77,14 +77,14 @@ export function SidebarPanelActions({ onCancel, submitLabel, submitDisabled = fa
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex h-10 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-800/50 text-[11px] font-bold uppercase tracking-[0.12em] text-gray-400 transition-colors hover:border-dark-500/70 hover:bg-dark-700/60 hover:text-gray-200"
+        className="inline-flex h-10 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-800/50 text-[13px] font-bold uppercase tracking-[0.12em] text-gray-400 transition-colors hover:border-dark-500/70 hover:bg-dark-700/60 hover:text-gray-200"
       >
         Vazgeç
       </button>
       <button
         type="submit"
         disabled={isDisabled}
-        className={`${BTN_PRIMARY} h-10 w-full text-[11px] uppercase tracking-[0.12em] shadow-[0_4px_14px_color-mix(in_srgb,var(--accent)_35%,transparent)] ${
+        className={`${BTN_PRIMARY} h-10 w-full text-[13px] uppercase tracking-[0.12em] shadow-[0_4px_14px_color-mix(in_srgb,var(--accent)_35%,transparent)] ${
           isDisabled ? 'cursor-not-allowed opacity-50' : ''
         }`}
       >
@@ -113,7 +113,7 @@ export function BalanceFooter({ rawBalance }) {
   return (
     <div className="border-t border-dark-500/35 bg-dark-700/40 px-4 py-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500">Bakiye</span>
+        <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-gray-500">Bakiye</span>
         <span className={`font-black tabular-nums ${isNegative ? 'text-red-300' : 'text-emerald-300'}`}>
           <span className="text-base">{liraPart},</span>
           <span className="text-sm">{kurusPart}₺</span>

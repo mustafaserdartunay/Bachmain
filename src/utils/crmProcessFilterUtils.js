@@ -175,13 +175,14 @@ export function filterCrmBoardEntries(entries, filters, { searchQuery = '', proc
   const query = searchQuery.trim().toLowerCase()
 
   return entries.filter((entry) => {
-    if (entry.kind !== 'note') {
+    if (entry.kind === 'note') {
+      if (processFilter === 'active' && entry.record.completed) return false
+      if (processFilter === 'done' && !entry.record.completed) return false
+    } else {
       const terminalId = entry.template.stages?.find((stage) => stage.isTerminal)?.id
       const isTerminal = entry.record.processTrack?.currentStageId === terminalId
       if (processFilter === 'active' && isTerminal) return false
       if (processFilter === 'done' && !isTerminal) return false
-    } else if (processFilter === 'done') {
-      return false
     }
 
     if (filters.assignee !== 'Tümü' && entry.record.assignee !== filters.assignee) return false

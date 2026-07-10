@@ -228,6 +228,7 @@ export default function ProductsPage() {
     })
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(stripHeavyMedia(cleanProducts)))
+      window.dispatchEvent(new CustomEvent('erlenbox:products-updated'))
     } catch {
       localStorage.removeItem(PRODUCT_STORAGE_KEY)
     }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Search } from 'lucide-react'
+import SearchInput from '../Common/SearchInput'
 import { sampleProducts } from '../../data/productsData'
 import { formatTL } from '../../utils/productPricing'
 
@@ -36,8 +36,7 @@ export default function ProductSearchSelect({ item, onSelect, onTextChange }) {
 
   return (
     <div ref={pickerRef} className="relative">
-      <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-gray-500" />
-      <input
+      <SearchInput
         value={query}
         onChange={(event) => {
           onTextChange(event.target.value)
@@ -45,7 +44,6 @@ export default function ProductSearchSelect({ item, onSelect, onTextChange }) {
         }}
         onFocus={() => setIsOpen(true)}
         placeholder="Ürün adı, ürün kodu veya barkod ara..."
-        className="form-input pl-10"
       />
       {isOpen && (
         <div className="absolute left-0 right-0 top-11 z-40 rounded-2xl border border-dark-500 bg-dark-900 p-2 shadow-card">
@@ -59,11 +57,11 @@ export default function ProductSearchSelect({ item, onSelect, onTextChange }) {
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-white">{product.name}</p>
-                  <p className="truncate text-[11px] font-semibold text-gray-500">
+                  <p className="truncate text-[13px] font-semibold text-gray-500">
                     {product.stockCode || product.productCode || 'Kod yok'} · Barkod: {product.barcode || 'Yok'}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-black text-emerald-300">
+                <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-black text-emerald-300">
                   KDV hariç {formatTL(product.salesPriceExcl || product.purchasePriceExcl || 0)}
                 </span>
               </button>

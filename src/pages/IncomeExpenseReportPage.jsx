@@ -54,7 +54,7 @@ function DistributionSection({ title, total, slices, totalTone = 'text-blue-300'
         </div>
 
         <div>
-          <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-gray-500">
+          <p className="mb-3 text-[12px] font-black uppercase tracking-widest text-gray-500">
             {title === 'GELİRLER' ? 'Gelirlerin Dağılımı' : 'Giderlerin Dağılımı'}
           </p>
           <div className="relative mx-auto h-[180px] w-[180px]">
@@ -127,7 +127,7 @@ export default function IncomeExpenseReportPage() {
         <div className="mb-2 flex flex-wrap items-center gap-3">
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-gray-300"
+            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-[12px] font-black uppercase tracking-wide text-gray-300"
           >
             <Filter className="h-4 w-4" />
             Filtrele
@@ -144,7 +144,7 @@ export default function IncomeExpenseReportPage() {
             <button
               type="button"
               onClick={() => setTaxMenuOpen((open) => !open)}
-              className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-gray-300"
+              className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-[12px] font-black uppercase tracking-wide text-gray-300"
             >
               {includeVat ? 'Vergiler Dahil' : 'Vergiler Hariç'}
               <ChevronDown className="h-3.5 w-3.5" />
@@ -173,14 +173,14 @@ export default function IncomeExpenseReportPage() {
         <DistributionSection title="GİDERLER" total={expense.total} slices={expense.slices} totalTone="text-amber-300" />
 
         {expense.isDemo && (
-          <p className="mb-4 text-[11px] text-gray-500">
+          <p className="mb-4 text-[13px] text-gray-500">
             Gider verisi henüz kasa hareketlerinde yok; örnek dağılım gösteriliyor.
           </p>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-dark-500/40 pt-5">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Net</p>
+            <p className="text-[12px] font-black uppercase tracking-widest text-gray-500">Net</p>
             <p className={`text-2xl font-black ${net >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
               {formatTL(net)}
             </p>

@@ -6,7 +6,7 @@ function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
     <div className="rounded-xl border border-dark-500/50 bg-dark-800 px-3 py-2 shadow-card">
-      <p className="text-[10px] text-gray-500">{label}</p>
+      <p className="text-[12px] text-gray-500">{label}</p>
       <p className="text-sm font-bold text-white">{formatCurrency(payload[0].value)}</p>
     </div>
   )
@@ -22,7 +22,7 @@ export default function SalesChart() {
           <h3 className="text-sm font-bold text-white">Satış Trendi</h3>
           <p className="text-xs text-gray-500">Aylık ciro · 2026</p>
         </div>
-        <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300">+18.4%</span>
+        <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-bold text-emerald-300">+18.4%</span>
       </div>
       <div className="relative h-[220px] w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">

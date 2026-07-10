@@ -37,11 +37,11 @@ export default function DocumentActivityPanel({
               className="grid grid-cols-[130px_minmax(0,1fr)] gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3"
             >
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Tarih</p>
-                <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--accent)]">{activity.date || '—'}</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Tarih</p>
+                <p className="mt-1 text-[13px] font-semibold tabular-nums text-[var(--accent)]">{activity.date || '—'}</p>
               </div>
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Detay</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Detay</p>
                 <p className="mt-1 text-xs font-medium leading-relaxed text-[var(--text-strong)]">{activity.text || '—'}</p>
               </div>
             </div>

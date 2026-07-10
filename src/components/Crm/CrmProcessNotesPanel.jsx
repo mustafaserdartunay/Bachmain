@@ -36,7 +36,7 @@ function NoteCard({ entry, onEdit, onDelete }) {
               {record.title}
             </p>
           </div>
-          <p className="mt-1 text-[10px] font-bold text-gray-500">
+          <p className="mt-1 text-[12px] font-bold text-gray-500">
             {formatNoteDate(record.date)}
             {record.time ? ` · ${record.time}` : ''}
           </p>
@@ -112,13 +112,13 @@ export default function CrmProcessNotesPanel({
     <aside className="flex min-h-[320px] flex-col rounded-xl border border-dark-500/50 bg-dark-800/40 xl:sticky xl:top-4 xl:max-h-[calc(100vh-220px)]">
       <div className="flex items-center justify-between gap-2 border-b border-dark-500/40 px-4 py-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Notlar</p>
+          <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Notlar</p>
           <p className="text-sm font-black text-white">{entries.length} kayıt</p>
         </div>
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-2.5 py-1.5 text-[10px] font-black text-purple-200 transition-colors hover:bg-purple-500/15"
+          className="inline-flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-2.5 py-1.5 text-[12px] font-black text-purple-200 transition-colors hover:bg-purple-500/15"
         >
           <Plus className="h-3 w-3" />
           Ekle
@@ -130,7 +130,7 @@ export default function CrmProcessNotesPanel({
           <div className="rounded-xl border border-dashed border-dark-500/50 bg-dark-800/30 px-4 py-8 text-center">
             <StickyNote className="mx-auto mb-2 h-6 w-6 text-gray-600" />
             <p className="text-xs font-black text-white">Not yok</p>
-            <p className="mt-1 text-[11px] text-gray-500">Eklenen notlar burada listelenir.</p>
+            <p className="mt-1 text-[13px] text-gray-500">Eklenen notlar burada listelenir.</p>
           </div>
         ) : (
           entries.map((entry) => (

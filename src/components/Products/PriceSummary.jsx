@@ -55,8 +55,8 @@ function MoneyValue({ tryValue, rates, bold = false, tone = 'default' }) {
       </span>
       {tryValue > 0 && (
         <div className="mt-0.5 flex justify-end gap-2">
-          <span className="text-[9px] text-gray-600">{formatFx(usd, 'USD')}</span>
-          <span className="text-[9px] text-gray-600">{formatFx(eur, 'EUR')}</span>
+          <span className="text-[11px] text-gray-600">{formatFx(usd, 'USD')}</span>
+          <span className="text-[11px] text-gray-600">{formatFx(eur, 'EUR')}</span>
         </div>
       )}
     </div>
@@ -86,11 +86,11 @@ function PairCard({ label, leftLabel, leftValue, rightLabel, rightValue, rates, 
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-xl border border-dark-500/40 bg-dark-700/35 p-2.5">
-          <p className="mb-1 text-[10px] font-medium text-gray-500">{leftLabel}</p>
+          <p className="mb-1 text-[12px] font-medium text-gray-500">{leftLabel}</p>
           <MoneyValue tryValue={leftValue} rates={rates} bold tone={tone} />
         </div>
         <div className="rounded-xl border border-dark-500/40 bg-dark-700/35 p-2.5">
-          <p className={`mb-1 text-[10px] font-medium ${rightColors.label}`}>{rightLabel}</p>
+          <p className={`mb-1 text-[12px] font-medium ${rightColors.label}`}>{rightLabel}</p>
           <MoneyValue tryValue={rightValue} rates={rates} bold tone={rightTone} />
         </div>
       </div>
@@ -113,11 +113,11 @@ export default function PriceSummary({ product, pricing, rates, loading }) {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-white">Fiyat Özeti</h3>
         {loading ? (
-          <span className="text-[9px] text-gray-600">Kurlar yükleniyor...</span>
+          <span className="text-[11px] text-gray-600">Kurlar yükleniyor...</span>
         ) : rates.updatedAt ? (
           <div className="text-right">
-            <p className="text-[9px] text-gray-600">Canlı kur · {rates.updatedAt}</p>
-            <p className="mt-0.5 text-[9px] text-gray-600">
+            <p className="text-[11px] text-gray-600">Canlı kur · {rates.updatedAt}</p>
+            <p className="mt-0.5 text-[11px] text-gray-600">
               1 USD = {formatTL(rates.USD)} · 1 EUR = {formatTL(rates.EUR)}
             </p>
           </div>
@@ -180,13 +180,13 @@ export default function PriceSummary({ product, pricing, rates, loading }) {
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-dark-500/40 bg-dark-700/35 p-2.5">
-              <p className="mb-1 text-[10px] font-medium text-gray-500">KDV Hariç Kar Yüzdesi</p>
+              <p className="mb-1 text-[12px] font-medium text-gray-500">KDV Hariç Kar Yüzdesi</p>
               <div className="text-right">
                 <span className="text-sm font-bold text-purple-300">%{formatPrice(dealerProfitRateExcl)}</span>
               </div>
             </div>
             <div className="rounded-xl border border-dark-500/40 bg-dark-700/35 p-2.5">
-              <p className="mb-1 text-[10px] font-medium text-purple-400">KDV Dahil Kar Yüzdesi</p>
+              <p className="mb-1 text-[12px] font-medium text-purple-400">KDV Dahil Kar Yüzdesi</p>
               <div className="text-right">
                 <span className="text-sm font-bold text-purple-300">%{formatPrice(dealerProfitRateIncl)}</span>
               </div>

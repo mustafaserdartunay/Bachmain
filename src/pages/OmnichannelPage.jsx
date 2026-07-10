@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Bot, Inbox, Settings2, Wifi, WifiOff } from 'lucide-react'
 import ConversationList from '../components/Omnichannel/ConversationList'
 import ChatThread from '../components/Omnichannel/ChatThread'
@@ -8,6 +8,7 @@ import CrmContextPanel from '../components/Omnichannel/CrmContextPanel'
 import AiInsightsPanel from '../components/Omnichannel/AiInsightsPanel'
 import ChannelBadge from '../components/Omnichannel/ChannelBadge'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
+import { AppPanelDot } from '../components/Layout/AppPageLayout'
 import {
   analyzeConversationWithAi,
   buildConversationContext,
@@ -28,11 +29,17 @@ import { getCustomerProfiles } from '../data/customerProfiles'
 import { CHANNELS } from '../omnichannel/schema'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
 import { getClientOpenAiApiKey, saveVoiceSettings } from '../utils/voiceSettings'
+import {
+  APP_FILTER_LABEL_CLASS,
+  APP_OMNI_SECTION_CLASS,
+  APP_PANEL_TITLE_CLASS,
+} from '../utils/dashboardDesign'
 
 export default function OmnichannelPage() {
+  const [searchParams] = useSearchParams()
   const [conversations, setConversations] = useState(() => readConversations())
   const [selectedId, setSelectedId] = useState(() => readConversations()[0]?.id || null)
-  const [channelFilter, setChannelFilter] = useState('all')
+  const [channelFilter, setChannelFilter] = useState(() => searchParams.get('kanal') || 'all')
   const [search, setSearch] = useState('')
   const [sending, setSending] = useState(false)
   const [suggestedText, setSuggestedText] = useState('')
@@ -53,6 +60,11 @@ export default function OmnichannelPage() {
     setConversations(readConversations())
     setLearningStats(getLearningStats())
   }, [])
+
+  useEffect(() => {
+    const kanal = searchParams.get('kanal')
+    if (kanal) setChannelFilter(kanal)
+  }, [searchParams])
 
   useEffect(() => {
     window.addEventListener('bach:omni-updated', refresh)
@@ -271,51 +283,50 @@ export default function OmnichannelPage() {
   const connectedCount = Object.values(channelConfig).filter((item) => item.connected).length
 
   return (
-    <div className="-m-4 flex h-[calc(100vh-4rem)] flex-col">
-      <div className="flex items-center justify-between border-b border-dark-500/45 bg-dark-800/80 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
-            <Inbox className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-lg font-black text-white">Omnichannel Communication Center</h1>
-            <p className="text-xs text-gray-500">
-              WhatsApp · Instagram · Messenger · E-posta · TikTok Leads — tek ekranda
+    <div className="modern-dashboard space-y-4">
+      <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-[20px] px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <AppPanelDot color="emerald" />
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] bg-[rgba(140,145,165,0.14)] text-emerald-600">
+            <Inbox className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0">
+            <h1 className={APP_PANEL_TITLE_CLASS}>Mesaj Merkezi</h1>
+            <p className="text-[12px] font-semibold text-[var(--muted)]">
+              WhatsApp · Instagram · Messenger · E-posta · TikTok Leads
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`hidden rounded-lg border px-3 py-1.5 text-xs font-bold md:inline ${
-            aiHealth?.hasApiKey
-              ? 'border-violet-500/30 bg-violet-500/10 text-violet-300'
-              : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`glass-pill !h-8 !px-3 !text-[12px] !font-bold ${
+            aiHealth?.hasApiKey ? 'text-violet-600' : 'text-amber-600'
           }`}
           >
             <Bot className="mr-1 inline h-3.5 w-3.5" />
             {aiHealth?.hasApiKey ? 'OpenAI bağlı' : 'OpenAI anahtarı gerekli'}
           </span>
-          <span className="hidden rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-300 md:inline">
+          <span className="glass-pill !h-8 !px-3 !text-[12px] !font-bold text-emerald-600">
             {connectedCount}/5 kanal bağlı
           </span>
           <button
             type="button"
             onClick={() => setSettingsOpen((open) => !open)}
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700"
+            className="btn-ghost inline-flex items-center gap-2 !px-3 !py-2 text-[12px] font-bold"
           >
-            <Settings2 className="h-4 w-4" />
+            <Settings2 className="h-3.5 w-3.5" />
             Kanal Ayarları
           </button>
         </div>
       </div>
 
       {settingsOpen && (
-        <div className="border-b border-dark-500/45 bg-dark-900/95 px-4 py-4">
-          <div className="mb-4 rounded-xl border border-violet-500/25 bg-violet-500/5 p-4">
-            <p className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-violet-300">
-              <Bot className="h-4 w-4" /> Yapay Zeka Ayarları
+        <div className="glass space-y-4 rounded-[20px] p-4">
+          <div className={APP_OMNI_SECTION_CLASS}>
+            <p className={`mb-3 flex items-center gap-2 ${APP_FILTER_LABEL_CLASS}`}>
+              <Bot className="h-3.5 w-3.5" /> Yapay Zeka Ayarları
             </p>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <label className="flex items-center gap-2 text-xs text-gray-300">
+              <label className="flex items-center gap-2 text-xs font-semibold text-[var(--ink)]">
                 <input
                   type="checkbox"
                   checked={Boolean(aiSettings.enabled)}
@@ -323,7 +334,7 @@ export default function OmnichannelPage() {
                 />
                 OpenAI analizi aktif
               </label>
-              <label className="flex items-center gap-2 text-xs text-gray-300">
+              <label className="flex items-center gap-2 text-xs font-semibold text-[var(--ink)]">
                 <input
                   type="checkbox"
                   checked={Boolean(aiSettings.autoReply)}
@@ -350,7 +361,7 @@ export default function OmnichannelPage() {
                 onChange={(e) => setAiSettings((prev) => ({ ...prev, brandVoice: e.target.value }))}
                 className="form-input text-xs md:col-span-2"
               />
-              <label className="text-xs text-gray-400">
+              <label className="text-xs text-[var(--muted)]">
                 Min. güven ({Math.round((aiSettings.autoReplyMinConfidence || 0.72) * 100)}%)
                 <input
                   type="range"
@@ -365,7 +376,7 @@ export default function OmnichannelPage() {
                   className="mt-1 w-full"
                 />
               </label>
-              <p className="text-[10px] text-gray-500 md:col-span-2">
+              <p className="text-[12px] font-semibold text-[var(--muted)] md:col-span-2">
                 {learningStats.exampleCount} öğrenilmiş yanıt · {learningStats.positiveFeedback} olumlu geri bildirim
               </p>
             </div>
@@ -375,17 +386,17 @@ export default function OmnichannelPage() {
             {Object.values(CHANNELS).map((channel) => {
               const config = channelConfig[channel.id] || {}
               return (
-                <div key={channel.id} className="rounded-xl border border-dark-500/45 bg-dark-800/60 p-3">
+                <div key={channel.id} className={APP_OMNI_SECTION_CLASS}>
                   <div className="mb-2 flex items-center justify-between">
                     <ChannelBadge channel={channel.id} showLabel />
                     {config.connected ? (
-                      <Wifi className="h-4 w-4 text-emerald-400" />
+                      <Wifi className="h-4 w-4 text-emerald-600" />
                     ) : (
-                      <WifiOff className="h-4 w-4 text-gray-500" />
+                      <WifiOff className="h-4 w-4 text-[var(--muted)]" />
                     )}
                   </div>
-                  <p className="mb-2 text-[10px] text-gray-500">{channel.api}</p>
-                  <label className="mb-2 flex items-center gap-2 text-xs text-gray-400">
+                  <p className="mb-2 text-[12px] font-semibold text-[var(--muted)]">{channel.api}</p>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-semibold text-[var(--ink)]">
                     <input
                       type="checkbox"
                       checked={Boolean(config.connected)}
@@ -455,8 +466,8 @@ export default function OmnichannelPage() {
               )
             })}
           </div>
-          <div className="mt-3 flex justify-end gap-2">
-            <button type="button" onClick={() => setSettingsOpen(false)} className="rounded-lg px-3 py-2 text-xs font-bold text-gray-400">
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setSettingsOpen(false)} className="btn-ghost !px-3 !py-2 text-[12px] font-bold">
               İptal
             </button>
             <button type="button" onClick={handleSaveConfig} className={`${BTN_SUCCESS} px-4 py-2 text-xs`}>
@@ -466,7 +477,7 @@ export default function OmnichannelPage() {
         </div>
       )}
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[320px_1fr_300px] xl:grid-cols-[360px_1fr_320px]">
+      <div className="grid min-h-[calc(100dvh-14rem)] grid-cols-1 gap-3 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)_minmax(0,18rem)] xl:grid-cols-3">
         <ConversationList
           conversations={filteredConversations}
           selectedId={selectedId}
@@ -477,7 +488,7 @@ export default function OmnichannelPage() {
           onSearch={setSearch}
         />
 
-        <section className="flex min-h-0 flex-col border-r border-dark-500/45">
+        <section className="glass flex min-h-0 flex-col overflow-hidden rounded-[20px]">
           <ChatThread conversation={selectedConversation} messages={messages} />
           <AiInsightsPanel
             insights={insights}
@@ -506,17 +517,18 @@ export default function OmnichannelPage() {
         />
       </div>
 
-      <div className="border-t border-dark-500/45 bg-dark-900/80 px-4 py-2 text-[10px] text-gray-500">
-        Webhook uçları: <code className="text-gray-400">/api/webhooks/whatsapp</code> ·{' '}
-        <code className="text-gray-400">/api/webhooks/instagram</code> ·{' '}
-        <code className="text-gray-400">/api/webhooks/facebook</code> ·{' '}
-        <code className="text-gray-400">/api/webhooks/email</code> ·{' '}
-        <code className="text-gray-400">/api/webhooks/tiktok</code>
+      <div className="glass-inset rounded-[16px] px-4 py-2 text-[12px] font-semibold text-[var(--muted)]">
+        Webhook uçları: <code className="text-[var(--ink)]">/api/webhooks/whatsapp</code> ·{' '}
+        <code className="text-[var(--ink)]">/api/webhooks/instagram</code> ·{' '}
+        <code className="text-[var(--ink)]">/api/webhooks/facebook</code> ·{' '}
+        <code className="text-[var(--ink)]">/api/webhooks/email</code> ·{' '}
+        <code className="text-[var(--ink)]">/api/webhooks/tiktok</code>
         {' · '}
-        <Link to="/teklifler" className="text-blue-400 hover:text-blue-300">Teklifler</Link>
+        <Link to="/teklifler" className="font-bold text-blue-600 hover:text-blue-700">Teklifler</Link>
         {' · '}
-        <Link to="/siparisler" className="text-blue-400 hover:text-blue-300">Siparişler</Link>
+        <Link to="/siparisler" className="font-bold text-blue-600 hover:text-blue-700">Siparişler</Link>
       </div>
+
       <ActivityArchivePanel
         title="Mesaj Merkezi Arşiv ve İşlem Geçmişi"
         modules={['omnichannel']}

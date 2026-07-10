@@ -46,7 +46,7 @@ function TabButton({ active, icon: Icon, label, count, onClick }) {
     >
       <Icon className="h-3.5 w-3.5" />
       {label}
-      <span className={`rounded-md px-1.5 py-0.5 text-[10px] ${active ? 'bg-blue-500/20' : 'bg-dark-600'}`}>{count}</span>
+      <span className={`rounded-md px-1.5 py-0.5 text-[12px] ${active ? 'bg-blue-500/20' : 'bg-dark-600'}`}>{count}</span>
     </button>
   )
 }
@@ -64,7 +64,7 @@ function QuotesTab() {
                 <span className={statusBadgeMap[quote.status]}>{quote.status}</span>
               </div>
               <p className="mt-1 truncate text-sm font-bold text-white">{getCustomerDisplay(quote.customer).brandShortName}</p>
-              <p className="text-[10px] text-gray-500">Oluşturma {quote.date} · Son tarih {quote.expiry}</p>
+              <p className="text-[12px] text-gray-500">Oluşturma {quote.date} · Son tarih {quote.expiry}</p>
             </div>
             <p className="shrink-0 text-sm font-black text-emerald-300">{formatCurrency(quote.amount)}</p>
           </div>
@@ -75,13 +75,13 @@ function QuotesTab() {
                 style={{ width: quote.status === 'Kabul Edildi' ? '100%' : quote.status === 'Bekliyor' ? '55%' : '20%' }}
               />
             </div>
-            <span className="text-[10px] font-bold text-gray-500">
+            <span className="text-[12px] font-bold text-gray-500">
               {quote.status === 'Kabul Edildi' ? 'Onaylandı' : quote.status === 'Bekliyor' ? 'Müşteri yanıtı bekleniyor' : 'Kapandı'}
             </span>
           </div>
         </div>
       ))}
-      <Link to="/teklifler" className="block pt-1 text-center text-[10px] font-bold text-blue-400 hover:text-blue-300">Teklif listesine git →</Link>
+      <Link to="/teklifler" className="block pt-1 text-center text-[12px] font-bold text-blue-400 hover:text-blue-300">Teklif listesine git →</Link>
     </div>
   )
 }
@@ -100,21 +100,21 @@ function OrdersTab() {
                   <p className="text-xs font-black text-blue-400">{order.id}</p>
                   <span className={statusBadgeMap[order.status]}>{order.status}</span>
                   {order.paymentStatus === 'Bekliyor' && (
-                    <span className="rounded bg-red-500/15 px-1.5 py-0.5 text-[9px] font-bold text-red-300">Ödeme bekliyor</span>
+                    <span className="rounded bg-red-500/15 px-1.5 py-0.5 text-[11px] font-bold text-red-300">Ödeme bekliyor</span>
                   )}
                 </div>
                 <p className="mt-1 truncate text-sm font-bold text-white">{getCustomerDisplay(order.customer).brandShortName}</p>
-                <p className="text-[10px] text-gray-500">
+                <p className="text-[12px] text-gray-500">
                   {order.assignedTo} · Teslim {order.delivery} · {order.items?.length || 0} kalem
                 </p>
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-sm font-black text-white">{formatCurrency(order.amount)}</p>
-                <p className="text-[10px] text-gray-500">{order.paymentMethod}</p>
+                <p className="text-[12px] text-gray-500">{order.paymentMethod}</p>
               </div>
             </div>
             <div className="mt-3">
-              <div className="mb-1 flex justify-between text-[10px] font-bold text-gray-500">
+              <div className="mb-1 flex justify-between text-[12px] font-bold text-gray-500">
                 <span>Sipariş ilerlemesi</span>
                 <span className="text-blue-300">{progress}%</span>
               </div>
@@ -123,12 +123,12 @@ function OrdersTab() {
               </div>
             </div>
             {order.timeline?.[0] && (
-              <p className="mt-2 truncate text-[10px] text-gray-500">Son: {order.timeline[order.timeline.length - 1]?.action}</p>
+              <p className="mt-2 truncate text-[12px] text-gray-500">Son: {order.timeline[order.timeline.length - 1]?.action}</p>
             )}
           </div>
         )
       })}
-      <Link to="/siparisler" className="block pt-1 text-center text-[10px] font-bold text-blue-400 hover:text-blue-300">Sipariş listesine git →</Link>
+      <Link to="/siparisler" className="block pt-1 text-center text-[12px] font-bold text-blue-400 hover:text-blue-300">Sipariş listesine git →</Link>
     </div>
   )
 }
@@ -148,12 +148,12 @@ function ProductionTab() {
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-xs font-black text-purple-300">{job.workOrder}</p>
                   <span className={statusBadgeMap[job.status]}>{job.status}</span>
-                  {isLate && <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[9px] font-black text-red-300">Termin gecikti</span>}
+                  {isLate && <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[11px] font-black text-red-300">Termin gecikti</span>}
                 </div>
                 <p className="mt-1 truncate text-sm font-bold text-white">{job.product}</p>
-                <p className="text-[10px] text-gray-500">{job.orderId} · {job.quantity.toLocaleString('tr-TR')} adet · Bitiş {job.endDate}</p>
+                <p className="text-[12px] text-gray-500">{job.orderId} · {job.quantity.toLocaleString('tr-TR')} adet · Bitiş {job.endDate}</p>
               </div>
-              <p className="shrink-0 rounded-lg bg-purple-500/15 px-2 py-1 text-[10px] font-black text-purple-200">{job.stage}</p>
+              <p className="shrink-0 rounded-lg bg-purple-500/15 px-2 py-1 text-[12px] font-black text-purple-200">{job.stage}</p>
             </div>
             <div className="mt-3 flex gap-1">
               {productionStages.map((stage, index) => (
@@ -164,11 +164,11 @@ function ProductionTab() {
                 />
               ))}
             </div>
-            <p className="mt-2 text-[10px] font-bold text-gray-500">İlerleme {progress}% · Aktif aşama: {job.stage}</p>
+            <p className="mt-2 text-[12px] font-bold text-gray-500">İlerleme {progress}% · Aktif aşama: {job.stage}</p>
           </div>
         )
       })}
-      <Link to="/uretim" className="block pt-1 text-center text-[10px] font-bold text-blue-400 hover:text-blue-300">Üretim takibine git →</Link>
+      <Link to="/uretim" className="block pt-1 text-center text-[12px] font-bold text-blue-400 hover:text-blue-300">Üretim takibine git →</Link>
     </div>
   )
 }

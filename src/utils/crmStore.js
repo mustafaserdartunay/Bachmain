@@ -226,6 +226,25 @@ export function deleteAgendaNote(noteId) {
   saveAgendaNotes(notes.filter((item) => item.id !== noteId))
 }
 
+export function deleteCompletedAgendaNotes() {
+  const notes = loadAgendaNotes()
+  const completed = notes.filter((item) => item.completed)
+  completed.forEach((note) => {
+    appendActivityEntry({
+      module: 'crm',
+      action: 'delete',
+      entityType: 'note',
+      entityId: note.id,
+      entityLabel: note.title || 'CRM notu',
+      description: `${note.title || 'CRM notu'} silindi.`,
+      snapshot: note,
+      undo: { type: 'crm.restoreNote' },
+    })
+  })
+  saveAgendaNotes(notes.filter((item) => !item.completed))
+  return completed.length
+}
+
 export function restoreCrmEntry(entryType, snapshot) {
   if (!snapshot?.id) return false
   if (entryType === 'task') {

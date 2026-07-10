@@ -1,9 +1,13 @@
-import { Link } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ChevronLeft } from 'lucide-react'
+import {
+  APP_PAGE_TITLE_CLASS,
+  APP_PANEL_TITLE_CLASS,
+  APP_DOT_COLORS,
+} from '../../utils/dashboardDesign'
 
 /**
- * Standart uygulama sayfa düzeni — CRM Yönetimi sayfası referans alınır.
- * Yeni sayfalar bu bileşenleri kullanmalı.
+ * Standart uygulama sayfa düzeni — Güncel Durum / glass dashboard referans alınır.
  */
 
 export function AppPageShell({ children, className = '' }) {
@@ -11,24 +15,87 @@ export function AppPageShell({ children, className = '' }) {
 }
 
 const APP_PAGE_BACK_BUTTON_CLASS =
-  'absolute left-5 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700 hover:text-white'
+  'glass-sidebar-toggle glass-sidebar-collapse app-page-back flex h-8 w-8 shrink-0 items-center justify-center rounded-xl'
 
-export function AppPageHeader({ title, actions, backTo, backLabel = 'Geri' }) {
+function AppPageBackButton({ backTo, backLabel, onBack }) {
+  const navigate = useNavigate()
+
+  function handleBack() {
+    if (onBack) {
+      onBack()
+      return
+    }
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
+  }
+
+  if (backTo) {
+    return (
+      <Link
+        to={backTo}
+        className={APP_PAGE_BACK_BUTTON_CLASS}
+        aria-label={backLabel}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Link>
+    )
+  }
+
   return (
-    <div className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-      {backTo ? (
-        <Link to={backTo} className={APP_PAGE_BACK_BUTTON_CLASS}>
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {backLabel}
-        </Link>
-      ) : null}
-      <div className="flex justify-center">
-        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-          {title}
-        </h1>
+    <button
+      type="button"
+      onClick={handleBack}
+      className={APP_PAGE_BACK_BUTTON_CLASS}
+      aria-label={backLabel}
+    >
+      <ChevronLeft className="h-4 w-4" />
+    </button>
+  )
+}
+
+export function AppPanelDot({ color = 'blue' }) {
+  const palette = APP_DOT_COLORS[color] || APP_DOT_COLORS.blue
+  return (
+    <span className="relative flex h-1.5 w-1.5 shrink-0">
+      <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${palette.ping}`} />
+      <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${palette.dot}`} />
+    </span>
+  )
+}
+
+export function AppPanelHeader({ title, action, dotColor = 'blue', className = '' }) {
+  return (
+    <div className={`mb-2.5 flex shrink-0 items-center justify-between gap-3 ${className}`.trim()}>
+      <div className="flex min-w-0 items-center gap-2">
+        <AppPanelDot color={dotColor} />
+        <h2 className={APP_PANEL_TITLE_CLASS}>{title}</h2>
+      </div>
+      {action}
+    </div>
+  )
+}
+
+export function AppPageHeader({
+  title,
+  actions,
+  backTo,
+  backLabel = 'Geri',
+  onBack,
+  showBack = true,
+}) {
+  return (
+    <div className="app-page-header flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        {showBack ? (
+          <AppPageBackButton backTo={backTo} backLabel={backLabel} onBack={onBack} />
+        ) : null}
+        <h1 className={`${APP_PAGE_TITLE_CLASS} truncate`}>{title}</h1>
       </div>
       {actions ? (
-        <div className="absolute right-5 top-1/2 flex -translate-y-1/2 flex-wrap items-center justify-end gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           {actions}
         </div>
       ) : null}
@@ -36,17 +103,27 @@ export function AppPageHeader({ title, actions, backTo, backLabel = 'Geri' }) {
   )
 }
 
-export function AppPagePanel({ title, description, action, children, className = '', fill = false }) {
+export function AppPagePanel({
+  title,
+  description,
+  action,
+  children,
+  className = '',
+  fill = false,
+  dotColor = 'blue',
+}) {
   return (
-    <section className={`card ${className}`.trim()}>
+    <section className={`card px-4 py-3 ${className}`.trim()}>
       {title || description || action ? (
-        <div className="mb-4 flex shrink-0 flex-wrap items-start justify-between gap-4">
-          <div>
-            {title ? <h2 className="text-base font-bold text-white">{title}</h2> : null}
-            {description ? <p className="mt-1 text-xs text-gray-500">{description}</p> : null}
-          </div>
-          {action}
-        </div>
+        <AppPanelHeader
+          title={title}
+          action={action}
+          dotColor={dotColor}
+          className={description ? 'mb-2' : ''}
+        />
+      ) : null}
+      {description ? (
+        <p className="app-titlecase-words mb-2.5 text-[12px] font-semibold leading-tight text-[var(--muted)]">{description}</p>
       ) : null}
       {fill ? (
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>

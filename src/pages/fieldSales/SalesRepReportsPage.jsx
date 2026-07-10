@@ -104,7 +104,7 @@ export default function SalesRepReportsPage() {
               <p className={`text-sm font-black ${row.rank === 1 ? 'text-amber-300' : 'text-gray-300'}`}>#{row.rank}</p>
               <div>
                 <p className="text-sm font-bold text-white">{row.repLabel}</p>
-                <p className="text-[11px] text-gray-500">{row.tasksDone} tamamlanan görev</p>
+                <p className="text-[13px] text-gray-500">{row.tasksDone} tamamlanan görev</p>
               </div>
               <p className="text-xs font-bold text-blue-300">{row.total}</p>
               <p className="text-xs text-gray-400">{row.quotes}</p>
@@ -112,7 +112,7 @@ export default function SalesRepReportsPage() {
               <p className="text-right text-sm font-black text-emerald-300">{formatTL(row.salesTotal)}</p>
               <p className="text-right text-sm font-black text-purple-300">
                 {formatTL(row.commission.commission)}
-                <span className="block text-[10px] text-gray-500">%{row.commission.rate}</span>
+                <span className="block text-[12px] text-gray-500">%{row.commission.rate}</span>
               </p>
             </div>
           ))}

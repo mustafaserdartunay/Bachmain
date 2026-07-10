@@ -18,19 +18,32 @@ import {
 import { resolveCustomerRepresentative, readOptionLists } from '../../utils/customerMeta'
 import { BTN_PRIMARY } from '../../utils/buttonStyles'
 
-const FIELD_LABEL = 'mb-1.5 block text-[10px] font-black uppercase tracking-wider text-gray-500'
+const FIELD_LABEL = 'mb-1.5 block text-[12px] font-black uppercase tracking-wider text-gray-500'
 
-function Modal({ title, onClose, children, wide, large, fullPage, panelClassName = '' }) {
+const HEADER_POPOVER_BTN_CANCEL =
+  'inline-flex h-9 min-w-[5.5rem] items-center justify-center rounded-xl bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-4 text-[12px] font-bold text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5'
+
+const HEADER_POPOVER_BTN_SUBMIT =
+  'inline-flex h-9 min-w-[5.5rem] items-center justify-center rounded-xl bg-gradient-to-br from-[#7cf2c6] via-[#34d399] to-[#10b981] px-4 text-[12px] font-bold text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5'
+
+const HEADER_POPOVER_ICON_BTN =
+  'inline-flex shrink-0 items-center justify-center p-0 text-[#f43f5e] transition-colors hover:text-[#e11d48]'
+
+function Modal({ title, onClose, children, wide, large, fullPage, panelClassName = '', compact = false }) {
   if (fullPage) {
     return (
-      <div className={`flex h-full min-h-[520px] flex-col ${wide ? '' : ''}`}>
-        <div className="flex items-center justify-between border-b border-dark-500/45 px-5 py-3.5">
-          <h2 className="text-base font-bold text-white">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-dark-700 hover:text-white">
-            <X className="h-4 w-4" />
+      <div className={`flex h-full flex-col ${compact ? 'min-h-0' : 'min-h-[520px]'}`}>
+        <div className={`flex shrink-0 items-center justify-between border-b border-dark-500/45 ${compact ? 'px-4 py-2.5' : 'px-5 py-3.5'}`}>
+          <h2 className={compact ? 'text-xs font-extrabold text-white' : 'text-base font-bold text-white'}>{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className={compact ? HEADER_POPOVER_ICON_BTN : 'rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-dark-700 hover:text-white'}
+          >
+            <X className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-5">{children}</div>
+        <div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${compact ? '' : 'overflow-y-auto p-5'}`}>{children}</div>
       </div>
     )
   }
@@ -69,7 +82,7 @@ function DropdownField({ label, value, onChange, options, openKey, activeMenu, s
   )
 }
 
-export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false }) {
+export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false, compact = false }) {
   const [form, setForm] = useState(() => ({
     ...initial,
     dateFrom: initial.dateFrom || initial.dueDate || '',
@@ -174,116 +187,144 @@ export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false }) 
     })
   }
 
+  const gridGap = compact ? 'gap-2.5' : 'gap-4'
+
+  const fields = (
+    <>
+      <div>
+        <label className={FIELD_LABEL}>Görev Başlığı</label>
+        <input
+          value={form.title}
+          onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+          placeholder="Örn. Teklif revizyonu gönder"
+          className="form-input text-sm"
+          required
+        />
+      </div>
+
+      <div className={`grid ${gridGap} sm:grid-cols-2`}>
+        <CrmCustomerSearchField
+          value={form.customer}
+          onChange={handleCustomerChange}
+        />
+        <DropdownField
+          label="Müşteri temsilcisi"
+          value={form.assignee}
+          onChange={(value) => {
+            setAssigneeTouched(true)
+            setForm((current) => ({ ...current, assignee: value }))
+          }}
+          options={representativeOptions}
+          openKey="task-assignee"
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+          placeholder="Sorumlu seçin"
+        />
+      </div>
+
+      <div className={`grid ${gridGap} grid-cols-3`}>
+        <DropdownField
+          label="Öncelik"
+          value={form.priority}
+          onChange={(value) => setForm((current) => ({ ...current, priority: value }))}
+          options={priorityOptions}
+          openKey="task-priority"
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+        />
+        <DropdownField
+          label="Durum"
+          value={form.status}
+          onChange={(value) => setForm((current) => ({ ...current, status: value }))}
+          options={statusOptions}
+          openKey="task-status"
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+        />
+        <DropdownField
+          label="Kategori"
+          value={form.category || categoryOptions[0]?.label || 'Genel'}
+          onChange={(value) => setForm((current) => {
+            const nextStatusOptions = getCrmTemplateStageOptions(value)
+            const nextStatus = nextStatusOptions.some((option) => option.label === current.status)
+              ? current.status
+              : nextStatusOptions[0]?.label || ''
+            return { ...current, category: value, status: nextStatus }
+          })}
+          options={categoryOptions}
+          openKey="task-category"
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+        />
+      </div>
+
+      <div>
+        <label className={FIELD_LABEL}>Başlangıç / Bitiş Tarihi</label>
+        <DateRangePicker
+          dateFrom={form.dateFrom || form.dueDate || ''}
+          dateTo={form.dateTo || ''}
+          timeFrom={form.timeFrom || ''}
+          timeTo={form.timeTo || ''}
+          includeTime={Boolean(form.includeTime)}
+          onChange={(value) => setForm((current) => ({
+            ...current,
+            ...value,
+            dueDate: value.dateFrom || current.dueDate,
+          }))}
+        />
+      </div>
+
+      <div>
+        <label className={FIELD_LABEL}>Detaylı Açıklama</label>
+        <textarea
+          value={form.description}
+          onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
+          placeholder="Görev kapsamı, beklenen çıktı ve notlar..."
+          className={`form-input resize-none text-sm ${compact ? 'min-h-16' : 'min-h-28'}`}
+          rows={compact ? 2 : undefined}
+        />
+      </div>
+    </>
+  )
+
+  const footer = (
+    <div className={`flex items-center justify-end gap-2.5 ${compact ? 'shrink-0 border-t border-[rgba(140,145,165,0.14)] px-4 py-3' : 'pt-1'}`}>
+      <button
+        type="button"
+        onClick={onClose}
+        className={compact ? HEADER_POPOVER_BTN_CANCEL : 'rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300'}
+      >
+        Vazgeç
+      </button>
+      <button
+        type="submit"
+        className={compact ? HEADER_POPOVER_BTN_SUBMIT : `${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}
+      >
+        {isEdit ? 'Güncelle' : compact ? 'Oluştur' : 'Görev Oluştur'}
+      </button>
+    </div>
+  )
+
   return (
-    <Modal title={isEdit ? 'Görev Düzenle' : 'Görev Oluştur'} onClose={onClose} wide fullPage={fullPage}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className={FIELD_LABEL}>Görev Başlığı</label>
-          <input
-            value={form.title}
-            onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-            placeholder="Örn. Teklif revizyonu gönder"
-            className="form-input text-sm"
-            required
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <CrmCustomerSearchField
-            value={form.customer}
-            onChange={handleCustomerChange}
-          />
-          <DropdownField
-            label="Müşteri temsilcisi"
-            value={form.assignee}
-            onChange={(value) => {
-              setAssigneeTouched(true)
-              setForm((current) => ({ ...current, assignee: value }))
-            }}
-            options={representativeOptions}
-            openKey="task-assignee"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-            placeholder="Sorumlu seçin"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <DropdownField
-            label="Öncelik"
-            value={form.priority}
-            onChange={(value) => setForm((current) => ({ ...current, priority: value }))}
-            options={priorityOptions}
-            openKey="task-priority"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-          />
-          <DropdownField
-            label="Durum"
-            value={form.status}
-            onChange={(value) => setForm((current) => ({ ...current, status: value }))}
-            options={statusOptions}
-            openKey="task-status"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-          />
-          <DropdownField
-            label="Kategori"
-            value={form.category || categoryOptions[0]?.label || 'Genel'}
-            onChange={(value) => setForm((current) => {
-              const nextStatusOptions = getCrmTemplateStageOptions(value)
-              const nextStatus = nextStatusOptions.some((option) => option.label === current.status)
-                ? current.status
-                : nextStatusOptions[0]?.label || ''
-              return { ...current, category: value, status: nextStatus }
-            })}
-            options={categoryOptions}
-            openKey="task-category"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-          />
-        </div>
-
-        <div>
-          <label className={FIELD_LABEL}>Başlangıç / Bitiş Tarihi</label>
-          <DateRangePicker
-            dateFrom={form.dateFrom || form.dueDate || ''}
-            dateTo={form.dateTo || ''}
-            timeFrom={form.timeFrom || ''}
-            timeTo={form.timeTo || ''}
-            includeTime={Boolean(form.includeTime)}
-            onChange={(value) => setForm((current) => ({
-              ...current,
-              ...value,
-              dueDate: value.dateFrom || current.dueDate,
-            }))}
-          />
-        </div>
-
-        <div>
-          <label className={FIELD_LABEL}>Detaylı Açıklama</label>
-          <textarea
-            value={form.description}
-            onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-            placeholder="Görev kapsamı, beklenen çıktı ve notlar..."
-            className="form-input min-h-28 resize-none text-sm"
-          />
-        </div>
-
-        <div className="flex items-center justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300">
-            Vazgeç
-          </button>
-          <button type="submit" className={`${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}>
-            {isEdit ? 'Güncelle' : 'Görev Oluştur'}
-          </button>
-        </div>
+    <Modal title={isEdit ? 'Görev Düzenle' : 'Görev Oluştur'} onClose={onClose} wide fullPage={fullPage} compact={compact}>
+      <form
+        onSubmit={handleSubmit}
+        className={compact ? 'flex min-h-0 flex-1 flex-col' : 'space-y-4'}
+      >
+        {compact ? (
+          <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-4 py-3">
+            {fields}
+          </div>
+        ) : (
+          fields
+        )}
+        {footer}
       </form>
     </Modal>
   )
 }
 
-export function AppointmentFormModal({ initial, onClose, onSubmit, fullPage = false }) {
+export function AppointmentFormModal({ initial, onClose, onSubmit, fullPage = false, compact = false }) {
   const [form, setForm] = useState(() => ({
     ...initial,
     dateFrom: initial.dateFrom || initial.date || '',
@@ -378,117 +419,152 @@ export function AppointmentFormModal({ initial, onClose, onSubmit, fullPage = fa
     })
   }
 
+  const gridGap = compact ? 'gap-2.5' : 'gap-4'
+
+  const fields = (
+    <>
+      <div>
+        <label className={FIELD_LABEL}>Randevu Başlığı</label>
+        <input
+          value={form.title}
+          onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+          placeholder="Örn. Teklif sunumu"
+          className="form-input text-sm"
+          required
+        />
+      </div>
+
+      <div className={`grid ${gridGap} sm:grid-cols-2`}>
+        <CrmCustomerSearchField
+          value={form.customer}
+          onChange={handleCustomerChange}
+        />
+        <div>
+          <label className={FIELD_LABEL}>İlgili Kişi</label>
+          <input
+            value={form.contact}
+            onChange={(event) => setForm((current) => ({ ...current, contact: event.target.value }))}
+            placeholder="Yetkili adı"
+            className="form-input text-sm"
+          />
+        </div>
+      </div>
+
+      <div className={`grid ${gridGap} grid-cols-3`}>
+        <DropdownField
+          label="Tür"
+          value={form.type}
+          onChange={(value) => setForm((current) => ({ ...current, type: value }))}
+          options={appointmentTypeOptions}
+          openKey="apt-type"
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+        />
+        <DropdownField
+          label="Durum"
+          value={form.status}
+          onChange={(value) => setForm((current) => ({ ...current, status: value }))}
+          options={appointmentStatusOptions}
+          openKey="apt-status"
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+        />
+        <DropdownField
+          label="Müşteri temsilcisi"
+          value={form.assignee}
+          onChange={(value) => {
+            setAssigneeTouched(true)
+            setForm((current) => ({ ...current, assignee: value }))
+          }}
+          options={representativeOptions}
+          openKey="apt-assignee"
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+        />
+      </div>
+
+      <div>
+        <label className={FIELD_LABEL}>Başlangıç / Bitiş Tarihi</label>
+        <DateRangePicker
+          dateFrom={form.dateFrom || form.date || ''}
+          dateTo={form.dateTo || ''}
+          timeFrom={form.timeFrom || form.startTime || ''}
+          timeTo={form.timeTo || ''}
+          includeTime={Boolean(form.includeTime)}
+          dateLabelFormat="numeric"
+          showTimeInLabel={false}
+          onChange={(value) => setForm((current) => ({
+            ...current,
+            ...value,
+            date: value.dateFrom || current.date,
+            startTime: value.includeTime ? value.timeFrom || '' : '',
+            endTime: value.includeTime ? value.timeTo || '' : '',
+          }))}
+        />
+      </div>
+
+      <div>
+        <label className={FIELD_LABEL}>Konum / Bağlantı</label>
+        <input
+          value={form.location}
+          onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))}
+          placeholder="Ofis, fabrika, Teams linki..."
+          className="form-input text-sm"
+        />
+      </div>
+
+      <div>
+        <label className={FIELD_LABEL}>Randevu Notları</label>
+        <textarea
+          value={form.notes}
+          onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
+          placeholder="Gündem maddeleri, hazırlık notları..."
+          className={`form-input resize-none text-sm ${compact ? 'min-h-16' : 'min-h-24'}`}
+          rows={compact ? 2 : undefined}
+        />
+      </div>
+    </>
+  )
+
+  const footer = (
+    <div className={`flex items-center justify-end gap-2.5 ${compact ? 'shrink-0 border-t border-[rgba(140,145,165,0.14)] px-4 py-3' : 'pt-1'}`}>
+      <button
+        type="button"
+        onClick={onClose}
+        className={compact ? HEADER_POPOVER_BTN_CANCEL : 'rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300'}
+      >
+        Vazgeç
+      </button>
+      <button
+        type="submit"
+        className={compact ? HEADER_POPOVER_BTN_SUBMIT : `${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}
+      >
+        {isEdit ? 'Güncelle' : compact ? 'Oluştur' : 'Randevu Oluştur'}
+      </button>
+    </div>
+  )
+
   return (
-    <Modal title={isEdit ? 'Randevu Düzenle' : 'Randevu Oluştur'} onClose={onClose} wide fullPage={fullPage} panelClassName="h-[593px]">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className={FIELD_LABEL}>Randevu Başlığı</label>
-          <input
-            value={form.title}
-            onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-            placeholder="Örn. Teklif sunumu"
-            className="form-input text-sm"
-            required
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <CrmCustomerSearchField
-            value={form.customer}
-            onChange={handleCustomerChange}
-          />
-          <div>
-            <label className={FIELD_LABEL}>İlgili Kişi</label>
-            <input
-              value={form.contact}
-              onChange={(event) => setForm((current) => ({ ...current, contact: event.target.value }))}
-              placeholder="Yetkili adı"
-              className="form-input text-sm"
-            />
+    <Modal
+      title={isEdit ? 'Randevu Düzenle' : 'Randevu Oluştur'}
+      onClose={onClose}
+      wide
+      fullPage={fullPage}
+      compact={compact}
+      panelClassName={compact ? '' : 'h-[593px]'}
+    >
+      <form
+        onSubmit={handleSubmit}
+        className={compact ? 'flex min-h-0 flex-1 flex-col' : 'space-y-4'}
+      >
+        {compact ? (
+          <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-4 py-3">
+            {fields}
           </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <DropdownField
-            label="Tür"
-            value={form.type}
-            onChange={(value) => setForm((current) => ({ ...current, type: value }))}
-            options={appointmentTypeOptions}
-            openKey="apt-type"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-          />
-          <DropdownField
-            label="Durum"
-            value={form.status}
-            onChange={(value) => setForm((current) => ({ ...current, status: value }))}
-            options={appointmentStatusOptions}
-            openKey="apt-status"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-          />
-          <DropdownField
-            label="Müşteri temsilcisi"
-            value={form.assignee}
-            onChange={(value) => {
-              setAssigneeTouched(true)
-              setForm((current) => ({ ...current, assignee: value }))
-            }}
-            options={representativeOptions}
-            openKey="apt-assignee"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-          />
-        </div>
-
-        <div>
-          <label className={FIELD_LABEL}>Başlangıç / Bitiş Tarihi</label>
-          <DateRangePicker
-            dateFrom={form.dateFrom || form.date || ''}
-            dateTo={form.dateTo || ''}
-            timeFrom={form.timeFrom || form.startTime || ''}
-            timeTo={form.timeTo || ''}
-            includeTime={Boolean(form.includeTime)}
-            dateLabelFormat="numeric"
-            showTimeInLabel={false}
-            onChange={(value) => setForm((current) => ({
-              ...current,
-              ...value,
-              date: value.dateFrom || current.date,
-              startTime: value.includeTime ? value.timeFrom || '' : '',
-              endTime: value.includeTime ? value.timeTo || '' : '',
-            }))}
-          />
-        </div>
-
-        <div>
-          <label className={FIELD_LABEL}>Konum / Bağlantı</label>
-          <input
-            value={form.location}
-            onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))}
-            placeholder="Ofis, fabrika, Teams linki..."
-            className="form-input text-sm"
-          />
-        </div>
-
-        <div>
-          <label className={FIELD_LABEL}>Randevu Notları</label>
-          <textarea
-            value={form.notes}
-            onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-            placeholder="Gündem maddeleri, hazırlık notları..."
-            className="form-input min-h-24 resize-none text-sm"
-          />
-        </div>
-
-        <div className="flex items-center justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300">
-            Vazgeç
-          </button>
-          <button type="submit" className={`${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}>
-            {isEdit ? 'Güncelle' : 'Randevu Oluştur'}
-          </button>
-        </div>
+        ) : (
+          fields
+        )}
+        {footer}
       </form>
     </Modal>
   )

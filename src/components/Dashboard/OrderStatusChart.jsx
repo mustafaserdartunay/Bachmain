@@ -33,7 +33,7 @@ export default function OrderStatusChart() {
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-2xl font-black text-white">{total}</span>
-            <span className="text-[10px] text-gray-500">toplam</span>
+            <span className="text-[12px] text-gray-500">toplam</span>
           </div>
         </div>
 
@@ -43,7 +43,7 @@ export default function OrderStatusChart() {
               <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
               <span className="min-w-0 flex-1 truncate text-xs text-gray-400">{item.name}</span>
               <span className="shrink-0 text-xs font-bold text-gray-300">{item.value}</span>
-              <span className="w-8 shrink-0 text-right text-[10px] text-gray-600">{Math.round((item.value / total) * 100)}%</span>
+              <span className="w-8 shrink-0 text-right text-[12px] text-gray-600">{Math.round((item.value / total) * 100)}%</span>
             </div>
           ))}
         </div>

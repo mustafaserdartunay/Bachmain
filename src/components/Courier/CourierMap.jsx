@@ -212,7 +212,7 @@ export default function CourierMap({
         </div>
       )}
       <div className="pointer-events-none absolute left-3 top-3 rounded-xl border border-dark-500/45 bg-dark-900/85 px-3 py-2 backdrop-blur-sm">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Canlı Filo Haritası</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.16em] text-gray-500">Canlı Filo Haritası</p>
         <p className="mt-0.5 text-xs font-bold text-emerald-300">{dispatches.length} aktif gönderi</p>
       </div>
     </div>

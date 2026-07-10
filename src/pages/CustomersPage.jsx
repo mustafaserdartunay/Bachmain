@@ -1,9 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Link2, Plus, Search, Users, WalletCards } from 'lucide-react'
+import { CheckCircle2, Link2, Plus, Users, WalletCards } from 'lucide-react'
+import SearchInput from '../components/Common/SearchInput'
 import { Link, useNavigate } from 'react-router-dom'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
+import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
+import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
+import {
+  APP_FILTER_LABEL_CLASS,
+  APP_LABEL_CLASS,
+  APP_METRIC_ROW_CLASS,
+  APP_VALUE_CLASS,
+} from '../utils/dashboardDesign'
 import { getCustomerProfiles, restoreCustomer, restoreDeletedCustomer } from '../data/customerProfiles'
 import { appendActivity } from '../utils/customerActivity'
 import {
@@ -39,33 +48,15 @@ const balanceFilterOptions = [
   { label: 'Sıfır', color: 'bg-orange-500' },
 ]
 
-function Panel({ title, description, children, action }) {
-  return (
-    <section className="card">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold text-white">{title}</h2>
-          {description && <p className="mt-1 text-xs text-gray-500">{description}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  )
+function balanceClass(balance) {
+  if (balance > 0) return 'text-emerald-600'
+  if (balance < 0) return 'text-red-600'
+  return 'text-orange-600'
 }
 
 function currentBalance(customer, movements) {
   return getCustomerLedgerBalance(customer, movements)
 }
-
-function balanceClass(balance) {
-  if (balance > 0) return 'text-emerald-300'
-  if (balance < 0) return 'text-red-300'
-  return 'text-orange-300'
-}
-
-const LIST_PILL_CLASS =
-  'flex w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold transition-colors hover:bg-dark-700/80'
 
 export default function CustomersPage({
   pageTitle = 'Müşteriler',
@@ -217,15 +208,15 @@ export default function CustomersPage({
   }
 
   return (
-    <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">{pageTitle}</h1>
-        </div>
-        <Link to={createPath} className="btn-primary absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-1.5 px-4 py-2.5 text-sm">
-          <Plus className="h-4 w-4" /> {createLabel}
-        </Link>
-      </section>
+    <AppPageShell>
+      <AppPageHeader
+        title={pageTitle}
+        actions={(
+          <Link to={createPath} className="btn-primary flex items-center gap-1.5 px-4 py-2.5 text-sm">
+            <Plus className="h-4 w-4" /> {createLabel}
+          </Link>
+        )}
+      />
 
       <SummaryMetrics
         columns={4}
@@ -237,23 +228,20 @@ export default function CustomersPage({
         ]}
       />
 
-      <Panel
+      <AppPagePanel
         title={listTitle}
-        action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{filteredCustomers.length} kayıt</span>}
+        dotColor="blue"
+        action={<span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px]">{filteredCustomers.length} kayıt</span>}
       >
         <div className="mb-4 space-y-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-            <input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Marka veya ünvan ara..."
-              className="form-input pl-10"
-            />
-          </div>
-          <div className="grid grid-cols-4 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3">
+          <SearchInput
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Marka veya ünvan ara..."
+          />
+          <div className="glass-inset app-filter-bar grid grid-cols-4 gap-3 p-3">
             <div>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Tipi</p>
+              <p className={APP_FILTER_LABEL_CLASS}>Tipi</p>
               <EditableDropdownPill
                 value={filters.type}
                 options={[filterAllOption, ...typeOptions]}
@@ -267,7 +255,7 @@ export default function CustomersPage({
               />
             </div>
             <div>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Temsilci</p>
+              <p className={APP_FILTER_LABEL_CLASS}>Temsilci</p>
               <EditableDropdownPill
                 value={filters.representative}
                 options={[filterAllOption, ...optionLists.representative]}
@@ -281,7 +269,7 @@ export default function CustomersPage({
               />
             </div>
             <div>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Puantaj</p>
+              <p className={APP_FILTER_LABEL_CLASS}>Puantaj</p>
               <EditableDropdownPill
                 value={filters.scoring}
                 options={[filterAllOption, ...optionLists.scoring]}
@@ -295,7 +283,7 @@ export default function CustomersPage({
               />
             </div>
             <div>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Bakiye</p>
+              <p className={APP_FILTER_LABEL_CLASS}>Bakiye</p>
               <EditableDropdownPill
                 value={filters.balance}
                 options={balanceFilterOptions}
@@ -338,13 +326,13 @@ export default function CustomersPage({
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') navigate(`/musteriler/${customer.id}`)
                 }}
-                className="relative grid cursor-pointer items-center gap-3 rounded-2xl border border-dark-500/45 bg-dark-800/55 px-4 py-3 transition-all hover:border-blue-500/35 hover:bg-dark-700/60"
+                className={`${APP_METRIC_ROW_CLASS} app-list-row relative grid items-center gap-3 px-4 py-3`}
                 style={{ gridTemplateColumns: listGrid }}
               >
                 <div className="min-w-0">
-                  <p className="flex min-w-0 items-center gap-2 text-sm font-black text-white">
+                  <p className={`flex min-w-0 items-center gap-2 ${APP_LABEL_CLASS} text-[var(--ink)]`}>
                     <span className="shrink-0 truncate">{display.brandShortName}</span>
-                    <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[10px] font-black text-gray-400">
+                    <span className="inline-flex min-w-0 items-center rounded-lg border border-white/55 bg-white/35 px-2 py-0.5 text-[12px] font-bold text-[var(--muted)]">
                       <span className="truncate">{display.companyTitle}</span>
                     </span>
                   </p>
@@ -379,7 +367,7 @@ export default function CustomersPage({
                   setActiveMenu={setActiveMenu}
                   onChange={(value) => updateCustomerSetting(customer.id, 'scoring', value)}
                 />
-                <p className={`min-w-0 pr-2 text-right text-sm font-black ${balanceClass(balance)}`}>
+                <p className={`min-w-0 pr-2 text-right ${APP_VALUE_CLASS} ${balanceClass(balance)}`}>
                   {formatTreasuryCurrency(balance)}
                 </p>
                 <div className="flex justify-end" onClick={(event) => event.stopPropagation()}>
@@ -388,7 +376,7 @@ export default function CustomersPage({
                       href={getPortalUrl(b2bMap[customer.id].accessToken)}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-xl border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 text-[10px] font-black uppercase text-blue-300 hover:bg-blue-500/20"
+                      className="inline-flex items-center gap-1 rounded-xl border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 text-[12px] font-black uppercase text-blue-300 hover:bg-blue-500/20"
                     >
                       <Link2 className="h-3 w-3" /> Panel
                     </a>
@@ -396,7 +384,7 @@ export default function CustomersPage({
                     <button
                       type="button"
                       onClick={(event) => grantB2bAccess(event, customer.id)}
-                      className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-black uppercase text-emerald-300 hover:bg-emerald-500/20"
+                      className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[12px] font-black uppercase text-emerald-300 hover:bg-emerald-500/20"
                     >
                       İzin Ver
                     </button>
@@ -408,13 +396,13 @@ export default function CustomersPage({
         </div>
 
         {filteredCustomers.length === 0 && (
-          <div className="mt-4 rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-8 text-center">
-            <Users className="mx-auto mb-3 h-8 w-8 text-gray-600" />
-            <p className="text-sm font-bold text-white">{emptyTitle}</p>
-            <p className="mt-1 text-xs text-gray-500">Arama veya segment filtresini değiştirin.</p>
+          <div className="glass-inset mt-4 p-8 text-center">
+            <Users className="mx-auto mb-3 h-8 w-8 text-[var(--muted)]" />
+            <p className="text-sm font-extrabold text-[var(--ink)]">{emptyTitle}</p>
+            <p className="mt-1 text-xs font-semibold text-[var(--muted)]">Arama veya segment filtresini değiştirin.</p>
           </div>
         )}
-      </Panel>
+      </AppPagePanel>
 
       <ActivityArchivePanel
         title="Arşiv ve İşlem Geçmişi"
@@ -422,6 +410,6 @@ export default function CustomersPage({
         onRestore={handleRestoreArchiveEntry}
         emptyMessage="Henüz arşiv veya silme kaydı yok."
       />
-    </div>
+    </AppPageShell>
   )
 }

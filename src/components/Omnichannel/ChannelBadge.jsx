@@ -29,16 +29,24 @@ export default function ChannelBadge({ channel, showLabel = false, size = 'sm' }
   const iconSize = size === 'lg' ? 'h-4 w-4' : 'h-3.5 w-3.5'
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-lg border ${config.border} ${config.bg} px-2 py-1`}>
-      <span className={`flex ${sizeClass} items-center justify-center rounded-md ${config.bg} ${config.color}`}>
+    <span className="glass-pill inline-flex !h-7 items-center gap-1.5 !px-2 !py-0.5">
+      <span className={`flex ${sizeClass} items-center justify-center rounded-md ${config.color}`}>
         <Icon className={iconSize} />
       </span>
-      {showLabel && <span className={`text-[10px] font-black uppercase tracking-wide ${config.color}`}>{config.label}</span>}
+      {showLabel && <span className={`text-[12px] font-bold uppercase tracking-wide ${config.color}`}>{config.label}</span>}
     </span>
   )
 }
 
+const channelDotColors = {
+  whatsapp: 'bg-emerald-500',
+  instagram: 'bg-pink-500',
+  facebook: 'bg-blue-500',
+  email: 'bg-amber-500',
+  tiktok: 'bg-slate-700',
+}
+
 export function ChannelDot({ channel }) {
-  const config = CHANNELS[channel] || CHANNELS.whatsapp
-  return <span className={`h-2 w-2 shrink-0 rounded-full ${config.bg} ring-2 ring-dark-800`} />
+  const dotClass = channelDotColors[channel] || channelDotColors.whatsapp
+  return <span className={`h-2 w-2 shrink-0 rounded-full ring-2 ring-white/70 ${dotClass}`} />
 }

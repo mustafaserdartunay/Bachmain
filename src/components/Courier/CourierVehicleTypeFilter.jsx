@@ -26,7 +26,7 @@ export default function CourierVehicleTypeFilter({ value = 'all', onChange, coun
             <span>{option.label}</span>
             {option.id !== 'all' && (
               <span
-                className="rounded-md px-1.5 py-0.5 text-[10px] font-black"
+                className="rounded-md px-1.5 py-0.5 text-[12px] font-black"
                 style={{ background: `${option.color}22`, color: option.color }}
               >
                 {count}

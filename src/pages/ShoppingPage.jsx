@@ -1,105 +1,43 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  BadgeCheck,
   Banknote,
-  CalendarDays,
   CheckCircle2,
+  Clock3,
   CreditCard,
+  FileText,
   Minus,
+  Percent,
   Plus,
   Receipt,
-  Search,
-  ShoppingBasket,
-  Trash2,
-  Truck,
+  ShoppingBag,
+  StickyNote,
+  Tag,
+  UserRound,
   WalletCards,
+  X,
 } from 'lucide-react'
-import SummaryMetrics from '../components/Common/SummaryMetrics'
+import SearchInput from '../components/Common/SearchInput'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
+import SummaryMetrics from '../components/Common/SummaryMetrics'
+import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import { appendActivityEntry } from '../utils/activityArchiveStore'
+import { getStoreSalesCategories, getStoreSalesProductsWithMedia } from '../utils/productCatalog'
 
 const HISTORY_KEY = 'erlenbox-shopping-sales-history'
 const CART_KEY = 'erlenbox-shopping-active-cart'
+const CART_META_KEY = 'erlenbox-shopping-cart-meta'
 
-const products = [
-  {
-    id: 'CHB-001',
-    name: 'Premium Madlen Çikolata Kutusu',
-    category: 'Chocolate Box',
-    description: 'Kurumsal hediye, özel gün ve bayi ziyaretleri için altın detaylı lüks madlen kutusu.',
-    image: 'linear-gradient(135deg,#3b1d12,#7c2d12 52%,#f59e0b)',
-    price: 1250,
-    vatRate: 20,
-    stock: 42,
-    tag: 'En Çok Satan',
-  },
-  {
-    id: 'CHB-002',
-    name: 'Kraft Spesiyal Çikolata Kutusu',
-    category: 'Chocolate Box',
-    description: 'Günlük satış, hızlı paketleme ve doğal marka dili için kraft dokulu spesiyal kutu.',
-    image: 'linear-gradient(135deg,#422006,#92400e 55%,#facc15)',
-    price: 780,
-    vatRate: 20,
-    stock: 68,
-    tag: 'Günlük',
-  },
-  {
-    id: 'CHP-003',
-    name: 'Bitter Trüf Çikolata 500g',
-    category: 'Chocolate Product',
-    description: 'Yoğun kakao aromalı bitter trüf; vitrin, paket servis ve özel siparişler için ideal.',
-    image: 'linear-gradient(135deg,#111827,#3f1d12 55%,#a16207)',
-    price: 540,
-    vatRate: 10,
-    stock: 96,
-    tag: 'Taze Ürün',
-  },
-  {
-    id: 'CHP-004',
-    name: 'Sütlü Fındıklı Tablet Seti',
-    category: 'Chocolate Product',
-    description: 'Beşli tablet seti; kasada hızlı satış ve personel ikram alışverişleri için pratik paket.',
-    image: 'linear-gradient(135deg,#4a2c1a,#9a3412 58%,#fed7aa)',
-    price: 390,
-    vatRate: 10,
-    stock: 120,
-    tag: 'Ekonomik',
-  },
-  {
-    id: 'CHB-005',
-    name: 'VIP Logolu Çikolata Kutusu',
-    category: 'Chocolate Box',
-    description: 'Firma logosu, kart notu ve premium iç dizilimle kurumsal müşteriye hazır sunum kutusu.',
-    image: 'linear-gradient(135deg,#020617,#1e3a8a 54%,#c084fc)',
-    price: 1850,
-    vatRate: 20,
-    stock: 24,
-    tag: 'VIP',
-  },
-  {
-    id: 'CHP-006',
-    name: 'Karışık Draje ve Pralin Paketi',
-    category: 'Chocolate Product',
-    description: 'Kasada tamamlayıcı ürün olarak önerilen, günlük alışveriş sepetini büyüten karışık paket.',
-    image: 'linear-gradient(135deg,#14532d,#166534 54%,#86efac)',
-    price: 320,
-    vatRate: 10,
-    stock: 150,
-    tag: 'Sepet Artırıcı',
-  },
+const quickCustomerPresets = [
+  'Perakende Müşteri',
+  'Kurumsal Müşteri',
+  'Misafir',
+  'Personel İkramı',
 ]
 
 const paymentMethods = [
-  { id: 'card', label: 'Kredi Kartı', icon: CreditCard },
-  { id: 'cash', label: 'Nakit', icon: Banknote },
-  { id: 'transfer', label: 'Havale / EFT', icon: WalletCards },
-]
-
-const categoryOptions = [
-  { value: 'All', label: 'Tüm ürünler' },
-  { value: 'Chocolate Box', label: 'Çikolata Kutuları' },
-  { value: 'Chocolate Product', label: 'Çikolata Ürünleri' },
+  { id: 'cash', label: 'Nakit', icon: Banknote, tone: 'bg-emerald-500 hover:bg-emerald-600 text-white', selectedRing: 'ring-emerald-400/50' },
+  { id: 'card', label: 'Kredi Kartı', icon: CreditCard, tone: 'bg-blue-500 hover:bg-blue-600 text-white', selectedRing: 'ring-blue-400/50' },
+  { id: 'transfer', label: 'Havale', icon: WalletCards, tone: 'bg-violet-500 hover:bg-violet-600 text-white', selectedRing: 'ring-violet-400/50' },
 ]
 
 function formatCurrency(value) {
@@ -117,57 +55,168 @@ function today() {
   })
 }
 
-function categoryLabel(value) {
-  return categoryOptions.find((option) => option.value === value)?.label || value
-}
+function ProductVisual({ product }) {
+  const imageUrl = product.imageUrl || product.image
+  const isImageUrl = typeof imageUrl === 'string'
+    && (imageUrl.startsWith('data:') || imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))
+  const fallbackStyle = { background: product.image || 'linear-gradient(135deg,#1e293b,#475569)' }
 
-function readStorage(key, fallback) {
-  try {
-    const value = localStorage.getItem(key)
-    if (!value) return fallback
-    const parsed = JSON.parse(value)
-    return Array.isArray(fallback) ? Array.isArray(parsed) ? parsed : fallback : parsed
-  } catch {
-    return fallback
-  }
-}
-
-function Panel({ title, description, children, action }) {
   return (
-    <section className="card">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold text-white">{title}</h2>
-          {description && <p className="mt-1 text-xs text-gray-500">{description}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
+    <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-dark-700/50">
+      {isImageUrl ? (
+        <img src={imageUrl} alt={product.name} className="h-full w-full object-cover" />
+      ) : (
+        <div className="h-full w-full" style={fallbackStyle} />
+      )}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/10" />
+      <span className="absolute left-2.5 top-2.5 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-black uppercase text-slate-700 shadow-sm">
+        {product.tag}
+      </span>
+    </div>
   )
 }
 
-function ProductVisual({ product }) {
+function DailySalesSparkline({ history }) {
+  const buckets = useMemo(() => {
+    const hours = Array.from({ length: 8 }, (_, index) => ({ hour: index + 9, total: 0 }))
+    history.forEach((sale) => {
+      const match = sale.date?.match(/(\d{1,2}):(\d{2})/)
+      if (!match) return
+      const hour = Number(match[1])
+      const bucket = hours.find((item) => item.hour === hour) || hours.find((item) => hour >= item.hour && hour < item.hour + 1)
+      if (bucket) bucket.total += sale.grandTotal
+    })
+    const max = Math.max(...hours.map((item) => item.total), 1)
+    return hours.map((item) => ({ ...item, pct: Math.round((item.total / max) * 100) }))
+  }, [history])
+
   return (
-    <div className="relative h-28 overflow-hidden rounded-2xl border border-white/10 shadow-inner" style={{ background: product.image }}>
-      <div className="absolute inset-x-5 top-5 h-12 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm" />
-      <div className="absolute bottom-4 left-5 right-5 rounded-xl border border-white/15 bg-black/20 px-3 py-2">
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/75">{categoryLabel(product.category)}</p>
-        <p className="truncate text-sm font-black text-white">{product.name}</p>
+    <div className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-4 shadow-card">
+      <p className="text-xs font-bold text-white">Günlük Satış Akışı</p>
+      <p className="mt-0.5 text-[12px] text-gray-500">Saatlik tahsilat dağılımı</p>
+      <div className="mt-4 flex h-16 items-end gap-1.5">
+        {buckets.map((item) => (
+          <div key={item.hour} className="flex flex-1 flex-col items-center gap-1">
+            <div
+              className="w-full rounded-t-md bg-blue-500 transition-all"
+              style={{
+                height: `${Math.max(item.pct, item.total > 0 ? 12 : 6)}%`,
+                opacity: item.total > 0 ? 1 : 0.2,
+              }}
+            />
+            <span className="text-[11px] font-semibold text-gray-500">{item.hour}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
 }
 
+function StoreBalanceCard({ history }) {
+  const balance = history.reduce((sum, sale) => sum + sale.grandTotal, 0)
+  const avgTicket = history.length ? balance / history.length : 0
+
+  return (
+    <div className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-4 shadow-card">
+      <p className="text-xs font-bold text-white">Mağaza Kasası</p>
+      <p className="mt-2 text-2xl font-black tabular-nums text-blue-300">{formatCurrency(balance)}</p>
+      <p className="mt-1 text-[12px] text-gray-500">
+        {history.length} fiş · ort. {formatCurrency(avgTicket)}
+      </p>
+    </div>
+  )
+}
+
+function PaymentMixBar({ history }) {
+  const totals = useMemo(() => {
+    const mix = { Nakit: 0, 'Kredi Kartı': 0, other: 0 }
+    history.forEach((sale) => {
+      if (sale.paymentMethod === 'Nakit') mix.Nakit += sale.grandTotal
+      else if (sale.paymentMethod === 'Kredi Kartı') mix['Kredi Kartı'] += sale.grandTotal
+      else mix.other += sale.grandTotal
+    })
+    const total = mix.Nakit + mix['Kredi Kartı'] + mix.other || 1
+    return [
+      { label: 'Nakit', value: mix.Nakit, pct: Math.round((mix.Nakit / total) * 100), color: 'bg-emerald-500' },
+      { label: 'Kart', value: mix['Kredi Kartı'], pct: Math.round((mix['Kredi Kartı'] / total) * 100), color: 'bg-blue-500' },
+      { label: 'Diğer', value: mix.other, pct: Math.round((mix.other / total) * 100), color: 'bg-violet-500' },
+    ]
+  }, [history])
+
+  return (
+    <div className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-4 shadow-card">
+      <p className="text-xs font-bold text-white">Ödeme Dağılımı</p>
+      <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-dark-700">
+        {totals.map((item) => (
+          item.pct > 0 ? <div key={item.label} className={item.color} style={{ width: `${item.pct}%` }} /> : null
+        ))}
+      </div>
+      <div className="mt-3 space-y-1.5">
+        {totals.map((item) => (
+          <div key={item.label} className="flex items-center justify-between text-[13px]">
+            <span className="flex items-center gap-2 text-gray-500">
+              <span className={`h-2 w-2 rounded-full ${item.color}`} />
+              {item.label}
+            </span>
+            <span className="font-bold tabular-nums text-gray-200">{item.pct}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const defaultCartMeta = {
+  customerName: 'Perakende Müşteri',
+  paymentMethod: 'cash',
+  note: '',
+  description: '',
+  discountType: 'percent',
+  discountValue: 0,
+}
+
 export default function ShoppingPage() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
+  const [products, setProducts] = useState([])
   const [cart, setCart] = useState(() => readStorage(CART_KEY, []))
   const [history, setHistory] = useState(() => readStorage(HISTORY_KEY, []))
-  const [customerName, setCustomerName] = useState('Perakende Müşteri')
-  const [paymentMethod, setPaymentMethod] = useState('card')
-  const [note, setNote] = useState('Günlük çikolata ve kutu satışı.')
+  const [meta, setMeta] = useState(() => ({ ...defaultCartMeta, ...readStorage(CART_META_KEY, defaultCartMeta) }))
+  const [activeQuickAction, setActiveQuickAction] = useState(null)
   const [lastReceipt, setLastReceipt] = useState(null)
+
+  const categoryOptions = useMemo(() => getStoreSalesCategories(products), [products])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function refreshProducts() {
+      const loaded = await getStoreSalesProductsWithMedia()
+      if (!cancelled) setProducts(loaded)
+    }
+
+    refreshProducts()
+    window.addEventListener('erlenbox:products-updated', refreshProducts)
+    window.addEventListener('storage', refreshProducts)
+    return () => {
+      cancelled = true
+      window.removeEventListener('erlenbox:products-updated', refreshProducts)
+      window.removeEventListener('storage', refreshProducts)
+    }
+  }, [])
+
+  const {
+    customerName,
+    paymentMethod,
+    note,
+    description,
+    discountType,
+    discountValue,
+  } = meta
+
+  function updateMeta(patch) {
+    setMeta((current) => ({ ...current, ...patch }))
+  }
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(cart))
@@ -177,6 +226,10 @@ export default function ShoppingPage() {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history))
   }, [history])
 
+  useEffect(() => {
+    localStorage.setItem(CART_META_KEY, JSON.stringify(meta))
+  }, [meta])
+
   const filteredProducts = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('tr-TR')
     return products.filter((product) => {
@@ -184,13 +237,12 @@ export default function ShoppingPage() {
       const matchesQuery = !normalized
         || product.name.toLocaleLowerCase('tr-TR').includes(normalized)
         || product.id.toLocaleLowerCase('tr-TR').includes(normalized)
-        || product.description.toLocaleLowerCase('tr-TR').includes(normalized)
       return matchesCategory && matchesQuery
     })
-  }, [category, query])
+  }, [category, query, products])
 
   const totals = useMemo(() => {
-    return cart.reduce((summary, item) => {
+    const base = cart.reduce((summary, item) => {
       const lineSubtotal = item.price * item.quantity
       const lineVat = lineSubtotal * (item.vatRate / 100)
       return {
@@ -199,16 +251,38 @@ export default function ShoppingPage() {
         quantity: summary.quantity + item.quantity,
       }
     }, { subtotal: 0, vat: 0, quantity: 0 })
-  }, [cart])
 
-  const grandTotal = totals.subtotal + totals.vat
+    const rawDiscount = discountType === 'percent'
+      ? base.subtotal * (Math.max(0, discountValue) / 100)
+      : Math.max(0, discountValue)
+    const discount = Math.min(rawDiscount, base.subtotal)
+    const ratio = base.subtotal > 0 ? (base.subtotal - discount) / base.subtotal : 1
+    const adjustedVat = base.vat * ratio
+    const grandTotal = Math.max(0, base.subtotal - discount + adjustedVat)
+
+    return {
+      ...base,
+      discount,
+      vat: adjustedVat,
+      grandTotal,
+    }
+  }, [cart, discountType, discountValue])
+
+  const grandTotal = totals.grandTotal
   const dailyRevenue = history.reduce((sum, sale) => sum + sale.grandTotal, 0)
+
+  const quickActions = [
+    { id: 'discount', label: 'İndirim Uygula', icon: Percent },
+    { id: 'customer', label: 'Müşteri Ekle', icon: UserRound },
+    { id: 'note', label: 'Not Ekle', icon: StickyNote },
+    { id: 'description', label: 'Açıklama Ekle', icon: FileText },
+  ]
 
   function addToCart(product) {
     setCart((current) => {
       const existing = current.find((item) => item.id === product.id)
       if (existing) {
-        return current.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
+        return current.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item))
       }
       return [...current, { ...product, quantity: 1 }]
     })
@@ -234,49 +308,60 @@ export default function ShoppingPage() {
       })
       return
     }
-    setCart((current) => current.map((item) => item.id === productId ? { ...item, quantity } : item))
+    setCart((current) => current.map((item) => (item.id === productId ? { ...item, quantity } : item)))
   }
 
-  function completePayment() {
+  function completePayment(methodOverride) {
     if (cart.length === 0) {
-      window.alert('Sepete en az bir çikolata kutusu veya ürün ekleyin.')
+      window.alert('Sepete en az bir ürün ekleyin.')
       return
     }
 
+    const methodId = methodOverride || paymentMethod
     const invoiceNo = `SHOP-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String(history.length + 1).padStart(3, '0')}`
     const sale = {
       id: invoiceNo,
       date: today(),
       customerName: customerName.trim() || 'Perakende Müşteri',
-      paymentMethod: paymentMethods.find((method) => method.id === paymentMethod)?.label || 'Ödeme',
+      paymentMethod: paymentMethods.find((method) => method.id === methodId)?.label || 'Ödeme',
       note: note.trim(),
+      description: description.trim(),
+      discount: totals.discount,
+      discountType,
+      discountValue,
       items: cart,
       subtotal: totals.subtotal,
       vat: totals.vat,
       grandTotal,
-      status: 'Tahsil edildi',
+      status: 'Tamamlandı',
     }
 
     setHistory((current) => [sale, ...current])
     setLastReceipt(sale)
     setCart([])
+    updateMeta({
+      paymentMethod: methodId,
+      note: '',
+      description: '',
+      discountValue: 0,
+    })
+    setActiveQuickAction(null)
   }
 
   function clearHistory() {
-    if (window.confirm('Kayıtlı alışveriş geçmişi temizlensin mi?')) {
-      appendActivityEntry({
-        module: 'shopping',
-        action: 'delete',
-        entityType: 'salesHistory',
-        entityId: 'shopping-history',
-        entityLabel: 'Satış geçmişi',
-        description: `${history.length} alışveriş geçmişi temizlendi.`,
-        snapshot: history,
-        undo: { type: 'shopping.restoreHistory' },
-      })
-      setHistory([])
-      setLastReceipt(null)
-    }
+    if (!window.confirm('Kayıtlı satış geçmişi temizlensin mi?')) return
+    appendActivityEntry({
+      module: 'shopping',
+      action: 'delete',
+      entityType: 'salesHistory',
+      entityId: 'shopping-history',
+      entityLabel: 'Satış geçmişi',
+      description: `${history.length} alışveriş geçmişi temizlendi.`,
+      snapshot: history,
+      undo: { type: 'shopping.restoreHistory' },
+    })
+    setHistory([])
+    setLastReceipt(null)
   }
 
   function clearCart() {
@@ -296,7 +381,7 @@ export default function ShoppingPage() {
 
   function handleRestoreArchiveEntry(entry) {
     if (entry.entityType === 'cartItem' && entry.snapshot?.id) {
-      setCart((current) => current.some((item) => item.id === entry.snapshot.id) ? current : [...current, entry.snapshot])
+      setCart((current) => (current.some((item) => item.id === entry.snapshot.id) ? current : [...current, entry.snapshot]))
       return true
     }
     if (entry.entityType === 'cart' && Array.isArray(entry.snapshot)) {
@@ -312,255 +397,416 @@ export default function ShoppingPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Alışveriş</h1>
-        </div>
-        <div className="mt-4 flex flex-wrap justify-center gap-2 lg:absolute lg:right-5 lg:top-1/2 lg:mt-0 lg:-translate-y-1/2">
-          {categoryOptions.slice(1).map((option) => (
-            <span key={option.value} className="rounded-xl border border-blue-500/25 bg-blue-500/10 px-3 py-2 text-xs font-black text-blue-300">
-              {option.label}
-            </span>
-          ))}
-        </div>
-      </section>
+    <AppPageShell>
+      <AppPageHeader title="Mağaza Satışı" />
 
       <SummaryMetrics
         columns={4}
         items={[
-          { title: 'Sepet Ürünü', value: totals.quantity, icon: ShoppingBasket, tone: 'orange', valueTone: 'orange' },
+          { title: 'Sepet Ürünü', value: totals.quantity, icon: ShoppingBag, tone: 'orange', valueTone: 'orange' },
           { title: 'Sepet Toplamı', value: formatCurrency(grandTotal), icon: Receipt, tone: 'blue', valueTone: 'blue' },
-          { title: 'Kesilen Fiş', value: history.length, icon: BadgeCheck, tone: 'emerald', valueTone: 'emerald' },
-          { title: 'Kayıtlı Ciro', value: formatCurrency(dailyRevenue), icon: WalletCards, tone: 'purple', valueTone: 'purple' },
+          { title: 'Günlük Fiş', value: history.length, icon: CheckCircle2, tone: 'emerald', valueTone: 'emerald' },
+          { title: 'Günlük Ciro', value: formatCurrency(dailyRevenue), icon: WalletCards, tone: 'purple', valueTone: 'purple' },
         ]}
       />
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_410px]">
-        <section className="space-y-4">
-          <Panel
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-4">
+          <AppPagePanel
             title="Ürün Kataloğu"
             description="Çikolata kutularını ve ürünleri arayın, doğrudan sepete ekleyin."
             action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{filteredProducts.length} ürün</span>}
           >
-            <div className="mb-4 grid grid-cols-[minmax(0,1fr)_210px] gap-3">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Ürün adı, ürün kodu veya açıklama ara..."
-                  className="form-input pl-10"
-                />
-              </div>
-              <select value={category} onChange={(event) => setCategory(event.target.value)} className="form-input">
-                {categoryOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+            <SearchInput
+              wrapperClassName="mb-4"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Ürün adı veya ürün kodu ara..."
+            />
+
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {categoryOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setCategory(option.value)}
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
+                    category === option.value
+                      ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-400/40'
+                      : 'bg-dark-700/70 text-gray-400 hover:bg-dark-700 hover:text-white'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
-              {filteredProducts.map((product) => (
-                <article key={product.id} className="rounded-3xl border border-dark-500/45 bg-dark-800/55 p-3 transition-all hover:border-blue-400/35 hover:bg-dark-700/45">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-4">
+              {filteredProducts.length === 0 ? (
+                <p className="col-span-full rounded-xl border border-dashed border-dark-500/60 bg-dark-800/40 py-10 text-center text-xs text-gray-500">
+                  Mağaza satışında görünecek ürün yok. Ürün kartından &quot;Mağaza satışında görünsün&quot; seçeneğini açın.
+                </p>
+              ) : filteredProducts.map((product) => (
+                <article
+                  key={product.id}
+                  className="group overflow-hidden rounded-2xl border border-dark-500/45 bg-dark-800/55 p-2 transition-all hover:border-blue-400/35 hover:bg-dark-700/45"
+                >
                   <ProductVisual product={product} />
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <p className="text-xs font-black text-blue-300">{product.id}</p>
-                      <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-[10px] font-black text-blue-300">{product.tag}</span>
+                  <div className="mt-2 px-1 pb-1">
+                    <p className="line-clamp-2 min-h-[2.5rem] text-xs font-bold leading-5 text-white">{product.name}</p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <p className="text-sm font-black tabular-nums text-blue-300">{formatCurrency(product.price)}</p>
+                      <button
+                        type="button"
+                        onClick={() => addToCart(product)}
+                        className="btn-primary flex h-8 w-8 items-center justify-center rounded-full p-0"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
                     </div>
-                    <h3 className="min-h-10 text-sm font-black leading-5 text-white">{product.name}</h3>
-                    <p className="mt-2 min-h-14 text-xs font-semibold leading-5 text-gray-500">{product.description}</p>
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <div className="rounded-2xl border border-dark-500/45 bg-dark-700/45 p-3">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">Fiyat</p>
-                        <p className="mt-1 text-sm font-black text-white">{formatCurrency(product.price)}</p>
-                      </div>
-                      <div className="rounded-2xl border border-dark-500/45 bg-dark-700/45 p-3">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">Stok</p>
-                        <p className="mt-1 text-sm font-black text-emerald-300">{product.stock} adet</p>
-                      </div>
-                    </div>
-                    <button onClick={() => addToCart(product)} className="btn-primary mt-4 flex w-full items-center justify-center gap-2 py-2.5 text-sm">
-                      <Plus className="h-4 w-4" /> Sepete Ekle
-                    </button>
+                    <p className="mt-1 text-[12px] font-medium text-gray-500">Stok: {product.stock}</p>
                   </div>
                 </article>
               ))}
             </div>
-          </Panel>
 
-          <Panel title="Satış Geçmişi" description="Tahsil edilen her sepet fiş numarasıyla burada saklanır.">
-            <div className="space-y-3">
-              {history.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-6 text-center">
-                  <Receipt className="mx-auto mb-3 h-8 w-8 text-gray-600" />
-                  <p className="text-sm font-bold text-white">Henüz kayıtlı fiş yok.</p>
-                  <p className="mt-1 text-xs text-gray-500">İlk fişi oluşturmak için ödeme alıp satışı tamamlayın.</p>
-                </div>
-              ) : (
-                history.map((sale) => (
-                  <div key={sale.id} className="grid grid-cols-[140px_minmax(0,1fr)_130px_110px] items-center gap-3 rounded-2xl border border-dark-500/45 bg-dark-700/35 p-4">
-                    <div>
-                      <p className="text-xs font-black text-blue-300">{sale.id}</p>
-                      <p className="mt-1 text-[11px] font-semibold text-gray-500">{sale.date}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-white">{sale.customerName}</p>
-                      <p className="mt-1 truncate text-xs font-semibold text-gray-500">{sale.items.length} ürün satırı · {sale.paymentMethod}</p>
-                    </div>
-                    <p className="text-right text-sm font-black text-white">{formatCurrency(sale.grandTotal)}</p>
-                    <span className="rounded-xl bg-emerald-500/10 px-3 py-2 text-center text-xs font-black text-emerald-300">{sale.status}</span>
-                  </div>
-                ))
-              )}
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {quickActions.map((action) => {
+                const Icon = action.icon
+                const isActive = activeQuickAction === action.id
+                return (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={() => setActiveQuickAction(isActive ? null : action.id)}
+                    className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-[13px] font-bold transition-colors ${
+                      isActive
+                        ? 'border-blue-400/45 bg-blue-500/10 text-blue-200'
+                        : 'border-dark-500/45 bg-dark-700/40 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {action.label}
+                  </button>
+                )
+              })}
             </div>
-          </Panel>
-        </section>
 
-        <aside className="space-y-4">
-          <Panel
-            title="Sepet"
-            description="Tahsilat bekleyen ürünler."
-            action={cart.length > 0 && (
-              <button onClick={clearCart} className="rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs font-black text-red-300">
+            {activeQuickAction && (
+              <div className="mt-3 rounded-xl border border-blue-400/25 bg-blue-500/10 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-xs font-bold text-blue-200">
+                    {quickActions.find((action) => action.id === activeQuickAction)?.label}
+                  </p>
+                  <button type="button" onClick={() => setActiveQuickAction(null)} className="text-gray-500 hover:text-white">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {activeQuickAction === 'discount' && (
+                  <div className="grid gap-3 sm:grid-cols-[140px_minmax(0,1fr)_auto]">
+                    <select
+                      value={discountType}
+                      onChange={(event) => updateMeta({ discountType: event.target.value })}
+                      className="form-input text-xs"
+                    >
+                      <option value="percent">Yüzde (%)</option>
+                      <option value="amount">Tutar (₺)</option>
+                    </select>
+                    <input
+                      type="number"
+                      min="0"
+                      step={discountType === 'percent' ? '1' : '0.01'}
+                      value={discountValue || ''}
+                      onChange={(event) => updateMeta({ discountValue: Number(event.target.value) || 0 })}
+                      placeholder={discountType === 'percent' ? 'Örn. 10' : 'Örn. 50'}
+                      className="form-input text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => updateMeta({ discountValue: 0 })}
+                      className="rounded-xl border border-dark-500/45 bg-dark-700/40 px-3 py-2 text-xs font-bold text-gray-400"
+                    >
+                      Sıfırla
+                    </button>
+                  </div>
+                )}
+
+                {activeQuickAction === 'customer' && (
+                  <div className="space-y-3">
+                    <input
+                      value={customerName}
+                      onChange={(event) => updateMeta({ customerName: event.target.value })}
+                      placeholder="Müşteri adı girin..."
+                      className="form-input text-xs"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      {quickCustomerPresets.map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => updateMeta({ customerName: preset })}
+                          className={`rounded-full px-3 py-1 text-[12px] font-bold ${
+                            customerName === preset
+                              ? 'bg-blue-500 text-white'
+                              : 'border border-dark-500/45 bg-dark-700/40 text-gray-400'
+                          }`}
+                        >
+                          {preset}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeQuickAction === 'note' && (
+                  <textarea
+                    value={note}
+                    onChange={(event) => updateMeta({ note: event.target.value })}
+                    placeholder="Fiş notu, paketleme veya teslimat detayı..."
+                    className="form-input min-h-20 resize-none text-xs"
+                  />
+                )}
+
+                {activeQuickAction === 'description' && (
+                  <textarea
+                    value={description}
+                    onChange={(event) => updateMeta({ description: event.target.value })}
+                    placeholder="Satış açıklaması, kampanya veya özel talep..."
+                    className="form-input min-h-20 resize-none text-xs"
+                  />
+                )}
+              </div>
+            )}
+
+            {(note || description || totals.discount > 0) && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {totals.discount > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[12px] font-bold text-emerald-300">
+                    <Tag className="h-3 w-3" />
+                    İndirim {formatCurrency(totals.discount)}
+                  </span>
+                )}
+                {note && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-[12px] font-bold text-amber-300">
+                    <StickyNote className="h-3 w-3" />
+                    Not eklendi
+                  </span>
+                )}
+                {description && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-1 text-[12px] font-bold text-blue-300">
+                    <FileText className="h-3 w-3" />
+                    Açıklama eklendi
+                  </span>
+                )}
+              </div>
+            )}
+          </AppPagePanel>
+
+          <AppPagePanel
+            title="Son Satışlar"
+            description="Bugün kesilen fişler"
+            action={history.length > 0 ? (
+              <button type="button" onClick={clearHistory} className="text-xs font-black text-red-300">
                 Temizle
               </button>
-            )}
+            ) : null}
           >
-            <div className="space-y-3">
+            {history.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-dark-500/60 bg-dark-800/40 py-8 text-center text-xs text-gray-500">
+                Henüz satış kaydı yok.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[520px] text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-dark-500/40 text-[12px] font-bold uppercase tracking-wide text-gray-500">
+                      <th className="pb-2 pr-3">Fiş No</th>
+                      <th className="pb-2 pr-3">Tarih</th>
+                      <th className="pb-2 pr-3">Müşteri</th>
+                      <th className="pb-2 pr-3">Ödeme</th>
+                      <th className="pb-2 pr-3 text-right">Tutar</th>
+                      <th className="pb-2 pr-3 text-right">İndirim</th>
+                      <th className="pb-2 text-right">Durum</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.slice(0, 8).map((sale) => (
+                      <tr key={sale.id} className="border-b border-dark-500/25 last:border-0">
+                        <td className="py-2.5 pr-3 font-bold text-blue-300">{sale.id}</td>
+                        <td className="py-2.5 pr-3 text-gray-500">{sale.date}</td>
+                        <td className="py-2.5 pr-3 font-semibold text-white">{sale.customerName}</td>
+                        <td className="py-2.5 pr-3 text-gray-500">{sale.paymentMethod}</td>
+                        <td className="py-2.5 pr-3 text-right font-bold tabular-nums text-white">{formatCurrency(sale.grandTotal)}</td>
+                        <td className="py-2.5 pr-3 text-right text-emerald-300">
+                          {sale.discount > 0 ? `-${formatCurrency(sale.discount)}` : '—'}
+                        </td>
+                        <td className="py-2.5 text-right">
+                          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[12px] font-bold text-emerald-300">{sale.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </AppPagePanel>
+        </div>
+
+        <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
+          <AppPagePanel
+            title="Satış Sepeti"
+            description="Tahsilat bekleyen ürünler"
+            action={cart.length > 0 ? (
+              <button type="button" onClick={clearCart} className="text-xs font-black text-red-300">Temizle</button>
+            ) : null}
+          >
+            <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
               {cart.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-6 text-center">
-                  <ShoppingBasket className="mx-auto mb-3 h-9 w-9 text-gray-600" />
-                  <p className="text-sm font-bold text-white">Sepet boş.</p>
-                  <p className="mt-1 text-xs text-gray-500">Satışa başlamak için ürün ekleyin.</p>
-                </div>
-              ) : (
-                cart.map((item) => (
-                  <div key={item.id} className="rounded-2xl border border-dark-500/45 bg-dark-700/40 p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-white">{item.name}</p>
-                        <p className="mt-1 text-xs font-semibold text-gray-500">{formatCurrency(item.price)} · KDV %{item.vatRate}</p>
-                      </div>
-                      <button onClick={() => updateQuantity(item.id, 0)} className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-500/10 hover:text-red-300">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center rounded-xl border border-dark-500/45 bg-dark-800/70">
-                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-2 text-gray-400 hover:text-white">
-                          <Minus className="h-3.5 w-3.5" />
-                        </button>
-                        <span className="min-w-9 text-center text-sm font-black text-white">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-2 text-gray-400 hover:text-white">
-                          <Plus className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      <p className="text-sm font-black text-white">{formatCurrency(item.price * item.quantity * (1 + item.vatRate / 100))}</p>
-                    </div>
+                <p className="rounded-xl border border-dashed border-dark-500/60 bg-dark-800/40 py-10 text-center text-xs text-gray-500">
+                  Sepet boş — ürün ekleyin
+                </p>
+              ) : cart.map((item) => (
+                <div key={item.id} className="flex items-center gap-2.5 rounded-xl border border-dark-500/45 bg-dark-700/40 p-2">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-dark-700/50">
+                    {(item.imageUrl || item.image)?.startsWith?.('data:') || (item.imageUrl || item.image)?.startsWith?.('http') ? (
+                      <img src={item.imageUrl || item.image} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full" style={{ background: item.image }} />
+                    )}
                   </div>
-                ))
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-bold text-white">{item.name}</p>
+                    <p className="text-[12px] text-gray-500">{formatCurrency(item.price)}</p>
+                  </div>
+                  <div className="flex items-center rounded-lg border border-dark-500/45 bg-dark-800/70">
+                    <button type="button" onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-1.5 text-gray-400 hover:text-white">
+                      <Minus className="h-3 w-3" />
+                    </button>
+                    <span className="min-w-6 text-center text-xs font-black text-white">{item.quantity}</span>
+                    <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-1.5 text-gray-400 hover:text-white">
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <p className="w-16 shrink-0 text-right text-xs font-bold tabular-nums text-white">
+                    {formatCurrency(item.price * item.quantity * (1 + item.vatRate / 100))}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 space-y-1.5 border-t border-dark-500/40 pt-3 text-xs">
+              <div className="flex justify-between text-gray-500"><span>Ara Toplam</span><span className="font-semibold tabular-nums text-gray-200">{formatCurrency(totals.subtotal)}</span></div>
+              {totals.discount > 0 && (
+                <div className="flex justify-between text-emerald-300">
+                  <span>İndirim</span>
+                  <span className="font-semibold tabular-nums">-{formatCurrency(totals.discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-gray-500"><span>KDV</span><span className="font-semibold tabular-nums text-gray-200">{formatCurrency(totals.vat)}</span></div>
+              <div className="flex justify-between pt-1 text-base font-black text-white">
+                <span>Toplam</span>
+                <span className="tabular-nums text-blue-300">{formatCurrency(grandTotal)}</span>
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-lg border border-dark-500/45 bg-dark-700/40 px-3 py-2">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-gray-500">Müşteri</p>
+              <p className="mt-0.5 truncate text-xs font-bold text-white">{customerName || 'Perakende Müşteri'}</p>
+              {(note || description) && (
+                <p className="mt-1 line-clamp-2 text-[12px] text-gray-500">
+                  {[note, description].filter(Boolean).join(' · ')}
+                </p>
               )}
             </div>
-          </Panel>
 
-          <Panel title="Tahsilat ve Fiş" description="Ödemeyi alın, sepeti fişe dönüştürün ve geçmişe kaydedin.">
-            <div className="space-y-3">
-              <div>
-                <label className="form-label">Müşteri Adı</label>
-                <input value={customerName} onChange={(event) => setCustomerName(event.target.value)} className="form-input" />
-              </div>
-              <div>
-                <label className="form-label">Ödeme Yöntemi</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {paymentMethods.map((method) => {
-                    const Icon = method.icon
-                    return (
-                      <button
-                        key={method.id}
-                        onClick={() => setPaymentMethod(method.id)}
-                        className={`rounded-2xl border p-3 text-center transition-all ${
-                          paymentMethod === method.id
-                            ? 'border-blue-400/45 bg-blue-500/10 text-blue-200'
-                            : 'border-dark-500/45 bg-dark-700/40 text-gray-400 hover:text-white'
-                        }`}
-                      >
-                        <Icon className="mx-auto mb-2 h-4 w-4" />
-                        <span className="text-[10px] font-black">{method.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              <div>
-                <label className="form-label">Fiş Notu</label>
-                <textarea value={note} onChange={(event) => setNote(event.target.value)} className="form-input min-h-20 resize-none" />
-              </div>
-              <div className="rounded-2xl border border-dark-500/45 bg-dark-700/40 p-4">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between text-gray-500"><span>Ara toplam</span><strong className="text-gray-200">{formatCurrency(totals.subtotal)}</strong></div>
-                  <div className="flex justify-between text-gray-500"><span>KDV</span><strong className="text-gray-200">{formatCurrency(totals.vat)}</strong></div>
-                  <div className="border-t border-dark-500/45 pt-3">
-                    <div className="flex justify-between text-base"><span className="font-black text-white">Genel toplam</span><strong className="text-blue-300">{formatCurrency(grandTotal)}</strong></div>
-                  </div>
-                </div>
-              </div>
-              <button onClick={completePayment} className="btn-primary flex w-full items-center justify-center gap-2 py-3 text-sm">
-                <CheckCircle2 className="h-4 w-4" /> Ödemeyi Al ve Fiş Kes
-              </button>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {paymentMethods.map((method) => {
+                const Icon = method.icon
+                const isSelected = paymentMethod === method.id
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => {
+                      updateMeta({ paymentMethod: method.id })
+                      if (cart.length) completePayment(method.id)
+                    }}
+                    className={`flex flex-col items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] font-bold transition-all ${
+                      isSelected
+                        ? `${method.tone} ring-2 ring-offset-1 ring-offset-dark-800 ${method.selectedRing}`
+                        : 'border border-dark-500/45 bg-dark-700/40 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {method.label}
+                  </button>
+                )
+              })}
             </div>
-          </Panel>
+            <button
+              type="button"
+              onClick={() => completePayment()}
+              className="btn-primary mt-2 flex w-full items-center justify-center gap-2 py-3 text-sm"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Ödeme Al
+            </button>
+          </AppPagePanel>
 
-          <Panel
-            title="Son Fiş"
-            description="Son tahsil edilen satış hızlı kontrol için burada tutulur."
-            action={history.length > 0 && <button onClick={clearHistory} className="text-xs font-black text-red-300">Geçmişi temizle</button>}
-          >
-            {lastReceipt || history[0] ? (
-              <div className="rounded-3xl border border-emerald-500/25 bg-emerald-500/10 p-4">
-                {(() => {
-                  const receipt = lastReceipt || history[0]
-                  return (
-                    <>
-                      <div className="mb-4 flex items-start justify-between">
-                        <div>
-                          <p className="text-xs font-black text-emerald-300">{receipt.id}</p>
-                          <p className="mt-1 text-sm font-black text-white">{receipt.customerName}</p>
-                        </div>
-                        <Receipt className="h-5 w-5 text-emerald-300" />
-                      </div>
-                      <div className="space-y-2">
-                        {receipt.items.map((item) => (
-                          <div key={item.id} className="flex justify-between gap-3 text-xs font-semibold text-gray-400">
-                            <span>{item.quantity} x {item.name}</span>
-                            <span className="text-gray-200">{formatCurrency(item.price * item.quantity)}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 rounded-2xl bg-dark-900/35 p-3">
-                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500"><CalendarDays className="h-3.5 w-3.5" /> {receipt.date}</div>
-                        <div className="mt-2 flex items-center gap-2 text-xs font-bold text-gray-500"><Truck className="h-3.5 w-3.5" /> Teslimat veya mağaza teslimi için hazır</div>
-                        <p className="mt-3 text-lg font-black text-white">{formatCurrency(receipt.grandTotal)}</p>
-                      </div>
-                    </>
-                  )
-                })()}
+          <StoreBalanceCard history={history} />
+          <DailySalesSparkline history={history} />
+          <PaymentMixBar history={history} />
+
+          {(lastReceipt || history[0]) && (
+            <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4">
+              <div className="flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-emerald-300" />
+                <p className="text-xs font-bold text-emerald-300">Son Fiş</p>
               </div>
-            ) : (
-              <p className="rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-5 text-center text-sm font-semibold text-gray-500">
-                Henüz fiş kesilmedi.
-              </p>
-            )}
-          </Panel>
+              {(() => {
+                const receipt = lastReceipt || history[0]
+                return (
+                  <div className="mt-2">
+                    <p className="text-[12px] font-bold text-emerald-300">{receipt.id}</p>
+                    <p className="mt-1 text-lg font-black tabular-nums text-white">{formatCurrency(receipt.grandTotal)}</p>
+                    <p className="mt-1 text-[12px] text-gray-500">{receipt.customerName} · {receipt.paymentMethod}</p>
+                    {receipt.discount > 0 && (
+                      <p className="mt-1 text-[12px] font-bold text-emerald-300">İndirim: -{formatCurrency(receipt.discount)}</p>
+                    )}
+                    {(receipt.note || receipt.description) && (
+                      <p className="mt-1 line-clamp-2 text-[12px] text-gray-500">{[receipt.note, receipt.description].filter(Boolean).join(' · ')}</p>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-800/70 px-3 py-2 text-[12px] text-gray-500">
+            <Clock3 className="h-3.5 w-3.5" />
+            Kısayol: ürün kartındaki + ile hızlı ekleme
+          </div>
         </aside>
       </div>
+
       <ActivityArchivePanel
-        title="Shopping Arşiv ve İşlem Geçmişi"
+        title="Mağaza Satışı Arşiv ve İşlem Geçmişi"
         modules={['shopping']}
         onRestore={handleRestoreArchiveEntry}
-        emptyMessage="Henüz shopping arşiv veya silme kaydı yok."
+        emptyMessage="Henüz mağaza satışı arşiv veya silme kaydı yok."
       />
-    </div>
+    </AppPageShell>
   )
+}
+
+function readStorage(key, fallback) {
+  try {
+    const value = localStorage.getItem(key)
+    if (!value) return fallback
+    const parsed = JSON.parse(value)
+    return Array.isArray(fallback) ? (Array.isArray(parsed) ? parsed : fallback) : parsed
+  } catch {
+    return fallback
+  }
 }

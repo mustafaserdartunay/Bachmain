@@ -1,4 +1,5 @@
-import { Search, Filter, Download, Calendar } from 'lucide-react'
+import { Filter, Download, Calendar } from 'lucide-react'
+import SearchInput from '../Common/SearchInput'
 import { orderStatuses, sourceOptions } from '../../data/ordersData'
 
 export default function OrderFilters({
@@ -18,16 +19,12 @@ export default function OrderFilters({
     <div className="card space-y-3">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 flex-1">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Sipariş no, müşteri veya ürün ara..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full bg-dark-700 border border-dark-500/50 rounded-lg pl-10 pr-4 py-2 text-sm text-gray-300 placeholder-gray-500 focus:outline-none focus:border-accent-blue/50"
-            />
-          </div>
+          <SearchInput
+            wrapperClassName="flex-1 max-w-xs"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Sipariş no, müşteri veya ürün ara..."
+          />
 
           <select
             value={sourceFilter}

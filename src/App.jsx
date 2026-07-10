@@ -21,6 +21,7 @@ import SalesReportPage from './pages/SalesReportPage'
 import CollectionsReportPage from './pages/CollectionsReportPage'
 import IncomeExpenseReportPage from './pages/IncomeExpenseReportPage'
 import ExpenseListPage from './pages/expenses/ExpenseListPage'
+import LoanPaymentsPage from './pages/expenses/LoanPaymentsPage'
 import IncomingEInvoicesPage from './pages/expenses/IncomingEInvoicesPage'
 import ExpensesReportPage from './pages/expenses/ExpensesReportPage'
 import PaymentsReportPage from './pages/expenses/PaymentsReportPage'
@@ -45,12 +46,14 @@ import StockProductsReportPage from './pages/stock/StockProductsReportPage'
 import CostCalculatorRoute, { LegacyCostCalculatorRedirect } from './pages/stock/CostCalculatorRoute'
 import DepoPage from './pages/process/DepoPage'
 import DeliveredPage from './pages/process/DeliveredPage'
+import MessageCenterSettingsPage from './pages/MessageCenterSettingsPage'
 import SettingsPage from './pages/SettingsPage'
 import LabelsSettingsPage from './pages/LabelsSettingsPage'
 import TagLabelsSettingsPage from './pages/TagLabelsSettingsPage'
 import CashBankSettingsPage from './pages/CashBankSettingsPage'
 import ProfilePage from './pages/ProfilePage'
 import AnnouncementsPage from './pages/AnnouncementsPage'
+import TrainingPage from './pages/TrainingPage'
 import AdminControlPage from './pages/AdminControlPage'
 import CustomerPortalPage from './pages/portal/CustomerPortalPage'
 import OmnichannelPage from './pages/OmnichannelPage'
@@ -75,6 +78,8 @@ import CourierTrackingPage from './pages/CourierTrackingPage'
 import CustomerCourierTrackingPage from './pages/portal/CustomerCourierTrackingPage'
 import SectoralSettingsPage from './pages/SectoralSettingsPage'
 import SectoralCategorySettingsPage from './pages/SectoralCategorySettingsPage'
+import GuncelDurumSettingsPage from './pages/GuncelDurumSettingsPage'
+import TaxVatSettingsPage from './pages/TaxVatSettingsPage'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -108,6 +113,7 @@ export default function App() {
                 <Route path="/musteriler/tahsilat-raporu" element={<CollectionsReportPage />} />
                 <Route path="/musteriler/gelir-gider-raporu" element={<IncomeExpenseReportPage />} />
                 <Route path="/giderler/liste" element={<ExpenseListPage />} />
+                <Route path="/giderler/kredi-odemeleri" element={<LoanPaymentsPage />} />
                 <Route path="/giderler/gelen-e-faturalar" element={<IncomingEInvoicesPage />} />
                 <Route path="/giderler/tedarikciler" element={<SuppliersPage />} />
                 <Route path="/ik" element={<PdksDashboardPage />} />
@@ -162,6 +168,9 @@ export default function App() {
                 <Route path="/shopping" element={<ShoppingPage />} />
                 <Route path="/projeler/yeni" element={<ProjectsPage />} />
                 <Route path="/ayarlar" element={<SettingsPage />} />
+                <Route path="/ayarlar/guncel-durum" element={<GuncelDurumSettingsPage />} />
+                <Route path="/ayarlar/mesaj-merkezi" element={<MessageCenterSettingsPage />} />
+                <Route path="/ayarlar/vergi-kdv" element={<TaxVatSettingsPage />} />
                 <Route path="/ayarlar/kasa-banka" element={<CashBankSettingsPage />} />
                 <Route path="/ayarlar/etiketler" element={<LabelsSettingsPage />} />
                 <Route path="/ayarlar/etiket-listesi" element={<TagLabelsSettingsPage />} />
@@ -169,6 +178,7 @@ export default function App() {
                 <Route path="/ayarlar/sektorel/:categoryId" element={<SectoralCategorySettingsPage />} />
                 <Route path="/profil" element={<ProfilePage />} />
                 <Route path="/duyurular" element={<AnnouncementsPage />} />
+                <Route path="/egitim" element={<TrainingPage />} />
                 <Route path="/yonetici-kontrol" element={<AdminControlPage />} />
                 <Route path="/mesajlar" element={<OmnichannelPage />} />
                 <Route path="/whatsapp" element={<Navigate to="/mesajlar" replace />} />

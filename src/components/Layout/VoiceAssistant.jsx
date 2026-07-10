@@ -174,7 +174,7 @@ export default function VoiceAssistant() {
                 </span>
                 <div>
                   <h2 className="text-sm font-black uppercase tracking-wide text-white">Sesli AI Asistan</h2>
-                  <p className="text-[11px] font-semibold text-gray-500">{statusText}</p>
+                  <p className="text-[13px] font-semibold text-gray-500">{statusText}</p>
                 </div>
               </div>
               <button type="button" onClick={closePanel} className="rounded-lg p-2 text-gray-500 hover:bg-dark-700 hover:text-white">
@@ -194,7 +194,7 @@ export default function VoiceAssistant() {
               )}
               {actionLogs.length > 0 && (
                 <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-emerald-300">Yapılan işlemler</p>
+                  <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-emerald-300">Yapılan işlemler</p>
                   <ul className="space-y-1 text-xs text-gray-300">
                     {actionLogs.map((log) => (
                       <li key={log}>• {log}</li>
@@ -241,10 +241,10 @@ export default function VoiceAssistant() {
                 </button>
               </form>
               {!micSupported && (
-                <p className="mt-2 text-[11px] text-amber-300">Tarayıcınız mikrofon kaydını desteklemiyor. Yazarak komut verebilirsiniz.</p>
+                <p className="mt-2 text-[13px] text-amber-300">Tarayıcınız mikrofon kaydını desteklemiyor. Yazarak komut verebilirsiniz.</p>
               )}
               {micSupported && (
-                <p className="mt-2 text-[11px] text-gray-500">Ses tanıma OpenAI Whisper ile sunucuda yapılır — Google ağı gerekmez.</p>
+                <p className="mt-2 text-[13px] text-gray-500">Ses tanıma OpenAI Whisper ile sunucuda yapılır — Google ağı gerekmez.</p>
               )}
             </div>
           </div>

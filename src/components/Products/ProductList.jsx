@@ -1,4 +1,5 @@
-import { Search, Plus, Package } from 'lucide-react'
+import { Plus, Package } from 'lucide-react'
+import SearchInput from '../Common/SearchInput'
 import { formatTL, getProductPricing } from '../../utils/productPricing'
 
 export default function ProductList({
@@ -32,16 +33,13 @@ export default function ProductList({
         </button>
       </div>
 
-      <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-        <input
-          type="text"
-          placeholder="Ara..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-dark-700 border border-dark-500/50 rounded-lg pl-9 pr-3 py-2 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-accent-blue/50"
-        />
-      </div>
+      <SearchInput
+        wrapperClassName="mb-3"
+        size="sm"
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder="Ara..."
+      />
 
       <div className="flex-1 overflow-y-auto space-y-1 -mx-1 px-1">
         {filtered.map((product) => {
@@ -69,7 +67,7 @@ export default function ProductList({
                   <p className={`text-sm font-medium truncate ${isActive ? 'text-accent-blue' : 'text-gray-200'}`}>
                     {product.name}
                   </p>
-                  <p className="text-[10px] text-gray-500">{product.stockCode}</p>
+                  <p className="text-[12px] text-gray-500">{product.stockCode}</p>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-xs text-gray-400">{product.category}</span>
                     <span className="text-xs font-medium text-white">{formatTL(pricing.finalSalesPriceIncl)}</span>
@@ -85,7 +83,7 @@ export default function ProductList({
         )}
       </div>
 
-      <p className="text-[10px] text-gray-600 text-center mt-3 pt-3 border-t border-dark-500/30">
+      <p className="text-[12px] text-gray-600 text-center mt-3 pt-3 border-t border-dark-500/30">
         {filtered.length} ürün / hizmet
       </p>
     </div>

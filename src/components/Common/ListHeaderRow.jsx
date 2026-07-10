@@ -2,7 +2,7 @@ export default function ListHeaderRow({ columns, gridTemplate, className = '', v
   const shellClass =
     variant === 'plain'
       ? `grid ${className}`
-      : `grid items-center gap-2 rounded-2xl border border-dark-500/40 bg-dark-800/70 px-3 py-3 text-xs font-bold uppercase tracking-wider text-gray-500 ${className}`
+      : `glass-inset grid items-center gap-2 rounded-2xl px-3 py-3 text-xs font-bold uppercase tracking-wider text-[var(--muted)] ${className}`
 
   return (
     <div

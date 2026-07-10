@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FileText } from 'lucide-react'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
+import SearchInput from '../../components/Common/SearchInput'
 import ListHeaderRow from '../../components/Common/ListHeaderRow'
 import { formatTL } from '../../utils/productPricing'
 
@@ -49,11 +50,11 @@ export default function IncomingEInvoicesPage() {
         title="Gelen E-Fatura Kutusu"
         action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{filtered.length} fatura</span>}
       >
-        <input
+        <SearchInput
+          wrapperClassName="mb-4 w-full max-w-md"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Tedarikçi veya fatura no ara..."
-          className="form-input mb-4 w-full max-w-md text-sm"
         />
 
         <ListHeaderRow
@@ -74,7 +75,7 @@ export default function IncomingEInvoicesPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-white">{item.supplier}</p>
-                  <p className="text-[10px] text-gray-500">{item.status}</p>
+                  <p className="text-[12px] text-gray-500">{item.status}</p>
                 </div>
               </div>
               <p className="text-xs font-semibold text-gray-300">{item.invoiceNo}</p>

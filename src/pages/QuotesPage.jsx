@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import html2canvas from 'html2canvas'
+import SearchInput from '../components/Common/SearchInput'
 import { jsPDF } from 'jspdf'
 import {
   ArrowLeft,
@@ -11,7 +12,6 @@ import {
   FileText,
   Mail,
   Plus,
-  Search,
   Send,
   Sparkles,
   Trash2,
@@ -133,7 +133,7 @@ const statusClasses = {
 
 const quoteListGrid = '118px 72px minmax(130px,1fr) 128px 128px 148px 118px 118px minmax(240px,auto)'
 const quoteListProcessPillClass =
-  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 py-1 text-[10px] font-bold transition-colors hover:bg-dark-700/80'
+  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 py-1 text-[12px] font-bold transition-colors hover:bg-dark-700/80'
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const sortFilterOptions = [
   { label: 'Son işleme göre', color: 'bg-blue-500' },
@@ -646,8 +646,7 @@ function ProductSearchSelect({ item, onSelect, onTextChange }) {
 
   return (
     <div ref={pickerRef} className="relative">
-      <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-gray-500" />
-      <input
+      <SearchInput
         value={query}
         onChange={(event) => {
           onTextChange(event.target.value)
@@ -655,7 +654,6 @@ function ProductSearchSelect({ item, onSelect, onTextChange }) {
         }}
         onFocus={() => setIsOpen(true)}
         placeholder="Ürün adı, ürün kodu veya barkod ara..."
-        className="form-input pl-10"
       />
       {isOpen && (
         <div className={`absolute left-0 right-0 top-11 z-40 ${documentDropdownMenuClass}`}>
@@ -669,11 +667,11 @@ function ProductSearchSelect({ item, onSelect, onTextChange }) {
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-white">{product.name}</p>
-                  <p className="truncate text-[11px] font-semibold text-gray-500">
+                  <p className="truncate text-[13px] font-semibold text-gray-500">
                     {product.stockCode || product.productCode || 'Kod yok'} · Barkod: {product.barcode || 'Yok'}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-black text-emerald-300">
+                <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-black text-emerald-300">
                   KDV hariç {formatTL(product.salesPriceExcl || product.purchasePriceExcl || 0)}
                 </span>
               </button>
@@ -1054,7 +1052,7 @@ function StageTracker({ quote, onUpdateStages }) {
                   </span>
                   <span className={`text-xs font-semibold ${isActive ? 'text-accent-blue' : 'text-white'}`}>{stage.label}</span>
                 </div>
-                <p className="line-clamp-2 text-[10px] text-gray-500">{stage.note}</p>
+                <p className="line-clamp-2 text-[12px] text-gray-500">{stage.note}</p>
               </button>
               <button
                 type="button"
@@ -2100,18 +2098,14 @@ export default function QuotesPage() {
           action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{filteredQuotes.length} kayıt</span>}
         >
           <div className="mb-4 space-y-3">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Teklif kodu, müşteri, yetkili veya etiket ara..."
-                className="form-input pl-10"
-              />
-            </div>
+            <SearchInput
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Teklif kodu, müşteri, yetkili veya etiket ara..."
+            />
             <div className="grid grid-cols-2 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3 lg:grid-cols-4">
               <div>
-                <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Öncelik</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Öncelik</p>
                 <EditableDropdownPill
                   value={filters.priority}
                   options={quotePriorityFilterOptions}
@@ -2125,7 +2119,7 @@ export default function QuotesPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Teklif Durumu</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Teklif Durumu</p>
                 <EditableDropdownPill
                   value={filters.status}
                   options={quoteStatusFilterOptions}
@@ -2139,7 +2133,7 @@ export default function QuotesPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Teklif Süreci</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Teklif Süreci</p>
                 <EditableDropdownPill
                   value={filters.stage}
                   options={quoteStageFilterOptions}
@@ -2153,7 +2147,7 @@ export default function QuotesPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Sıralama</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Sıralama</p>
                 <EditableDropdownPill
                   value={sortLabelByMode[sortMode] || 'Son işleme göre'}
                   options={sortFilterOptions}
@@ -2218,7 +2212,7 @@ export default function QuotesPage() {
                     <p className="flex min-w-0 items-center justify-start gap-2 text-left text-sm font-black text-white">
                       <span className="shrink-0 truncate">{customerDisplay.brandShortName || 'Müşteri girilmedi'}</span>
                       {customerDisplay.companyTitle && (
-                        <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[10px] font-black text-gray-400">
+                        <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[12px] font-black text-gray-400">
                           <span className="truncate">{customerDisplay.companyTitle}</span>
                         </span>
                       )}
@@ -2274,7 +2268,7 @@ export default function QuotesPage() {
                       type="button"
                       disabled={orderCreated}
                       onClick={(event) => handleCreateOrderFromList(quote, event)}
-                      className={`whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-[10px] font-bold transition-colors disabled:cursor-default ${
+                      className={`whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-[12px] font-bold transition-colors disabled:cursor-default ${
                         orderCreated
                           ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400/90'
                           : 'border-blue-500/25 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20'
@@ -2642,7 +2636,7 @@ export default function QuotesPage() {
                       <div className="bg-white p-12 text-slate-900">
                         <div className="mb-10 flex items-end justify-between border-b border-slate-200 pb-6">
                           <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Erlenbox</p>
+                            <p className="text-[13px] font-semibold uppercase tracking-[0.28em] text-slate-400">Erlenbox</p>
                             <h1 className="mt-2 text-4xl font-semibold tracking-tight text-slate-900">Fiyat Teklifi</h1>
                           </div>
                           <div className="text-right">
@@ -2653,7 +2647,7 @@ export default function QuotesPage() {
 
                         <div className="mb-8 grid grid-cols-3 gap-8">
                           <div>
-                            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Müşteri</p>
+                            <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">Müşteri</p>
                             <div className="space-y-2 text-sm">
                               {[
                                 ['Marka', customer.company],
@@ -2672,7 +2666,7 @@ export default function QuotesPage() {
                           </div>
 
                           <div>
-                            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Teklif Bilgileri</p>
+                            <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">Teklif Bilgileri</p>
                             <div className="space-y-2 text-sm">
                               {[
                                 ['Başlık', previewQuote.title || '—'],
@@ -2690,14 +2684,14 @@ export default function QuotesPage() {
                           </div>
 
                           <div>
-                            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Temsilci</p>
+                            <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">Temsilci</p>
                             <p className="text-lg font-semibold text-slate-900">{representative}</p>
                             <p className="mt-1 text-sm text-slate-500">Müşteri Temsilcisi</p>
                           </div>
                         </div>
 
                         <div className="overflow-hidden rounded-lg border border-slate-200">
-                          <div className="grid grid-cols-[120px_minmax(0,1.4fr)_72px_110px_120px] border-b border-slate-200 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                          <div className="grid grid-cols-[120px_minmax(0,1.4fr)_72px_110px_120px] border-b border-slate-200 px-4 py-3 text-[13px] font-semibold uppercase tracking-wider text-slate-500">
                             <span>Görsel</span>
                             <span>Ürün</span>
                             <span className="text-right">Adet</span>
@@ -2734,7 +2728,7 @@ export default function QuotesPage() {
 
                         <div className="mt-8 grid grid-cols-[minmax(0,1fr)_300px] gap-8">
                           <div>
-                            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Açıklama & Koşullar</p>
+                            <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">Açıklama & Koşullar</p>
                             <p className="whitespace-pre-line text-sm leading-7 text-slate-600">
                               {previewQuote.termsDescription || 'Teklif koşulları belirtilmedi.'}
                             </p>
@@ -2747,7 +2741,7 @@ export default function QuotesPage() {
                             )}
                             {previewBankAccounts.length > 0 && (
                               <div className="mt-6">
-                                <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Banka Hesapları</p>
+                                <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">Banka Hesapları</p>
                                 <div className="space-y-3">
                                   {previewBankAccounts.map((account) => (
                                     <div key={account.id} className="text-sm text-slate-600">

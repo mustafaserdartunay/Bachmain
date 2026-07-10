@@ -61,7 +61,7 @@ export default function AdminControlPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-[140px_minmax(0,1fr)_minmax(0,1fr)_180px_180px] border-b border-dark-500/45 px-5 py-3 text-[11px] font-black uppercase tracking-wider text-gray-500">
+        <div className="grid grid-cols-[140px_minmax(0,1fr)_minmax(0,1fr)_180px_180px] border-b border-dark-500/45 px-5 py-3 text-[13px] font-black uppercase tracking-wider text-gray-500">
           <span>Müşteri No</span>
           <span>Kullanıcı</span>
           <span>Firma</span>
@@ -106,7 +106,7 @@ export default function AdminControlPage() {
               <article key={ticket.id} className="rounded-2xl border border-dark-500/40 bg-dark-700/30 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-black text-white">{ticket.customerName}</p>
-                  <span className="text-[10px] font-black uppercase text-blue-300">{ticket.status}</span>
+                  <span className="text-[12px] font-black uppercase text-blue-300">{ticket.status}</span>
                 </div>
                 <p className="mt-2 text-xs text-gray-400">{ticket.message}</p>
                 {(ticket.replies || []).map((reply) => (

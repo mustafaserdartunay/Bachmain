@@ -29,7 +29,7 @@ export default function DocumentLineItemRow({
   const totals = itemTotals(item)
 
   return (
-    <div className="rounded-3xl border border-dark-500/45 bg-dark-700/30 p-4">
+    <div className="glass-inset rounded-[20px] p-4">
       <div className={`grid ${documentItemGridClass} ${documentItemFieldGapClass} items-start`}>
         <div className="flex flex-col self-start">
           <label className="mb-2 block shrink-0 text-sm font-semibold text-white">Görsel</label>

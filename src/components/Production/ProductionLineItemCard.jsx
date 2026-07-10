@@ -16,7 +16,7 @@ const productionClosedBannerToneClass = 'border-red-500/45 bg-red-500/15 text-re
 const productionClosedActionToneClass = 'border-emerald-500/25 bg-emerald-500/10 text-emerald-700'
 
 const pillClass =
-  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2.5 text-[11px] font-semibold text-[var(--text-strong)]'
+  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2.5 text-[13px] font-semibold text-[var(--text-strong)]'
 
 const headerMetricPillClass =
   'inline-flex h-8 flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/70 px-3 text-xs font-semibold text-[var(--text-muted)]'
@@ -33,7 +33,7 @@ function ColumnTimestamp({ value, visible }) {
   if (!visible && !value) return null
   if (!value) return null
   return (
-    <p className="mt-1 truncate text-[9px] font-medium tabular-nums text-[var(--text-soft)]">
+    <p className="mt-1 truncate text-[11px] font-medium tabular-nums text-[var(--text-soft)]">
       {formatQuantityRowDateTime(value)}
     </p>
   )
@@ -155,7 +155,7 @@ export default function ProductionLineItemCard({
 
             {!readOnly && !metrics.productionClosed && metrics.produced > 0 && (
               <>
-                <span className="inline-flex h-8 items-center rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/50 px-3 text-[10px] font-black uppercase tracking-wide text-[var(--text-soft)]">
+                <span className="inline-flex h-8 items-center rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/50 px-3 text-[12px] font-black uppercase tracking-wide text-[var(--text-soft)]">
                   Merkez Depo → Depo
                 </span>
                 <button
@@ -207,15 +207,15 @@ export default function ProductionLineItemCard({
           )}
           <div className={`space-y-3 ${columnsLocked ? 'bg-[var(--surface-muted)]/35 p-2.5' : ''}`}>
           <div className="grid gap-2" style={{ gridTemplateColumns: gridTemplate }}>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Süreç</p>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Durum</p>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Üretilen</p>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Teslim</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Süreç</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Durum</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Üretilen</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Teslim</p>
             {showKalan && (
-              <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Kalan</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Kalan</p>
             )}
             {showFazla && (
-              <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Fazla</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Fazla</p>
             )}
             {!readOnly && <span />}
           </div>

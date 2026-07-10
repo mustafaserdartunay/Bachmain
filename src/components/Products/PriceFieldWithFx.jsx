@@ -26,8 +26,8 @@ export default function PriceFieldWithFx({
       />
       {showFx && tryValue > 0 && (
         <div className="flex gap-3 mt-1.5">
-          <span className="text-[10px] text-gray-500">{formatFx(usd, 'USD')}</span>
-          <span className="text-[10px] text-gray-500">{formatFx(eur, 'EUR')}</span>
+          <span className="text-[12px] text-gray-500">{formatFx(usd, 'USD')}</span>
+          <span className="text-[12px] text-gray-500">{formatFx(eur, 'EUR')}</span>
         </div>
       )}
     </div>
@@ -40,8 +40,8 @@ export function FxHint({ tryValue, rates }) {
   const eur = tryToForeign(tryValue, rates.EUR)
   return (
     <div className="flex gap-3 mt-0.5">
-      <span className="text-[10px] text-gray-500">{formatFx(usd, 'USD')}</span>
-      <span className="text-[10px] text-gray-500">{formatFx(eur, 'EUR')}</span>
+      <span className="text-[12px] text-gray-500">{formatFx(usd, 'USD')}</span>
+      <span className="text-[12px] text-gray-500">{formatFx(eur, 'EUR')}</span>
     </div>
   )
 }

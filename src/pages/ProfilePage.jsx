@@ -7,7 +7,7 @@ import { BTN_SUCCESS } from '../utils/buttonStyles'
 function Field({ label, children }) {
   return (
     <label className="block space-y-2">
-      <span className="text-[11px] font-black uppercase tracking-wider text-gray-500">{label}</span>
+      <span className="text-[13px] font-black uppercase tracking-wider text-gray-500">{label}</span>
       {children}
     </label>
   )

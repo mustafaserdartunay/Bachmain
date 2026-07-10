@@ -1,29 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUp,
   BarChart3,
   CalendarDays,
-  CheckCircle2,
-  Clock3,
   ClipboardList,
   Factory,
   FileText,
   Handshake,
-  LoaderCircle,
   MoreHorizontal,
-  Plus,
+  PackageCheck,
+  Percent,
   ReceiptText,
   ShoppingCart,
   StickyNote,
@@ -31,95 +17,315 @@ import {
   Users,
   Warehouse,
 } from 'lucide-react'
-import { formatCurrency } from '../../utils/dashboardAlerts'
-import { getPaymentActionTimeline } from '../../utils/paymentTimeline'
+import { toTitleCaseTr } from '../../utils/autoCapitalize'
+import { formatCurrency, getPaymentActionTimeline } from '../../utils/paymentTimeline'
+import { RECURRING_PAYMENTS_EVENT } from '../../utils/recurringPaymentsStore'
 import {
+  buildConfiguredQuickActionCards,
   buildCrmActivitySummary,
-  buildQuickActionCards,
-  buildSalesPerformanceSeries,
   enrichFinanceCards,
   formatQuickActionAmount,
 } from '../../utils/dashboardModernData'
+import {
+  DASHBOARD_FINANCE_CARDS_EVENT,
+  loadDashboardFinanceCards,
+} from '../../utils/dashboardFinanceCards'
+import {
+  DASHBOARD_LAYOUT_EVENT,
+  isDashboardSectionVisible,
+  loadDashboardLayout,
+} from '../../utils/dashboardLayoutStore'
+import {
+  APP_LABEL_CLASS,
+  APP_METRIC_ROW_CLASS,
+  APP_PANEL_CLASS,
+  APP_DASHBOARD_PANEL_SIZE_CLASS,
+  APP_DASHBOARD_PANEL_BODY_CLASS,
+  APP_DASHBOARD_TIMELINE_RAIL_CLASS,
+  APP_PANEL_TITLE_CLASS,
+  APP_ACTIVATION_ROW_CLASS,
+  getActivationAccentTone,
+  getActivationAmountTone,
+  APP_SUBLABEL_CLASS,
+  APP_VALUE_CLASS,
+} from '../../utils/dashboardDesign'
 
-const ICON_BG = {
-  cash: 'bg-emerald-50 text-emerald-600',
-  bank: 'bg-blue-50 text-blue-600',
-  cheques: 'bg-violet-50 text-violet-600',
-  'live-assets': 'bg-indigo-50 text-indigo-600',
-  receivables: 'bg-cyan-50 text-cyan-600',
-  future: 'bg-green-50 text-green-600',
-  orders: 'bg-lime-50 text-lime-700',
-  production: 'bg-fuchsia-50 text-fuchsia-600',
-  'depo-stock-sales': 'bg-teal-50 text-teal-600',
-  possible: 'bg-sky-50 text-sky-600',
-  payables: 'bg-orange-50 text-orange-600',
+const FINANCE_METRIC_COLORS = {
+  cash: { text: 'text-emerald-600', stroke: '#10b981' },
+  bank: { text: 'text-blue-600', stroke: '#3b82f6' },
+  cheques: { text: 'text-violet-600', stroke: '#8b5cf6' },
+  'promissory-notes': { text: 'text-fuchsia-600', stroke: '#c026d3' },
+  'live-assets': { text: 'text-indigo-600', stroke: '#6366f1' },
+  receivables: { text: 'text-cyan-600', stroke: '#06b6d4' },
+  future: { text: 'text-lime-600', stroke: '#65a30d' },
+  orders: { text: 'text-amber-600', stroke: '#d97706' },
+  production: { text: 'text-fuchsia-600', stroke: '#c026d3' },
+  'depo-stock-sales': { text: 'text-teal-600', stroke: '#0d9488' },
+  possible: { text: 'text-sky-600', stroke: '#0284c7' },
+  payables: { text: 'text-orange-600', stroke: '#ea580c' },
+  'stock-value': { text: 'text-teal-600', stroke: '#0d9488' },
 }
 
-function buildSmoothLinePath(coords) {
-  if (!coords.length) return ''
-  if (coords.length === 1) return `M ${coords[0].x} ${coords[0].y}`
+const QUICK_ACTION_COLORS = {
+  quote: { text: 'text-blue-600' },
+  order: { text: 'text-emerald-600' },
+  production: { text: 'text-violet-600' },
+  depo: { text: 'text-amber-600' },
+  delivered: { text: 'text-teal-600' },
+}
 
-  let path = `M ${coords[0].x} ${coords[0].y}`
-  for (let index = 0; index < coords.length - 1; index += 1) {
-    const current = coords[index]
-    const next = coords[index + 1]
-    const previous = coords[index - 1] || current
-    const following = coords[index + 2] || next
-    const control1x = current.x + (next.x - previous.x) / 6
-    const control1y = current.y + (next.y - previous.y) / 6
-    const control2x = next.x - (following.x - current.x) / 6
-    const control2y = next.y - (following.y - current.y) / 6
-    path += ` C ${control1x} ${control1y}, ${control2x} ${control2y}, ${next.x} ${next.y}`
+const CRM_CATEGORY_COLORS = {
+  clipboard: { text: 'text-violet-600' },
+  calendar: { text: 'text-blue-600' },
+  note: { text: 'text-orange-600' },
+}
+
+const ACTION_ICONS = {
+  'file-text': FileText,
+  factory: Factory,
+  cart: ShoppingCart,
+  users: Users,
+  handshake: Handshake,
+  warehouse: Warehouse,
+  'package-check': PackageCheck,
+}
+
+const CRM_CATEGORY_ICONS = {
+  clipboard: ClipboardList,
+  calendar: CalendarDays,
+  note: StickyNote,
+}
+
+const DASHBOARD_METRIC_ROW_CLASS = APP_METRIC_ROW_CLASS
+
+function FinanceMetricCell({ card }) {
+  const palette = FINANCE_METRIC_COLORS[card.id] || FINANCE_METRIC_COLORS.cash
+  const Icon = card.icon
+  const rowClass = DASHBOARD_METRIC_ROW_CLASS
+  const content = (
+    <>
+      <span className="flex min-w-0 items-center gap-1.5">
+        {Icon ? <Icon className={`h-3.5 w-3.5 shrink-0 ${palette.text}`} /> : null}
+        <span className={APP_LABEL_CLASS} title={card.label}>
+          {toTitleCaseTr(card.label)}
+        </span>
+      </span>
+      <span className="flex shrink-0 items-center">
+        <span className={`text-xs font-extrabold tabular-nums leading-tight ${palette.text}`} title={card.value}>
+          {card.value}
+        </span>
+      </span>
+    </>
+  )
+
+  if (card.href) {
+    return (
+      <Link to={card.href} title={card.sub || card.label} className={rowClass}>
+        {content}
+      </Link>
+    )
   }
-  return path
+
+  return <div className={`${rowClass} cursor-default`}>{content}</div>
 }
 
-function FinanceSparkline({ points = [], tone = 'emerald' }) {
-  if (!points.length) return null
+const QUICK_ACTION_STAT_TONES = {
+  pending: 'text-blue-600',
+  ongoing: 'text-emerald-600',
+  completed: 'text-rose-500',
+}
 
-  const width = 88
-  const height = 24
-  const paddingY = 3
-  const min = Math.min(...points)
-  const max = Math.max(...points)
-  const range = Math.max(1, max - min)
-  const coords = points.map((point, index) => ({
-    x: (index / Math.max(points.length - 1, 1)) * width,
-    y: height - paddingY - ((point - min) / range) * (height - paddingY * 2),
-  }))
-  const linePath = buildSmoothLinePath(coords)
-  const stroke = tone === 'rose' ? '#f43f5e' : '#10b981'
+const CRM_STAT_TONES = {
+  new: 'text-violet-600',
+  ongoing: 'text-blue-600',
+  completed: 'text-orange-600',
+}
+
+const CRM_METRIC_STAT_LABELS = ['Yeni', 'Devam', 'Biten']
+
+function collectDashboardMetricStatLabels(quickActions = []) {
+  const labels = new Set(CRM_METRIC_STAT_LABELS)
+  buildConfiguredQuickActionCards(quickActions).forEach((action) => {
+    labels.add(action.statLabels?.pending || 'Bekleyen')
+    labels.add(action.statLabels?.ongoing || 'İşleme Alındı')
+    labels.add(action.statLabels?.completed || 'Bitti')
+  })
+  return [...labels]
+}
+
+function useDashboardMetricStatColumnWidth(labels) {
+  const measureRef = useRef(null)
+  const [columnWidth, setColumnWidth] = useState(null)
+
+  useLayoutEffect(() => {
+    const measureEl = measureRef.current
+    if (!measureEl || !labels.length) return undefined
+
+    function measure() {
+      let maxWidth = 0
+      labels.forEach((label) => {
+        measureEl.textContent = label
+        maxWidth = Math.max(maxWidth, measureEl.offsetWidth)
+      })
+      setColumnWidth(Math.ceil(maxWidth + 16))
+    }
+
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [labels])
+
+  const longestLabelChars = Math.max(...labels.map((label) => label.length), 6)
+  const measurer = (
+    <span
+      ref={measureRef}
+      className="pointer-events-none fixed left-[-9999px] top-0 whitespace-nowrap text-[10px] font-bold leading-none opacity-0"
+      aria-hidden="true"
+    />
+  )
+
+  return {
+    measurer,
+    style: {
+      '--dashboard-metric-stat-col': columnWidth
+        ? `${columnWidth}px`
+        : `max(4.25rem, ${longestLabelChars}ch)`,
+    },
+  }
+}
+
+function MetricStatGroup({ stats }) {
+  return (
+    <span className="dashboard-metric-stat-group shrink-0">
+      {stats.map((stat) => (
+        <span key={stat.label} className="dashboard-metric-stat-cell">
+          <span className="whitespace-nowrap text-[10px] font-bold leading-none text-[var(--muted)]">
+            {toTitleCaseTr(stat.label)}
+          </span>
+          <span
+            className={`text-xs font-extrabold tabular-nums leading-none ${
+              Number(stat.value) > 0 ? (stat.tone || 'text-[var(--ink)]') : 'text-[var(--muted)] opacity-70'
+            }`}
+          >
+            {stat.value}
+          </span>
+        </span>
+      ))}
+    </span>
+  )
+}
+
+function QuickActionMetricRow({ action }) {
+  const palette = QUICK_ACTION_COLORS[action.id] || QUICK_ACTION_COLORS.quote
+  const ActionIcon = ACTION_ICONS[action.icon] || FileText
+  const pending = Number(action.stats.pending || 0)
+  const ongoing = Number(action.stats.ongoing || 0)
+  const completed = Number(action.stats.completed || 0)
+  const totalOpen = pending + ongoing
+  const amount = formatQuickActionAmount(action.stats.pendingAmount)
+  const stats = [
+    { label: action.statLabels?.pending || 'Bekleyen', value: pending, tone: QUICK_ACTION_STAT_TONES.pending },
+    { label: action.statLabels?.ongoing || 'İşleme Alındı', value: ongoing, tone: QUICK_ACTION_STAT_TONES.ongoing },
+    { label: action.statLabels?.completed || 'Bitti', value: completed, tone: QUICK_ACTION_STAT_TONES.completed },
+  ]
+  const detail = action.id === 'delivered' ? amount : `${totalOpen} açık · ${amount}`
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
-      className="block h-6 w-[88px] shrink-0"
-      preserveAspectRatio="none"
-      aria-hidden="true"
+    <Link
+      to={action.href}
+      title={`${action.label} — ${detail}`}
+      className={DASHBOARD_METRIC_ROW_CLASS}
     >
-      <path
-        d={linePath}
-        fill="none"
-        stroke={stroke}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
+      <span className="flex min-w-0 items-center gap-1.5">
+        <ActionIcon className={`h-3.5 w-3.5 shrink-0 ${palette.text}`} />
+        <span className={APP_LABEL_CLASS} title={action.label}>
+          {toTitleCaseTr(action.label)}
+        </span>
+      </span>
+      <MetricStatGroup stats={stats} />
+    </Link>
+  )
+}
+
+function CrmCategoryMetricRow({ category }) {
+  const palette = CRM_CATEGORY_COLORS[category.icon] || CRM_CATEGORY_COLORS.clipboard
+  const Icon = CRM_CATEGORY_ICONS[category.icon] || ClipboardList
+  const total = category.newCount + category.ongoingCount + category.completedCount
+  const stats = [
+    { label: 'Yeni', value: category.newCount, tone: CRM_STAT_TONES.new },
+    { label: 'Devam', value: category.ongoingCount, tone: CRM_STAT_TONES.ongoing },
+    { label: 'Biten', value: category.completedCount, tone: CRM_STAT_TONES.completed },
+  ]
+  const detail = `${total} kayıt · son 7 gün`
+
+  return (
+    <Link
+      to={category.href}
+      title={`${category.label} — ${detail}`}
+      className={DASHBOARD_METRIC_ROW_CLASS}
+    >
+      <span className="flex min-w-0 items-center gap-1.5">
+        <Icon className={`h-3.5 w-3.5 shrink-0 ${palette.text}`} />
+        <span className={APP_LABEL_CLASS} title={category.label}>
+          {toTitleCaseTr(category.label)}
+        </span>
+      </span>
+      <MetricStatGroup stats={stats} />
+    </Link>
+  )
+}
+
+const FINANCE_STRIP_ORDER = [
+  'receivables',
+  'payables',
+  'stock-value',
+  'cash',
+  'bank',
+  'cheques',
+  'promissory-notes',
+  'live-assets',
+  'future',
+  'possible',
+]
+
+function sortFinanceStripCards(cards) {
+  const orderMap = new Map(FINANCE_STRIP_ORDER.map((id, index) => [id, index]))
+  return [...cards].sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999))
+}
+
+function FinanceMetricsPanel({ cards = [], className = '' }) {
+  if (!cards.length) return null
+
+  const orderedCards = sortFinanceStripCards(cards)
+  const panelTitleClass = APP_PANEL_TITLE_CLASS
+
+  return (
+    <section className={`${APP_PANEL_CLASS} ${APP_DASHBOARD_PANEL_SIZE_CLASS} ${className}`}>
+      <div className="mb-2.5 flex items-center gap-2">
+        <span className="relative flex h-1.5 w-1.5 shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        </span>
+        <h2 className={panelTitleClass}>Finans Özeti</h2>
+      </div>
+
+      <div className={APP_DASHBOARD_PANEL_BODY_CLASS}>
+        {orderedCards.map((card) => (
+          <FinanceMetricCell key={card.id} card={card} />
+        ))}
+      </div>
+    </section>
   )
 }
 
 function LightPanel({ title, subtitle, action, children, className = '' }) {
   return (
-    <section className={`rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_30px_rgba(15,23,42,0.04)] sm:p-5 ${className}`}>
+    <section className={`glass p-5 ${className}`}>
       {(title || action) && (
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            {title && <h2 className="text-sm font-bold text-slate-800">{title}</h2>}
-            {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
+            {title && <h2 className="text-sm font-extrabold text-[var(--ink)]">{title}</h2>}
+            {subtitle && <p className="mt-0.5 text-xs text-[var(--muted)]">{subtitle}</p>}
           </div>
           {action}
         </div>
@@ -129,143 +335,140 @@ function LightPanel({ title, subtitle, action, children, className = '' }) {
   )
 }
 
-function FinanceMetricsPanel({ cards = [] }) {
-  if (!cards.length) return null
+function ActivationRowAccent({ item }) {
+  const tone = getActivationAccentTone(item)
 
   return (
-    <LightPanel title="Finans Özeti">
-      <div className="overflow-hidden rounded-xl border border-slate-100">
-        {cards.map((card, index) => {
-          const iconBg = ICON_BG[card.id] || 'bg-slate-100 text-slate-500'
-          const Icon = card.icon
-          const row = (
-            <div
-              className={`flex items-center gap-2 px-2.5 py-2 sm:px-3 ${index > 0 ? 'border-t border-slate-100' : ''}`}
-            >
-              {Icon ? (
-                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
-                  <Icon className="h-3.5 w-3.5" />
-                </span>
-              ) : null}
-
-              <p className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-600">{card.label}</p>
-
-              <div className="ml-auto shrink-0 text-right">
-                <p className="text-sm font-bold tabular-nums tracking-tight text-slate-900">{card.value}</p>
-                <div className="mt-1 flex justify-end">
-                  <FinanceSparkline points={card.sparkline} tone={card.trendUp ? 'emerald' : 'rose'} />
-                </div>
-                <p className={`mt-0.5 text-[10px] font-semibold tabular-nums ${card.trendUp ? 'text-emerald-600' : 'text-rose-500'}`}>
-                  {card.changePercent > 0 ? '+' : ''}{card.changePercent}%
-                </p>
-              </div>
-            </div>
-          )
-
-          if (card.href) {
-            return (
-              <Link
-                key={card.id}
-                to={card.href}
-                title={card.sub || card.label}
-                className="block transition-colors hover:bg-slate-50/70"
-              >
-                {row}
-              </Link>
-            )
-          }
-
-          return (
-            <div key={card.id} title={card.sub || card.label}>
-              {row}
-            </div>
-          )
-        })}
-      </div>
-    </LightPanel>
+    <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden="true">
+      <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${tone.ping}`} />
+      <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${tone.dot}`} />
+    </span>
   )
 }
 
-function ModernTimeline() {
+function ModernTimeline({ className = '' }) {
+  const [revision, setRevision] = useState(0)
+
+  useEffect(() => {
+    function refresh() {
+      setRevision((current) => current + 1)
+    }
+    window.addEventListener('erlenbox:treasury-updated', refresh)
+    window.addEventListener('bach:personnel-updated', refresh)
+    window.addEventListener(RECURRING_PAYMENTS_EVENT, refresh)
+    return () => {
+      window.removeEventListener('erlenbox:treasury-updated', refresh)
+      window.removeEventListener('bach:personnel-updated', refresh)
+      window.removeEventListener(RECURRING_PAYMENTS_EVENT, refresh)
+    }
+  }, [])
+
+  void revision
+
   const items = getPaymentActionTimeline()
 
   return (
-    <LightPanel
-      title="Aksiyon Zaman Çizelgesi"
-      subtitle="Tekrarlayan · tedarikçi · maaş · gider"
-      className="flex h-[32rem] flex-col"
-    >
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1">
+    <section className={`glass flex h-full min-h-0 flex-col px-4 py-3 ${className}`}>
+      <div className="mb-2.5 flex min-w-0 items-center gap-2">
+        <span className="relative flex h-1.5 w-1.5 shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-50" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-violet-500" />
+        </span>
+        <h2 className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">Aktivasyon Zaman Tablosu</h2>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain pr-0.5">
         {items.length === 0 ? (
-          <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-xs text-slate-500">Planlı ödeme bulunamadı.</p>
+          <p className="glass-inset px-3 py-5 text-center text-[12px] font-semibold text-[var(--muted)]">Planlı ödeme veya alacak bulunamadı.</p>
         ) : items.map((item) => {
-          const dotTone = item.overdue || item.dueToday
-            ? 'bg-rose-500 ring-rose-100'
-            : item.urgency === 'soon'
-              ? 'bg-amber-400 ring-amber-100'
-              : 'bg-emerald-500 ring-emerald-100'
+          const amountTone = getActivationAmountTone(item)
           return (
             <Link
               key={item.id}
               to={item.link || '/kasa'}
-              className="relative block rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5 pl-8 transition-colors hover:border-slate-200 hover:bg-white"
+              title={item.title}
+              className={APP_ACTIVATION_ROW_CLASS}
             >
-              <span className={`absolute left-3 top-4 h-2.5 w-2.5 rounded-full ring-4 ${dotTone}`} />
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-slate-800">{item.title}</p>
-                  <p className="mt-0.5 truncate text-xs text-slate-500">{item.subtitle}</p>
-                </div>
-                {item.amount > 0 && (
-                  <span className="shrink-0 text-sm font-black text-slate-700">{formatCurrency(item.amount)}</span>
+              <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                <ActivationRowAccent item={item} />
+                <span className="flex min-w-0 flex-col gap-1">
+                  <span className="truncate text-[12px] font-semibold leading-tight text-[var(--muted)]">{item.title}</span>
+                  {item.subtitle ? (
+                    <span className="truncate text-[11px] font-bold leading-none text-[var(--muted)]">{item.subtitle}</span>
+                  ) : null}
+                </span>
+              </span>
+              <span className="flex shrink-0 flex-col items-end gap-1">
+                {item.amount > 0 ? (
+                  <span className={`text-xs font-extrabold tabular-nums leading-tight ${amountTone}`}>
+                    {formatCurrency(item.amount)}
+                  </span>
+                ) : (
+                  <span className="text-xs font-extrabold leading-tight text-transparent" aria-hidden="true">—</span>
                 )}
-              </div>
-              <p className="mt-1 text-[11px] font-semibold text-slate-400">{item.dateLabel}</p>
+                <span className="text-[11px] font-bold leading-none text-[var(--muted)]">{item.dateLabel}</span>
+              </span>
             </Link>
           )
         })}
       </div>
-      <Link to="/kasa" className="mt-3 shrink-0 inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700">
-        Kasa ve ödemeler <ArrowRight className="h-3.5 w-3.5" />
-      </Link>
-    </LightPanel>
+    </section>
   )
 }
 
-function TaxStatusPanel({ issued, supplier, estimatedVatDue, onOpenIssued, onOpenSupplier }) {
+function TaxStatusPanel({ issued, supplier, estimatedVatDue, estimatedIncomeTaxDue, onOpenIssued, onOpenSupplier, className = '' }) {
   const rows = [
     {
       id: 'issued',
-      label: 'Kesilen KDV',
-      value: issued.vat,
-      total: issued.total,
+      label: 'Kesilen Faturalar Toplamı',
+      value: issued.total,
       icon: ReceiptText,
-      tone: 'text-emerald-600 bg-emerald-50',
+      tone: 'text-emerald-600',
       onOpen: onOpenIssued,
     },
     {
       id: 'supplier',
-      label: 'Alınan KDV',
-      value: supplier.vat,
-      total: supplier.total,
+      label: 'Alınan Faturalar Toplamı',
+      value: supplier.total,
       icon: Store,
-      tone: 'text-orange-600 bg-orange-50',
+      tone: 'text-orange-600',
       onOpen: onOpenSupplier,
     },
     {
-      id: 'due',
-      label: 'Tahmini Ödenecek',
+      id: 'paid-vat',
+      label: 'Ödenen KDV Toplamı',
       value: estimatedVatDue,
-      total: estimatedVatDue,
       icon: BarChart3,
-      tone: 'text-rose-600 bg-rose-50',
+      tone: 'text-rose-600',
+      onOpen: onOpenIssued,
+    },
+    {
+      id: 'received-vat',
+      label: 'Alınan KDV Toplamı',
+      value: supplier.vat,
+      icon: Store,
+      tone: 'text-orange-600',
+      onOpen: onOpenSupplier,
+    },
+    {
+      id: 'income-tax',
+      label: 'Ortalama Ödenecek Gelir Vergisi',
+      value: estimatedIncomeTaxDue,
+      icon: Percent,
+      tone: 'text-violet-600',
       onOpen: onOpenIssued,
     },
   ]
 
   return (
-    <LightPanel title="KDV Durumu" subtitle="Bu ay fatura ve alış özeti">
-      <div className="space-y-2">
+    <section className={`${APP_PANEL_CLASS} ${APP_DASHBOARD_PANEL_SIZE_CLASS} ${className}`}>
+      <div className="mb-2.5 flex shrink-0 items-center gap-2">
+        <span className="relative flex h-1.5 w-1.5 shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-50" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-500" />
+        </span>
+        <h2 className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">KDV Durumu</h2>
+      </div>
+      <div className={APP_DASHBOARD_PANEL_BODY_CLASS}>
         {rows.map((row) => {
           const Icon = row.icon
           return (
@@ -273,27 +476,77 @@ function TaxStatusPanel({ issued, supplier, estimatedVatDue, onOpenIssued, onOpe
               key={row.id}
               type="button"
               onClick={row.onOpen}
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-3 text-left transition-colors hover:border-slate-200 hover:bg-white"
+              title={row.label}
+              className={DASHBOARD_METRIC_ROW_CLASS}
             >
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${row.tone}`}>
-                <Icon className="h-4 w-4" />
+              <span className="flex min-w-0 items-center gap-1.5">
+                <Icon className={`h-3.5 w-3.5 shrink-0 ${row.tone}`} />
+                <span className={APP_LABEL_CLASS}>{toTitleCaseTr(row.label)}</span>
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-slate-500">{row.label}</p>
-                <p className="text-sm font-black text-slate-900">{formatCurrency(row.value)}</p>
-              </div>
-              <span className="text-xs font-bold text-slate-400">{formatCurrency(row.total)}</span>
+              <span className="flex shrink-0 items-center justify-center">
+                <span className={`text-xs font-extrabold tabular-nums leading-tight ${row.tone}`}>
+                  {formatCurrency(row.value)}
+                </span>
+              </span>
             </button>
           )
         })}
       </div>
-    </LightPanel>
+    </section>
   )
 }
 
-function QuickActionsPanel() {
+function CustomDashboardBlocks({ blocks = [] }) {
+  const visibleBlocks = blocks.filter((block) => block.visible !== false)
+  if (!visibleBlocks.length) return null
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {visibleBlocks.map((block) => {
+        if (block.type === 'note') {
+          return (
+            <article
+              key={block.id}
+              className="glass px-4 py-3"
+            >
+              <p className="text-sm font-extrabold text-[var(--ink)]">{block.title}</p>
+              {block.subtitle ? <p className="mt-0.5 text-xs text-[var(--muted)]">{block.subtitle}</p> : null}
+              {block.content ? <p className="mt-2 text-sm leading-relaxed text-[var(--ink)] opacity-80">{block.content}</p> : null}
+            </article>
+          )
+        }
+
+        const content = (
+          <article className="glass px-4 py-3 transition-transform hover:-translate-y-0.5">
+            <p className="text-sm font-extrabold text-[var(--ink)]">{block.title}</p>
+            {block.subtitle ? <p className="mt-0.5 text-xs text-[var(--muted)]">{block.subtitle}</p> : null}
+            <p className="mt-2 text-xs font-semibold text-[var(--blue2)]">{block.href}</p>
+          </article>
+        )
+
+        if (block.href) {
+          return (
+            <Link key={block.id} to={block.href}>
+              {content}
+            </Link>
+          )
+        }
+
+        return <div key={block.id}>{content}</div>
+      })}
+    </div>
+  )
+}
+
+function QuickActionsPanel({ quickActions = [], className = '' }) {
   const [tick, setTick] = useState(0)
-  const actions = useMemo(() => buildQuickActionCards(), [tick])
+  const processIds = new Set(['quote', 'order', 'production', 'depo', 'delivered'])
+  const actions = useMemo(
+    () => buildConfiguredQuickActionCards(quickActions)
+      .filter((action) => processIds.has(action.id) || action.isCustom)
+      .slice(0, 5),
+    [quickActions, tick],
+  )
 
   useEffect(() => {
     const events = [
@@ -307,6 +560,7 @@ function QuickActionsPanel() {
       'bach:omni-updated',
       'erlenbox:treasury-updated',
       'erlenbox:company-settings-updated',
+      DASHBOARD_LAYOUT_EVENT,
     ]
     const refresh = () => setTick((value) => value + 1)
     events.forEach((event) => window.addEventListener(event, refresh))
@@ -314,86 +568,27 @@ function QuickActionsPanel() {
   }, [])
 
   return (
-    <LightPanel className="!p-3 sm:!p-4">
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+    <section className={`${APP_PANEL_CLASS} ${APP_DASHBOARD_PANEL_SIZE_CLASS} ${className}`}>
+      <div className="mb-2.5 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="relative flex h-1.5 w-1.5 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-50" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-blue-500" />
+          </span>
+          <h2 className={APP_PANEL_TITLE_CLASS}>Hızlı İşlemler</h2>
+        </div>
+      </div>
+
+      <div className={APP_DASHBOARD_PANEL_BODY_CLASS}>
         {actions.map((action) => (
-          <QuickActionCard key={action.id} action={action} />
+          <QuickActionMetricRow key={action.id} action={action} />
         ))}
       </div>
-    </LightPanel>
+    </section>
   )
 }
 
-const ACTION_ICONS = {
-  'file-text': FileText,
-  factory: Factory,
-  cart: ShoppingCart,
-  users: Users,
-  handshake: Handshake,
-  warehouse: Warehouse,
-}
-
-function QuickActionCard({ action }) {
-  const ActionIcon = ACTION_ICONS[action.icon] || FileText
-  const createHref = action.createHref || action.href
-  const statItems = [
-    { key: 'pending', label: 'Bekleyen', value: action.stats.pending, icon: Clock3 },
-    { key: 'ongoing', label: 'Devam', value: action.stats.ongoing, icon: LoaderCircle },
-    { key: 'completed', label: 'Biten', value: action.stats.completed, icon: CheckCircle2 },
-  ]
-
-  return (
-    <div
-      className={`group relative overflow-hidden rounded-xl border bg-gradient-to-br p-2.5 shadow-[0_6px_20px_rgba(15,23,42,0.04)] transition-all hover:shadow-[0_10px_28px_rgba(15,23,42,0.07)] sm:p-3 ${action.border} ${action.surface}`}
-    >
-      <div className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/50 blur-xl" />
-      <Link to={action.href} className="relative block">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className={`text-xs font-black tracking-tight ${action.text}`}>{action.label}</p>
-            <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400">Canlı süreç özeti</p>
-          </div>
-          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow-sm ${action.chip}`}>
-            <ActionIcon className="h-4 w-4" />
-          </span>
-        </div>
-
-        <div className="mt-2.5 grid grid-cols-3 gap-1.5">
-          {statItems.map((item) => {
-            const StatIcon = item.icon
-            return (
-              <div
-                key={item.key}
-                className="flex min-h-[52px] flex-col items-center justify-center rounded-lg border border-white/70 bg-white/80 px-1.5 py-1.5 text-center shadow-sm backdrop-blur-sm transition-colors group-hover:bg-white"
-              >
-                <StatIcon className={`h-3 w-3 shrink-0 ${action.text}`} />
-                <p className={`mt-0.5 text-sm font-black leading-none ${action.text}`}>{item.value}</p>
-                <p className="mt-0.5 text-[8px] font-bold uppercase tracking-wide text-slate-400">{item.label}</p>
-              </div>
-            )
-          })}
-        </div>
-      </Link>
-
-      <div className="relative mt-2">
-        <Link
-          to={createHref}
-          className={`group/create inline-flex origin-left items-center gap-1 text-[9px] font-bold uppercase tracking-wide ${action.text} opacity-75 transition-all duration-200 ease-out hover:scale-[1.04] hover:opacity-100`}
-        >
-          <Plus className="h-2.5 w-2.5 transition-transform duration-200 group-hover/create:scale-110" />
-          Yeni oluştur
-          <ArrowRight className="h-2.5 w-2.5 transition-transform duration-200 group-hover/create:translate-x-0.5" />
-        </Link>
-        <p className={`mt-1.5 flex w-full items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-xs font-black tabular-nums tracking-tight shadow-sm ${action.chip}`}>
-          <span>Toplam:</span>
-          <span>{formatQuickActionAmount(action.stats.pendingAmount)}</span>
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function CrmActivityPanel() {
+function CrmActivityPanel({ className = '' }) {
   const [tick, setTick] = useState(0)
   const summary = useMemo(() => buildCrmActivitySummary(), [tick])
 
@@ -403,113 +598,22 @@ function CrmActivityPanel() {
     return () => window.removeEventListener('bach:crm-updated', refresh)
   }, [])
 
-  const categoryIcons = {
-    clipboard: ClipboardList,
-    calendar: CalendarDays,
-    note: StickyNote,
-  }
-
-  const stateStyles = {
-    new: { label: 'Yeni', className: 'bg-sky-100 text-sky-700' },
-    ongoing: { label: 'Devam', className: 'bg-violet-100 text-violet-700' },
-    completed: { label: 'Bitti', className: 'bg-emerald-100 text-emerald-700' },
-  }
-
   return (
-    <LightPanel
-      title="CRM Aktivite Özeti"
-      subtitle="Yeni görevler, randevular, notlar ve süreç durumu"
-      action={(
-        <Link to="/crm" className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-200">
-          CRM&apos;ye git <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
-      )}
-    >
-      <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        {[
-          { label: 'Yeni Kayıtlar', value: summary.totals.new, icon: Plus, tone: 'text-sky-600 bg-sky-50' },
-          { label: 'Devam Eden', value: summary.totals.ongoing, icon: LoaderCircle, tone: 'text-violet-600 bg-violet-50' },
-          { label: 'Biten', value: summary.totals.completed, icon: CheckCircle2, tone: 'text-emerald-600 bg-emerald-50' },
-        ].map((item) => {
-          const Icon = item.icon
-          return (
-            <div key={item.label} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{item.label}</p>
-                  <p className="mt-1 text-3xl font-black text-slate-900">{item.value}</p>
-                </div>
-                <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${item.tone}`}>
-                  <Icon className="h-5 w-5" />
-                </span>
-              </div>
-            </div>
-          )
-        })}
+    <section className={`${APP_PANEL_CLASS} ${APP_DASHBOARD_PANEL_SIZE_CLASS} ${className}`}>
+      <div className="mb-2.5 flex items-center gap-2">
+        <span className="relative flex h-1.5 w-1.5 shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-orange-500" />
+        </span>
+        <h2 className={APP_PANEL_TITLE_CLASS}>CRM Aktivite Özeti</h2>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-3">
-        {summary.categories.map((category) => {
-          const Icon = categoryIcons[category.icon] || ClipboardList
-          return (
-            <Link
-              key={category.id}
-              to={category.href}
-              className={`group rounded-2xl border bg-gradient-to-br p-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${category.border} ${category.surface}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className={`text-sm font-black ${category.text}`}>{category.label}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Son 7 gün özeti</p>
-                </div>
-                <span className={`flex h-10 w-10 items-center justify-center rounded-2xl ${category.chip}`}>
-                  <Icon className="h-4.5 w-4.5" />
-                </span>
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                {[
-                  { label: 'Yeni', value: category.newCount },
-                  { label: 'Devam', value: category.ongoingCount },
-                  { label: 'Biten', value: category.completedCount },
-                ].map((stat) => (
-                  <div key={stat.label} className="rounded-xl border border-white/70 bg-white/85 px-2 py-2 text-center shadow-sm">
-                    <p className={`text-lg font-black leading-none ${category.text}`}>{stat.value}</p>
-                    <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-slate-400">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-            </Link>
-          )
-        })}
+      <div className={APP_DASHBOARD_PANEL_BODY_CLASS}>
+        {summary.categories.map((category) => (
+          <CrmCategoryMetricRow key={category.id} category={category} />
+        ))}
       </div>
-
-      <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-3">
-        <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Son aktiviteler</p>
-        <div className="grid gap-2 lg:grid-cols-2">
-          {summary.recentItems.length === 0 ? (
-            <p className="rounded-xl bg-white px-4 py-6 text-center text-xs text-slate-500">Henüz CRM kaydı yok.</p>
-          ) : summary.recentItems.map((item) => {
-            const badge = stateStyles[item.state] || stateStyles.new
-            return (
-              <Link
-                key={`${item.kind}-${item.id}`}
-                to={item.href}
-                className="flex items-center gap-3 rounded-xl border border-white bg-white px-3 py-2.5 transition-colors hover:border-slate-200"
-              >
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${badge.className}`}>
-                  {badge.label}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-slate-800">{item.title}</p>
-                  <p className="truncate text-xs text-slate-500">{item.subtitle}</p>
-                </div>
-                <span className="shrink-0 text-[10px] font-semibold text-slate-400">{item.date || '—'}</span>
-              </Link>
-            )
-          })}
-        </div>
-      </div>
-    </LightPanel>
+    </section>
   )
 }
 
@@ -518,51 +622,90 @@ export default function ModernDashboard({
   issuedInvoiceAnalytics,
   supplierPurchaseAnalytics,
   estimatedVatDue,
+  estimatedIncomeTaxDue,
   onOpenIssuedTax,
   onOpenSupplierTax,
 }) {
   const metricCards = useMemo(() => enrichFinanceCards(financeCards), [financeCards])
-  const salesSeries = useMemo(() => buildSalesPerformanceSeries(), [])
+  const [layout, setLayout] = useState(() => loadDashboardLayout())
+
+  useEffect(() => {
+    function refreshLayout() {
+      setLayout(loadDashboardLayout())
+    }
+    window.addEventListener(DASHBOARD_LAYOUT_EVENT, refreshLayout)
+    window.addEventListener(DASHBOARD_FINANCE_CARDS_EVENT, refreshLayout)
+    return () => {
+      window.removeEventListener(DASHBOARD_LAYOUT_EVENT, refreshLayout)
+      window.removeEventListener(DASHBOARD_FINANCE_CARDS_EVENT, refreshLayout)
+    }
+  }, [])
+
+  const showFinance = isDashboardSectionVisible(layout, 'finance')
+  const showQuickActions = isDashboardSectionVisible(layout, 'quick-actions')
+  const showCustomBlocks = isDashboardSectionVisible(layout, 'custom-blocks')
+  const showTimeline = isDashboardSectionVisible(layout, 'timeline')
+  const showCrmActivity = isDashboardSectionVisible(layout, 'crm-activity')
+  const showTaxStatus = isDashboardSectionVisible(layout, 'tax-status')
+
+  const showFinanceTaxRow = showFinance || showTaxStatus
+  const showMainStack = showQuickActions || showCrmActivity
+  const hasLeftPanels = showFinanceTaxRow || showMainStack
+
+  const taxStatusPanel = showTaxStatus ? (
+    <TaxStatusPanel
+      issued={issuedInvoiceAnalytics}
+      supplier={supplierPurchaseAnalytics}
+      estimatedVatDue={estimatedVatDue}
+      estimatedIncomeTaxDue={estimatedIncomeTaxDue}
+      onOpenIssued={onOpenIssuedTax}
+      onOpenSupplier={onOpenSupplierTax}
+    />
+  ) : null
+
+  const metricStatLabels = useMemo(
+    () => collectDashboardMetricStatLabels(layout.quickActions),
+    [layout.quickActions],
+  )
+  const { measurer: metricStatMeasurer, style: metricStatScopeStyle } = useDashboardMetricStatColumnWidth(
+    showQuickActions || showCrmActivity ? metricStatLabels : [],
+  )
+
+  const leftPanels = (
+    <>
+      {showFinance ? <FinanceMetricsPanel cards={metricCards} /> : null}
+      {taxStatusPanel}
+      {showQuickActions ? <QuickActionsPanel quickActions={layout.quickActions} /> : null}
+      {showCrmActivity ? <CrmActivityPanel /> : null}
+    </>
+  )
+
+  const dashboardBody = !hasLeftPanels && showTimeline ? (
+    <ModernTimeline className="h-auto w-full" />
+  ) : showTimeline && hasLeftPanels ? (
+    <div className="flex flex-col shell-grid-gap xl:flex-row xl:items-stretch">
+      <div className="flex min-w-0 flex-col shell-grid-gap xl:flex-[2]" style={metricStatScopeStyle}>
+        {metricStatMeasurer}
+        {leftPanels}
+      </div>
+      <div className={APP_DASHBOARD_TIMELINE_RAIL_CLASS}>
+        <ModernTimeline className="h-full min-h-0 w-full" />
+      </div>
+    </div>
+  ) : hasLeftPanels ? (
+    <div className="flex flex-col shell-grid-gap" style={metricStatScopeStyle}>
+      {metricStatMeasurer}
+      {leftPanels}
+    </div>
+  ) : null
 
   return (
-    <div className="modern-dashboard -mx-3 min-h-full rounded-[28px] bg-[#eef2f7] p-3 sm:-mx-4 sm:p-4 lg:-mx-5 lg:p-5">
-      <div className="mb-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
-        <QuickActionsPanel />
-        <ModernTimeline />
-      </div>
+    <div className="modern-dashboard">
+      {showCustomBlocks && layout.customBlocks?.length ? (
+        <CustomDashboardBlocks blocks={layout.customBlocks} />
+      ) : null}
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-5">
-          <CrmActivityPanel />
-
-          <LightPanel title="Satış Performansı" subtitle="Aylık sipariş ve teklif hacmi">
-            <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesSeries} barGap={6}>
-                  <CartesianGrid stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip formatter={(value) => formatCurrency(value)} />
-                  <Bar dataKey="sales" name="Sipariş" fill="#6366f1" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="quotes" name="Teklif" fill="#cbd5e1" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </LightPanel>
-        </div>
-
-        <div className="space-y-5">
-          <FinanceMetricsPanel cards={metricCards} />
-
-          <TaxStatusPanel
-            issued={issuedInvoiceAnalytics}
-            supplier={supplierPurchaseAnalytics}
-            estimatedVatDue={estimatedVatDue}
-            onOpenIssued={onOpenIssuedTax}
-            onOpenSupplier={onOpenSupplierTax}
-          />
-        </div>
-      </div>
+      {dashboardBody}
     </div>
   )
 }

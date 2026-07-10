@@ -146,7 +146,7 @@ function SegmentTabs({
               key={segment.id}
               className="inline-flex items-center gap-2 rounded-xl border border-red-500/35 bg-red-500/10 px-2 py-1.5"
             >
-              <span className="text-[11px] font-black uppercase tracking-wide text-red-200">{segment.label}</span>
+              <span className="text-[13px] font-black uppercase tracking-wide text-red-200">{segment.label}</span>
               <InlineDeleteConfirm
                 onConfirm={() => onDelete(segment)}
                 onCancel={() => setPendingDeleteId(null)}
@@ -181,7 +181,7 @@ function SegmentTabs({
                       setEditDraft('')
                     }
                   }}
-                  className="h-7 w-40 rounded-lg border border-blue-500/40 bg-dark-900/70 px-2 text-[11px] font-black uppercase text-white outline-none"
+                  className="h-7 w-40 rounded-lg border border-blue-500/40 bg-dark-900/70 px-2 text-[13px] font-black uppercase text-white outline-none"
                   autoFocus
                 />
                 <button type="submit" className="rounded-md p-1 text-emerald-300 hover:bg-emerald-500/15" title="Kaydet">
@@ -200,7 +200,7 @@ function SegmentTabs({
                 }`}
               >
                 {segment.label}
-                <span className="ml-1.5 text-[10px] font-bold text-gray-500">({getCount(segment)})</span>
+                <span className="ml-1.5 text-[12px] font-bold text-gray-500">({getCount(segment)})</span>
               </button>
             )}
             {editId !== segment.id && (
@@ -1204,7 +1204,7 @@ export default function WorkflowStagesSettingsPanel() {
           {activeSegmentMeta?.label || 'Süreç'}
         </h3>
         {activeSegmentSource === 'depo' && (
-          <p className="mb-2 text-[11px] font-semibold text-gray-500">
+          <p className="mb-2 text-[13px] font-semibold text-gray-500">
             Depo listesinde üretimdeki gibi süreç butonları görünür. &quot;Araç Teslim&quot; ve &quot;Teslim Edildi&quot; aşamalarında fotoğraf yüklenir.
           </p>
         )}
@@ -1324,7 +1324,7 @@ export default function WorkflowStagesSettingsPanel() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="max-w-[8rem] text-[8px] font-black uppercase leading-snug tracking-[0.18em] text-gray-400">{card.label}</p>
+                    <p className="max-w-[8rem] text-[10px] font-black uppercase leading-snug tracking-[0.18em] text-gray-400">{card.label}</p>
                     <p className={`mt-2 break-words text-[1rem] font-black leading-tight tracking-tight ${card.valueTone}`}>{card.value}</p>
                   </div>
                   <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-dark-500/65 bg-dark-700/70 ${card.iconTone}`}>
@@ -1332,8 +1332,8 @@ export default function WorkflowStagesSettingsPanel() {
                   </span>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <p className="line-clamp-1 text-[9px] font-semibold leading-snug text-gray-400">{card.sub || 'Dashboard finans kartı'}</p>
-                  <span className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-black ${
+                  <p className="line-clamp-1 text-[11px] font-semibold leading-snug text-gray-400">{card.sub || 'Dashboard finans kartı'}</p>
+                  <span className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-[12px] font-black ${
                     isVisible
                       ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
                       : 'border-dark-500/50 bg-dark-800/60 text-gray-500'

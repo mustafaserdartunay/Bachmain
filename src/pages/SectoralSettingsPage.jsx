@@ -24,7 +24,7 @@ export default function SectoralSettingsPage() {
                 <p className="mt-1 text-xs font-semibold text-gray-500">{category.description}</p>
               </div>
               <div className="mt-4 flex items-center justify-between gap-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-gray-600">
+                <p className="text-[12px] font-black uppercase tracking-wider text-gray-600">
                   {category.sections.length} bölüm
                 </p>
                 <ChevronRight className="h-4 w-4 shrink-0 text-gray-500" />

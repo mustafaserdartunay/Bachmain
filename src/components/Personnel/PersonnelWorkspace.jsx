@@ -9,12 +9,12 @@ import {
   Coins,
   Plus,
   QrCode,
-  Search,
   UserMinus,
   UserPlus,
   Users,
   Wallet,
 } from 'lucide-react'
+import SearchInput from '../Common/SearchInput'
 import SummaryMetrics from '../Common/SummaryMetrics'
 import ActivityArchivePanel from '../Common/ActivityArchivePanel'
 import {
@@ -75,7 +75,7 @@ function Panel({ title, description, children, action }) {
 function Field({ label, value, mono }) {
   return (
     <div>
-      <p className="text-[10px] font-black uppercase tracking-wider text-gray-600">{label}</p>
+      <p className="text-[12px] font-black uppercase tracking-wider text-gray-600">{label}</p>
       <p className={`mt-0.5 text-sm font-semibold text-gray-200 ${mono ? 'tabular-nums' : ''}`}>{value || '—'}</p>
     </div>
   )
@@ -88,7 +88,7 @@ function DataTable({ columns, rows, emptyLabel = 'Kayıt yok' }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-dark-500/40">
       <table className="min-w-full text-left text-xs">
-        <thead className="border-b border-dark-500/40 bg-dark-900/50 text-[10px] font-black uppercase tracking-wider text-gray-500">
+        <thead className="border-b border-dark-500/40 bg-dark-900/50 text-[12px] font-black uppercase tracking-wider text-gray-500">
           <tr>
             {columns.map((col) => (
               <th key={col.key} className={`px-3 py-2.5 ${col.align === 'right' ? 'text-right' : ''}`}>{col.label}</th>
@@ -358,14 +358,16 @@ export default function PersonnelWorkspace() {
         <aside className="card space-y-3 p-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-black uppercase tracking-wider text-gray-500">Personel</p>
-            <button type="button" onClick={handleAddEmployee} className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-1 text-[10px] font-bold text-blue-300 hover:bg-blue-500/20">
+            <button type="button" onClick={handleAddEmployee} className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-1 text-[12px] font-bold text-blue-300 hover:bg-blue-500/20">
               <UserPlus className="h-3.5 w-3.5" /> Yeni
             </button>
           </div>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ara..." className="form-input pl-8 text-xs" />
-          </div>
+          <SearchInput
+            size="sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Ara..."
+          />
           <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className="form-input text-xs">
             <option value="Tümü">Tüm departmanlar</option>
             {PERSONNEL_DEPARTMENTS.map((item) => <option key={item} value={item}>{item}</option>)}
@@ -387,8 +389,8 @@ export default function PersonnelWorkspace() {
                 }`}
               >
                 <p className="truncate text-sm font-bold text-white">{fullName(item)}</p>
-                <p className="truncate text-[10px] text-gray-500">{item.employeeNo} · {item.department}</p>
-                <span className={`mt-1 inline-block rounded border px-1.5 py-px text-[9px] font-bold uppercase ${statusTone(item.status)}`}>
+                <p className="truncate text-[12px] text-gray-500">{item.employeeNo} · {item.department}</p>
+                <span className={`mt-1 inline-block rounded border px-1.5 py-px text-[11px] font-bold uppercase ${statusTone(item.status)}`}>
                   {item.status}
                 </span>
               </button>
@@ -403,7 +405,7 @@ export default function PersonnelWorkspace() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition-colors ${
+                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-bold transition-colors ${
                   activeTab === tab.id
                     ? 'bg-blue-500/15 text-blue-300'
                     : 'text-gray-500 hover:bg-dark-700/60 hover:text-gray-300'
@@ -426,7 +428,7 @@ export default function PersonnelWorkspace() {
                   { key: 'department', label: 'Departman' },
                   { key: 'position', label: 'Pozisyon' },
                   { key: 'status', label: 'Durum', render: (row) => (
-                    <span className={`rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${statusTone(row.status)}`}>{row.status}</span>
+                    <span className={`rounded border px-1.5 py-0.5 text-[11px] font-bold uppercase ${statusTone(row.status)}`}>{row.status}</span>
                   ) },
                   { key: 'hireDate', label: 'İşe Giriş' },
                   { key: 'present', label: 'Geldi', align: 'right', render: (row) => countPresentDays(row.attendance) },
@@ -441,7 +443,7 @@ export default function PersonnelWorkspace() {
               title={`${fullName(selected)} — Özlük Dosyası`}
               description="İşe giriş, sözleşme, iletişim ve işten çıkış bilgileri"
               action={selected.status !== 'Ayrıldı' ? (
-                <button type="button" onClick={handleTerminate} className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[10px] font-bold text-red-300 hover:bg-red-500/20">
+                <button type="button" onClick={handleTerminate} className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[12px] font-bold text-red-300 hover:bg-red-500/20">
                   <UserMinus className="mr-1 inline h-3.5 w-3.5" /> İşten Çıkış Kaydı
                 </button>
               ) : null}
@@ -456,23 +458,23 @@ export default function PersonnelWorkspace() {
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-lg font-black text-white">{fullName(selected)}</h3>
                     {selectedPdks?.liveStatus && (
-                      <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${statusBadgeClass(selectedPdks.liveStatus.tone)}`}>
+                      <span className={`rounded-full border px-2 py-0.5 text-[12px] font-bold uppercase ${statusBadgeClass(selectedPdks.liveStatus.tone)}`}>
                         PDKS: {selectedPdks.liveStatus.label}
                       </span>
                     )}
-                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${selected.active === false ? 'border-gray-500/40 text-gray-400' : 'border-emerald-500/40 text-emerald-300'}`}>
+                    <span className={`rounded-full border px-2 py-0.5 text-[12px] font-bold uppercase ${selected.active === false ? 'border-gray-500/40 text-gray-400' : 'border-emerald-500/40 text-emerald-300'}`}>
                       {selected.active === false ? 'Pasif' : 'Aktif'}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500">{selected.employeeNo} · {selected.department} · {selected.position}</p>
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={handleChangeShift} className="rounded-lg border border-dark-500/50 px-2.5 py-1 text-[10px] font-bold text-gray-300 hover:bg-dark-700/60">
+                    <button type="button" onClick={handleChangeShift} className="rounded-lg border border-dark-500/50 px-2.5 py-1 text-[12px] font-bold text-gray-300 hover:bg-dark-700/60">
                       Vardiya: {selectedPdks?.shift?.name || '—'}
                     </button>
-                    <button type="button" onClick={handleToggleActive} className="rounded-lg border border-dark-500/50 px-2.5 py-1 text-[10px] font-bold text-gray-300 hover:bg-dark-700/60">
+                    <button type="button" onClick={handleToggleActive} className="rounded-lg border border-dark-500/50 px-2.5 py-1 text-[12px] font-bold text-gray-300 hover:bg-dark-700/60">
                       {selected.active === false ? 'Aktifleştir' : 'Pasifleştir'}
                     </button>
-                    <Link to="/ik/ayarlar" className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold text-blue-300 hover:bg-blue-500/20">
+                    <Link to="/ik/ayarlar" className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[12px] font-bold text-blue-300 hover:bg-blue-500/20">
                       <QrCode className="h-3 w-3" /> PDKS Ayarları
                     </Link>
                   </div>
@@ -480,7 +482,7 @@ export default function PersonnelWorkspace() {
                 {selectedPdks?.qrUrl && (
                   <div className="rounded-2xl border border-dark-500/40 bg-white p-2 text-center">
                     <img src={selectedPdks.qrUrl} alt="Personel QR" className="h-24 w-24" />
-                    <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-gray-600">Kişisel QR</p>
+                    <p className="mt-1 text-[11px] font-bold uppercase tracking-wider text-gray-600">Kişisel QR</p>
                   </div>
                 )}
               </div>
@@ -538,22 +540,22 @@ export default function PersonnelWorkspace() {
               title="Puantaj"
               description="Geldiği günler, giriş–çıkış saatleri ve çalışma süreleri"
               action={(
-                <button type="button" onClick={handleAddAttendance} className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 text-[10px] font-bold text-blue-300">
+                <button type="button" onClick={handleAddAttendance} className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 text-[12px] font-bold text-blue-300">
                   <Plus className="h-3.5 w-3.5" /> Puantaj Ekle
                 </button>
               )}
             >
               <div className="mb-4 grid grid-cols-3 gap-3">
                 <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3 text-center">
-                  <p className="text-[10px] font-bold uppercase text-gray-500">Geldiği Gün</p>
+                  <p className="text-[12px] font-bold uppercase text-gray-500">Geldiği Gün</p>
                   <p className="text-xl font-black text-emerald-300">{countPresentDays(selected.attendance)}</p>
                 </div>
                 <div className="rounded-xl border border-red-500/25 bg-red-500/5 p-3 text-center">
-                  <p className="text-[10px] font-bold uppercase text-gray-500">Gelmediği Gün</p>
+                  <p className="text-[12px] font-bold uppercase text-gray-500">Gelmediği Gün</p>
                   <p className="text-xl font-black text-red-300">{countAbsentDays(selected.attendance, selected.absences)}</p>
                 </div>
                 <div className="rounded-xl border border-blue-500/25 bg-blue-500/5 p-3 text-center">
-                  <p className="text-[10px] font-bold uppercase text-gray-500">Toplam Kayıt</p>
+                  <p className="text-[12px] font-bold uppercase text-gray-500">Toplam Kayıt</p>
                   <p className="text-xl font-black text-blue-300">{(selected.attendance || []).length}</p>
                 </div>
               </div>
@@ -587,7 +589,7 @@ export default function PersonnelWorkspace() {
               title="Devamsızlık"
               description="Gelmediği günler, sebepler ve onay durumu"
               action={(
-                <button type="button" onClick={handleAddAbsence} className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[10px] font-bold text-red-300">
+                <button type="button" onClick={handleAddAbsence} className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[12px] font-bold text-red-300">
                   <Plus className="h-3.5 w-3.5" /> Devamsızlık Ekle
                 </button>
               )}
@@ -622,7 +624,7 @@ export default function PersonnelWorkspace() {
               title="İzin Yönetimi"
               description="Yıllık, hastalık, mazeret ve diğer izin talepleri"
               action={(
-                <button type="button" onClick={handleAddLeave} className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-[10px] font-bold text-amber-300">
+                <button type="button" onClick={handleAddLeave} className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-[12px] font-bold text-amber-300">
                   <Plus className="h-3.5 w-3.5" /> İzin Talebi
                 </button>
               )}
@@ -634,7 +636,7 @@ export default function PersonnelWorkspace() {
                   { key: 'endDate', label: 'Bitiş' },
                   { key: 'days', label: 'Gün', align: 'right' },
                   { key: 'status', label: 'Durum', render: (row) => (
-                    <span className={`rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${leaveStatusTone(row.status)}`}>{row.status}</span>
+                    <span className={`rounded border px-1.5 py-0.5 text-[11px] font-bold uppercase ${leaveStatusTone(row.status)}`}>{row.status}</span>
                   ) },
                   { key: 'reason', label: 'Sebep' },
                   { key: 'approvedBy', label: 'Onaylayan' },
@@ -650,7 +652,7 @@ export default function PersonnelWorkspace() {
                     { key: 'startDate', label: 'Başlangıç' },
                     { key: 'endDate', label: 'Bitiş' },
                     { key: 'status', label: 'Durum', render: (row) => (
-                      <span className={`rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${leaveStatusTone(row.status)}`}>{row.status}</span>
+                      <span className={`rounded border px-1.5 py-0.5 text-[11px] font-bold uppercase ${leaveStatusTone(row.status)}`}>{row.status}</span>
                     ) },
                   ]}
                   rows={allLeaves}
@@ -663,10 +665,10 @@ export default function PersonnelWorkspace() {
               description="Brüt maaş, prim ödemeleri ve bordro geçmişi"
               action={(
                 <div className="flex gap-2">
-                  <button type="button" onClick={handleAddBonus} className="inline-flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-2.5 py-1.5 text-[10px] font-bold text-purple-300">
+                  <button type="button" onClick={handleAddBonus} className="inline-flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-2.5 py-1.5 text-[12px] font-bold text-purple-300">
                     <Plus className="h-3.5 w-3.5" /> Prim Ekle
                   </button>
-                  <button type="button" onClick={handleAddPayroll} className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 text-[10px] font-bold text-blue-300">
+                  <button type="button" onClick={handleAddPayroll} className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 text-[12px] font-bold text-blue-300">
                     <Plus className="h-3.5 w-3.5" /> Bordro Ekle
                   </button>
                 </div>

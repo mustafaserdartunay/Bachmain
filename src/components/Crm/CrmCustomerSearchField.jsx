@@ -4,7 +4,7 @@ import { getCustomerDisplay } from '../../utils/customerDisplay'
 import { resolveCustomerContactInfo } from '../../utils/customerContacts'
 import { resolveCustomerRepresentative } from '../../utils/customerMeta'
 
-const FIELD_LABEL = 'mb-1.5 block text-[10px] font-black uppercase tracking-wider text-gray-500'
+const FIELD_LABEL = 'mb-1.5 block text-[12px] font-black uppercase tracking-wider text-gray-500'
 
 function customerSearchTexts(customer) {
   const display = getCustomerDisplay(customer)
@@ -135,7 +135,7 @@ export default function CrmCustomerSearchField({ label = 'Müşteri', value, onC
                       {contactInfo.email ? ` · ${contactInfo.email}` : ''}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-lg bg-blue-500/10 px-2 py-1 text-[10px] font-bold text-blue-300">
+                  <span className="shrink-0 rounded-lg bg-blue-500/10 px-2 py-1 text-[12px] font-bold text-blue-300">
                     Seç
                   </span>
                 </button>

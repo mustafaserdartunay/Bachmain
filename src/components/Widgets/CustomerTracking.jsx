@@ -17,19 +17,19 @@ export default function CustomerTracking() {
       <div className="grid grid-cols-4 gap-2 mb-4">
         <div className="bg-dark-700 rounded-lg p-2 text-center">
           <p className="text-lg font-bold text-white">{summary.total}</p>
-          <p className="text-[10px] text-gray-500">Toplam</p>
+          <p className="text-[12px] text-gray-500">Toplam</p>
         </div>
         <div className="bg-dark-700 rounded-lg p-2 text-center">
           <p className="text-lg font-bold text-emerald-400">{summary.active}</p>
-          <p className="text-[10px] text-gray-500">Aktif</p>
+          <p className="text-[12px] text-gray-500">Aktif</p>
         </div>
         <div className="bg-dark-700 rounded-lg p-2 text-center">
           <p className="text-lg font-bold text-gray-400">{summary.passive}</p>
-          <p className="text-[10px] text-gray-500">Pasif</p>
+          <p className="text-[12px] text-gray-500">Pasif</p>
         </div>
         <div className="bg-dark-700 rounded-lg p-2 text-center">
           <p className="text-sm font-bold text-accent-blue">{summary.revenue}</p>
-          <p className="text-[10px] text-gray-500">Toplam Ciro</p>
+          <p className="text-[12px] text-gray-500">Toplam Ciro</p>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, ChevronDown, ChevronRight, ClipboardList, Factory, Search } from 'lucide-react'
+import { CheckCircle2, ChevronDown, ChevronRight, ClipboardList, Factory } from 'lucide-react'
+import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
@@ -63,7 +64,7 @@ function TimelineDateCell({ value }) {
   if (!formatted) {
     return (
       <div className={LIST_ROW_CELL}>
-        <p className="truncate text-[10px] font-semibold tabular-nums text-gray-400">—</p>
+        <p className="truncate text-[12px] font-semibold tabular-nums text-gray-400">—</p>
       </div>
     )
   }
@@ -73,10 +74,10 @@ function TimelineDateCell({ value }) {
   if (timePart) {
     return (
       <div className={DATE_COL_CELL} title={formatted}>
-        <p className={`${DATE_COL_LINE} truncate text-[10px] font-semibold tabular-nums text-gray-400`}>
+        <p className={`${DATE_COL_LINE} truncate text-[12px] font-semibold tabular-nums text-gray-400`}>
           {datePart}
         </p>
-        <p className={`${DATE_COL_LINE} truncate text-[10px] font-semibold tabular-nums text-gray-400`}>
+        <p className={`${DATE_COL_LINE} truncate text-[12px] font-semibold tabular-nums text-gray-400`}>
           {timePart}
         </p>
       </div>
@@ -86,7 +87,7 @@ function TimelineDateCell({ value }) {
   return (
     <div className={LIST_ROW_CELL}>
       <p
-        className="truncate text-[10px] font-semibold tabular-nums text-gray-400"
+        className="truncate text-[12px] font-semibold tabular-nums text-gray-400"
         title={formatted}
       >
         {formatted}
@@ -289,18 +290,14 @@ export default function ProductionPage() {
         action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{filteredJobs.length} kayıt</span>}
       >
         <div className="mb-4 space-y-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-            <input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Sipariş kodu, müşteri veya ürün kalemi ara..."
-              className="form-input pl-10"
-            />
-          </div>
+          <SearchInput
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Sipariş kodu, müşteri veya ürün kalemi ara..."
+          />
           <div className="grid grid-cols-2 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3 lg:grid-cols-3">
             <div>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Süreç</p>
+              <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Süreç</p>
               <EditableDropdownPill
                 value={filters.process}
                 options={productionProcessFilterOptions}
@@ -314,7 +311,7 @@ export default function ProductionPage() {
               />
             </div>
             <div>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Durum</p>
+              <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Durum</p>
               <EditableDropdownPill
                 value={filters.status}
                 options={productionStatusFilterOptions}
@@ -328,7 +325,7 @@ export default function ProductionPage() {
               />
             </div>
             <div>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Adet / Teslimat</p>
+              <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Adet / Teslimat</p>
               <EditableDropdownPill
                 value={filters.quantity}
                 options={quantityFilterOptions}
@@ -392,7 +389,7 @@ export default function ProductionPage() {
                       <p className="flex min-w-0 items-center gap-1.5 text-sm font-black text-white">
                         <span className="shrink-0 truncate">{customerDisplay.brandShortName || 'Müşteri girilmedi'}</span>
                         {customerDisplay.companyTitle && (
-                          <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[10px] font-black text-gray-400">
+                          <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[12px] font-black text-gray-400">
                             <span className="truncate">{customerDisplay.companyTitle}</span>
                           </span>
                         )}

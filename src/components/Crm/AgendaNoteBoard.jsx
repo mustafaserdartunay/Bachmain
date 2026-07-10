@@ -1,0 +1,326 @@
+import { useEffect, useState } from 'react'
+import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
+import { HEADER_SEARCH_INPUT_CLASS } from '../../utils/themeMode'
+
+export function getAgendaNoteStamp() {
+  const now = new Date()
+  return {
+    date: now.toISOString().slice(0, 10),
+    time: now.toTimeString().slice(0, 5),
+  }
+}
+
+export function formatAgendaNoteStamp(note) {
+  const date = note.date || note.createdAt?.slice?.(0, 10) || ''
+  const time = note.time || note.createdAt?.slice?.(11, 16) || ''
+  const formattedDate = date ? date.split('-').reverse().join('.') : ''
+  return [formattedDate, time].filter(Boolean).join(' ')
+}
+
+export function sortAgendaNotes(notes = []) {
+  return [...notes].sort((left, right) => {
+    const leftStamp = `${left.date || ''} ${left.time || ''} ${left.createdAt || ''}`
+    const rightStamp = `${right.date || ''} ${right.time || ''} ${right.createdAt || ''}`
+    return rightStamp.localeCompare(leftStamp)
+  })
+}
+
+export function countIncompleteAgendaNotes(notes = []) {
+  return notes.filter((note) => !note.completed).length
+}
+
+export function countCompletedAgendaNotes(notes = []) {
+  return notes.filter((note) => note.completed).length
+}
+
+const AGENDA_NOTE_ACTION_BTN_CLASS = 'agenda-note-action-btn'
+
+const AGENDA_NOTE_DELETE_BTN_CLASS =
+  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-bold leading-none text-[#e11d48] transition-all disabled:pointer-events-none disabled:opacity-50`
+
+const AGENDA_NOTE_SAVE_BTN_CLASS =
+  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-bold leading-none text-[#10b981] transition-all disabled:cursor-not-allowed disabled:opacity-50`
+
+const NOTE_ACTION_EDIT_CLASS =
+  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-[#2563eb] transition-all`
+
+const NOTE_ACTION_COMPLETE_CLASS =
+  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-teal-600 transition-all`
+
+const NOTE_ACTION_DELETE_CLASS =
+  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-[#e11d48] transition-all`
+
+const AGENDA_NOTE_CONFIRM_POPOVER_CLASS = 'absolute right-0 top-[calc(100%+0.35rem)] z-40 w-[min(18rem,calc(100vw-2rem))]'
+
+export const AGENDA_NOTE_BADGE_CLASS =
+  'absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#7cf2c6] via-[#34d399] to-[#10b981] px-1 text-[11px] font-black text-white shadow-[0_0_10px_rgba(52,211,153,0.45)]'
+
+export function AgendaNoteItem({ note, onToggleComplete, onEdit, onUpdate, onDelete, confirmVariant = 'dark' }) {
+  const [pendingDelete, setPendingDelete] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editDraft, setEditDraft] = useState('')
+  const isCompleted = Boolean(note.completed)
+
+  useEffect(() => {
+    setIsEditing(false)
+    setEditDraft('')
+  }, [note.id, note.content, note.title])
+
+  function startEdit() {
+    if (onUpdate) {
+      setEditDraft(note.content || note.title || '')
+      setIsEditing(true)
+      return
+    }
+    onEdit?.(note)
+  }
+
+  function handleCancelEdit() {
+    setIsEditing(false)
+    setEditDraft('')
+  }
+
+  function handleSaveEdit() {
+    const content = editDraft.trim()
+    if (!content) return
+    onUpdate?.(note, content)
+    setIsEditing(false)
+    setEditDraft('')
+  }
+
+  if (isEditing) {
+    return (
+      <article
+        className={`rounded-xl border px-3 py-2.5 ${
+          isCompleted
+            ? 'border-emerald-500/20 bg-emerald-500/5'
+            : 'border-[rgba(140,145,165,0.14)] bg-white/35'
+        }`}
+      >
+        {formatAgendaNoteStamp(note) ? (
+          <p className="mb-1.5 text-[11px] font-bold text-[var(--muted)]">{formatAgendaNoteStamp(note)}</p>
+        ) : null}
+        <textarea
+          value={editDraft}
+          onChange={(event) => setEditDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              handleCancelEdit()
+            }
+            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+              event.preventDefault()
+              handleSaveEdit()
+            }
+          }}
+          rows={2}
+          autoFocus
+          className={`${HEADER_SEARCH_INPUT_CLASS} !h-auto !min-h-[60px] !resize-none !py-2 !pl-3 !pr-3 !text-sm`}
+        />
+        <div className="mt-2 flex items-center justify-end gap-1.5">
+          <button
+            type="button"
+            onClick={handleCancelEdit}
+            className="inline-flex h-7 items-center rounded-xl px-3 text-[12px] font-bold text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+          >
+            İptal
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveEdit}
+            disabled={!editDraft.trim()}
+            className={`${AGENDA_NOTE_SAVE_BTN_CLASS} !h-7`}
+          >
+            <Check className="h-3.5 w-3.5" />
+            Kaydet
+          </button>
+        </div>
+      </article>
+    )
+  }
+
+  return (
+    <article
+      className={`rounded-xl border px-3 py-2.5 ${
+        isCompleted
+          ? 'border-emerald-500/20 bg-emerald-500/5'
+          : 'border-[rgba(140,145,165,0.14)] bg-white/35'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {formatAgendaNoteStamp(note) ? (
+            <p className="mb-1 text-[11px] font-bold text-[var(--muted)]">{formatAgendaNoteStamp(note)}</p>
+          ) : null}
+          <p className={`text-sm font-bold leading-snug text-[var(--ink)] ${isCompleted ? 'line-through opacity-60' : ''}`}>
+            {note.content || note.title}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-0.5 self-center">
+          <button
+            type="button"
+            onClick={startEdit}
+            className={NOTE_ACTION_EDIT_CLASS}
+            title="Düzenle"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggleComplete?.(note)}
+            className={NOTE_ACTION_COMPLETE_CLASS}
+            title={isCompleted ? 'Tamamlandı' : 'Tamamla'}
+          >
+            <Check className="h-3.5 w-3.5" />
+          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setPendingDelete((value) => !value)}
+              className={NOTE_ACTION_DELETE_CLASS}
+              title="Sil"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+            {pendingDelete ? (
+              <DeleteConfirmPopover
+                title="Not silinsin mi?"
+                description="Bu not kalıcı olarak kaldırılacak."
+                confirmLabel="Evet"
+                cancelLabel="Hayır"
+                variant={confirmVariant}
+                onCancel={() => setPendingDelete(false)}
+                onConfirm={() => {
+                  onDelete?.(note.id)
+                  setPendingDelete(false)
+                }}
+                className={AGENDA_NOTE_CONFIRM_POPOVER_CLASS}
+              />
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+export default function AgendaNoteBoard({
+  notes = [],
+  onSave,
+  onToggleComplete,
+  onEdit,
+  onUpdate,
+  onDelete,
+  onDeleteCompleted,
+  confirmVariant = 'dark',
+  showComposer = true,
+  composerOnly = false,
+  listOnly = false,
+  totalRecordCount,
+  composerClassName = 'border-b border-[rgba(140,145,165,0.14)] p-3',
+  listClassName = 'max-h-[22rem] overflow-y-auto p-2',
+  emptyMessage = 'Henüz not yok. Yukarıdan hızlıca ekleyebilirsin.',
+  fill = false,
+}) {
+  const [draft, setDraft] = useState('')
+  const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const sortedNotes = sortAgendaNotes(notes)
+  const completedCount = countCompletedAgendaNotes(sortedNotes)
+
+  function handleSave(event) {
+    event.preventDefault()
+    const content = draft.trim()
+    if (!content) return
+    onSave?.(content)
+    setDraft('')
+  }
+
+  return (
+    <div className={fill ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : ''}>
+      {showComposer && !listOnly ? (
+        <form onSubmit={handleSave} className={composerClassName}>
+          <textarea
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                handleSave(event)
+              }
+            }}
+            placeholder="Notunuzu Yazınız..."
+            rows={3}
+            className={`${HEADER_SEARCH_INPUT_CLASS} !h-auto !min-h-[82px] !resize-none !py-2.5 !pl-3 !pr-3`}
+          />
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <p className="text-[11px] font-semibold text-[var(--muted)]">{totalRecordCount ?? sortedNotes.length} kayıt</p>
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {onDeleteCompleted && !pendingBulkDelete ? (
+                <button
+                  type="button"
+                  disabled={completedCount === 0}
+                  onClick={() => setPendingBulkDelete(true)}
+                  className={AGENDA_NOTE_DELETE_BTN_CLASS}
+                >
+                  <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                  Tamamlananların Hepsini Sil
+                </button>
+              ) : null}
+              {!pendingBulkDelete ? (
+                <button
+                  type="submit"
+                  disabled={!draft.trim()}
+                  className={AGENDA_NOTE_SAVE_BTN_CLASS}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Kaydet
+                </button>
+              ) : null}
+            </div>
+          </div>
+          {pendingBulkDelete ? (
+            <div className="mt-2">
+              <DeleteConfirmPopover
+                title="Tamamlanan notlar silinsin mi?"
+                description={`${completedCount} tamamlanmış not kalıcı olarak kaldırılacak.`}
+                confirmLabel="Evet"
+                cancelLabel="Hayır"
+                variant={confirmVariant}
+                onCancel={() => setPendingBulkDelete(false)}
+                onConfirm={() => {
+                  onDeleteCompleted()
+                  setPendingBulkDelete(false)
+                }}
+                className="w-full max-w-none"
+              />
+            </div>
+          ) : null}
+        </form>
+      ) : null}
+
+      {!composerOnly ? (
+      <div className={fill ? 'min-h-0 flex-1 overflow-y-auto p-2' : listClassName}>
+        {sortedNotes.length === 0 ? (
+          <p className="px-3 py-8 text-center text-xs font-semibold text-[var(--muted)]">
+            {emptyMessage}
+          </p>
+        ) : (
+          <div className="space-y-1.5">
+            {sortedNotes.map((note) => (
+              <AgendaNoteItem
+                key={note.id}
+                note={note}
+                onToggleComplete={onToggleComplete}
+                onEdit={onEdit}
+                onUpdate={onUpdate}
+                onDelete={onDelete}
+                confirmVariant={confirmVariant}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      ) : null}
+    </div>
+  )
+}

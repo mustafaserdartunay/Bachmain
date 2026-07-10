@@ -18,19 +18,19 @@ export default function DealerManagement() {
           <div className="grid grid-cols-2 gap-2 mb-4">
             <div className="bg-dark-700 rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-white">{summary.total}</p>
-              <p className="text-[10px] text-gray-500">Toplam Bayi</p>
+              <p className="text-[12px] text-gray-500">Toplam Bayi</p>
             </div>
             <div className="bg-dark-700 rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-emerald-400">{summary.active}</p>
-              <p className="text-[10px] text-gray-500">Aktif</p>
+              <p className="text-[12px] text-gray-500">Aktif</p>
             </div>
             <div className="bg-dark-700 rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-orange-400">{summary.applicant}</p>
-              <p className="text-[10px] text-gray-500">Başvuru</p>
+              <p className="text-[12px] text-gray-500">Başvuru</p>
             </div>
             <div className="bg-dark-700 rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-red-400">{summary.passive}</p>
-              <p className="text-[10px] text-gray-500">Pasif</p>
+              <p className="text-[12px] text-gray-500">Pasif</p>
             </div>
           </div>
 
@@ -106,7 +106,7 @@ export function DealerMap() {
           {mapPins.slice(0, 4).map((pin) => (
             <div key={pin.city} className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: pin.color }} />
-              <span className="text-[9px] text-gray-500">{pin.city}</span>
+              <span className="text-[11px] text-gray-500">{pin.city}</span>
             </div>
           ))}
         </div>

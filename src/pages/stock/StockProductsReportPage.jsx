@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, BarChart3, Boxes, PackageX } from 'lucide-react'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
+import SearchInput from '../../components/Common/SearchInput'
 import ListHeaderRow from '../../components/Common/ListHeaderRow'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import { formatTL } from '../../utils/productPricing'
@@ -61,11 +62,11 @@ export default function StockProductsReportPage() {
 
       <AppPagePanel title="Ürün Bazlı Stok Durumu">
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <input
+          <SearchInput
+            wrapperClassName="w-full max-w-md"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Ürün adı, kod veya kategori ara..."
-            className="form-input w-full max-w-md text-sm"
           />
           <div className="flex flex-wrap gap-1">
             {['Tümü', 'Kritik', 'Stok Yok'].map((item) => (
@@ -99,12 +100,12 @@ export default function StockProductsReportPage() {
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-white">{row.name}</p>
-                <p className="truncate text-[11px] text-gray-500">{formatTL(row.value)} değer</p>
+                <p className="truncate text-[13px] text-gray-500">{formatTL(row.value)} değer</p>
               </div>
               <p className="truncate text-xs text-gray-400">{row.category}</p>
               <p className="text-xs text-gray-400">{row.sku}</p>
               <p className="text-right text-sm font-black text-blue-300">{row.totalStock.toLocaleString('tr-TR')}</p>
-              <span className={`rounded-lg px-2 py-1 text-[10px] font-bold ${
+              <span className={`rounded-lg px-2 py-1 text-[12px] font-bold ${
                 row.isEmpty
                   ? 'bg-red-500/10 text-red-300'
                   : row.isCritical

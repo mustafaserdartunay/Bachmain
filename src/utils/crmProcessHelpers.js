@@ -47,6 +47,7 @@ function formatScheduleAt(record) {
 }
 
 function inferInitialStageId(record, template, kind) {
+  if (!template?.stages?.length) return null
   const stages = template.stages
   const terminal = stages.find((stage) => stage.isTerminal)?.id || stages[stages.length - 1]?.id
   const waitId = stages[0]?.id
@@ -75,6 +76,7 @@ function inferInitialStageId(record, template, kind) {
 
 export function createEmptyProcessTrack(record, kind = 'appointment') {
   const template = resolveCrmProcessTemplate(record, kind)
+  if (!template?.stages?.length) return { templateId: template?.id || null, currentStageId: null, stageHistory: {}, notifications: [] }
   const currentStageId = inferInitialStageId(record, template, kind)
   const reachedAt = nowStamp()
   const stageHistory = { [currentStageId]: { reachedAt } }

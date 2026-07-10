@@ -177,7 +177,7 @@ export default function SalesRepresentativesPage() {
                   }`}
                 >
                   <p className="text-sm font-bold text-white">{rep.label}</p>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[13px] text-gray-500">
                     Sıra {row?.rank || '—'} · {row?.tasksOpen || 0} açık görev
                   </p>
                 </button>
@@ -349,9 +349,9 @@ export default function SalesRepresentativesPage() {
 function MetricCard({ label, value, sub }) {
   return (
     <div className="rounded-2xl border border-dark-500/40 bg-dark-800/55 p-3">
-      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+      <p className="text-[12px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
       <p className="mt-1 text-lg font-black text-white">{value}</p>
-      {sub ? <p className="text-[11px] text-gray-500">{sub}</p> : null}
+      {sub ? <p className="text-[13px] text-gray-500">{sub}</p> : null}
     </div>
   )
 }
@@ -383,7 +383,7 @@ function TaskList({ tasks, stages, onToggle, onStage }) {
           <div key={task.id} className="grid items-center gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/55 px-3 py-3 md:grid-cols-[minmax(0,1fr)_160px_120px]">
             <div>
               <p className={`text-sm font-bold ${task.status === 'done' ? 'text-gray-500 line-through' : 'text-white'}`}>{task.title}</p>
-              <p className="text-[11px] text-gray-500">{task.assignedBy ? `Atayan: ${task.assignedBy}` : '—'} · {task.dueDate || 'Tarihsiz'}</p>
+              <p className="text-[13px] text-gray-500">{task.assignedBy ? `Atayan: ${task.assignedBy}` : '—'} · {task.dueDate || 'Tarihsiz'}</p>
             </div>
             <select className="form-input text-xs" value={task.stageId || stages[0]?.id || ''} onChange={(e) => onStage(task, e.target.value)}>
               {stages.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}

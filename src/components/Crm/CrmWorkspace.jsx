@@ -116,7 +116,7 @@ function StatPill({ icon: Icon, label, value, tone = 'text-white' }) {
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+        <p className="text-[12px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
         <p className={`text-lg font-black tabular-nums leading-tight ${tone}`}>{value}</p>
       </div>
     </div>
@@ -176,7 +176,7 @@ function WeekStrip({ weekDays, selectedDate, today, onSelect, onPrev, onNext, it
                     : 'hover:bg-dark-700/40'
               }`}
             >
-              <span className="text-[9px] font-bold uppercase text-gray-500">{day.label}</span>
+              <span className="text-[11px] font-bold uppercase text-gray-500">{day.label}</span>
               <span className={`mt-0.5 text-sm font-black tabular-nums ${isSelected || isToday ? 'text-white' : 'text-gray-300'}`}>
                 {day.date.slice(8)}
               </span>
@@ -216,16 +216,16 @@ function FeedItem({ item, today, onEdit, onDelete }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-sm font-black text-white">{item.title}</h3>
-            <span className="rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[9px] font-black uppercase text-gray-500">
+            <span className="rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[11px] font-black uppercase text-gray-500">
               {kindLabel(item.kind)}
             </span>
             {item.priority && (
-              <span className={`rounded-md border px-1.5 py-0.5 text-[9px] font-black ${priorityTone[item.priority]}`}>
+              <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black ${priorityTone[item.priority]}`}>
                 {item.priority}
               </span>
             )}
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-gray-500">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] font-semibold text-gray-500">
             {timeLabel && (
               <span className="inline-flex items-center gap-1 text-gray-400">
                 <Clock className="h-3 w-3" />
@@ -284,13 +284,13 @@ function AppointmentCard({ apt, onEdit, onDelete }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-black text-white">{apt.title}</h3>
-            <span className="rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[9px] font-black text-gray-400">{apt.type}</span>
+            <span className="rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[11px] font-black text-gray-400">{apt.type}</span>
           </div>
           <p className="mt-1 text-xs font-bold text-gray-400">
             {getCustomerDisplay(apt.customer).brandShortName}
             {apt.contact ? ` · ${apt.contact}` : ''}
           </p>
-          <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold text-gray-500">
+          <div className="mt-2 flex flex-wrap gap-3 text-[13px] font-semibold text-gray-500">
             <span className="inline-flex items-center gap-1 text-blue-300">
               <Calendar className="h-3 w-3" />
               {formatShortDate(apt.date)}
@@ -309,7 +309,7 @@ function AppointmentCard({ apt, onEdit, onDelete }) {
           {apt.notes && <p className="mt-2 line-clamp-2 text-xs text-gray-500">{apt.notes}</p>}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <span className="rounded-lg border border-blue-500/25 bg-blue-500/10 px-2 py-0.5 text-[10px] font-black text-blue-300">
+          <span className="rounded-lg border border-blue-500/25 bg-blue-500/10 px-2 py-0.5 text-[12px] font-black text-blue-300">
             {apt.status}
           </span>
           <div className="flex gap-0.5 opacity-70 group-hover:opacity-100">
@@ -350,13 +350,13 @@ function TaskRow({ task, today, onToggle, onEdit, onDelete }) {
           done ? 'border-emerald-500/50 bg-emerald-500/20 text-emerald-300' : 'border-dark-500/60 hover:border-blue-500/40'
         }`}
       >
-        {done && <span className="text-[10px] font-black">✓</span>}
+        {done && <span className="text-[12px] font-black">✓</span>}
       </button>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className={`text-sm font-black ${done ? 'text-gray-500 line-through' : 'text-white'}`}>{task.title}</p>
           {task.category && (
-            <span className="rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[9px] font-black uppercase text-gray-500">
+            <span className="rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[11px] font-black uppercase text-gray-500">
               {task.category}
             </span>
           )}
@@ -364,7 +364,7 @@ function TaskRow({ task, today, onToggle, onEdit, onDelete }) {
         {task.description && (
           <p className="mt-1 line-clamp-2 text-xs text-gray-500">{task.description}</p>
         )}
-        <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold text-gray-500">
+        <div className="mt-2 flex flex-wrap gap-3 text-[13px] font-semibold text-gray-500">
           <span>{getCustomerDisplay(task.customer).brandShortName}</span>
           <span className="inline-flex items-center gap-1">
             <User className="h-3 w-3" />
@@ -375,7 +375,7 @@ function TaskRow({ task, today, onToggle, onEdit, onDelete }) {
           </span>
         </div>
       </div>
-      <span className={`shrink-0 rounded-lg border px-2 py-0.5 text-[10px] font-black ${priorityTone[task.priority]}`}>
+      <span className={`shrink-0 rounded-lg border px-2 py-0.5 text-[12px] font-black ${priorityTone[task.priority]}`}>
         {task.priority}
       </span>
       <div className="relative flex shrink-0 gap-0.5 opacity-70 group-hover:opacity-100">
@@ -647,7 +647,7 @@ export default function CrmWorkspace({ variant = 'full', defaultTab = 'processes
       {!compact && (
         <header className="flex flex-col gap-4 rounded-2xl border border-dark-500/40 bg-gradient-to-br from-dark-800/80 to-dark-900/40 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400/80">CRM</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.2em] text-blue-400/80">CRM</p>
             <h1 className="mt-1 text-xl font-black text-white">Randevu & Süreç Merkezi</h1>
             <p className="mt-1 text-xs text-gray-500">Müşteri süreçlerini takip et, aşama bildirimlerini WhatsApp ile gönder.</p>
           </div>
@@ -657,7 +657,7 @@ export default function CrmWorkspace({ variant = 'full', defaultTab = 'processes
 
       {compact && (
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">CRM merkezi</p>
+          <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">CRM merkezi</p>
           {addMenu}
         </div>
       )}
@@ -705,7 +705,7 @@ export default function CrmWorkspace({ variant = 'full', defaultTab = 'processes
                 key={filter.id}
                 type="button"
                 onClick={() => setProcessFilter(filter.id)}
-                className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-colors ${
+                className={`rounded-lg border px-3 py-1.5 text-[13px] font-bold transition-colors ${
                   processFilter === filter.id
                     ? 'border-blue-500/35 bg-blue-500/10 text-blue-200'
                     : 'border-dark-500/45 bg-dark-800/50 text-gray-500 hover:text-gray-300'
@@ -714,7 +714,7 @@ export default function CrmWorkspace({ variant = 'full', defaultTab = 'processes
                 {filter.label}
               </button>
             ))}
-            <p className="ml-auto text-[10px] font-bold text-gray-500">
+            <p className="ml-auto text-[12px] font-bold text-gray-500">
               Her aşamanın yanındaki WA ile müşteriye bildirim gönderilir
             </p>
           </div>
@@ -766,13 +766,13 @@ export default function CrmWorkspace({ variant = 'full', defaultTab = 'processes
               <section className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dark-500/40 bg-dark-800/45 px-4 py-3">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Seçili gün</p>
+                    <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">Seçili gün</p>
                     <p className="text-sm font-black capitalize text-white">{formatDateLabel(selectedDate)}</p>
                   </div>
                   <div className="flex gap-1.5">
-                    <button type="button" onClick={() => openNoteModal(null, selectedDate)} className="rounded-lg border border-dark-500/45 px-2.5 py-1.5 text-[10px] font-black text-gray-400 hover:text-white">Not</button>
-                    <button type="button" onClick={() => openTaskModal({ ...emptyTaskForm(), dueDate: selectedDate })} className="rounded-lg border border-dark-500/45 px-2.5 py-1.5 text-[10px] font-black text-gray-400 hover:text-white">Görev</button>
-                    <button type="button" onClick={() => openAppointmentModal(null, selectedDate)} className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 text-[10px] font-black text-blue-300">Randevu</button>
+                    <button type="button" onClick={() => openNoteModal(null, selectedDate)} className="rounded-lg border border-dark-500/45 px-2.5 py-1.5 text-[12px] font-black text-gray-400 hover:text-white">Not</button>
+                    <button type="button" onClick={() => openTaskModal({ ...emptyTaskForm(), dueDate: selectedDate })} className="rounded-lg border border-dark-500/45 px-2.5 py-1.5 text-[12px] font-black text-gray-400 hover:text-white">Görev</button>
+                    <button type="button" onClick={() => openAppointmentModal(null, selectedDate)} className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 text-[12px] font-black text-blue-300">Randevu</button>
                   </div>
                 </div>
 
@@ -817,7 +817,7 @@ export default function CrmWorkspace({ variant = 'full', defaultTab = 'processes
                       key={filter.id}
                       type="button"
                       onClick={() => setTaskFilter(filter.id)}
-                      className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-colors ${
+                      className={`rounded-lg border px-3 py-1.5 text-[13px] font-bold transition-colors ${
                         taskFilter === filter.id
                           ? 'border-blue-500/35 bg-blue-500/10 text-blue-200'
                           : 'border-dark-500/45 bg-dark-800/50 text-gray-500 hover:text-gray-300'
@@ -826,7 +826,7 @@ export default function CrmWorkspace({ variant = 'full', defaultTab = 'processes
                       {filter.label}
                     </button>
                   ))}
-                  <button type="button" onClick={() => openTaskModal(null)} className="ml-auto inline-flex items-center gap-1 rounded-lg border border-dark-500/45 px-3 py-1.5 text-[11px] font-bold text-gray-400 hover:text-white">
+                  <button type="button" onClick={() => openTaskModal(null)} className="ml-auto inline-flex items-center gap-1 rounded-lg border border-dark-500/45 px-3 py-1.5 text-[13px] font-bold text-gray-400 hover:text-white">
                     <Plus className="h-3 w-3" />
                     Yeni
                   </button>

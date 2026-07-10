@@ -18,19 +18,19 @@ import {
 } from '../../utils/productionQuantityMetrics'
 
 const listRowPillClass =
-  'flex h-7 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 text-[10px] font-bold transition-colors hover:bg-dark-700/80'
+  'flex h-7 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 text-[12px] font-bold transition-colors hover:bg-dark-700/80'
 
 const metricBoxClass =
-  'flex h-7 items-center justify-center rounded-lg border border-dark-500/50 bg-dark-800/40 px-2 text-[11px] font-bold tabular-nums'
+  'flex h-7 items-center justify-center rounded-lg border border-dark-500/50 bg-dark-800/40 px-2 text-[13px] font-bold tabular-nums'
 
 const depoSendBtnClass =
-  'flex h-7 items-center gap-1 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2 text-[10px] font-bold text-orange-300 transition-colors hover:border-orange-500/45 hover:bg-orange-500/15 disabled:cursor-not-allowed disabled:opacity-35'
+  'flex h-7 items-center gap-1 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2 text-[12px] font-bold text-orange-300 transition-colors hover:border-orange-500/45 hover:bg-orange-500/15 disabled:cursor-not-allowed disabled:opacity-35'
 
 const depoSentIconClass =
   'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-orange-500/30 bg-orange-500/10 text-orange-300'
 
 const depoUndoBtnClass =
-  'inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2 text-[10px] font-bold text-orange-300 transition-colors hover:border-orange-500/45 hover:bg-orange-500/15'
+  'inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2 text-[12px] font-bold text-orange-300 transition-colors hover:border-orange-500/45 hover:bg-orange-500/15'
 
 function getRowPieceMetrics(row, rowOrdered) {
   const produced = Math.max(0, Number(row.producedQuantity) || 0)
@@ -106,9 +106,9 @@ function ProcessMetricsRow({
   return (
     <div className="flex shrink-0 items-end gap-1.5">
       <div className="w-[138px]">
-        <p className="mb-0.5 text-[8px] font-black uppercase tracking-wide text-gray-600">Durum</p>
+        <p className="mb-0.5 text-[10px] font-black uppercase tracking-wide text-gray-600">Durum</p>
         {totalsMode ? (
-          <div className={`${metricBoxClass} truncate px-1 text-[10px] text-white`}>
+          <div className={`${metricBoxClass} truncate px-1 text-[12px] text-white`}>
             {row.fulfillmentStatus || 'Devam Ediyor'}
           </div>
         ) : (
@@ -127,13 +127,13 @@ function ProcessMetricsRow({
         )}
       </div>
       <div className="w-[74px]">
-        <p className="mb-0.5 text-[8px] font-black uppercase tracking-wide text-gray-600">{orderColumnLabel}</p>
+        <p className="mb-0.5 text-[10px] font-black uppercase tracking-wide text-gray-600">{orderColumnLabel}</p>
         <div className={`${metricBoxClass} ${orderColumnTone}`}>
           {orderColumnValue}
         </div>
       </div>
       <div className="w-[74px]">
-        <p className="mb-0.5 text-[8px] font-black uppercase tracking-wide text-gray-600">Üretilen</p>
+        <p className="mb-0.5 text-[10px] font-black uppercase tracking-wide text-gray-600">Üretilen</p>
         {totalsMode ? (
           <div className={`${metricBoxClass} text-blue-300`}>
             {formatQty(lineMetrics.produced)}
@@ -143,13 +143,13 @@ function ProcessMetricsRow({
             value={row.producedQuantity}
             onChange={(value) => onQuantityRowChange(row.id, { producedQuantity: Math.round(Number(value) || 0) })}
             readOnly={columnsLocked}
-            className={columnsLocked ? lockedInputClass : 'form-input h-7 text-[11px] font-bold tabular-nums px-2'}
+            className={columnsLocked ? lockedInputClass : 'form-input h-7 text-[13px] font-bold tabular-nums px-2'}
             placeholder="0"
           />
         )}
       </div>
       <div className="w-[74px]">
-        <p className="mb-0.5 text-[8px] font-black uppercase tracking-wide text-gray-600">Teslim</p>
+        <p className="mb-0.5 text-[10px] font-black uppercase tracking-wide text-gray-600">Teslim</p>
         {totalsMode ? (
           <div className={`${metricBoxClass} text-emerald-300`}>
             {formatQty(lineMetrics.delivered)}
@@ -159,13 +159,13 @@ function ProcessMetricsRow({
             value={row.deliveredQuantity}
             onChange={(value) => onQuantityRowChange(row.id, { deliveredQuantity: Math.round(Number(value) || 0) })}
             readOnly={columnsLocked}
-            className={columnsLocked ? lockedInputClass : 'form-input h-7 text-[11px] font-bold tabular-nums px-2'}
+            className={columnsLocked ? lockedInputClass : 'form-input h-7 text-[13px] font-bold tabular-nums px-2'}
             placeholder="0"
           />
         )}
       </div>
       <div className="w-[74px]">
-        <p className="mb-0.5 text-[8px] font-black uppercase tracking-wide text-gray-600">{kalanLabel}</p>
+        <p className="mb-0.5 text-[10px] font-black uppercase tracking-wide text-gray-600">{kalanLabel}</p>
         <div className={`${metricBoxClass} ${kalanTone}`}>
           {kalanValue}
         </div>
@@ -175,7 +175,7 @@ function ProcessMetricsRow({
           className="relative flex shrink-0 flex-col self-end"
           onClick={(event) => event.stopPropagation()}
         >
-          <p className="mb-0.5 text-[8px] font-black uppercase tracking-wide text-transparent select-none">.</p>
+          <p className="mb-0.5 text-[10px] font-black uppercase tracking-wide text-transparent select-none">.</p>
           {pendingDepoRowId === row.id ? (
             <ListInlineActionConfirm
               message="Emin misin?"
@@ -205,9 +205,9 @@ function ProcessMetricsRow({
                 >
                   <Package className="h-3 w-3" />
                 </div>
-                <span className="whitespace-nowrap text-[10px] font-bold text-orange-300">Depoya gönderildi</span>
+                <span className="whitespace-nowrap text-[12px] font-bold text-orange-300">Depoya gönderildi</span>
                 {productionCode && (
-                  <span className="whitespace-nowrap rounded-md border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-black tabular-nums text-blue-300">
+                  <span className="whitespace-nowrap rounded-md border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[12px] font-black tabular-nums text-blue-300">
                     {productionCode}
                   </span>
                 )}
@@ -235,7 +235,7 @@ function ProcessMetricsRow({
               <Package className="h-3 w-3 shrink-0" />
               <span className="whitespace-nowrap">Depoya gönder</span>
               {productionCode && (
-                <span className="rounded-md border border-orange-500/25 bg-orange-500/10 px-1 py-0.5 text-[9px] font-black tabular-nums">
+                <span className="rounded-md border border-orange-500/25 bg-orange-500/10 px-1 py-0.5 text-[11px] font-black tabular-nums">
                   {productionCode}
                 </span>
               )}
@@ -244,7 +244,7 @@ function ProcessMetricsRow({
         </div>
       )}
       <div className="w-[132px]">
-        <p className="mb-0.5 text-[8px] font-black uppercase tracking-wide text-gray-600">Akış</p>
+        <p className="mb-0.5 text-[10px] font-black uppercase tracking-wide text-gray-600">Akış</p>
         <ProductionJobFlowBadge
           lineItems={[totalsMode ? lineItem : rowSnapshot]}
           jobStatus={row.fulfillmentStatus || lineItem.fulfillmentStatus || jobStatus}
@@ -285,7 +285,7 @@ export default function ProductionListLineItemRow({
   const lineMetrics = getLineQuantityMetrics(lineItem)
   const quantityRows = getLineQuantityRows(lineItem)
   const columnsLocked = lineItem.productionClosed === true
-  const lockedInputClass = 'form-input-readonly h-7 text-[11px] font-bold tabular-nums px-2'
+  const lockedInputClass = 'form-input-readonly h-7 text-[13px] font-bold tabular-nums px-2'
   const stagePhotos = lineItem.stagePhotos || []
 
   if (!quantityRows.length) return null
@@ -312,12 +312,12 @@ export default function ProductionListLineItemRow({
                     title={lineItem.product || 'Ürün'}
                   >
                     {productionCode && (
-                      <span className="mr-2 shrink-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[10px] font-black tabular-nums text-blue-300">
+                      <span className="mr-2 shrink-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[12px] font-black tabular-nums text-blue-300">
                         {productionCode}
                       </span>
                     )}
                     {lineCount > 1 && (
-                      <span className="mr-1 text-[10px] font-black tabular-nums text-gray-500">
+                      <span className="mr-1 text-[12px] font-black tabular-nums text-gray-500">
                         #{lineIndex + 1}
                       </span>
                     )}
@@ -329,7 +329,7 @@ export default function ProductionListLineItemRow({
                     title={lineItem.product || 'Ürün'}
                   >
                     {productionCode && (
-                      <span className="mr-2 shrink-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[10px] font-black tabular-nums text-blue-300">
+                      <span className="mr-2 shrink-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[12px] font-black tabular-nums text-blue-300">
                         {productionCode}
                       </span>
                     )}
@@ -363,7 +363,7 @@ export default function ProductionListLineItemRow({
 
                 {(typeof onAddQuantityRow === 'function' || typeof onRemoveLineItem === 'function' || typeof onRemoveQuantityRow === 'function') && (
                   <div className="flex shrink-0 items-end gap-1">
-                    <p className="mb-0.5 text-[8px] font-black uppercase tracking-wide text-transparent select-none">.</p>
+                    <p className="mb-0.5 text-[10px] font-black uppercase tracking-wide text-transparent select-none">.</p>
                     <div className="flex items-center gap-1">
                       {typeof onAddQuantityRow === 'function' && (
                         <button

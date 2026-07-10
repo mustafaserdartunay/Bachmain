@@ -26,7 +26,7 @@ export default function DepoStatusTrack({ status, compact = false, showLabels = 
               <div className={`${compact ? 'h-2' : 'h-5'} w-full`} />
               {!compact && showLabels && (
                 <p
-                  className={`absolute inset-0 flex items-center justify-center truncate px-0.5 text-[8px] font-black uppercase tracking-wide ${
+                  className={`absolute inset-0 flex items-center justify-center truncate px-0.5 text-[10px] font-black uppercase tracking-wide ${
                     isActive ? 'text-white' : isPast ? 'text-emerald-200/90' : 'text-gray-600'
                   }`}
                 >
@@ -41,7 +41,7 @@ export default function DepoStatusTrack({ status, compact = false, showLabels = 
         })}
       </div>
       {!compact && (
-        <p className="mt-1 truncate text-[10px] font-bold uppercase tracking-wide text-gray-400">
+        <p className="mt-1 truncate text-[12px] font-bold uppercase tracking-wide text-gray-400">
           {status}
         </p>
       )}

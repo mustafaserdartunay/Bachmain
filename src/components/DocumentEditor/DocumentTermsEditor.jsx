@@ -43,7 +43,7 @@ export default function DocumentTermsEditor({
   }
 
   return (
-    <div className={compact ? '' : 'col-span-2 rounded-3xl border border-dark-500/45 bg-dark-900/35 p-4'}>
+    <div className={compact ? '' : 'glass-inset col-span-2 rounded-[20px] p-4'}>
       {!compact && (
         <div className="mb-4 text-center">
           <h3 className="text-base font-bold text-white">{title}</h3>
@@ -55,7 +55,7 @@ export default function DocumentTermsEditor({
       <div className={compact
         ? 'grid grid-cols-2 items-stretch gap-3'
         : 'grid grid-cols-[minmax(0,1fr)_390px] items-stretch gap-4'}>
-        <div className={`flex flex-col rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3 ${compact ? 'min-h-[180px]' : 'h-[332px]'}`}>
+        <div className={`glass-inset flex flex-col rounded-[16px] p-3 ${compact ? 'min-h-[180px]' : 'h-[332px]'}`}>
           <div className="mb-3">
             <h4 className="text-base font-bold text-white">Açıklama</h4>
           </div>
@@ -67,7 +67,7 @@ export default function DocumentTermsEditor({
           />
         </div>
 
-        <div className={`flex flex-col rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3 ${compact ? 'min-h-[220px]' : 'h-[332px]'}`}>
+        <div className={`glass-inset flex flex-col rounded-[16px] p-3 ${compact ? 'min-h-[220px]' : 'h-[332px]'}`}>
           <div className="mb-3">
             <h3 className="text-base font-bold text-white">{savedTermsTitle}</h3>
           </div>

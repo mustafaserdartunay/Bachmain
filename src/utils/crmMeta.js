@@ -1,7 +1,6 @@
 import { representativeOptions } from './customerMeta'
 
-export const LIST_PILL_CLASS =
-  'flex w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold transition-colors hover:bg-dark-700/80'
+export const LIST_PILL_CLASS = 'glass-pill'
 
 export const priorityOptions = [
   { label: 'Acil', color: 'bg-red-500' },

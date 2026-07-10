@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
+import SearchInput from '../../components/Common/SearchInput'
 import ListHeaderRow from '../../components/Common/ListHeaderRow'
 import { formatTL } from '../../utils/productPricing'
 import { getTreasuryMovements } from '../../utils/treasuryStore'
@@ -59,11 +60,11 @@ export default function ExpenseListPage() {
           </span>
         )}
       >
-        <input
+        <SearchInput
+          wrapperClassName="mb-4 w-full max-w-md"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Gider ara..."
-          className="form-input mb-4 w-full max-w-md text-sm"
         />
 
         <ListHeaderRow
@@ -83,7 +84,7 @@ export default function ExpenseListPage() {
               <p className="text-xs font-semibold text-gray-300">{formatDate(row.date)}</p>
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-white">{row.description || row.type}</p>
-                <p className="truncate text-[11px] text-gray-500">{row.vendorName || row.accountName || '—'}</p>
+                <p className="truncate text-[13px] text-gray-500">{row.vendorName || row.accountName || '—'}</p>
               </div>
               <p className="text-xs text-gray-400">{row.expenseCategory || row.type || '—'}</p>
               <p className="text-right text-sm font-black text-red-300">{formatTL(row.amount)}</p>

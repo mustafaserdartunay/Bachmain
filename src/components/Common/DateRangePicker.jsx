@@ -241,7 +241,7 @@ export default function DateRangePicker({
 
           <div className="mb-1 grid grid-cols-7 gap-1">
             {WEEKDAYS.map((day) => (
-              <span key={day} className="py-1 text-center text-[9px] font-black uppercase tracking-wide text-gray-500">
+              <span key={day} className="py-1 text-center text-[11px] font-black uppercase tracking-wide text-gray-500">
                 {day}
               </span>
             ))}
@@ -263,7 +263,7 @@ export default function DateRangePicker({
                   key={toIso(day)}
                   type="button"
                   onClick={() => handleDaySelect(day)}
-                  className={`flex h-8 items-center justify-center rounded-lg text-[11px] font-bold transition-colors ${
+                  className={`flex h-8 items-center justify-center rounded-lg text-[13px] font-bold transition-colors ${
                     isStart || isEnd
                       ? 'bg-emerald-500 text-white'
                       : inRange
@@ -279,12 +279,12 @@ export default function DateRangePicker({
             })}
           </div>
 
-          <p className="mt-3 text-[10px] font-medium text-gray-500">
+          <p className="mt-3 text-[12px] font-medium text-gray-500">
             {selectingEnd ? 'Bitiş tarihini seçin' : 'Başlangıç ve bitiş tarihini seçin'}
           </p>
 
           <div className="mt-3 border-t border-dark-500/40 pt-3">
-            <label className="flex cursor-pointer items-center gap-2 text-[11px] font-bold text-gray-400">
+            <label className="flex cursor-pointer items-center gap-2 text-[13px] font-bold text-gray-400">
               <input
                 type="checkbox"
                 checked={localIncludeTime}
@@ -307,7 +307,7 @@ export default function DateRangePicker({
             {localIncludeTime && (
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <div>
-                  <p className="mb-1 text-[9px] font-black uppercase tracking-wide text-gray-500">Başlangıç</p>
+                  <p className="mb-1 text-[11px] font-black uppercase tracking-wide text-gray-500">Başlangıç</p>
                   <input
                     type="time"
                     value={localTimeFrom}
@@ -326,7 +326,7 @@ export default function DateRangePicker({
                   />
                 </div>
                 <div>
-                  <p className="mb-1 text-[9px] font-black uppercase tracking-wide text-gray-500">Bitiş</p>
+                  <p className="mb-1 text-[11px] font-black uppercase tracking-wide text-gray-500">Bitiş</p>
                   <input
                     type="time"
                     value={localTimeTo}

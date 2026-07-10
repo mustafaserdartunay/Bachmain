@@ -30,7 +30,7 @@ export default function ProductionProgressChart() {
           return (
             <div key={step.name} className="flex items-center gap-2 min-w-0">
               <span className={`h-1.5 w-6 shrink-0 rounded-full ${isDone ? 'bg-emerald-500' : isActive ? 'bg-blue-500' : 'bg-dark-600'}`} />
-              <span className={`truncate text-[10px] ${isDone || isActive ? 'font-semibold text-gray-300' : 'text-gray-600'}`}>
+              <span className={`truncate text-[12px] ${isDone || isActive ? 'font-semibold text-gray-300' : 'text-gray-600'}`}>
                 {step.name}
               </span>
             </div>

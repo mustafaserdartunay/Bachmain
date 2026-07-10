@@ -39,9 +39,9 @@ export default function AbsencesPage() {
               <div>
                 <p className="text-sm font-bold text-white">{fullName(employee)}</p>
                 <p className="text-xs text-gray-500">{employee.department}</p>
-                {log?.lateMinutes > 0 && <p className="text-[11px] text-amber-300">{log.lateMinutes} dk geç kaldı</p>}
+                {log?.lateMinutes > 0 && <p className="text-[13px] text-amber-300">{log.lateMinutes} dk geç kaldı</p>}
               </div>
-              <span className={`rounded-lg border px-2 py-1 text-[10px] font-black ${statusBadgeClass(status.tone)}`}>{status.label}</span>
+              <span className={`rounded-lg border px-2 py-1 text-[12px] font-black ${statusBadgeClass(status.tone)}`}>{status.label}</span>
             </div>
           ))}
         </div>

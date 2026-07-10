@@ -20,7 +20,7 @@ export default function ProductionSteps() {
               >
                 {step.completed ? <Check className="w-3.5 h-3.5" /> : index + 1}
               </div>
-              <span className={`text-[10px] mt-1.5 text-center leading-tight ${
+              <span className={`text-[12px] mt-1.5 text-center leading-tight ${
                 step.active || step.completed ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 {step.name}

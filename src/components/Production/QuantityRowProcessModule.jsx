@@ -2,7 +2,7 @@ import { Check, ChevronRight } from 'lucide-react'
 import { getQuantityRowStageProgress } from '../../utils/productionLineItems'
 
 const DEFAULT_PILL_CLASS =
-  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2.5 text-[11px] font-semibold text-[var(--text-strong)]'
+  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2.5 text-[13px] font-semibold text-[var(--text-strong)]'
 
 export function QuantityRowProcessTrigger({
   row,
@@ -57,7 +57,7 @@ export function QuantityRowProcessTrigger({
                 onStageChange?.(stage.id)
                 setActiveMenu(null)
               }}
-              className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[11px] font-semibold transition-colors ${
+              className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold transition-colors ${
                 stage.active
                   ? 'bg-[color-mix(in_srgb,var(--accent)_10%,var(--surface-muted))] text-[var(--accent)]'
                   : 'text-[var(--text-strong)] hover:bg-[var(--surface-muted)]'

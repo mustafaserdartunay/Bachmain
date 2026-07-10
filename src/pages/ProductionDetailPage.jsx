@@ -256,7 +256,7 @@ export default function ProductionDetailPage() {
         </div>
 
         <div className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2">
-          <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wide ${statusStyle[job.status] || statusStyle['Devam Ediyor']}`}>
+          <span className={`rounded-full px-3 py-1 text-[12px] font-black uppercase tracking-wide ${statusStyle[job.status] || statusStyle['Devam Ediyor']}`}>
             {job.status || 'Devam Ediyor'}
           </span>
           <button
@@ -281,7 +281,7 @@ export default function ProductionDetailPage() {
 
           <div className="relative flex flex-wrap items-start justify-between gap-6">
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent)]">
+              <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.2em] text-[var(--accent)]">
                 <Sparkles className="h-3 w-3" />
                 Üretim Takip
               </p>
@@ -316,19 +316,19 @@ export default function ProductionDetailPage() {
             ].map(({ icon: Icon, label }) => (
               <span
                 key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-raised)]/90 px-3 py-1.5 text-[11px] font-semibold text-[var(--text-muted)] backdrop-blur-sm"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-raised)]/90 px-3 py-1.5 text-[13px] font-semibold text-[var(--text-muted)] backdrop-blur-sm"
               >
                 <Icon className="h-3.5 w-3.5 text-[var(--accent)]" />
                 {label}
               </span>
             ))}
             {jobMetrics.remaining > 0 && (
-              <span className="inline-flex items-center rounded-full bg-amber-500/10 px-3 py-1.5 text-[11px] font-bold text-amber-700">
+              <span className="inline-flex items-center rounded-full bg-amber-500/10 px-3 py-1.5 text-[13px] font-bold text-amber-700">
                 {formatQty(jobMetrics.remaining)} kalan adet
               </span>
             )}
             {jobMetrics.excess > 0 && (
-              <span className="inline-flex items-center rounded-full bg-sky-500/10 px-3 py-1.5 text-[11px] font-bold text-sky-700">
+              <span className="inline-flex items-center rounded-full bg-sky-500/10 px-3 py-1.5 text-[13px] font-bold text-sky-700">
                 +{formatQty(jobMetrics.excess)} fazla
               </span>
             )}
@@ -358,12 +358,12 @@ export default function ProductionDetailPage() {
             </p>
             <div className="flex gap-1.5">
               {jobMetrics.remaining > 0 && (
-                <span className="rounded-md bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                <span className="rounded-md bg-amber-500/10 px-2.5 py-1 text-[12px] font-bold text-amber-700">
                   {formatQty(jobMetrics.remaining)} kalan
                 </span>
               )}
               {jobMetrics.excess > 0 && (
-                <span className="rounded-md bg-sky-500/10 px-2.5 py-1 text-[10px] font-bold text-sky-700">
+                <span className="rounded-md bg-sky-500/10 px-2.5 py-1 text-[12px] font-bold text-sky-700">
                   +{formatQty(jobMetrics.excess)} fazla
                 </span>
               )}
@@ -380,7 +380,7 @@ export default function ProductionDetailPage() {
           title={`Ürün Kalemleri · ${lineItems.length}`}
           description="Her kalem kendi sürecini ve adet takibini içerir"
           action={(
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+            <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
               Sipariş {job.orderId || job.id}
             </span>
           )}

@@ -63,7 +63,7 @@ export default function DocumentBankAccountsPanel({
   }
 
   const paddingClass = compact ? 'p-2' : 'p-3'
-  const editButtonClass = `inline-flex shrink-0 items-center gap-1 rounded-lg border border-dark-500/50 bg-dark-800/90 px-2 py-1 text-[10px] font-bold text-gray-400 transition-colors hover:text-white ${
+  const editButtonClass = `inline-flex shrink-0 items-center gap-1 rounded-lg border border-dark-500/50 bg-dark-800/90 px-2 py-1 text-[12px] font-bold text-gray-400 transition-colors hover:text-white ${
     compact ? 'mt-0.5' : 'mt-1'
   }`
 

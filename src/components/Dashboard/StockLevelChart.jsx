@@ -13,7 +13,7 @@ function ChartTooltip({ active, payload }) {
   const row = payload[0].payload
   return (
     <div className="rounded-xl border border-dark-500/50 bg-dark-800 px-3 py-2 shadow-card">
-      <p className="text-[10px] text-gray-500">{row.name}</p>
+      <p className="text-[12px] text-gray-500">{row.name}</p>
       <p className="text-xs font-bold text-white">{row.current} / {row.min} min</p>
     </div>
   )

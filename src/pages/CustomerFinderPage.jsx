@@ -217,25 +217,25 @@ export default function CustomerFinderPage() {
       <section className="rounded-2xl border border-dark-500/45 bg-dark-800/65 p-4 shadow-card">
         <form onSubmit={searchPlaces} className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(220px,0.7fr)_auto]">
           <label>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Kategori / Sektör</p>
+            <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Kategori / Sektör</p>
             <input
               value={category}
               onChange={(event) => setCategory(event.target.value)}
-              className="form-input h-11 text-sm font-bold"
+              className="form-input search-pill h-10 text-sm font-semibold"
               placeholder="Örn: mobilyacı, reklam ajansı, matbaa, restoran"
             />
           </label>
           <label>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Bölge</p>
+            <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Bölge</p>
             <input
               value={region}
               onChange={(event) => setRegion(event.target.value)}
-              className="form-input h-11 text-sm font-bold"
+              className="form-input search-pill h-10 text-sm font-semibold"
               placeholder="Türkiye, İstanbul, Ankara..."
             />
           </label>
           <div className="flex items-end gap-2">
-            <button type="submit" disabled={loading} className="btn-primary h-11 gap-2 px-5 text-sm disabled:opacity-60">
+            <button type="submit" disabled={loading} className="btn-primary h-10 gap-2 rounded-full px-5 text-sm disabled:opacity-60">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               Ara
             </button>
@@ -326,9 +326,9 @@ export default function CustomerFinderPage() {
 
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap gap-1.5">
-                      {exists && <span className="rounded-lg bg-orange-500/10 px-2 py-1 text-[10px] font-black text-orange-300">Sistemde olabilir</span>}
+                      {exists && <span className="rounded-lg bg-orange-500/10 px-2 py-1 text-[12px] font-black text-orange-300">Sistemde olabilir</span>}
                       {candidate.openNow !== null && (
-                        <span className={`rounded-lg px-2 py-1 text-[10px] font-black ${candidate.openNow ? 'bg-emerald-500/10 text-emerald-300' : 'bg-gray-500/10 text-gray-400'}`}>
+                        <span className={`rounded-lg px-2 py-1 text-[12px] font-black ${candidate.openNow ? 'bg-emerald-500/10 text-emerald-300' : 'bg-gray-500/10 text-gray-400'}`}>
                           {candidate.openNow ? 'Açık' : 'Kapalı'}
                         </span>
                       )}

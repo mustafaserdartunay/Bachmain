@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ChevronDown,
   ChevronLeft,
@@ -10,10 +10,10 @@ import {
   Plus,
   Printer,
   Receipt,
-  Search,
   Users,
 } from 'lucide-react'
 import DateRangePicker from '../components/Common/DateRangePicker'
+import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
@@ -144,15 +144,12 @@ function CustomerPickerModal({ open, onClose, onSelect }) {
         <div className="border-b border-dark-500/45 px-5 py-4">
           <h3 className="text-base font-black text-white">Müşteri Seçin</h3>
           <p className="mt-1 text-xs text-gray-500">Satış faturası oluşturmak için müşteri seçin.</p>
-          <div className="relative mt-3">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Müşteri ara..."
-              className="form-input w-full pl-9 text-sm"
-            />
-          </div>
+          <SearchInput
+            wrapperClassName="mt-3"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Müşteri ara..."
+          />
         </div>
         <div className="max-h-80 overflow-y-auto p-2">
           {filtered.length === 0 ? (
@@ -181,6 +178,7 @@ function CustomerPickerModal({ open, onClose, onSelect }) {
 
 export default function SalesInvoicesPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [invoices, setInvoices] = useState(() => readSalesInvoices())
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -211,6 +209,12 @@ export default function SalesInvoicesPage() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  useEffect(() => {
+    if (searchParams.get('yeni') !== '1') return
+    setCustomerModalOpen(true)
+    setSearchParams({}, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -356,15 +360,12 @@ export default function SalesInvoicesPage() {
             />
           </div>
 
-          <div className="relative min-w-[220px] flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="İçerisinde ara..."
-              className="form-input w-full pl-9 text-sm"
-            />
-          </div>
+          <SearchInput
+            wrapperClassName="min-w-[220px] flex-1"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="İçerisinde ara..."
+          />
         </div>
 
         <ListHeaderRow
@@ -413,13 +414,13 @@ export default function SalesInvoicesPage() {
                   <div className="relative mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/80 text-gray-400">
                     <FileText className="h-5 w-5" />
                     {invoice.invoiceKind === 'e-fatura' && (
-                      <span className="absolute -bottom-1 -right-1 rounded bg-blue-500 px-1 text-[8px] font-black text-white">e</span>
+                      <span className="absolute -bottom-1 -right-1 rounded bg-blue-500 px-1 text-[10px] font-black text-white">e</span>
                     )}
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-sm font-black text-white">{invoice.title}</p>
-                      <span className={`rounded-md border px-1.5 py-0.5 text-[9px] font-black tracking-wide ${kindBadgeClass(invoice.invoiceKind)}`}>
+                      <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black tracking-wide ${kindBadgeClass(invoice.invoiceKind)}`}>
                         {INVOICE_KIND_LABELS[invoice.invoiceKind]}
                       </span>
                     </div>
@@ -441,7 +442,7 @@ export default function SalesInvoicesPage() {
 
               <div>
                 <p className="text-xs font-semibold text-gray-200">{formatInvoiceDate(invoice.issueDate)}</p>
-                <p className={`mt-1 flex items-center gap-1.5 text-[10px] font-bold ${statusTone(invoice.status)}`}>
+                <p className={`mt-1 flex items-center gap-1.5 text-[12px] font-bold ${statusTone(invoice.status)}`}>
                   <span className={`h-1.5 w-1.5 rounded-full ${statusDotClass(invoice.status)}`} />
                   {invoice.invoiceKind === 'e-fatura' ? 'Ticari e-Fatura' : 'Satış Faturaları'}
                   {' · '}
@@ -452,7 +453,7 @@ export default function SalesInvoicesPage() {
               <div>
                 <p className="text-xs font-semibold text-gray-200">{formatInvoiceDate(invoice.dueDate)}</p>
                 {invoice.remainingAmount > 0 && invoice.overdueDays > 0 && (
-                  <p className="mt-1 text-[10px] font-bold text-red-300">
+                  <p className="mt-1 text-[12px] font-bold text-red-300">
                     ({invoice.overdueDays} gün gecikti)
                   </p>
                 )}
@@ -462,11 +463,11 @@ export default function SalesInvoicesPage() {
                 {invoice.remainingAmount > 0 ? (
                   <>
                     <p className="text-sm font-black text-red-300">{formatTL(invoice.remainingAmount)}</p>
-                    <p className="mt-1 text-[10px] text-gray-500">Genel Toplam {formatTL(invoice.totalAmount)}</p>
+                    <p className="mt-1 text-[12px] text-gray-500">Genel Toplam {formatTL(invoice.totalAmount)}</p>
                     <button
                       type="button"
                       onClick={() => handleCollect(invoice)}
-                      className="mt-2 rounded-lg border border-emerald-500/30 px-2 py-1 text-[10px] font-bold text-emerald-300 transition-colors hover:bg-emerald-500/10"
+                      className="mt-2 rounded-lg border border-emerald-500/30 px-2 py-1 text-[12px] font-bold text-emerald-300 transition-colors hover:bg-emerald-500/10"
                     >
                       Tahsil Et
                     </button>
@@ -474,7 +475,7 @@ export default function SalesInvoicesPage() {
                 ) : (
                   <>
                     <p className="text-sm font-bold text-gray-500">Tahsil edildi</p>
-                    <p className="mt-1 text-[10px] text-gray-600">Genel Toplam {formatTL(invoice.totalAmount)}</p>
+                    <p className="mt-1 text-[12px] text-gray-600">Genel Toplam {formatTL(invoice.totalAmount)}</p>
                   </>
                 )}
               </div>
@@ -582,7 +583,7 @@ export default function SalesInvoicesPage() {
             <div className="text-right">
               <p className="text-xs font-black text-white">{stats.totalRecords} Kayıt</p>
               <p className="text-sm font-black text-white">{formatTL(stats.grandTotal)}</p>
-              <p className="text-[10px] font-bold text-red-300">Tahsil Edilecek {formatTL(stats.remainingTotal)}</p>
+              <p className="text-[12px] font-bold text-red-300">Tahsil Edilecek {formatTL(stats.remainingTotal)}</p>
             </div>
           </div>
         </div>

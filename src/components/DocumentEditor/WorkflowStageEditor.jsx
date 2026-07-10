@@ -407,7 +407,7 @@ export default function WorkflowStageEditor({
         </div>
 
         <div className="flex w-8 shrink-0 flex-col items-center gap-2 self-stretch border-l border-dark-500/35 pl-2.5">
-          <span className="shrink-0 text-[10px] font-black uppercase tracking-wider text-gray-500">Renk</span>
+          <span className="shrink-0 text-[12px] font-black uppercase tracking-wider text-gray-500">Renk</span>
           <StageColorSwatches
             value={activeColorValue}
             onChange={handleColorChange}

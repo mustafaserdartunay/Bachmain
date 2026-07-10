@@ -11,7 +11,7 @@ import {
 function StatusPill({ status }) {
   const meta = getDispatchStatusMeta(status)
   return (
-    <span className={`rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wide ${meta.bg} ${meta.tone}`}>
+    <span className={`rounded-lg px-2 py-1 text-[12px] font-black uppercase tracking-wide ${meta.bg} ${meta.tone}`}>
       {meta.label}
     </span>
   )
@@ -53,7 +53,7 @@ function DispatchRow({
                 <p className="text-sm font-bold text-white">{dispatch.customerName}</p>
                 <StatusPill status={dispatch.status} />
               </div>
-              <p className="mt-0.5 text-[11px] font-semibold text-gray-500">
+              <p className="mt-0.5 text-[13px] font-semibold text-gray-500">
                 {dispatch.referenceNo || dispatch.trackingToken} · {typeMeta.label}
               </p>
               <p className="mt-1 flex items-center gap-1 text-xs text-gray-400">
@@ -63,7 +63,7 @@ function DispatchRow({
             </div>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">ETA</p>
+            <p className="text-[12px] font-black uppercase tracking-wide text-gray-500">ETA</p>
             <p className="text-sm font-bold text-emerald-300">{formatEta(dispatch.estimatedArrival)}</p>
           </div>
         </div>
@@ -84,7 +84,7 @@ function DispatchRow({
               key={status.id}
               type="button"
               onClick={() => onStatusChange?.(dispatch.id, status.id)}
-              className="rounded-lg border border-dark-500/50 bg-dark-700/70 px-2.5 py-1 text-[10px] font-bold text-gray-300 hover:text-white"
+              className="rounded-lg border border-dark-500/50 bg-dark-700/70 px-2.5 py-1 text-[12px] font-bold text-gray-300 hover:text-white"
             >
               {status.label}
             </button>
@@ -92,7 +92,7 @@ function DispatchRow({
           <button
             type="button"
             onClick={() => onShare?.(dispatch)}
-            className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold text-blue-300 hover:bg-blue-500/20"
+            className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[12px] font-bold text-blue-300 hover:bg-blue-500/20"
           >
             <Share2 className="h-3 w-3" />
             {dispatch.sharedWithCustomer ? 'Paylaşıldı' : 'Müşteriye Gönder'}
@@ -146,7 +146,7 @@ export function CourierTrackingLinkBar({ trackingToken, onCopy }) {
       <button
         type="button"
         onClick={() => onCopy?.(url)}
-        className="inline-flex items-center gap-1 rounded-lg border border-dark-500/50 bg-dark-700 px-2.5 py-1.5 text-[10px] font-bold text-gray-200 hover:text-white"
+        className="inline-flex items-center gap-1 rounded-lg border border-dark-500/50 bg-dark-700 px-2.5 py-1.5 text-[12px] font-bold text-gray-200 hover:text-white"
       >
         <Copy className="h-3 w-3" />
         Kopyala

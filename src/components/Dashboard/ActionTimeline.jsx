@@ -84,11 +84,11 @@ export default function ActionTimeline() {
       <div className="border-b border-dark-500/45 px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-black uppercase tracking-wide text-blue-300">Aksiyon Zaman Çizelgesi</h2>
-            <p className="mt-0.5 text-[11px] font-semibold text-gray-400">Tekrarlayan · tedarikçi · maaş · gider</p>
+            <h2 className="text-sm font-black uppercase tracking-wide text-blue-300">Tekrarlayan Ödemeler Zaman Çizelgesi</h2>
+            <p className="mt-0.5 text-[13px] font-semibold text-gray-400">Tekrarlayan · tedarikçi · maaş · gider</p>
           </div>
           {overdueCount > 0 && (
-            <span className="shrink-0 rounded-full border border-red-400/25 bg-red-500/10 px-2.5 py-1 text-[10px] font-black text-red-300">
+            <span className="shrink-0 rounded-full border border-red-400/25 bg-red-500/10 px-2.5 py-1 text-[12px] font-black text-red-300">
               {overdueCount} ödeme
             </span>
           )}
@@ -117,12 +117,12 @@ export default function ActionTimeline() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                          <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${styles.badge}`}>{styles.label}</span>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-gray-400">
+                          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black uppercase ${styles.badge}`}>{styles.label}</span>
+                          <span className="inline-flex items-center gap-1 text-[12px] font-black uppercase tracking-wide text-gray-400">
                             <Icon className="h-3 w-3" /> {item.category}
                           </span>
                           {item.recurring && (
-                            <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-2 py-0.5 text-[9px] font-bold text-purple-300">Tekrarlayan</span>
+                            <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-2 py-0.5 text-[11px] font-bold text-purple-300">Tekrarlayan</span>
                           )}
                         </div>
                         <p className={`truncate text-sm font-black ${styles.title}`}>{item.title}</p>
@@ -130,7 +130,7 @@ export default function ActionTimeline() {
                       </div>
                     </div>
                     <div className="mt-2.5 flex items-center justify-between gap-2">
-                      <span className={`text-[11px] font-black ${styles.date}`}>
+                      <span className={`text-[13px] font-black ${styles.date}`}>
                         {item.dateLabel}
                         {item.overdue && ` · ${Math.abs(item.daysUntil)} gün gecikti`}
                         {item.dueToday && !item.overdue && ' · Bugün'}
@@ -151,7 +151,7 @@ export default function ActionTimeline() {
       </div>
 
       <div className="border-t border-dark-500/45 p-3 text-center">
-        <Link to="/kasa" className="inline-flex items-center gap-1 text-[11px] font-black text-blue-400 hover:text-blue-300">
+        <Link to="/kasa" className="inline-flex items-center gap-1 text-[13px] font-black text-blue-400 hover:text-blue-300">
           Kasa ve ödemeler <ArrowRight className="h-3 w-3" />
         </Link>
       </div>

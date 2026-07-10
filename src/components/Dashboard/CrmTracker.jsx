@@ -14,18 +14,18 @@ export default function CrmTracker() {
           <h3 className="text-sm font-bold text-white">CRM Takip</h3>
           <p className="text-xs text-gray-500">Görev ve randevular</p>
         </div>
-        <Link to="/crm" className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-400 hover:text-blue-300">
+        <Link to="/crm" className="inline-flex items-center gap-1 text-[12px] font-bold text-blue-400 hover:text-blue-300">
           CRM <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-2">
         <div className="rounded-xl border border-dark-500/40 bg-dark-700/30 px-3 py-2">
-          <p className="text-[10px] text-gray-500">Bugün randevu</p>
+          <p className="text-[12px] text-gray-500">Bugün randevu</p>
           <p className="text-lg font-black text-blue-300">{summary.appointmentsToday}</p>
         </div>
         <div className="rounded-xl border border-dark-500/40 bg-dark-700/30 px-3 py-2">
-          <p className="text-[10px] text-gray-500">Açık görev</p>
+          <p className="text-[12px] text-gray-500">Açık görev</p>
           <p className="text-lg font-black text-emerald-300">{summary.tasksPending}</p>
         </div>
       </div>
@@ -40,7 +40,7 @@ export default function CrmTracker() {
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold text-gray-200">{item.title}</p>
-              <p className="truncate text-[10px] text-gray-500">
+              <p className="truncate text-[12px] text-gray-500">
                 {getCustomerDisplay(item.customer).brandShortName} · {item.date}{item.time ? ` ${item.time}` : ''}
               </p>
             </div>
@@ -49,7 +49,7 @@ export default function CrmTracker() {
       </div>
 
       {summary.tasksOverdue > 0 && (
-        <p className="mt-3 text-[10px] font-bold text-red-400">{summary.tasksOverdue} geciken görev</p>
+        <p className="mt-3 text-[12px] font-bold text-red-400">{summary.tasksOverdue} geciken görev</p>
       )}
     </div>
   )

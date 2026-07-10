@@ -4,7 +4,7 @@ import { DropdownMenuShell } from '../Common/DropdownMenu'
 import { AppPageHeader } from '../Layout/AppPageLayout'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
 
-const SIDEBAR_ACTION_CLASS = 'flex w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/55 px-3 py-3 text-left text-[11px] font-black uppercase tracking-wide text-gray-200 transition-colors hover:border-dark-500/70 hover:bg-dark-700/80'
+const SIDEBAR_ACTION_CLASS = 'flex w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/55 px-3 py-3 text-left text-[13px] font-black uppercase tracking-wide text-gray-200 transition-colors hover:border-dark-500/70 hover:bg-dark-700/80'
 
 export default function CashAccountDetailLayout({
   account,
@@ -61,7 +61,7 @@ export default function CashAccountDetailLayout({
             balanceFooter ?? (
               <div className="mt-auto border-t border-dark-500/40 pt-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] font-black uppercase tracking-wide text-gray-500">Bakiye</span>
+                  <span className="text-[13px] font-black uppercase tracking-wide text-gray-500">Bakiye</span>
                   <span className={`text-sm font-black ${String(balance).includes('-') ? 'text-red-300' : 'text-emerald-300'}`}>
                     {balance}
                   </span>

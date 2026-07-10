@@ -16,19 +16,19 @@ export default function QuotesWidget() {
       <div className="grid grid-cols-4 gap-2 mb-4">
         <div className="bg-dark-700 rounded-lg p-2 text-center">
           <p className="text-lg font-bold text-white">{summary.total}</p>
-          <p className="text-[10px] text-gray-500">Toplam</p>
+          <p className="text-[12px] text-gray-500">Toplam</p>
         </div>
         <div className="bg-dark-700 rounded-lg p-2 text-center">
           <p className="text-lg font-bold text-orange-400">{summary.pending}</p>
-          <p className="text-[10px] text-gray-500">Bekleyen</p>
+          <p className="text-[12px] text-gray-500">Bekleyen</p>
         </div>
         <div className="bg-dark-700 rounded-lg p-2 text-center">
           <p className="text-lg font-bold text-emerald-400">{summary.accepted}</p>
-          <p className="text-[10px] text-gray-500">Kabul</p>
+          <p className="text-[12px] text-gray-500">Kabul</p>
         </div>
         <div className="bg-dark-700 rounded-lg p-2 text-center">
           <p className="text-lg font-bold text-red-400">{summary.rejected}</p>
-          <p className="text-[10px] text-gray-500">Red</p>
+          <p className="text-[12px] text-gray-500">Red</p>
         </div>
       </div>
 

@@ -242,7 +242,7 @@ export default function ProjectsPage() {
                     <div className="mx-auto w-24 h-2 rounded-full bg-dark-600 overflow-hidden">
                       <div className="h-full rounded-full bg-emerald-500" style={{ width: `${project.progress}%` }} />
                     </div>
-                    <span className="text-[10px] text-gray-500">%{project.progress}</span>
+                    <span className="text-[12px] text-gray-500">%{project.progress}</span>
                   </td>
                 </tr>
               ))}

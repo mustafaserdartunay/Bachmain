@@ -12,11 +12,11 @@ import {
   PackageCheck,
   Phone,
   Plus,
-  Search,
   Trash2,
   Warehouse,
   X,
 } from 'lucide-react'
+import SearchInput from '../../components/Common/SearchInput'
 import { Link } from 'react-router-dom'
 import NumericInput from '../../components/Products/NumericInput'
 import { formatTL } from '../../utils/productPricing'
@@ -81,7 +81,7 @@ function StatCard({ icon: Icon, label, value, sub, color = 'text-accent-blue' })
       <div>
         <p className="text-xs text-gray-500">{label}</p>
         <p className="text-xl font-bold text-white">{value}</p>
-        {sub && <p className="text-[10px] text-gray-500">{sub}</p>}
+        {sub && <p className="text-[12px] text-gray-500">{sub}</p>}
       </div>
     </div>
   )
@@ -99,7 +99,7 @@ function CapacityBar({ used, total }) {
       <div className="h-2 rounded-full bg-dark-600 overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${percent}%` }} />
       </div>
-      <p className="mt-1 text-[10px] text-gray-500">{used.toLocaleString('tr-TR')} / {total.toLocaleString('tr-TR')} m³</p>
+      <p className="mt-1 text-[12px] text-gray-500">{used.toLocaleString('tr-TR')} / {total.toLocaleString('tr-TR')} m³</p>
     </div>
   )
 }
@@ -407,15 +407,12 @@ export default function WarehousesPage() {
 
       <div className="card">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Depo adı, kod, şehir veya sorumlu ara..."
-              className="form-input pl-10"
-            />
-          </div>
+          <SearchInput
+            wrapperClassName="w-full max-w-sm"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Depo adı, kod, şehir veya sorumlu ara..."
+          />
           <div className="flex gap-1">
             {warehouseStatuses.map((item) => (
               <button
@@ -493,15 +490,15 @@ export default function WarehousesPage() {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-lg bg-dark-700/50 p-2 text-center">
                     <p className="text-lg font-bold text-white">{selected.totalSku}</p>
-                    <p className="text-[10px] text-gray-500">SKU</p>
+                    <p className="text-[12px] text-gray-500">SKU</p>
                   </div>
                   <div className="rounded-lg bg-dark-700/50 p-2 text-center">
                     <p className="text-lg font-bold text-emerald-400">{selected.totalStock.toLocaleString('tr-TR')}</p>
-                    <p className="text-[10px] text-gray-500">Stok</p>
+                    <p className="text-[12px] text-gray-500">Stok</p>
                   </div>
                   <div className="rounded-lg bg-dark-700/50 p-2 text-center">
                     <p className="text-lg font-bold text-red-400">{selected.criticalProducts}</p>
-                    <p className="text-[10px] text-gray-500">Kritik</p>
+                    <p className="text-[12px] text-gray-500">Kritik</p>
                   </div>
                 </div>
               </div>

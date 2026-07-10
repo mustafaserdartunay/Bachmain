@@ -1,11 +1,56 @@
 import { emptyProduct, sampleProducts } from '../data/productsData'
 
 const PRODUCT_STORAGE_KEY = 'erlenbox-products'
+const PRODUCT_DB_NAME = 'erlenbox-product-storage'
+const PRODUCT_DB_STORE = 'products'
+const PRODUCT_DB_KEY = 'all-products'
+
+function openProductDb() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      reject(new Error('IndexedDB kullanılamıyor'))
+      return
+    }
+    const request = window.indexedDB.open(PRODUCT_DB_NAME, 1)
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(PRODUCT_DB_STORE)
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+async function loadProductsFromIndexedDb() {
+  const db = await openProductDb()
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(PRODUCT_DB_STORE, 'readonly')
+    const request = transaction.objectStore(PRODUCT_DB_STORE).get(PRODUCT_DB_KEY)
+    request.onsuccess = () => {
+      db.close()
+      resolve(request.result)
+    }
+    request.onerror = () => {
+      db.close()
+      reject(request.error)
+    }
+  })
+}
+
+export function resolveProductImage(product) {
+  const candidates = [
+    product?.image,
+    product?.gallery?.[0],
+    product?.webImages?.[0],
+    product?.instagramImages?.[0],
+  ]
+  return candidates.find((item) => typeof item === 'string' && item.length > 0) || null
+}
 
 function cloneProduct(product) {
   return {
     ...emptyProduct,
     ...product,
+    storeSalesVisible: Boolean(product.storeSalesVisible),
     warehouses: [...(product.warehouses || emptyProduct.warehouses)],
   }
 }
@@ -20,6 +65,18 @@ export function getCatalogProducts() {
   } catch {
     return sampleProducts.map(cloneProduct)
   }
+}
+
+export async function getCatalogProductsWithMedia() {
+  try {
+    const fromDb = await loadProductsFromIndexedDb()
+    if (Array.isArray(fromDb) && fromDb.length > 0) {
+      return fromDb.map(cloneProduct)
+    }
+  } catch {
+    // IndexedDB yoksa localStorage'a düş.
+  }
+  return getCatalogProducts()
 }
 
 export function getTotalStock(product) {
@@ -52,6 +109,46 @@ export function getStockStatus(stock) {
   if (stock <= 0) return { label: 'Stok Yok', tone: 'text-red-300', badge: 'bg-red-500/15 text-red-300' }
   if (stock <= 100) return { label: 'Kritik', tone: 'text-amber-300', badge: 'bg-amber-500/15 text-amber-300' }
   return { label: 'Stokta', tone: 'text-emerald-300', badge: 'bg-emerald-500/15 text-emerald-300' }
+}
+
+export function getStoreSalesCategories(products = []) {
+  const categories = [...new Set(products.map((product) => product.category).filter(Boolean))]
+  categories.sort((a, b) => a.localeCompare(b, 'tr-TR'))
+  return [
+    { value: 'All', label: 'Tümü' },
+    ...categories.map((category) => ({ value: category, label: category })),
+  ]
+}
+
+export function mapProductForStoreSales(product) {
+  const stock = getTotalStock(product)
+  const imageUrl = resolveProductImage(product)
+  return {
+    id: product.stockCode || product.id,
+    productId: product.id,
+    name: product.name || 'İsimsiz ürün',
+    category: product.category || 'Diğer',
+    description: product.notes || '',
+    image: imageUrl || 'linear-gradient(135deg,#1e293b,#475569)',
+    imageUrl,
+    price: Number(product.salesPriceExcl) || 0,
+    vatRate: Number(product.vatRate) || 0,
+    stock,
+    tag: product.tags?.[0] || 'Ürün',
+  }
+}
+
+export function getStoreSalesProducts() {
+  return getCatalogProducts()
+    .filter((product) => product.storeSalesVisible)
+    .map(mapProductForStoreSales)
+}
+
+export async function getStoreSalesProductsWithMedia() {
+  const products = await getCatalogProductsWithMedia()
+  return products
+    .filter((product) => product.storeSalesVisible)
+    .map(mapProductForStoreSales)
 }
 
 export function stripCostFields(product) {

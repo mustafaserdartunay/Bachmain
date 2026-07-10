@@ -1,4 +1,6 @@
 import { appendActivityEntry } from './activityArchiveStore'
+import { getCustomerProfiles } from '../data/customerProfiles'
+import { getCustomerMetaSelection, matchesPartyListFilter, readCustomerMeta } from './customerMeta'
 
 const ACCOUNTS_KEY = 'erlenbox-treasury-accounts'
 const MOVEMENTS_KEY = 'erlenbox-treasury-movements'
@@ -80,6 +82,83 @@ const ACCOUNT_TYPE_BY_METHOD = {
   Nakit: 'Nakit Kasa',
   Banka: 'Banka Hesabı',
   Çek: 'Çek Kasası',
+}
+
+export const CASH_TREASURY_ACCOUNT_TYPE = 'Nakit Kasa'
+export const BANK_TREASURY_ACCOUNT_TYPE = 'Banka Hesabı'
+export const CHEQUE_TREASURY_ACCOUNT_TYPE = 'Çek Kasası'
+
+export function isCashTreasuryAccount(account) {
+  const type = String(account?.type || '').trim()
+  if (!type) return false
+  if (type === CHEQUE_TREASURY_ACCOUNT_TYPE || type === BANK_TREASURY_ACCOUNT_TYPE) return false
+  if (type === CASH_TREASURY_ACCOUNT_TYPE) return true
+
+  const normalized = type.toLocaleLowerCase('tr-TR')
+  if (normalized.includes('çek') || normalized.includes('banka')) return false
+  return normalized.includes('nakit') || normalized.includes('kasa') || normalized.includes('merkez')
+}
+
+export function isBankTreasuryAccount(account) {
+  const type = String(account?.type || '').trim()
+  if (!type) return false
+  if (type === CHEQUE_TREASURY_ACCOUNT_TYPE || type === CASH_TREASURY_ACCOUNT_TYPE) return false
+  if (type === BANK_TREASURY_ACCOUNT_TYPE) return true
+
+  const normalized = type.toLocaleLowerCase('tr-TR')
+  return normalized.includes('banka') && !normalized.includes('çek')
+}
+
+export function isChequeTreasuryAccount(account) {
+  const type = String(account?.type || '').trim()
+  if (type === CHEQUE_TREASURY_ACCOUNT_TYPE) return true
+  const normalized = type.toLocaleLowerCase('tr-TR')
+  return normalized.includes('çek') && normalized.includes('kasa')
+}
+
+export function getCashTreasuryAccounts(accounts = getTreasuryAccounts()) {
+  return accounts.filter(isCashTreasuryAccount)
+}
+
+export function getBankTreasuryAccounts(accounts = getTreasuryAccounts()) {
+  return accounts.filter(isBankTreasuryAccount)
+}
+
+export function getCashTreasuryTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+  return getCashTreasuryAccounts(accounts).reduce(
+    (sum, account) => sum + calculateAccountBalance(account, movements),
+    0,
+  )
+}
+
+export function getBankTreasuryTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+  return getBankTreasuryAccounts(accounts).reduce(
+    (sum, account) => sum + calculateAccountBalance(account, movements),
+    0,
+  )
+}
+
+export function getChequeTreasuryAccounts(accounts = getTreasuryAccounts()) {
+  return accounts.filter(isChequeTreasuryAccount)
+}
+
+export function getChequeTreasuryTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+  return getChequeTreasuryAccounts(accounts).reduce(
+    (sum, account) => sum + calculateAccountBalance(account, movements),
+    0,
+  )
+}
+
+export function getLiveAssetTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+  const cash = getCashTreasuryTotal(movements, accounts)
+  const bank = getBankTreasuryTotal(movements, accounts)
+  const cheques = getChequeTreasuryTotal(movements, accounts)
+  return {
+    cash,
+    bank,
+    cheques,
+    total: cash + bank + cheques,
+  }
 }
 
 export function resolveTreasuryAccountForMovement(method, accountName, accounts = getTreasuryAccounts()) {
@@ -396,6 +475,31 @@ export function getCustomerLedgerBalance(customer, movements = getTreasuryMoveme
 
 export function getCustomerLiveBalance(customer, movements = getTreasuryMovements()) {
   return getCustomerLedgerBalance(customer, movements)
+}
+
+function sumPartyBalances(listKind, movements = getTreasuryMovements()) {
+  const customerMeta = readCustomerMeta()
+  return getCustomerProfiles()
+    .filter((customer) => {
+      const settings = customerMeta[customer.id] || {}
+      const selected = getCustomerMetaSelection(customer, settings)
+      return matchesPartyListFilter(selected.type, listKind)
+    })
+    .reduce((sum, customer) => {
+      const balance = getCustomerLedgerBalance(customer, movements)
+      if (listKind === 'supplier') {
+        return sum + Math.abs(Math.min(balance, 0))
+      }
+      return sum + Math.max(balance, 0)
+    }, 0)
+}
+
+export function getTotalCustomerReceivable(movements = getTreasuryMovements()) {
+  return sumPartyBalances('customer', movements)
+}
+
+export function getTotalSupplierPayable(movements = getTreasuryMovements()) {
+  return sumPartyBalances('supplier', movements)
 }
 
 export function getCustomerBalanceColor(balance) {

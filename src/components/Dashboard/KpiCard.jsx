@@ -17,7 +17,7 @@ export default function KpiCard({ title, value, trend, color = 'blue', sparkline
       <div className="flex items-start justify-between gap-2">
         <span className="text-xs font-medium text-gray-500">{title}</span>
         {trend && (
-          <span className={`text-[10px] font-bold ${isPositive ? 'text-emerald-400' : trend.startsWith('-') ? 'text-orange-400' : 'text-gray-500'}`}>
+          <span className={`text-[12px] font-bold ${isPositive ? 'text-emerald-400' : trend.startsWith('-') ? 'text-orange-400' : 'text-gray-500'}`}>
             {trend}
           </span>
         )}

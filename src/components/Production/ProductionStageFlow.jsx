@@ -49,8 +49,8 @@ export default function ProductionStageFlow({
 }) {
   if (stages.length === 0) return null
 
-  const dotSize = compact ? 'h-7 w-7 text-[9px]' : 'h-10 w-10 text-[11px]'
-  const labelSize = compact ? 'text-[9px]' : 'text-[10px] sm:text-[11px]'
+  const dotSize = compact ? 'h-7 w-7 text-[11px]' : 'h-10 w-10 text-[13px]'
+  const labelSize = compact ? 'text-[11px]' : 'text-[12px] sm:text-[13px]'
   const dotRowH = compact ? 'h-7' : 'h-10'
   const lineClass = compact ? 'h-px' : 'h-1'
   const checkSize = compact ? 'h-3 w-3' : 'h-4 w-4'
@@ -112,7 +112,7 @@ export default function ProductionStageFlow({
       {(trackLabel || trackQuantity > 0) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)]/60 pb-3">
           {trackLabel && (
-            <p className={`text-[11px] font-black uppercase tracking-[0.14em] ${trackLabelClass[tone] || trackLabelClass.active}`}>
+            <p className={`text-[13px] font-black uppercase tracking-[0.14em] ${trackLabelClass[tone] || trackLabelClass.active}`}>
               {trackLabel}
             </p>
           )}
@@ -150,7 +150,7 @@ export function ProductionMinimalStageRail({
     compact: {
       dotSize: 'h-2 w-2',
       dotRowH: 'h-2',
-      labelClass: 'text-[8px]',
+      labelClass: 'text-[10px]',
       productClass: 'text-[7px]',
       stepW: showProducts ? 'min-w-[100px]' : 'min-w-[52px]',
       labelMaxW: 'max-w-[84px]',
@@ -167,8 +167,8 @@ export function ProductionMinimalStageRail({
     default: {
       dotSize: 'h-2.5 w-2.5',
       dotRowH: 'h-2.5',
-      labelClass: 'text-[9px]',
-      productClass: 'text-[8px]',
+      labelClass: 'text-[11px]',
+      productClass: 'text-[10px]',
       stepW: showProducts ? 'min-w-[100px]' : 'min-w-[64px]',
       labelMaxW: 'max-w-[84px]',
       productMaxW: 'max-w-[120px]',
@@ -184,8 +184,8 @@ export function ProductionMinimalStageRail({
     large: {
       dotSize: 'h-4 w-4',
       dotRowH: 'h-4',
-      labelClass: 'text-[11px]',
-      productClass: 'text-[10px]',
+      labelClass: 'text-[13px]',
+      productClass: 'text-[12px]',
       stepW: showProducts ? 'min-w-[152px]' : 'min-w-[88px]',
       labelMaxW: 'max-w-[140px]',
       productMaxW: 'max-w-[168px]',
@@ -227,7 +227,7 @@ export function ProductionMinimalStageRail({
   function renderStep(step, index, isFluid = false) {
     const fluidRowH = 'h-10'
     const dotRowHeight = isFluid ? fluidRowH : dotRowH
-    const fluidLabelClass = 'text-[11px] sm:text-xs'
+    const fluidLabelClass = 'text-[13px] sm:text-xs'
     const resolvedLabelClass = isFluid ? fluidLabelClass : labelClass
     const resolvedLineClass = isFluid ? 'h-1.5 rounded-full' : lineClass
 
@@ -235,7 +235,7 @@ export function ProductionMinimalStageRail({
       ? 'h-8 w-8 border-[3px] border-[var(--surface-raised)] bg-[var(--accent)] text-white shadow-[0_0_0_4px_color-mix(in_srgb,var(--accent)_22%,transparent),0_4px_14px_color-mix(in_srgb,var(--accent)_35%,transparent)] scale-110'
       : step.isComplete
         ? 'h-7 w-7 border-[3px] border-[var(--surface-raised)] bg-emerald-500 text-white shadow-[0_2px_8px_color-mix(in_srgb,emerald_500_40%,transparent)]'
-        : 'h-7 w-7 border-2 border-[var(--border)] bg-[var(--surface-raised)] text-[10px] font-black text-[var(--text-soft)] shadow-[0_1px_4px_rgba(0,0,0,0.06)]'
+        : 'h-7 w-7 border-2 border-[var(--border)] bg-[var(--surface-raised)] text-[12px] font-black text-[var(--text-soft)] shadow-[0_1px_4px_rgba(0,0,0,0.06)]'
 
     return (
       <div key={step.id} className={isFluid ? 'relative min-w-0' : `flex items-start ${stepW} shrink-0`}>
@@ -384,7 +384,7 @@ export function ProductionLineItemStageTrackInline({ steps = [], theme = 'light'
               {showLabels && (
                 <span
                   className={`relative z-10 line-clamp-2 w-full text-center font-bold leading-tight ${labelClass} ${
-                    isDark ? 'text-[8px] sm:text-[9px]' : 'text-[9px] sm:text-[10px]'
+                    isDark ? 'text-[10px] sm:text-[11px]' : 'text-[11px] sm:text-[12px]'
                   } ${step.isActive ? 'font-black' : ''}`}
                 >
                   {step.label}
@@ -452,7 +452,7 @@ export function ProductionLineItemStageTrack({
           <div key={`${step.id}-meta`} className="flex h-full min-w-0 flex-col items-center px-0.5">
             <div className="flex w-full flex-col items-center gap-1">
               <p
-                className={`line-clamp-2 text-center text-[10px] font-bold leading-snug sm:text-[11px] ${
+                className={`line-clamp-2 text-center text-[12px] font-bold leading-snug sm:text-[13px] ${
                   step.isActive
                     ? 'font-black text-[var(--text-strong)]'
                     : step.isComplete
@@ -467,7 +467,7 @@ export function ProductionLineItemStageTrack({
                   {step.products.map((product) => (
                     <span
                       key={product.id}
-                      className="max-w-full truncate rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-muted)]"
+                      className="max-w-full truncate rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--text-muted)]"
                       title={product.name}
                     >
                       {product.name}
@@ -520,10 +520,10 @@ export function ProductionLineItemTopStageStrip({
   return (
     <div className="border-t border-[var(--border)] bg-[var(--surface-muted)]/25 px-4 py-3">
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--text-soft)]">
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-[var(--text-soft)]">
           Genel süreç · teslimat satırlarından
         </p>
-        <span className="text-[10px] font-semibold tabular-nums text-[var(--text-muted)]">
+        <span className="text-[12px] font-semibold tabular-nums text-[var(--text-muted)]">
           {rowCount} teslimat · {productionStages.length} aşama
         </span>
       </div>
@@ -560,7 +560,7 @@ export function QuantityRowVerticalStages({ stages = [], onStageClick }) {
           }`}
         >
           <span
-            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-black ${
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-black ${
               stage.completed
                 ? 'bg-emerald-500 text-white'
                 : stage.active
@@ -571,7 +571,7 @@ export function QuantityRowVerticalStages({ stages = [], onStageClick }) {
             {stage.completed ? <Check className="h-3 w-3" strokeWidth={3} /> : index + 1}
           </span>
           <span
-            className={`min-w-0 flex-1 text-[10px] font-bold leading-snug ${
+            className={`min-w-0 flex-1 text-[12px] font-bold leading-snug ${
               stage.active ? 'text-[var(--accent)]' : stage.completed ? 'text-[var(--text-strong)]' : 'text-[var(--text-muted)]'
             }`}
           >
@@ -604,8 +604,8 @@ export function ProductionLineItemProcessSidebar({
           <Settings2 className="h-3.5 w-3.5" />
         </span>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--text-strong)]">Üretim süreci</p>
-          <p className="text-[9px] text-[var(--text-muted)]">
+          <p className="text-[12px] font-black uppercase tracking-[0.14em] text-[var(--text-strong)]">Üretim süreci</p>
+          <p className="text-[11px] text-[var(--text-muted)]">
             {productionClosed ? 'Kilitli · geri al ile düzenle' : 'Aşamayı seçerek ilerlet'}
           </p>
         </div>
@@ -623,11 +623,11 @@ export function ProductionLineItemProcessSidebar({
               className={`rounded-xl border p-2.5 ${trackToneClass[track.tone] || trackToneClass.active}`}
             >
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className={`text-[9px] font-black uppercase tracking-wider ${trackLabelClass[track.tone] || trackLabelClass.active}`}>
+                <p className={`text-[11px] font-black uppercase tracking-wider ${trackLabelClass[track.tone] || trackLabelClass.active}`}>
                   {track.label}
                 </p>
                 {track.quantity > 0 && (
-                  <span className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-1.5 py-0.5 text-[9px] font-black tabular-nums text-[var(--text-strong)]">
+                  <span className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-1.5 py-0.5 text-[11px] font-black tabular-nums text-[var(--text-strong)]">
                     {formatQty(track.quantity)}
                   </span>
                 )}
@@ -666,7 +666,7 @@ export function QuantityProgressBar({ ordered, produced, delivered, productionCl
           />
         )}
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-semibold">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-semibold">
         <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
           Üretim {formatQty(produced)}
@@ -721,8 +721,8 @@ export function ProgressRing({ value, label, sublabel, size = 88, stroke = 6, to
           <span className="text-lg font-black tabular-nums leading-none text-[var(--text-strong)]">%{value}</span>
         </div>
       </div>
-      <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">{label}</p>
-      {sublabel && <p className="text-[9px] font-semibold text-[var(--text-muted)]">{sublabel}</p>}
+      <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">{label}</p>
+      {sublabel && <p className="text-[11px] font-semibold text-[var(--text-muted)]">{sublabel}</p>}
     </div>
   )
 }

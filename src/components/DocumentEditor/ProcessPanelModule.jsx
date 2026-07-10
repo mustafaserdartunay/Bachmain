@@ -51,17 +51,17 @@ export default function ProcessPanelModule({
         >
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className={`font-black uppercase tracking-wider text-gray-500 ${compact ? 'text-[9px]' : 'text-[10px]'}`}>{activeLabel}</p>
+              <p className={`font-black uppercase tracking-wider text-gray-500 ${compact ? 'text-[11px]' : 'text-[12px]'}`}>{activeLabel}</p>
               <p className={`flex items-center gap-1.5 font-bold ${compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'} ${isPlaceholder ? 'text-gray-500' : 'text-white'}`}>
                 <span className={`shrink-0 rounded-full ${compact ? 'h-2 w-2' : 'h-2.5 w-2.5'} ${isPlaceholder ? 'bg-gray-500' : (activeStage?.color || 'bg-blue-500')}`} />
                 <span className="truncate">{displayLabel}</span>
               </p>
               {summaryLine ?? (
-                <p className={`text-gray-500 ${compact ? 'mt-0.5 text-[10px]' : 'mt-1 text-xs'}`}>{stages.length} {countSuffix}</p>
+                <p className={`text-gray-500 ${compact ? 'mt-0.5 text-[12px]' : 'mt-1 text-xs'}`}>{stages.length} {countSuffix}</p>
               )}
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <span className={`font-bold text-gray-400 ${compact ? 'text-[10px]' : 'text-xs'}`}>{isOpen ? 'Gizle' : 'Düzenle'}</span>
+              <span className={`font-bold text-gray-400 ${compact ? 'text-[12px]' : 'text-xs'}`}>{isOpen ? 'Gizle' : 'Düzenle'}</span>
               <ChevronDown className={`text-gray-400 transition-transform ${compact ? 'h-3 w-3' : 'h-4 w-4'} ${isOpen ? 'rotate-180' : ''}`} />
             </div>
           </div>

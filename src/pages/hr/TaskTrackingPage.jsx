@@ -44,7 +44,7 @@ export default function TaskTrackingPage() {
                 <p className="text-sm font-bold text-white">{task.title}</p>
                 <p className="text-xs text-gray-500">{task.employeeName}</p>
               </div>
-              <button type="button" className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300" onClick={() => { updatePdksTask(task.id, { status: 'Tamamlandı' }); refresh() }}>
+              <button type="button" className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-bold text-emerald-300" onClick={() => { updatePdksTask(task.id, { status: 'Tamamlandı' }); refresh() }}>
                 {task.status === 'Tamamlandı' ? 'Tamam' : 'Tamamla'}
               </button>
             </div>

@@ -81,7 +81,7 @@ export default function PdksDashboardPage() {
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-dark-700">
                   <div className="h-full rounded-full bg-blue-500" style={{ width: `${item.rate}%` }} />
                 </div>
-                <p className="mt-1 text-[11px] text-gray-500">{item.present}/{item.total} personel</p>
+                <p className="mt-1 text-[13px] text-gray-500">{item.present}/{item.total} personel</p>
               </div>
             ))}
           </div>
@@ -97,9 +97,9 @@ export default function PdksDashboardPage() {
             <div key={employee.id} className="flex items-center justify-between rounded-2xl border border-dark-500/40 bg-dark-800/55 px-3 py-3">
               <div>
                 <p className="text-sm font-bold text-white">{fullName(employee)}</p>
-                <p className="text-[11px] text-gray-500">{employee.department} · {employee.employeeNo}</p>
+                <p className="text-[13px] text-gray-500">{employee.department} · {employee.employeeNo}</p>
               </div>
-              <span className={`rounded-lg border px-2 py-1 text-[10px] font-black ${statusBadgeClass(status.tone)}`}>
+              <span className={`rounded-lg border px-2 py-1 text-[12px] font-black ${statusBadgeClass(status.tone)}`}>
                 {status.label}
               </span>
             </div>

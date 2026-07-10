@@ -114,7 +114,7 @@ export default function PriceListsPage() {
               >
                 <div>
                   <p className="text-sm font-bold text-white">{list.name}</p>
-                  <p className="text-[11px] text-gray-500">{list.items?.length || 0} kalem · {list.currency}</p>
+                  <p className="text-[13px] text-gray-500">{list.items?.length || 0} kalem · {list.currency}</p>
                 </div>
                 {!list.isDefault && (
                   <button
@@ -159,7 +159,7 @@ export default function PriceListsPage() {
                 <p className="text-xs text-gray-400">{row.sku || '—'}</p>
                 <p className="text-xs text-gray-400">%{row.vatRate ?? 0}</p>
                 <p className="text-right text-sm font-black text-purple-300">{formatTL(row.price)}</p>
-                <span className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300">Aktif</span>
+                <span className="rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-bold text-emerald-300">Aktif</span>
               </div>
             ))}
           </div>

@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import HeaderCashActionsPanel from './HeaderCashActionsPanel'
+import TeamHubPanel from './TeamHubPanel'
 
 export default function Layout({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('erlenbox-sidebar') === 'collapsed')
+  const [teamHubCollapsed, setTeamHubCollapsed] = useState(() => localStorage.getItem('bach-team-hub-panel') !== 'expanded')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 1024 : false))
 
@@ -32,8 +35,16 @@ export default function Layout({ children }) {
     })
   }
 
+  function toggleTeamHub() {
+    setTeamHubCollapsed((collapsed) => {
+      const next = !collapsed
+      localStorage.setItem('bach-team-hub-panel', next ? 'collapsed' : 'expanded')
+      return next
+    })
+  }
+
   return (
-    <div className="min-h-screen bg-dark-900 transition-colors">
+    <div className="app-shell min-h-screen bg-dark-900 transition-colors">
       {mobileSidebarOpen && (
         <button
           type="button"
@@ -48,10 +59,16 @@ export default function Layout({ children }) {
         onCloseMobile={() => setMobileSidebarOpen(false)}
         onToggle={toggleSidebar}
       />
-      <div className={`min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-56'}`}>
+      <div
+        className="app-shell-content min-w-0 transition-all duration-300"
+        data-sidebar-collapsed={!isMobile && sidebarCollapsed ? 'true' : 'false'}
+        data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
+      >
         <Header onMenuClick={() => setMobileSidebarOpen(true)} />
-        <main className="app-responsive min-w-0 overflow-x-hidden p-3 sm:p-4 lg:p-5">{children}</main>
+        <HeaderCashActionsPanel />
+        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden">{children}</main>
       </div>
+      <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
     </div>
   )
 }

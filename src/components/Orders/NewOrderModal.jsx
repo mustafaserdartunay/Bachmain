@@ -65,7 +65,7 @@ export default function NewOrderModal({ onClose }) {
           <div>
             <label className="block text-xs text-gray-500 mb-2">Ürünler *</label>
             <div className="bg-dark-700/50 rounded-lg p-3 space-y-2">
-              <div className="grid grid-cols-12 gap-2 text-[10px] text-gray-500 uppercase">
+              <div className="grid grid-cols-12 gap-2 text-[12px] text-gray-500 uppercase">
                 <div className="col-span-5">Ürün</div>
                 <div className="col-span-3 text-right">Miktar</div>
                 <div className="col-span-2 text-right">Birim Fiyat</div>

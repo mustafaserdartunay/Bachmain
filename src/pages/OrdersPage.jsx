@@ -6,10 +6,10 @@ import {
   ChevronRight,
   ClipboardList,
   Plus,
-  Search,
   Send,
   Trash2,
 } from 'lucide-react'
+import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import ListDeleteConfirmPanel, { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
@@ -57,7 +57,7 @@ import { resolveCustomerContactInfo } from '../utils/customerContacts'
 
 const orderListGrid = '118px 72px minmax(180px,1.2fr) 148px 148px 118px 118px minmax(160px,auto)'
 const orderListProcessPillClass =
-  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 py-1 text-[10px] font-bold transition-colors hover:bg-dark-700/80'
+  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 py-1 text-[12px] font-bold transition-colors hover:bg-dark-700/80'
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const sortFilterOptions = [
   { label: 'Son işleme göre', color: 'bg-blue-500' },
@@ -994,18 +994,14 @@ export default function OrdersPage() {
           action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{filteredOrders.length} kayıt</span>}
         >
           <div className="mb-4 space-y-3">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Sipariş kodu, teklif no, müşteri veya yetkili ara..."
-                className="form-input pl-10"
-              />
-            </div>
+            <SearchInput
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Sipariş kodu, teklif no, müşteri veya yetkili ara..."
+            />
             <div className="grid grid-cols-2 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3 lg:grid-cols-3">
               <div>
-                <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Öncelik</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Öncelik</p>
                 <EditableDropdownPill
                   value={filters.priority}
                   options={orderPriorityFilterOptions}
@@ -1019,7 +1015,7 @@ export default function OrdersPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Süreç</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Süreç</p>
                 <EditableDropdownPill
                   value={filters.stage}
                   options={orderStageFilterOptions}
@@ -1033,7 +1029,7 @@ export default function OrdersPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-gray-500">Sıralama</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Sıralama</p>
                 <EditableDropdownPill
                   value={sortLabelByMode[sortMode] || 'Son işleme göre'}
                   options={sortFilterOptions}
@@ -1099,7 +1095,7 @@ export default function OrdersPage() {
                     <div className="flex w-full min-w-0 items-center justify-start gap-2 text-left text-sm font-black text-white">
                       <span className="truncate">{customerDisplay.brandShortName || 'Müşteri girilmedi'}</span>
                       {customerDisplay.companyTitle && (
-                        <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[10px] font-black text-gray-400">
+                        <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[12px] font-black text-gray-400">
                           <span className="truncate">{customerDisplay.companyTitle}</span>
                         </span>
                       )}
@@ -1143,7 +1139,7 @@ export default function OrdersPage() {
                       <button
                         type="button"
                         onClick={(event) => handleCancelOrderFromList(order, event)}
-                        className="whitespace-nowrap rounded-lg border border-blue-500/25 bg-blue-500/10 px-2.5 py-1.5 text-[10px] font-bold text-blue-300 transition-colors hover:bg-blue-500/20"
+                        className="whitespace-nowrap rounded-lg border border-blue-500/25 bg-blue-500/10 px-2.5 py-1.5 text-[12px] font-bold text-blue-300 transition-colors hover:bg-blue-500/20"
                       >
                         Vazgeç
                       </button>

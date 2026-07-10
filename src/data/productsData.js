@@ -74,6 +74,7 @@ export const emptyProduct = {
   productCode: '',
   gtipCode: '',
   stockTracking: true,
+  storeSalesVisible: false,
   initialStock: 0,
   criticalStock: 0,
   purchasePriceExcl: 0,

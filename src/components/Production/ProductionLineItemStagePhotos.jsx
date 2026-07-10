@@ -49,7 +49,7 @@ export function PhotoLightbox({ photo, onClose }) {
               <p className="text-xs font-black uppercase tracking-wide text-blue-300">{photo.stageLabel}</p>
             )}
             {photo.caption && <p className="mt-1 text-sm font-semibold text-white">{photo.caption}</p>}
-            {photo.createdAt && <p className="mt-1 text-[11px] text-gray-400">{photo.createdAt}</p>}
+            {photo.createdAt && <p className="mt-1 text-[13px] text-gray-400">{photo.createdAt}</p>}
           </div>
         )}
       </div>
@@ -177,7 +177,7 @@ export function ProductionStageColumnPhotos({
               type="button"
               onClick={handleRemove}
               className={`inline-flex items-center gap-0.5 rounded-md transition-colors ${
-                compact ? 'p-0.5' : 'px-1.5 py-0.5 text-[9px] font-bold'
+                compact ? 'p-0.5' : 'px-1.5 py-0.5 text-[11px] font-bold'
               } ${
                 isDark
                   ? 'text-red-300 hover:bg-red-500/10'

@@ -1,24 +1,41 @@
 /**
- * Standart koyu tema açılır menü — EditableDropdownPill ile aynı görsel dil.
+ * Standart glass açılır menü — FormSectionPanel / glass-inset ile aynı görsel dil.
  */
 
+export const DROPDOWN_Z_INDEX = 10000
+
+export const DROPDOWN_MENU_SHELL_BASE_CLASS = 'glass-inset min-w-[210px] rounded-[16px] p-2'
+
 export const DROPDOWN_MENU_PANEL_CLASS =
-  'z-50 min-w-[210px] rounded-2xl border border-dark-500 bg-dark-800 p-2 shadow-2xl shadow-black/40'
+  `z-50 ${DROPDOWN_MENU_SHELL_BASE_CLASS}`
+
+export const DROPDOWN_MENU_PORTAL_CLASS =
+  `app-dropdown-portal ${DROPDOWN_MENU_SHELL_BASE_CLASS}`
 
 export const DROPDOWN_MENU_SHELL_CLASS = `absolute left-0 top-11 ${DROPDOWN_MENU_PANEL_CLASS}`
 
 export const DROPDOWN_MENU_ITEM_CLASS =
-  'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/10 hover:text-white'
+  'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-[var(--ink)] transition-colors hover:bg-white/45'
+
+export const DROPDOWN_MENU_ITEM_MUTED_CLASS =
+  `${DROPDOWN_MENU_ITEM_CLASS} text-[var(--muted)]`
+
+export const DROPDOWN_MENU_DIVIDER_CLASS = 'my-1.5 border-t border-white/50'
 
 export function dropdownMenuShellClass({
   matchWidth = true,
   inline = false,
+  portaled = false,
   positionClass = 'absolute left-0 top-11',
 } = {}) {
+  const panelClass = portaled ? DROPDOWN_MENU_PORTAL_CLASS : DROPDOWN_MENU_PANEL_CLASS
   if (inline) {
-    return `relative z-30 mt-1 w-full ${DROPDOWN_MENU_PANEL_CLASS}`
+    return `relative z-30 mt-1 w-full ${panelClass}`
   }
-  return `${positionClass} ${DROPDOWN_MENU_PANEL_CLASS}${matchWidth ? ' w-full' : ' w-max max-w-[260px]'}`
+  if (portaled) {
+    return `${panelClass}${matchWidth ? '' : ' w-max max-w-[260px]'}`
+  }
+  return `${positionClass} ${panelClass}${matchWidth ? ' w-full' : ' w-max max-w-[260px]'}`
 }
 
 export function DropdownMenuShell({ children, className = '', matchWidth = true, inline = false }) {
@@ -37,7 +54,7 @@ export function DropdownMenuItem({ label, onClick, icon: Icon, dotColor, iconTon
       className={`${DROPDOWN_MENU_ITEM_CLASS} ${className}`.trim()}
     >
       {Icon ? (
-        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-dark-700/70 ${iconTone || 'text-gray-400'}`}>
+        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/40 ${iconTone || 'text-[var(--muted)]'}`}>
           <Icon className="h-3.5 w-3.5" />
         </span>
       ) : null}
@@ -50,5 +67,5 @@ export function DropdownMenuItem({ label, onClick, icon: Icon, dotColor, iconTon
 }
 
 export function DropdownMenuDivider() {
-  return <div className="my-1.5 border-t border-dark-500/60" />
+  return <div className={DROPDOWN_MENU_DIVIDER_CLASS} />
 }

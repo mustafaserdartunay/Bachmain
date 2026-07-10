@@ -76,16 +76,16 @@ function FlowPercentRing({ segment, size = 32 }) {
           />
         </svg>
         <span
-          className={`absolute inset-0 flex items-center justify-center text-[9px] font-black tabular-nums leading-none ${style.text}`}
+          className={`absolute inset-0 flex items-center justify-center text-[11px] font-black tabular-nums leading-none ${style.text}`}
         >
           {segment.percent}
         </span>
       </div>
       <div className="min-w-0 pr-1.5 leading-none">
-        <p className="truncate text-[8px] font-black uppercase tracking-wide text-gray-500">
+        <p className="truncate text-[10px] font-black uppercase tracking-wide text-gray-500">
           {segment.shortLabel}
         </p>
-        <p className={`text-[10px] font-black tabular-nums ${style.text}`}>
+        <p className={`text-[12px] font-black tabular-nums ${style.text}`}>
           {segment.count} kalem
         </p>
       </div>
@@ -117,7 +117,7 @@ export default function ProductionJobFlowBadge({
   }
 
   const state = resolveJobProductionFlowBadge(lineItems, jobStatus)
-  const sizeClass = large ? 'h-8 text-[10px]' : 'h-7 text-[9px]'
+  const sizeClass = large ? 'h-8 text-[12px]' : 'h-7 text-[11px]'
 
   return (
     <span

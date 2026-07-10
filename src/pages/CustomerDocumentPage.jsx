@@ -21,6 +21,7 @@ import { appendActivity } from '../utils/customerActivity'
 import { formatTL } from '../utils/productPricing'
 import NumericInput from '../components/Products/NumericInput'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
+import { FormSectionPanel, FORM_FIELD_LABEL_CLASS, FORM_FIELD_ROW_CLASS } from '../components/Common/FormSectionPanel'
 
 const DOCUMENT_CONFIG = {
   'satis-faturasi': {
@@ -229,20 +230,20 @@ export default function CustomerDocumentPage() {
         </div>
       </section>
 
-      <SectionPanel icon={Building2} title={`${config.partyLabel || 'Cari'} Bilgileri`}>
-        <div className="flex items-center gap-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-dark-500/45 bg-dark-700/55 text-lg font-black text-gray-300">
+      <FormSectionPanel icon={Building2} title={`${config.partyLabel || 'Cari'} Bilgileri`} dotColor="violet">
+        <div className={`${FORM_FIELD_ROW_CLASS} flex items-center gap-4`}>
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/35 text-lg font-extrabold text-[var(--ink)]">
             {display.brandShortName.slice(0, 1)}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-black uppercase tracking-wide text-white">{display.brandShortName}</p>
-            <p className="mt-0.5 truncate text-xs font-semibold text-gray-500">{display.companyTitle} · {customer.city}</p>
+            <p className="truncate text-sm font-extrabold uppercase tracking-wide text-[var(--ink)]">{display.brandShortName}</p>
+            <p className="mt-0.5 truncate text-xs font-semibold text-[var(--muted)]">{display.companyTitle} · {customer.city}</p>
           </div>
         </div>
-      </SectionPanel>
+      </FormSectionPanel>
 
-      <SectionPanel icon={Icon} title="Belge Bilgileri">
-        <div className="grid max-w-4xl grid-cols-2 gap-4">
+      <FormSectionPanel icon={Icon} title="Belge Bilgileri" dotColor="blue">
+        <div className="grid max-w-4xl grid-cols-2 gap-1">
           <Field label="Belge No">
             <input value={docNo} readOnly className="form-input-readonly" />
           </Field>
@@ -270,11 +271,11 @@ export default function CustomerDocumentPage() {
             <input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Belge açıklaması" className="form-input" />
           </Field>
         </div>
-      </SectionPanel>
+      </FormSectionPanel>
 
       {config.kind === 'transfer' ? (
-        <SectionPanel icon={ArrowRightLeft} title="Virman Detayı">
-          <div className="grid max-w-4xl grid-cols-2 gap-4">
+        <FormSectionPanel icon={ArrowRightLeft} title="Virman Detayı" dotColor="orange">
+          <div className="grid max-w-4xl grid-cols-2 gap-1">
             <Field label="Kaynak Hesap">
               <select value={transfer.fromAccount} onChange={(event) => setTransfer((c) => ({ ...c, fromAccount: event.target.value }))} className="form-input">
                 {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
@@ -289,11 +290,11 @@ export default function CustomerDocumentPage() {
               <NumericInput value={transfer.amount} onChange={(value) => setTransfer((c) => ({ ...c, amount: value }))} suffix="₺" formatMode="price" />
             </Field>
           </div>
-        </SectionPanel>
+        </FormSectionPanel>
       ) : (
-        <SectionPanel icon={Receipt} title="Kalemler">
-          <div className="space-y-2">
-            <div className="grid grid-cols-[minmax(0,1fr)_90px_140px_80px_130px_36px] gap-2 px-1 text-[10px] font-black uppercase tracking-wider text-gray-500">
+        <FormSectionPanel icon={Receipt} title="Kalemler" dotColor="emerald">
+          <div className="space-y-1">
+            <div className="glass-inset grid grid-cols-[minmax(0,1fr)_90px_140px_80px_130px_36px] gap-2 rounded-[16px] px-3 py-2 text-[12px] font-black uppercase tracking-wider text-[var(--muted)]">
               <span>Açıklama</span>
               <span className="text-right">Miktar</span>
               <span className="text-right">Birim Fiyat</span>
@@ -305,7 +306,7 @@ export default function CustomerDocumentPage() {
               const net = (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0)
               const lineTotal = net * (1 + (Number(line.vat) || 0) / 100)
               return (
-                <div key={line.id} className="grid grid-cols-[minmax(0,1fr)_90px_140px_80px_130px_36px] items-center gap-2">
+                <div key={line.id} className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[minmax(0,1fr)_90px_140px_80px_130px_36px] items-center gap-2`}>
                   <input
                     value={line.description}
                     onChange={(event) => updateLine(line.id, 'description', event.target.value)}
@@ -315,11 +316,11 @@ export default function CustomerDocumentPage() {
                   <NumericInput value={line.quantity} onChange={(value) => updateLine(line.id, 'quantity', value)} className="text-right" />
                   <NumericInput value={line.unitPrice} onChange={(value) => updateLine(line.id, 'unitPrice', value)} suffix="₺" formatMode="price" />
                   <NumericInput value={line.vat} onChange={(value) => updateLine(line.id, 'vat', value)} suffix="%" className="text-right" />
-                  <span className="text-right text-sm font-black text-white">{formatTL(lineTotal)}</span>
+                  <span className="text-right text-sm font-extrabold text-[var(--ink)]">{formatTL(lineTotal)}</span>
                   <button
                     type="button"
                     onClick={() => removeLine(line.id)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-500/25 bg-red-500/10 text-red-300 transition-colors hover:bg-red-500/20"
+                    className="icon-btn flex h-9 w-9 items-center justify-center !rounded-lg text-red-500"
                     aria-label="Satırı sil"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -331,35 +332,35 @@ export default function CustomerDocumentPage() {
           <button
             type="button"
             onClick={() => setLines((current) => [...current, createLine()])}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+            className="btn-ghost mt-4 inline-flex items-center gap-2 !px-4 !py-2 text-[12px] font-bold"
           >
             <Plus className="h-4 w-4" /> Kalem Ekle
           </button>
 
           <div className="mt-5 flex justify-end">
-            <div className="w-full max-w-xs space-y-2 rounded-2xl border border-dark-500/45 bg-dark-700/35 p-4">
-              <div className="flex items-center justify-between text-xs font-semibold text-gray-400">
+            <div className="glass-inset w-full max-w-xs space-y-2 rounded-[16px] p-4">
+              <div className="flex items-center justify-between text-xs font-semibold text-[var(--muted)]">
                 <span>Ara Toplam</span>
-                <span className="font-black text-gray-200">{formatTL(totals.subtotal)}</span>
+                <span className="font-extrabold text-[var(--ink)]">{formatTL(totals.subtotal)}</span>
               </div>
-              <div className="flex items-center justify-between text-xs font-semibold text-gray-400">
+              <div className="flex items-center justify-between text-xs font-semibold text-[var(--muted)]">
                 <span>KDV</span>
-                <span className="font-black text-gray-200">{formatTL(totals.vat)}</span>
+                <span className="font-extrabold text-[var(--ink)]">{formatTL(totals.vat)}</span>
               </div>
-              <div className="flex items-center justify-between border-t border-dark-500/45 pt-2 text-sm">
-                <span className="font-black uppercase tracking-wide text-gray-300">Genel Toplam</span>
-                <span className="font-black text-emerald-300">{formatTL(grandTotal)}</span>
+              <div className="flex items-center justify-between border-t border-white/50 pt-2 text-sm">
+                <span className="font-extrabold uppercase tracking-wide text-[var(--ink)]">Genel Toplam</span>
+                <span className="font-extrabold text-emerald-600">{formatTL(grandTotal)}</span>
               </div>
             </div>
           </div>
-        </SectionPanel>
+        </FormSectionPanel>
       )}
 
       <div className="flex items-center justify-end gap-2">
         <button
           type="button"
           onClick={() => navigate(`/musteriler/${customer.id}`)}
-          className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-5 py-2.5 text-xs font-black uppercase text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+          className="btn-ghost !px-5 !py-2.5 text-[12px] font-bold uppercase"
         >
           Vazgeç
         </button>
@@ -375,24 +376,10 @@ export default function CustomerDocumentPage() {
   )
 }
 
-function SectionPanel({ icon: Icon, title, children }) {
-  return (
-    <section className="card p-6">
-      <div className="mb-5 flex items-center gap-3 text-[11px] font-black uppercase tracking-wider text-gray-500">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 text-blue-300">
-          <Icon className="h-4 w-4" />
-        </span>
-        {title}
-      </div>
-      {children}
-    </section>
-  )
-}
-
 function Field({ label, children, full = false }) {
   return (
-    <label className={`flex flex-col gap-1.5 ${full ? 'col-span-2' : ''}`}>
-      <span className="text-[11px] font-black uppercase tracking-wider text-gray-500">{label}</span>
+    <label className={`glass-inset flex flex-col gap-1.5 rounded-[16px] p-3 ${full ? 'col-span-2' : ''}`}>
+      <span className={FORM_FIELD_LABEL_CLASS}>{label}</span>
       {children}
     </label>
   )

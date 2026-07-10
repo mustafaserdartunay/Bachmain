@@ -51,7 +51,7 @@ function SummaryStrip({ summary }) {
           className={`text-center ${index < items.length - 1 ? 'xl:border-r xl:border-dark-500/40' : ''}`}
         >
           <p className={`text-2xl font-black ${item.tone}`}>{item.value}</p>
-          <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-gray-500">{item.label}</p>
+          <p className="mt-1 text-[12px] font-black uppercase tracking-widest text-gray-500">{item.label}</p>
         </div>
       ))}
     </div>
@@ -123,9 +123,9 @@ export default function CollectionsReportPage() {
         <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-7">
           {agingBuckets.map((bucket) => (
             <div key={bucket.id} className="rounded-xl border border-dark-500/40 bg-dark-900/40 px-3 py-2 text-center">
-              <p className="text-[10px] font-bold text-gray-500">{bucket.label}</p>
+              <p className="text-[12px] font-bold text-gray-500">{bucket.label}</p>
               <p className="mt-1 text-xs font-black text-white">{formatTL(bucket.amount)}</p>
-              <p className="text-[10px] text-gray-600">{bucket.count}</p>
+              <p className="text-[12px] text-gray-600">{bucket.count}</p>
             </div>
           ))}
         </div>
