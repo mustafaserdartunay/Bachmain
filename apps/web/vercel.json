@@ -3,7 +3,24 @@
   "outputDirectory": ".",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/giris", "destination": "https://uygulama.bachmain.com/giris", "permanent": false },
+    { "source": "/fiyatlandirma", "destination": "/pricing", "permanent": true },
+    { "source": "/iletisim", "destination": "/contact", "permanent": true },
+    { "source": "/yardim-merkezi", "destination": "/help", "permanent": true },
+    { "source": "/urunler", "destination": "/features", "permanent": true },
+    { "source": "/kayit", "destination": "https://uygulama.bachmain.com/kayit", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ],
   "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
