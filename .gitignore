@@ -1,5 +1,8 @@
 # Dependencies
 node_modules/
+apps/**/node_modules/
+apps/**/dist/
+apps/admin/tsconfig.tsbuildinfo
 
 # Build output
 dist/
@@ -26,3 +29,4 @@ yarn-error.log*
 # Backups / restore points (kept out of the project to avoid index bloat)
 restore-backups/
 *.backup
+.vercel

@@ -48,6 +48,27 @@ Header'daki mikrofon simgesine tıklayın. Konuşun veya yazın; asistan müşte
 
 ## Online Yayın (Production)
 
+Platform domain yapısı (Paraşüt modeli):
+
+| Domain | Uygulama |
+|--------|----------|
+| `bachmain.com` / `www` | Kurumsal web (`apps/web`) |
+| `uygulama.bachmain.com` | CRM (repo root) |
+| `yonetim.bachmain.com` | Admin (`apps/admin`) |
+
+Detay: [`docs/PRODUCTION.md`](docs/PRODUCTION.md)
+
+### Vercel
+
+1. GitHub’a push edin.
+2. Üç Vercel project oluşturun (rootDirectory: `.` / `apps/web` / `apps/admin`).
+3. Environment Variables: `.env.production.example` dosyasına bakın.
+4. DNS (Squarespace):
+   - `A @` → `76.76.21.21`
+   - `CNAME www` → `cname.vercel-dns.com`
+   - `CNAME uygulama` → `cname.vercel-dns.com`
+   - `CNAME yonetim` → `cname.vercel-dns.com`
+
 ### Vercel + bachmain.com (önerilen)
 
 1. Projeyi GitHub’a push edin.
@@ -55,7 +76,7 @@ Header'daki mikrofon simgesine tıklayın. Konuşun veya yazın; asistan müşte
 3. Environment Variables ekleyin:
    - `OPENAI_API_KEY` = `sk-...`
    - `OPENAI_MODEL` = `gpt-4o-mini` (opsiyonel)
-4. Deploy sonrası Domains → `bachmain.com` ve `www.bachmain.com` ekleyin.
+4. Deploy sonrası Domains → ilgili subdomain’leri ekleyin.
 5. Google Workspace / domain DNS’te Vercel’in verdiği kayıtları ekleyin:
    - `A` → `76.76.21.21` (apex)
    - veya Vercel’in gösterdiği `CNAME` → `cname.vercel-dns.com`
