@@ -1,10 +1,16 @@
 /**
- * Payment webhook + checkout session stubs (iyzico / Stripe ready).
- * Wire PROVIDER keys via env; until then returns setup instructions.
+ * Payment webhook + checkout (Stripe when configured; otherwise manual upgrade request).
  */
-import { withStore, newId } from './store.mjs'
+import { withStore, newId, loadStore } from './store.mjs'
 import { insertPaymentEvent, hasDatabase } from './db.mjs'
 import { sendJson } from './authRoutes.mjs'
+import { getBearerOrCookieToken, getAccountFromToken } from './auth.mjs'
+
+const PLANS = {
+  Starter: { label: 'Başlangıç', mrr: 990, stripePriceEnv: 'STRIPE_PRICE_STARTER' },
+  Pro: { label: 'Profesyonel', mrr: 2490, stripePriceEnv: 'STRIPE_PRICE_PRO' },
+  Enterprise: { label: 'Kurumsal', mrr: 0, stripePriceEnv: 'STRIPE_PRICE_ENTERPRISE' },
+}
 
 function providerConfigured() {
   return Boolean(
@@ -12,6 +18,57 @@ function providerConfigured() {
       process.env.IYZICO_API_KEY ||
       process.env.PAYTR_MERCHANT_ID,
   )
+}
+
+function normalizePlan(plan) {
+  const raw = String(plan || 'Pro')
+  if (/starter|başlangıç|baslangic/i.test(raw)) return 'Starter'
+  if (/enter|kurum/i.test(raw)) return 'Enterprise'
+  return 'Pro'
+}
+
+async function createStripeCheckout({ planKey, customerId, email, successUrl, cancelUrl }) {
+  const secret = process.env.STRIPE_SECRET_KEY
+  if (!secret) return null
+  const plan = PLANS[planKey] || PLANS.Pro
+  const priceId = process.env[plan.stripePriceEnv]
+  const params = new URLSearchParams()
+  params.set('mode', 'subscription')
+  params.set('success_url', successUrl || 'https://uygulama.bachmain.com/?paid=1')
+  params.set('cancel_url', cancelUrl || 'https://bachmain.com/fiyatlandirma.html')
+  params.set('client_reference_id', customerId || '')
+  params.set('customer_email', email || '')
+  params.set('metadata[customerId]', customerId || '')
+  params.set('metadata[plan]', planKey)
+  if (priceId) {
+    params.set('line_items[0][price]', priceId)
+    params.set('line_items[0][quantity]', '1')
+  } else {
+    // Fallback: ad-hoc price in TRY (minor units = kuruş)
+    const amount = Math.max(plan.mrr, 1) * 100
+    params.set('line_items[0][price_data][currency]', 'try')
+    params.set('line_items[0][price_data][unit_amount]', String(amount))
+    params.set('line_items[0][price_data][recurring][interval]', 'month')
+    params.set('line_items[0][price_data][product_data][name]', `BACHMAIN ${plan.label}`)
+    params.set('line_items[0][quantity]', '1')
+  }
+
+  const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${secret}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    const err = new Error(data.error?.message || 'Stripe checkout failed')
+    err.code = 'STRIPE_ERROR'
+    err.details = data
+    throw err
+  }
+  return data
 }
 
 export async function handlePaymentsApi(req, res, path, body = {}) {
@@ -26,25 +83,98 @@ export async function handlePaymentsApi(req, res, path, body = {}) {
         iyzico: Boolean(process.env.IYZICO_API_KEY),
         paytr: Boolean(process.env.PAYTR_MERCHANT_ID),
       },
+      plans: Object.fromEntries(
+        Object.entries(PLANS).map(([k, v]) => [k, { label: v.label, mrr: v.mrr }]),
+      ),
       database: hasDatabase(),
     })
     return true
   }
 
+  if (method === 'GET' && path === 'payments/plans') {
+    sendJson(req, res, 200, {
+      ok: true,
+      plans: Object.entries(PLANS).map(([id, v]) => ({
+        id,
+        label: v.label,
+        mrr: v.mrr,
+        currency: 'TRY',
+      })),
+    })
+    return true
+  }
+
   if (method === 'POST' && path === 'payments/checkout') {
-    if (!providerConfigured()) {
-      sendJson(req, res, 503, {
-        error: 'PAYMENT_NOT_CONFIGURED',
-        message:
-          'Ödeme sağlayıcı henüz bağlanmadı. Vercel env: STRIPE_SECRET_KEY veya IYZICO_API_KEY / PAYTR_MERCHANT_ID ekleyin.',
-      })
-      return true
+    const planKey = normalizePlan(body.plan)
+    const token = getBearerOrCookieToken(req)
+    const store = await loadStore()
+    const session = token ? getAccountFromToken(store, token) : null
+    const customerId = body.customerId || session?.user?.customerId || null
+    const email = body.email || session?.user?.email || ''
+
+    // Stripe path
+    if (process.env.STRIPE_SECRET_KEY) {
+      try {
+        const sessionCheckout = await createStripeCheckout({
+          planKey,
+          customerId,
+          email,
+          successUrl: body.successUrl,
+          cancelUrl: body.cancelUrl,
+        })
+        sendJson(req, res, 200, {
+          ok: true,
+          provider: 'stripe',
+          url: sessionCheckout.url,
+          sessionId: sessionCheckout.id,
+        })
+        return true
+      } catch (error) {
+        sendJson(req, res, 502, {
+          error: error.code || 'CHECKOUT_FAILED',
+          message: error.message,
+        })
+        return true
+      }
     }
-    // Placeholder — real provider session creation goes here
-    sendJson(req, res, 501, {
-      error: 'NOT_IMPLEMENTED',
-      message: 'Checkout oturumu bir sonraki adımda provider SDK ile tamamlanacak',
-      plan: body.plan || 'Pro',
+
+    // Manual / sales-assisted checkout request (no provider keys yet)
+    const requestId = newId('payreq')
+    await withStore((s) => {
+      if (!Array.isArray(s.paymentRequests)) s.paymentRequests = []
+      s.paymentRequests.unshift({
+        id: requestId,
+        plan: planKey,
+        customerId,
+        email,
+        companyName: body.companyName || session?.user?.companyName || '',
+        phone: body.phone || session?.user?.phone || '',
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        source: body.source || 'checkout',
+      })
+      s.paymentRequests = s.paymentRequests.slice(0, 500)
+      if (!Array.isArray(s.notifications)) s.notifications = []
+      s.notifications.unshift({
+        id: newId('ntf'),
+        title: `Yeni ödeme talebi: ${planKey}`,
+        body: `${email || 'Anonim'} — ${planKey} planı`,
+        type: 'payment_request',
+        createdAt: new Date().toISOString(),
+      })
+      return s
+    })
+
+    sendJson(req, res, 200, {
+      ok: true,
+      provider: 'manual',
+      requestId,
+      message:
+        'Ödeme talebiniz alındı. Sağlayıcı bağlanana kadar satış ekibi sizinle iletişime geçecek.',
+      nextUrl:
+        customerId
+          ? 'https://uygulama.bachmain.com/hesap/lisans'
+          : `https://uygulama.bachmain.com/kayit?plan=${encodeURIComponent(planKey)}`,
     })
     return true
   }
@@ -52,18 +182,29 @@ export async function handlePaymentsApi(req, res, path, body = {}) {
   if (method === 'POST' && path === 'payments/webhook') {
     const eventId = newId('pay')
     const eventType = body.type || body.event || 'payment.received'
-    const customerId = body.customerId || body.data?.object?.metadata?.customerId || null
-    const plan = body.plan || body.data?.object?.metadata?.plan || 'Pro'
+    const customerId =
+      body.customerId ||
+      body.data?.object?.metadata?.customerId ||
+      body.data?.object?.client_reference_id ||
+      null
+    const plan = normalizePlan(body.plan || body.data?.object?.metadata?.plan || 'Pro')
     const months = Number(body.months || 1)
+
+    // Stripe checkout.session.completed
+    const stripeType = body.type
+    const stripeObj = body.data?.object
+    if (stripeType === 'checkout.session.completed' && stripeObj) {
+      // fall through with extracted fields
+    }
 
     await insertPaymentEvent({
       id: eventId,
-      provider: body.provider || 'manual',
+      provider: body.provider || (stripeType ? 'stripe' : 'manual'),
       customerId,
       accountId: body.accountId || null,
-      eventType,
-      amountCents: body.amountCents ?? null,
-      currency: body.currency || 'TRY',
+      eventType: stripeType || eventType,
+      amountCents: body.amountCents ?? stripeObj?.amount_total ?? null,
+      currency: body.currency || stripeObj?.currency || 'TRY',
       raw: body,
     })
 
@@ -77,7 +218,9 @@ export async function handlePaymentsApi(req, res, path, body = {}) {
           customer.licenseExpiry = start.toISOString().slice(0, 10)
           customer.status = 'active'
           customer.plan = plan
-          customer.mrr = body.mrr ?? customer.mrr
+          const planMeta = PLANS[plan]
+          if (planMeta?.mrr) customer.mrr = planMeta.mrr
+          if (body.mrr != null) customer.mrr = body.mrr
         }
         return store
       })

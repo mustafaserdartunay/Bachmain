@@ -192,25 +192,6 @@ export async function registerAccount(store, body) {
   const accountId = newId('acc')
   const tenantCode = makeTenantCode(store)
 
-  const customer = {
-    id: customerId,
-    company: companyName,
-    contact: fullName,
-    email,
-    phone,
-    taxNo: '',
-    city: body.city || '',
-    status: 'trial',
-    plan: 'Starter',
-    mrr: 0,
-    users: 1,
-    createdAt: now.toISOString().slice(0, 10),
-    licenseExpiry,
-    balance: 0,
-    source: 'self_signup',
-    tenantCode,
-  }
-
   const account = {
     id: accountId,
     email,
@@ -221,9 +202,28 @@ export async function registerAccount(store, body) {
     role: 'owner',
     customerId,
     tenantCode,
-    plan: 'Starter',
+    plan: body.plan === 'Pro' || body.plan === 'Enterprise' || body.plan === 'Starter' ? body.plan : 'Starter',
     createdAt: now.toISOString(),
     lastLoginAt: now.toISOString(),
+  }
+
+  const customer = {
+    id: customerId,
+    company: companyName,
+    contact: fullName,
+    email,
+    phone,
+    taxNo: '',
+    city: body.city || '',
+    status: 'trial',
+    plan: account.plan,
+    mrr: 0,
+    users: 1,
+    createdAt: now.toISOString().slice(0, 10),
+    licenseExpiry,
+    balance: 0,
+    source: 'self_signup',
+    tenantCode,
   }
 
   store.customers.unshift(customer)

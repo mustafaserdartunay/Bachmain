@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { ensureUserProfile, readUserProfile } from '../../utils/userProfile'
 import { readCompanySettings } from '../../utils/companySettings'
+import { useAuth } from '../../auth/AuthContext'
 import { HEADER_CONTROL_BUTTON_CLASS, HEADER_SEARCH_INPUT_CLASS } from '../../utils/themeMode'
 import NotificationDropdown from './NotificationDropdown'
 import AppearanceToggle from './AppearanceToggle'
@@ -38,6 +39,7 @@ export default function Header({ onMenuClick }) {
 
 function HeaderBar({ onMenuClick }) {
   const navigate = useNavigate()
+  const { logout } = useAuth()
   const { open: menuOpen, setOpen: setMenuOpen, toggle: toggleMenu } = useHeaderPopover('user-menu')
   const [pendingLogout, setPendingLogout] = useState(false)
   const [profile, setProfile] = useState(() => ensureUserProfile())
@@ -66,10 +68,11 @@ function HeaderBar({ onMenuClick }) {
     }
   }, [])
 
-  function handleLogout() {
+  async function handleLogout() {
     setMenuOpen(false)
     setPendingLogout(false)
-    navigate('/')
+    await logout()
+    navigate('/giris', { replace: true })
   }
 
   const menuItems = [

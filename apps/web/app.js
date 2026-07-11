@@ -91,12 +91,12 @@ const demoLogin = document.querySelector("[data-demo-login]");
 if (demoLogin) {
   demoLogin.addEventListener("submit", (event) => {
     event.preventDefault();
-    window.location.href = "https://uygulama.bachmain.com";
+    window.location.href = "https://uygulama.bachmain.com/kayit";
   });
 }
 
 document.querySelectorAll('a[href="giris.html"], a[href*="giris.html"]').forEach((a) => {
-  a.setAttribute("href", "https://uygulama.bachmain.com");
+  a.setAttribute("href", "https://uygulama.bachmain.com/giris");
 });
 
 /* ── v2 Landing Interactions ── */

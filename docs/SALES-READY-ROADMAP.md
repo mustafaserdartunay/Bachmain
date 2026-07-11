@@ -47,40 +47,27 @@ Bu belge, sistemin güvenli şekilde satılabilmesi için gereken işleri öncel
 
 ---
 
-## Sizin yapmanız gerekenler (hesap erişimi)
+## Ödeme
 
-### 1) Neon Postgres (5 dk)
+1. Stripe hesabı açın → API key alın
+2. Vercel **bachmain-admin** env:
+   - `STRIPE_SECRET_KEY=sk_live_...` (veya test)
+   - Opsiyonel: `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_PRO`
+3. Stripe webhook → `https://yonetim.bachmain.com/api/payments/webhook`
+   Event: `checkout.session.completed`
+4. Redeploy admin
 
-1. https://console.neon.tech → ücretsiz proje oluşturun (`bachmain`)
-2. Connection string kopyalayın (`postgresql://...`)
-3. Vercel → **bachmain-admin** → Settings → Environment Variables:
+Sağlayıcı yokken `/api/payments/checkout` manuel talep oluşturur (yonetim bildirimlerine düşer).
 
-```text
-DATABASE_URL=postgresql://...
-ADMIN_EMAIL=admin@bachmain.com
-ADMIN_PASSWORD=güçlü-bir-şifre
-JWT_SECRET=zaten-var-olmalı
-CORS_ORIGIN=https://uygulama.bachmain.com,https://bachmain.com,https://www.bachmain.com,https://yonetim.bachmain.com
-```
+## Git otomatik deploy
 
-4. Redeploy `bachmain-admin`
-5. https://yonetim.bachmain.com/giris ile personel girişi yapın
-6. `GET https://yonetim.bachmain.com/api/health` → `"database": true`, `"storage": "postgres"`
+| Proje | Domain | Root |
+|-------|--------|------|
+| bachmain-web | bachmain.com | `apps/web` |
+| bachmain-admin | yonetim.bachmain.com | `apps/admin` |
+| bachmain | uygulama.bachmain.com | repo kökü |
 
-### 2) Ödeme (sonraki sprint)
-
-- Türkiye için: **iyzico** veya **PayTR**
-- Uluslararası: **Stripe**
-- Env: `IYZICO_API_KEY` / `IYZICO_SECRET_KEY` veya `STRIPE_SECRET_KEY` + webhook secret
-- Webhook endpoint: `POST /api/payments/webhook` (iskelet hazır)
-
-### 3) CRM env
-
-Vercel **bachmain** (uygulama) projesinde:
-
-```text
-VITE_PLATFORM_API_URL=https://yonetim.bachmain.com/api
-```
+`main` branch push → otomatik production deploy.
 
 ---
 

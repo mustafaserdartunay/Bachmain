@@ -127,8 +127,7 @@ export function isPublicApiPath(path, method) {
   if (!path || path === 'health' || path === '') return true
   if (path.startsWith('auth/')) return true
   if (path.startsWith('staff/')) return true
-  if (path.startsWith('payments/webhook')) return true
-  if (method === 'OPTIONS') return true
+  if (path.startsWith('payments/')) return true
   if (path.startsWith('tenant/')) return true
   return false
 }
