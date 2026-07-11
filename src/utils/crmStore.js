@@ -3,6 +3,7 @@ import { applyTaskStatusToProcessTrack, isTaskCompleted, normalizeProcessTrack }
 import { normalizeStagePhotos } from './productionStagePhotos'
 import { getLoggedInUserDisplayName } from './userProfile'
 import { appendActivityEntry } from './activityArchiveStore'
+import { scheduleTenantPush } from './tenantSync'
 
 const TASKS_KEY = 'bach-crm-tasks'
 const APPOINTMENTS_KEY = 'bach-crm-appointments'
@@ -32,6 +33,15 @@ function readJson(key, fallback) {
 function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value))
   window.dispatchEvent(new CustomEvent('bach:crm-updated'))
+  try {
+    scheduleTenantPush('crmRecords', {
+      tasks: readJson(TASKS_KEY, []),
+      appointments: readJson(APPOINTMENTS_KEY, []),
+      notes: readJson(NOTES_KEY, []),
+    })
+  } catch {
+    /* tenant sync optional until DATABASE_URL is live */
+  }
 }
 
 function offsetDate(days) {

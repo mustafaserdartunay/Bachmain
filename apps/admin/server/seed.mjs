@@ -62,6 +62,7 @@ function genModuleRows() {
 }
 
 export const seedData = {
+  accounts: [],
   customers,
   supportTickets,
   customerExtras: {

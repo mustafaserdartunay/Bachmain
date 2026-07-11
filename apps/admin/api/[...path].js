@@ -1,9 +1,12 @@
 /**
  * Vercel serverless adapter — proxies admin control-center API routes.
- * Full Node server lives in ../server for local/dev; this wraps key endpoints.
  */
-import { loadStore, withStore, newId } from '../server/store.mjs'
+import { loadStore, withStore, newId, storageBackend } from '../server/store.mjs'
 import { handleAuthApi, sendJson, applyCors } from '../server/authRoutes.mjs'
+import { requireStaffOrReject, staffAuthEnabled } from '../server/staffAuth.mjs'
+import { handlePaymentsApi } from '../server/payments.mjs'
+import { handleTenantApi } from '../server/tenantApi.mjs'
+import { hasDatabase } from '../server/db.mjs'
 
 function getPath(req) {
   const url = new URL(req.url, 'http://localhost')
@@ -15,7 +18,11 @@ async function readBody(req) {
   for await (const chunk of req) chunks.push(chunk)
   const raw = Buffer.concat(chunks).toString('utf8')
   if (!raw) return {}
-  return JSON.parse(raw)
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return {}
+  }
 }
 
 export default async function handler(req, res) {
@@ -28,16 +35,26 @@ export default async function handler(req, res) {
   try {
     const path = getPath(req)
     const method = req.method
-    const body = method === 'POST' || method === 'PUT' ? await readBody(req) : {}
+    const body = method === 'POST' || method === 'PUT' || method === 'PATCH' ? await readBody(req) : {}
 
     if (await handleAuthApi(req, res, path, body)) return
+    if (await handlePaymentsApi(req, res, path, body)) return
+    if (await handleTenantApi(req, res, path, body)) return
 
     if (method === 'GET' && (path === '' || path === 'health')) {
       return sendJson(req, res, 200, {
         status: 'ok',
         service: 'bachmain-platform-api',
         timestamp: new Date().toISOString(),
+        storage: storageBackend(),
+        database: hasDatabase(),
+        staffAuth: staffAuthEnabled(),
       })
+    }
+
+    const staffGate = requireStaffOrReject(req, path, method)
+    if (!staffGate.ok) {
+      return sendJson(req, res, staffGate.status, staffGate.body)
     }
 
     if (method === 'GET' && path === 'dashboard') {

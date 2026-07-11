@@ -3,6 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadStore, withStore, newId } from './store.mjs'
+import { handleAuthApi, applyCors, sendJson as sendAuthJson } from './authRoutes.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -11,9 +12,8 @@ const PUBLIC = path.join(ROOT, 'public')
 const PORT = Number(process.env.PORT || process.env.API_PORT || 5200)
 const SERVE_STATIC = process.env.SERVE_STATIC !== 'false'
 
-function sendJson(res, status, data) {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' })
-  res.end(JSON.stringify(data))
+function sendJson(req, res, status, data) {
+  return sendAuthJson(req, res, status, data)
 }
 
 function computeMetrics(rows) {
@@ -63,20 +63,30 @@ async function handle(req, res, url) {
   const method = req.method
 
   if (method === 'OPTIONS') {
-    res.writeHead(204, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' })
+    applyCors(req, res)
+    res.statusCode = 204
     return res.end()
   }
 
   try {
+    const apiPath = pathname.replace(/^\/api\/?/, '') || ''
+    if (method === 'POST' || method === 'GET') {
+      let body = {}
+      if (method === 'POST' && pathname.startsWith('/api/auth/')) {
+        body = await parseBody(req)
+      }
+      if (await handleAuthApi(req, res, apiPath, body)) return
+    }
+
     if (method === 'GET' && pathname === '/api/health') {
-      return sendJson(res, 200, { status: 'ok', service: 'bachmain-control-center-api', timestamp: new Date().toISOString() })
+      return sendJson(req, res, 200, { status: 'ok', service: 'bachmain-control-center-api', timestamp: new Date().toISOString() })
     }
 
     if (method === 'GET' && pathname === '/api/dashboard') {
       const store = await loadStore()
       const expiringLicenses = store.customers.filter((c) => ['active', 'trial'].includes(c.status)).filter((c) => new Date(c.licenseExpiry) < new Date('2026-03-01')).slice(0, 5)
       const openTickets = store.supportTickets.filter((t) => !['resolved', 'closed'].includes(t.status))
-      return sendJson(res, 200, {
+      return sendJson(req, res, 200, {
         ...store.dashboard,
         expiringLicenses,
         openTickets,
@@ -91,16 +101,16 @@ async function handle(req, res, url) {
 
     if (method === 'GET' && pathname === '/api/customers') {
       const store = await loadStore()
-      return sendJson(res, 200, store.customers)
+      return sendJson(req, res, 200, store.customers)
     }
 
     const customerMatch = pathname.match(/^\/api\/customers\/([^/]+)$/)
     if (method === 'GET' && customerMatch) {
       const store = await loadStore()
       const customer = store.customers.find((c) => c.id === customerMatch[1])
-      if (!customer) return sendJson(res, 404, { error: 'Müşteri bulunamadı' })
+      if (!customer) return sendJson(req, res, 404, { error: 'Müşteri bulunamadı' })
       const tickets = store.supportTickets.filter((t) => t.customerId === customer.id)
-      return sendJson(res, 200, { ...customer, userList: store.customerExtras.users, invoices: store.customerExtras.invoices, payments: store.customerExtras.payments, aiUsage: store.customerExtras.aiUsage, loginHistory: store.customerExtras.loginHistory, timeline: store.customerExtras.timeline, supportTickets: tickets })
+      return sendJson(req, res, 200, { ...customer, userList: store.customerExtras.users, invoices: store.customerExtras.invoices, payments: store.customerExtras.payments, aiUsage: store.customerExtras.aiUsage, loginHistory: store.customerExtras.loginHistory, timeline: store.customerExtras.timeline, supportTickets: tickets })
     }
 
     if (method === 'POST' && pathname === '/api/customers') {
@@ -111,7 +121,7 @@ async function handle(req, res, url) {
         store.modules.customers.unshift({ id: customer.id, company: customer.company, contact: customer.contact, city: customer.city, plan: customer.plan, mrr: '₺0', status: 'Deneme', licenseExpiry: customer.licenseExpiry })
         return customer
       })
-      return sendJson(res, 201, result)
+      return sendJson(req, res, 201, result)
     }
 
     if (method === 'PUT' && customerMatch) {
@@ -122,8 +132,8 @@ async function handle(req, res, url) {
         store.customers[idx] = { ...store.customers[idx], ...body }
         return store.customers[idx]
       }).catch((e) => (e.message === 'NOT_FOUND' ? null : Promise.reject(e)))
-      if (!result) return sendJson(res, 404, { error: 'Müşteri bulunamadı' })
-      return sendJson(res, 200, result)
+      if (!result) return sendJson(req, res, 404, { error: 'Müşteri bulunamadı' })
+      return sendJson(req, res, 200, result)
     }
 
     if (method === 'DELETE' && customerMatch) {
@@ -137,15 +147,15 @@ async function handle(req, res, url) {
 
     if (method === 'GET' && pathname === '/api/support/tickets') {
       const store = await loadStore()
-      return sendJson(res, 200, store.supportTickets)
+      return sendJson(req, res, 200, store.supportTickets)
     }
 
     const ticketMatch = pathname.match(/^\/api\/support\/tickets\/([^/]+)$/)
     if (method === 'GET' && ticketMatch) {
       const store = await loadStore()
       const ticket = store.supportTickets.find((t) => t.id === ticketMatch[1])
-      if (!ticket) return sendJson(res, 404, { error: 'Ticket bulunamadı' })
-      return sendJson(res, 200, ticket)
+      if (!ticket) return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
+      return sendJson(req, res, 200, ticket)
     }
 
     if (method === 'POST' && pathname === '/api/support/tickets') {
@@ -155,7 +165,7 @@ async function handle(req, res, url) {
         store.supportTickets.unshift(ticket)
         return ticket
       })
-      return sendJson(res, 201, result)
+      return sendJson(req, res, 201, result)
     }
 
     const noteMatch = pathname.match(/^\/api\/support\/tickets\/([^/]+)\/notes$/)
@@ -170,26 +180,26 @@ async function handle(req, res, url) {
         ticket.updatedAt = new Date().toISOString()
         return note
       }).catch((e) => (e.message === 'NOT_FOUND' ? null : Promise.reject(e)))
-      if (!result) return sendJson(res, 404, { error: 'Ticket bulunamadı' })
-      return sendJson(res, 201, result)
+      if (!result) return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
+      return sendJson(req, res, 201, result)
     }
 
     const moduleMatch = pathname.match(/^\/api\/modules\/([^/]+)$/)
     if (method === 'GET' && moduleMatch) {
       const store = await loadStore()
       const rows = store.modules[moduleMatch[1]]
-      if (!rows) return sendJson(res, 404, { error: 'Modül bulunamadı' })
-      return sendJson(res, 200, { rows, metrics: computeMetrics(rows) })
+      if (!rows) return sendJson(req, res, 404, { error: 'Modül bulunamadı' })
+      return sendJson(req, res, 200, { rows, metrics: computeMetrics(rows) })
     }
 
     const moduleItemMatch = pathname.match(/^\/api\/modules\/([^/]+)\/([^/]+)$/)
     if (method === 'GET' && moduleItemMatch) {
       const store = await loadStore()
       const rows = store.modules[moduleItemMatch[1]]
-      if (!rows) return sendJson(res, 404, { error: 'Modül bulunamadı' })
+      if (!rows) return sendJson(req, res, 404, { error: 'Modül bulunamadı' })
       const row = rows.find((r) => r.id === moduleItemMatch[2])
-      if (!row) return sendJson(res, 404, { error: 'Kayıt bulunamadı' })
-      return sendJson(res, 200, row)
+      if (!row) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+      return sendJson(req, res, 200, row)
     }
 
     if (method === 'POST' && moduleMatch) {
@@ -201,8 +211,8 @@ async function handle(req, res, url) {
         rows.unshift(row)
         return row
       }).catch((e) => (e.message === 'NOT_FOUND' ? null : Promise.reject(e)))
-      if (!result) return sendJson(res, 404, { error: 'Modül bulunamadı' })
-      return sendJson(res, 201, result)
+      if (!result) return sendJson(req, res, 404, { error: 'Modül bulunamadı' })
+      return sendJson(req, res, 201, result)
     }
 
     if (method === 'PUT' && moduleItemMatch) {
@@ -219,9 +229,9 @@ async function handle(req, res, url) {
         if (e.message === 'ITEM_NOT_FOUND') return { error: 'ITEM_NOT_FOUND' }
         throw e
       })
-      if (result?.error === 'NOT_FOUND') return sendJson(res, 404, { error: 'Modül bulunamadı' })
-      if (result?.error === 'ITEM_NOT_FOUND') return sendJson(res, 404, { error: 'Kayıt bulunamadı' })
-      return sendJson(res, 200, result)
+      if (result?.error === 'NOT_FOUND') return sendJson(req, res, 404, { error: 'Modül bulunamadı' })
+      if (result?.error === 'ITEM_NOT_FOUND') return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+      return sendJson(req, res, 200, result)
     }
 
     if (method === 'DELETE' && moduleItemMatch) {
@@ -241,19 +251,19 @@ async function handle(req, res, url) {
         const rows = store.modules[bulkMatch[1]]
         if (rows) store.modules[bulkMatch[1]] = rows.filter((r) => !ids.includes(r.id))
       })
-      return sendJson(res, 200, { deleted: ids.length })
+      return sendJson(req, res, 200, { deleted: ids.length })
     }
 
     if (!pathname.startsWith('/api')) {
       if (SERVE_STATIC && method === 'GET' && await serveStatic(res, pathname)) return
-      if (!SERVE_STATIC) return sendJson(res, 404, { error: 'Endpoint bulunamadı' })
-      return sendJson(res, 404, { error: 'Dosya bulunamadı' })
+      if (!SERVE_STATIC) return sendJson(req, res, 404, { error: 'Endpoint bulunamadı' })
+      return sendJson(req, res, 404, { error: 'Dosya bulunamadı' })
     }
 
-    return sendJson(res, 404, { error: 'Endpoint bulunamadı' })
+    return sendJson(req, res, 404, { error: 'Endpoint bulunamadı' })
   } catch (err) {
     console.error(err)
-    return sendJson(res, 500, { error: 'Sunucu hatası' })
+    return sendJson(req, res, 500, { error: 'Sunucu hatası' })
   }
 }
 

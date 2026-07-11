@@ -6,6 +6,7 @@ import { SupportDetailPage } from '@/pages/SupportDetailPage'
 import { ModuleListPage } from '@/components/module/ModuleListPage'
 import { ModuleDetailPage } from '@/components/module/ModuleDetailPage'
 import { ModuleFormPage } from '@/components/module/ModuleFormPage'
+import { StaffLoginPage, RequireStaff } from '@/pages/StaffLoginPage'
 import { moduleConfigs } from '@/data/modules'
 
 const moduleIds = Object.keys(moduleConfigs)
@@ -13,7 +14,15 @@ const moduleIds = Object.keys(moduleConfigs)
 export function AppRoutes() {
   return (
     <Routes>
-      <Route element={<AppShell />}>
+      <Route path="giris" element={<StaffLoginPage />} />
+
+      <Route
+        element={
+          <RequireStaff>
+            <AppShell />
+          </RequireStaff>
+        }
+      >
         <Route index element={<DashboardPage />} />
 
         {/* Müşteri özel rotaları */}

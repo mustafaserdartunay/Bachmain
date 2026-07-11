@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { installAutoCapitalize } from './utils/autoCapitalize'
-import { ensureUserProfile } from './utils/userProfile'
 import { cleanupDemoDataOnce } from './utils/demoDataCleanup'
+import { AuthProvider } from './auth/AuthContext'
+import RequireAuth from './auth/RequireAuth'
+import { LoginPage, RegisterPage } from './pages/auth/AuthPages'
+import LicensePage from './pages/auth/LicensePage'
 import Layout from './components/Layout/Layout'
 import CashPage from './pages/CashPage'
 import ChequesPage from './pages/treasury/ChequesPage'
@@ -90,20 +93,24 @@ export default function App() {
   useEffect(() => {
     cleanupDemoDataOnce()
     installAutoCapitalize()
-    ensureUserProfile()
   }, [])
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/portal/:token" element={<CustomerPortalPage />} />
-        <Route path="/kurye-takip/:trackingToken" element={<CustomerCourierTrackingPage />} />
-        <Route
-          path="*"
-          element={(
-            <Layout>
-              <Routes>
-                <Route path="/" element={<DashboardPage />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/giris" element={<LoginPage />} />
+          <Route path="/kayit" element={<RegisterPage />} />
+          <Route path="/hesap/lisans" element={<LicensePage />} />
+          <Route path="/portal/:token" element={<CustomerPortalPage />} />
+          <Route path="/kurye-takip/:trackingToken" element={<CustomerCourierTrackingPage />} />
+          <Route
+            path="*"
+            element={(
+              <RequireAuth>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<DashboardPage />} />
                 <Route path="/siparisler" element={<OrdersPage />} />
                 <Route path="/uretim" element={<ProductionPage />} />
                 <Route path="/uretim/yeni" element={<ProductionCreatePage />} />
@@ -199,10 +206,12 @@ export default function App() {
                 <Route path="/stok/stok-gecmisi" element={<StockHistoryPage />} />
                 <Route path="/stok/stoktaki-urunler-raporu" element={<StockProductsReportPage />} />
               </Routes>
-            </Layout>
-          )}
-        />
-      </Routes>
-    </BrowserRouter>
+                </Layout>
+              </RequireAuth>
+            )}
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }

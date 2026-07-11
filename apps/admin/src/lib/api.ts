@@ -10,10 +10,22 @@ export class ApiError extends Error {
   }
 }
 
+function staffAuthHeaders(): HeadersInit {
+  try {
+    const token = localStorage.getItem('bachmain_staff_token')
+    if (token) return { Authorization: `Bearer ${token}` }
+  } catch {
+    /* ignore */
+  }
+  return {}
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...staffAuthHeaders(),
       ...options.headers,
     },
     ...options,
@@ -21,7 +33,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }))
-    throw new ApiError(res.status, body.error ?? `HTTP ${res.status}`)
+    throw new ApiError(res.status, body.message || body.error || `HTTP ${res.status}`)
   }
 
   if (res.status === 204) return undefined as T

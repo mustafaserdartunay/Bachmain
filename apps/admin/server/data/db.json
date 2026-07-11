@@ -1,6 +1,42 @@
 {
   "customers": [
     {
+      "id": "c_mrg535ld_waen1",
+      "company": "Bach Deneme 2",
+      "contact": "Serdar Test 2",
+      "email": "serdar2@bachmain.com",
+      "phone": "",
+      "taxNo": "",
+      "city": "",
+      "status": "trial",
+      "plan": "Starter",
+      "mrr": 0,
+      "users": 1,
+      "createdAt": "2026-07-11",
+      "licenseExpiry": "2026-07-25",
+      "balance": 0,
+      "source": "self_signup",
+      "tenantCode": "15342"
+    },
+    {
+      "id": "c_mrg52msg_487vv",
+      "company": "Bach Deneme Ltd",
+      "contact": "Serdar Test",
+      "email": "serdar.test@bachmain.com",
+      "phone": "05320000000",
+      "taxNo": "",
+      "city": "",
+      "status": "trial",
+      "plan": "Starter",
+      "mrr": 0,
+      "users": 1,
+      "createdAt": "2026-07-11",
+      "licenseExpiry": "2026-07-25",
+      "balance": 0,
+      "source": "self_signup",
+      "tenantCode": "33897"
+    },
+    {
       "id": "c1",
       "company": "Erlenbox Teknoloji A.Ş.",
       "contact": "Ahmet Yılmaz",
@@ -361,6 +397,15 @@
     },
     "loginHistory": [
       {
+        "id": "lh_mrg535um_05ql5",
+        "user": "Serdar Test 2",
+        "email": "serdar2@bachmain.com",
+        "customerId": "c_mrg535ld_waen1",
+        "ip": "—",
+        "device": "curl/8.7.1",
+        "date": "2026-07-11T09:05:37.630Z"
+      },
+      {
         "id": "lh1",
         "user": "Ahmet Yılmaz",
         "ip": "185.27.xxx.12",
@@ -492,6 +537,26 @@
   },
   "modules": {
     "customers": [
+      {
+        "id": "c_mrg535ld_waen1",
+        "company": "Bach Deneme 2",
+        "contact": "Serdar Test 2",
+        "city": "—",
+        "plan": "Starter",
+        "mrr": "₺0",
+        "status": "Deneme",
+        "licenseExpiry": "2026-07-25"
+      },
+      {
+        "id": "c_mrg52msg_487vv",
+        "company": "Bach Deneme Ltd",
+        "contact": "Serdar Test",
+        "city": "—",
+        "plan": "Starter",
+        "mrr": "₺0",
+        "status": "Deneme",
+        "licenseExpiry": "2026-07-25"
+      },
       {
         "id": "c1",
         "company": "Erlenbox Teknoloji A.Ş.",
@@ -1173,5 +1238,35 @@
         "updated": "2026-01-01"
       }
     ]
-  }
+  },
+  "accounts": [
+    {
+      "id": "acc_mrg535ld_unxst",
+      "email": "serdar2@bachmain.com",
+      "fullName": "Serdar Test 2",
+      "companyName": "Bach Deneme 2",
+      "phone": "",
+      "passwordHash": "4b642dba0fd25a744ae6ac53a2d42d84:446762f906341c411103713debb54646e6090ac94c54fcc78fdfbe5770484b02b4f523245de77e865b3776fe5d9c1fb93a18a151ff31c09d6c9b6a6ba8b05644",
+      "role": "owner",
+      "customerId": "c_mrg535ld_waen1",
+      "tenantCode": "15342",
+      "plan": "Starter",
+      "createdAt": "2026-07-11T09:05:37.289Z",
+      "lastLoginAt": "2026-07-11T09:05:37.630Z"
+    },
+    {
+      "id": "acc_mrg52msh_c1ybm",
+      "email": "serdar.test@bachmain.com",
+      "fullName": "Serdar Test",
+      "companyName": "Bach Deneme Ltd",
+      "phone": "05320000000",
+      "passwordHash": "4edea7c41f2d69f4ef072126170e1fb8:1cf5d08c00e99f394a411d1a6dee1808b4c59ffe42a2d4846585640dc36e1cf9f7aa24a4f9df7ccc46888f32043728b6cd3e4e0bf0a174055b6ffb0e35522aea",
+      "role": "owner",
+      "customerId": "c_mrg52msg_487vv",
+      "tenantCode": "33897",
+      "plan": "Starter",
+      "createdAt": "2026-07-11T09:05:12.925Z",
+      "lastLoginAt": "2026-07-11T09:05:12.925Z"
+    }
+  ]
 }
