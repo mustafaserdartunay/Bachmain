@@ -180,17 +180,18 @@ export async function registerAccount(store, body) {
     err.code = 'MISSING_FIELDS'
     throw err
   }
-  if (store.accounts.some((a) => a.email === email)) {
+  if (store.accounts.some((a) => a.email === email && a.canLogin !== false && a.role !== 'demo_lead')) {
     const err = new Error('Bu e-posta ile zaten üyelik var')
     err.code = 'EMAIL_TAKEN'
     throw err
   }
 
+  const existingLead = store.accounts.find((a) => a.email === email && (a.role === 'demo_lead' || a.canLogin === false))
   const now = new Date()
   const licenseExpiry = new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10)
-  const customerId = newId('c')
-  const accountId = newId('acc')
-  const tenantCode = makeTenantCode(store)
+  const customerId = existingLead?.customerId || newId('c')
+  const accountId = existingLead?.id || newId('acc')
+  const tenantCode = existingLead?.tenantCode || makeTenantCode(store)
 
   const account = {
     id: accountId,
@@ -200,35 +201,56 @@ export async function registerAccount(store, body) {
     phone,
     passwordHash: hashPassword(password),
     role: 'owner',
+    canLogin: true,
     customerId,
     tenantCode,
     plan: body.plan === 'Pro' || body.plan === 'Enterprise' || body.plan === 'Starter' ? body.plan : 'Starter',
-    createdAt: now.toISOString(),
+    createdAt: existingLead?.createdAt || now.toISOString(),
     lastLoginAt: now.toISOString(),
+    source: existingLead ? 'demo_converted' : 'self_signup',
   }
 
-  const customer = {
-    id: customerId,
-    company: companyName,
-    contact: fullName,
-    email,
-    phone,
-    taxNo: '',
-    city: body.city || '',
-    status: 'trial',
-    plan: account.plan,
-    mrr: 0,
-    users: 1,
-    createdAt: now.toISOString().slice(0, 10),
-    licenseExpiry,
-    balance: 0,
-    source: 'self_signup',
-    tenantCode,
+  let customer = store.customers.find((c) => c.id === customerId)
+  if (!customer) {
+    customer = {
+      id: customerId,
+      company: companyName,
+      contact: fullName,
+      email,
+      phone,
+      taxNo: '',
+      city: body.city || '',
+      status: 'trial',
+      plan: account.plan,
+      mrr: 0,
+      users: 1,
+      createdAt: now.toISOString().slice(0, 10),
+      licenseExpiry,
+      balance: 0,
+      source: existingLead ? 'demo_converted' : 'self_signup',
+      tenantCode,
+    }
+    store.customers.unshift(customer)
+  } else {
+    customer.company = companyName
+    customer.contact = fullName
+    customer.email = email
+    customer.phone = phone || customer.phone
+    customer.status = 'trial'
+    customer.plan = account.plan
+    customer.licenseExpiry = licenseExpiry
+    customer.source = existingLead ? 'demo_converted' : customer.source || 'self_signup'
+    customer.tenantCode = tenantCode
   }
 
-  store.customers.unshift(customer)
-  store.accounts.unshift(account)
-  store.modules.customers.unshift({
+  if (existingLead) {
+    Object.assign(existingLead, account)
+  } else {
+    store.accounts.unshift(account)
+  }
+
+  const moduleIdx = store.modules.customers.findIndex((c) => c.id === customer.id)
+  const moduleRow = {
     id: customer.id,
     company: customer.company,
     contact: customer.contact,
@@ -237,7 +259,9 @@ export async function registerAccount(store, body) {
     mrr: '₺0',
     status: 'Deneme',
     licenseExpiry: customer.licenseExpiry,
-  })
+  }
+  if (moduleIdx >= 0) store.modules.customers[moduleIdx] = moduleRow
+  else store.modules.customers.unshift(moduleRow)
 
   const token = signToken({
     sub: account.id,
@@ -259,13 +283,26 @@ export async function loginAccount(store, body) {
   const email = normalizeEmail(body.email)
   const password = String(body.password || '')
   const account = store.accounts.find((a) => a.email === email)
-  if (!account || !verifyPassword(password, account.passwordHash)) {
+  if (!account || account.canLogin === false || account.role === 'demo_lead') {
+    const err = new Error(
+      account?.role === 'demo_lead'
+        ? 'Bu e-posta yalnızca demo talebi olarak kayıtlı. Lütfen üye olun veya uygulama üzerinden kayıt olun.'
+        : 'E-posta veya şifre hatalı',
+    )
+    err.code = account?.role === 'demo_lead' ? 'DEMO_LEAD_ONLY' : 'INVALID_CREDENTIALS'
+    throw err
+  }
+  if (!verifyPassword(password, account.passwordHash)) {
     const err = new Error('E-posta veya şifre hatalı')
     err.code = 'INVALID_CREDENTIALS'
     throw err
   }
   account.lastLoginAt = new Date().toISOString()
   const customer = store.customers.find((c) => c.id === account.customerId) || null
+  if (customer) {
+    customer.lastLoginAt = account.lastLoginAt
+    if (!customer.source) customer.source = 'self_signup'
+  }
   store.customerExtras.loginHistory.unshift({
     id: newId('lh'),
     user: account.fullName,

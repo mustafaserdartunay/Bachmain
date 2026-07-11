@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CheckCircle } from "lucide-react";
 import Button from "./Button";
+import { platformPost } from "../utils/platformApi";
 
 const inputCls =
   "w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-white/50 focus:outline-none focus:ring-2 focus:ring-white/20";
@@ -9,6 +10,8 @@ export default function DemoForm() {
   const [form, setForm] = useState({ name: "", company: "", phone: "", email: "", size: "", message: "" });
   const [errors, setErrors] = useState({});
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const validate = () => {
     const e = {};
@@ -19,10 +22,27 @@ export default function DemoForm() {
     return Object.keys(e).length === 0;
   };
 
-  const submit = (ev) => {
+  const submit = async (ev) => {
     ev.preventDefault();
     if (!validate()) return;
-    setDone(true);
+    setBusy(true);
+    setSubmitError("");
+    try {
+      await platformPost("leads/demo", {
+        name: form.name.trim(),
+        company: form.company.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        size: form.size,
+        message: form.message.trim(),
+        source: "bachmain_demo",
+      });
+      setDone(true);
+    } catch (err) {
+      setSubmitError(err.message || "Talebiniz gönderilemedi. Lütfen tekrar deneyin.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   if (done) {
@@ -66,8 +86,9 @@ export default function DemoForm() {
           </div>
         ))}
       </div>
-      <Button type="submit" variant="secondary" className="mt-6 w-full justify-center sm:w-auto">
-        Demo Talep Et →
+      {submitError ? <p className="mt-4 text-sm text-rose-200">{submitError}</p> : null}
+      <Button type="submit" variant="secondary" disabled={busy} className="mt-6 w-full justify-center sm:w-auto">
+        {busy ? "Gönderiliyor…" : "Demo Talep Et →"}
       </Button>
     </form>
   );

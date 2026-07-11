@@ -129,6 +129,8 @@ export function isPublicApiPath(path, method) {
   if (path.startsWith('staff/')) return true
   if (path.startsWith('payments/')) return true
   if (path.startsWith('tenant/')) return true
+  if (path.startsWith('leads/')) return true
+  if (path === 'demo-requests') return true
   return false
 }
 

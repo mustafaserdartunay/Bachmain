@@ -5,6 +5,7 @@ import {
   getStoredSession,
   loginAccount,
   logoutAccount,
+  persistSession,
   registerAccount,
 } from '../utils/platformAuth'
 import { saveUserProfile } from '../utils/userProfile'
@@ -38,6 +39,15 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let cancelled = false
     async function boot() {
+      const params = new URLSearchParams(window.location.search)
+      const handoffToken = params.get('authToken')
+      if (handoffToken) {
+        persistSession({ token: handoffToken, user: getStoredSession().user })
+        params.delete('authToken')
+        const nextUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash || ''}`
+        window.history.replaceState({}, '', nextUrl || '/')
+      }
+
       const { token, user: cached } = getStoredSession()
       if (!token) {
         if (!cancelled) {
@@ -47,6 +57,7 @@ export function AuthProvider({ children }) {
         }
         return
       }
+      if (!cancelled) setLoading(true)
       try {
         const next = await fetchCurrentUser()
         if (!cancelled) {

@@ -6,6 +6,7 @@ import { handleAuthApi, sendJson, applyCors } from '../server/authRoutes.mjs'
 import { requireStaffOrReject, staffAuthEnabled } from '../server/staffAuth.mjs'
 import { handlePaymentsApi } from '../server/payments.mjs'
 import { handleTenantApi } from '../server/tenantApi.mjs'
+import { handleLeadsApi } from '../server/leads.mjs'
 import { hasDatabase } from '../server/db.mjs'
 import {
   buildCustomerRows,
@@ -45,6 +46,7 @@ export default async function handler(req, res) {
     const body = method === 'POST' || method === 'PUT' || method === 'PATCH' ? await readBody(req) : {}
 
     if (await handleAuthApi(req, res, path, body)) return
+    if (await handleLeadsApi(req, res, path, body)) return
     if (await handlePaymentsApi(req, res, path, body)) return
     if (await handleTenantApi(req, res, path, body)) return
 
@@ -108,7 +110,12 @@ export default async function handler(req, res) {
         kpis: [
           { label: 'Toplam Müşteri', value: String(customers.length), change: '', trend: 'up' },
           { label: 'Web Üyelik', value: String(webSignups), change: '', trend: 'up' },
-          { label: 'Açık Ticket', value: String(openTickets.length), change: '', trend: 'neutral' },
+          {
+            label: 'Demo Talep',
+            value: String(customers.filter((c) => c.source === 'demo_request' || c.source === 'demo_converted').length),
+            change: '',
+            trend: 'up',
+          },
           {
             label: 'Ödeme Talebi',
             value: String(paymentRequests.filter((p) => p.status === 'pending').length),

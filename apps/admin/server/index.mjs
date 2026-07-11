@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadStore, withStore, newId } from './store.mjs'
 import { handleAuthApi, applyCors, sendJson as sendAuthJson } from './authRoutes.mjs'
+import { handleLeadsApi } from './leads.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -70,12 +71,17 @@ async function handle(req, res, url) {
 
   try {
     const apiPath = pathname.replace(/^\/api\/?/, '') || ''
-    if (method === 'POST' || method === 'GET') {
+    if (method === 'POST' || method === 'GET' || method === 'PUT' || method === 'PATCH') {
       let body = {}
-      if (method === 'POST' && pathname.startsWith('/api/auth/')) {
-        body = await parseBody(req)
+      if (method !== 'GET' && pathname.startsWith('/api/')) {
+        try {
+          body = await parseBody(req)
+        } catch {
+          body = {}
+        }
       }
       if (await handleAuthApi(req, res, apiPath, body)) return
+      if (await handleLeadsApi(req, res, apiPath, body)) return
     }
 
     if (method === 'GET' && pathname === '/api/health') {

@@ -25,7 +25,14 @@ export function customerToRow(c, account) {
     plan: c.plan || 'Starter',
     mrr: typeof c.mrr === 'number' ? `₺${c.mrr.toLocaleString('tr-TR')}` : c.mrr || '₺0',
     status: statusLabel(c.status),
-    source: c.source === 'self_signup' ? 'Web Üyelik' : c.source || 'Manuel',
+    source:
+      c.source === 'self_signup'
+        ? 'Web Üyelik'
+        : c.source === 'demo_request'
+          ? 'Demo Talep'
+          : c.source === 'demo_converted'
+            ? 'Demo → Üyelik'
+            : c.source || 'Manuel',
     licenseExpiry: c.licenseExpiry || '—',
     tenantCode: c.tenantCode || account?.tenantCode || '—',
     createdAt: c.createdAt || '—',
@@ -43,6 +50,7 @@ export function buildAccountRows(store) {
   const byId = new Map(customers.map((c) => [c.id, c]))
   return (store.accounts || []).map((a) => {
     const c = byId.get(a.customerId)
+    const isDemo = a.role === 'demo_lead' || a.canLogin === false || a.source === 'demo_request'
     return {
       id: a.id,
       email: a.email,
@@ -50,12 +58,21 @@ export function buildAccountRows(store) {
       company: a.companyName || c?.company || '—',
       phone: a.phone || c?.phone || '—',
       plan: a.plan || c?.plan || 'Starter',
-      status: statusLabel(c?.status || 'trial'),
+      status: isDemo ? 'Demo Talep' : statusLabel(c?.status || 'trial'),
+      source: isDemo
+        ? 'Demo Talep'
+        : a.source === 'demo_converted'
+          ? 'Demo → Üyelik'
+          : a.source === 'self_signup'
+            ? 'Web Üyelik'
+            : a.source || 'Web',
       customerId: a.customerId,
       tenantCode: a.tenantCode || '—',
-      lastLoginAt: a.lastLoginAt || '—',
+      lastLoginAt: a.lastLoginAt || a.lastDemoAt || '—',
       createdAt: a.createdAt || '—',
-      role: a.role || 'owner',
+      role: isDemo ? 'demo' : a.role || 'owner',
+      companySize: a.companySize || c?.companySize || '—',
+      message: a.demoMessage || c?.demoMessage || '—',
     }
   })
 }
