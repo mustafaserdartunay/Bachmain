@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, Menu, X } from "lucide-react";
 import Logo from "./Logo";
@@ -33,12 +33,31 @@ const nav = [
 
 function Dropdown({ label, items, href }) {
   const [open, setOpen] = useState(false);
+  const closeTimer = useRef(null);
+
+  useEffect(() => () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  }, []);
+
+  const openMenu = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    setOpen(true);
+  };
+
+  const closeMenu = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpen(false), 220);
+  };
+
   return (
-    <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div className="relative" onMouseEnter={openMenu} onMouseLeave={closeMenu}>
       {href ? (
         <Link to={href} className="flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600">
           {label}
-          <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+          <ChevronDown className={`h-3.5 w-3.5 opacity-50 transition ${open ? "rotate-180" : ""}`} />
         </Link>
       ) : (
         <button type="button" className="flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600">
@@ -47,12 +66,18 @@ function Dropdown({ label, items, href }) {
         </button>
       )}
       {open && items && (
-        <div className="absolute left-0 top-full z-50 mt-1 min-w-[200px] rounded-2xl border border-slate-100 bg-white/95 p-2 shadow-xl backdrop-blur">
-          {items.map((item) => (
-            <Link key={item.href} to={item.href} className="block rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-blue-50 hover:text-blue-700">
-              {item.label}
-            </Link>
-          ))}
+        <div className="absolute left-0 top-full z-50 pt-2">
+          <div className="min-w-[200px] rounded-2xl border border-slate-100 bg-white/95 p-2 shadow-xl backdrop-blur">
+            {items.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className="block rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-blue-50 hover:text-blue-700"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>

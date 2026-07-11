@@ -29,7 +29,7 @@ export default function FeatureLayout({
       </section>
 
       {features && (
-        <section className="section-pad bg-white">
+        <section className="section-pad">
           <div className="mx-auto max-w-7xl px-4 lg:px-8">
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((f, i) => (

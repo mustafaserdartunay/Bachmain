@@ -24,7 +24,7 @@ function AuthForm({ mode }) {
       <div className="saas-card p-8 text-center">
         <CheckCircle className="mx-auto h-12 w-12 text-blue-600" />
         <h3 className="mt-4 text-xl font-bold text-slate-900">{mode === "login" ? "Giriş başarılı!" : "Kayıt tamamlandı!"}</h3>
-        <p className="mt-2 text-slate-500">14 gün ücretsiz denemeniz başladı.</p>
+        <p className="mt-2 text-slate-500">7 gün ücretsiz denemeniz başladı.</p>
       </div>
     );
   }
@@ -51,7 +51,7 @@ function AuthForm({ mode }) {
       <input type="password" className={`mb-4 ${inputCls}`} value={form.password || ""} onChange={(e) => setForm({ ...form, password: e.target.value })} />
       {errors.password && <p className="mb-2 text-xs text-rose-500">{errors.password}</p>}
       <Button type="submit" className="w-full justify-center">
-        {mode === "login" ? "Giriş Yap" : "14 Gün Ücretsiz Başla"}
+        {mode === "login" ? "Giriş Yap" : "7 Gün Ücretsiz Başla"}
       </Button>
     </form>
   );
@@ -73,7 +73,7 @@ export function RegisterPage() {
     <div className="page-mesh min-h-[85vh] pt-28 pb-20">
       <div className="mx-auto max-w-md px-4">
         <h1 className="text-center text-3xl font-extrabold text-slate-900">Üye Ol</h1>
-        <p className="mt-2 text-center text-slate-500">14 gün ücretsiz, kredi kartı gerekmez</p>
+        <p className="mt-2 text-center text-slate-500">7 gün ücretsiz, kredi kartı gerekmez</p>
         <div className="mt-10"><AuthForm mode="register" /></div>
       </div>
     </div>
@@ -110,7 +110,7 @@ export function ContactPage() {
       <section className="page-hero text-center">
         <h1 className="text-4xl font-extrabold text-slate-900">İletişim</h1>
       </section>
-      <section className="section-pad bg-white">
+      <section className="section-pad">
         <div className="mx-auto grid max-w-7xl gap-12 px-4 lg:grid-cols-2 lg:px-8">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Bize Ulaşın</h2>

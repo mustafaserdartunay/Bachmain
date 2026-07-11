@@ -1,17 +1,11 @@
 export const processFlow = [
-  { emoji: "📋", label: "Teklif", hi: true },
-  { emoji: "🛒", label: "Sipariş" },
-  { emoji: "⚙️", label: "Üretim", hi: true },
-  { emoji: "✅", label: "Kalite" },
-  { emoji: "🏭", label: "Depo", hi: true },
-  { emoji: "📦", label: "Paketleme" },
-  { emoji: "📫", label: "Koli", hi: true },
-  { emoji: "🪵", label: "Palet" },
-  { emoji: "🚛", label: "Sevkiyat", hi: true },
-  { emoji: "🗺️", label: "Nakliye" },
-  { emoji: "📍", label: "Teslimat", hi: true },
-  { emoji: "💳", label: "Tahsilat" },
-  { emoji: "📒", label: "Muhasebe", hi: true },
+  { id: "teklif", label: "Teklif", desc: "Hızlı Teklif & Onay", icon: "FileText", tone: "blue" },
+  { id: "siparis", label: "Sipariş", desc: "Sipariş Oluşturma", icon: "ShoppingCart", tone: "violet" },
+  { id: "uretim", label: "Üretim", desc: "İş Emri & MRP", icon: "Cog", tone: "orange" },
+  { id: "paketleme", label: "Paketleme", desc: "Koli & Paket", icon: "PackageCheck", tone: "amber" },
+  { id: "depo", label: "Depo", desc: "Stok & Sevk Hazırlığı", icon: "Warehouse", tone: "cyan" },
+  { id: "sevkiyat", label: "Sevkiyat", desc: "Nakliye & Rota", icon: "Truck", tone: "sky" },
+  { id: "teslim", label: "Teslim", desc: "Teslimat & Tahsilat", icon: "PackageOpen", tone: "emerald" },
 ];
 
 /** @deprecated use moduleShowcase in ModulesShowcase */
@@ -88,13 +82,13 @@ export const moduleShowcase = [
 ];
 
 export const moduleChannels = [
-  { label: "WhatsApp", color: "#25D366" },
-  { label: "Instagram", color: "#E1306C" },
-  { label: "Facebook", color: "#1877F2" },
-  { label: "SMS", color: "#0EA5E9" },
-  { label: "Mail", color: "#F59E0B" },
-  { label: "Web Chat", color: "#8B5CF6" },
-  { label: "Ticket", color: "#EF4444" },
+  { id: "whatsapp", label: "WhatsApp", color: "#25D366" },
+  { id: "instagram", label: "Instagram", color: "#E1306C" },
+  { id: "facebook", label: "Facebook", color: "#1877F2" },
+  { id: "x", label: "X", color: "#0F1419" },
+  { id: "tiktok", label: "TikTok", color: "#111111" },
+  { id: "mail", label: "Mail", color: "#EA4335" },
+  { id: "b2b", label: "B2B", color: "#2563EB" },
 ];
 
 export const moduleMarquee = [
@@ -141,9 +135,30 @@ export const bandStats = [
 ];
 
 export const testimonials = [
-  { quote: "6 ayrı yazılımı tek panelde birleştirdik. Operasyon maliyetimiz %40 düştü.", name: "Mehmet Kaya", role: "CFO · Tekstil A.Ş." },
-  { quote: "B2B portal ile müşteriler üretimi canlı izliyor. Destek talepleri yarıya indi.", name: "Ayşe Demir", role: "Operasyon · Mobilya" },
-  { quote: "Saha ekibimizin performansı GPS ile %35 arttı. Raporlar saniyeler sürüyor.", name: "Can Öztürk", role: "Satış Direktörü" },
+  {
+    quote: "6 ayrı yazılımı tek panelde birleştirdik. Operasyon maliyetimiz %40 düştü.",
+    name: "Mehmet Kaya",
+    role: "CFO",
+    company: "Tekstil A.Ş.",
+    image: "/assets/testimonials/mehmet.jpg",
+    rating: 5,
+  },
+  {
+    quote: "B2B portal ile müşteriler üretimi canlı izliyor. Destek talepleri yarıya indi.",
+    name: "Ayşe Demir",
+    role: "Operasyon Müdürü",
+    company: "Mobilya",
+    image: "/assets/testimonials/ayse.jpg",
+    rating: 5,
+  },
+  {
+    quote: "Saha ekibimizin performansı GPS ile %35 arttı. Raporlar saniyeler sürüyor.",
+    name: "Can Öztürk",
+    role: "Satış Direktörü",
+    company: "Dağıtım",
+    image: "/assets/testimonials/can.jpg",
+    rating: 5,
+  },
 ];
 
 export const heroChecks = [

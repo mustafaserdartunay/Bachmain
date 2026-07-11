@@ -50,7 +50,6 @@ export const footerLinks = {
     { label: "Yardım Merkezi", href: "/help" },
     { label: "SSS", href: "/faq" },
     { label: "Eğitimler", href: "/help" },
-    { label: "Destek", href: "/contact" },
   ],
 };
 
@@ -114,10 +113,76 @@ export const blogPosts = [
 ];
 
 export const faqItems = [
-  { q: "14 gün ücretsiz deneme nasıl çalışır?", a: "Kayıt olduktan sonra tüm modüllere 14 gün boyunca sınırsız erişim sağlarsınız. Kredi kartı gerekmez." },
-  { q: "Verilerim güvende mi?", a: "Tüm veriler Türkiye'deki ISO 27001 sertifikalı veri merkezlerinde şifreli saklanır. KVKK uyumluyuz." },
-  { q: "Mevcut sistemimden veri taşıyabilir miyim?", a: "Evet, Excel, Logo, Mikro ve diğer sistemlerden veri migrasyon desteği sunuyoruz." },
-  { q: "Kaç kullanıcı ekleyebilirim?", a: "Paketinize göre 5'ten sınırsıza kadar kullanıcı ekleyebilirsiniz." },
-  { q: "E-fatura entegrasyonu dahil mi?", a: "Tüm paketlerde e-fatura, e-arşiv ve e-irsaliye modülleri dahildir." },
-  { q: "Mobil uygulama var mı?", a: "Evet, iOS ve Android uygulamalarımız ile saha satış, stok ve onay süreçlerini yönetebilirsiniz." },
+  {
+    q: "7 gün ücretsiz deneme nasıl çalışır?",
+    a: "Kayıt olduktan sonra tüm modüllere 7 gün boyunca sınırsız erişim sağlarsınız. Kredi kartı gerekmez. Önce deneyimleyin; dilerseniz deneme sonunda paketinizi satın alırsınız.",
+  },
+  {
+    q: "Deneme süresi bitince ne olur?",
+    a: "7 gün sonunda hesabınız askıya alınmaz hemen; seçtiğiniz pakete geçerek kesintisiz devam edebilirsiniz. Verileriniz silinmez, satın alma sonrası aynı panelde kalır.",
+  },
+  {
+    q: "Verilerim güvende mi?",
+    a: "Veriler HTTPS/TLS ile iletilir, AES-256 ile şifrelenir ve Türkiye'deki ISO 27001 sertifikalı veri merkezlerinde saklanır. KVKK uyumluyuz; rol bazlı yetki ve güvenlik logları aktiftir.",
+  },
+  {
+    q: "KVKK ve gizlilik süreçleri nasıl yönetiliyor?",
+    a: "Aydınlatma metni, veri işleme kayıtları ve talep süreçleri platformda tanımlıdır. Gizlilik Politikası ve KVKK sayfalarımızdan detaylara ulaşabilirsiniz.",
+  },
+  {
+    q: "Mevcut sistemimden veri taşıyabilir miyim?",
+    a: "Evet. Excel, Logo, Mikro ve benzeri sistemlerden müşteri, stok, cari ve sipariş verilerinizi aktarmanıza yardımcı oluyoruz. İhtiyaç halinde migrasyon desteği sağlanır.",
+  },
+  {
+    q: "Hangi modüller tek platformda yer alıyor?",
+    a: "CRM, ERP, teklif/sipariş, üretim, depo/stok, saha satış, nakliye, POS & kasa, finans, e-fatura, B2B portal, mesaj merkezi, İK, görev/randevu ve detaylı raporlama tek panelde birleşir.",
+  },
+  {
+    q: "B2B müşteri portalı nedir?",
+    a: "Müşterileriniz kendi panellerinden sipariş verebilir, cari bakiyeyi izleyebilir, kampanyaları takip edebilir, üretim sürecini görsellerle görebilir, canlı mesaj ve ticket gönderebilir.",
+  },
+  {
+    q: "Saha satış ve GPS takibi var mı?",
+    a: "Evet. Temsilci konumları canlı izlenir; rota, ziyaret, sipariş, tahsilat, puantaj ve prim sistemleri saha satış modülünde yönetilir.",
+  },
+  {
+    q: "Mesaj merkezi hangi kanalları destekliyor?",
+    a: "WhatsApp, Instagram, Facebook, X, TikTok, mail ve B2B mesajları tek ekranda birleşir. Gelen talepleri kayıp etmeden yanıtlayabilirsiniz.",
+  },
+  {
+    q: "E-fatura entegrasyonu dahil mi?",
+    a: "Evet. e-Fatura, e-Arşiv ve ilgili e-belge süreçleri GİB uyumlu şekilde paketlere dahildir; faturalarınızı panelden yönetirsiniz.",
+  },
+  {
+    q: "Nakliye ve palet hesabı yapılabiliyor mu?",
+    a: "Evet. Tır, koli, paket ve palet hesaplama ile sevkiyat planlaması nakliye modülünde yürütülür; süreç tekliften teslime kadar izlenir.",
+  },
+  {
+    q: "Fotoğraflı üretim takibi nasıl çalışır?",
+    a: "Üretim aşamalarına fotoğraf ekleyebilirsiniz. Müşteriniz B2B üzerinden sürecin görsel ilerlemesini canlı takip edebilir.",
+  },
+  {
+    q: "Kaç kullanıcı ekleyebilirim?",
+    a: "Paketinize göre 5 kullanıcısından sınırsız kullanıcıya kadar ölçeklenir. Roller ve yetkiler kullanıcı bazında tanımlanır.",
+  },
+  {
+    q: "Gündüz / gece modu var mı?",
+    a: "Evet. Panel görünümünü tek tıkla gündüz veya gece temasına alabilirsiniz; tüm ekranlar aynı deneyimde kalır.",
+  },
+  {
+    q: "Mobil uygulama var mı?",
+    a: "Evet. iOS ve Android uygulamalarıyla saha satış, stok, onay ve temel operasyonları mobil cihazdan yönetebilirsiniz.",
+  },
+  {
+    q: "Kurulum ve eğitim desteği sunuyor musunuz?",
+    a: "Evet. Onboarding, canlı eğitim ve yardım merkezi içerikleriyle ekibinizin hızlı adapte olmasını sağlıyoruz. Destek talepleriniz destek@bachmain.com üzerinden alınır.",
+  },
+  {
+    q: "Fiyatlandırma nasıl işliyor?",
+    a: "Şeffaf paketler sunuyoruz. 7 gün ücretsiz deneme sonrası ihtiyacınıza uygun paketi seçersiniz; taahhüt zorunluluğu olmadan başlayabilirsiniz.",
+  },
+  {
+    q: "İptal veya paket değişikliği yapabilir miyim?",
+    a: "Evet. Paket yükseltme/düşürme ve iptal taleplerinizi destek ekibimizle iletebilirsiniz. Verilerinize erişim politikası gizlilik metnimizde açıklanır.",
+  },
 ];

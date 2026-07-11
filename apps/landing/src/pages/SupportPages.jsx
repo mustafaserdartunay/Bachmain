@@ -11,7 +11,7 @@ export function PricingPage() {
         <div className="mx-auto max-w-3xl px-4">
           <span className="pill">Fiyatlandırma</span>
           <h1 className="mt-4 text-4xl font-extrabold text-slate-900">Şeffaf paketler</h1>
-          <p className="mt-3 text-slate-500">14 gün ücretsiz deneyin. Taahhüt yok.</p>
+          <p className="mt-3 text-slate-500">7 gün ücretsiz deneyin. Taahhüt yok.</p>
         </div>
       </section>
       <section className="section-pad">
@@ -44,7 +44,7 @@ export function PricingPage() {
 export function FaqSection() {
   const [open, setOpen] = useState(null);
   return (
-    <section className="section-pad bg-white">
+    <section className="section-pad">
       <div className="mx-auto max-w-3xl px-4">
         <h2 className="section-title text-center">Sık Sorulan Sorular</h2>
         <div className="mt-10 space-y-3">

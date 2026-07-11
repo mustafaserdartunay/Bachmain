@@ -187,7 +187,7 @@ export async function registerAccount(store, body) {
   }
 
   const now = new Date()
-  const licenseExpiry = new Date(now.getTime() + 14 * 86400000).toISOString().slice(0, 10)
+  const licenseExpiry = new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10)
   const customerId = newId('c')
   const accountId = newId('acc')
   const tenantCode = makeTenantCode(store)

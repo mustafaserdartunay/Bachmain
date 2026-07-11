@@ -126,7 +126,7 @@ export function RegisterPage() {
 
   return (
     <AuthShell
-      title="14 gün ücretsiz üye olun"
+      title="7 gün ücretsiz üye olun"
       subtitle={`Seçilen plan: ${form.plan || 'Starter'} · Kayıt sonrası yönetim panelinde görünür`}
       footer={(
         <>
