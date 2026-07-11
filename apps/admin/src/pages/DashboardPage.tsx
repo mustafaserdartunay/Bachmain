@@ -38,7 +38,15 @@ export function DashboardPage() {
 
   if (status === 'error' || !data) return <ErrorState onRetry={reload} />
 
-  const { kpis: dashboardKpis, revenueChart, recentActivities, expiringLicenses, openTickets: supportTickets, pendingPayments, systemHealth } = data
+  const {
+    kpis: dashboardKpis = [],
+    revenueChart = [],
+    recentActivities = [],
+    expiringLicenses = [],
+    openTickets: supportTickets = [],
+    pendingPayments = [],
+    systemHealth = [],
+  } = data
 
   return (
     <div className="space-y-6">

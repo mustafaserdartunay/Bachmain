@@ -3,16 +3,7 @@
  * Full Node server lives in ../server for local/dev; this wraps key endpoints.
  */
 import { loadStore, withStore, newId } from '../server/store.mjs'
-
-function json(res, status, data) {
-  res.statusCode = status
-  res.setHeader('Content-Type', 'application/json; charset=utf-8')
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://uygulama.bachmain.com')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.end(JSON.stringify(data))
-}
+import { handleAuthApi, sendJson, applyCors } from '../server/authRoutes.mjs'
 
 function getPath(req) {
   const url = new URL(req.url, 'http://localhost')
@@ -29,15 +20,20 @@ async function readBody(req) {
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
-    return json(res, 204, {})
+    applyCors(req, res)
+    res.statusCode = 204
+    return res.end()
   }
 
   try {
     const path = getPath(req)
     const method = req.method
+    const body = method === 'POST' || method === 'PUT' ? await readBody(req) : {}
+
+    if (await handleAuthApi(req, res, path, body)) return
 
     if (method === 'GET' && (path === '' || path === 'health')) {
-      return json(res, 200, {
+      return sendJson(req, res, 200, {
         status: 'ok',
         service: 'bachmain-platform-api',
         timestamp: new Date().toISOString(),
@@ -46,16 +42,60 @@ export default async function handler(req, res) {
 
     if (method === 'GET' && path === 'dashboard') {
       const store = await loadStore()
-      return json(res, 200, store.dashboard || {})
+      const customers = store.customers || []
+      const tickets = store.supportTickets || []
+      const expiringLicenses = customers
+        .filter((c) => ['active', 'trial'].includes(c.status))
+        .filter((c) => c.licenseExpiry && new Date(c.licenseExpiry) < new Date(Date.now() + 90 * 86400000))
+        .slice(0, 5)
+      const openTickets = tickets.filter((t) => !['resolved', 'closed'].includes(t.status)).slice(0, 8)
+      return sendJson(req, res, 200, {
+        ...(store.dashboard || {}),
+        expiringLicenses,
+        openTickets,
+        kpis: store.dashboard?.kpis || [
+          { label: 'Aktif Müşteri', value: String(customers.filter((c) => c.status === 'active').length), change: '', trend: 'up' },
+          { label: 'Açık Ticket', value: String(openTickets.length), change: '', trend: 'neutral' },
+        ],
+      })
+    }
+
+    if (method === 'GET' && path.startsWith('modules/')) {
+      const parts = path.split('/')
+      const moduleId = parts[1]
+      const itemId = parts[2]
+      const store = await loadStore()
+      if (!store.modules) store.modules = {}
+      if (parts.length === 2) {
+        let rows = store.modules[moduleId] || []
+        if (moduleId === 'customers' && rows.length === 0) {
+          rows = (store.customers || []).map((c) => ({
+            id: c.id,
+            company: c.company,
+            contact: c.contact,
+            city: c.city || '—',
+            plan: c.plan,
+            mrr: typeof c.mrr === 'number' ? `₺${c.mrr}` : c.mrr || '₺0',
+            status: c.status === 'trial' ? 'Deneme' : c.status === 'active' ? 'Aktif' : c.status,
+            licenseExpiry: c.licenseExpiry,
+          }))
+        }
+        return sendJson(req, res, 200, { rows, metrics: [] })
+      }
+      if (parts.length === 3) {
+        const rows = store.modules[moduleId] || []
+        const row = rows.find((r) => r.id === itemId)
+        if (!row) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+        return sendJson(req, res, 200, row)
+      }
     }
 
     if (method === 'GET' && path === 'tickets') {
       const store = await loadStore()
-      return json(res, 200, store.supportTickets || [])
+      return sendJson(req, res, 200, store.supportTickets || [])
     }
 
     if (method === 'POST' && path === 'tickets') {
-      const body = await readBody(req)
       const ticket = {
         id: newId('tkt'),
         subject: body.subject || 'Destek talebi',
@@ -78,21 +118,20 @@ export default async function handler(req, res) {
         store.supportTickets = [ticket, ...(store.supportTickets || [])]
         return store
       })
-      return json(res, 201, ticket)
+      return sendJson(req, res, 201, ticket)
     }
 
     if (method === 'GET' && path === 'customers') {
       const store = await loadStore()
-      return json(res, 200, store.customers || [])
+      return sendJson(req, res, 200, store.customers || [])
     }
 
     if (method === 'GET' && path === 'notifications') {
       const store = await loadStore()
-      return json(res, 200, store.notifications || store.campaigns || [])
+      return sendJson(req, res, 200, store.notifications || store.campaigns || [])
     }
 
     if (method === 'POST' && path === 'notifications') {
-      const body = await readBody(req)
       const item = {
         id: newId('ntf'),
         title: body.title || 'Bildirim',
@@ -104,11 +143,11 @@ export default async function handler(req, res) {
         store.notifications = [item, ...(store.notifications || [])]
         return store
       })
-      return json(res, 201, item)
+      return sendJson(req, res, 201, item)
     }
 
-    return json(res, 404, { error: 'NOT_FOUND', path })
+    return sendJson(req, res, 404, { error: 'NOT_FOUND', path })
   } catch (error) {
-    return json(res, 500, { error: 'SERVER_ERROR', message: error.message })
+    return sendJson(req, res, 500, { error: 'SERVER_ERROR', message: error.message })
   }
 }
