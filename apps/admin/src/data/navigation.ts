@@ -17,10 +17,12 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', path: '/', icon: LayoutDashboard, group: 'Ana' },
   { id: 'customers', label: 'Müşteri Yönetimi', path: '/musteriler', icon: Users, group: 'Müşteri' },
+  { id: 'memberships', label: 'Üye Hesapları', path: '/uyeler', icon: UserCheck, group: 'Müşteri' },
   { id: 'subscriptions', label: 'Abonelik ve Lisanslar', path: '/abonelikler', icon: CreditCard, group: 'Müşteri' },
   { id: 'dealers', label: 'Bayi Yönetimi', path: '/bayiler', icon: Store, group: 'Müşteri' },
   { id: 'accounts', label: 'Cari Hesaplar', path: '/cari-hesaplar', icon: Wallet, group: 'Finans' },
   { id: 'payments', label: 'Tahsilatlar ve Ödemeler', path: '/tahsilatlar', icon: Banknote, group: 'Finans' },
+  { id: 'payment-requests', label: 'Ödeme Talepleri', path: '/odeme-talepleri', icon: Banknote, group: 'Finans' },
   { id: 'invoices', label: 'Faturalar', path: '/faturalar', icon: FileText, group: 'Finans' },
   { id: 'packages', label: 'Paket Yönetimi', path: '/paketler', icon: Package, group: 'Finans' },
   { id: 'support', label: 'Destek / Ticket', path: '/destek', icon: Headphones, badge: 12, group: 'Destek' },
