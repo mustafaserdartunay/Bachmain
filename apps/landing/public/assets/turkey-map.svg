@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 450" role="img" aria-label="Türkiye canlı saha satış haritası" class="bm-tr-map-svg">
+  <defs>
+    <linearGradient id="trFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8ecf1"/>
+      <stop offset="100%" stop-color="#dde3ea"/>
+    </linearGradient>
+    <filter id="trShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <rect width="1000" height="450" rx="16" fill="#f4f6f8"/>
+  <path class="bm-tr-route" d="M 173.9,95.9 Q 270.95,100.44999999999999 368.0,165.0" fill="none" stroke="#E2BC0F" stroke-width="2" stroke-dasharray="6 5" opacity="0.55"><animate attributeName="stroke-dashoffset" from="0" to="-22" dur="2.5s" repeatCount="indefinite"/></path><path class="bm-tr-route" d="M 368.0,165.0 Q 225.05,183.5 82.1,262.0" fill="none" stroke="#E2BC0F" stroke-width="2" stroke-dasharray="6 5" opacity="0.55"><animate attributeName="stroke-dashoffset" from="0" to="-22" dur="2.5s" repeatCount="indefinite"/></path><path class="bm-tr-route" d="M 173.9,95.9 Q 442.34999999999997,66.1 710.8,96.3" fill="none" stroke="#E2BC0F" stroke-width="2" stroke-dasharray="6 5" opacity="0.55"><animate attributeName="stroke-dashoffset" from="0" to="-22" dur="2.5s" repeatCount="indefinite"/></path>
+  <path d="M 570.7,74.9 L 642.4,99.7 L 700.6,89.8 L 743.7,95.5 L 802.7,62.0 L 856.0,58.9 L 904.1,90.5 L 912.6,113.1 L 907.8,144.4 L 945.0,160.4 L 964.7,179.2 L 930.5,197.5 L 946.1,271.2 L 936.3,291.1 L 963.6,342.6 L 939.7,353.5 L 922.1,337.1 L 864.0,328.8 L 842.5,338.8 L 785.6,348.8 L 758.7,347.7 L 701.1,371.8 L 660.0,372.0 L 633.4,359.9 L 578.3,377.8 L 562.0,365.3 L 559.3,401.2 L 545.9,415.2 L 532.5,429.3 L 514.1,400.2 L 533.0,376.0 L 502.5,381.5 L 460.7,366.7 L 426.3,403.7 L 350.5,410.9 L 310.0,376.4 L 256.1,374.3 L 244.6,401.0 L 210.0,408.6 L 161.6,374.3 L 107.1,375.5 L 77.4,311.6 L 40.9,275.9 L 65.2,225.9 L 33.5,195.2 L 89.0,133.7 L 166.0,131.1 L 187.0,82.3 L 282.3,90.8 L 342.4,49.1 L 400.7,30.9 L 483.4,29.6 L 570.7,74.9 Z" fill="url(#trFill)" stroke="#c5cdd8" stroke-width="1.5" filter="url(#trShadow)"/>
+  <path d="M 84.6,116.3 L 42.9,150.9 L 27.2,121.0 L 27.8,107.7 L 39.7,100.5 L 55.2,60.3 L 30.9,43.3 L 81.8,23.0 L 124.8,31.7 L 130.8,56.4 L 174.4,77.1 L 165.3,92.9 L 106.0,96.4 L 84.6,116.3 Z" fill="url(#trFill)" stroke="#c5cdd8" stroke-width="1.5" filter="url(#trShadow)"/>
+  
+  <g class="bm-tr-pin" transform="translate(173.9,95.9)" style="animation-delay:0.0s">
+    <circle class="bm-tr-pulse" r="18" fill="none" stroke="#E2BC0F" stroke-width="1.5" opacity="0.6"/>
+    <circle class="bm-tr-pulse bm-tr-pulse-2" r="28" fill="none" stroke="#E2BC0F" stroke-width="1" opacity="0.35"/>
+    <circle r="6" fill="#E2BC0F" stroke="#fff" stroke-width="2"/>
+    <text x="12" y="-10" class="bm-tr-label">Ahmet K.</text>
+    <text x="12" y="4" class="bm-tr-sublabel">İstanbul</text>
+  </g>
+  <g class="bm-tr-pin" transform="translate(368.0,165.0)" style="animation-delay:0.6s">
+    <circle class="bm-tr-pulse" r="18" fill="none" stroke="#E2BC0F" stroke-width="1.5" opacity="0.6"/>
+    <circle class="bm-tr-pulse bm-tr-pulse-2" r="28" fill="none" stroke="#E2BC0F" stroke-width="1" opacity="0.35"/>
+    <circle r="6" fill="#E2BC0F" stroke="#fff" stroke-width="2"/>
+    <text x="12" y="-10" class="bm-tr-label">Selin Y.</text>
+    <text x="12" y="4" class="bm-tr-sublabel">Ankara</text>
+  </g>
+  <g class="bm-tr-pin" transform="translate(82.1,262.0)" style="animation-delay:1.2s">
+    <circle class="bm-tr-pulse" r="18" fill="none" stroke="#E2BC0F" stroke-width="1.5" opacity="0.6"/>
+    <circle class="bm-tr-pulse bm-tr-pulse-2" r="28" fill="none" stroke="#E2BC0F" stroke-width="1" opacity="0.35"/>
+    <circle r="6" fill="#E2BC0F" stroke="#fff" stroke-width="2"/>
+    <text x="12" y="-10" class="bm-tr-label">Murat D.</text>
+    <text x="12" y="4" class="bm-tr-sublabel">İzmir</text>
+  </g>
+  <g class="bm-tr-pin" transform="translate(710.8,96.3)" style="animation-delay:1.7999999999999998s">
+    <circle class="bm-tr-pulse" r="18" fill="none" stroke="#E2BC0F" stroke-width="1.5" opacity="0.6"/>
+    <circle class="bm-tr-pulse bm-tr-pulse-2" r="28" fill="none" stroke="#E2BC0F" stroke-width="1" opacity="0.35"/>
+    <circle r="6" fill="#E2BC0F" stroke="#fff" stroke-width="2"/>
+    <text x="12" y="-10" class="bm-tr-label">Deniz A.</text>
+    <text x="12" y="4" class="bm-tr-sublabel">Trabzon</text>
+  </g>
+  <g class="bm-tr-pin" transform="translate(260.7,360.2)" style="animation-delay:2.4s">
+    <circle class="bm-tr-pulse" r="18" fill="none" stroke="#E2BC0F" stroke-width="1.5" opacity="0.6"/>
+    <circle class="bm-tr-pulse bm-tr-pulse-2" r="28" fill="none" stroke="#E2BC0F" stroke-width="1" opacity="0.35"/>
+    <circle r="6" fill="#E2BC0F" stroke="#fff" stroke-width="2"/>
+    <text x="12" y="-10" class="bm-tr-label">Ece T.</text>
+    <text x="12" y="4" class="bm-tr-sublabel">Antalya</text>
+  </g>
+  <g transform="translate(16,16)">
+    <rect width="132" height="36" rx="10" fill="#fff" stroke="#e2e8f0"/>
+    <circle cx="28" cy="18" r="5" fill="#22c55e"><animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite"/></circle>
+    <text x="42" y="15" fill="#64748b" font-family="Plus Jakarta Sans,sans-serif" font-size="10" font-weight="600">CANLI TAKİP</text>
+    <text x="42" y="28" fill="#0f172a" font-family="Plus Jakarta Sans,sans-serif" font-size="12" font-weight="800">5 temsilci aktif</text>
+  </g>
+</svg>
