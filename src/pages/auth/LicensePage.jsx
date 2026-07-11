@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-import { useAuth } from '../auth/AuthContext'
+import { useAuth } from '../../auth/AuthContext'
 import { getStoredSession } from '../../utils/platformAuth'
 
 const API = import.meta.env.VITE_PLATFORM_API_URL || 'https://yonetim.bachmain.com/api'

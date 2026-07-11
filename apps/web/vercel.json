@@ -1,6 +1,4 @@
 {
-  "buildCommand": "echo 'static site'",
-  "outputDirectory": ".",
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
@@ -9,7 +7,7 @@
     { "source": "/iletisim", "destination": "/contact", "permanent": true },
     { "source": "/yardim-merkezi", "destination": "/help", "permanent": true },
     { "source": "/urunler", "destination": "/features", "permanent": true },
-    { "source": "/kayit", "destination": "https://uygulama.bachmain.com/kayit", "permanent": false }
+    { "source": "/kayit", "destination": "/register", "permanent": false }
   ],
   "rewrites": [
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
