@@ -1,6 +1,5 @@
 import { AppPanelDot } from '../Layout/AppPageLayout'
 import {
-  APP_FILTER_LABEL_CLASS,
   APP_ICON_SM_CLASS,
   APP_ICON_WRAP_CLASS,
   APP_PANEL_TITLE_CLASS,
@@ -27,7 +26,7 @@ export function FormSectionPanel({ icon: Icon, title, children, dotColor = 'blue
 
 export default FormSectionPanel
 
-export const FORM_FIELD_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} mb-0`
+export const FORM_FIELD_LABEL_CLASS = 'mb-0 text-[12px] font-black capitalize tracking-wider text-[var(--muted)]'
 export const FORM_FIELD_SURFACE_CLASS = 'app-form-field-surface'
 export const FORM_FIELD_CELL_CLASS = `${FORM_FIELD_SURFACE_CLASS} rounded-[16px] p-3`
 export const FORM_FIELD_ROW_CLASS =
