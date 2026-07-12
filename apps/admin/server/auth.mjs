@@ -164,6 +164,14 @@ export async function registerAccount(store, body) {
   const fullName = String(body.fullName || body.contact || '').trim()
   const companyName = String(body.companyName || body.company || '').trim()
   const phone = String(body.phone || '').trim()
+  const gsm = String(body.gsm || body.mobile || '').trim()
+  const taxNo = String(body.taxNo || body.vkn || '').replace(/\D/g, '')
+  const taxOffice = String(body.taxOffice || '').trim()
+  const address = String(body.address || '').trim()
+  const city = String(body.city || '').trim()
+  const district = String(body.district || '').trim()
+  const companySize = String(body.companySize || body.size || '').trim()
+  const sourceTag = String(body.source || 'self_signup').trim() || 'self_signup'
 
   if (!email || !email.includes('@')) {
     const err = new Error('Geçerli bir e-posta girin')
@@ -180,6 +188,11 @@ export async function registerAccount(store, body) {
     err.code = 'MISSING_FIELDS'
     throw err
   }
+  if (taxNo && (taxNo.length < 10 || taxNo.length > 11)) {
+    const err = new Error('Vergi / T.C. kimlik no 10 veya 11 haneli olmalı')
+    err.code = 'INVALID_TAX_NO'
+    throw err
+  }
   if (store.accounts.some((a) => a.email === email && a.canLogin !== false && a.role !== 'demo_lead')) {
     const err = new Error('Bu e-posta ile zaten üyelik var')
     err.code = 'EMAIL_TAKEN'
@@ -192,13 +205,22 @@ export async function registerAccount(store, body) {
   const customerId = existingLead?.customerId || newId('c')
   const accountId = existingLead?.id || newId('acc')
   const tenantCode = existingLead?.tenantCode || makeTenantCode(store)
+  const primaryPhone = gsm || phone
 
   const account = {
     id: accountId,
     email,
     fullName,
     companyName,
-    phone,
+    phone: primaryPhone,
+    gsm: gsm || primaryPhone,
+    landline: phone,
+    taxNo,
+    taxOffice,
+    address,
+    city,
+    district,
+    companySize,
     passwordHash: hashPassword(password),
     role: 'owner',
     canLogin: true,
@@ -207,7 +229,7 @@ export async function registerAccount(store, body) {
     plan: body.plan === 'Pro' || body.plan === 'Enterprise' || body.plan === 'Starter' ? body.plan : 'Starter',
     createdAt: existingLead?.createdAt || now.toISOString(),
     lastLoginAt: now.toISOString(),
-    source: existingLead ? 'demo_converted' : 'self_signup',
+    source: existingLead ? 'demo_converted' : sourceTag === 'bachmain_signup_modal' ? 'self_signup' : (sourceTag || 'self_signup'),
   }
 
   let customer = store.customers.find((c) => c.id === customerId)
@@ -217,9 +239,15 @@ export async function registerAccount(store, body) {
       company: companyName,
       contact: fullName,
       email,
-      phone,
-      taxNo: '',
-      city: body.city || '',
+      phone: primaryPhone,
+      gsm: gsm || primaryPhone,
+      landline: phone,
+      taxNo: taxNo || '',
+      taxOffice,
+      address,
+      city: city || '',
+      district,
+      companySize,
       status: 'trial',
       plan: account.plan,
       mrr: 0,
@@ -235,7 +263,15 @@ export async function registerAccount(store, body) {
     customer.company = companyName
     customer.contact = fullName
     customer.email = email
-    customer.phone = phone || customer.phone
+    customer.phone = primaryPhone || customer.phone
+    customer.gsm = gsm || customer.gsm || customer.phone
+    customer.landline = phone || customer.landline
+    if (taxNo) customer.taxNo = taxNo
+    if (taxOffice) customer.taxOffice = taxOffice
+    if (address) customer.address = address
+    if (city) customer.city = city
+    if (district) customer.district = district
+    if (companySize) customer.companySize = companySize
     customer.status = 'trial'
     customer.plan = account.plan
     customer.licenseExpiry = licenseExpiry
@@ -254,10 +290,14 @@ export async function registerAccount(store, body) {
     id: customer.id,
     company: customer.company,
     contact: customer.contact,
+    email: customer.email,
+    phone: customer.phone,
+    taxNo: customer.taxNo || '—',
     city: customer.city || '—',
     plan: customer.plan,
     mrr: '₺0',
     status: 'Deneme',
+    source: 'Web Üyelik',
     licenseExpiry: customer.licenseExpiry,
   }
   if (moduleIdx >= 0) store.modules.customers[moduleIdx] = moduleRow

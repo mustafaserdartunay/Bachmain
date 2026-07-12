@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, Menu, X } from "lucide-react";
 import Logo from "./Logo";
+import SignupModal from "./SignupModal";
 
 const nav = [
   { label: "Ana Sayfa", href: "/" },
@@ -88,6 +89,7 @@ function Dropdown({ label, items, href }) {
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(false);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 12);
@@ -96,6 +98,7 @@ export default function Header() {
   }, []);
 
   return (
+    <>
     <header className={`site-nav ${scrolled ? "scrolled" : ""}`}>
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
         <Logo />
@@ -114,7 +117,13 @@ export default function Header() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <Link to="/login" className="btn-ghost">Giriş Yap</Link>
-          <Link to="/demo" className="btn-primary !px-4 !py-2.5 !text-[13px]">Demo Talep Et</Link>
+          <button
+            type="button"
+            className="btn-primary !px-4 !py-2.5 !text-[13px]"
+            onClick={() => setSignupOpen(true)}
+          >
+            Üye Ol
+          </button>
         </div>
 
         <button type="button" className="rounded-lg p-2 text-slate-700 xl:hidden" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menü">
@@ -141,11 +150,22 @@ export default function Header() {
             ))}
             <div className="mt-3 flex gap-2">
               <Link to="/login" className="btn-ghost flex-1 justify-center border border-slate-200" onClick={() => setMobileOpen(false)}>Giriş</Link>
-              <Link to="/demo" className="btn-primary flex-1 !py-2.5" onClick={() => setMobileOpen(false)}>Demo</Link>
+              <button
+                type="button"
+                className="btn-primary flex-1 !py-2.5"
+                onClick={() => {
+                  setMobileOpen(false);
+                  setSignupOpen(true);
+                }}
+              >
+                Üye Ol
+              </button>
             </div>
           </div>
         </div>
       )}
     </header>
+    <SignupModal open={signupOpen} onClose={() => setSignupOpen(false)} />
+    </>
   );
 }
