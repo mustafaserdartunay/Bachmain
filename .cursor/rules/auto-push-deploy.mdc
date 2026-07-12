@@ -1,0 +1,41 @@
+---
+description: Her özellik/değişiklik sonrası otomatik commit, push ve Vercel production deploy
+alwaysApply: true
+---
+
+# Otomatik Push + Deploy
+
+Kullanıcı BachMain üzerinde özellik, düzeltme veya içerik işi bitince **ayrıca sormadan**:
+
+1. İlgili dosyaları commit et (anlamlı mesaj).
+2. `git push origin main` yap.
+3. Production deploy çalıştır:
+   - Web (bachmain.com) değiştiyse → `bachmain-web`
+   - Yönetim değiştiyse → `bachmain-admin`
+   - Uygulama/CRM kök değiştiyse → `bachmain`
+   - Karışıksa → `./scripts/ship.sh` veya `./scripts/deploy-all.sh`
+
+## Web landing değişiklikleri
+
+`apps/landing` değiştiyse önce:
+
+```bash
+cd apps/landing && npm run build
+rsync -a --delete --exclude vercel.json --exclude .vercel --exclude CALISMA.md dist/ ../web/
+```
+
+Sonra push + `bachmain-web` deploy.
+
+## Standart komut
+
+```bash
+./scripts/ship.sh
+```
+
+Vercel project IDs:
+- CRM: `.vercel/project.json` (kök)
+- Admin: `prj_58uYNTn8uZNfSaNF53pg5mHkosf9`
+- Web: `prj_1IxdJq7c8Kamffare0gLAskdoD9k`
+- Org: `team_6Bs45GjLiuQAkKP5eE6fUOsf`
+
+Git takılırsa Developer klonundan (`~/Developer/Bach Crm`) senkronlayıp push et; deploy Documents/BachMain üzerinden yapılabilir.
