@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 import SearchInput from '../components/Common/SearchInput'
 import { jsPDF } from 'jspdf'
@@ -12,6 +12,7 @@ import {
   FileText,
   Mail,
   Plus,
+  Printer,
   Send,
   Sparkles,
   Trash2,
@@ -2018,7 +2019,15 @@ export default function QuotesPage() {
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Teklif listesine dön
             </button>
-            <div className="absolute right-5 top-1/2 -translate-y-1/2" data-quote-dropdown>
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2" data-quote-dropdown>
+              {selectedQuote ? (
+                <Link
+                  to={`/belge-merkezi/yazdir?type=quote&id=${encodeURIComponent(selectedQuote.id)}`}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-xs font-black uppercase text-gray-300 hover:bg-dark-700 hover:text-white"
+                >
+                  <Printer className="h-4 w-4" /> Şablonla Yazdır
+                </Link>
+              ) : null}
               <div className="inline-flex items-stretch overflow-hidden rounded-xl shadow-lg shadow-emerald-900/25">
                 <button
                   type="button"
@@ -2060,7 +2069,7 @@ export default function QuotesPage() {
                   {pendingHeaderQuoteDelete ? (
                     <ListDeleteConfirmPanel
                       title="Teklif silinsin mi?"
-                      description="Bu işlem geri alınamaz. Teklif kalıcı olarak silinir."
+                      description="Teklif silinenlere taşınır; geri alınabilir."
                       onConfirm={() => deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })}
                       onCancel={() => setPendingHeaderQuoteDelete(false)}
                     />

@@ -83,6 +83,10 @@ import SectoralSettingsPage from './pages/SectoralSettingsPage'
 import SectoralCategorySettingsPage from './pages/SectoralCategorySettingsPage'
 import GuncelDurumSettingsPage from './pages/GuncelDurumSettingsPage'
 import TaxVatSettingsPage from './pages/TaxVatSettingsPage'
+import DocumentCenterPage from './pages/documentCenter/DocumentCenterPage'
+import DocTemplatesPage from './pages/documentCenter/DocTemplatesPage'
+import DocTemplateDesignerPage from './pages/documentCenter/DocTemplateDesignerPage'
+import DocPrintPage from './pages/documentCenter/DocPrintPage'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -160,6 +164,10 @@ export default function App() {
                 <Route path="/musteriler/:customerId/hareket/:movementId" element={<CustomerMovementDetailPage />} />
                 <Route path="/musteriler/:customerId" element={<CustomerDetailPage />} />
                 <Route path="/teklifler" element={<QuotesPage />} />
+                <Route path="/belge-merkezi" element={<DocumentCenterPage />} />
+                <Route path="/belge-merkezi/sablonlar" element={<DocTemplatesPage />} />
+                <Route path="/belge-merkezi/tasarimci" element={<DocTemplateDesignerPage />} />
+                <Route path="/belge-merkezi/yazdir" element={<DocPrintPage />} />
                 <Route path="/depo" element={<DepoPage />} />
                 <Route path="/siparis-deposu" element={<Navigate to="/depo" replace />} />
                 <Route path="/stok-deposu" element={<Navigate to="/depo" replace />} />
