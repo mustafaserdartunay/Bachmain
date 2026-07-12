@@ -113,7 +113,7 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <Link to="/login" className="btn-ghost">Giriş Yap</Link>
+          <Link to="/login" className="btn-gold !px-4 !py-2.5 !text-[13px]">Giriş Yap</Link>
           <Link to="/register" className="btn-primary !px-4 !py-2.5 !text-[13px]">Üye Ol</Link>
         </div>
 
@@ -140,7 +140,7 @@ export default function Header() {
               </div>
             ))}
             <div className="mt-3 flex gap-2">
-              <Link to="/login" className="btn-ghost flex-1 justify-center border border-slate-200" onClick={() => setMobileOpen(false)}>Giriş</Link>
+              <Link to="/login" className="btn-gold flex-1 !py-2.5" onClick={() => setMobileOpen(false)}>Giriş</Link>
               <Link to="/register" className="btn-primary flex-1 !py-2.5" onClick={() => setMobileOpen(false)}>Üye Ol</Link>
             </div>
           </div>

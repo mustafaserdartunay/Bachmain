@@ -161,6 +161,26 @@ body {
   background: #fff;
   border-color: var(--color-border);
 }
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1a1205;
+  background: linear-gradient(135deg, #F4A41C, #e8940f);
+  box-shadow: 0 8px 22px rgba(244, 164, 28, 0.35);
+  text-decoration: none;
+  border: none;
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(244, 164, 28, 0.45);
+}
 
 .pill {
   display: inline-flex;
