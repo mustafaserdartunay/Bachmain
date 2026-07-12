@@ -36,35 +36,17 @@ function writeState(state) {
   window.dispatchEvent(new CustomEvent(TEAM_HUB_EVENT))
 }
 
-function seedState() {
-  const employees = getActiveTeamMembers()
-  const seeded = {
-    messages: [
-      {
-        id: createId('msg'),
-        authorId: employees[0]?.id || 'system',
-        authorName: employees[0] ? fullName(employees[0]) : 'Ekip',
-        text: 'Günaydın ekip! Bugünkü teklif ve sipariş hedeflerimizi buradan takip edelim.',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: createId('msg'),
-        authorId: employees[1]?.id || 'system',
-        authorName: employees[1] ? fullName(employees[1]) : 'Ekip',
-        text: 'Yeni gelen siparişleri ve teklifleri sağ panelden paylaşabiliriz.',
-        createdAt: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
-      },
-    ],
+function emptyTeamHubState() {
+  return {
+    messages: [],
     monthlyBonusPoints: {},
     dailyWinners: [],
     lastReadChatAt: '',
   }
-  writeState(seeded)
-  return seeded
 }
 
 export function loadTeamHubState() {
-  return readState() || seedState()
+  return readState() || emptyTeamHubState()
 }
 
 function saveTeamHubState(state) {

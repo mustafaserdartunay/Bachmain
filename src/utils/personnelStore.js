@@ -1,4 +1,3 @@
-import { personnelSeed } from '../data/personnelSeed'
 import { appendActivityEntry } from './activityArchiveStore'
 
 const STORAGE_KEY = 'erlenbox-personnel'
@@ -24,7 +23,7 @@ function writeRaw(employees) {
 }
 
 export function loadPersonnel() {
-  return readRaw() || personnelSeed
+  return readRaw() || []
 }
 
 export function savePersonnel(employees) {
@@ -154,6 +153,6 @@ export function rehireEmployee(employeeId, { hireDate, department, position, sal
 }
 
 export function resetPersonnelSeed() {
-  savePersonnel(personnelSeed)
-  return personnelSeed
+  savePersonnel([])
+  return []
 }

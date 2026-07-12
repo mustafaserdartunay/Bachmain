@@ -1,14 +1,14 @@
 const COMPANY_SETTINGS_KEY = 'erlenbox-company-settings'
 
 export const defaultCompanySettings = {
-  companyName: 'Erlenbox',
-  legalTitle: 'Erlenbox Ambalaj San. ve Tic. Ltd. Şti.',
-  taxOffice: 'Kadıköy',
-  taxNumber: '1234567890',
-  address: 'Bağdat Cad. No: 120, Kadıköy / İstanbul',
-  phone: '+90 212 555 00 00',
-  email: 'info@erlenbox.com',
-  website: 'www.erlenbox.com',
+  companyName: '',
+  legalTitle: '',
+  taxOffice: '',
+  taxNumber: '',
+  address: '',
+  phone: '',
+  email: '',
+  website: '',
   logoDataUrl: '',
   bankAccounts: [],
 }

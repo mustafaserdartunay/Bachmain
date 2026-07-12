@@ -24,11 +24,11 @@ function createUniqueTenantCode(registry) {
 }
 
 export const defaultUserProfile = {
-  displayName: 'Yönetici',
-  companyName: 'Erlenbox',
-  email: 'yonetici@erlenbox.com',
-  phone: '+90 532 000 00 00',
-  title: 'Genel Müdür',
+  displayName: '',
+  companyName: '',
+  email: '',
+  phone: '',
+  title: '',
   avatarDataUrl: '',
   tenantCode: '',
   createdAt: '',
@@ -113,5 +113,5 @@ export function updateUserProfile(partial) {
 }
 
 export function getLoggedInUserDisplayName() {
-  return ensureUserProfile().displayName?.trim() || defaultUserProfile.displayName
+  return ensureUserProfile().displayName?.trim() || 'Kullanıcı'
 }

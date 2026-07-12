@@ -54,75 +54,10 @@ function getVehicleType(typeId) {
   return VEHICLE_TYPES.find((item) => item.id === typeId) || VEHICLE_TYPES[0]
 }
 
-function defaultFleet() {
-  return [
-    { id: 'veh-m1', name: 'MK-01', plate: '34 KRY 01', vehicleType: 'motor', courierName: 'Emre Kaya', courierPhone: '0532 111 22 33', status: 'available' },
-    { id: 'veh-m2', name: 'MK-02', plate: '34 KRY 02', vehicleType: 'motor', courierName: 'Selin Arslan', courierPhone: '0533 222 33 44', status: 'available' },
-    { id: 'veh-c1', name: 'AK-01', plate: '34 KRY 10', vehicleType: 'car', courierName: 'Burak Demir', courierPhone: '0534 333 44 55', status: 'available' },
-    { id: 'veh-p1', name: 'PV-01', plate: '34 KRY 20', vehicleType: 'panelvan', courierName: 'Murat Yıldız', courierPhone: '0535 444 55 66', status: 'available' },
-    { id: 'veh-p2', name: 'PV-02', plate: '34 KRY 21', vehicleType: 'panelvan', courierName: 'Ayşe Çelik', courierPhone: '0536 555 66 77', status: 'available' },
-    { id: 'veh-v1', name: 'MV-01', plate: '34 KRY 30', vehicleType: 'minivan', courierName: 'Can Öztürk', courierPhone: '0537 666 77 88', status: 'available' },
-    { id: 'veh-k1', name: 'KN-01', plate: '34 KRY 40', vehicleType: 'kamyonet', courierName: 'Hakan Şahin', courierPhone: '0538 777 88 99', status: 'available' },
-    { id: 'veh-b1', name: 'BK-01', plate: '—', vehicleType: 'bisiklet', courierName: 'Deniz Ak', courierPhone: '0539 888 99 00', status: 'available' },
-  ]
-}
-
-function seedDispatches(fleet) {
-  const customers = getCustomerProfiles().slice(0, 3)
-  if (!customers.length) return []
-
-  const vehicle = fleet.find((item) => item.vehicleType === 'motor') || fleet[0]
-  const customer = customers[0]
-  const display = getCustomerDisplay(customer)
-  const coords = getCustomerCoordinates(customer)
-  const now = new Date()
-
-  return [{
-    id: createCourierId('DSP'),
-    trackingToken: 'KT-DEMO2026',
-    referenceNo: 'SIP-2401',
-    customerId: customer.id,
-    customerName: display.brandShortName || display.companyTitle,
-    customerPhone: customer.phone || customer.mobile || '',
-    address: formatCustomerAddress(customer),
-    destination: coords,
-    vehicleId: vehicle.id,
-    vehicleType: vehicle.vehicleType,
-    courierName: vehicle.courierName,
-    courierPhone: vehicle.courierPhone,
-    status: 'en_route',
-    priority: 'normal',
-    packageNote: 'Kırılabilir ürün — dikkatli taşıma',
-    sharedWithCustomer: true,
-    createdAt: new Date(now.getTime() - 45 * 60000).toISOString(),
-    startedAt: new Date(now.getTime() - 30 * 60000).toISOString(),
-    estimatedArrival: new Date(now.getTime() + 18 * 60000).toISOString(),
-    deliveredAt: null,
-    livePosition: {
-      lat: HQ.lat + (coords.lat - HQ.lat) * 0.55,
-      lng: HQ.lng + (coords.lng - HQ.lng) * 0.55,
-      heading: 135,
-      speed: 32,
-      updatedAt: now.toISOString(),
-    },
-    routeGeometry: [
-      [HQ.lat, HQ.lng],
-      [HQ.lat + (coords.lat - HQ.lat) * 0.3, HQ.lng + (coords.lng - HQ.lng) * 0.3],
-      [HQ.lat + (coords.lat - HQ.lat) * 0.55, HQ.lng + (coords.lng - HQ.lng) * 0.55],
-    ],
-    timeline: [
-      { status: 'assigned', label: 'Kurye atandı', at: new Date(now.getTime() - 40 * 60000).toISOString() },
-      { status: 'picked_up', label: 'Paket depodan alındı', at: new Date(now.getTime() - 30 * 60000).toISOString() },
-      { status: 'en_route', label: 'Teslimat yolunda', at: new Date(now.getTime() - 25 * 60000).toISOString() },
-    ],
-  }]
-}
-
-function defaultState() {
-  const fleet = defaultFleet()
+function emptyState() {
   return {
-    fleet,
-    dispatches: seedDispatches(fleet),
+    fleet: [],
+    dispatches: [],
     hq: HQ,
   }
 }
@@ -130,14 +65,14 @@ function defaultState() {
 export function loadCourierState() {
   const saved = readJson(STORAGE_KEY, null)
   if (!saved) {
-    const seeded = defaultState()
-    writeJson(STORAGE_KEY, seeded)
-    return seeded
+    const empty = emptyState()
+    writeJson(STORAGE_KEY, empty)
+    return empty
   }
   return {
-    ...defaultState(),
+    ...emptyState(),
     ...saved,
-    fleet: Array.isArray(saved.fleet) && saved.fleet.length ? saved.fleet : defaultFleet(),
+    fleet: Array.isArray(saved.fleet) ? saved.fleet : [],
     dispatches: Array.isArray(saved.dispatches) ? saved.dispatches : [],
   }
 }

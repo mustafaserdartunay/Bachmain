@@ -1,5 +1,5 @@
 const CLEANUP_VERSION_KEY = 'bach-demo-data-cleanup-version'
-const CLEANUP_VERSION = '2026-06-14-empty-start-v1'
+const CLEANUP_VERSION = '2026-07-12-no-demo-workspace-v2'
 
 const LOCAL_STORAGE_KEYS_TO_REMOVE = [
   'erlenbox-created-customers',
@@ -37,6 +37,9 @@ const LOCAL_STORAGE_KEYS_TO_REMOVE = [
   'bach-omni-leads',
   'bach-omni-webhook-log',
   'bach-omni-assignments',
+  'bach-courier-tracking-v1',
+  'bach-team-hub-state',
+  'erlenbox-company-settings',
 ]
 
 const SESSION_STORAGE_KEYS_TO_REMOVE = [
@@ -59,6 +62,10 @@ function deleteProductMediaDb() {
   }
 }
 
+/**
+ * One-time wipe of leftover demo/sample CRM rows on this browser.
+ * Per-account data is then restored from tenant DB after login.
+ */
 export function cleanupDemoDataOnce() {
   try {
     if (localStorage.getItem(CLEANUP_VERSION_KEY) === CLEANUP_VERSION) return

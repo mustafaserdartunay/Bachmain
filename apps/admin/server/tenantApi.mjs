@@ -12,6 +12,7 @@ const ALLOWED_COLLECTIONS = new Set([
   'quotes',
   'treasury',
   'settings',
+  'workspace',
 ])
 
 export async function handleTenantApi(req, res, path, body = {}) {

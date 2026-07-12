@@ -9,6 +9,13 @@ import {
   registerAccount,
 } from '../utils/platformAuth'
 import { saveUserProfile } from '../utils/userProfile'
+import { updateCompanySettings, readCompanySettings } from '../utils/companySettings'
+import {
+  bindUserWorkspace,
+  clearWorkspaceStorage,
+  flushWorkspaceNow,
+  WORKSPACE_OWNER_KEY,
+} from '../utils/workspaceStorage'
 
 const AuthContext = createContext(null)
 
@@ -16,7 +23,7 @@ function syncLocalProfile(user) {
   if (!user) return
   saveUserProfile({
     displayName: user.fullName || 'Kullanıcı',
-    companyName: user.companyName || 'Firma',
+    companyName: user.companyName || '',
     email: user.email || '',
     phone: user.phone || '',
     title: 'Hesap Sahibi',
@@ -28,6 +35,22 @@ function syncLocalProfile(user) {
     status: user.status,
     licenseExpiry: user.licenseExpiry || '',
   })
+
+  // Fill company card from membership only when still empty (never inject demo firm).
+  const company = readCompanySettings()
+  if (!company.companyName && user.companyName) {
+    updateCompanySettings({
+      companyName: user.companyName,
+      email: user.email || company.email,
+      phone: user.phone || company.phone,
+    })
+  }
+}
+
+async function activateWorkspace(user) {
+  if (!user) return
+  await bindUserWorkspace(user)
+  syncLocalProfile(user)
 }
 
 export function AuthProvider({ children }) {
@@ -62,14 +85,16 @@ export function AuthProvider({ children }) {
         const next = await fetchCurrentUser()
         if (!cancelled) {
           setUser(next)
-          syncLocalProfile(next)
+          await activateWorkspace(next)
         }
       } catch {
         if (cached && !cancelled) {
           setUser(cached)
-          syncLocalProfile(cached)
+          await activateWorkspace(cached)
         } else if (!cancelled) {
           clearSession()
+          clearWorkspaceStorage()
+          localStorage.removeItem(WORKSPACE_OWNER_KEY)
           setUser(null)
         }
       } finally {
@@ -99,17 +124,24 @@ export function AuthProvider({ children }) {
     async login(form) {
       const data = await loginAccount(form)
       setUser(data.user)
-      syncLocalProfile(data.user)
+      await activateWorkspace(data.user)
       return data.user
     },
     async register(form) {
       const data = await registerAccount(form)
       setUser(data.user)
-      syncLocalProfile(data.user)
+      await activateWorkspace(data.user)
       return data.user
     },
     async logout() {
+      try {
+        await flushWorkspaceNow()
+      } catch {
+        // still logout locally
+      }
       await logoutAccount()
+      clearWorkspaceStorage()
+      localStorage.removeItem(WORKSPACE_OWNER_KEY)
       setUser(null)
     },
   }
