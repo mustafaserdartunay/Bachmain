@@ -28,6 +28,7 @@ const nav = [
   { label: "Fiyatlandırma", href: "/pricing" },
   { label: "Referanslar", href: "/#referanslar" },
   { label: "Blog", href: "/blog" },
+  { label: "Eğitim", href: "/egitim" },
   { label: "İletişim", href: "/contact" },
 ];
 

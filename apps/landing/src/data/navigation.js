@@ -19,7 +19,7 @@ export const modulesDropdown = [
 export const supportDropdown = [
   { label: "Yardım Merkezi", href: "/help" },
   { label: "SSS", href: "/faq" },
-  { label: "Eğitimler", href: "/help" },
+  { label: "Eğitimler", href: "/egitim" },
 ];
 
 export const mainNav = [
@@ -49,7 +49,7 @@ export const footerLinks = {
   support: [
     { label: "Yardım Merkezi", href: "/help" },
     { label: "SSS", href: "/faq" },
-    { label: "Eğitimler", href: "/help" },
+    { label: "Eğitimler", href: "/egitim" },
   ],
 };
 

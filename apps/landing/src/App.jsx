@@ -7,7 +7,7 @@ import {
   FeaturesPage, CrmPage, ErpPage, StockPage, FinancePage, ReportsPage,
   ModulesPage, ProductionPage, EcommercePage, FieldSalesPage, EInvoicePage,
 } from "./pages/FeaturePages";
-import { PricingPage, FaqPage, HelpPage } from "./pages/SupportPages";
+import { PricingPage, FaqPage, HelpPage, EducationPage } from "./pages/SupportPages";
 import { BlogPage, BlogDetailPage } from "./pages/BlogPages";
 import { LoginPage, RegisterPage, DemoPage, ContactPage } from "./pages/AuthPages";
 
@@ -45,6 +45,8 @@ export default function App() {
           <Route path="/demo" element={<DemoPage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/faq" element={<FaqPage />} />
+          <Route path="/egitim" element={<EducationPage />} />
+          <Route path="/egitimler" element={<EducationPage />} />
         </Routes>
       </main>
       <Footer />

@@ -2,29 +2,73 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    { "source": "/giris", "destination": "https://uygulama.bachmain.com/giris", "permanent": false },
-    { "source": "/fiyatlandirma", "destination": "/pricing", "permanent": true },
-    { "source": "/iletisim", "destination": "/contact", "permanent": true },
-    { "source": "/yardim-merkezi", "destination": "/help", "permanent": true },
-    { "source": "/urunler", "destination": "/features", "permanent": true },
-    { "source": "/kayit", "destination": "/register", "permanent": false }
+    {
+      "source": "/giris",
+      "destination": "https://uygulama.bachmain.com/giris",
+      "permanent": false
+    },
+    {
+      "source": "/fiyatlandirma",
+      "destination": "/pricing",
+      "permanent": true
+    },
+    {
+      "source": "/iletisim",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/yardim-merkezi",
+      "destination": "/help",
+      "permanent": true
+    },
+    {
+      "source": "/urunler",
+      "destination": "/features",
+      "permanent": true
+    },
+    {
+      "source": "/kayit",
+      "destination": "/register",
+      "permanent": false
+    },
+    {
+      "source": "/egitimler",
+      "destination": "/egitim",
+      "permanent": true
+    }
   ],
   "rewrites": [
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/assets/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
       ]
     }
   ]
