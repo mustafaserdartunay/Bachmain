@@ -498,9 +498,9 @@ export default function CustomerCreatePage() {
             <div className="max-w-4xl space-y-2">
               <SelectLine icon={WalletCards} label="Fiyat Listesi" name="priceList" options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']} />
               <SelectLine icon={WalletCards} label="Döviz Kuru" name="currencyRate" options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']} />
-              <label className={`${FORM_FIELD_ROW_COMPACT_CLASS} grid grid-cols-[160px_minmax(0,1fr)] items-center gap-3`}>
+              <label className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[180px_minmax(0,1fr)] items-center gap-4`}>
                 <span className={`flex h-full items-center gap-2 self-center ${FORM_FIELD_LABEL_CLASS}`}>
-                  <WalletCards className="h-3.5 w-3.5 shrink-0" /> Açılış Bakiyesi:
+                  <WalletCards className="h-4 w-4 shrink-0" /> Açılış Bakiyesi:
                 </span>
                 <span className="flex items-center gap-3 text-[12px] font-semibold text-[var(--muted)]">
                   <input
@@ -540,9 +540,9 @@ export default function CustomerCreatePage() {
 
 function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', large = false, disabled = false }) {
   return (
-    <label className={`${FORM_FIELD_ROW_COMPACT_CLASS} grid grid-cols-[160px_minmax(0,1fr)] items-center gap-3`}>
+    <label className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[180px_minmax(0,1fr)] items-center gap-4`}>
       <span className={`flex h-full items-center gap-2 self-center ${FORM_FIELD_LABEL_CLASS}`}>
-        <Icon className="h-3.5 w-3.5 shrink-0" /> {label}:
+        <Icon className="h-4 w-4 shrink-0" /> {label}:
       </span>
       <input
         name={name}
@@ -557,9 +557,9 @@ function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', 
 
 function CompactFieldLine({ icon: Icon, label, name, defaultValue = '' }) {
   return (
-    <label className={`${FORM_FIELD_ROW_COMPACT_CLASS} grid grid-cols-[48px_minmax(0,1fr)] items-center gap-2`}>
+    <label className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[54px_minmax(0,1fr)] items-center gap-2`}>
       <span className={`flex h-full items-center justify-end gap-1 self-center text-right ${FORM_FIELD_LABEL_CLASS}`}>
-        <Icon className="h-3.5 w-3.5 shrink-0" /> {label}:
+        <Icon className="h-4 w-4 shrink-0" /> {label}:
       </span>
       <input name={name} defaultValue={defaultValue} className="form-input !py-1.5" />
     </label>
@@ -618,9 +618,9 @@ function AddressLine({ id, defaultTitle = '', defaultAddress = '', defaultLocati
 
 function SelectLine({ icon: Icon, label, name, options }) {
   return (
-    <label className={`${FORM_FIELD_ROW_COMPACT_CLASS} grid grid-cols-[160px_minmax(0,1fr)] items-center gap-3`}>
+    <label className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[180px_minmax(0,1fr)] items-center gap-4`}>
       <span className={`flex h-full items-center gap-2 self-center ${FORM_FIELD_LABEL_CLASS}`}>
-        <Icon className="h-3.5 w-3.5 shrink-0" /> {label}:
+        <Icon className="h-4 w-4 shrink-0" /> {label}:
       </span>
       <select name={name} defaultValue="" className="form-input !py-1.5">
         <option value="">Seçiniz</option>
