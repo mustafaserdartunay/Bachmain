@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   CheckCircle2,
   ChevronRight,
   ClipboardList,
   Plus,
+  Printer,
   Send,
   Trash2,
 } from 'lucide-react'
@@ -913,7 +914,15 @@ export default function OrdersPage() {
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Sipariş listesine dön
             </button>
-            <div className="absolute right-5 top-1/2 -translate-y-1/2" data-order-dropdown>
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2" data-order-dropdown>
+              {selectedOrder && !isDraftOrder ? (
+                <Link
+                  to={`/belge-merkezi/yazdir?type=order&id=${encodeURIComponent(selectedOrder.id)}`}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-xs font-black uppercase text-gray-300 hover:bg-dark-700 hover:text-white"
+                >
+                  <Printer className="h-4 w-4" /> Şablonla Yazdır
+                </Link>
+              ) : null}
               <div className="inline-flex items-stretch overflow-hidden rounded-xl shadow-lg shadow-emerald-900/25">
                 <button
                   type="button"

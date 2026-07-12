@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { FileStack, PenLine, Printer, LayoutTemplate } from 'lucide-react'
+import { FileStack, PenLine, Printer, LayoutTemplate, Tags, History } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../../components/Layout/AppPageLayout'
 import { DOCUMENT_CENTER_BASE } from '../../data/documentCenterMenu'
 import { loadDocTemplates } from '../../utils/docTemplatesStore'
@@ -7,7 +7,9 @@ import { loadDocTemplates } from '../../utils/docTemplatesStore'
 const cards = [
   { to: `${DOCUMENT_CENTER_BASE}/sablonlar`, title: 'Şablonlar', desc: 'Teklif, sipariş ve etiket şablonlarını yönetin.', icon: LayoutTemplate },
   { to: `${DOCUMENT_CENTER_BASE}/tasarimci`, title: 'Tasarımcı', desc: 'Yeni şablon oluşturun veya düzenleyin.', icon: PenLine },
+  { to: `${DOCUMENT_CENTER_BASE}/etiket`, title: 'Etiket / Barkod / QR', desc: 'Termal etiket boyutları, barkod ve QR tasarlayın.', icon: Tags },
   { to: `${DOCUMENT_CENTER_BASE}/yazdir`, title: 'Yazdır / PDF', desc: 'Belge seçip şablonla yazdırın veya PDF indirin.', icon: Printer },
+  { to: `${DOCUMENT_CENTER_BASE}/kayitlar`, title: 'Yazdırma Kayıtları', desc: 'Yazdırma ve PDF işlem geçmişi.', icon: History },
 ]
 
 export default function DocumentCenterPage() {
@@ -19,7 +21,7 @@ export default function DocumentCenterPage() {
         title="Belge Merkezi"
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => {
           const Icon = card.icon
           return (

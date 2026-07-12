@@ -86,7 +86,9 @@ import TaxVatSettingsPage from './pages/TaxVatSettingsPage'
 import DocumentCenterPage from './pages/documentCenter/DocumentCenterPage'
 import DocTemplatesPage from './pages/documentCenter/DocTemplatesPage'
 import DocTemplateDesignerPage from './pages/documentCenter/DocTemplateDesignerPage'
+import DocLabelDesignerPage from './pages/documentCenter/DocLabelDesignerPage'
 import DocPrintPage from './pages/documentCenter/DocPrintPage'
+import DocPrintJobsPage from './pages/documentCenter/DocPrintJobsPage'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -167,7 +169,9 @@ export default function App() {
                 <Route path="/belge-merkezi" element={<DocumentCenterPage />} />
                 <Route path="/belge-merkezi/sablonlar" element={<DocTemplatesPage />} />
                 <Route path="/belge-merkezi/tasarimci" element={<DocTemplateDesignerPage />} />
+                <Route path="/belge-merkezi/etiket" element={<DocLabelDesignerPage />} />
                 <Route path="/belge-merkezi/yazdir" element={<DocPrintPage />} />
+                <Route path="/belge-merkezi/kayitlar" element={<DocPrintJobsPage />} />
                 <Route path="/depo" element={<DepoPage />} />
                 <Route path="/siparis-deposu" element={<Navigate to="/depo" replace />} />
                 <Route path="/stok-deposu" element={<Navigate to="/depo" replace />} />

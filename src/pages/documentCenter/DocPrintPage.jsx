@@ -5,6 +5,8 @@ import { AppPageHeader, AppPageShell } from '../../components/Layout/AppPageLayo
 import { listTemplatesByDocType, getDocTemplateById } from '../../utils/docTemplatesStore'
 import { buildDocumentContext, renderTemplateHtml } from '../../utils/docVariableEngine'
 import { downloadPdfFromHtml, openPrintWindow } from '../../utils/docPrint'
+import { logPrintJob } from '../../utils/docPrintJobsStore'
+import { flushWorkspaceNow } from '../../utils/workspaceStorage'
 import { readCompanySettings } from '../../utils/companySettings'
 import { loadQuotes } from '../../utils/quotesStore'
 import { loadOrders } from '../../utils/ordersStore'
@@ -72,6 +74,15 @@ export default function DocPrintPage() {
     setBusy(true)
     try {
       await downloadPdfFromHtml(rendered.html, `${selectedDoc.id || 'belge'}.pdf`)
+      logPrintJob({
+        kind: 'pdf',
+        docType,
+        documentId: selectedDoc.id,
+        templateId: selectedTpl.id,
+        templateName: selectedTpl.name,
+        userEmail: user?.email || '',
+      })
+      await flushWorkspaceNow()
     } catch (err) {
       window.alert(err.message || 'PDF oluşturulamadı')
     } finally {
@@ -79,9 +90,18 @@ export default function DocPrintPage() {
     }
   }
 
-  function handlePrint() {
+  async function handlePrint() {
     if (!selectedTpl) return
     openPrintWindow(rendered.html)
+    logPrintJob({
+      kind: 'print',
+      docType,
+      documentId: selectedDoc?.id || '',
+      templateId: selectedTpl.id,
+      templateName: selectedTpl.name,
+      userEmail: user?.email || '',
+    })
+    await flushWorkspaceNow()
   }
 
   return (

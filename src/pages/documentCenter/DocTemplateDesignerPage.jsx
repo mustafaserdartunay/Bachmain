@@ -98,6 +98,7 @@ export default function DocTemplateDesignerPage() {
                 <option value="quote">Teklif</option>
                 <option value="order">Sipariş</option>
                 <option value="production">Üretim</option>
+                <option value="label">Etiket</option>
                 <option value="generic">Genel</option>
               </select>
             </label>
