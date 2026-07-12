@@ -8,7 +8,11 @@
     "build": "vite build",
     "preview": "vite preview --host",
     "start": "node server/index.js",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "api:dev": "npm --prefix apps/api run dev",
+    "api:install": "npm --prefix apps/api install",
+    "compose:up": "docker compose up -d db redis",
+    "compose:down": "docker compose down"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
