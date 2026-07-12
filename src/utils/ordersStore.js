@@ -2,6 +2,7 @@ import { detailedOrders } from '../data/ordersData'
 import { documentTotals, sanitizeDocumentDiscountFields } from './documentTotals'
 import { syncQuoteFromOrder } from './quoteWorkflowSync'
 import { loadQuotes, saveQuotes } from './quotesStore'
+import { softDeleteRecord, restoreDeletedRecord } from './deletedRecordsStore'
 import {
   DEFAULT_ORDER_STAGE_ID,
   findWorkflowStage,
@@ -14,6 +15,7 @@ import {
 export { DEFAULT_ORDER_STAGE_ID }
 
 const STORAGE_KEY = 'erlenbox-orders'
+const DELETED_COLLECTION = 'orders'
 
 function normalizeOrder(order) {
   const stages = loadWorkflowStages()
@@ -159,7 +161,20 @@ export function updateOrder(orderId, patch) {
 }
 
 export function deleteOrder(orderId) {
-  saveOrders(loadOrders().filter((order) => order.id !== orderId))
+  const order = loadOrders().find((item) => item.id === orderId)
+  if (order) {
+    softDeleteRecord(DELETED_COLLECTION, order, { entityLabel: order.id || 'Sipariş' })
+  }
+  saveOrders(loadOrders().filter((item) => item.id !== orderId))
+}
+
+export function restoreDeletedOrder(orderId) {
+  const record = restoreDeletedRecord(DELETED_COLLECTION, orderId)
+  if (!record) return null
+  const orders = loadOrders()
+  if (orders.some((item) => item.id === record.id)) return record
+  saveOrders([normalizeOrder(record), ...orders])
+  return record
 }
 
 function findQuoteForOrder(order) {

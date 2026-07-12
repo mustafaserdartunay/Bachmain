@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
+import DeletedRecordsPanel from '../components/Common/DeletedRecordsPanel'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import {
@@ -190,6 +191,12 @@ export default function CustomersPage({
 
   function updateFilter(field, value) {
     setFilters((current) => ({ ...current, [field]: value }))
+  }
+
+  function handleRestoreDeletedRecord(record) {
+    restoreDeletedCustomer(record)
+    appendActivity(record.id, 'Geri Alındı', `${getCustomerDisplay(record).brandShortName || record.company} silinenlerden geri alındı`)
+    setCustomerProfiles(getCustomerProfiles())
   }
 
   function handleRestoreArchiveEntry(entry) {
@@ -403,6 +410,13 @@ export default function CustomersPage({
           </div>
         )}
       </AppPagePanel>
+
+      <DeletedRecordsPanel
+        title="Silinenler"
+        collection="customers"
+        onRestore={handleRestoreDeletedRecord}
+        emptyMessage="Silinen müşteri/tedarikçi yok."
+      />
 
       <ActivityArchivePanel
         title="Arşiv ve İşlem Geçmişi"

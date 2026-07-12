@@ -58,6 +58,9 @@ export const WORKSPACE_STORAGE_KEYS = [
   'erlenbox-company-settings',
   'erlenbox-user-profile',
   'erlenbox-tenant-registry',
+  'erlenbox-deleted-records',
+  'erlenbox-projects',
+  'erlenbox-activity-archive-log',
 ]
 
 const SESSION_KEYS = [

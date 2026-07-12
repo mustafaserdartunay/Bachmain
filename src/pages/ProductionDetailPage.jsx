@@ -33,6 +33,7 @@ import {
   loadProductionJobs,
   updateProductionJob,
 } from '../utils/productionStore'
+import { flushWorkspaceNow } from '../utils/workspaceStorage'
 import {
   getProductionStageOptions,
   loadWorkflowStages,
@@ -202,8 +203,11 @@ export default function ProductionDetailPage() {
 
   function saveProductionRecord() {
     if (!job) return
+    updateProductionJob(job.id, {
+      lastSavedAt: new Date().toISOString(),
+    })
     addJobActivity('Üretim kaydı kaydedildi.')
-    navigate('/uretim')
+    flushWorkspaceNow().finally(() => navigate('/uretim'))
   }
 
   function removeProductionStage(stage) {

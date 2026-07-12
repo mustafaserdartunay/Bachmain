@@ -33,7 +33,7 @@ import { getListCustomerDisplay } from '../data/customerProfiles'
 import { sampleProducts, vatRates } from '../data/productsData'
 import { createOrderFromQuote, loadOrders, updateOrder } from '../utils/ordersStore'
 import { nextQuoteCode, resolveQuoteCode, sanitizeQuoteCode } from '../utils/documentCodes'
-import { readVoiceQuoteOpenId, clearVoiceQuoteOpenId } from '../utils/quotesStore'
+import { readVoiceQuoteOpenId, clearVoiceQuoteOpenId, softDeleteQuote } from '../utils/quotesStore'
 import { publishWorkflowStages } from '../utils/workflowStagePublish'
 import {
   appendOrderStage,
@@ -1929,7 +1929,7 @@ export default function QuotesPage() {
     if (!quote) return
     if (!skipConfirm) {
       const quoteName = quote?.id || 'Bu teklif'
-      const second = window.confirm(`Son onay: "${quoteName}" teklifi kalıcı olarak silinecek. Devam edilsin mi?`)
+      const second = window.confirm(`Son onay: "${quoteName}" teklifi silinenlere taşınacak (geri alınabilir). Devam edilsin mi?`)
       if (!second) return
     }
 
@@ -1938,8 +1938,9 @@ export default function QuotesPage() {
       setDraftQuote(null)
       setSelectedId(quotes[0]?.id || null)
     } else {
-      const nextQuotes = quotes.filter((item) => item.id !== quote.id)
-      if (!updateQuotes(nextQuotes)) return
+      softDeleteQuote(quote)
+      const nextQuotes = loadQuotes()
+      setQuotes(nextQuotes)
       if (selectedId === quote.id) {
         setSelectedId(nextQuotes[0]?.id || null)
       }

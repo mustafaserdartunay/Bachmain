@@ -446,7 +446,7 @@ export default function CustomerDetailPage() {
                         <div className="min-w-0">
                           <p className="text-sm font-black text-white">Müşteri silinsin mi?</p>
                           <p className="mt-0.5 text-[13px] font-medium text-gray-500">
-                            Bu işlem geri alınamaz. Tüm müşteri verileri kalıcı olarak silinir.
+                            Bu kayıt silinenlere taşınır; istediğiniz zaman geri yükleyebilirsiniz.
                           </p>
                         </div>
                       </div>

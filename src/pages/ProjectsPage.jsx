@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Calendar,
   CheckCircle2,
@@ -14,8 +14,10 @@ import NumericInput from '../components/Products/NumericInput'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
 import { formatTL } from '../utils/productPricing'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
-
-const initialProjects = []
+import { loadProjects, upsertProject, saveProjects, PROJECTS_UPDATED_EVENT } from '../utils/projectsStore'
+import { softDeleteRecord } from '../utils/deletedRecordsStore'
+import { flushWorkspaceNow } from '../utils/workspaceStorage'
+import { appendActivityEntry } from '../utils/activityArchiveStore'
 
 const statusStyles = {
   Planlama: 'badge-blue',
@@ -41,9 +43,17 @@ function emptyProject() {
 }
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState(initialProjects)
+  const [projects, setProjects] = useState(loadProjects)
   const [draft, setDraft] = useState(emptyProject())
   const [toast, setToast] = useState('')
+
+  useEffect(() => {
+    function refresh() {
+      setProjects(loadProjects())
+    }
+    window.addEventListener(PROJECTS_UPDATED_EVENT, refresh)
+    return () => window.removeEventListener(PROJECTS_UPDATED_EVENT, refresh)
+  }, [])
 
   function update(field, value) {
     setDraft((current) => ({ ...current, [field]: value }))
@@ -54,16 +64,32 @@ export default function ProjectsPage() {
     window.setTimeout(() => setToast(''), 2400)
   }
 
-  function saveProject() {
+  async function saveProject() {
     if (!draft.name.trim() || !draft.customer.trim()) {
       alert('Proje adı ve müşteri zorunludur.')
       return
     }
 
-    const id = `PRJ-2026-${String(projects.length + 1).padStart(3, '0')}`
-    setProjects([{ ...draft, id }, ...projects])
+    const id = draft.id || `PRJ-${Date.now()}`
+    upsertProject({ ...draft, id, updatedAt: new Date().toISOString() })
+    setProjects(loadProjects())
     setDraft(emptyProject())
     showToast('Proje kaydedildi')
+    await flushWorkspaceNow()
+  }
+
+  function removeProject(project) {
+    if (!window.confirm(`"${project.name}" silinenlere taşınsın mı?`)) return
+    softDeleteRecord('projects', project, { entityLabel: project.name })
+    appendActivityEntry({
+      module: 'projects',
+      action: 'delete',
+      entityLabel: project.name,
+      snapshot: project,
+    })
+    saveProjects(loadProjects().filter((item) => item.id !== project.id))
+    setProjects(loadProjects())
+    flushWorkspaceNow()
   }
 
   return (
@@ -225,6 +251,7 @@ export default function ProjectsPage() {
                 <th className="table-header text-right pb-2">Bütçe</th>
                 <th className="table-header text-right pb-2">Teslim</th>
                 <th className="table-header text-center pb-2">İlerleme</th>
+                <th className="table-header text-right pb-2">İşlem</th>
               </tr>
             </thead>
             <tbody>
@@ -243,6 +270,15 @@ export default function ProjectsPage() {
                       <div className="h-full rounded-full bg-emerald-500" style={{ width: `${project.progress}%` }} />
                     </div>
                     <span className="text-[12px] text-gray-500">%{project.progress}</span>
+                  </td>
+                  <td className="table-cell text-right">
+                    <button
+                      type="button"
+                      onClick={() => removeProject(project)}
+                      className="rounded-lg border border-rose-500/30 px-2.5 py-1 text-[11px] font-black uppercase text-rose-300 hover:bg-rose-500/10"
+                    >
+                      Sil
+                    </button>
                   </td>
                 </tr>
               ))}

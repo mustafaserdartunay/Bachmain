@@ -3,6 +3,7 @@ import { Building2, ImagePlus, Save, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { defaultCompanySettings, readCompanySettings, saveCompanySettings } from '../utils/companySettings'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
+import { flushWorkspaceNow } from '../utils/workspaceStorage'
 
 function Field({ label, children }) {
   return (
@@ -40,6 +41,7 @@ export default function SettingsPage() {
   function handleSave(event) {
     event.preventDefault()
     saveCompanySettings(settings)
+    flushWorkspaceNow()
     setSaved(true)
     setTimeout(() => setSaved(false), 1800)
   }
@@ -49,7 +51,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
+    <div className="w-full space-y-5">
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
         <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Yönetici Ayarları</h1>
         <p className="mt-2 text-xs font-semibold text-gray-500">Firma bilgileri ekstre PDF ve sistem genelinde kullanılır.</p>

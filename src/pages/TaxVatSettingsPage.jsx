@@ -78,7 +78,7 @@ export default function TaxVatSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
+    <div className="w-full space-y-5">
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 text-rose-300">

@@ -1,6 +1,7 @@
 import { customers } from './mockData'
 import { getBrandShortName, getCustomerDisplay } from '../utils/customerDisplay'
 import { resolvePrimaryContact } from '../utils/customerContacts'
+import { softDeleteRecord, getDeletedRecords, restoreDeletedRecord, getDeletedRecord } from '../utils/deletedRecordsStore'
 
 const CREATED_CUSTOMERS_KEY = 'erlenbox-created-customers'
 
@@ -8,6 +9,7 @@ export const customerProfiles = []
 
 const ARCHIVED_CUSTOMERS_KEY = 'erlenbox-archived-customers'
 const DELETED_CUSTOMERS_KEY = 'erlenbox-deleted-customers'
+const DELETED_COLLECTION = 'customers'
 
 function readCreatedCustomers() {
   try {
@@ -36,17 +38,17 @@ function writeArchivedMap(map) {
   localStorage.setItem(ARCHIVED_CUSTOMERS_KEY, JSON.stringify(map))
 }
 
-function readDeletedIds() {
+/** Legacy id-list + new soft-delete map (deletedRecordsStore). */
+function readDeletedIdSet() {
+  const fromStore = new Set(getDeletedRecords(DELETED_COLLECTION).map((entry) => entry.record?.id).filter(Boolean))
   try {
     const parsed = JSON.parse(localStorage.getItem(DELETED_CUSTOMERS_KEY) || '[]')
-    return Array.isArray(parsed) ? parsed : []
+    if (Array.isArray(parsed)) parsed.forEach((id) => fromStore.add(id))
+    else if (parsed && typeof parsed === 'object') Object.keys(parsed).forEach((id) => fromStore.add(id))
   } catch {
-    return []
+    // ignore
   }
-}
-
-function writeDeletedIds(ids) {
-  localStorage.setItem(DELETED_CUSTOMERS_KEY, JSON.stringify(ids))
+  return fromStore
 }
 
 export function getAllCustomerProfiles() {
@@ -59,7 +61,7 @@ export function getAllCustomerProfiles() {
 
 export function getCustomerProfiles() {
   const archived = readArchivedMap()
-  const deleted = new Set(readDeletedIds())
+  const deleted = readDeletedIdSet()
   return getAllCustomerProfiles().filter((customer) => !archived[customer.id] && !deleted.has(customer.id))
 }
 
@@ -72,40 +74,77 @@ export function getArchivedCustomers() {
   return Object.values(archived).sort((a, b) => String(b.archivedAt).localeCompare(String(a.archivedAt)))
 }
 
+export function getDeletedCustomers() {
+  return getDeletedRecords(DELETED_COLLECTION)
+}
+
 export function archiveCustomer(customerId) {
   const customer = getAllCustomerProfiles().find((item) => item.id === customerId)
   if (!customer) return
   const map = readArchivedMap()
   map[customerId] = { customer, archivedAt: new Date().toISOString() }
   writeArchivedMap(map)
+  window.dispatchEvent(new CustomEvent('bach:customers-updated'))
 }
 
 export function restoreCustomer(customerId) {
   const map = readArchivedMap()
   delete map[customerId]
   writeArchivedMap(map)
+  window.dispatchEvent(new CustomEvent('bach:customers-updated'))
 }
 
 export function restoreDeletedCustomer(customer) {
   if (!customer?.id) return null
-  const deleted = readDeletedIds().filter((id) => id !== customer.id)
-  writeDeletedIds(deleted)
+  const fromStore = restoreDeletedRecord(DELETED_COLLECTION, customer.id)
+  const payload = fromStore || customer
+  try {
+    const legacy = JSON.parse(localStorage.getItem(DELETED_CUSTOMERS_KEY) || '[]')
+    if (Array.isArray(legacy)) {
+      localStorage.setItem(DELETED_CUSTOMERS_KEY, JSON.stringify(legacy.filter((id) => id !== customer.id)))
+    } else if (legacy && typeof legacy === 'object') {
+      delete legacy[customer.id]
+      localStorage.setItem(DELETED_CUSTOMERS_KEY, JSON.stringify(legacy))
+    }
+  } catch {
+    // ignore
+  }
   const map = readArchivedMap()
   delete map[customer.id]
   writeArchivedMap(map)
-  return saveCustomerProfile(customer)
+  return saveCustomerProfile(payload)
 }
 
 export function deleteCustomer(customerId) {
-  const created = readCreatedCustomers().filter((customer) => customer.id !== customerId)
+  const archivedEntry = readArchivedMap()[customerId]
+  const customer = getAllCustomerProfiles().find((item) => item.id === customerId)
+    || archivedEntry?.customer
+    || getDeletedRecord(DELETED_COLLECTION, customerId)?.record
+  if (!customer) return
+
+  const created = readCreatedCustomers().filter((item) => item.id !== customerId)
   writeCreatedCustomers(created)
+
   const map = readArchivedMap()
   delete map[customerId]
   writeArchivedMap(map)
-  const deleted = readDeletedIds()
-  if (!deleted.includes(customerId)) {
-    writeDeletedIds([...deleted, customerId])
+
+  softDeleteRecord(DELETED_COLLECTION, customer, {
+    entityLabel: getCustomerDisplay(customer).brandShortName || customer.company || customerId,
+  })
+
+  // Keep legacy key as id list for older filters during transition
+  try {
+    const legacy = JSON.parse(localStorage.getItem(DELETED_CUSTOMERS_KEY) || '[]')
+    const ids = Array.isArray(legacy) ? legacy : Object.keys(legacy || {})
+    if (!ids.includes(customerId)) {
+      localStorage.setItem(DELETED_CUSTOMERS_KEY, JSON.stringify([...ids, customerId]))
+    }
+  } catch {
+    localStorage.setItem(DELETED_CUSTOMERS_KEY, JSON.stringify([customerId]))
   }
+
+  window.dispatchEvent(new CustomEvent('bach:customers-updated'))
 }
 
 export function saveCustomerProfile(profile) {

@@ -11,8 +11,10 @@ import {
   loadWorkflowStages,
   PRODUCTION_ENTRY_STAGE_ID,
 } from './workflowStages'
+import { softDeleteRecord, restoreDeletedRecord } from './deletedRecordsStore'
 
 const STORAGE_KEY = 'erlenbox-production'
+const DELETED_COLLECTION = 'production'
 
 function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -221,5 +223,18 @@ export function getProductionJobById(jobId) {
 }
 
 export function deleteProductionJob(jobId) {
-  saveProductionJobs(loadProductionJobs().filter((job) => job.id !== jobId))
+  const job = loadProductionJobs().find((item) => item.id === jobId)
+  if (job) {
+    softDeleteRecord(DELETED_COLLECTION, job, { entityLabel: job.id || 'Üretim' })
+  }
+  saveProductionJobs(loadProductionJobs().filter((item) => item.id !== jobId))
+}
+
+export function restoreDeletedProductionJob(jobId) {
+  const record = restoreDeletedRecord(DELETED_COLLECTION, jobId)
+  if (!record) return null
+  const jobs = loadProductionJobs()
+  if (jobs.some((item) => item.id === record.id)) return record
+  saveProductionJobs([normalizeProductionJob(record), ...jobs])
+  return record
 }

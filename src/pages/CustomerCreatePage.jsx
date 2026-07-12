@@ -25,6 +25,7 @@ import {
 } from '../components/Common/FormSectionPanel'
 import { APP_FILTER_LABEL_CLASS } from '../utils/dashboardDesign'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
+import { flushWorkspaceNow } from '../utils/workspaceStorage'
 import { getTreasuryAccounts, getTreasuryMovements, saveTreasuryMovements } from '../utils/treasuryStore'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
@@ -271,6 +272,7 @@ export default function CustomerCreatePage() {
     setOpeningEnabled(false)
     setMeta(emptyMeta(defaultPartyType))
     showSavedMessage()
+    flushWorkspaceNow()
     setTimeout(() => navigate(-1), 900)
   }
 
@@ -291,6 +293,7 @@ export default function CustomerCreatePage() {
     setMeta(emptyMeta(defaultPartyType))
     setActionMenuOpen(false)
     showSavedMessage()
+    flushWorkspaceNow()
   }
 
   function confirmTwoStepDelete(label, onConfirm, key) {
