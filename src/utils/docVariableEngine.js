@@ -2,6 +2,7 @@
  * Safe mustache-like variable resolver for Document Center.
  * No eval — whitelist path lookup only.
  */
+import { blocksToHtml, migrateTemplateToVisual } from './docCanvasEngine'
 
 function getPath(obj, path) {
   if (!path) return undefined
@@ -109,6 +110,30 @@ export function buildDocumentContext({
 
 export function renderTemplateHtml(template, context) {
   const errors = []
+
+  if (template?.designMode === 'visual' || (Array.isArray(template?.blocks) && template.blocks.length > 0)) {
+    const visual = migrateTemplateToVisual(template)
+    const canvasHtml = blocksToHtml(visual.blocks || [], {
+      pageSize: visual.pageSize || 'A4',
+      size: visual.pageSize || 'A4',
+    })
+    const resolved = resolveTemplateString(canvasHtml, context, errors)
+    const html = `<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <title>${template.name || 'Belge'}</title>
+  <style>
+    @page { size: ${template.pageSize || 'A4'} ${template.orientation || 'portrait'}; margin: 0; }
+    body { margin: 0; font-family: Inter, Arial, sans-serif; color: #111; background: #fff; }
+    @media print { .no-print { display: none !important; } }
+  </style>
+</head>
+<body>${resolved}</body>
+</html>`
+    return { html, errors: [...new Set(errors)] }
+  }
+
   const header = resolveTemplateString(template.headerHtml, context, errors)
   const body = resolveTemplateString(template.bodyHtml, context, errors)
   const footer = resolveTemplateString(template.footerHtml, context, errors)

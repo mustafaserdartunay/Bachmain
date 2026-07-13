@@ -89,6 +89,24 @@ import DocTemplateDesignerPage from './pages/documentCenter/DocTemplateDesignerP
 import DocLabelDesignerPage from './pages/documentCenter/DocLabelDesignerPage'
 import DocPrintPage from './pages/documentCenter/DocPrintPage'
 import DocPrintJobsPage from './pages/documentCenter/DocPrintJobsPage'
+import {
+  DocArchivePage,
+  DocAssetsPage,
+  DocBarcodeDesignerPage,
+  DocComponentsPage,
+  DocEmailTemplatesPage,
+  DocFontsPage,
+  DocMarketplacePage,
+  DocPdfDesignerPage,
+  DocPermissionsPage,
+  DocPrintProfilesPage,
+  DocQrDesignerPage,
+  DocThemesPage,
+  DocVariablesPage,
+  DocVersionsPage,
+  DocWhatsAppTemplatesPage,
+  DocWorkflowPage,
+} from './pages/documentCenter/DocCenterModules'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -170,6 +188,22 @@ export default function App() {
                 <Route path="/belge-merkezi/sablonlar" element={<DocTemplatesPage />} />
                 <Route path="/belge-merkezi/tasarimci" element={<DocTemplateDesignerPage />} />
                 <Route path="/belge-merkezi/etiket" element={<DocLabelDesignerPage />} />
+                <Route path="/belge-merkezi/barkod" element={<DocBarcodeDesignerPage />} />
+                <Route path="/belge-merkezi/qr" element={<DocQrDesignerPage />} />
+                <Route path="/belge-merkezi/pdf" element={<DocPdfDesignerPage />} />
+                <Route path="/belge-merkezi/eposta" element={<DocEmailTemplatesPage />} />
+                <Route path="/belge-merkezi/whatsapp" element={<DocWhatsAppTemplatesPage />} />
+                <Route path="/belge-merkezi/yazici-profilleri" element={<DocPrintProfilesPage />} />
+                <Route path="/belge-merkezi/degiskenler" element={<DocVariablesPage />} />
+                <Route path="/belge-merkezi/bilesenler" element={<DocComponentsPage />} />
+                <Route path="/belge-merkezi/assets" element={<DocAssetsPage />} />
+                <Route path="/belge-merkezi/fonts" element={<DocFontsPage />} />
+                <Route path="/belge-merkezi/temalar" element={<DocThemesPage />} />
+                <Route path="/belge-merkezi/workflow" element={<DocWorkflowPage />} />
+                <Route path="/belge-merkezi/izinler" element={<DocPermissionsPage />} />
+                <Route path="/belge-merkezi/marketplace" element={<DocMarketplacePage />} />
+                <Route path="/belge-merkezi/versiyonlar" element={<DocVersionsPage />} />
+                <Route path="/belge-merkezi/arsiv" element={<DocArchivePage />} />
                 <Route path="/belge-merkezi/yazdir" element={<DocPrintPage />} />
                 <Route path="/belge-merkezi/kayitlar" element={<DocPrintJobsPage />} />
                 <Route path="/depo" element={<DepoPage />} />

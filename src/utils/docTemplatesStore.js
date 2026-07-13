@@ -23,10 +23,106 @@ export function emptyDocTemplate(partial = {}) {
       '<p style="text-align:right"><strong>Toplam:</strong> {{belge.toplam}}</p>',
     ].join('\n'),
     footerHtml: '<p style="font-size:11px;color:#666">{{sirket.unvan}} · {{sirket.telefon}}</p>',
+    // Visual designer foundation (HTML fields above are preserved)
+    designMode: 'visual',
+    blocks: [],
+    status: 'draft', // draft | published | archived
+    version: 1,
+    versions: [],
+    zoom: 1,
+    themeId: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ...partial,
   }
+}
+
+function snapshotVersion(template) {
+  return {
+    version: template.version || 1,
+    savedAt: new Date().toISOString(),
+    name: template.name,
+    status: template.status || 'draft',
+    designMode: template.designMode || 'visual',
+    pageSize: template.pageSize,
+    orientation: template.orientation,
+    headerHtml: template.headerHtml,
+    bodyHtml: template.bodyHtml,
+    footerHtml: template.footerHtml,
+    blocks: Array.isArray(template.blocks) ? structuredClone(template.blocks) : [],
+    themeId: template.themeId ?? null,
+    zoom: template.zoom ?? 1,
+  }
+}
+
+/** Deep-ish clone of a template as a new draft. */
+export function duplicateDocTemplate(template, overrides = {}) {
+  if (!template) return null
+  const copy = emptyDocTemplate({
+    ...template,
+    id: `tpl-${Date.now()}`,
+    name: `${template.name || 'Şablon'} (kopya)`,
+    status: 'draft',
+    version: 1,
+    versions: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    blocks: Array.isArray(template.blocks) ? structuredClone(template.blocks) : [],
+    ...overrides,
+  })
+  return saveDocTemplate(copy)
+}
+
+/** Mark template published and bump version (keeps previous snapshot). */
+export function publishDocTemplate(templateId) {
+  const current = getDocTemplateById(templateId)
+  if (!current) return null
+  const versions = [...(current.versions || []), snapshotVersion(current)]
+  return saveDocTemplate({
+    ...current,
+    status: 'published',
+    version: (current.version || 1) + 1,
+    versions,
+  })
+}
+
+/** Soft-archive without deleting (status only). */
+export function archiveDocTemplate(templateId) {
+  const current = getDocTemplateById(templateId)
+  if (!current) return null
+  return saveDocTemplate({
+    ...current,
+    status: 'archived',
+  })
+}
+
+/**
+ * Restore a prior version snapshot onto the live template.
+ * Pushes the current state into `versions` before overwrite.
+ */
+export function restoreDocTemplateVersion(templateId, versionNumber) {
+  const current = getDocTemplateById(templateId)
+  if (!current) return null
+  const snap = (current.versions || []).find((item) => item.version === versionNumber)
+  if (!snap) return null
+
+  const versions = [...(current.versions || []), snapshotVersion(current)]
+  return saveDocTemplate({
+    ...current,
+    name: snap.name ?? current.name,
+    status: 'draft',
+    designMode: snap.designMode || current.designMode || 'visual',
+    pageSize: snap.pageSize || current.pageSize,
+    orientation: snap.orientation || current.orientation,
+    headerHtml: snap.headerHtml ?? current.headerHtml,
+    bodyHtml: snap.bodyHtml ?? current.bodyHtml,
+    footerHtml: snap.footerHtml ?? current.footerHtml,
+    blocks: Array.isArray(snap.blocks) ? structuredClone(snap.blocks) : [],
+    themeId: snap.themeId ?? current.themeId ?? null,
+    zoom: snap.zoom ?? current.zoom ?? 1,
+    version: (current.version || 1) + 1,
+    versions,
+  })
 }
 
 function readAll() {
