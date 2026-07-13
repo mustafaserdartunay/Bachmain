@@ -9,6 +9,12 @@ export const documentCenterSubMenus = [
   { label: 'Yazdırma Kayıtları', path: `${DOCUMENT_CENTER_BASE}/kayitlar`, icon: 'history' },
 ]
 
+/** Belge Merkezi ana sayfası dışındaki alt menüler */
+export const documentCenterChildMenus = documentCenterSubMenus.filter(
+  (item) => item.path !== DOCUMENT_CENTER_BASE,
+)
+
 export function isDocumentCenterRoute(pathname) {
   return pathname === DOCUMENT_CENTER_BASE || pathname.startsWith(`${DOCUMENT_CENTER_BASE}/`)
 }
+

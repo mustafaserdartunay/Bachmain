@@ -52,7 +52,11 @@ import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/sto
 import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '../../data/fieldSalesMenu'
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
-import { isDocumentCenterRoute } from '../../data/documentCenterMenu'
+import {
+  documentCenterChildMenus,
+  isDocumentCenterRoute,
+  DOCUMENT_CENTER_BASE,
+} from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
 
@@ -155,6 +159,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const [hrOpen, setHrOpen] = useState(isHrRouteActive)
   const [processOpen, setProcessOpen] = useState(isProcessRouteActive)
   const [settingsOpen, setSettingsOpen] = useState(isSettingsRoute)
+  const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
 
   useEffect(() => {
@@ -188,6 +193,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   useEffect(() => {
     if (isSettingsRoute) setSettingsOpen(true)
   }, [isSettingsRoute])
+
+  useEffect(() => {
+    if (isDocumentCenterRouteActive) setDocumentCenterOpen(true)
+  }, [isDocumentCenterRouteActive])
 
   useEffect(() => {
     function syncMessageBadge() {
@@ -705,7 +714,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 <NavLink
                   key={sub.path}
                   to={sub.path}
-                  end={sub.path === '/ayarlar' || sub.path === '/belge-merkezi'}
+                  end={sub.path === '/ayarlar'}
                   onClick={handleNavigate}
                   className={({ isActive }) =>
                     `${subMenuButtonBase} ${
@@ -718,6 +727,53 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   {sub.label}
                 </NavLink>
               ))}
+
+              <div>
+                <div className="flex items-center gap-0.5">
+                  <NavLink
+                    to={DOCUMENT_CENTER_BASE}
+                    end
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex-1 ${
+                        isActive || isDocumentCenterRouteActive
+                          ? 'sidebar-menu-active font-medium'
+                          : ''
+                      }`
+                    }
+                  >
+                    Belge Merkezi
+                  </NavLink>
+                  <button
+                    type="button"
+                    onClick={() => setDocumentCenterOpen((open) => !open)}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white/20"
+                    aria-label={documentCenterOpen ? 'Belge Merkezi menüsünü kapat' : 'Belge Merkezi menüsünü aç'}
+                  >
+                    {documentCenterOpen
+                      ? <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                      : <ChevronRight className="h-3.5 w-3.5 opacity-60" />}
+                  </button>
+                </div>
+                {documentCenterOpen && (
+                  <div className="mt-0.5 ml-2 space-y-0.5 border-l border-dark-500/40 pl-2">
+                    {documentCenterChildMenus.map((child) => (
+                      <NavLink
+                        key={child.path}
+                        to={child.path}
+                        onClick={handleNavigate}
+                        className={({ isActive }) =>
+                          `${subMenuButtonBase} ${
+                            isActive ? 'sidebar-menu-active font-medium' : ''
+                          }`
+                        }
+                      >
+                        {child.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
