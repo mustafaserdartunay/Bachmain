@@ -4,6 +4,7 @@ export const MESSAGE_CENTER_CHANNEL_DEFINITIONS = [
     label: 'WhatsApp',
     api: 'WhatsApp Business Cloud API',
     fields: [
+      { key: 'displayPhone', label: 'WhatsApp Numarası', placeholder: '+90…' },
       { key: 'phoneNumberId', label: 'Phone Number ID', placeholder: 'Meta Phone Number ID' },
       { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'EAA...' },
       { key: 'webhookVerifyToken', label: 'Webhook Verify Token', placeholder: 'Doğrulama anahtarı' },
@@ -91,6 +92,12 @@ export function buildDefaultMessageCenterChannelConfig() {
       {
         connected: false,
         ...Object.fromEntries(channel.fields.map((field) => [field.key, ''])),
+        ...(channel.id === 'whatsapp'
+          ? {
+              displayPhone: '+905449572530',
+              webhookVerifyToken: 'bach-wa-5449572530',
+            }
+          : {}),
       },
     ]),
   )

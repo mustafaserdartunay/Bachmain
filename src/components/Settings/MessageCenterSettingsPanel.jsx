@@ -100,7 +100,8 @@ export default function MessageCenterSettingsPanel() {
               ...local,
               connected: data.config.connected ?? local.connected,
               phoneNumberId: data.config.phoneNumberId || local.phoneNumberId || '',
-              webhookVerifyToken: data.config.webhookVerifyToken || local.webhookVerifyToken || '',
+              webhookVerifyToken: data.config.webhookVerifyToken || local.webhookVerifyToken || 'bach-wa-5449572530',
+              displayPhone: data.config.displayPhone || local.displayPhone || '+905449572530',
               // Keep local token input; if empty and server has token, leave blank (masked on server)
               accessToken: local.accessToken || '',
             }
@@ -137,7 +138,8 @@ export default function MessageCenterSettingsPanel() {
           connected: Boolean(wa.connected),
           phoneNumberId: wa.phoneNumberId,
           accessToken: wa.accessToken,
-          webhookVerifyToken: wa.webhookVerifyToken,
+          webhookVerifyToken: wa.webhookVerifyToken || 'bach-wa-5449572530',
+          displayPhone: wa.displayPhone || '+905449572530',
         })
         setServerMeta(result.config)
         if (result.webhookUrl) setWebhookUrl(result.webhookUrl)
@@ -248,9 +250,9 @@ export default function MessageCenterSettingsPanel() {
               <div className="rounded-xl bg-[rgba(140,145,165,0.08)] px-3 py-2 text-[12px] font-semibold text-[var(--muted)]">
                 <p className="mb-1 font-extrabold text-[var(--ink)]">Kurulum</p>
                 <ol className="list-decimal space-y-1 pl-4">
-                  <li>Meta for Developers → WhatsApp → API Setup’tan Phone Number ID ve Access Token alın.</li>
-                  <li>Aşağıdaki Webhook URL’yi Meta’da Callback URL olarak yapıştırın.</li>
-                  <li>Verify Token alanına burada yazdığınız aynı anahtarı girin.</li>
+                  <li>Meta → WhatsApp → API Setup sayfasından <strong>Phone number ID</strong> değerini kopyalayıp forma yapıştırın.</li>
+                  <li><strong>Temporary access token</strong> (EAA…) değerini Access Token alanına yapıştırın.</li>
+                  <li>Webhook URL’yi Meta’da Callback URL yapın; Verify Token: <code className="font-mono">bach-wa-5449572530</code></li>
                   <li>Webhook alanı: <code className="font-mono">messages</code> abone edin.</li>
                   <li>Kaydet → Bağlantıyı Test Et.</li>
                 </ol>
