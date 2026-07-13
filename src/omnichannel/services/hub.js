@@ -1,10 +1,20 @@
 import { appendMessage, appendWebhookLog, createId, markConversationRead, readConversations, upsertConversation } from '../store'
 import { analyzeMessage } from '../ai/assistant'
+import { sendWhatsAppServerMessage } from '../../utils/whatsappChannelApi'
 
 const channelSenders = {
   whatsapp: async (payload) => {
-    appendWebhookLog({ channel: 'whatsapp', event: 'message.sent', to: payload.to })
-    return { success: true, messageId: createId('WA') }
+    const result = await sendWhatsAppServerMessage({
+      to: payload.to,
+      text: payload.body || payload.text || '',
+    })
+    appendWebhookLog({
+      channel: 'whatsapp',
+      event: 'message.sent',
+      to: payload.to,
+      messageId: result.messageId,
+    })
+    return { success: true, messageId: result.messageId || createId('WA') }
   },
   instagram: async (payload) => {
     appendWebhookLog({ channel: 'instagram', event: 'message.sent', to: payload.to })

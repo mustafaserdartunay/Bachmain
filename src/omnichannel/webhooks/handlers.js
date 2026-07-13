@@ -1,4 +1,4 @@
-import { appendMessage, appendWebhookLog, createId, upsertConversation } from '../store'
+import { appendMessage, appendWebhookLog, createId, upsertConversation, readConversations } from '../store'
 import { matchCustomer } from '../customerMatcher'
 import { createLeadFromContact } from '../leadService'
 import { getDepartments } from '../store'
@@ -13,30 +13,33 @@ function processInbound({ channel, externalId, contactName, phone, email, handle
 
   const customer = matchCustomer({ phone, email, name: contactName })
   const department = routeDepartment(channel)
-  const conversationId = createId('CONV')
+  const existing = readConversations().find(
+    (item) => item.channel === channel && String(item.externalId) === String(externalId),
+  )
+  const conversationId = existing?.id || createId('CONV')
 
   const conversation = {
     id: conversationId,
     channel,
     externalId,
-    contactName: contactName || 'Bilinmeyen',
-    contactPhone: phone || '',
-    contactEmail: email || '',
-    contactHandle: handle || '',
-    customerId: customer?.id || null,
-    leadId: null,
-    assignedUserId: department.defaultAssignee,
-    departmentId: department.id,
+    contactName: contactName || existing?.contactName || 'Bilinmeyen',
+    contactPhone: phone || existing?.contactPhone || '',
+    contactEmail: email || existing?.contactEmail || '',
+    contactHandle: handle || existing?.contactHandle || '',
+    customerId: customer?.id || existing?.customerId || null,
+    leadId: existing?.leadId || null,
+    assignedUserId: existing?.assignedUserId || department.defaultAssignee,
+    departmentId: existing?.departmentId || department.id,
     lastMessageAt: new Date().toISOString(),
     lastMessagePreview: body?.slice(0, 80) || `[${type}]`,
-    unreadCount: 1,
+    unreadCount: (existing?.unreadCount || 0) + 1,
     sentiment: analyzeMessage(body).sentiment,
     status: 'open',
   }
 
   upsertConversation(conversation)
 
-  if (!customer) {
+  if (!customer && !existing) {
     createLeadFromContact({
       channel,
       contactName,

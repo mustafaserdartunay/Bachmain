@@ -7,6 +7,7 @@ import { requireStaffOrReject, staffAuthEnabled } from '../server/staffAuth.mjs'
 import { handlePaymentsApi } from '../server/payments.mjs'
 import { handleTenantApi } from '../server/tenantApi.mjs'
 import { handleLeadsApi } from '../server/leads.mjs'
+import { handleWhatsAppApi } from '../server/whatsappApi.mjs'
 import { hasDatabase } from '../server/db.mjs'
 import {
   buildCustomerRows,
@@ -48,6 +49,7 @@ export default async function handler(req, res) {
     if (await handleAuthApi(req, res, path, body)) return
     if (await handleLeadsApi(req, res, path, body)) return
     if (await handlePaymentsApi(req, res, path, body)) return
+    if (await handleWhatsAppApi(req, res, path, body)) return
     if (await handleTenantApi(req, res, path, body)) return
 
     if (method === 'GET' && (path === '' || path === 'health')) {

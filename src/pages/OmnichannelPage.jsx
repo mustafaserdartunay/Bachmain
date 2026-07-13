@@ -19,12 +19,14 @@ import { readAiSettings, saveAiSettings } from '../omnichannel/ai/settings'
 import {
   assignConversation,
   getConversationMessages,
+  mergeWhatsAppInbox,
   readChannelConfig,
   readConversations,
   readLeads,
   saveChannelConfig,
 } from '../omnichannel/store'
 import { sendChannelMessage, openConversation } from '../omnichannel/services/hub'
+import { pullWhatsAppInbox } from '../utils/whatsappChannelApi'
 import { getCustomerProfiles } from '../data/customerProfiles'
 import { CHANNELS } from '../omnichannel/schema'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
@@ -74,6 +76,26 @@ export default function OmnichannelPage() {
       window.removeEventListener('bach:omni-updated', refresh)
       window.removeEventListener('bach:omni-ai-learning-updated', refresh)
       window.removeEventListener('bach:omni-ai-settings-updated', () => setAiSettings(readAiSettings()))
+    }
+  }, [refresh])
+
+  useEffect(() => {
+    let cancelled = false
+    async function syncInbox() {
+      try {
+        const data = await pullWhatsAppInbox()
+        if (cancelled || !data?.inbox) return
+        mergeWhatsAppInbox(data.inbox)
+        refresh()
+      } catch {
+        // no session / not configured
+      }
+    }
+    syncInbox()
+    const timer = window.setInterval(syncInbox, 20000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
     }
   }, [refresh])
 

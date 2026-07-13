@@ -82,8 +82,12 @@ export function upsertConversation(conversation) {
   return conversation
 }
 
-export function appendMessage(message) {
-  const messages = [...readMessages(), message]
+export function appendMessage(message, { bumpUnread = true } = {}) {
+  const existing = readMessages()
+  if (message.id && existing.some((item) => item.id === message.id)) {
+    return existing.find((item) => item.id === message.id)
+  }
+  const messages = [...existing, message]
   writeMessages(messages)
 
   const conversations = readConversations()
@@ -93,13 +97,59 @@ export function appendMessage(message) {
       ...conversations[index],
       lastMessageAt: message.at,
       lastMessagePreview: message.type === 'text' ? message.body : `[${message.type}]`,
-      unreadCount: message.direction === 'in'
+      unreadCount: bumpUnread && message.direction === 'in'
         ? (conversations[index].unreadCount || 0) + 1
         : conversations[index].unreadCount || 0,
     }
     writeConversations(conversations)
   }
   return message
+}
+
+/** Merge server-side WhatsApp inbox (webhook) into local omnichannel store. */
+export function mergeWhatsAppInbox(inbox = {}) {
+  const remoteConversations = Array.isArray(inbox.conversations) ? inbox.conversations : []
+  const remoteMessages = Array.isArray(inbox.messages) ? inbox.messages : []
+  if (!remoteConversations.length && !remoteMessages.length) return { conversations: 0, messages: 0 }
+
+  let conversationCount = 0
+  let messageCount = 0
+  const localConversations = readConversations()
+  const idByExternal = new Map(
+    localConversations
+      .filter((item) => item.channel === 'whatsapp' && item.externalId)
+      .map((item) => [String(item.externalId), item.id]),
+  )
+
+  remoteConversations.forEach((conversation) => {
+    const existingId = conversation.id
+      && localConversations.some((item) => item.id === conversation.id)
+      ? conversation.id
+      : idByExternal.get(String(conversation.externalId))
+    const existing = existingId
+      ? localConversations.find((item) => item.id === existingId)
+      : null
+    const id = existing?.id || conversation.id
+    upsertConversation({
+      ...(existing || {}),
+      ...conversation,
+      id,
+      unreadCount: Math.max(existing?.unreadCount || 0, conversation.unreadCount || 0),
+    })
+    idByExternal.set(String(conversation.externalId), id)
+    conversationCount += 1
+  })
+
+  remoteMessages.forEach((message) => {
+    const mappedId = idByExternal.get(
+      String(remoteConversations.find((item) => item.id === message.conversationId)?.externalId || ''),
+    ) || message.conversationId
+    const before = readMessages().length
+    appendMessage({ ...message, conversationId: mappedId }, { bumpUnread: false })
+    if (readMessages().length > before) messageCount += 1
+  })
+
+  return { conversations: conversationCount, messages: messageCount }
 }
 
 export function markConversationRead(conversationId) {
