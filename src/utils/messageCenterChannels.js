@@ -94,8 +94,8 @@ export function buildDefaultMessageCenterChannelConfig() {
         ...Object.fromEntries(channel.fields.map((field) => [field.key, ''])),
         ...(channel.id === 'whatsapp'
           ? {
-              displayPhone: '+905449572530',
-              webhookVerifyToken: 'bach-wa-5449572530',
+              displayPhone: '+905301285610',
+              webhookVerifyToken: 'bach-wa-5301285610',
             }
           : {}),
       },
