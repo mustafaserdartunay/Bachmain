@@ -41,7 +41,6 @@ import {
   UserX,
   CheckSquare,
   Smartphone,
-  FileStack,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -53,7 +52,7 @@ import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/sto
 import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '../../data/fieldSalesMenu'
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
-import { documentCenterSubMenus, isDocumentCenterRoute, DOCUMENT_CENTER_BASE } from '../../data/documentCenterMenu'
+import { isDocumentCenterRoute } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
 
@@ -147,7 +146,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isProcessRouteActive = isProcessRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
   const isCrmRouteActive = location.pathname === '/crm' || location.pathname.startsWith('/crm/')
-  const isSettingsRoute = location.pathname.startsWith('/ayarlar')
+  const isSettingsRoute = location.pathname.startsWith('/ayarlar') || isDocumentCenterRouteActive
   const [customerOpen, setCustomerOpen] = useState(isCustomerRouteActive)
   const [expensesOpen, setExpensesOpen] = useState(isExpensesRouteActive)
   const [treasuryOpen, setTreasuryOpen] = useState(isTreasuryRouteActive)
@@ -155,7 +154,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const [fieldSalesOpen, setFieldSalesOpen] = useState(isFieldSalesRouteActive)
   const [hrOpen, setHrOpen] = useState(isHrRouteActive)
   const [processOpen, setProcessOpen] = useState(isProcessRouteActive)
-  const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
   const [settingsOpen, setSettingsOpen] = useState(isSettingsRoute)
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
 
@@ -186,10 +184,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   useEffect(() => {
     if (isProcessRouteActive) setProcessOpen(true)
   }, [isProcessRouteActive])
-
-  useEffect(() => {
-    if (isDocumentCenterRouteActive) setDocumentCenterOpen(true)
-  }, [isDocumentCenterRouteActive])
 
   useEffect(() => {
     if (isSettingsRoute) setSettingsOpen(true)
@@ -522,50 +516,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {/* Belge Merkezi */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setDocumentCenterOpen((open) => !open)}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isDocumentCenterRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <FileStack className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Belge Merkezi</span>
-                {documentCenterOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
-              </>
-            )}
-          </button>
-
-          {documentCenterOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
-              {documentCenterSubMenus.map((sub) => (
-                <NavLink
-                  key={sub.path}
-                  to={sub.path}
-                  end={sub.path === DOCUMENT_CENTER_BASE}
-                  onClick={handleNavigate}
-                  className={({ isActive }) =>
-                    `${subMenuButtonBase} ${
-                      isActive ? 'sidebar-menu-active font-medium' : ''
-                    }`
-                  }
-                >
-                  {sub.label}
-                </NavLink>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* 7. CRM */}
         <NavLink
           to="/crm"
@@ -755,7 +705,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 <NavLink
                   key={sub.path}
                   to={sub.path}
-                  end={sub.path === '/ayarlar'}
+                  end={sub.path === '/ayarlar' || sub.path === '/belge-merkezi'}
                   onClick={handleNavigate}
                   className={({ isActive }) =>
                     `${subMenuButtonBase} ${
