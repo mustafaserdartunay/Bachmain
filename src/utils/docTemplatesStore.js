@@ -10,7 +10,7 @@ export function emptyDocTemplate(partial = {}) {
   return {
     id: `tpl-${Date.now()}`,
     name: 'Yeni Şablon',
-    docType: 'quote', // quote | order | production | label | generic
+    docType: 'quote', // quote | order | invoice | waybill | production | label | pos | generic
     pageSize: 'A4',
     orientation: 'portrait',
     headerHtml: '<h1>{{sirket.unvan}}</h1><p>{{sirket.adres}}</p>',

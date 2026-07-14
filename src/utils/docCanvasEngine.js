@@ -5,31 +5,45 @@
 
 import { getElementDef } from '../data/docDesignerElements'
 
+/** ~96dpi: 1mm ≈ 3.78px */
+function mm(w, h, id, label) {
+  const k = 3.7795275591
+  return {
+    id,
+    label,
+    widthMm: w,
+    heightMm: h,
+    widthPx: Math.round(w * k),
+    heightPx: Math.round(h * k),
+  }
+}
+
 export const PAGE_PRESETS = {
-  A4: {
-    id: 'A4',
-    label: 'A4',
-    widthPx: 794,
-    heightPx: 1123,
-    widthMm: 210,
-    heightMm: 297,
-  },
-  A5: {
-    id: 'A5',
-    label: 'A5',
-    widthPx: 559,
-    heightPx: 794,
-    widthMm: 148,
-    heightMm: 210,
-  },
-  Letter: {
-    id: 'Letter',
-    label: 'Letter',
-    widthPx: 816,
-    heightPx: 1056,
-    widthMm: 215.9,
-    heightMm: 279.4,
-  },
+  A4: mm(210, 297, 'A4', 'A4 (210 × 297 mm)'),
+  A5: mm(148, 210, 'A5', 'A5 (148 × 210 mm)'),
+  Letter: mm(215.9, 279.4, 'Letter', 'Letter (216 × 279 mm)'),
+  Thermal58: mm(58, 200, 'Thermal58', 'Termal 58 mm'),
+  Thermal80: mm(80, 297, 'Thermal80', 'Termal 80 mm'),
+  LabelQR: mm(50, 50, 'LabelQR', 'QR Etiketi'),
+  LabelCargo: mm(100, 150, 'LabelCargo', 'Kargo Etiketi'),
+  LabelPallet: mm(150, 100, 'LabelPallet', 'Palet Etiketi'),
+  LabelBox: mm(100, 70, 'LabelBox', 'Koli Etiketi'),
+}
+
+export const PAGE_PRESET_LIST = Object.values(PAGE_PRESETS)
+
+export function resolveOrientedPreset(size, orientation = 'portrait') {
+  const base = PAGE_PRESETS[size] || PAGE_PRESETS.A4
+  if (orientation === 'landscape' && base.widthPx < base.heightPx) {
+    return {
+      ...base,
+      widthPx: base.heightPx,
+      heightPx: base.widthPx,
+      widthMm: base.heightMm,
+      heightMm: base.widthMm,
+    }
+  }
+  return base
 }
 
 const DEFAULT_PAGE = PAGE_PRESETS.A4
@@ -47,14 +61,20 @@ function escapeHtml(value) {
 }
 
 function resolvePage(page = {}) {
-  const preset = PAGE_PRESETS[page.size || page.pageSize] || DEFAULT_PAGE
+  const orient = page.orientation || 'portrait'
+  const preset = resolveOrientedPreset(page.size || page.pageSize, orient)
   return {
     widthPx: page.widthPx || preset.widthPx,
     heightPx: page.heightPx || preset.heightPx,
     widthMm: page.widthMm || preset.widthMm,
     heightMm: page.heightMm || preset.heightMm,
     size: preset.id,
+    orientation: orient,
     unit: page.unit || 'px',
+    marginTop: page.marginTop ?? 15,
+    marginRight: page.marginRight ?? 15,
+    marginBottom: page.marginBottom ?? 15,
+    marginLeft: page.marginLeft ?? 15,
   }
 }
 
@@ -78,9 +98,11 @@ export function createBlock(type, partial = {}) {
     w: Number.isFinite(partial.w) ? partial.w : size.w,
     h: Number.isFinite(partial.h) ? partial.h : size.h,
     rotation: partial.rotation || 0,
+    opacity: Number.isFinite(partial.opacity) ? partial.opacity : 1,
     zIndex: partial.zIndex ?? 1,
     locked: Boolean(partial.locked),
     visible: partial.visible !== false,
+    groupId: partial.groupId || null,
     props,
   }
 }
@@ -94,6 +116,7 @@ function blockBoxStyle(block) {
     `height:${block.h}px`,
     `z-index:${block.zIndex ?? 1}`,
     block.rotation ? `transform:rotate(${block.rotation}deg)` : '',
+    Number.isFinite(block.opacity) && block.opacity !== 1 ? `opacity:${block.opacity}` : '',
     'box-sizing:border-box',
     'overflow:hidden',
   ]
@@ -394,6 +417,6 @@ function stripTagsKeepNewlines(html) {
     .trim()
 }
 
-export function getPagePreset(size) {
-  return PAGE_PRESETS[size] || PAGE_PRESETS.A4
+export function getPagePreset(size, orientation = 'portrait') {
+  return resolveOrientedPreset(size, orientation)
 }

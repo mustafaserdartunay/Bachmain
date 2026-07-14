@@ -132,9 +132,6 @@ export function DocEmailTemplatesPage() {
 export function DocWhatsAppTemplatesPage() {
   return <DocCenterModulePage moduleKey="whatsapp" />
 }
-export function DocPrintProfilesPage() {
-  return <DocCenterModulePage moduleKey="yazici-profilleri" />
-}
 export function DocVariablesPage() {
   return <DocCenterModulePage moduleKey="degiskenler" />
 }

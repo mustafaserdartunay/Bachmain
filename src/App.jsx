@@ -93,6 +93,7 @@ import DocTemplateDesignerPage from './pages/documentCenter/DocTemplateDesignerP
 import DocLabelDesignerPage from './pages/documentCenter/DocLabelDesignerPage'
 import DocPrintPage from './pages/documentCenter/DocPrintPage'
 import DocPrintJobsPage from './pages/documentCenter/DocPrintJobsPage'
+import DocPrintProfilesPage from './pages/documentCenter/DocPrintProfilesPage'
 import {
   DocArchivePage,
   DocAssetsPage,
@@ -103,7 +104,6 @@ import {
   DocMarketplacePage,
   DocPdfDesignerPage,
   DocPermissionsPage,
-  DocPrintProfilesPage,
   DocQrDesignerPage,
   DocThemesPage,
   DocVariablesPage,

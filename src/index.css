@@ -3638,3 +3638,790 @@ html.night .crm-pricing-cta.is-ghost {
 }
 
 
+
+/* —— Bach Document Designer (fullscreen) —— */
+.bach-doc-designer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse 70% 50% at 8% 0%, rgba(37, 99, 235, 0.12), transparent 55%),
+    var(--color-surface, #f4f7fb);
+  color: var(--ink, #0f172a);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.bach-doc-designer-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
+}
+
+.bach-doc-designer-crumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: #64748b;
+}
+
+.bach-doc-autosave {
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.bach-doc-name-input {
+  flex: 1;
+  min-width: 12rem;
+  max-width: 28rem;
+  height: 2.35rem;
+  padding: 0 0.85rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.bach-doc-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-left: auto;
+}
+
+.bach-doc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.2rem;
+  padding: 0 0.85rem;
+  border-radius: 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 750;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.bach-doc-btn.ghost {
+  background: #fff;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #334155;
+}
+
+.bach-doc-icon-btn {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.bach-doc-designer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.bach-doc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.65rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.bach-doc-field select,
+.bach-doc-field input {
+  height: 2rem;
+  min-width: 7rem;
+  padding: 0 0.55rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.bach-doc-field.compact input {
+  width: 3.5rem;
+  min-width: 0;
+}
+
+.bach-doc-orient {
+  display: inline-flex;
+  padding: 0.15rem;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.05);
+  gap: 0.15rem;
+}
+
+.bach-doc-orient button {
+  height: 1.85rem;
+  padding: 0 0.7rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.bach-doc-orient button.is-active {
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
+.bach-doc-tool {
+  display: inline-flex;
+  height: 2rem;
+  min-width: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0 0.5rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bach-doc-tool.is-active,
+.bach-doc-tool:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.bach-doc-tool:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.bach-doc-sep {
+  width: 1px;
+  height: 1.5rem;
+  background: rgba(15, 23, 42, 0.1);
+  margin: 0 0.15rem;
+}
+
+.bach-doc-zoom {
+  min-width: 2.6rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.bach-doc-designer-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 300px;
+}
+
+.bach-doc-left,
+.bach-doc-right {
+  min-height: 0;
+  overflow: auto;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.bach-doc-left {
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 0.85rem 0.75rem;
+}
+
+.bach-doc-right {
+  border-left: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.bach-doc-left h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.bach-doc-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.bach-doc-chip-row button {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.bach-doc-chip-row button.is-active {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+}
+
+.bach-doc-section-label {
+  margin: 0.85rem 0 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.bach-doc-ready-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bach-doc-ready-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bach-doc-ready-item:hover {
+  border-color: rgba(37, 99, 235, 0.3);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.bach-doc-ready-item > span {
+  flex: 1;
+  min-width: 0;
+  truncate: true;
+}
+
+.bach-doc-fav {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: #94a3b8;
+}
+
+.bach-doc-empty,
+.bach-doc-hint {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin: 0.35rem 0;
+}
+
+.bach-doc-canvas-wrap {
+  min-height: 0;
+  background: #e8eef6;
+}
+
+.bach-doc-canvas-stage {
+  height: 100%;
+  position: relative;
+}
+
+.bach-doc-canvas-scroll {
+  height: 100%;
+  overflow: auto;
+}
+
+.bach-doc-ruler-h {
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 0;
+  height: 18px;
+  background: linear-gradient(90deg, rgba(15,23,42,0.08) 1px, transparent 1px) 0 0 / 10px 100%;
+  border-bottom: 1px solid rgba(15,23,42,0.1);
+  z-index: 2;
+}
+
+.bach-doc-ruler-v {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  bottom: 0;
+  width: 18px;
+  background: linear-gradient(180deg, rgba(15,23,42,0.08) 1px, transparent 1px) 0 0 / 100% 10px;
+  border-right: 1px solid rgba(15,23,42,0.1);
+  z-index: 2;
+}
+
+.bach-doc-page {
+  position: relative;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.16);
+  border-radius: 2px;
+}
+
+.bach-doc-margin-guide {
+  position: absolute;
+  border: 1px dashed rgba(37, 99, 235, 0.25);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bach-doc-smart-guide-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #2563eb;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.bach-doc-smart-guide-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #2563eb;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.bach-doc-block {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.bach-doc-block.is-selected {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.bach-doc-block.is-locked {
+  cursor: default;
+}
+
+.bach-doc-resize {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: #2563eb;
+  border: 1px solid #fff;
+  cursor: se-resize;
+}
+
+.bach-doc-right-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.bach-doc-right-tabs button {
+  height: 2.6rem;
+  border: 0;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.bach-doc-right-tabs button.is-active {
+  color: #1d4ed8;
+  box-shadow: inset 0 -2px 0 #2563eb;
+}
+
+.bach-doc-right-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.75rem;
+}
+
+.bach-doc-search {
+  width: 100%;
+  height: 2.1rem;
+  margin-bottom: 0.65rem;
+  padding: 0 0.7rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  font-size: 0.8rem;
+}
+
+.bach-doc-comp-group {
+  margin-bottom: 0.85rem;
+}
+
+.bach-doc-comp-group > p {
+  margin: 0 0 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.bach-doc-comp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+}
+
+.bach-doc-comp-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0.55rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #334155;
+  text-align: left;
+  cursor: grab;
+}
+
+.bach-doc-comp-btn:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  color: #1d4ed8;
+}
+
+.bach-doc-var-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bach-doc-var-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bach-doc-var-btn span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.bach-doc-var-btn code {
+  font-size: 0.62rem;
+  color: #059669;
+}
+
+.bach-doc-props {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.bach-doc-props-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.bach-doc-props-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.bach-doc-props label,
+.bach-doc-props-2 label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.bach-doc-props input,
+.bach-doc-props textarea,
+.bach-doc-props select,
+.bach-doc-props-2 input {
+  height: 2rem;
+  padding: 0 0.5rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.bach-doc-props textarea {
+  height: auto;
+  min-height: 4rem;
+  padding: 0.45rem 0.5rem;
+}
+
+.bach-doc-font-tools {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.bach-doc-font-tools button {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bach-doc-font-tools button.is-active {
+  background: #0f172a;
+  color: #fff;
+}
+
+.bach-doc-font-tools select {
+  flex: 1;
+  height: 1.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.bach-doc-check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.45rem !important;
+  text-transform: none !important;
+  font-size: 0.8rem !important;
+  color: #334155 !important;
+}
+
+.bach-doc-table-cols {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bach-doc-table-col-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.bach-doc-table-col-row input {
+  flex: 1;
+  height: 1.85rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  padding: 0 0.45rem;
+}
+
+.bach-doc-table-col-row button {
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: rgba(244, 63, 94, 0.1);
+  color: #e11d48;
+  cursor: pointer;
+}
+
+.bach-doc-props-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.bach-doc-props-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 1.9rem;
+  padding: 0 0.55rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bach-doc-props-actions button.danger {
+  color: #e11d48;
+  border-color: rgba(225, 29, 72, 0.25);
+}
+
+.bach-doc-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bach-doc-layer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bach-doc-layer-item.is-active {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.06);
+  color: #1d4ed8;
+}
+
+.bach-doc-preview-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  padding: 1.5rem;
+}
+
+.bach-doc-preview-panel {
+  width: min(920px, 100%);
+  height: min(90vh, 900px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+}
+
+.bach-doc-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.bach-doc-preview-frame {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: #e2e8f0;
+}
+
+html.night .bach-doc-designer {
+  background:
+    radial-gradient(ellipse 70% 50% at 8% 0%, rgba(37, 99, 235, 0.18), transparent 55%),
+    #0b1220;
+}
+
+html.night .bach-doc-designer-topbar,
+html.night .bach-doc-designer-toolbar,
+html.night .bach-doc-left,
+html.night .bach-doc-right,
+html.night .bach-doc-ready-item,
+html.night .bach-doc-comp-btn,
+html.night .bach-doc-var-btn,
+html.night .bach-doc-layer-item,
+html.night .bach-doc-name-input,
+html.night .bach-doc-tool,
+html.night .bach-doc-btn.ghost,
+html.night .bach-doc-icon-btn,
+html.night .bach-doc-search,
+html.night .bach-doc-field select,
+html.night .bach-doc-field input,
+html.night .bach-doc-props input,
+html.night .bach-doc-props textarea,
+html.night .bach-doc-props select {
+  background: rgba(15, 23, 42, 0.85);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
+html.night .bach-doc-canvas-wrap {
+  background: #020617;
+}
+
+@media (max-width: 1100px) {
+  .bach-doc-designer-body {
+    grid-template-columns: 200px minmax(0, 1fr) 260px;
+  }
+}
+
+@media (max-width: 860px) {
+  .bach-doc-designer-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(360px, 1fr) minmax(280px, auto);
+  }
+  .bach-doc-left,
+  .bach-doc-right {
+    border: 0;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    max-height: 240px;
+  }
+}

@@ -141,18 +141,33 @@ export const DOC_VARIABLE_GROUPS = [
     ],
   },
   {
-    id: 'system',
-    label: 'Sistem / Belge',
+    id: 'aliases',
+    label: 'Kısa Değişkenler',
     variables: [
-      { path: 'belge.no', label: 'Belge No', sample: 'TKL-2026-001' },
-      { path: 'belge.tarih', label: 'Belge Tarihi', sample: '13.07.2026' },
-      { path: 'belge.toplam', label: 'Toplam', sample: '12.500,00' },
-      { path: 'belge.araToplam', label: 'Ara Toplam', sample: '10.593,22' },
-      { path: 'belge.kdv', label: 'KDV', sample: '1.906,78' },
-      { path: 'kullanici.ad', label: 'Kullanıcı', sample: 'Kullanıcı' },
-      { path: 'sistem.tarih', label: 'Bugün', sample: '13.07.2026' },
-      { path: 'sistem.saat', label: 'Saat', sample: '18:00' },
-      { path: 'kalemler_html', label: 'Kalemler (HTML)', sample: '[tablo]' },
+      { path: 'firma_unvani', label: 'Firma Ünvanı', sample: 'BachMain A.Ş.' },
+      { path: 'firma_adresi', label: 'Firma Adresi', sample: 'İstanbul' },
+      { path: 'telefon', label: 'Telefon', sample: '0212 000 00 00' },
+      { path: 'vergi_no', label: 'Vergi No', sample: '1234567890' },
+      { path: 'cari_adi', label: 'Cari Adı', sample: 'Örnek Müşteri A.Ş.' },
+      { path: 'cari_adresi', label: 'Cari Adresi', sample: 'Ankara' },
+      { path: 'teklif_no', label: 'Teklif No', sample: 'TKL-2026-001' },
+      { path: 'siparis_no', label: 'Sipariş No', sample: 'SPR-2026-001' },
+      { path: 'irsaliye_no', label: 'İrsaliye No', sample: 'IRS-2026-001' },
+      { path: 'fatura_no', label: 'Fatura No', sample: 'FTR-2026-001' },
+      { path: 'urun_adi', label: 'Ürün Adı', sample: 'Örnek Ürün' },
+      { path: 'miktar', label: 'Miktar', sample: '10' },
+      { path: 'birim', label: 'Birim', sample: 'Adet' },
+      { path: 'birim_fiyat', label: 'Birim Fiyat', sample: '1.000,00' },
+      { path: 'kdv', label: 'KDV', sample: '2.000,00' },
+      { path: 'indirim', label: 'İndirim', sample: '0,00' },
+      { path: 'ara_toplam', label: 'Ara Toplam', sample: '10.000,00' },
+      { path: 'genel_toplam', label: 'Genel Toplam', sample: '12.000,00' },
+      { path: 'belge.saat', label: 'Belge Saati', sample: '14:30' },
+      { path: 'belge.not', label: 'Belge Notu', sample: 'Tesekkür ederiz.' },
+      { path: 'teslimat.adres', label: 'Teslimat Adresi', sample: 'İstanbul Depo' },
+      { path: 'ozel.alan', label: 'Özel Alan', sample: '—' },
+      { path: 'kosul.deger', label: 'Koşullu Değer', sample: 'Görünür' },
+      { path: 'kosul.gorunur', label: 'Koşul Bayrağı', sample: 'true' },
     ],
   },
 ]
@@ -176,4 +191,26 @@ export function findVariableByPath(path) {
 
 export function variableToken(path) {
   return `{{${path}}}`
+}
+
+/** Sample context for live preview */
+export function buildSamplePreviewContext() {
+  const flat = flattenVariableCatalog()
+  const ctx = {}
+  for (const item of flat) {
+    const parts = item.path.split('.')
+    if (parts.length === 1) {
+      ctx[parts[0]] = item.sample ?? ''
+    } else {
+      let node = ctx
+      for (let i = 0; i < parts.length - 1; i += 1) {
+        node[parts[i]] = node[parts[i]] || {}
+        node = node[parts[i]]
+      }
+      node[parts[parts.length - 1]] = item.sample ?? ''
+    }
+  }
+  ctx.page = 1
+  ctx.pages = 1
+  return ctx
 }
