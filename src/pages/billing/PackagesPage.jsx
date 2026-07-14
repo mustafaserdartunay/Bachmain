@@ -4,22 +4,6 @@ import { useState } from 'react'
 import { CRM_PRICING_PLANS, checkoutPath, formatTry } from '../../data/pricingPlans'
 import BrandLogo from '../../components/Layout/BrandLogo'
 
-function BuyRow({ period, className = '' }) {
-  return (
-    <div className={`crm-pricing-buy-row ${className}`.trim()}>
-      {CRM_PRICING_PLANS.map((p) => (
-        <Link
-          key={p.id}
-          to={checkoutPath(p.id, period)}
-          className={`crm-pricing-buy-btn ${p.featured ? 'is-primary' : p.id === 'enterprise' ? 'is-navy' : 'is-ghost'}`}
-        >
-          {p.plan} Satın Al
-        </Link>
-      ))}
-    </div>
-  )
-}
-
 export default function PackagesPage() {
   const [period, setPeriod] = useState('month')
   const perLabel = period === 'year' ? '/ yıl · KDV hariç' : '/ ay · KDV hariç'
@@ -53,8 +37,6 @@ export default function PackagesPage() {
           </button>
         </div>
       </section>
-
-      <BuyRow period={period} className="is-top" />
 
       <section className="crm-pricing-plans">
         <div className="crm-pricing-grid">
@@ -134,8 +116,6 @@ export default function PackagesPage() {
           ))}
         </div>
       </section>
-
-      <BuyRow period={period} className="is-bottom" />
     </div>
   )
 }
