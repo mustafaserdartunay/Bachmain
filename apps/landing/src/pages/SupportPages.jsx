@@ -1,40 +1,117 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Check, HardDrive, Users } from "lucide-react";
 import ScrollReveal from "../components/ScrollReveal";
 import { landingPricing } from "../data/landing";
 import { faqItems } from "../data/navigation";
 import { useState } from "react";
 
+function formatTry(amount) {
+  return `₺${Number(amount).toLocaleString("tr-TR")}`;
+}
+
 export function PricingPage() {
+  const [period, setPeriod] = useState("month");
+
   return (
-    <div className="page-mesh">
-      <section className="page-hero text-center">
-        <div className="mx-auto max-w-3xl px-4">
-          <span className="pill">Fiyatlandırma</span>
-          <h1 className="mt-4 text-4xl font-extrabold text-slate-900">Şeffaf paketler</h1>
-          <p className="mt-3 text-slate-500">7 gün ücretsiz deneyin. Taahhüt yok.</p>
+    <div className="page-mesh pricing-page">
+      <section className="pricing-hero">
+        <div className="mx-auto max-w-3xl px-4 text-center">
+          <motion.p
+            className="pricing-brand"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+          >
+            BACHMAIN
+          </motion.p>
+          <motion.h1
+            className="pricing-hero-title"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.06 }}
+          >
+            İşinize uyan paket
+          </motion.h1>
+          <motion.p
+            className="pricing-hero-sub"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.12 }}
+          >
+            7 gün ücretsiz deneyin. Taahhüt yok — Starter, Professional veya Enterprise.
+          </motion.p>
+
+          <motion.div
+            className="pricing-period"
+            role="group"
+            aria-label="Fatura dönemi"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.18 }}
+          >
+            <button
+              type="button"
+              className={period === "month" ? "is-active" : undefined}
+              onClick={() => setPeriod("month")}
+            >
+              Aylık
+            </button>
+            <button
+              type="button"
+              className={period === "year" ? "is-active" : undefined}
+              onClick={() => setPeriod("year")}
+            >
+              Yıllık
+              <span className="pricing-save">2 ay hediye</span>
+            </button>
+          </motion.div>
         </div>
       </section>
-      <section className="section-pad">
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 lg:grid-cols-3 lg:items-stretch lg:px-8">
-          {landingPricing.map((p, i) => (
-            <ScrollReveal key={p.plan} delay={i * 0.08}>
-              <div className={`saas-card relative flex h-full flex-col p-8 ${p.featured ? "border-blue-300 ring-2 ring-blue-500/20" : ""}`}>
-                {p.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-[11px] font-bold text-white">{p.badge}</div>
-                )}
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">{p.plan}</div>
-                <div className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900">{p.price}</div>
-                <div className="mt-1 text-sm text-slate-400">{p.per}</div>
-                <ul className="mt-6 flex-1 space-y-2.5">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex gap-2 text-sm text-slate-600"><span className="text-emerald-500">✓</span>{f}</li>
-                  ))}
-                </ul>
-                <Link to={p.to} className={`mt-8 ${p.featured ? "btn-primary w-full" : "btn-secondary w-full"}`}>{p.cta}</Link>
-              </div>
-            </ScrollReveal>
-          ))}
+
+      <section className="section-pad pricing-plans">
+        <div className="mx-auto grid max-w-6xl gap-5 px-4 lg:grid-cols-3 lg:items-stretch lg:gap-6 lg:px-8">
+          {landingPricing.map((p, i) => {
+            const amount = p.prices[period];
+            const perLabel = period === "year" ? "/ yıl · KDV hariç" : "/ ay · KDV hariç";
+            return (
+              <ScrollReveal key={p.id} delay={i * 0.08}>
+                <article className={`pricing-card ${p.featured ? "is-featured" : ""}`}>
+                  {p.badge ? <div className="pricing-badge">{p.badge}</div> : null}
+                  <header className="pricing-card-head">
+                    <h2 className="pricing-plan-name">{p.plan}</h2>
+                    <p className="pricing-tagline">{p.tagline}</p>
+                  </header>
+                  <div className="pricing-amount-row">
+                    <span className="pricing-amount">{formatTry(amount)}</span>
+                    <span className="pricing-per">{perLabel}</span>
+                  </div>
+                  <div className="pricing-meta">
+                    <span><Users className="h-3.5 w-3.5" aria-hidden />{p.users}</span>
+                    <span><HardDrive className="h-3.5 w-3.5" aria-hidden />{p.storage}</span>
+                  </div>
+                  <ul className="pricing-features">
+                    {p.features.map((f) => (
+                      <li key={f}>
+                        <Check className="pricing-check" strokeWidth={2.5} aria-hidden />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    to={p.to}
+                    className={`pricing-cta ${p.featured ? "is-primary" : p.id === "enterprise" ? "is-navy" : "is-ghost"}`}
+                  >
+                    {p.cta}
+                  </Link>
+                </article>
+              </ScrollReveal>
+            );
+          })}
         </div>
+        <p className="pricing-footnote">
+          Fiyatlar katalog fiyatlarıdır. Modül ekleri ve özel dönemler hesap içinden seçilebilir.
+        </p>
       </section>
       <FaqSection />
     </div>
