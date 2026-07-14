@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  LayoutDashboard, Users, CreditCard, Wallet, Banknote, FileText, Package,
+  LayoutDashboard, Users, CreditCard, Wallet, Banknote, Package,
   Headphones, MessageCircle, Bell, Sparkles, BarChart3, Server, Download,
   Shield, UserCheck, Store, Globe, Plug, Settings, Activity, UserCog, ScrollText,
   Boxes, Tags, Percent, Ticket, Timer, RefreshCw, Receipt,

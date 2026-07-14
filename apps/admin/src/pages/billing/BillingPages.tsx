@@ -91,7 +91,7 @@ export function BillingPlansPage() {
           </button>
         }
       />
-      {error ? <ErrorState title="Hata" subtitle={error} onRetry={load} /> : null}
+      {error ? <ErrorState title="Hata" description={error} onRetry={load} /> : null}
       <div className="grid gap-4 lg:grid-cols-2">
         {plans.map((plan) => (
           <Card key={plan.id} className="p-4">
@@ -251,7 +251,7 @@ export function BillingModulesPage() {
   return (
     <div className="space-y-6 p-6">
       <PageHeader title="Modüller (Add-on)" subtitle="Tek tek aç/kapa; aylık-yıllık fiyat ve deneme süresi." />
-      {error ? <ErrorState title="Hata" subtitle={error} onRetry={load} /> : null}
+      {error ? <ErrorState title="Hata" description={error} onRetry={load} /> : null}
       <div className="overflow-auto rounded-xl border border-border">
         <table className="min-w-full text-sm">
           <thead className="bg-surface-elevated text-left text-text-muted">
@@ -326,7 +326,7 @@ export function BillingSubscriptionsPage() {
   return (
     <div className="space-y-6 p-6">
       <PageHeader title="Abonelikler" subtitle="Kalan gün / saat / dakika ve durum yönetimi." />
-      {error ? <ErrorState title="Hata" subtitle={error} onRetry={load} /> : null}
+      {error ? <ErrorState title="Hata" description={error} onRetry={load} /> : null}
       <div className="overflow-auto rounded-xl border border-border">
         <table className="min-w-full text-sm">
           <thead className="bg-surface-elevated text-left text-text-muted">
@@ -401,7 +401,7 @@ export function BillingPaymentsPage() {
   return (
     <div className="space-y-6 p-6">
       <PageHeader title="Ödemeler" subtitle="Kart otomatik; Havale/EFT için onay." />
-      {error ? <ErrorState title="Hata" subtitle={error} onRetry={load} /> : null}
+      {error ? <ErrorState title="Hata" description={error} onRetry={load} /> : null}
       <div className="overflow-auto rounded-xl border border-border">
         <table className="min-w-full text-sm">
           <thead className="bg-surface-elevated text-left text-text-muted">
@@ -498,7 +498,7 @@ function SimpleBillingList({
           ) : undefined
         }
       />
-      {error ? <ErrorState title="Hata" subtitle={error} onRetry={load} /> : null}
+      {error ? <ErrorState title="Hata" description={error} onRetry={load} /> : null}
       <div className="overflow-auto rounded-xl border border-border">
         <table className="min-w-full text-sm">
           <thead className="bg-surface-elevated text-left text-text-muted">
@@ -571,7 +571,7 @@ export function BillingCouponsPage() {
   return (
     <SimpleBillingList
       title="Kuponlar"
-      subtitle="İndirim kodları."
+      description="İndirim kodları."
       loader={async () => (await billingAdminApi.coupons()).rows as unknown as Record<string, unknown>[]}
       createLabel="Örnek kupon"
       onCreate={async () => {
@@ -597,7 +597,7 @@ export function BillingCampaignsPage() {
   return (
     <SimpleBillingList
       title="Kampanyalar"
-      subtitle="Dönemsel kampanyalar."
+      description="Dönemsel kampanyalar."
       loader={async () => (await billingAdminApi.campaigns()).rows as unknown as Record<string, unknown>[]}
       createLabel="Kampanya ekle"
       onCreate={async () => {
@@ -621,7 +621,7 @@ export function BillingTrialsPage() {
   return (
     <SimpleBillingList
       title="Deneme Süreleri"
-      subtitle="Varsayılan deneme kuralları."
+      description="Varsayılan deneme kuralları."
       loader={async () => (await billingAdminApi.trialPeriods()).rows as unknown as Record<string, unknown>[]}
       createLabel="Kural ekle"
       onCreate={async () => {
@@ -641,7 +641,7 @@ export function BillingInvoicesPage() {
   return (
     <SimpleBillingList
       title="Faturalar"
-      subtitle="Kesilen faturalar."
+      description="Kesilen faturalar."
       loader={async () => (await billingAdminApi.invoices()).rows as unknown as Record<string, unknown>[]}
       columns={[
         { key: 'number', label: 'No' },
@@ -657,7 +657,7 @@ export function BillingRenewalsPage() {
   return (
     <SimpleBillingList
       title="Otomatik Yenilemeler"
-      subtitle="autoRenew açık abonelikler."
+      description="autoRenew açık abonelikler."
       loader={async () => (await billingAdminApi.renewals()).rows as unknown as Record<string, unknown>[]}
       columns={[
         { key: 'company', label: 'Firma' },
@@ -677,7 +677,7 @@ export function BillingHistoryPage() {
   return (
     <SimpleBillingList
       title="Abonelik Logları"
-      subtitle="Satın alma, upgrade, grace, expired kayıtları."
+      description="Satın alma, upgrade, grace, expired kayıtları."
       loader={rowsMemo}
       columns={[
         { key: 'at', label: 'Zaman' },
