@@ -59,15 +59,17 @@ import {
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
+import { useAuth } from '../../auth/AuthContext'
+import { filterMenuByEntitlements } from '../../utils/entitlements'
 
 const baseMenuItems = [
-  { icon: Truck, label: 'Kurye Takip', path: '/kurye-takip' },
-  { icon: FolderPlus, label: 'Yeni Proje', path: '/projeler/yeni' },
-  { icon: ShoppingBag, label: 'Pos', path: '/shopping' },
-  { icon: Store, label: 'Bayi Yönetimi', path: '/bayi' },
-  { icon: MessageCircle, label: 'Mesaj Merkezi', path: '/mesajlar' },
-  { icon: Receipt, label: 'E-Fatura', path: '/efatura' },
-  { icon: BarChart3, label: 'Raporlar', path: '/raporlar' },
+  { icon: Truck, label: 'Kurye Takip', path: '/kurye-takip', moduleCode: 'courier' },
+  { icon: FolderPlus, label: 'Yeni Proje', path: '/projeler/yeni', moduleCode: 'crm' },
+  { icon: ShoppingBag, label: 'Pos', path: '/shopping', moduleCode: 'pos' },
+  { icon: Store, label: 'Bayi Yönetimi', path: '/bayi', moduleCode: 'dealer' },
+  { icon: MessageCircle, label: 'Mesaj Merkezi', path: '/mesajlar', moduleCode: 'whatsapp' },
+  { icon: Receipt, label: 'E-Fatura', path: '/efatura', moduleCode: 'einvoice' },
+  { icon: BarChart3, label: 'Raporlar', path: '/raporlar', moduleCode: 'reporting' },
 ]
 
 const customerSubMenuIcons = {
@@ -140,6 +142,7 @@ function MenuIcon({ children, collapsed }) {
 
 export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, onToggle }) {
   const location = useLocation()
+  const { user } = useAuth()
   const [company, setCompany] = useState(() => readCompanySettings())
   const isCustomerRouteActive = isCustomerRoute(location.pathname)
   const isExpensesRouteActive = isExpensesRoute(location.pathname)
@@ -217,7 +220,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     }
   }, [])
 
-  const menuItems = baseMenuItems
+  const menuItems = filterMenuByEntitlements(baseMenuItems, user?.entitlements)
   const brandLabel = company.companyName || 'Bach'
   const sidebarWidthClass = collapsed ? 'lg:w-[4.75rem] w-[17.5rem]' : 'w-[17.5rem]'
   const sidebarPaddingClass = collapsed ? 'p-4 lg:px-2 lg:py-4' : 'px-3 py-4'

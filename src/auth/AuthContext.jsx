@@ -117,11 +117,38 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('bachmain:auth-changed', onChange)
   }, [])
 
+  useEffect(() => {
+    if (!user) return undefined
+    const tick = async () => {
+      try {
+        const next = await fetchCurrentUser()
+        setUser(next)
+      } catch {
+        /* ignore poll errors */
+      }
+    }
+    const onLicense = () => {
+      tick()
+    }
+    window.addEventListener('bachmain:license-updated', onLicense)
+    const id = window.setInterval(tick, 60_000)
+    return () => {
+      window.clearInterval(id)
+      window.removeEventListener('bachmain:license-updated', onLicense)
+    }
+  }, [user?.id])
+
   const value = {
     user,
     loading,
     bootstrapped,
     isAuthenticated: Boolean(user),
+    async refreshUser() {
+      const next = await fetchCurrentUser()
+      setUser(next)
+      await activateWorkspace(next)
+      return next
+    },
     async login(form) {
       const data = await loginAccount(form)
       setUser(data.user)

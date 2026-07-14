@@ -5,6 +5,7 @@ import { loadStore, withStore, newId, storageBackend } from '../server/store.mjs
 import { handleAuthApi, sendJson, applyCors } from '../server/authRoutes.mjs'
 import { requireStaffOrReject, staffAuthEnabled } from '../server/staffAuth.mjs'
 import { handlePaymentsApi } from '../server/payments.mjs'
+import { handleBillingApi } from '../server/billingRoutes.mjs'
 import { handleTenantApi } from '../server/tenantApi.mjs'
 import { handleLeadsApi } from '../server/leads.mjs'
 import { handleWhatsAppApi } from '../server/whatsappApi.mjs'
@@ -48,6 +49,7 @@ export default async function handler(req, res) {
 
     if (await handleAuthApi(req, res, path, body)) return
     if (await handleLeadsApi(req, res, path, body)) return
+    if (await handleBillingApi(req, res, path, body)) return
     if (await handlePaymentsApi(req, res, path, body)) return
     if (await handleWhatsAppApi(req, res, path, body)) return
     if (await handleTenantApi(req, res, path, body)) return

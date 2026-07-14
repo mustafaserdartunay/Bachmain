@@ -57,6 +57,7 @@ import LabelsSettingsPage from './pages/LabelsSettingsPage'
 import TagLabelsSettingsPage from './pages/TagLabelsSettingsPage'
 import CashBankSettingsPage from './pages/CashBankSettingsPage'
 import ProfilePage from './pages/ProfilePage'
+import { MyPlanPage, BuyPlanPage, CheckoutPage } from './pages/billing/BillingPages'
 import AnnouncementsPage from './pages/AnnouncementsPage'
 import TrainingPage from './pages/TrainingPage'
 import AdminControlPage from './pages/AdminControlPage'
@@ -253,6 +254,9 @@ export default function App() {
                 <Route path="/ayarlar/sektorel" element={<SectoralSettingsPage />} />
                 <Route path="/ayarlar/sektorel/:categoryId" element={<SectoralCategorySettingsPage />} />
                 <Route path="/profil" element={<ProfilePage />} />
+                <Route path="/profil/paketim" element={<MyPlanPage />} />
+                <Route path="/profil/paket-satin-al" element={<BuyPlanPage />} />
+                <Route path="/profil/odeme" element={<CheckoutPage />} />
                 <Route path="/duyurular" element={<AnnouncementsPage />} />
                 <Route path="/egitim" element={<TrainingPage />} />
                 <Route path="/yonetici-kontrol" element={<AdminControlPage />} />

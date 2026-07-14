@@ -47,22 +47,25 @@ export async function handleTenantApi(req, res, path, body = {}) {
     return true
   }
 
-  // License gate
+  // License gate — expired = read-only; grace/active/trial can write
   const customer = session.customer
-  if (customer?.licenseExpiry) {
-    const expired = new Date(customer.licenseExpiry) < new Date(new Date().toISOString().slice(0, 10))
-    if (expired && customer.status !== 'active') {
-      // trial/expired blocked for writes
-      if (method !== 'GET') {
-        sendJson(req, res, 402, {
-          error: 'LICENSE_EXPIRED',
-          message: 'Lisans veya deneme süresi dolmuş. Plan yükseltin.',
-          licenseExpiry: customer.licenseExpiry,
-          status: customer.status,
-        })
-        return true
-      }
-    }
+  const subStatus = customer?.subscriptionStatus || customer?.status
+  const isExpired =
+    subStatus === 'expired' ||
+    (customer?.licenseExpiry &&
+      new Date(customer.licenseExpiry) < new Date(new Date().toISOString().slice(0, 10)) &&
+      subStatus !== 'grace' &&
+      subStatus !== 'active' &&
+      subStatus !== 'trial' &&
+      subStatus !== 'trialing')
+  if (isExpired && method !== 'GET') {
+    sendJson(req, res, 402, {
+      error: 'LICENSE_EXPIRED',
+      message: 'Abonelik süresi dolmuş. Verileriniz korunuyor; işlem için paketinizi yenileyin.',
+      licenseExpiry: customer.licenseExpiry,
+      status: subStatus,
+    })
+    return true
   }
 
   if (method === 'GET') {

@@ -39,15 +39,26 @@ async function saveToFile(data) {
 
 export async function loadStore() {
   warnIfEphemeral()
+  let data
   if (hasDatabase()) {
     await ensureSchema()
     const payload = await loadPayload('main')
-    if (payload && typeof payload === 'object') return payload
-    const seeded = structuredClone(seedData)
-    await savePayload(seeded, 'main')
-    return seeded
+    if (payload && typeof payload === 'object') data = payload
+    else {
+      const seeded = structuredClone(seedData)
+      await savePayload(seeded, 'main')
+      data = seeded
+    }
+  } else {
+    data = await loadFromFile()
   }
-  return loadFromFile()
+  try {
+    const { seedBillingIfEmpty } = await import('./subscriptionService.mjs')
+    seedBillingIfEmpty(data)
+  } catch {
+    // ignore seed errors on cold start
+  }
+  return data
 }
 
 export async function saveStore(data) {

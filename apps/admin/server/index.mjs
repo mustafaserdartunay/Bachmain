@@ -6,6 +6,9 @@ import { loadStore, withStore, newId } from './store.mjs'
 import { handleAuthApi, applyCors, sendJson as sendAuthJson } from './authRoutes.mjs'
 import { handleLeadsApi } from './leads.mjs'
 import { handleWhatsAppApi } from './whatsappApi.mjs'
+import { handleBillingApi } from './billingRoutes.mjs'
+import { handlePaymentsApi } from './payments.mjs'
+import { seedBillingIfEmpty } from './subscriptionService.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -83,6 +86,8 @@ async function handle(req, res, url) {
       }
       if (await handleAuthApi(req, res, apiPath, body)) return
       if (await handleLeadsApi(req, res, apiPath, body)) return
+      if (await handleBillingApi(req, res, apiPath, body)) return
+      if (await handlePaymentsApi(req, res, apiPath, body)) return
       if (await handleWhatsAppApi(req, res, apiPath, body)) return
     }
 

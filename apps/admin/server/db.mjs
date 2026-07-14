@@ -67,6 +67,68 @@ export async function ensureSchema() {
       window_start TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `
+  // Billing tables (durable mirror; primary catalog also lives in app_state.billing)
+  await db`
+    CREATE TABLE IF NOT EXISTS subscription_plans (
+      id TEXT PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      prices JSONB NOT NULL DEFAULT '{}'::jsonb,
+      modules JSONB NOT NULL DEFAULT '[]'::jsonb,
+      max_users INTEGER DEFAULT 3,
+      storage_gb INTEGER DEFAULT 2,
+      active BOOLEAN DEFAULT true,
+      sort_order INTEGER DEFAULT 0,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `
+  await db`
+    CREATE TABLE IF NOT EXISTS addon_modules (
+      id TEXT PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      label TEXT NOT NULL,
+      monthly_price INTEGER DEFAULT 0,
+      yearly_price INTEGER DEFAULT 0,
+      trial_days INTEGER DEFAULT 0,
+      active BOOLEAN DEFAULT true,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `
+  await db`
+    CREATE TABLE IF NOT EXISTS billing_subscriptions (
+      id TEXT PRIMARY KEY,
+      customer_id TEXT NOT NULL,
+      plan_code TEXT NOT NULL,
+      status TEXT NOT NULL,
+      period TEXT,
+      period_start TIMESTAMPTZ,
+      period_end TIMESTAMPTZ,
+      grace_until TIMESTAMPTZ,
+      payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `
+  await db`
+    CREATE TABLE IF NOT EXISTS billing_payments (
+      id TEXT PRIMARY KEY,
+      customer_id TEXT,
+      method TEXT,
+      status TEXT,
+      amount_try INTEGER,
+      payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `
+  await db`
+    CREATE TABLE IF NOT EXISTS billing_history (
+      id TEXT PRIMARY KEY,
+      customer_id TEXT,
+      action TEXT NOT NULL,
+      meta JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `
   ready = true
   return true
 }

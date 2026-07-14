@@ -10,7 +10,9 @@ export default function Layout({ children }) {
   const { user } = useAuth()
   const remainingDays = computeRemainingDays(user)
   const showTrialBanner =
-    isTrialActive(user) && typeof remainingDays === 'number' && remainingDays >= 0
+    (isTrialActive(user) && typeof remainingDays === 'number' && remainingDays >= 0) ||
+    user?.subscriptionStatus === 'grace' ||
+    (typeof remainingDays === 'number' && remainingDays >= 0 && remainingDays <= 7 && !isTrialActive(user))
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('erlenbox-sidebar') === 'collapsed')
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(() => localStorage.getItem('bach-team-hub-panel') !== 'expanded')
@@ -58,8 +60,9 @@ export default function Layout({ children }) {
       {showTrialBanner ? (
         <TrialBanner
           remainingDays={remainingDays}
-          trialEnd={user?.trialEnd || user?.trialEndsAt || user?.licenseExpiry}
+          trialEnd={user?.trialEnd || user?.trialEndsAt || user?.licenseExpiry || user?.graceUntil}
           status={user?.status}
+          subscriptionStatus={user?.subscriptionStatus}
         />
       ) : null}
       {mobileSidebarOpen && (

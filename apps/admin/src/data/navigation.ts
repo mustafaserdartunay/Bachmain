@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Users, CreditCard, Wallet, Banknote, FileText, Package,
   Headphones, MessageCircle, Bell, Sparkles, BarChart3, Server, Download,
   Shield, UserCheck, Store, Globe, Plug, Settings, Activity, UserCog, ScrollText,
+  Boxes, Tags, Percent, Ticket, Timer, RefreshCw, Receipt,
 } from 'lucide-react'
 
 /** Staff roles that may see a nav item. Empty / omitted = all authenticated staff. */
@@ -15,7 +16,6 @@ export interface NavItem {
   icon: LucideIcon
   badge?: number
   group: string
-  /** When set, item is shown only for these staff roles (e.g. SUPER_ADMIN platform ops). */
   roles?: StaffNavRole[]
 }
 
@@ -47,13 +47,23 @@ export const navItems: NavItem[] = [
   },
   { id: 'customers', label: 'Müşteri Yönetimi', path: '/musteriler', icon: Users, group: 'Müşteri' },
   { id: 'memberships', label: 'Üye Hesapları', path: '/uyeler', icon: UserCheck, group: 'Müşteri' },
-  { id: 'subscriptions', label: 'Abonelik ve Lisanslar', path: '/abonelikler', icon: CreditCard, group: 'Müşteri' },
   { id: 'dealers', label: 'Bayi Yönetimi', path: '/bayiler', icon: Store, group: 'Müşteri' },
   { id: 'accounts', label: 'Cari Hesaplar', path: '/cari-hesaplar', icon: Wallet, group: 'Finans' },
-  { id: 'payments', label: 'Tahsilatlar ve Ödemeler', path: '/tahsilatlar', icon: Banknote, group: 'Finans' },
+  { id: 'payments-finance', label: 'Tahsilatlar', path: '/tahsilatlar', icon: Banknote, group: 'Finans' },
   { id: 'payment-requests', label: 'Ödeme Talepleri', path: '/odeme-talepleri', icon: Banknote, group: 'Finans' },
-  { id: 'invoices', label: 'Faturalar', path: '/faturalar', icon: FileText, group: 'Finans' },
-  { id: 'packages', label: 'Paket Yönetimi', path: '/paketler', icon: Package, group: 'Finans' },
+
+  { id: 'billing-plans', label: 'Paketler', path: '/abonelik/paketler', icon: Package, group: 'Abonelik Yönetimi' },
+  { id: 'billing-modules', label: 'Modüller', path: '/abonelik/moduller', icon: Boxes, group: 'Abonelik Yönetimi' },
+  { id: 'billing-pricing', label: 'Fiyatlandırma', path: '/abonelik/fiyatlandirma', icon: Tags, group: 'Abonelik Yönetimi' },
+  { id: 'billing-campaigns', label: 'Kampanyalar', path: '/abonelik/kampanyalar', icon: Percent, group: 'Abonelik Yönetimi' },
+  { id: 'billing-coupons', label: 'Kuponlar', path: '/abonelik/kuponlar', icon: Ticket, group: 'Abonelik Yönetimi' },
+  { id: 'billing-trials', label: 'Deneme Süreleri', path: '/abonelik/deneme', icon: Timer, group: 'Abonelik Yönetimi' },
+  { id: 'billing-subscriptions', label: 'Abonelikler', path: '/abonelik/abonelikler', icon: CreditCard, group: 'Abonelik Yönetimi' },
+  { id: 'billing-payments', label: 'Ödemeler', path: '/abonelik/odemeler', icon: Banknote, group: 'Abonelik Yönetimi' },
+  { id: 'billing-invoices', label: 'Faturalar', path: '/abonelik/faturalar', icon: Receipt, group: 'Abonelik Yönetimi' },
+  { id: 'billing-renewals', label: 'Otomatik Yenilemeler', path: '/abonelik/yenilemeler', icon: RefreshCw, group: 'Abonelik Yönetimi' },
+  { id: 'billing-history', label: 'Abonelik Logları', path: '/abonelik/loglar', icon: ScrollText, group: 'Abonelik Yönetimi' },
+
   { id: 'support', label: 'Destek / Ticket', path: '/destek', icon: Headphones, badge: 12, group: 'Destek' },
   { id: 'live-support', label: 'Canlı Destek', path: '/canli-destek', icon: MessageCircle, badge: 3, group: 'Destek' },
   { id: 'notifications', label: 'Bildirim Merkezi', path: '/bildirimler', icon: Bell, badge: 5, group: 'Destek' },
@@ -70,7 +80,6 @@ export const navItems: NavItem[] = [
 
 export function filterNavItemsForRole(role: string | null | undefined): NavItem[] {
   const normalized = String(role || '').toLowerCase()
-  // Staff auth kapalı / rol yok → tam menü (yerel geliştirme)
   if (!normalized) return navItems
   return navItems.filter((item) => {
     if (!item.roles || item.roles.length === 0) return true
@@ -89,6 +98,16 @@ export function getNavItemById(id: string) {
   return navItems.find((n) => n.id === id)
 }
 
-export function getNavItemByPath(path: string) {
-  return navItems.find((n) => n.path === path || path.startsWith(n.path + '/'))
+export function getNavItemByPath(pathname: string): NavItem | undefined {
+  return navItems.find((n) => n.path === pathname || pathname.startsWith(`${n.path}/`))
+}
+
+export function getBreadcrumbs(pathname: string): { label: string; path?: string }[] {
+  const item = getNavItemByPath(pathname)
+  if (!item) return [{ label: 'Dashboard', path: '/' }]
+  return [
+    { label: 'Dashboard', path: '/' },
+    { label: item.group },
+    { label: item.label },
+  ]
 }

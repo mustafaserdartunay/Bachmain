@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ImagePlus, Save, UserRound } from 'lucide-react'
 import { ensureUserProfile, updateUserProfile } from '../utils/userProfile'
 import { readCompanySettings } from '../utils/companySettings'
@@ -73,6 +74,15 @@ export default function ProfilePage() {
             Fotoğraf Yükle
             <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           </label>
+        </div>
+
+        <div className="grid gap-3 rounded-2xl border border-dark-500/40 bg-dark-700/30 p-4 sm:grid-cols-2">
+          <Link to="/profil/paketim" className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-3 text-sm font-bold text-white hover:bg-dark-600">
+            Paketim
+          </Link>
+          <Link to="/profil/paket-satin-al" className="rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-bold text-blue-200 hover:bg-blue-500/20">
+            Paket Satın Al
+          </Link>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

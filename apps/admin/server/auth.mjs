@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import { newId } from './store.mjs'
+import { entitlementPayloadForCustomer, seedBillingIfEmpty } from './subscriptionService.mjs'
 
 const COOKIE_NAME = 'bachmain_session'
 const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 14
@@ -130,9 +131,23 @@ function remainingTrialDays(licenseExpiry) {
   return Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 }
 
-function publicUser(account, customer) {
-  const licenseExpiry = customer?.licenseExpiry || null
-  const status = customer?.status || 'trial'
+function publicUser(account, customer, entitlements = null) {
+  const licenseExpiry = entitlements?.licenseExpiry || customer?.licenseExpiry || null
+  const status =
+    entitlements?.subscriptionStatus === 'expired'
+      ? 'expired'
+      : entitlements?.subscriptionStatus === 'trialing'
+        ? 'trial'
+        : entitlements?.subscriptionStatus === 'grace'
+          ? 'active'
+          : customer?.status || 'trial'
+  const remaining =
+    typeof entitlements?.remainingDays === 'number'
+      ? entitlements.remainingDays
+      : status === 'trial' || status === 'trialing'
+        ? remainingTrialDays(licenseExpiry)
+        : entitlements?.remainingDays ?? remainingTrialDays(licenseExpiry)
+
   return {
     id: account.id,
     email: account.email,
@@ -141,14 +156,33 @@ function publicUser(account, customer) {
     phone: account.phone || customer?.phone || '',
     role: account.role || 'owner',
     customerId: account.customerId,
-    plan: customer?.plan || account.plan || 'Starter',
+    plan: entitlements?.plan || customer?.plan || account.plan || 'Starter',
+    planCode: entitlements?.planCode || customer?.planCode || null,
     status,
+    subscriptionStatus: entitlements?.subscriptionStatus || customer?.subscriptionStatus || status,
     licenseExpiry,
-    trialEnd: licenseExpiry,
-    remainingDays: status === 'trial' || status === 'trialing' ? remainingTrialDays(licenseExpiry) : null,
+    trialEnd: entitlements?.trialEnd || licenseExpiry,
+    remainingDays: remaining,
+    remainingHours: entitlements?.remainingHours ?? null,
+    remainingMinutes: entitlements?.remainingMinutes ?? null,
+    graceUntil: entitlements?.graceUntil || customer?.graceUntil || null,
+    entitlements: entitlements?.entitlements || customer?.entitlements || null,
+    limits: entitlements?.limits || customer?.limits || null,
     onboardingCompleted: account.onboardingCompleted !== false,
     tenantCode: account.tenantCode,
   }
+}
+
+function enrichUser(store, account, customer) {
+  try {
+    seedBillingIfEmpty(store)
+    if (customer?.id) {
+      return publicUser(account, customer, entitlementPayloadForCustomer(store, customer.id))
+    }
+  } catch {
+    // fallback below
+  }
+  return publicUser(account, customer)
 }
 
 function ensureCollections(store) {
@@ -327,7 +361,7 @@ export async function registerAccount(store, body) {
 
   return {
     token,
-    user: publicUser(account, customer),
+    user: enrichUser(store, account, customer),
     customer,
   }
 }
@@ -378,7 +412,7 @@ export async function loginAccount(store, body) {
 
   return {
     token,
-    user: publicUser(account, customer),
+    user: enrichUser(store, account, customer),
     customer,
   }
 }
@@ -394,7 +428,7 @@ export function completeOnboarding(store, accountId) {
   account.onboardingCompleted = true
   account.onboardingCompletedAt = new Date().toISOString()
   const customer = store.customers.find((c) => c.id === account.customerId) || null
-  return { user: publicUser(account, customer) }
+  return { user: enrichUser(store, account, customer) }
 }
 
 export function getAccountFromToken(store, token) {
@@ -404,7 +438,7 @@ export function getAccountFromToken(store, token) {
   const account = store.accounts.find((a) => a.id === payload.sub)
   if (!account) return null
   const customer = store.customers.find((c) => c.id === account.customerId) || null
-  return { account, customer, user: publicUser(account, customer), payload }
+  return { account, customer, user: enrichUser(store, account, customer), payload }
 }
 
 export { COOKIE_NAME, TOKEN_TTL_SECONDS }

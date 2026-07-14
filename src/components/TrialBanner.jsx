@@ -7,7 +7,7 @@ export function computeRemainingDays(user) {
   if (typeof user.remainingDays === 'number' && Number.isFinite(user.remainingDays)) {
     return user.remainingDays
   }
-  const endRaw = user.trialEnd || user.trialEndsAt || user.licenseExpiry
+  const endRaw = user.graceUntil || user.trialEnd || user.trialEndsAt || user.licenseExpiry
   if (!endRaw) return null
   const end = new Date(endRaw)
   if (Number.isNaN(end.getTime())) return null
@@ -18,14 +18,21 @@ export function computeRemainingDays(user) {
 
 export function isTrialActive(user) {
   if (!user) return false
-  return TRIAL_STATUSES.has(user.status)
+  return TRIAL_STATUSES.has(user.status) || user.subscriptionStatus === 'trialing'
 }
 
 /**
- * Apple-style glass trial countdown bar (fixed top, 36px).
- * Props: remainingDays (0–7), trialEnd optional, status optional.
+ * Subscription / trial glass banner (36px).
+ * - Trial countdown
+ * - Paid renewal ≤7 days
+ * - Grace period messaging
  */
-export default function TrialBanner({ remainingDays, trialEnd, status = 'trial' }) {
+export default function TrialBanner({
+  remainingDays,
+  trialEnd,
+  status = 'trial',
+  subscriptionStatus,
+}) {
   const days =
     typeof remainingDays === 'number' && Number.isFinite(remainingDays)
       ? remainingDays
@@ -33,13 +40,27 @@ export default function TrialBanner({ remainingDays, trialEnd, status = 'trial' 
         ? computeRemainingDays({ trialEnd, remainingDays })
         : null
 
-  if (days === null || days < 0) return null
-  if (!TRIAL_STATUSES.has(status)) return null
+  const sub = subscriptionStatus || status
+  let label = null
+  let ctaTo = '/profil/paket-satin-al'
+  let cta = 'Yenile'
 
-  const label =
-    days === 0
-      ? 'Ücretsiz deneme: son gün'
-      : `Ücretsiz deneme: ${days} gün kaldı`
+  if (sub === 'grace') {
+    label =
+      days === null
+        ? 'Aboneliğiniz sona erdi. Ek kullanım süreniz devam ediyor. Lütfen aboneliğinizi yenileyin.'
+        : `Aboneliğiniz sona erdi. ${days} günlük ek kullanım süreniz kaldı. Lütfen aboneliğinizi yenileyin.`
+  } else if (TRIAL_STATUSES.has(status) || sub === 'trialing') {
+    if (days === null || days < 0) return null
+    label =
+      days === 0 ? 'Ücretsiz deneme: son gün' : `Ücretsiz deneme: ${days} gün kaldı`
+    ctaTo = '/hesap/lisans'
+    cta = 'Yükselt'
+  } else if (typeof days === 'number' && days >= 0 && days <= 7) {
+    label = `Paketinizin bitmesine ${days} gün kaldı. Kesintisiz kullanım için aboneliğinizi yenileyebilirsiniz.`
+  } else {
+    return null
+  }
 
   return (
     <div
@@ -49,17 +70,14 @@ export default function TrialBanner({ remainingDays, trialEnd, status = 'trial' 
       style={{ height: 36 }}
     >
       <div className="flex max-w-5xl items-center gap-3 text-[13px] leading-none tracking-tight">
-        <span className="font-medium tabular-nums">{label}</span>
-        {trialEnd ? (
+        <span className="font-medium">{label}</span>
+        {trialEnd && sub !== 'grace' ? (
           <span className="hidden text-slate-500 sm:inline">
             · {new Date(trialEnd).toLocaleDateString('tr-TR')}
           </span>
         ) : null}
-        <Link
-          to="/hesap/lisans"
-          className="font-semibold text-[#1d4ed8] transition hover:text-[#1e40af] hover:underline"
-        >
-          Yükselt
+        <Link to={ctaTo} className="font-semibold text-[#1d4ed8] transition hover:text-[#1e40af] hover:underline">
+          {cta}
         </Link>
       </div>
     </div>
