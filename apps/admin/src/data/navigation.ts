@@ -2,8 +2,11 @@ import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard, Users, CreditCard, Wallet, Banknote, FileText, Package,
   Headphones, MessageCircle, Bell, Sparkles, BarChart3, Server, Download,
-  Shield, UserCheck, Store, Globe, Plug, Settings,
+  Shield, UserCheck, Store, Globe, Plug, Settings, Activity, UserCog, ScrollText,
 } from 'lucide-react'
+
+/** Staff roles that may see a nav item. Empty / omitted = all authenticated staff. */
+export type StaffNavRole = 'super_admin' | 'admin' | 'support' | 'billing'
 
 export interface NavItem {
   id: string
@@ -12,10 +15,36 @@ export interface NavItem {
   icon: LucideIcon
   badge?: number
   group: string
+  /** When set, item is shown only for these staff roles (e.g. SUPER_ADMIN platform ops). */
+  roles?: StaffNavRole[]
 }
 
 export const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', path: '/', icon: LayoutDashboard, group: 'Ana' },
+  {
+    id: 'platform-ops',
+    label: 'Platform Ops',
+    path: '/platform-ops',
+    icon: Activity,
+    group: 'Platform',
+    roles: ['super_admin'],
+  },
+  {
+    id: 'user-management',
+    label: 'User Management',
+    path: '/user-management',
+    icon: UserCog,
+    group: 'Platform',
+    roles: ['super_admin'],
+  },
+  {
+    id: 'audit-logs',
+    label: 'Audit Logs',
+    path: '/audit-logs',
+    icon: ScrollText,
+    group: 'Platform',
+    roles: ['super_admin'],
+  },
   { id: 'customers', label: 'Müşteri Yönetimi', path: '/musteriler', icon: Users, group: 'Müşteri' },
   { id: 'memberships', label: 'Üye Hesapları', path: '/uyeler', icon: UserCheck, group: 'Müşteri' },
   { id: 'subscriptions', label: 'Abonelik ve Lisanslar', path: '/abonelikler', icon: CreditCard, group: 'Müşteri' },
@@ -38,6 +67,16 @@ export const navItems: NavItem[] = [
   { id: 'api', label: 'API ve Entegrasyonlar', path: '/api', icon: Plug, group: 'Sistem' },
   { id: 'settings', label: 'Genel Ayarlar', path: '/ayarlar', icon: Settings, group: 'Sistem' },
 ]
+
+export function filterNavItemsForRole(role: string | null | undefined): NavItem[] {
+  const normalized = String(role || '').toLowerCase()
+  // Staff auth kapalı / rol yok → tam menü (yerel geliştirme)
+  if (!normalized) return navItems
+  return navItems.filter((item) => {
+    if (!item.roles || item.roles.length === 0) return true
+    return item.roles.some((r) => r.toLowerCase() === normalized)
+  })
+}
 
 export const quickActions = [
   { label: 'Yeni Müşteri', color: 'bg-violet-500 hover:bg-violet-600', path: '/musteriler/yeni' },

@@ -3,6 +3,9 @@ import { AppShell } from '@/components/layout/AppShell'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { CustomerDetailPage } from '@/pages/CustomerDetailPage'
 import { SupportDetailPage } from '@/pages/SupportDetailPage'
+import { PlatformOpsPage } from '@/pages/PlatformOpsPage'
+import { UserManagementPage } from '@/pages/UserManagementPage'
+import { AuditLogPage } from '@/pages/AuditLogPage'
 import { ModuleListPage } from '@/components/module/ModuleListPage'
 import { ModuleDetailPage } from '@/components/module/ModuleDetailPage'
 import { ModuleFormPage } from '@/components/module/ModuleFormPage'
@@ -24,6 +27,11 @@ export function AppRoutes() {
         }
       >
         <Route index element={<DashboardPage />} />
+
+        {/* SUPER_ADMIN platform */}
+        <Route path="platform-ops" element={<PlatformOpsPage />} />
+        <Route path="user-management" element={<UserManagementPage />} />
+        <Route path="audit-logs" element={<AuditLogPage />} />
 
         {/* Müşteri özel rotaları */}
         <Route path="musteriler" element={<ModuleListPage moduleId="customers" />} />

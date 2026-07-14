@@ -2,6 +2,16 @@ import { api } from '@/lib/api'
 import type { Customer, MetricItem, SupportTicket, TimelineEvent } from '@/types'
 import { getModuleById } from '@/data/modules'
 
+export {
+  platformAdminApi,
+  type SystemHealthMetrics,
+  type PlatformUserRow,
+  type AuditLogEntry,
+  type AuditLogResponse,
+  type ActionResult,
+  type ServiceStatus,
+} from './platformAdminApi'
+
 export interface DashboardData {
   kpis: MetricItem[]
   revenueChart: { label: string; value: number }[]

@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { api } from '@/lib/api'
 
 const STAFF_TOKEN_KEY = 'bachmain_staff_token'
+const STAFF_ROLE_KEY = 'bachmain_staff_role'
 
 export function getStaffToken() {
   try {
@@ -12,10 +13,23 @@ export function getStaffToken() {
   }
 }
 
-export function setStaffToken(token: string) {
+export function getStaffRole() {
   try {
-    if (token) localStorage.setItem(STAFF_TOKEN_KEY, token)
-    else localStorage.removeItem(STAFF_TOKEN_KEY)
+    return localStorage.getItem(STAFF_ROLE_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+export function setStaffToken(token: string, role?: string) {
+  try {
+    if (token) {
+      localStorage.setItem(STAFF_TOKEN_KEY, token)
+      if (role) localStorage.setItem(STAFF_ROLE_KEY, role)
+    } else {
+      localStorage.removeItem(STAFF_TOKEN_KEY)
+      localStorage.removeItem(STAFF_ROLE_KEY)
+    }
   } catch {
     /* ignore */
   }
@@ -34,11 +48,15 @@ export function StaffLoginPage() {
     setLoading(true)
     setError('')
     try {
-      const res = await api.post<{ ok: boolean; token: string; user: { fullName: string } }>('/staff/login', {
+      const res = await api.post<{
+        ok: boolean
+        token: string
+        user: { fullName: string; role?: string }
+      }>('/staff/login', {
         email,
         password,
       })
-      setStaffToken(res.token)
+      setStaffToken(res.token, res.user?.role || 'super_admin')
       window.location.href = from
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Giriş başarısız')
@@ -114,13 +132,15 @@ export function RequireStaff({ children }: { children: React.ReactNode }) {
         return
       }
       try {
-        await fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/staff/me`, {
+        const me = await fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/staff/me`, {
           headers: { Authorization: `Bearer ${token}` },
           credentials: 'include',
         }).then(async (r) => {
           if (!r.ok) throw new Error('unauthorized')
-          return r.json()
+          return r.json() as Promise<{ user?: { role?: string }; role?: string }>
         })
+        const role = me.user?.role || me.role
+        if (role) setStaffToken(token, role)
         if (!cancelled) setState('ok')
       } catch {
         setStaffToken('')

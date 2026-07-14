@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Search, X } from 'lucide-react'
-import { navItems } from '@/data/navigation'
+import { filterNavItemsForRole } from '@/data/navigation'
+import { getStaffRole } from '@/pages/StaffLoginPage'
 
 export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
 
-  const filtered = navItems.filter((n) =>
+  const filtered = filterNavItemsForRole(getStaffRole()).filter((n) =>
     n.label.toLowerCase().includes(query.toLowerCase()),
   )
 

@@ -1,11 +1,14 @@
+import { useMemo } from 'react'
 import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import * as ScrollArea from '@radix-ui/react-scroll-area'
-import { navItems } from '@/data/navigation'
+import { filterNavItemsForRole } from '@/data/navigation'
+import { getStaffRole } from '@/pages/StaffLoginPage'
 import { cn } from '@/lib/utils'
 
 export function Sidebar() {
-  const groups = [...new Set(navItems.map((n) => n.group))]
+  const items = useMemo(() => filterNavItemsForRole(getStaffRole()), [])
+  const groups = [...new Set(items.map((n) => n.group))]
 
   return (
     <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-border bg-surface-elevated">
@@ -22,7 +25,7 @@ export function Sidebar() {
                   {group}
                 </p>
                 <ul className="space-y-0.5">
-                  {navItems
+                  {items
                     .filter((n) => n.group === group)
                     .map((item) => (
                       <li key={item.id}>
