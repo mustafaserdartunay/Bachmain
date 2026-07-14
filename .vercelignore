@@ -6,3 +6,10 @@ restore-backups
 .env
 .env.local
 node_modules
+apps/landing/src/content
+apps/landing/src/seo
+apps/landing/src/components/seo
+apps/landing/src/pages/SeoArticlePage.jsx
+docs/seo
+**/node_modules
+.git

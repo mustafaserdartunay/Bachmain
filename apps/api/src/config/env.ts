@@ -22,6 +22,8 @@ const envSchema = z.object({
   ADMIN_URL: z.string().default('https://yonetim.bachmain.com'),
   WEB_URL: z.string().default('https://bachmain.com'),
   API_PUBLIC_URL: z.string().default('http://127.0.0.1:8080'),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default('BACHMAIN <noreply@bachmain.com>'),
 })
 
 export type Env = z.infer<typeof envSchema>

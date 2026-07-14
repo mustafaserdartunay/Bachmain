@@ -7,6 +7,7 @@ import {
   logoutAccount,
   persistSession,
   registerAccount,
+  completeOnboarding as completeOnboardingRequest,
 } from '../utils/platformAuth'
 import { saveUserProfile } from '../utils/userProfile'
 import { updateCompanySettings, readCompanySettings } from '../utils/companySettings'
@@ -143,6 +144,12 @@ export function AuthProvider({ children }) {
       clearWorkspaceStorage()
       localStorage.removeItem(WORKSPACE_OWNER_KEY)
       setUser(null)
+    },
+    async completeOnboarding() {
+      const next = await completeOnboardingRequest()
+      setUser(next)
+      await activateWorkspace(next)
+      return next
     },
   }
 

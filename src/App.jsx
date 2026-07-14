@@ -2,10 +2,12 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { installAutoCapitalize } from './utils/autoCapitalize'
 import { cleanupDemoDataOnce } from './utils/demoDataCleanup'
-import { AuthProvider } from './auth/AuthContext'
+import { AuthProvider, useAuth } from './auth/AuthContext'
 import RequireAuth from './auth/RequireAuth'
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages'
 import LicensePage from './pages/auth/LicensePage'
+import TrialExpiredPage from './pages/auth/TrialExpiredPage'
+import OnboardingWizard from './pages/onboarding/OnboardingWizard'
 import Layout from './components/Layout/Layout'
 import CashPage from './pages/CashPage'
 import ChequesPage from './pages/treasury/ChequesPage'
@@ -113,6 +115,11 @@ function LegacyKasaAccountRedirect() {
   return <Navigate to={`${CASH_BASE_PATH}/${accountId}`} replace />
 }
 
+function OnboardingWizardRoute() {
+  const { completeOnboarding } = useAuth()
+  return <OnboardingWizard onComplete={() => completeOnboarding()} />
+}
+
 export default function App() {
   useEffect(() => {
     cleanupDemoDataOnce()
@@ -126,6 +133,22 @@ export default function App() {
           <Route path="/giris" element={<LoginPage />} />
           <Route path="/kayit" element={<RegisterPage />} />
           <Route path="/hesap/lisans" element={<LicensePage />} />
+          <Route
+            path="/deneme-bitti"
+            element={(
+              <RequireAuth>
+                <TrialExpiredPage />
+              </RequireAuth>
+            )}
+          />
+          <Route
+            path="/kurulum"
+            element={(
+              <RequireAuth>
+                <OnboardingWizardRoute />
+              </RequireAuth>
+            )}
+          />
           <Route path="/portal/:token" element={<CustomerPortalPage />} />
           <Route path="/kurye-takip/:trackingToken" element={<CustomerCourierTrackingPage />} />
           <Route

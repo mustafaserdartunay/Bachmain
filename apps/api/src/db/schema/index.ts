@@ -56,6 +56,10 @@ export const users = pgTable(
     phone: text('phone'),
     emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
     platformRole: platformRoleEnum('platform_role').default('none').notNull(),
+    mfaEnabled: boolean('mfa_enabled').default(false).notNull(),
+    mfaSecretEnc: text('mfa_secret_enc'),
+    mfaBackupCodesHash: jsonb('mfa_backup_codes_hash').$type<string[]>().default([]),
+    onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
     ...timestamps,
   },
@@ -150,6 +154,44 @@ export const refreshTokens = pgTable(
     ...timestamps,
   },
   (t) => [index('refresh_tokens_user_idx').on(t.userId)],
+)
+
+export const trustedDevices = pgTable(
+  'trusted_devices',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    deviceHash: text('device_hash').notNull(),
+    label: text('label'),
+    userAgent: text('user_agent'),
+    ip: text('ip'),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).defaultNow().notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('trusted_devices_user_hash_uidx').on(t.userId, t.deviceHash),
+    index('trusted_devices_user_idx').on(t.userId),
+  ],
+)
+
+export const mfaChallenges = pgTable(
+  'mfa_challenges',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    challengeHash: text('challenge_hash').notNull(),
+    purpose: text('purpose').default('login').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [index('mfa_challenges_user_idx').on(t.userId)],
 )
 
 export const emailTokens = pgTable('email_tokens', {

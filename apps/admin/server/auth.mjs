@@ -122,7 +122,17 @@ function normalizeEmail(email) {
     .toLowerCase()
 }
 
+function remainingTrialDays(licenseExpiry) {
+  if (!licenseExpiry) return null
+  const end = new Date(licenseExpiry)
+  if (Number.isNaN(end.getTime())) return null
+  end.setHours(23, 59, 59, 999)
+  return Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+}
+
 function publicUser(account, customer) {
+  const licenseExpiry = customer?.licenseExpiry || null
+  const status = customer?.status || 'trial'
   return {
     id: account.id,
     email: account.email,
@@ -132,8 +142,11 @@ function publicUser(account, customer) {
     role: account.role || 'owner',
     customerId: account.customerId,
     plan: customer?.plan || account.plan || 'Starter',
-    status: customer?.status || 'trial',
-    licenseExpiry: customer?.licenseExpiry || null,
+    status,
+    licenseExpiry,
+    trialEnd: licenseExpiry,
+    remainingDays: status === 'trial' || status === 'trialing' ? remainingTrialDays(licenseExpiry) : null,
+    onboardingCompleted: account.onboardingCompleted !== false,
     tenantCode: account.tenantCode,
   }
 }
@@ -227,6 +240,7 @@ export async function registerAccount(store, body) {
     customerId,
     tenantCode,
     plan: body.plan === 'Pro' || body.plan === 'Enterprise' || body.plan === 'Starter' ? body.plan : 'Starter',
+    onboardingCompleted: false,
     createdAt: existingLead?.createdAt || now.toISOString(),
     lastLoginAt: now.toISOString(),
     source: existingLead ? 'demo_converted' : sourceTag === 'bachmain_signup_modal' ? 'self_signup' : (sourceTag || 'self_signup'),
@@ -367,6 +381,20 @@ export async function loginAccount(store, body) {
     user: publicUser(account, customer),
     customer,
   }
+}
+
+export function completeOnboarding(store, accountId) {
+  ensureCollections(store)
+  const account = store.accounts.find((a) => a.id === accountId)
+  if (!account) {
+    const err = new Error('Hesap bulunamadı')
+    err.code = 'NOT_FOUND'
+    throw err
+  }
+  account.onboardingCompleted = true
+  account.onboardingCompletedAt = new Date().toISOString()
+  const customer = store.customers.find((c) => c.id === account.customerId) || null
+  return { user: publicUser(account, customer) }
 }
 
 export function getAccountFromToken(store, token) {

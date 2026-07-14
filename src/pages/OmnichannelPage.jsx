@@ -18,6 +18,7 @@ import { getLearningStats, recordAcceptedReply, recordFeedback } from '../omnich
 import { readAiSettings, saveAiSettings } from '../omnichannel/ai/settings'
 import {
   assignConversation,
+  createWhatsAppExampleThread,
   getConversationMessages,
   mergeWhatsAppInbox,
   readChannelConfig,
@@ -249,6 +250,11 @@ export default function OmnichannelPage() {
       appliedSuggestionRef.current = ''
       setSuggestedText('')
       refresh()
+    } catch (error) {
+      window.alert(
+        error?.message
+          || 'Mesaj gönderilemedi. WhatsApp için Ayarlar → Mesaj Merkezi’nde Phone Number ID ve Access Token kaydedin.',
+      )
     } finally {
       setSending(false)
     }
@@ -302,6 +308,16 @@ export default function OmnichannelPage() {
     checkOmniAiHealth().then(setAiHealth)
   }
 
+  function handleCreateWhatsAppExample() {
+    const id = createWhatsAppExampleThread({
+      contactName: 'Örnek Müşteri',
+      contactPhone: '+905301285610',
+    })
+    setChannelFilter('whatsapp')
+    setSelectedId(id)
+    refresh()
+  }
+
   const connectedCount = Object.values(channelConfig).filter((item) => item.connected).length
 
   return (
@@ -330,6 +346,13 @@ export default function OmnichannelPage() {
           <span className="glass-pill !h-8 !px-3 !text-[12px] !font-bold text-emerald-600">
             {connectedCount}/5 kanal bağlı
           </span>
+          <button
+            type="button"
+            onClick={handleCreateWhatsAppExample}
+            className="btn-ghost inline-flex items-center gap-2 !px-3 !py-2 text-[12px] font-bold"
+          >
+            Örnek WhatsApp
+          </button>
           <button
             type="button"
             onClick={() => setSettingsOpen((open) => !open)}

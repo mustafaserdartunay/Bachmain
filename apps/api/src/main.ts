@@ -3,6 +3,7 @@ import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import sensible from '@fastify/sensible'
+import cookie from '@fastify/cookie'
 import { Server } from 'socket.io'
 import { env, corsOrigins } from './config/env.js'
 import { isAppError } from './shared/errors.js'
@@ -22,6 +23,7 @@ async function main() {
   })
 
   await app.register(sensible)
+  await app.register(cookie)
   await app.register(helmet, { global: true })
   await app.register(cors, {
     origin: (origin, cb) => {

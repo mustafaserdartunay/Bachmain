@@ -4,6 +4,7 @@ import {
   getAccountFromToken,
   getBearerOrCookieToken,
   buildSessionCookie,
+  completeOnboarding,
 } from './auth.mjs'
 import { loadStore, withStore } from './store.mjs'
 import { hitRateLimit } from './db.mjs'
@@ -153,6 +154,27 @@ export async function handleAuthApi(req, res, path, body = {}) {
     }
     sendJson(req, res, 200, { ok: true, user: session.user })
     return true
+  }
+
+  if (method === 'POST' && path === 'auth/onboarding/complete') {
+    const token = getBearerOrCookieToken(req)
+    try {
+      const result = await withStore((store) => {
+        const session = getAccountFromToken(store, token)
+        if (!session) {
+          const err = new Error('Oturum bulunamadı')
+          err.code = 'UNAUTHORIZED'
+          throw err
+        }
+        return completeOnboarding(store, session.account.id)
+      })
+      sendJson(req, res, 200, { ok: true, user: result.user })
+      return true
+    } catch (error) {
+      const status = error.code === 'UNAUTHORIZED' ? 401 : error.code === 'NOT_FOUND' ? 404 : 400
+      sendJson(req, res, status, { error: error.code || 'ONBOARDING_FAILED', message: error.message })
+      return true
+    }
   }
 
   if (method === 'POST' && path === 'auth/logout') {

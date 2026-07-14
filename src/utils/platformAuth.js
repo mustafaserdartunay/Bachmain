@@ -88,6 +88,12 @@ export async function fetchCurrentUser() {
   return data.user
 }
 
+export async function completeOnboarding() {
+  const data = await authRequest('auth/onboarding/complete', { method: 'POST', body: {} })
+  if (data.user) persistSession({ token: getStoredSession().token, user: data.user })
+  return data.user
+}
+
 export async function logoutAccount() {
   try {
     await authRequest('auth/logout', { method: 'POST', body: {} })

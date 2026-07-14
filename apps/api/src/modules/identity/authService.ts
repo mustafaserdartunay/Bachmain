@@ -15,6 +15,7 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../sha
 import { env } from '../../config/env.js'
 import { logActivity } from '../audit/activityService.js'
 import { notifyUser } from '../notifications/notificationService.js'
+import { createMfaChallenge, isTrustedDevice } from './mfaService.js'
 
 async function uniqueSlug(base: string) {
   const slug = slugify(base)
@@ -52,14 +53,16 @@ export async function registerUser(input: {
 
   const now = new Date()
   const trialEnds = new Date(now.getTime() + 7 * 86400000)
+  const passwordHash = hashPassword(input.password)
 
   const [user] = await db
     .insert(users)
     .values({
       email,
-      passwordHash: hashPassword(input.password),
+      passwordHash,
       fullName: input.fullName.trim(),
       phone: input.phone?.trim() || null,
+      onboardingCompleted: false,
     })
     .returning()
 
@@ -122,6 +125,7 @@ export async function loginUser(input: {
   password: string
   ip?: string
   userAgent?: string
+  deviceId?: string
 }) {
   const email = input.email.trim().toLowerCase()
   const [user] = await db
@@ -140,6 +144,27 @@ export async function loginUser(input: {
     .limit(1)
 
   await db.update(users).set({ lastLoginAt: new Date(), updatedAt: new Date() }).where(eq(users.id, user.id))
+
+  if (user.mfaEnabled) {
+    const trusted = await isTrustedDevice(user.id, {
+      userAgent: input.userAgent,
+      ip: input.ip,
+      deviceId: input.deviceId,
+    })
+    if (!trusted) {
+      const mfaToken = await createMfaChallenge(user.id)
+      return {
+        mfaRequired: true as const,
+        mfaToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          mfaEnabled: true,
+        },
+      }
+    }
+  }
 
   const tokens = await issueSession(
     user.id,
@@ -160,6 +185,7 @@ export async function loginUser(input: {
   })
 
   return {
+    mfaRequired: false as const,
     user: publicUser(user, membership?.companyId || null, membership?.role || 'viewer'),
     tokens,
   }
@@ -189,6 +215,28 @@ async function issueSession(
     userAgent: meta.userAgent || null,
   })
   return { accessToken, refreshToken, expiresIn: env.JWT_ACCESS_TTL_SECONDS }
+}
+
+export async function issueSessionForUser(userId: string, meta: { ip?: string; userAgent?: string }) {
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
+  if (!user) throw new AppError('USER_NOT_FOUND', 'Kullanıcı bulunamadı', 404)
+  const [membership] = await db
+    .select()
+    .from(companyMemberships)
+    .where(and(eq(companyMemberships.userId, user.id), eq(companyMemberships.isDefault, true)))
+    .limit(1)
+  const tokens = await issueSession(
+    user.id,
+    membership?.companyId || null,
+    membership?.role || 'viewer',
+    user.platformRole,
+    meta,
+  )
+  return {
+    user: publicUser(user, membership?.companyId || null, membership?.role || 'viewer'),
+    companyId: membership?.companyId || null,
+    tokens,
+  }
 }
 
 export async function refreshSession(refreshToken: string) {
@@ -305,5 +353,7 @@ function publicUser(
     role,
     platformRole: user.platformRole,
     emailVerified: Boolean(user.emailVerifiedAt),
+    mfaEnabled: Boolean(user.mfaEnabled),
+    onboardingCompleted: Boolean(user.onboardingCompleted),
   }
 }

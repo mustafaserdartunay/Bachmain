@@ -3,8 +3,15 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
+import TrialBanner, { computeRemainingDays, isTrialActive } from '../TrialBanner'
+import { useAuth } from '../../auth/AuthContext'
 
 export default function Layout({ children }) {
+  const { user } = useAuth()
+  const remainingDays = computeRemainingDays(user)
+  const showTrialBanner =
+    isTrialActive(user) && typeof remainingDays === 'number' && remainingDays >= 0
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('erlenbox-sidebar') === 'collapsed')
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(() => localStorage.getItem('bach-team-hub-panel') !== 'expanded')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -44,7 +51,17 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="app-shell min-h-screen bg-dark-900 transition-colors">
+    <div
+      className="app-shell min-h-screen bg-dark-900 transition-colors"
+      style={showTrialBanner ? { paddingTop: 36 } : undefined}
+    >
+      {showTrialBanner ? (
+        <TrialBanner
+          remainingDays={remainingDays}
+          trialEnd={user?.trialEnd || user?.trialEndsAt || user?.licenseExpiry}
+          status={user?.status}
+        />
+      ) : null}
       {mobileSidebarOpen && (
         <button
           type="button"

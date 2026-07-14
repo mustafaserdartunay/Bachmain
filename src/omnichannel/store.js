@@ -258,6 +258,57 @@ function seedIfEmpty() {
 
 seedIfEmpty()
 
+/** Always creates a sample WhatsApp thread so the inbox UI can be checked. */
+export function createWhatsAppExampleThread({
+  contactName = 'Örnek Müşteri',
+  contactPhone = '+905301285610',
+} = {}) {
+  const conversationId = createId('CONV')
+  const at = new Date().toISOString()
+  const externalId = String(contactPhone).replace(/\D/g, '') || '905301285610'
 
+  upsertConversation({
+    id: conversationId,
+    channel: 'whatsapp',
+    externalId,
+    contactName,
+    contactPhone,
+    contactEmail: '',
+    contactHandle: '',
+    customerId: null,
+    leadId: null,
+    assignedUserId: null,
+    departmentId: 'dep-sales',
+    lastMessageAt: at,
+    lastMessagePreview: 'Merhaba, BachMain WhatsApp örneği — fiyat alabilir miyim?',
+    unreadCount: 1,
+    sentiment: 'neutral',
+    status: 'open',
+  })
+
+  appendMessage({
+    id: createId('MSG'),
+    conversationId,
+    channel: 'whatsapp',
+    direction: 'in',
+    type: 'text',
+    body: 'Merhaba, BachMain WhatsApp örneği — fiyat alabilir miyim?',
+    mediaUrl: null,
+    mediaName: null,
+    duration: null,
+    senderName: contactName,
+    at,
+    status: 'delivered',
+  }, { bumpUnread: false })
+
+  appendWebhookLog({
+    channel: 'whatsapp',
+    event: 'example.created',
+    externalId,
+    note: 'Yerel örnek konuşma (Meta API olmadan UI testi)',
+  })
+
+  return conversationId
+}
 
 export { CHANNELS }

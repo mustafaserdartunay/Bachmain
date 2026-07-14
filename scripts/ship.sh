@@ -43,9 +43,10 @@ fi
 echo "==> Push origin main"
 git push origin main
 
+# Always deploy from repo root: Vercel project Root Directory is apps/web|apps/admin|/.
 deploy() {
   local name="$1" project="$2"
-  echo "==> Deploy $name"
+  echo "==> Deploy $name (from repo root)"
   VERCEL_ORG_ID="$ORG" VERCEL_PROJECT_ID="$project" \
     npx --yes vercel@latest --prod --yes
 }
