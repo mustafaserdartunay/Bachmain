@@ -16,7 +16,7 @@ export default function PackagesPage() {
         </div>
         <h1 className="crm-pricing-hero-title">İşinize uyan paket</h1>
         <p className="crm-pricing-hero-sub">
-          Starter, Professional veya Enterprise — ihtiyaçlarınıza göre seçin. Ödeme adımında kart veya havale ile devam edebilirsiniz.
+          Starter, Professional veya Enterprise — her sütunda özet özellikler ve detaylı açıklamalar yukarıdan aşağıya sıralıdır.
         </p>
 
         <div className="crm-pricing-period" role="group" aria-label="Fatura dönemi">
@@ -42,17 +42,21 @@ export default function PackagesPage() {
         <div className="crm-pricing-grid">
           {CRM_PRICING_PLANS.map((p) => {
             const amount = p.prices[period]
+            const ctaClass = p.featured ? 'is-primary' : p.id === 'enterprise' ? 'is-navy' : 'is-ghost'
             return (
-              <article key={p.id} className={`crm-pricing-card ${p.featured ? 'is-featured' : ''}`}>
+              <article key={p.id} className={`crm-pricing-card crm-pricing-card-full ${p.featured ? 'is-featured' : ''}`}>
                 {p.badge ? <div className="crm-pricing-badge">{p.badge}</div> : null}
+
                 <header className="crm-pricing-card-head">
                   <h2 className="crm-pricing-plan-name">{p.plan}</h2>
                   <p className="crm-pricing-tagline">{p.tagline}</p>
                 </header>
+
                 <div className="crm-pricing-amount-row">
                   <span className="crm-pricing-amount">{formatTry(amount)}</span>
                   <span className="crm-pricing-per">{perLabel}</span>
                 </div>
+
                 <div className="crm-pricing-meta">
                   <span>
                     <Users className="h-3.5 w-3.5" aria-hidden />
@@ -63,19 +67,38 @@ export default function PackagesPage() {
                     {p.storage}
                   </span>
                 </div>
-                <ul className="crm-pricing-features">
-                  {p.features.map((f) => (
-                    <li key={f}>
-                      <Check className="crm-pricing-check" strokeWidth={2.5} aria-hidden />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  to={checkoutPath(p.id, period)}
-                  className={`crm-pricing-cta ${p.featured ? 'is-primary' : p.id === 'enterprise' ? 'is-navy' : 'is-ghost'}`}
-                >
-                  Satın Al
+
+                <div className="crm-pricing-section">
+                  <h3 className="crm-pricing-section-title">Dahil olanlar</h3>
+                  <ul className="crm-pricing-features">
+                    {p.features.map((f) => (
+                      <li key={f}>
+                        <Check className="crm-pricing-check" strokeWidth={2.5} aria-hidden />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="crm-pricing-section crm-pricing-section-detail">
+                  <h3 className="crm-pricing-section-title">Detaylı özellikler</h3>
+                  <ol className="crm-pricing-detail-flow">
+                    {p.details.map((block, index) => (
+                      <li key={block.title} className="crm-pricing-detail-step">
+                        <span className="crm-pricing-step-num" aria-hidden>
+                          {index + 1}
+                        </span>
+                        <div className="crm-pricing-detail-block">
+                          <h4>{block.title}</h4>
+                          <p>{block.body}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                <Link to={checkoutPath(p.id, period)} className={`crm-pricing-cta ${ctaClass}`}>
+                  {p.plan} Satın Al
                 </Link>
               </article>
             )
@@ -84,37 +107,6 @@ export default function PackagesPage() {
         <p className="crm-pricing-footnote">
           Fiyatlar katalog fiyatlarıdır. Satın Al ile ödeme sayfasına geçersiniz; seçtiğiniz dönem korunur.
         </p>
-      </section>
-
-      <section className="crm-pricing-details">
-        <h2 className="crm-pricing-details-title">Paketlerin detaylı özellikleri</h2>
-        <p className="crm-pricing-details-lead">
-          Her paketin kapsadığı süreçleri aşağıdan inceleyin; hazır olduğunuzda Satın Al ile ödeme adımına geçin.
-        </p>
-        <div className="crm-pricing-details-grid">
-          {CRM_PRICING_PLANS.map((p) => (
-            <article key={`detail-${p.id}`} className={`crm-pricing-detail-card ${p.featured ? 'is-featured' : ''}`}>
-              <div className="crm-pricing-detail-top">
-                <h3>{p.plan}</h3>
-                <span>{formatTry(p.prices[period])} {perLabel}</span>
-              </div>
-              <div className="crm-pricing-detail-blocks">
-                {p.details.map((block) => (
-                  <div key={block.title} className="crm-pricing-detail-block">
-                    <h4>{block.title}</h4>
-                    <p>{block.body}</p>
-                  </div>
-                ))}
-              </div>
-              <Link
-                to={checkoutPath(p.id, period)}
-                className={`crm-pricing-cta ${p.featured ? 'is-primary' : p.id === 'enterprise' ? 'is-navy' : 'is-ghost'}`}
-              >
-                {p.plan} Satın Al
-              </Link>
-            </article>
-          ))}
-        </div>
       </section>
     </div>
   )

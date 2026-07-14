@@ -3294,11 +3294,14 @@ html.night *::-webkit-scrollbar-thumb {
 
 @media (min-width: 1024px) {
   .crm-pricing-card.is-featured {
-    transform: scale(1.02);
+    transform: none;
     z-index: 1;
   }
   .crm-pricing-card.is-featured:hover {
-    transform: translateY(-8px) scale(1.03);
+    transform: translateY(-4px);
+  }
+  .crm-pricing-card-full.is-featured {
+    transform: none;
   }
 }
 
@@ -3394,13 +3397,122 @@ html.night *::-webkit-scrollbar-thumb {
 }
 
 .crm-pricing-features {
-  margin: 1.25rem 0 0;
+  margin: 0.75rem 0 0;
   padding: 0;
   list-style: none;
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
+}
+
+.crm-pricing-card-full .crm-pricing-features {
+  flex: 0 0 auto;
+}
+
+.crm-pricing-section {
+  margin-top: 1.35rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.crm-pricing-card.is-featured .crm-pricing-section {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.crm-pricing-section-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.crm-pricing-card.is-featured .crm-pricing-section-title {
+  color: #94a3b8;
+}
+
+.crm-pricing-section-detail {
+  flex: 1;
+}
+
+.crm-pricing-detail-flow {
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.crm-pricing-detail-step {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  gap: 0.7rem;
+  position: relative;
+  padding-bottom: 1.1rem;
+}
+
+.crm-pricing-detail-step:last-child {
+  padding-bottom: 0;
+}
+
+.crm-pricing-detail-step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 0.72rem;
+  top: 1.55rem;
+  bottom: 0.15rem;
+  width: 1px;
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.crm-pricing-card.is-featured .crm-pricing-detail-step:not(:last-child)::before {
+  background: rgba(244, 164, 28, 0.28);
+}
+
+.crm-pricing-step-num {
+  display: inline-flex;
+  width: 1.45rem;
+  height: 1.45rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.crm-pricing-card.is-featured .crm-pricing-step-num {
+  color: #1a1205;
+  background: linear-gradient(135deg, #F4A41C, #e8940f);
+  border-color: transparent;
+}
+
+.crm-pricing-detail-block h4 {
+  margin: 0.1rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 750;
+  color: #0f172a;
+}
+
+.crm-pricing-card.is-featured .crm-pricing-detail-block h4 {
+  color: #fbbf24;
+}
+
+.crm-pricing-detail-block p {
+  margin: 0.35rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.crm-pricing-card.is-featured .crm-pricing-detail-block p {
+  color: #cbd5e1;
 }
 
 .crm-pricing-features li {
@@ -3455,136 +3567,17 @@ html.night *::-webkit-scrollbar-thumb {
   color: #94a3b8;
 }
 
-.crm-pricing-details {
-  margin-top: 2.5rem;
-  width: 100%;
-}
-
-.crm-pricing-details-title {
-  margin: 0;
-  text-align: center;
-  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: #0f172a;
-}
-
-.crm-pricing-details-lead {
-  margin: 0.6rem auto 1.5rem;
-  max-width: 40rem;
-  text-align: center;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: #64748b;
-}
-
-.crm-pricing-details-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  width: 100%;
-}
-
-@media (min-width: 1024px) {
-  .crm-pricing-details-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.crm-pricing-detail-card {
-  display: flex;
-  flex-direction: column;
-  padding: 1.4rem 1.35rem 1.25rem;
-  border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
-}
-
-.crm-pricing-detail-card.is-featured {
-  background: linear-gradient(165deg, #0f172a, #152238);
-  border-color: rgba(244, 164, 28, 0.35);
-  color: #e2e8f0;
-}
-
-.crm-pricing-detail-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.crm-pricing-detail-card.is-featured .crm-pricing-detail-top {
-  border-bottom-color: rgba(255, 255, 255, 0.12);
-}
-
-.crm-pricing-detail-top h3 {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.crm-pricing-detail-card.is-featured .crm-pricing-detail-top h3 {
-  color: #fff;
-}
-
-.crm-pricing-detail-top span {
-  font-size: 0.8rem;
-  font-weight: 650;
-  color: #64748b;
-}
-
-.crm-pricing-detail-card.is-featured .crm-pricing-detail-top span {
-  color: #94a3b8;
-}
-
-.crm-pricing-detail-blocks {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin: 1rem 0 0;
-  flex: 1;
-}
-
-.crm-pricing-detail-block h4 {
-  margin: 0;
-  font-size: 0.92rem;
-  font-weight: 750;
-  color: #0f172a;
-}
-
-.crm-pricing-detail-card.is-featured .crm-pricing-detail-block h4 {
-  color: #fbbf24;
-}
-
-.crm-pricing-detail-block p {
-  margin: 0.35rem 0 0;
-  font-size: 0.86rem;
-  line-height: 1.55;
-  color: #475569;
-}
-
-.crm-pricing-detail-card.is-featured .crm-pricing-detail-block p {
-  color: #cbd5e1;
-}
-
 html.night .crm-pricing-page {
   background:
     radial-gradient(ellipse 70% 50% at 10% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
     radial-gradient(ellipse 50% 40% at 90% 10%, rgba(244, 164, 28, 0.08), transparent 50%);
 }
 
-html.night .crm-pricing-hero-title,
-html.night .crm-pricing-details-title {
+html.night .crm-pricing-hero-title {
   color: #e2e8f0;
 }
 
 html.night .crm-pricing-hero-sub,
-html.night .crm-pricing-details-lead,
 html.night .crm-pricing-footnote {
   color: #94a3b8;
 }
@@ -3599,15 +3592,13 @@ html.night .crm-pricing-period button.is-active {
   color: #f8fafc;
 }
 
-html.night .crm-pricing-card:not(.is-featured),
-html.night .crm-pricing-detail-card:not(.is-featured) {
+html.night .crm-pricing-card:not(.is-featured) {
   background: rgba(15, 23, 42, 0.72);
   border-color: rgba(148, 163, 184, 0.14);
 }
 
 html.night .crm-pricing-plan-name,
 html.night .crm-pricing-amount,
-html.night .crm-pricing-detail-top h3,
 html.night .crm-pricing-detail-block h4 {
   color: #f1f5f9;
 }
@@ -3615,7 +3606,7 @@ html.night .crm-pricing-detail-block h4 {
 html.night .crm-pricing-tagline,
 html.night .crm-pricing-features li,
 html.night .crm-pricing-detail-block p,
-html.night .crm-pricing-detail-top span {
+html.night .crm-pricing-section-title {
   color: #94a3b8;
 }
 
@@ -3623,6 +3614,20 @@ html.night .crm-pricing-meta span {
   color: #cbd5e1;
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.08);
+}
+
+html.night .crm-pricing-section {
+  border-top-color: rgba(148, 163, 184, 0.16);
+}
+
+html.night .crm-pricing-step-num {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+html.night .crm-pricing-detail-step:not(:last-child)::before {
+  background: rgba(148, 163, 184, 0.22);
 }
 
 html.night .crm-pricing-buy-btn.is-ghost,
