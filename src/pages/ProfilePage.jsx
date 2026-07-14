@@ -80,8 +80,8 @@ export default function ProfilePage() {
           <Link to="/profil/paketim" className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-3 text-sm font-bold text-white hover:bg-dark-600">
             Paketim
           </Link>
-          <Link to="/profil/paket-satin-al" className="rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-bold text-blue-200 hover:bg-blue-500/20">
-            Paket Satın Al
+          <Link to="/paketler" className="rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-bold text-blue-200 hover:bg-blue-500/20">
+            Paketler / Satın Al
           </Link>
         </div>
 

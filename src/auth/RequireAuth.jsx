@@ -8,6 +8,7 @@ const BILLING_PATHS = new Set([
   '/profil/paketim',
   '/profil/paket-satin-al',
   '/profil/odeme',
+  '/paketler',
   '/kurulum',
 ])
 

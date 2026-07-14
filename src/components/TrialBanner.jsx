@@ -42,7 +42,7 @@ export default function TrialBanner({
 
   const sub = subscriptionStatus || status
   let label = null
-  let ctaTo = '/profil/paket-satin-al'
+  let ctaTo = '/paketler'
   let cta = 'Yenile'
 
   if (sub === 'grace') {

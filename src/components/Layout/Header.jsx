@@ -12,6 +12,7 @@ import {
   Trash2,
   GraduationCap,
   ShoppingBag,
+  Package,
 } from 'lucide-react'
 import { ensureUserProfile, readUserProfile } from '../../utils/userProfile'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -78,6 +79,7 @@ function HeaderBar({ onMenuClick }) {
   const menuItems = [
     { label: 'Yeni Özellikler ve Duyurular', icon: Megaphone, path: '/duyurular' },
     { label: 'Eğitim', icon: GraduationCap, path: '/egitim' },
+    { label: 'Paketler', icon: Package, path: '/paketler' },
     { label: 'Profilim', icon: UserRound, path: '/profil' },
     { label: 'Yönetici Ayarları', icon: Settings, path: '/ayarlar' },
   ]

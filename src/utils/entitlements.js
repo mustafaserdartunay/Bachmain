@@ -36,6 +36,7 @@ export const ALWAYS_ALLOWED_PATHS = new Set([
   '/profil/paketim',
   '/profil/paket-satin-al',
   '/profil/odeme',
+  '/paketler',
   '/hesap/lisans',
   '/deneme-bitti',
   '/kurulum',
