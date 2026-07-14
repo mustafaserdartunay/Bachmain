@@ -3,16 +3,13 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
-import TrialBanner, { computeRemainingDays, isTrialActive } from '../TrialBanner'
+import TrialBanner, { shouldShowTrialBanner, computeRemainingDays } from '../TrialBanner'
 import { useAuth } from '../../auth/AuthContext'
 
 export default function Layout({ children }) {
   const { user } = useAuth()
   const remainingDays = computeRemainingDays(user)
-  const showTrialBanner =
-    (isTrialActive(user) && typeof remainingDays === 'number' && remainingDays >= 0) ||
-    user?.subscriptionStatus === 'grace' ||
-    (typeof remainingDays === 'number' && remainingDays >= 0 && remainingDays <= 7 && !isTrialActive(user))
+  const showTrialBanner = shouldShowTrialBanner(user)
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('erlenbox-sidebar') === 'collapsed')
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(() => localStorage.getItem('bach-team-hub-panel') !== 'expanded')
@@ -53,18 +50,7 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div
-      className="app-shell min-h-screen bg-dark-900 transition-colors"
-      style={showTrialBanner ? { paddingTop: 36 } : undefined}
-    >
-      {showTrialBanner ? (
-        <TrialBanner
-          remainingDays={remainingDays}
-          trialEnd={user?.trialEnd || user?.trialEndsAt || user?.licenseExpiry || user?.graceUntil}
-          status={user?.status}
-          subscriptionStatus={user?.subscriptionStatus}
-        />
-      ) : null}
+    <div className="app-shell min-h-screen bg-dark-900 transition-colors">
       {mobileSidebarOpen && (
         <button
           type="button"
@@ -84,6 +70,14 @@ export default function Layout({ children }) {
         data-sidebar-collapsed={!isMobile && sidebarCollapsed ? 'true' : 'false'}
         data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
       >
+        {showTrialBanner ? (
+          <TrialBanner
+            remainingDays={remainingDays}
+            trialEnd={user?.trialEnd || user?.trialEndsAt || user?.licenseExpiry || user?.graceUntil}
+            status={user?.status}
+            subscriptionStatus={user?.subscriptionStatus}
+          />
+        ) : null}
         <Header onMenuClick={() => setMobileSidebarOpen(true)} />
         <HeaderCashActionsPanel />
         <main className="app-responsive min-w-0 flex-1 overflow-x-hidden">{children}</main>
