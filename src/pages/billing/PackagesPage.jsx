@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Check, HardDrive, Users } from 'lucide-react'
 import { useState } from 'react'
 import { CRM_PRICING_PLANS, checkoutPath, formatTry } from '../../data/pricingPlans'
+import BrandLogo from '../../components/Layout/BrandLogo'
 
 function BuyRow({ period, className = '' }) {
   return (
@@ -26,7 +27,9 @@ export default function PackagesPage() {
   return (
     <div className="crm-pricing-page">
       <section className="crm-pricing-hero">
-        <p className="crm-pricing-brand">BACHMAIN</p>
+        <div className="crm-pricing-brand">
+          <BrandLogo />
+        </div>
         <h1 className="crm-pricing-hero-title">İşinize uyan paket</h1>
         <p className="crm-pricing-hero-sub">
           Starter, Professional veya Enterprise — ihtiyaçlarınıza göre seçin. Ödeme adımında kart veya havale ile devam edebilirsiniz.
