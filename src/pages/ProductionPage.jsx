@@ -28,8 +28,10 @@ import {
   createProductionLineItemActions,
 } from '../utils/productionLineItemActions'
 import {
+  cancelProductionBackToOrder,
   deleteProductionJob,
   loadProductionJobs,
+  sendProductionJobToDepo,
   updateProductionJob,
 } from '../utils/productionStore'
 import { getProductionJobTimelineDates } from '../utils/productionJobTimeline'
@@ -43,7 +45,7 @@ import {
 } from '../utils/workflowStages'
 
 const productionListGrid =
-  '96px minmax(128px, 1fr) 96px 104px 120px 96px 240px 76px'
+  '96px minmax(128px, 1fr) 96px 104px 120px 96px 240px 168px'
 
 const LIST_ROW_CELL = 'flex h-full min-w-0 items-center'
 const DATE_COL_LINE = 'min-h-[15px] leading-tight'
@@ -295,7 +297,7 @@ export default function ProductionPage() {
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Sipariş kodu, müşteri veya ürün kalemi ara..."
           />
-          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3 lg:grid-cols-3">
             <div>
               <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Süreç</p>
               <EditableDropdownPill
@@ -408,6 +410,27 @@ export default function ProductionPage() {
                       />
                     </div>
                     <div className={`relative z-10 ${LIST_ROW_CELL} justify-end gap-1.5`} onClick={(event) => event.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          cancelProductionBackToOrder(job.id)
+                          refreshJobs()
+                        }}
+                        className="whitespace-nowrap rounded-lg border border-blue-500/25 bg-blue-500/10 px-2 py-1.5 text-[11px] font-bold text-blue-300 transition-colors hover:bg-blue-500/20"
+                      >
+                        Vazgeç
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sendProductionJobToDepo(job.id)
+                          refreshJobs()
+                          navigate('/depo')
+                        }}
+                        className="whitespace-nowrap rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2 py-1.5 text-[11px] font-bold text-emerald-300 transition-colors hover:bg-emerald-500/20"
+                      >
+                        Depoya gönder
+                      </button>
                       <button
                         type="button"
                         onClick={() => toggleJobExpanded(job.id)}

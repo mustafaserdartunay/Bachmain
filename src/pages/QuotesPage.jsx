@@ -31,7 +31,8 @@ import EditableDropdownPill from '../components/EditableDropdownPill'
 import { defaultQuoteStages, initialQuotes } from '../data/quotesData'
 import { customers as customerData } from '../data/mockData'
 import { getListCustomerDisplay } from '../data/customerProfiles'
-import { sampleProducts, vatRates } from '../data/productsData'
+import { vatRates } from '../data/productsData'
+import { getCatalogProducts } from '../utils/productCatalog'
 import { createOrderFromQuote, loadOrders, updateOrder } from '../utils/ordersStore'
 import { nextQuoteCode, resolveQuoteCode, sanitizeQuoteCode } from '../utils/documentCodes'
 import { readVoiceQuoteOpenId, clearVoiceQuoteOpenId, softDeleteQuote } from '../utils/quotesStore'
@@ -615,17 +616,31 @@ function FieldLabelSpacer({ label = 'Alan' }) {
 }
 
 function ProductSearchSelect({ item, onSelect, onTextChange }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
+  const [catalogProducts, setCatalogProducts] = useState(() => getCatalogProducts())
   const pickerRef = useRef(null)
   const query = item.product || ''
   const normalizedQuery = query.trim().toLowerCase()
   const filteredProducts = normalizedQuery
-    ? sampleProducts.filter((product) => (
-      [product.name, product.stockCode, product.barcode, product.productCode]
+    ? catalogProducts.filter((product) => (
+      [product.name, product.stockCode, product.barcode, product.productCode, product.category]
         .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalizedQuery))
+        .some((value) => String(value).toLowerCase().includes(normalizedQuery))
     ))
-    : sampleProducts
+    : catalogProducts
+
+  useEffect(() => {
+    function refreshCatalog() {
+      setCatalogProducts(getCatalogProducts())
+    }
+    refreshCatalog()
+    window.addEventListener('storage', refreshCatalog)
+    window.addEventListener('bach:products-updated', refreshCatalog)
+    return () => {
+      window.removeEventListener('storage', refreshCatalog)
+      window.removeEventListener('bach:products-updated', refreshCatalog)
+    }
+  }, [])
 
   useEffect(() => {
     if (!isOpen) return undefined
@@ -641,7 +656,7 @@ function ProductSearchSelect({ item, onSelect, onTextChange }) {
   }, [isOpen])
 
   function selectProduct(product) {
-    onSelect(product.name)
+    onSelect(product)
     setIsOpen(false)
   }
 
@@ -669,7 +684,7 @@ function ProductSearchSelect({ item, onSelect, onTextChange }) {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-white">{product.name}</p>
                   <p className="truncate text-[13px] font-semibold text-gray-500">
-                    {product.stockCode || product.productCode || 'Kod yok'} · Barkod: {product.barcode || 'Yok'}
+                    {product.category || 'Stok'} · {product.stockCode || product.productCode || 'Kod yok'} · Barkod: {product.barcode || 'Yok'}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-black text-emerald-300">
@@ -679,7 +694,7 @@ function ProductSearchSelect({ item, onSelect, onTextChange }) {
             ))}
             {filteredProducts.length === 0 && (
               <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-xs font-semibold text-gray-500">
-                Ürün adı, ürün kodu veya barkod ile eşleşen ürün bulunamadı.
+                Stok ürün/hizmet listesinde eşleşen kayıt yok.
               </div>
             )}
           </div>
@@ -1086,6 +1101,7 @@ export default function QuotesPage() {
   const [openItemMenuId, setOpenItemMenuId] = useState(null)
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [pendingHeaderQuoteDelete, setPendingHeaderQuoteDelete] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [stageInput, setStageInput] = useState('')
@@ -1407,7 +1423,8 @@ export default function QuotesPage() {
   function handleCreateOrderFromList(quote, event) {
     event?.stopPropagation?.()
     if (Boolean(quote.orderId) || linkedOrderQuoteIds.has(quote.id)) return
-    transferQuoteToOrder(quote)
+    const order = transferQuoteToOrder(quote)
+    if (order) navigate('/siparisler')
   }
 
   function setQuoteStage(quote, stage) {
@@ -1551,7 +1568,7 @@ export default function QuotesPage() {
   }, [searchParams, navigate])
 
   function saveCurrentQuote({ startNew = false, returnToList = false } = {}) {
-    if (!selectedQuote) return
+    if (!selectedQuote || isSaving) return
     const validation = validateQuoteForSave(selectedQuote)
     if (!validation.ok) {
       window.alert(validation.message)
@@ -1564,6 +1581,8 @@ export default function QuotesPage() {
       window.alert('Bu teklif kodu zaten kullanılıyor.')
       return
     }
+
+    setIsSaving(true)
 
     let safeQuote = {
       ...(existingQuote || {}),
@@ -1581,7 +1600,10 @@ export default function QuotesPage() {
 
     const nextQuotes = [safeQuote, ...quotes.filter((quote) => quote.id !== safeQuote.id && quote.id !== selectedQuote.id)]
     const saved = updateQuotes(nextQuotes)
-    if (!saved) return
+    if (!saved) {
+      setIsSaving(false)
+      return
+    }
 
     setOpenSaveMenu(false)
 
@@ -1590,20 +1612,14 @@ export default function QuotesPage() {
       setDraftQuote(nextDraft)
       setSelectedId(nextDraft.id)
       setViewMode('prepare')
-      window.alert('Teklif kaydedildi. Yeni teklif ekranı açıldı.')
+      setIsSaving(false)
       return
     }
 
     setDraftQuote(null)
     setSelectedId(safeQuote.id)
-
-    if (returnToList) {
-      setViewMode('list')
-      window.alert('Değişiklikleriniz kaydedildi.')
-      return
-    }
-
-    window.alert(existingQuote ? 'Değişiklikleriniz kaydedildi.' : 'Teklif başarıyla kaydedildi.')
+    setViewMode(returnToList ? 'prepare' : 'prepare')
+    setIsSaving(false)
   }
 
   function getSafeQuoteForOutput() {
@@ -1878,8 +1894,11 @@ export default function QuotesPage() {
     })
   }
 
-  function selectProductForItem(id, productName) {
-    const product = sampleProducts.find((item) => item.name === productName)
+  function selectProductForItem(id, productOrName) {
+    const product = typeof productOrName === 'object' && productOrName
+      ? productOrName
+      : getCatalogProducts().find((entry) => entry.name === productOrName)
+    const productName = product?.name || String(productOrName || '')
     patchSelected({
       items: selectedQuote.items.map((item) => item.id === id
         ? {
@@ -1983,43 +2002,53 @@ export default function QuotesPage() {
     return getQuoteSortDate(b) - getQuoteSortDate(a)
   })
 
-  const orderReceivedQuotes = filteredQuotes.filter((quote) => {
+  const openQuotes = filteredQuotes.filter((quote) => {
     const activeStage = resolveListQuoteStage(quote)
-    return Boolean(quote.orderId) || isOrderReceivedStage(activeStage)
+    return !quote.orderId && !isOrderReceivedStage(activeStage) && !linkedOrderQuoteIds.has(quote.id)
   })
 
   const summary = {
     total: filteredQuotes.length,
     sent: filteredQuotes.filter((quote) => quote.status === 'Müşteriye Gönderildi').length,
     approved: filteredQuotes.filter((quote) => quote.status === 'Onaylandı').length,
-    totalNet: orderReceivedQuotes.reduce((sum, quote) => sum + documentTotals(quote).net, 0),
-    totalAmount: orderReceivedQuotes.reduce((sum, quote) => sum + documentTotals(quote).grandTotal, 0),
+    totalNet: openQuotes.reduce((sum, quote) => sum + documentTotals(quote).net, 0),
+    totalAmount: openQuotes.reduce((sum, quote) => sum + documentTotals(quote).grandTotal, 0),
   }
 
   return (
     <div className="space-y-5">
-      <div className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <div className="flex justify-center">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-            {viewMode === 'prepare'
-              ? (isDraftQuote ? 'Yeni Teklif Oluştur' : 'Teklif Düzenle')
-              : 'Teklif Yönetimi'}
-          </h1>
-        </div>
+      <div className="flex min-h-[4.75rem] items-center justify-between gap-4 rounded-2xl border border-dark-500/50 bg-dark-800/70 px-5 py-3 shadow-card">
         {viewMode === 'list' ? (
-          <button onClick={addQuote} className="btn-primary absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-1.5 px-4 py-2.5 text-sm">
-            <Plus className="h-4 w-4" /> Yeni Teklif
-          </button>
+          <>
+            <div className="hidden w-[10.5rem] shrink-0 sm:block" aria-hidden="true" />
+            <h1 className="flex-1 text-center text-2xl font-black uppercase tracking-wide text-blue-300">
+              Teklif Yönetimi
+            </h1>
+            <button
+              type="button"
+              onClick={addQuote}
+              title="Yeni Teklif"
+              className="group flex h-[52px] min-w-[8.5rem] shrink-0 items-center gap-2.5 rounded-xl bg-gradient-to-br from-[#93c5fd] via-[#3b82f6] to-[#2563eb] px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5"
+            >
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-white ring-1 ring-white/25">
+                <Plus className="h-4 w-4" strokeWidth={2.25} />
+              </span>
+              <span className="truncate text-xs font-extrabold leading-none text-white">Yeni Teklif</span>
+            </button>
+          </>
         ) : (
           <>
             <button
               type="button"
               onClick={returnToQuoteList}
-              className="absolute left-5 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Teklif listesine dön
             </button>
-            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2" data-quote-dropdown>
+            <h1 className="flex-1 text-center text-2xl font-black uppercase tracking-wide text-blue-300">
+              {isDraftQuote ? 'Yeni Teklif Oluştur' : 'Teklif Düzenle'}
+            </h1>
+            <div className="relative flex shrink-0 items-center gap-2" data-quote-dropdown>
               {selectedQuote ? (
                 <Link
                   to={`/belge-merkezi/yazdir?type=quote&id=${encodeURIComponent(selectedQuote.id)}`}
@@ -2032,10 +2061,10 @@ export default function QuotesPage() {
                 <button
                   type="button"
                   onClick={() => saveCurrentQuote({ returnToList: true })}
-                  disabled={!selectedQuote}
-                  className="btn-success inline-flex h-10 items-center justify-center rounded-none px-4 text-sm font-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={!selectedQuote || isSaving}
+                  className="btn-success inline-flex h-10 min-w-[7.5rem] items-center justify-center rounded-none px-4 text-sm font-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Kaydet
+                  {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>
                 <button
                   type="button"
@@ -2046,7 +2075,7 @@ export default function QuotesPage() {
                       return !open
                     })
                   }}
-                  disabled={!selectedQuote}
+                  disabled={!selectedQuote || isSaving}
                   className="btn-success inline-flex h-10 w-10 items-center justify-center rounded-none border-l border-white/25 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                   title="Kaydet seçenekleri"
                   aria-expanded={openSaveMenu}
@@ -2342,34 +2371,12 @@ export default function QuotesPage() {
                         </Field>
                       </div>
                     </div>
-                    <CustomerPicker quote={selectedQuote} onPatch={patchSelected} />
+                    <CustomerPicker quote={selectedQuote} onPatch={patchSelected} allowCreate={false} />
                     <Field label="Oluşturma Tarihi"><input type="date" value={selectedQuote.createdAt || todayIsoDate()} onChange={(e) => patchSelected({ createdAt: e.target.value })} className="form-input" /></Field>
                     <Field label="Geçerlilik Tarihi"><input type="date" value={selectedQuote.validUntil || defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())} onChange={(e) => patchSelected({ validUntil: e.target.value })} className="form-input" /></Field>
                   </div>
                 </section>
               </div>
-
-              <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-                <QuoteProcessManagement
-                  quote={selectedQuote}
-                  onPatch={patchSelected}
-                  optionLists={optionLists}
-                  updateOptionList={updateOptionList}
-                  quoteStageRecord={quoteStageRecord}
-                  isStageEditorOpen={isStageEditorOpen}
-                  toggleStageEditor={toggleStageEditor}
-                  stageInput={stageInput}
-                  setStageInput={setStageInput}
-                  onAddQuoteStage={addQuoteStage}
-                  onSelectQuoteStage={selectQuoteStageInEditor}
-                  onUpdateQuoteStageColor={updateQuoteStageColor}
-                  onUpdateQuoteStageLabel={updateQuoteStageLabel}
-                  onReorderQuoteStages={reorderQuoteStages}
-                  pendingStageDeleteId={pendingStageDeleteId}
-                  setPendingStageDeleteId={setPendingStageDeleteId}
-                  onRemoveQuoteStage={removeQuoteStage}
-                />
-              </section>
 
               <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
                 <div className="mb-4 flex items-center justify-between">
@@ -2424,7 +2431,7 @@ export default function QuotesPage() {
                           <Field label="Ürün">
                             <ProductSearchSelect
                               item={item}
-                              onSelect={(productName) => selectProductForItem(item.id, productName)}
+                              onSelect={(product) => selectProductForItem(item.id, product)}
                               onTextChange={(value) => updateItem(item.id, 'product', value)}
                             />
                           </Field>

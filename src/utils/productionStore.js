@@ -4,14 +4,26 @@ import { nextDocumentCode } from './documentCodes'
 import {
   deriveJobSummary,
   ensureLineItems,
+  getLineQuantityRows,
+  resolveOrderForProductionJob,
+  syncLineQuantitiesFromRows,
+  createQuantityRowTimestamp,
 } from './productionLineItems'
 import {
   findWorkflowStage,
+  getOrderStageOptions,
   getProductionStageOptions,
+  isOrderReceivedStage,
   loadWorkflowStages,
   PRODUCTION_ENTRY_STAGE_ID,
 } from './workflowStages'
 import { softDeleteRecord, restoreDeletedRecord } from './deletedRecordsStore'
+import { loadOrders, updateOrder } from './ordersStore'
+import {
+  addDepoItem,
+  createDepoItemFromRow,
+  getDepoItemByProductionRow,
+} from './depoStore'
 
 const STORAGE_KEY = 'erlenbox-production'
 const DELETED_COLLECTION = 'production'
@@ -237,4 +249,102 @@ export function restoreDeletedProductionJob(jobId) {
   if (jobs.some((item) => item.id === record.id)) return record
   saveProductionJobs([normalizeProductionJob(record), ...jobs])
   return record
+}
+
+export function cancelProductionBackToOrder(jobId) {
+  const job = getProductionJobById(jobId)
+  if (!job) return false
+
+  const orderId = job.orderId || job.id
+  deleteProductionJob(jobId)
+
+  const order = loadOrders().find((item) => item.id === orderId)
+  if (!order) return true
+
+  const stages = loadWorkflowStages()
+  const orderStages = getOrderStageOptions(stages)
+  const fallBack = orderStages.find((stage) => isOrderReceivedStage(stage))
+    || orderStages.find((stage) => stage.label !== 'Üretime Alındı')
+    || orderStages[0]
+
+  updateOrder(orderId, {
+    status: order.status === 'Üretimde' ? 'Yeni' : order.status,
+    currentStageId: fallBack?.id || order.currentStageId,
+    activities: [
+      ...(order.activities || []),
+      {
+        id: createId('act'),
+        date: new Date().toLocaleString('tr-TR'),
+        text: 'Üretime alma işlemi vazgeçildi. Sipariş listede kaldı.',
+      },
+    ],
+  })
+  return true
+}
+
+export function sendProductionJobToDepo(jobId) {
+  const job = getProductionJobById(jobId)
+  if (!job) return { sent: 0 }
+
+  const stages = loadWorkflowStages()
+  const productionStages = getProductionStageOptions(stages)
+  const orders = loadOrders()
+  const order = resolveOrderForProductionJob(job, orders)
+  const lineItems = ensureLineItems(job, productionStages, order)
+  let sent = 0
+  const now = createQuantityRowTimestamp()
+  const nextLineItems = lineItems.map((lineItem) => {
+    const rows = getLineQuantityRows(lineItem).map((row, index) => ({
+      ...row,
+      productionCode: row.productionCode || `${job.id}-${index + 1}`,
+    }))
+
+    const patchedRows = rows.map((row) => {
+      if (row.depoItemId) {
+        const existing = getDepoItemByProductionRow(job.id, lineItem.id, row.id)
+        return existing ? { ...row, depoItemId: existing.id } : row
+      }
+
+      const quantity = Math.max(
+        Number(row.deliveredQuantity) || 0,
+        Number(row.producedQuantity) || 0,
+        Number(lineItem.quantity) || 0,
+        1,
+      )
+      const readyRow = {
+        ...row,
+        deliveredQuantity: quantity,
+        producedQuantity: Math.max(Number(row.producedQuantity) || 0, quantity),
+      }
+      const depoItem = createDepoItemFromRow(job, lineItem, readyRow, { quantity })
+      addDepoItem(depoItem)
+      sent += 1
+      return {
+        ...readyRow,
+        depoItemId: depoItem.id,
+        depoSentAt: now,
+      }
+    })
+
+    const synced = syncLineQuantitiesFromRows(patchedRows)
+    return { ...lineItem, ...synced, quantityRows: synced.quantityRows }
+  })
+
+  const summary = deriveJobSummary({ ...job, lineItems: nextLineItems }, stages)
+  updateProductionJob(job.id, {
+    lineItems: nextLineItems,
+    status: summary.status,
+    currentStageId: summary.currentStageId,
+    stage: summary.stage,
+    activities: [
+      ...(job.activities || []),
+      {
+        id: createId('act'),
+        date: new Date().toLocaleString('tr-TR'),
+        text: sent > 0 ? `${sent} kalem depoya gönderildi.` : 'Depoya gönderilecek kalem bulunamadı.',
+      },
+    ],
+  })
+
+  return { sent }
 }

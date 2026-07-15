@@ -308,7 +308,7 @@ function CustomerFieldActionRow({ children, actions }) {
   )
 }
 
-export default function CustomerPicker({ record, quote, onPatch }) {
+export default function CustomerPicker({ record, quote, onPatch, allowCreate = true }) {
   const doc = record || quote
   const [isOpen, setIsOpen] = useState(false)
   const [isQuickEditOpen, setIsQuickEditOpen] = useState(false)
@@ -394,13 +394,15 @@ export default function CustomerPicker({ record, quote, onPatch }) {
               >
                 <Plus className="h-3.5 w-3.5" /> Hızlı Müşteri Düzenle
               </button>
-              <button
-                type="button"
-                onClick={addNewCustomer}
-                className={`${BTN_PRIMARY} ${DOCUMENT_SIDE_ACTION_WIDTH} h-[38px] gap-2 px-4 text-xs`}
-              >
-                <Plus className="h-3.5 w-3.5" /> Yeni Müşteri Ekle
-              </button>
+              {allowCreate ? (
+                <button
+                  type="button"
+                  onClick={addNewCustomer}
+                  className={`${BTN_PRIMARY} ${DOCUMENT_SIDE_ACTION_WIDTH} h-[38px] gap-2 px-4 text-xs`}
+                >
+                  <Plus className="h-3.5 w-3.5" /> Yeni Müşteri Ekle
+                </button>
+              ) : null}
             </div>
           )}
         >

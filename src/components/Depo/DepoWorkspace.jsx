@@ -28,19 +28,23 @@ import {
 import { formatTL } from '../../utils/productPricing'
 import {
   addWarehouse,
+  advanceDepoItemStatus,
   createDepoWaybill,
   createTransfer,
   issueDepoInvoice,
   loadDepoItems,
   loadDepoTransfers,
   loadDepoWarehouses,
+  removeDepoItemById,
   syncDepoFromProduction,
 } from '../../utils/depoStore'
+import { getProductionJobById, updateProductionJob } from '../../utils/productionStore'
+import { getLineQuantityRows, syncLineQuantitiesFromRows } from '../../utils/productionLineItems'
 import { getDepoItemStatusLabel, isDepoItemDelivered } from '../../utils/depoStageHelpers'
 import { getDepoStageFilterOptions, loadDepoWorkflowStages } from '../../utils/depoWorkflowStages'
 
 const depoListGrid =
-  '96px 76px minmax(140px,1fr) minmax(200px,1.5fr) 96px 136px'
+  '96px 76px minmax(140px,1fr) minmax(200px,1.5fr) 96px 210px'
 
 const DEPO_PAGE_CONFIG = {
   order: {
@@ -228,6 +232,33 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
 
   function handleCreateWaybill(item) {
     createDepoWaybill(item.id)
+    refresh()
+  }
+
+  function handleDeliverItem(item) {
+    if (isDepoItemDelivered(item, depoStages)) return
+    advanceDepoItemStatus(item.id, 'Teslim Edildi')
+    refresh()
+  }
+
+  function handleCancelDepoItem(item) {
+    if (item.productionJobId && item.lineItemId && item.quantityRowId) {
+      const job = getProductionJobById(item.productionJobId)
+      if (job) {
+        const lineItems = (job.lineItems || []).map((line) => {
+          if (line.id !== item.lineItemId) return line
+          const rows = getLineQuantityRows(line).map((row) => (
+            row.id === item.quantityRowId
+              ? { ...row, depoItemId: '', depoSentAt: '', invoiceNo: '', invoiceAt: '' }
+              : row
+          ))
+          const synced = syncLineQuantitiesFromRows(rows)
+          return { ...line, ...synced, quantityRows: synced.quantityRows }
+        })
+        updateProductionJob(job.id, { lineItems })
+      }
+    }
+    removeDepoItemById(item.id)
     refresh()
   }
 
@@ -424,6 +455,24 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
                     )}
                   </div>
                   <div className="relative z-10 flex items-center justify-end gap-1">
+                    {!isDepoItemDelivered(item, depoStages) && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleCancelDepoItem(item)}
+                          className="whitespace-nowrap rounded-lg border border-blue-500/25 bg-blue-500/10 px-2 py-1.5 text-[11px] font-bold text-blue-300 transition-colors hover:bg-blue-500/20"
+                        >
+                          Vazgeç
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeliverItem(item)}
+                          className="whitespace-nowrap rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2 py-1.5 text-[11px] font-bold text-emerald-300 transition-colors hover:bg-emerald-500/20"
+                        >
+                          Teslim et
+                        </button>
+                      </>
+                    )}
                     {item.invoiceNo ? (
                       <span
                         className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[12px] font-black text-emerald-300"

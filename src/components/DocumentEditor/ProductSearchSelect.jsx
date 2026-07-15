@@ -1,20 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
 import SearchInput from '../Common/SearchInput'
-import { sampleProducts } from '../../data/productsData'
+import { getCatalogProducts } from '../../utils/productCatalog'
 import { formatTL } from '../../utils/productPricing'
 
 export default function ProductSearchSelect({ item, onSelect, onTextChange }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
+  const [catalogProducts, setCatalogProducts] = useState(() => getCatalogProducts())
   const pickerRef = useRef(null)
   const query = item.product || ''
   const normalizedQuery = query.trim().toLowerCase()
   const filteredProducts = normalizedQuery
-    ? sampleProducts.filter((product) => (
-      [product.name, product.stockCode, product.barcode, product.productCode]
+    ? catalogProducts.filter((product) => (
+      [product.name, product.stockCode, product.barcode, product.productCode, product.category]
         .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalizedQuery))
+        .some((value) => String(value).toLowerCase().includes(normalizedQuery))
     ))
-    : sampleProducts
+    : catalogProducts
+
+  useEffect(() => {
+    function refreshCatalog() {
+      setCatalogProducts(getCatalogProducts())
+    }
+    refreshCatalog()
+    window.addEventListener('storage', refreshCatalog)
+    window.addEventListener('bach:products-updated', refreshCatalog)
+    return () => {
+      window.removeEventListener('storage', refreshCatalog)
+      window.removeEventListener('bach:products-updated', refreshCatalog)
+    }
+  }, [])
 
   useEffect(() => {
     if (!isOpen) return undefined
@@ -30,7 +44,7 @@ export default function ProductSearchSelect({ item, onSelect, onTextChange }) {
   }, [isOpen])
 
   function selectProduct(product) {
-    onSelect(product.name)
+    onSelect(product)
     setIsOpen(false)
   }
 
@@ -58,7 +72,7 @@ export default function ProductSearchSelect({ item, onSelect, onTextChange }) {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-white">{product.name}</p>
                   <p className="truncate text-[13px] font-semibold text-gray-500">
-                    {product.stockCode || product.productCode || 'Kod yok'} · Barkod: {product.barcode || 'Yok'}
+                    {product.category || 'Stok'} · {product.stockCode || product.productCode || 'Kod yok'} · Barkod: {product.barcode || 'Yok'}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 text-[12px] font-black text-emerald-300">
@@ -68,7 +82,7 @@ export default function ProductSearchSelect({ item, onSelect, onTextChange }) {
             ))}
             {filteredProducts.length === 0 && (
               <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-xs font-semibold text-gray-500">
-                Ürün adı, ürün kodu veya barkod ile eşleşen ürün bulunamadı.
+                Stok ürün/hizmet listesinde eşleşen kayıt yok.
               </div>
             )}
           </div>

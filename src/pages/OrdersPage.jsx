@@ -56,7 +56,7 @@ import { documentTotals } from '../utils/documentTotals'
 import { readOptionLists, saveOptionList } from '../utils/customerMeta'
 import { resolveCustomerContactInfo } from '../utils/customerContacts'
 
-const orderListGrid = '118px 72px minmax(180px,1.2fr) 148px 148px 118px 118px minmax(160px,auto)'
+const orderListGrid = '118px 72px minmax(180px,1.2fr) 148px 148px 118px 118px minmax(220px,auto)'
 const orderListProcessPillClass =
   'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 py-1 text-[12px] font-bold transition-colors hover:bg-dark-700/80'
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
@@ -1152,6 +1152,24 @@ export default function OrdersPage() {
                       >
                         Vazgeç
                       </button>
+                    )}
+                    {!isInProduction && productionEntryStage && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          transferOrderToProduction(order, productionEntryStage)
+                          navigate('/uretim')
+                        }}
+                        className="whitespace-nowrap rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1.5 text-[12px] font-bold text-emerald-300 transition-colors hover:bg-emerald-500/20"
+                      >
+                        Üretime al
+                      </button>
+                    )}
+                    {isInProduction && (
+                      <span className="whitespace-nowrap rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-[12px] font-bold text-emerald-400/90">
+                        Üretimde
+                      </span>
                     )}
                     <DeleteTrashButton
                       pending={pendingDeleteId === order.id}
