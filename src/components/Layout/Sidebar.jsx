@@ -239,23 +239,32 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
       data-collapsed={collapsed ? 'true' : 'false'}
       className={`glass-sidebar app-sidebar fixed top-[var(--shell-gap)] bottom-[var(--shell-gap)] left-0 z-50 flex h-[calc(100dvh-(2*var(--shell-gap)))] flex-col transition-all duration-300 lg:left-[var(--shell-gap)] ${sidebarPaddingClass} ${sidebarWidthClass} ${mobileStateClass}`}
     >
-      <div className={`flex w-full items-center ${collapsed ? 'justify-center px-0 pt-2' : 'justify-center px-3 pt-1 pb-1'}`}>
+      <div className={`flex w-full items-center gap-1.5 ${collapsed ? 'flex-col justify-center px-0 pt-2' : 'justify-between px-1 pt-1 pb-1'}`}>
         <NavLink
           to="/"
           onClick={handleNavigate}
-          className={`flex hover:opacity-90 transition-opacity ${collapsed ? 'items-center justify-center' : 'w-full items-center justify-center'}`}
+          className={`flex min-w-0 hover:opacity-90 transition-opacity ${collapsed ? 'items-center justify-center' : 'flex-1 items-center justify-center'}`}
           title={brandLabel}
         >
           {company?.logoDataUrl ? (
             <img
               src={company.logoDataUrl}
               alt={brandLabel}
-              className={collapsed ? 'h-8 w-8 object-contain' : 'h-9 max-h-9 w-auto max-w-[11.5rem] shrink-0 object-contain object-center'}
+              className={collapsed ? 'h-8 w-8 object-contain' : 'h-9 max-h-9 w-auto max-w-[10rem] shrink-0 object-contain object-center'}
             />
           ) : (
             <BrandLogo collapsed={collapsed} />
           )}
         </NavLink>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="glass-sidebar-toggle glass-sidebar-collapse hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl lg:flex"
+          title={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
+          aria-label={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
       </div>
 
       <nav className={`flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 ${collapsed ? 'px-0' : 'px-1'}`}>
@@ -793,19 +802,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
       </nav>
 
-      <div className={`mt-auto shrink-0 space-y-2 ${collapsed ? 'px-0 pb-0.5' : 'px-1 pb-1'}`}>
+      <div className={`mt-auto shrink-0 ${collapsed ? 'px-0 pb-0.5' : 'px-1 pb-1'}`}>
         <TrialBanner collapsed={collapsed} />
-        <div className={`hidden lg:flex ${collapsed ? 'justify-center' : 'justify-end px-1'}`}>
-          <button
-            type="button"
-            onClick={onToggle}
-            className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
-            title={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
-            aria-label={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </button>
-        </div>
       </div>
     </aside>
   )

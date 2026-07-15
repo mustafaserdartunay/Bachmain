@@ -86,7 +86,7 @@ function HeaderBar({ onMenuClick }) {
 
   return (
       <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 lg:flex-nowrap lg:gap-4">
-        <div className="order-1 flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
+        <div className="order-1 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
           <button
             type="button"
             onClick={onMenuClick}
@@ -103,29 +103,31 @@ function HeaderBar({ onMenuClick }) {
               className={HEADER_SEARCH_INPUT_CLASS}
             />
           </div>
-          <OrgSwitcher />
-          <HeaderMessageCenter />
-          <HeaderNotebook />
-          <HeaderCalendar />
-          <HeaderAiAssistant />
-          <button
-            type="button"
-            onClick={() => navigate('/shopping')}
-            className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only`}
-            aria-label="POS"
-            title="POS / Shopping"
-          >
-            <span className="icon-wrap">
-              <ShoppingBag className="h-4 w-4 shrink-0" />
-            </span>
-          </button>
+          <div className="flex shrink-0 items-center gap-2.5 sm:gap-3">
+            <OrgSwitcher />
+            <HeaderMessageCenter />
+            <HeaderNotebook />
+            <HeaderCalendar />
+            <HeaderAiAssistant />
+            <button
+              type="button"
+              onClick={() => navigate('/shopping')}
+              className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only`}
+              aria-label="POS"
+              title="POS / Shopping"
+            >
+              <span className="icon-wrap">
+                <ShoppingBag className="h-4 w-4 shrink-0" />
+              </span>
+            </button>
+          </div>
         </div>
 
-        <div className="order-2 flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 lg:gap-4">
+        <div className="order-2 flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-3">
           <AppearanceToggle />
           <NotificationDropdown />
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <div className="hidden h-6 w-px shrink-0 bg-[rgba(140,145,165,0.25)] sm:block" aria-hidden="true" />
 
             <div className="relative flex items-center" ref={anchorRef} onClick={(event) => event.stopPropagation()}>

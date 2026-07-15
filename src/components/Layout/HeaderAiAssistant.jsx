@@ -140,14 +140,13 @@ export default function HeaderAiAssistant() {
         type="button"
         data-header-popover-trigger="ai-assistant"
         onClick={toggle}
-        className={`${HEADER_CONTROL_BUTTON_CLASS} !w-auto gap-1.5 px-3 relative ${open ? 'ring-2 ring-[rgba(139,92,246,0.28)]' : ''}`}
+        className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only relative ${open ? 'ring-2 ring-[rgba(139,92,246,0.28)]' : ''}`}
         aria-label="Asistan"
         title="Asistan"
       >
         <span className="icon-wrap text-[#7c3aed]">
           <Sparkles className="h-4 w-4 shrink-0" />
         </span>
-        <span className="hidden text-xs font-extrabold text-[var(--ink)] sm:inline">Asistan</span>
         {(recording || loading) && (
           <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-[#7c3aed]" />
         )}

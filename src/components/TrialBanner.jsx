@@ -156,52 +156,44 @@ export default function TrialBanner({
     <div
       role="status"
       aria-live="polite"
-      className={`trial-banner-sidebar ${urgent ? 'is-urgent' : ''}`}
+      className={`trial-banner-sidebar is-minimal ${urgent ? 'is-urgent' : ''}`}
     >
-      <div className="trial-banner-sidebar-inner">
+      <div className="trial-banner-sidebar-row">
         <div className="trial-banner-sidebar-copy">
           {mode === 'grace' ? (
             <>
-              <span className="font-semibold">Abonelik bitti.</span>
+              <span className="font-semibold">Ek süre</span>
               {days !== null ? (
                 <>
                   {' '}
-                  <DaysPart days={days} urgent /> ek süre.
+                  <DaysPart days={days} urgent />
                 </>
-              ) : (
-                <span> Ek süre devam ediyor.</span>
-              )}
+              ) : null}
             </>
           ) : null}
 
           {mode === 'trial' ? (
             <>
-              <span className="font-semibold">Ücretsiz deneme</span>
-              <span className="trial-banner-sidebar-meta">
-                <DaysPart days={days} urgent={urgent} />
-                {days === 0 ? null : ' kaldı'}
-                {trialEnd ? (
-                  <span className="trial-banner-date">
-                    {' '}
-                    · {new Date(trialEnd).toLocaleDateString('tr-TR')}
-                  </span>
-                ) : null}
-              </span>
+              <DaysPart days={days} urgent={urgent} />
+              {days === 0 ? null : ' kaldı'}
+              {trialEnd ? (
+                <span className="trial-banner-date">
+                  {' '}
+                  · {new Date(trialEnd).toLocaleDateString('tr-TR')}
+                </span>
+              ) : null}
             </>
           ) : null}
 
           {mode === 'renew' ? (
             <>
-              <span className="font-semibold">Paket bitiyor</span>
-              <span className="trial-banner-sidebar-meta">
-                <DaysPart days={days} urgent /> kaldı.
-              </span>
+              <span className="font-semibold">Paket</span>{' '}
+              <DaysPart days={days} urgent /> kaldı
             </>
           ) : null}
         </div>
-
         <div className="trial-banner-sidebar-actions">
-          <Link to={ctaTo} className="trial-banner-cta" onClick={() => {}}>
+          <Link to={ctaTo} className="trial-banner-cta">
             {cta}
           </Link>
           <button
