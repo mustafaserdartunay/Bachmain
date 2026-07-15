@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, CreditCard, Wallet, Banknote, Package,
   Headphones, MessageCircle, Bell, Sparkles, BarChart3, Server, Download,
   Shield, UserCheck, Store, Globe, Plug, Settings, Activity, UserCog, ScrollText,
-  Boxes, Tags, Percent, Ticket, Timer, RefreshCw, Receipt,
+  Boxes, Tags, Percent, Ticket, Timer, RefreshCw, Receipt, Mail,
 } from 'lucide-react'
 
 /** Staff roles that may see a nav item. Empty / omitted = all authenticated staff. */
@@ -63,6 +63,8 @@ export const navItems: NavItem[] = [
   { id: 'billing-invoices', label: 'Faturalar', path: '/abonelik/faturalar', icon: Receipt, group: 'Abonelik Yönetimi' },
   { id: 'billing-renewals', label: 'Otomatik Yenilemeler', path: '/abonelik/yenilemeler', icon: RefreshCw, group: 'Abonelik Yönetimi' },
   { id: 'billing-history', label: 'Abonelik Logları', path: '/abonelik/loglar', icon: ScrollText, group: 'Abonelik Yönetimi' },
+
+  { id: 'mail-center', label: 'E-posta Merkezi', path: '/eposta', icon: Mail, group: 'Destek', roles: ['super_admin', 'admin', 'support'] },
 
   { id: 'support', label: 'Destek / Ticket', path: '/destek', icon: Headphones, badge: 12, group: 'Destek' },
   { id: 'live-support', label: 'Canlı Destek', path: '/canli-destek', icon: MessageCircle, badge: 3, group: 'Destek' },

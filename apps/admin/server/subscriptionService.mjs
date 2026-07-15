@@ -11,6 +11,7 @@ import {
   modulesForPlan,
   normalizePlanCode,
 } from './billingCatalog.mjs'
+import { sendTemplateMail } from './mail/mailService.mjs'
 
 const GRACE_DAYS = 3
 const REMINDER_DAYS = 7
@@ -231,15 +232,15 @@ export function evaluateLifecycle(store, customerId) {
       meta: { graceUntil: sub.graceUntil },
     })
     rebuildLicense(store, customerId, sub)
-    maybeNotify(store, customerId, 'grace_started', sub)
+    void maybeNotify(store, customerId, 'grace_started', sub)
   } else if (sub.status === 'grace' && graceUntil && graceUntil < now) {
     sub.status = 'expired'
     sub.updatedAt = new Date().toISOString()
     pushHistory(b, { customerId, subscriptionId: sub.id, action: 'expired' })
     rebuildLicense(store, customerId, sub)
-    maybeNotify(store, customerId, 'expired', sub)
+    void maybeNotify(store, customerId, 'expired', sub)
   } else {
-    maybeRemind(store, customerId, sub)
+    void maybeRemind(store, customerId, sub)
   }
   return sub
 }
@@ -248,7 +249,7 @@ function dayKey(d = new Date()) {
   return d.toISOString().slice(0, 10)
 }
 
-function maybeNotify(store, customerId, type, sub) {
+async function maybeNotify(store, customerId, type, sub) {
   const b = ensureBilling(store)
   const key = `${type}:${customerId}:${dayKey()}`
   if (b.notificationLogs.some((n) => n.key === key)) return
@@ -288,31 +289,56 @@ function maybeNotify(store, customerId, type, sub) {
     createdAt: new Date().toISOString(),
   })
 
+  const customer = (store.customers || []).find((c) => c.id === customerId)
+  const to = customer?.email || ''
+  let template = 'package_expiring'
+  if (type === 'grace_started' || String(type).startsWith('grace_')) template = 'grace_started'
+  else if (type === 'expired') template = 'package_expired'
+  else if (String(type).startsWith('renewal_')) template = 'package_expiring'
+
+  const daysLeftMatch = String(type).match(/renewal_(\d+)d/)
+  const daysLeft = daysLeftMatch ? Number(daysLeftMatch[1]) : null
+
+  const mailRow = await sendTemplateMail(store, {
+    to,
+    template,
+    type,
+    customerId,
+    data: {
+      name: customer?.contact || customer?.company || '',
+      endDate,
+      graceUntil: endDate,
+      daysLeft,
+      planName: sub.planCode || customer?.plan || '',
+    },
+    immediate: true,
+  })
+
   b.emailLogs.unshift({
-    id: newId('elog'),
+    id: mailRow?.id || newId('elog'),
     customerId,
     type,
-    to: (store.customers || []).find((c) => c.id === customerId)?.email || '',
+    to,
     subject: title,
     body,
-    status: process.env.RESEND_API_KEY ? 'queued' : 'skipped_no_provider',
+    status: mailRow?.status || (process.env.RESEND_API_KEY ? 'queued' : 'skipped_no_provider'),
     createdAt: new Date().toISOString(),
   })
   b.emailLogs = b.emailLogs.slice(0, 2000)
 }
 
-function maybeRemind(store, customerId, sub) {
+async function maybeRemind(store, customerId, sub) {
   if (!['active', 'trialing', 'grace'].includes(sub.status)) return
   const target = sub.status === 'grace' ? sub.graceUntil : sub.periodEnd
   if (!target) return
   const ms = new Date(target).getTime() - Date.now()
   const daysLeft = Math.ceil(ms / 86400000)
   if (sub.status === 'grace') {
-    maybeNotify(store, customerId, 'grace_daily', sub)
+    await maybeNotify(store, customerId, 'grace_daily', sub)
     return
   }
   if (daysLeft <= REMINDER_DAYS && daysLeft >= 0) {
-    maybeNotify(store, customerId, `renewal_${daysLeft}d`, sub)
+    await maybeNotify(store, customerId, `renewal_${daysLeft}d`, sub)
   }
 }
 

@@ -19,6 +19,7 @@ import {
   BillingSubscriptionsPage,
   BillingTrialsPage,
 } from '@/pages/billing/BillingPages'
+import { MailCenterPage } from '@/pages/mail/MailCenterPage'
 import { ModuleListPage } from '@/components/module/ModuleListPage'
 import { ModuleDetailPage } from '@/components/module/ModuleDetailPage'
 import { ModuleFormPage } from '@/components/module/ModuleFormPage'
@@ -56,6 +57,8 @@ export function AppRoutes() {
         <Route path="abonelik/faturalar" element={<BillingInvoicesPage />} />
         <Route path="abonelik/yenilemeler" element={<BillingRenewalsPage />} />
         <Route path="abonelik/loglar" element={<BillingHistoryPage />} />
+
+        <Route path="eposta" element={<MailCenterPage />} />
 
         <Route path="musteriler" element={<ModuleListPage moduleId="customers" />} />
         <Route path="musteriler/yeni" element={<ModuleFormPage moduleId="customers" mode="create" />} />

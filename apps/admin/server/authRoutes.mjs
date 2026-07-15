@@ -5,6 +5,9 @@ import {
   getBearerOrCookieToken,
   buildSessionCookie,
   completeOnboarding,
+  requestPasswordReset,
+  resetPasswordWithToken,
+  verifyEmailWithToken,
 } from './auth.mjs'
 import { loadStore, withStore } from './store.mjs'
 import { hitRateLimit } from './db.mjs'
@@ -180,6 +183,45 @@ export async function handleAuthApi(req, res, path, body = {}) {
   if (method === 'POST' && path === 'auth/logout') {
     sendJson(req, res, 200, { ok: true }, { cookie: buildSessionCookie('', { clear: true }) })
     return true
+  }
+
+  if (method === 'POST' && path === 'auth/forgot-password') {
+    const ip = req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown'
+    const rate = await hitRateLimit(`forgot:${ip}`, { limit: 8, windowMs: 60 * 60 * 1000 })
+    if (!rate.allowed) {
+      sendJson(req, res, 429, { error: 'RATE_LIMITED', message: 'Çok fazla deneme. Lütfen sonra tekrar deneyin.' })
+      return true
+    }
+    try {
+      await withStore((store) => requestPasswordReset(store, body.email))
+      sendJson(req, res, 200, { ok: true, message: 'Eşleşen hesap varsa sıfırlama bağlantısı e-posta ile gönderildi.' })
+      return true
+    } catch (error) {
+      sendJson(req, res, 400, { error: error.code || 'FORGOT_FAILED', message: error.message })
+      return true
+    }
+  }
+
+  if (method === 'POST' && path === 'auth/reset-password') {
+    try {
+      await withStore((store) => resetPasswordWithToken(store, { token: body.token, password: body.password }))
+      sendJson(req, res, 200, { ok: true, message: 'Şifreniz güncellendi. Giriş yapabilirsiniz.' })
+      return true
+    } catch (error) {
+      sendJson(req, res, 400, { error: error.code || 'RESET_FAILED', message: error.message })
+      return true
+    }
+  }
+
+  if (method === 'POST' && path === 'auth/verify-email') {
+    try {
+      const result = await withStore((store) => verifyEmailWithToken(store, body.token))
+      sendJson(req, res, 200, { ok: true, ...result })
+      return true
+    } catch (error) {
+      sendJson(req, res, 400, { error: error.code || 'VERIFY_FAILED', message: error.message })
+      return true
+    }
   }
 
   return false

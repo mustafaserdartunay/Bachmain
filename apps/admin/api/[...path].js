@@ -9,6 +9,7 @@ import { handleBillingApi } from '../server/billingRoutes.mjs'
 import { handleTenantApi } from '../server/tenantApi.mjs'
 import { handleLeadsApi } from '../server/leads.mjs'
 import { handleWhatsAppApi } from '../server/whatsappApi.mjs'
+import { handleMailApi } from '../server/mailRoutes.mjs'
 import { hasDatabase } from '../server/db.mjs'
 import {
   buildCustomerRows,
@@ -53,6 +54,7 @@ export default async function handler(req, res) {
     if (await handlePaymentsApi(req, res, path, body)) return
     if (await handleWhatsAppApi(req, res, path, body)) return
     if (await handleTenantApi(req, res, path, body)) return
+    if (await handleMailApi(req, res, path, body)) return
 
     if (method === 'GET' && (path === '' || path === 'health')) {
       return sendJson(req, res, 200, {

@@ -1,6 +1,8 @@
 import crypto from 'node:crypto'
 import { newId } from './store.mjs'
 import { entitlementPayloadForCustomer, seedBillingIfEmpty } from './subscriptionService.mjs'
+import { mailConfig } from './mail/mailConfig.mjs'
+import { sendTemplateMail } from './mail/mailService.mjs'
 
 const COOKIE_NAME = 'bachmain_session'
 const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 14
@@ -188,6 +190,7 @@ function enrichUser(store, account, customer) {
 function ensureCollections(store) {
   if (!Array.isArray(store.accounts)) store.accounts = []
   if (!Array.isArray(store.customers)) store.customers = []
+  if (!Array.isArray(store.emailTokens)) store.emailTokens = []
   if (!store.modules) store.modules = {}
   if (!Array.isArray(store.modules.customers)) store.modules.customers = []
   if (!store.customerExtras) store.customerExtras = {}
@@ -351,6 +354,38 @@ export async function registerAccount(store, body) {
   if (moduleIdx >= 0) store.modules.customers[moduleIdx] = moduleRow
   else store.modules.customers.unshift(moduleRow)
 
+  const verifyToken = crypto.randomBytes(32).toString('hex')
+  store.emailTokens.unshift({
+    id: newId('etok'),
+    purpose: 'verify',
+    token: verifyToken,
+    accountId: account.id,
+    email: account.email,
+    expiresAt: new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
+    createdAt: now.toISOString(),
+  })
+  store.emailTokens = store.emailTokens.slice(0, 2000)
+  account.emailVerifiedAt = null
+
+  const cfg = mailConfig()
+  const verifyUrl = `${cfg.appUrl}/eposta-dogrula?token=${encodeURIComponent(verifyToken)}`
+  await sendTemplateMail(store, {
+    to: account.email,
+    template: 'welcome',
+    type: 'welcome',
+    customerId,
+    accountId: account.id,
+    data: { name: fullName, company: companyName, plan: account.plan, appUrl: cfg.appUrl },
+  })
+  await sendTemplateMail(store, {
+    to: account.email,
+    template: 'email_verification',
+    type: 'email_verification',
+    customerId,
+    accountId: account.id,
+    data: { name: fullName, verifyUrl },
+  })
+
   const token = signToken({
     sub: account.id,
     email: account.email,
@@ -402,6 +437,22 @@ export async function loginAccount(store, body) {
   })
   store.customerExtras.loginHistory = store.customerExtras.loginHistory.slice(0, 200)
 
+  await sendTemplateMail(store, {
+    to: account.email,
+    template: 'new_login',
+    type: 'new_login',
+    customerId: account.customerId,
+    accountId: account.id,
+    data: {
+      name: account.fullName,
+      at: account.lastLoginAt,
+      userAgent: body.userAgent || '—',
+      ip: body.ip || '—',
+    },
+    immediate: true,
+    meta: { quiet: true },
+  })
+
   const token = signToken({
     sub: account.id,
     email: account.email,
@@ -415,6 +466,92 @@ export async function loginAccount(store, body) {
     user: enrichUser(store, account, customer),
     customer,
   }
+}
+
+export async function requestPasswordReset(store, emailRaw) {
+  ensureCollections(store)
+  const email = normalizeEmail(emailRaw)
+  const account = store.accounts.find((a) => a.email === email && a.canLogin !== false && a.role !== 'demo_lead')
+  // Always succeed to avoid account enumeration
+  if (!account) return { ok: true }
+
+  const token = crypto.randomBytes(32).toString('hex')
+  store.emailTokens = store.emailTokens.filter((t) => !(t.accountId === account.id && t.purpose === 'reset'))
+  store.emailTokens.unshift({
+    id: newId('etok'),
+    purpose: 'reset',
+    token,
+    accountId: account.id,
+    email: account.email,
+    expiresAt: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
+    createdAt: new Date().toISOString(),
+  })
+  store.emailTokens = store.emailTokens.slice(0, 2000)
+
+  const cfg = mailConfig()
+  const resetUrl = `${cfg.appUrl}/sifre-sifirla?token=${encodeURIComponent(token)}`
+  await sendTemplateMail(store, {
+    to: account.email,
+    template: 'password_reset',
+    type: 'password_reset',
+    customerId: account.customerId,
+    accountId: account.id,
+    data: { name: account.fullName, resetUrl },
+  })
+  return { ok: true }
+}
+
+export async function resetPasswordWithToken(store, { token, password }) {
+  ensureCollections(store)
+  const row = store.emailTokens.find((t) => t.purpose === 'reset' && t.token === token)
+  if (!row || new Date(row.expiresAt).getTime() < Date.now()) {
+    const err = new Error('Geçersiz veya süresi dolmuş bağlantı')
+    err.code = 'INVALID_TOKEN'
+    throw err
+  }
+  if (String(password || '').length < 6) {
+    const err = new Error('Şifre en az 6 karakter olmalı')
+    err.code = 'WEAK_PASSWORD'
+    throw err
+  }
+  const account = store.accounts.find((a) => a.id === row.accountId)
+  if (!account) {
+    const err = new Error('Hesap bulunamadı')
+    err.code = 'NOT_FOUND'
+    throw err
+  }
+  account.passwordHash = hashPassword(password)
+  account.passwordChangedAt = new Date().toISOString()
+  store.emailTokens = store.emailTokens.filter((t) => t.id !== row.id)
+
+  await sendTemplateMail(store, {
+    to: account.email,
+    template: 'password_changed',
+    type: 'password_changed',
+    customerId: account.customerId,
+    accountId: account.id,
+    data: { name: account.fullName },
+  })
+  return { ok: true }
+}
+
+export async function verifyEmailWithToken(store, token) {
+  ensureCollections(store)
+  const row = store.emailTokens.find((t) => t.purpose === 'verify' && t.token === token)
+  if (!row || new Date(row.expiresAt).getTime() < Date.now()) {
+    const err = new Error('Geçersiz veya süresi dolmuş doğrulama bağlantısı')
+    err.code = 'INVALID_TOKEN'
+    throw err
+  }
+  const account = store.accounts.find((a) => a.id === row.accountId)
+  if (!account) {
+    const err = new Error('Hesap bulunamadı')
+    err.code = 'NOT_FOUND'
+    throw err
+  }
+  account.emailVerifiedAt = new Date().toISOString()
+  store.emailTokens = store.emailTokens.filter((t) => t.id !== row.id)
+  return { ok: true, email: account.email }
 }
 
 export function completeOnboarding(store, accountId) {

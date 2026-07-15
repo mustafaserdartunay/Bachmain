@@ -9,6 +9,7 @@ import { handleWhatsAppApi } from './whatsappApi.mjs'
 import { handleBillingApi } from './billingRoutes.mjs'
 import { handlePaymentsApi } from './payments.mjs'
 import { seedBillingIfEmpty } from './subscriptionService.mjs'
+import { handleMailApi } from './mailRoutes.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -89,6 +90,7 @@ async function handle(req, res, url) {
       if (await handleBillingApi(req, res, apiPath, body)) return
       if (await handlePaymentsApi(req, res, apiPath, body)) return
       if (await handleWhatsAppApi(req, res, apiPath, body)) return
+      if (await handleMailApi(req, res, apiPath, body)) return
     }
 
     if (method === 'GET' && pathname === '/api/health') {

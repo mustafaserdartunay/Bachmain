@@ -1,7 +1,12 @@
-import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { Link, Navigate, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import BrandLogo from '../../components/Layout/BrandLogo'
 import { useAuth } from '../../auth/AuthContext'
+import {
+  requestPasswordReset,
+  resetPasswordWithToken,
+  verifyEmailWithToken,
+} from '../../utils/platformAuth'
 
 function AuthShell({ title, subtitle, children, footer }) {
   return (
@@ -73,6 +78,11 @@ export function LoginPage() {
           Şifre
           <input className={fieldClass} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
+        <div className="text-right">
+          <Link className="text-sm font-semibold text-[#1d4ed8] hover:underline" to="/sifremi-unuttum">
+            Şifremi unuttum
+          </Link>
+        </div>
         {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
         <button
           type="submit"
@@ -167,6 +177,156 @@ export function RegisterPage() {
           {busy ? 'Hesap oluşturuluyor…' : 'Üye Ol'}
         </button>
       </form>
+    </AuthShell>
+  )
+}
+
+export function ForgotPasswordPage() {
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState('')
+  const [done, setDone] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  async function onSubmit(event) {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      await requestPasswordReset(email)
+      setDone(true)
+    } catch (err) {
+      setError(err.message || 'İstek başarısız')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <AuthShell
+      title="Şifremi unuttum"
+      subtitle="E-posta adresinize sıfırlama bağlantısı göndeririz"
+      footer={(
+        <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
+          Girişe dön
+        </Link>
+      )}
+    >
+      {done ? (
+        <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
+          Eşleşen bir hesap varsa sıfırlama bağlantısı e-posta kutunuza gönderildi.
+        </p>
+      ) : (
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <label className="block text-sm font-medium text-slate-700">
+            E-posta
+            <input className={fieldClass} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </label>
+          {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full rounded-xl bg-[#0b1f3a] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {busy ? 'Gönderiliyor…' : 'Bağlantı gönder'}
+          </button>
+        </form>
+      )}
+    </AuthShell>
+  )
+}
+
+export function ResetPasswordPage() {
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
+  const token = params.get('token') || ''
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function onSubmit(event) {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      await resetPasswordWithToken({ token, password })
+      navigate('/giris', { replace: true })
+    } catch (err) {
+      setError(err.message || 'Şifre güncellenemedi')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <AuthShell title="Yeni şifre belirle" subtitle="Güvenli bir şifre seçin (en az 6 karakter)">
+      <form className="space-y-4" onSubmit={onSubmit}>
+        <label className="block text-sm font-medium text-slate-700">
+          Yeni şifre
+          <input
+            className={fieldClass}
+            type="password"
+            minLength={6}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+        <button
+          type="submit"
+          disabled={busy || !token}
+          className="w-full rounded-xl bg-[#0b1f3a] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {busy ? 'Kaydediliyor…' : 'Şifreyi güncelle'}
+        </button>
+      </form>
+    </AuthShell>
+  )
+}
+
+export function VerifyEmailPage() {
+  const [params] = useSearchParams()
+  const token = params.get('token') || ''
+  const [error, setError] = useState('')
+  const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function run() {
+      if (!token) {
+        setError('Doğrulama bağlantısı eksik')
+        return
+      }
+      try {
+        await verifyEmailWithToken(token)
+        if (!cancelled) setDone(true)
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Doğrulama başarısız')
+      }
+    }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [token])
+
+  return (
+    <AuthShell
+      title="E-posta doğrulama"
+      subtitle="Hesap e-posta adresiniz doğrulanıyor"
+      footer={(
+        <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
+          Girişe git
+        </Link>
+      )}
+    >
+      {done ? (
+        <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">E-posta adresiniz doğrulandı.</p>
+      ) : error ? (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+      ) : (
+        <p className="text-sm text-slate-600">Doğrulanıyor…</p>
+      )}
     </AuthShell>
   )
 }

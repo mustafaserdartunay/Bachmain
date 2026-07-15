@@ -102,3 +102,15 @@ export async function logoutAccount() {
   }
   clearSession()
 }
+
+export async function requestPasswordReset(email) {
+  return authRequest('auth/forgot-password', { method: 'POST', body: { email } })
+}
+
+export async function resetPasswordWithToken({ token, password }) {
+  return authRequest('auth/reset-password', { method: 'POST', body: { token, password } })
+}
+
+export async function verifyEmailWithToken(token) {
+  return authRequest('auth/verify-email', { method: 'POST', body: { token } })
+}

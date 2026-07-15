@@ -5,7 +5,7 @@ import { cleanupDemoDataOnce } from './utils/demoDataCleanup'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { OrgProvider } from './org/OrgContext'
 import RequireAuth from './auth/RequireAuth'
-import { LoginPage, RegisterPage } from './pages/auth/AuthPages'
+import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/auth/AuthPages'
 import LicensePage from './pages/auth/LicensePage'
 import TrialExpiredPage from './pages/auth/TrialExpiredPage'
 import OnboardingWizard from './pages/onboarding/OnboardingWizard'
@@ -145,6 +145,9 @@ export default function App() {
         <Routes>
           <Route path="/giris" element={<LoginPage />} />
           <Route path="/kayit" element={<RegisterPage />} />
+          <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
+          <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
+          <Route path="/eposta-dogrula" element={<VerifyEmailPage />} />
           <Route path="/hesap/lisans" element={<LicensePage />} />
           <Route
             path="/deneme-bitti"
