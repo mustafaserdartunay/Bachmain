@@ -286,8 +286,12 @@ export default function App() {
                 <Route path="/stok" element={<Navigate to="/stok/urunler" replace />} />
                 <Route path="/stok/urunler" element={<ProductsPage />} />
                 <Route
-                  path="/stok/baklava-kutu-maliyet-hesaplama"
+                  path="/stok/maliyet-hesaplama"
                   element={<CostCalculatorRoute variant="baklava" moduleId="baklavaCostCalculator" />}
+                />
+                <Route
+                  path="/stok/baklava-kutu-maliyet-hesaplama"
+                  element={<LegacyCostCalculatorRedirect />}
                 />
                 <Route path="/stok/urun-maliyet-hesaplama" element={<LegacyCostCalculatorRedirect />} />
                 <Route path="/stok/pasta-kutu-maliyet-hesaplama" element={<LegacyCostCalculatorRedirect />} />

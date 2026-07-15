@@ -1,17 +1,18 @@
 import { Navigate } from 'react-router-dom'
-import { isSectoralModuleEnabled } from '../../utils/sectoralSettings'
+import { isBaklavaCostCalculatorEnabled, isSectoralModuleEnabled } from '../../utils/sectoralSettings'
 import ProductCostCalculatorPage from './ProductCostCalculatorPage'
 
-export default function CostCalculatorRoute({ variant, moduleId }) {
+/** Stok → Maliyet Hesaplama — header modülünden taşındı. */
+export default function CostCalculatorRoute({ variant = 'baklava', moduleId = 'baklavaCostCalculator' }) {
   if (!isSectoralModuleEnabled('ambalaj', 'matbaa', moduleId)) {
-    return <Navigate to="/stok/urunler" replace />
+    return <Navigate to="/ayarlar/sektorel/ambalaj" replace />
   }
   return <ProductCostCalculatorPage variant={variant} />
 }
 
 export function LegacyCostCalculatorRedirect() {
-  if (isSectoralModuleEnabled('ambalaj', 'matbaa', 'baklavaCostCalculator')) {
-    return <Navigate to="/stok/baklava-kutu-maliyet-hesaplama" replace />
+  if (isBaklavaCostCalculatorEnabled()) {
+    return <Navigate to="/stok/maliyet-hesaplama" replace />
   }
-  return <Navigate to="/stok/urunler" replace />
+  return <Navigate to="/ayarlar/sektorel/ambalaj" replace />
 }

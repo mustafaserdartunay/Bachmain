@@ -20,7 +20,6 @@ import { useAuth } from '../../auth/AuthContext'
 import { HEADER_CONTROL_BUTTON_CLASS, HEADER_SEARCH_INPUT_CLASS } from '../../utils/themeMode'
 import NotificationDropdown from './NotificationDropdown'
 import AppearanceToggle from './AppearanceToggle'
-import HeaderModuleDropdown from './HeaderModuleDropdown'
 import HeaderMessageCenter from './HeaderMessageCenter'
 import HeaderNotebook from './HeaderNotebook'
 import HeaderCalendar from './HeaderCalendar'
@@ -104,7 +103,6 @@ function HeaderBar({ onMenuClick }) {
               className={HEADER_SEARCH_INPUT_CLASS}
             />
           </div>
-          <HeaderModuleDropdown />
           <OrgSwitcher />
           <HeaderMessageCenter />
           <HeaderNotebook />

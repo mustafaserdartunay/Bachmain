@@ -15,7 +15,7 @@ export const SECTORAL_CATEGORIES = [
             id: 'baklavaCostCalculator',
             label: 'Baklava, Pasta, Turta, Donut, Kruvasan Kutuları Maaliyet Hesaplama',
             description: 'Onay verildiğinde menüde baklava, pasta, turta, donut ve kruvasan kutuları maaliyet hesaplama sayfası açılır.',
-            route: '/stok/baklava-kutu-maliyet-hesaplama',
+            route: '/stok/maliyet-hesaplama',
           },
         ],
       },

@@ -1,4 +1,5 @@
 export const STOCK_PRODUCTS_PATH = '/stok/urunler'
+export const STOCK_COST_CALCULATOR_PATH = '/stok/maliyet-hesaplama'
 
 export const stockSubMenus = [
   { label: 'Hizmet ve Ürünler', path: STOCK_PRODUCTS_PATH, icon: 'package', openProductsList: true },
@@ -9,6 +10,7 @@ export const stockSubMenus = [
   { label: 'Fiyat Listeleri', path: '/stok/fiyat-listeleri', icon: 'tags' },
   { label: 'Stok Geçmişi', path: '/stok/stok-gecmisi', icon: 'history' },
   { label: 'Stoktaki Ürünler Raporu', path: '/stok/stoktaki-urunler-raporu', icon: 'bar-chart' },
+  { label: 'Maliyet Hesaplama', path: STOCK_COST_CALCULATOR_PATH, icon: 'calculator' },
 ]
 
 export function isStockRoute(pathname) {

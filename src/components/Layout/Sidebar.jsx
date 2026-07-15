@@ -35,6 +35,7 @@ import {
   Warehouse,
   History,
   Tags,
+  Calculator,
   LogIn,
   Clock,
   Timer,
@@ -107,6 +108,7 @@ const stockSubMenuIcons = {
   tags: Tags,
   history: History,
   'bar-chart': BarChart3,
+  calculator: Calculator,
 }
 const fieldSalesSubMenuIcons = {
   'map-pinned': MapPinned,
