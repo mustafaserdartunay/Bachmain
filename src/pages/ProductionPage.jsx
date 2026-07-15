@@ -295,7 +295,7 @@ export default function ProductionPage() {
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Sipariş kodu, müşteri veya ürün kalemi ara..."
           />
-          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3 lg:grid-cols-3">
             <div>
               <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Süreç</p>
               <EditableDropdownPill
