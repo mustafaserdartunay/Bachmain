@@ -25,6 +25,7 @@ import HeaderMessageCenter from './HeaderMessageCenter'
 import HeaderNotebook from './HeaderNotebook'
 import HeaderCalendar from './HeaderCalendar'
 import HeaderAiAssistant from './HeaderAiAssistant'
+import OrgSwitcher from './OrgSwitcher'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { HeaderPopoverProvider, useHeaderPopover } from '../../hooks/useHeaderPopover'
 
@@ -104,6 +105,7 @@ function HeaderBar({ onMenuClick }) {
             />
           </div>
           <HeaderModuleDropdown />
+          <OrgSwitcher />
           <HeaderMessageCenter />
           <HeaderNotebook />
           <HeaderCalendar />

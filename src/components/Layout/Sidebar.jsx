@@ -61,6 +61,7 @@ import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
 import { useAuth } from '../../auth/AuthContext'
 import { filterMenuByEntitlements } from '../../utils/entitlements'
+import { canUseMultiCompany } from '../../utils/orgScope'
 
 const baseMenuItems = [
   { icon: Truck, label: 'Kurye Takip', path: '/kurye-takip', moduleCode: 'courier' },
@@ -713,7 +714,14 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
           {settingsOpen && !collapsed && (
             <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
-              {settingsSubMenus.map((sub) => (
+              {filterMenuByEntitlements(settingsSubMenus, user?.entitlements)
+                .filter((sub) => {
+                  if (sub.moduleCode === 'multi_company') {
+                    return canUseMultiCompany(user?.entitlements, user?.planCode)
+                  }
+                  return true
+                })
+                .map((sub) => (
                 <NavLink
                   key={sub.path}
                   to={sub.path}

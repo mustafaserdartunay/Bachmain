@@ -1,4 +1,5 @@
 import { emptyProduct, sampleProducts } from '../data/productsData'
+import { filterByOrgScope, getActiveOrgScope, withOrgScope } from './orgScope'
 
 const PRODUCT_STORAGE_KEY = 'erlenbox-products'
 const PRODUCT_DB_NAME = 'erlenbox-product-storage'
@@ -58,12 +59,14 @@ function cloneProduct(product) {
 export function getCatalogProducts() {
   try {
     const saved = localStorage.getItem(PRODUCT_STORAGE_KEY)
-    if (!saved) return sampleProducts.map(cloneProduct)
+    if (!saved) return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), { loose: true })
     const parsed = JSON.parse(saved)
-    if (!Array.isArray(parsed) || parsed.length === 0) return sampleProducts.map(cloneProduct)
-    return parsed.map(cloneProduct)
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), { loose: true })
+    }
+    return filterByOrgScope(parsed.map(cloneProduct), getActiveOrgScope(), { loose: true })
   } catch {
-    return sampleProducts.map(cloneProduct)
+    return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), { loose: true })
   }
 }
 

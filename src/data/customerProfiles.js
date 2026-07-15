@@ -2,6 +2,7 @@ import { customers } from './mockData'
 import { getBrandShortName, getCustomerDisplay } from '../utils/customerDisplay'
 import { resolvePrimaryContact } from '../utils/customerContacts'
 import { softDeleteRecord, getDeletedRecords, restoreDeletedRecord, getDeletedRecord } from '../utils/deletedRecordsStore'
+import { filterByOrgScope, getActiveOrgScope, withOrgScope } from '../utils/orgScope'
 
 const CREATED_CUSTOMERS_KEY = 'erlenbox-created-customers'
 
@@ -62,7 +63,8 @@ export function getAllCustomerProfiles() {
 export function getCustomerProfiles() {
   const archived = readArchivedMap()
   const deleted = readDeletedIdSet()
-  return getAllCustomerProfiles().filter((customer) => !archived[customer.id] && !deleted.has(customer.id))
+  const active = getAllCustomerProfiles().filter((customer) => !archived[customer.id] && !deleted.has(customer.id))
+  return filterByOrgScope(active, getActiveOrgScope(), { loose: true })
 }
 
 export function isCustomerArchived(customerId) {
@@ -152,8 +154,10 @@ export function saveCustomerProfile(profile) {
   const existing = getAllCustomerProfiles().find((item) => item.id === profile.id) || {}
   const contacts = Array.isArray(profile.contacts) ? profile.contacts : (existing.contacts || [])
   const primary = resolvePrimaryContact(contacts, profile)
+  const scoped = withOrgScope({ ...existing, ...profile }, getActiveOrgScope())
   const nextProfile = {
     ...existing,
+    ...scoped,
     id: profile.id || `MST-${Date.now()}`,
     company: profile.company || profile.shortBrandName || existing.company || 'Yeni Müşteri',
     shortBrandName: profile.shortBrandName || getBrandShortName(profile.company || existing.company),

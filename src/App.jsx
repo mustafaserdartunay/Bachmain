@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-
 import { installAutoCapitalize } from './utils/autoCapitalize'
 import { cleanupDemoDataOnce } from './utils/demoDataCleanup'
 import { AuthProvider, useAuth } from './auth/AuthContext'
+import { OrgProvider } from './org/OrgContext'
 import RequireAuth from './auth/RequireAuth'
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages'
 import LicensePage from './pages/auth/LicensePage'
@@ -53,6 +54,15 @@ import DepoPage from './pages/process/DepoPage'
 import DeliveredPage from './pages/process/DeliveredPage'
 import MessageCenterSettingsPage from './pages/MessageCenterSettingsPage'
 import SettingsPage from './pages/SettingsPage'
+import {
+  OrgHubPage,
+  OrgCompaniesPage,
+  OrgBranchesPage,
+  OrgWarehousesPage,
+  OrgDepartmentsPage,
+  OrgUserPermissionsPage,
+  OrgCompanySettingsPage,
+} from './pages/org/OrgStructurePages'
 import LabelsSettingsPage from './pages/LabelsSettingsPage'
 import TagLabelsSettingsPage from './pages/TagLabelsSettingsPage'
 import CashBankSettingsPage from './pages/CashBankSettingsPage'
@@ -130,6 +140,7 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <OrgProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/giris" element={<LoginPage />} />
@@ -254,6 +265,13 @@ export default function App() {
                 <Route path="/ayarlar/etiket-listesi" element={<TagLabelsSettingsPage />} />
                 <Route path="/ayarlar/sektorel" element={<SectoralSettingsPage />} />
                 <Route path="/ayarlar/sektorel/:categoryId" element={<SectoralCategorySettingsPage />} />
+                <Route path="/ayarlar/kurumsal-yapi" element={<OrgHubPage />} />
+                <Route path="/ayarlar/kurumsal-yapi/sirketler" element={<OrgCompaniesPage />} />
+                <Route path="/ayarlar/kurumsal-yapi/subeler" element={<OrgBranchesPage />} />
+                <Route path="/ayarlar/kurumsal-yapi/depolar" element={<OrgWarehousesPage />} />
+                <Route path="/ayarlar/kurumsal-yapi/departmanlar" element={<OrgDepartmentsPage />} />
+                <Route path="/ayarlar/kurumsal-yapi/kullanici-yetkileri" element={<OrgUserPermissionsPage />} />
+                <Route path="/ayarlar/kurumsal-yapi/sirket-ayarlari" element={<OrgCompanySettingsPage />} />
                 <Route path="/profil" element={<ProfilePage />} />
                 <Route path="/paketler" element={<PackagesPage />} />
                 <Route path="/profil/paketim" element={<MyPlanPage />} />
@@ -287,6 +305,7 @@ export default function App() {
           />
         </Routes>
       </BrowserRouter>
+      </OrgProvider>
     </AuthProvider>
   )
 }

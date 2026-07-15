@@ -64,6 +64,8 @@ export const WORKSPACE_STORAGE_KEYS = [
   'erlenbox-doc-templates',
   'erlenbox-doc-labels',
   'erlenbox-doc-print-jobs',
+  'bach-org-structure',
+  'bach-org-context',
 ]
 
 const SESSION_KEYS = [

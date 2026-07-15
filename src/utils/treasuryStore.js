@@ -1,6 +1,7 @@
 import { appendActivityEntry } from './activityArchiveStore'
 import { getCustomerProfiles } from '../data/customerProfiles'
 import { getCustomerMetaSelection, matchesPartyListFilter, readCustomerMeta } from './customerMeta'
+import { filterByOrgScope, getActiveOrgScope, withOrgScope } from './orgScope'
 
 const ACCOUNTS_KEY = 'erlenbox-treasury-accounts'
 const MOVEMENTS_KEY = 'erlenbox-treasury-movements'
@@ -59,7 +60,7 @@ function writeJson(key, value) {
 }
 
 export function getTreasuryAccounts() {
-  return readJson(ACCOUNTS_KEY, defaultTreasuryAccounts)
+  return filterByOrgScope(readJson(ACCOUNTS_KEY, defaultTreasuryAccounts), getActiveOrgScope(), { loose: true })
 }
 
 export function saveTreasuryAccounts(accounts) {
@@ -67,7 +68,7 @@ export function saveTreasuryAccounts(accounts) {
 }
 
 export function getTreasuryMovements() {
-  return readJson(MOVEMENTS_KEY, defaultTreasuryMovements)
+  return filterByOrgScope(readJson(MOVEMENTS_KEY, defaultTreasuryMovements), getActiveOrgScope(), { loose: true })
 }
 
 export function saveTreasuryMovements(movements) {
@@ -231,17 +232,30 @@ export function calculateAccountBalance(account, movements = getTreasuryMovement
 export function addTreasuryMovement(movement) {
   const accounts = getTreasuryAccounts()
   const account = accounts.find((item) => item.id === movement.accountId) || accounts[0]
-  const nextMovement = {
-    id: movement.id || createTreasuryId(),
-    accountId: account?.id || movement.accountId,
-    accountName: account?.name || movement.accountName || 'Kasa',
-    date: movement.date || todayForTreasury(),
-    status: movement.status || 'İşlendi',
-    ...movement,
-    amount: Number(movement.amount) || 0,
-  }
+  const nextMovement = withOrgScope(
+    {
+      id: movement.id || createTreasuryId(),
+      accountId: account?.id || movement.accountId,
+      accountName: account?.name || movement.accountName || 'Kasa',
+      date: movement.date || todayForTreasury(),
+      status: movement.status || 'İşlendi',
+      ...movement,
+      amount: Number(movement.amount) || 0,
+    },
+    getActiveOrgScope(),
+  )
 
-  const nextMovements = [nextMovement, ...getTreasuryMovements()]
+  // Persist against full store (not filtered view)
+  const all = (() => {
+    try {
+      const raw = localStorage.getItem(MOVEMENTS_KEY)
+      const parsed = raw ? JSON.parse(raw) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  })()
+  const nextMovements = [nextMovement, ...all.filter((m) => m.id !== nextMovement.id)]
   saveTreasuryMovements(nextMovements)
   return nextMovement
 }

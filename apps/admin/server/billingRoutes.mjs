@@ -5,7 +5,7 @@ import { withStore, loadStore, newId } from './store.mjs'
 import { sendJson } from './authRoutes.mjs'
 import { getAccountFromToken, getBearerOrCookieToken } from './auth.mjs'
 import { getStaffSession } from './staffAuth.mjs'
-import { insertPaymentEvent } from './db.mjs'
+import { insertPaymentEvent, getTenantCollection, hasDatabase } from './db.mjs'
 import {
   activateFromPayment,
   activatePlanDirect,
@@ -277,6 +277,68 @@ export async function handleBillingApi(req, res, path, body = {}) {
     if (method === 'GET' && path === 'billing/admin/subscriptions') {
       const store = await loadStore()
       return sendJson(req, res, 200, { ok: true, rows: listBillingAdmin(store).subscriptions })
+    }
+
+    if (method === 'GET' && path.startsWith('billing/admin/license-detail/')) {
+      requireStaff(req)
+      const customerId = path.split('/')[3]
+      const store = await loadStore()
+      seedBillingIfEmpty(store)
+      const customer = (store.customers || []).find((c) => c.id === customerId)
+      if (!customer) {
+        return sendJson(req, res, 404, { ok: false, error: 'NOT_FOUND', message: 'Müşteri bulunamadı' })
+      }
+      const snap = getSubscriptionSnapshot(store, customerId)
+      const plan = snap?.plan
+      const limits = {
+        maxCompanies: plan?.maxCompanies ?? 1,
+        maxBranches: plan?.maxBranches ?? 1,
+        maxWarehouses: plan?.maxWarehouses ?? 1,
+        maxUsers: plan?.maxUsers ?? 3,
+        storageGb: plan?.storageGb ?? 2,
+      }
+      let usage = { companies: 0, branches: 0, warehouses: 0 }
+      const tenantCode = customer.tenantCode || (store.accounts || []).find((a) => a.customerId === customerId)?.tenantCode
+      if (tenantCode && hasDatabase()) {
+        try {
+          const workspace = await getTenantCollection(tenantCode, 'workspace')
+          const raw = workspace?.keys?.['bach-org-structure']
+          if (raw) {
+            const structure = typeof raw === 'string' ? JSON.parse(raw) : raw
+            usage = {
+              companies: (structure.companies || []).filter((c) => c.active !== false).length,
+              branches: (structure.branches || []).filter((b) => b.active !== false).length,
+              warehouses: (structure.warehouses || []).filter((w) => w.active !== false).length,
+            }
+            customer.orgUsage = usage
+          }
+        } catch {
+          // ignore parse/sync errors
+        }
+      } else if (customer.orgUsage) {
+        usage = customer.orgUsage
+      }
+      const over = {
+        companies: limits.maxCompanies > 0 && usage.companies > limits.maxCompanies,
+        branches: limits.maxBranches > 0 && usage.branches > limits.maxBranches,
+        warehouses: limits.maxWarehouses > 0 && usage.warehouses > limits.maxWarehouses,
+      }
+      return sendJson(req, res, 200, {
+        ok: true,
+        customer: {
+          id: customer.id,
+          company: customer.company || customer.companyName,
+          email: customer.email,
+          plan: plan?.name || customer.plan,
+          planCode: plan?.code || customer.planCode,
+          tenantCode: tenantCode || null,
+        },
+        limits,
+        usage,
+        overLimit: over.companies || over.branches || over.warehouses,
+        over,
+        multiCompanyEnabled: (plan?.modules || []).includes('multi_company'),
+      })
     }
 
     if (method === 'PATCH' && path.startsWith('billing/admin/subscriptions/')) {

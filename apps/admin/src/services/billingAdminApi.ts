@@ -13,6 +13,16 @@ export const billingAdminApi = {
   subscriptions: () => api.get<{ ok: boolean; rows: SubscriptionRow[] }>('/billing/admin/subscriptions'),
   patchSubscription: (id: string, body: Record<string, unknown>) =>
     api.patch(`/billing/admin/subscriptions/${id}`, body),
+  licenseDetail: (customerId: string) =>
+    api.get<{
+      ok: boolean
+      customer: { id: string; company?: string; email?: string; plan?: string; planCode?: string }
+      limits: { maxCompanies: number; maxBranches: number; maxWarehouses: number }
+      usage: { companies: number; branches: number; warehouses: number }
+      overLimit: boolean
+      over: { companies: boolean; branches: boolean; warehouses: boolean }
+      multiCompanyEnabled: boolean
+    }>(`/billing/admin/license-detail/${customerId}`),
   payments: () => api.get<{ ok: boolean; rows: PaymentRow[] }>('/billing/admin/payments'),
   approvePayment: (id: string) => api.post(`/billing/admin/payments/${id}/approve`, {}),
   invoices: () => api.get<{ ok: boolean; rows: InvoiceRow[] }>('/billing/admin/invoices'),
@@ -41,6 +51,9 @@ export interface PlanRow {
   modules?: string[]
   maxUsers?: number
   storageGb?: number
+  maxCompanies?: number
+  maxBranches?: number
+  maxWarehouses?: number
   active?: boolean
   sortOrder?: number
 }
@@ -70,6 +83,16 @@ export interface SubscriptionRow {
   remainingHours?: number | null
   remainingMinutes?: number | null
   autoRenew?: boolean
+  limits?: {
+    maxCompanies?: number
+    maxBranches?: number
+    maxWarehouses?: number
+    maxUsers?: number
+    storageGb?: number
+  }
+  orgUsage?: { companies?: number; branches?: number; warehouses?: number }
+  orgOverLimit?: boolean
+  tenantCode?: string | null
 }
 
 export interface PaymentRow {

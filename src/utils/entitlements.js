@@ -28,6 +28,7 @@ export const ROUTE_MODULE_MAP = {
   '/kurye': 'courier',
   '/ik': 'hr',
   '/raporlar': 'reporting',
+  '/ayarlar/kurumsal-yapi': 'multi_company',
 }
 
 /** Core paths always visible even without entitlements list (profile, billing, settings shell). */
@@ -57,6 +58,9 @@ export function hasModule(entitlements, code) {
 export function canAccessPath(entitlements, pathname) {
   if (!pathname) return true
   if (ALWAYS_ALLOWED_PATHS.has(pathname)) return true
+  if (pathname.startsWith('/ayarlar/kurumsal-yapi')) {
+    return hasModule(entitlements, 'multi_company')
+  }
   if (pathname.startsWith('/profil') || pathname.startsWith('/ayarlar') || pathname.startsWith('/hesap')) {
     return true
   }

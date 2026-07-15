@@ -168,6 +168,9 @@ function rebuildLicense(store, customerId, sub, extraModules = []) {
   license.modules = modules
   license.maxUsers = plan?.maxUsers ?? 3
   license.storageGb = plan?.storageGb ?? 2
+  license.maxCompanies = plan?.maxCompanies ?? 1
+  license.maxBranches = plan?.maxBranches ?? 1
+  license.maxWarehouses = plan?.maxWarehouses ?? 1
   license.periodStart = sub.periodStart
   license.periodEnd = sub.periodEnd
   license.graceUntil = sub.graceUntil || null
@@ -177,6 +180,13 @@ function rebuildLicense(store, customerId, sub, extraModules = []) {
   if (customer) {
     customer.plan = license.planName
     customer.planCode = license.planCode
+    customer.limits = {
+      maxUsers: license.maxUsers,
+      storageGb: license.storageGb,
+      maxCompanies: license.maxCompanies,
+      maxBranches: license.maxBranches,
+      maxWarehouses: license.maxWarehouses,
+    }
     customer.status =
       sub.status === 'trialing'
         ? 'trial'
@@ -385,7 +395,7 @@ export function entitlementPayloadForCustomer(store, customerId) {
       planCode: 'starter',
       subscriptionStatus: 'trialing',
       entitlements: modulesFallback('starter'),
-      limits: { maxUsers: 3, storageGb: 2 },
+      limits: { maxUsers: 3, storageGb: 2, maxCompanies: 1, maxBranches: 1, maxWarehouses: 1 },
       remainingDays: 7,
       graceUntil: null,
       licenseExpiry: null,
@@ -401,6 +411,9 @@ export function entitlementPayloadForCustomer(store, customerId) {
     limits: {
       maxUsers: snap.plan?.maxUsers ?? 3,
       storageGb: snap.plan?.storageGb ?? 2,
+      maxCompanies: snap.plan?.maxCompanies ?? 1,
+      maxBranches: snap.plan?.maxBranches ?? 1,
+      maxWarehouses: snap.plan?.maxWarehouses ?? 1,
     },
     remainingDays: snap.countdown.remainingDays,
     remainingHours: snap.countdown.remainingHours,
@@ -662,6 +675,9 @@ export function staffCreatePlan(store, body) {
     prices: body.prices || { month: 0, year: 0 },
     maxUsers: body.maxUsers ?? 3,
     storageGb: body.storageGb ?? 2,
+    maxCompanies: body.maxCompanies ?? 1,
+    maxBranches: body.maxBranches ?? 1,
+    maxWarehouses: body.maxWarehouses ?? 1,
     modules: Array.isArray(body.modules) ? body.modules : [],
     sortOrder: body.sortOrder ?? b.plans.length + 1,
     active: body.active !== false,
@@ -703,11 +719,27 @@ export function listBillingAdmin(store) {
     const cd = countdown(s.status === 'grace' ? s.graceUntil : s.periodEnd)
     const customer = (store.customers || []).find((c) => c.id === s.customerId)
     const plan = b.plans.find((p) => p.id === s.planId)
+    const limits = {
+      maxCompanies: plan?.maxCompanies ?? 1,
+      maxBranches: plan?.maxBranches ?? 1,
+      maxWarehouses: plan?.maxWarehouses ?? 1,
+      maxUsers: plan?.maxUsers ?? 3,
+      storageGb: plan?.storageGb ?? 2,
+    }
+    const usage = customer?.orgUsage || { companies: 0, branches: 0, warehouses: 0 }
     return {
       ...s,
       company: customer?.company || customer?.companyName || '—',
       email: customer?.email || '—',
+      tenantCode: customer?.tenantCode || null,
       planName: plan?.name || s.planCode,
+      planCode: plan?.code || s.planCode,
+      limits,
+      orgUsage: usage,
+      orgOverLimit:
+        (limits.maxCompanies > 0 && usage.companies > limits.maxCompanies) ||
+        (limits.maxBranches > 0 && usage.branches > limits.maxBranches) ||
+        (limits.maxWarehouses > 0 && usage.warehouses > limits.maxWarehouses),
       ...cd,
     }
   })

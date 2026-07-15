@@ -740,6 +740,8 @@ export default function DashboardPage() {
       'erlenbox:treasury-updated',
       'bach:customers-updated',
       'bach:customer-meta-updated',
+      'bachmain:org-scope-changed',
+      'bach:org-context-changed',
       TAX_VAT_SETTINGS_EVENT,
     ]
     events.forEach((event) => window.addEventListener(event, refreshFinanceCards))

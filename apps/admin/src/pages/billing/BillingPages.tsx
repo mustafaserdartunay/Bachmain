@@ -83,6 +83,9 @@ export function BillingPlansPage() {
                 modules: [],
                 maxUsers: 3,
                 storageGb: 2,
+                maxCompanies: 1,
+                maxBranches: 1,
+                maxWarehouses: 1,
                 active: true,
               })
             }
@@ -104,8 +107,11 @@ export function BillingPlansPage() {
                 </p>
                 <p className="mt-1 text-xs text-text-subtle">
                   {plan.maxUsers === 0 ? 'Limitsiz kullanıcı' : `${plan.maxUsers} kullanıcı`} ·{' '}
-                  {plan.storageGb === 0 ? 'Limitsiz depolama' : `${plan.storageGb} GB`} · {(plan.modules || []).length}{' '}
-                  modül
+                  {plan.storageGb === 0 ? 'Limitsiz depolama' : `${plan.storageGb} GB`} ·{' '}
+                  {plan.maxCompanies === 0 ? '∞ şirket' : `${plan.maxCompanies ?? 1} şirket`} ·{' '}
+                  {plan.maxBranches === 0 ? '∞ şube' : `${plan.maxBranches ?? 1} şube`} ·{' '}
+                  {plan.maxWarehouses === 0 ? '∞ depo' : `${plan.maxWarehouses ?? 1} depo`} ·{' '}
+                  {(plan.modules || []).length} modül
                 </p>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -183,6 +189,33 @@ export function BillingPlansPage() {
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                 value={selected.storageGb ?? 0}
                 onChange={(e) => setSelected({ ...selected, storageGb: Number(e.target.value) })}
+              />
+            </label>
+            <label className="text-sm">
+              Maks. şirket (0 = sınırsız)
+              <input
+                type="number"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2"
+                value={selected.maxCompanies ?? 0}
+                onChange={(e) => setSelected({ ...selected, maxCompanies: Number(e.target.value) })}
+              />
+            </label>
+            <label className="text-sm">
+              Maks. şube (0 = sınırsız)
+              <input
+                type="number"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2"
+                value={selected.maxBranches ?? 0}
+                onChange={(e) => setSelected({ ...selected, maxBranches: Number(e.target.value) })}
+              />
+            </label>
+            <label className="text-sm">
+              Maks. depo (0 = sınırsız)
+              <input
+                type="number"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2"
+                value={selected.maxWarehouses ?? 0}
+                onChange={(e) => setSelected({ ...selected, maxWarehouses: Number(e.target.value) })}
               />
             </label>
           </div>
@@ -308,6 +341,14 @@ export function BillingModulesPage() {
 export function BillingSubscriptionsPage() {
   const [rows, setRows] = useState<SubscriptionRow[]>([])
   const [error, setError] = useState('')
+  const [licenseDetail, setLicenseDetail] = useState<{
+    customer: { company?: string; email?: string; plan?: string; planCode?: string }
+    limits: { maxCompanies: number; maxBranches: number; maxWarehouses: number }
+    usage: { companies: number; branches: number; warehouses: number }
+    overLimit: boolean
+    over: { companies: boolean; branches: boolean; warehouses: boolean }
+    multiCompanyEnabled: boolean
+  } | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -325,8 +366,54 @@ export function BillingSubscriptionsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <PageHeader title="Abonelikler" subtitle="Kalan gün / saat / dakika ve durum yönetimi." />
+      <PageHeader title="Abonelikler" subtitle="Kalan gün / saat / dakika, paket ve müşteri lisans detayı." />
       {error ? <ErrorState title="Hata" description={error} onRetry={load} /> : null}
+      {licenseDetail ? (
+        <Card className="space-y-3 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-text">Müşteri Lisans Detayı</h3>
+              <p className="text-sm text-text-muted">
+                {licenseDetail.customer.company} · {licenseDetail.customer.email} · {licenseDetail.customer.plan}
+              </p>
+            </div>
+            <button type="button" className="text-sm font-semibold text-bach-blue" onClick={() => setLicenseDetail(null)}>
+              Kapat
+            </button>
+          </div>
+          {!licenseDetail.multiCompanyEnabled ? (
+            <p className="rounded-lg border border-amber-300/40 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Çoklu şirket bu pakette kapalı. Enterprise veya multi_company modülü gerekir.
+            </p>
+          ) : null}
+          {licenseDetail.overLimit ? (
+            <p className="rounded-lg border border-rose-300/50 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+              Limit aşımı var — müşteri ile iletişime geçin veya limiti artırın.
+            </p>
+          ) : null}
+          <div className="grid gap-3 sm:grid-cols-3">
+            {(
+              [
+                ['Şirket', licenseDetail.usage.companies, licenseDetail.limits.maxCompanies, licenseDetail.over.companies],
+                ['Şube', licenseDetail.usage.branches, licenseDetail.limits.maxBranches, licenseDetail.over.branches],
+                ['Depo', licenseDetail.usage.warehouses, licenseDetail.limits.maxWarehouses, licenseDetail.over.warehouses],
+              ] as const
+            ).map(([label, used, max, warn]) => (
+              <div
+                key={label}
+                className={`rounded-xl border px-3 py-3 text-sm ${
+                  warn ? 'border-rose-300 bg-rose-50 text-rose-800' : 'border-border bg-surface-elevated text-text'
+                }`}
+              >
+                <div className="font-semibold">{label}</div>
+                <div className="mt-1 tabular-nums">
+                  {used} / {max === 0 ? 'Sınırsız' : max}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
       <div className="overflow-auto rounded-xl border border-border">
         <table className="min-w-full text-sm">
           <thead className="bg-surface-elevated text-left text-text-muted">
@@ -335,6 +422,7 @@ export function BillingSubscriptionsPage() {
               <th className="px-3 py-2">Paket</th>
               <th className="px-3 py-2">Durum</th>
               <th className="px-3 py-2">Kalan</th>
+              <th className="px-3 py-2">Org limit</th>
               <th className="px-3 py-2">İşlem</th>
             </tr>
           </thead>
@@ -354,22 +442,45 @@ export function BillingSubscriptionsPage() {
                 <td className="px-3 py-2 tabular-nums">
                   {r.remainingDays ?? '—'}g {r.remainingHours ?? '—'}s {r.remainingMinutes ?? '—'}dk
                 </td>
+                <td className="px-3 py-2 text-xs">
+                  <div className={r.orgOverLimit ? 'font-semibold text-rose-600' : 'text-text-muted'}>
+                    {r.limits?.maxCompanies === 0 ? '∞' : r.limits?.maxCompanies ?? '—'} ş ·{' '}
+                    {r.limits?.maxBranches === 0 ? '∞' : r.limits?.maxBranches ?? '—'} sb ·{' '}
+                    {r.limits?.maxWarehouses === 0 ? '∞' : r.limits?.maxWarehouses ?? '—'} dp
+                  </div>
+                </td>
                 <td className="px-3 py-2">
-                  <select
-                    className="rounded border border-border px-2 py-1"
-                    defaultValue=""
-                    onChange={async (e) => {
-                      const planCode = e.target.value
-                      if (!planCode) return
-                      await billingAdminApi.patchSubscription(r.id, { planCode })
-                      await load()
-                    }}
-                  >
-                    <option value="">Paket değiştir…</option>
-                    <option value="starter">Starter</option>
-                    <option value="professional">Professional</option>
-                    <option value="enterprise">Enterprise</option>
-                  </select>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded border border-border px-2 py-1 text-xs font-semibold text-bach-blue"
+                      onClick={async () => {
+                        try {
+                          const data = await billingAdminApi.licenseDetail(r.customerId)
+                          setLicenseDetail(data)
+                        } catch (e) {
+                          setError(e instanceof Error ? e.message : 'Lisans detayı alınamadı')
+                        }
+                      }}
+                    >
+                      Lisans detayı
+                    </button>
+                    <select
+                      className="rounded border border-border px-2 py-1"
+                      defaultValue=""
+                      onChange={async (e) => {
+                        const planCode = e.target.value
+                        if (!planCode) return
+                        await billingAdminApi.patchSubscription(r.id, { planCode })
+                        await load()
+                      }}
+                    >
+                      <option value="">Paket değiştir…</option>
+                      <option value="starter">Starter</option>
+                      <option value="professional">Professional</option>
+                      <option value="enterprise">Enterprise</option>
+                    </select>
+                  </div>
                 </td>
               </tr>
             ))}
