@@ -4,15 +4,10 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
-import TrialBanner, { shouldShowTrialBanner, computeRemainingDays } from '../TrialBanner'
-import { useAuth } from '../../auth/AuthContext'
 
 export default function Layout({ children }) {
-  const { user } = useAuth()
   const { pathname } = useLocation()
   const hideChrome = pathname === '/paketler' || pathname.startsWith('/paketler/')
-  const remainingDays = computeRemainingDays(user)
-  const showTrialBanner = !hideChrome && shouldShowTrialBanner(user)
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('erlenbox-sidebar') === 'collapsed')
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(() => localStorage.getItem('bach-team-hub-panel') !== 'expanded')
@@ -73,14 +68,6 @@ export default function Layout({ children }) {
         data-sidebar-collapsed={!isMobile && sidebarCollapsed ? 'true' : 'false'}
         data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
       >
-        {showTrialBanner ? (
-          <TrialBanner
-            remainingDays={remainingDays}
-            trialEnd={user?.trialEnd || user?.trialEndsAt || user?.licenseExpiry || user?.graceUntil}
-            status={user?.status}
-            subscriptionStatus={user?.subscriptionStatus}
-          />
-        ) : null}
         {!hideChrome ? <Header onMenuClick={() => setMobileSidebarOpen(true)} /> : null}
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
         <main className="app-responsive min-w-0 flex-1 overflow-x-hidden">{children}</main>

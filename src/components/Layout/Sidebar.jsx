@@ -59,6 +59,7 @@ import {
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
+import TrialBanner from '../TrialBanner'
 import { useAuth } from '../../auth/AuthContext'
 import { filterMenuByEntitlements } from '../../utils/entitlements'
 import { canUseMultiCompany } from '../../utils/orgScope'
@@ -790,16 +791,19 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
       </nav>
 
-      <div className={`mt-auto hidden shrink-0 pt-2 lg:flex ${collapsed ? 'justify-center px-0 pb-0.5' : 'justify-end px-2 pb-1'}`}>
-        <button
-          type="button"
-          onClick={onToggle}
-          className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
-          title={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
-          aria-label={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
+      <div className={`mt-auto shrink-0 space-y-2 ${collapsed ? 'px-0 pb-0.5' : 'px-1 pb-1'}`}>
+        <TrialBanner collapsed={collapsed} />
+        <div className={`hidden lg:flex ${collapsed ? 'justify-center' : 'justify-end px-1'}`}>
+          <button
+            type="button"
+            onClick={onToggle}
+            className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
+            title={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
+            aria-label={collapsed ? 'Menüyü aç' : 'Menüyü daralt'}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
     </aside>
   )

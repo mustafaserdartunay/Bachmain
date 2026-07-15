@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useAuth } from '../auth/AuthContext'
 
 const TRIAL_STATUSES = new Set(['trial', 'trialing'])
 const BANNER_HIDDEN_KEY = 'bach-trial-banner-hidden'
@@ -63,14 +64,19 @@ function resolveBanner(status, subscriptionStatus, days) {
 }
 
 /**
- * Trial / renewal / grace strip — sits in the content rail (shared shell gaps), not over sidebars.
+ * Trial / renewal / grace notice — footer of the left sidebar.
  */
 export default function TrialBanner({
-  remainingDays,
-  trialEnd,
-  status = 'trial',
-  subscriptionStatus,
+  remainingDays: remainingDaysProp,
+  trialEnd: trialEndProp,
+  status: statusProp,
+  subscriptionStatus: subscriptionStatusProp,
+  collapsed = false,
 }) {
+  const { user } = useAuth()
+  const { pathname } = useLocation()
+  const hideOnPackages = pathname === '/paketler' || pathname.startsWith('/paketler/')
+
   const [hidden, setHidden] = useState(() => {
     try {
       return sessionStorage.getItem(BANNER_HIDDEN_KEY) === '1'
@@ -87,6 +93,19 @@ export default function TrialBanner({
       /* ignore */
     }
   }, [hidden])
+
+  const remainingDays =
+    typeof remainingDaysProp === 'number'
+      ? remainingDaysProp
+      : computeRemainingDays(user)
+  const trialEnd =
+    trialEndProp || user?.trialEnd || user?.trialEndsAt || user?.licenseExpiry || user?.graceUntil
+  const status = statusProp || user?.status || 'trial'
+  const subscriptionStatus = subscriptionStatusProp || user?.subscriptionStatus
+
+  if (hideOnPackages || !shouldShowTrialBanner(user || { status, subscriptionStatus, remainingDays, trialEnd })) {
+    return null
+  }
 
   const days =
     typeof remainingDays === 'number' && Number.isFinite(remainingDays)
@@ -105,17 +124,29 @@ export default function TrialBanner({
     setHidden((v) => !v)
   }
 
+  if (collapsed) {
+    if (hidden) return null
+    return (
+      <div className={`trial-banner-sidebar is-collapsed ${urgent ? 'is-urgent' : ''}`}>
+        <Link to={ctaTo} className="trial-banner-sidebar-dot" title={`${cta} · deneme`} aria-label={cta}>
+          !
+        </Link>
+      </div>
+    )
+  }
+
   if (hidden) {
     return (
-      <div className="trial-banner-reveal">
+      <div className="trial-banner-sidebar is-compact">
         <button
           type="button"
           onClick={toggleHidden}
-          className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
+          className="trial-banner-sidebar-reveal"
           aria-label="Deneme uyarısını göster"
           title="Deneme uyarısını göster"
         >
-          <ChevronDown className="h-4 w-4" />
+          <ChevronUp className="h-3.5 w-3.5" />
+          <span>Deneme bilgisi</span>
         </button>
       </div>
     )
@@ -125,61 +156,64 @@ export default function TrialBanner({
     <div
       role="status"
       aria-live="polite"
-      className={`trial-banner app-header-banner ${urgent ? 'is-urgent' : ''}`}
+      className={`trial-banner-sidebar ${urgent ? 'is-urgent' : ''}`}
     >
-      <div className="trial-banner-inner">
-        <div className="trial-banner-copy">
+      <div className="trial-banner-sidebar-inner">
+        <div className="trial-banner-sidebar-copy">
           {mode === 'grace' ? (
             <>
-              <span className="font-medium">Aboneliğiniz sona erdi.</span>
+              <span className="font-semibold">Abonelik bitti.</span>
               {days !== null ? (
                 <>
                   {' '}
-                  <DaysPart days={days} urgent />
-                  {' '}ek kullanım süreniz kaldı.
+                  <DaysPart days={days} urgent /> ek süre.
                 </>
               ) : (
-                <span> Ek kullanım süreniz devam ediyor.</span>
+                <span> Ek süre devam ediyor.</span>
               )}
-              <span> Lütfen aboneliğinizi yenileyin.</span>
             </>
           ) : null}
 
           {mode === 'trial' ? (
             <>
-              <span className="font-medium">Ücretsiz deneme:</span>{' '}
-              <DaysPart days={days} urgent={urgent} />
-              {days === 0 ? null : ' kaldı'}
-              {trialEnd ? (
-                <span className="trial-banner-date">
-                  · {new Date(trialEnd).toLocaleDateString('tr-TR')}
-                </span>
-              ) : null}
+              <span className="font-semibold">Ücretsiz deneme</span>
+              <span className="trial-banner-sidebar-meta">
+                <DaysPart days={days} urgent={urgent} />
+                {days === 0 ? null : ' kaldı'}
+                {trialEnd ? (
+                  <span className="trial-banner-date">
+                    {' '}
+                    · {new Date(trialEnd).toLocaleDateString('tr-TR')}
+                  </span>
+                ) : null}
+              </span>
             </>
           ) : null}
 
           {mode === 'renew' ? (
             <>
-              <span className="font-medium">Paketinizin bitmesine</span>{' '}
-              <DaysPart days={days} urgent /> kaldı.
-              <span> Kesintisiz kullanım için aboneliğinizi yenileyebilirsiniz.</span>
+              <span className="font-semibold">Paket bitiyor</span>
+              <span className="trial-banner-sidebar-meta">
+                <DaysPart days={days} urgent /> kaldı.
+              </span>
             </>
           ) : null}
-
-          <Link to={ctaTo} className="trial-banner-cta">
-            {cta}
-          </Link>
         </div>
 
-        <button
-          type="button"
-          onClick={toggleHidden}
-          className="glass-sidebar-toggle glass-sidebar-collapse trial-banner-hide flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
-          aria-label="Deneme uyarısını gizle"
-          title="Deneme uyarısını gizle"
-        >
-          <ChevronUp className="h-4 w-4" />
-        </button>
+        <div className="trial-banner-sidebar-actions">
+          <Link to={ctaTo} className="trial-banner-cta" onClick={() => {}}>
+            {cta}
+          </Link>
+          <button
+            type="button"
+            onClick={toggleHidden}
+            className="trial-banner-sidebar-hide"
+            aria-label="Deneme uyarısını gizle"
+            title="Gizle"
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   )
