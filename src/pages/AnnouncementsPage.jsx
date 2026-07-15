@@ -37,7 +37,7 @@ const announcements = [
 
 export default function AnnouncementsPage() {
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
+    <div className="space-y-5">
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
         <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Yeni Özellikler ve Duyurular</h1>
         <p className="mt-2 text-xs font-semibold text-gray-500">Sistem güncellemeleri ve yeni modüller burada listelenir.</p>

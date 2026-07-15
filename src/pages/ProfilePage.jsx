@@ -49,7 +49,7 @@ export default function ProfilePage() {
   const initials = profile.displayName?.slice(0, 1)?.toUpperCase() || 'Y'
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
+    <div className="space-y-5">
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
         <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Profilim</h1>
         <p className="mt-2 text-xs font-semibold text-gray-500">Hesap bilgilerinizi güncelleyin.</p>
