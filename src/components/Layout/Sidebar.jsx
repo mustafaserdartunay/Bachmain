@@ -11,6 +11,7 @@ import {
   Inbox,
   Percent,
   Store,
+  MessageCircle,
   Receipt,
   BarChart3,
   Settings,
@@ -49,9 +50,8 @@ import { customerSubMenus, isCustomerRoute } from '../../data/customerMenu'
 import { expensesSubMenus, isExpensesRoute } from '../../data/expensesMenu'
 import { treasurySubMenus, isTreasuryRoute, CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/stockMenu'
-import { fieldSalesSubMenus, FIELD_SALES_HOME_PATH } from '../../data/fieldSalesMenu'
+import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '../../data/fieldSalesMenu'
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
-import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
 import {
   documentCenterChildMenus,
@@ -67,6 +67,7 @@ import { canUseMultiCompany } from '../../utils/orgScope'
 
 const baseMenuItems = [
   { icon: Truck, label: 'Kurye Takip', path: '/kurye-takip', moduleCode: 'courier' },
+  { icon: FolderPlus, label: 'Yeni Proje', path: '/projeler/yeni', moduleCode: 'crm' },
   { icon: ShoppingBag, label: 'Pos', path: '/shopping', moduleCode: 'pos' },
   { icon: Store, label: 'Bayi Yönetimi', path: '/bayi', moduleCode: 'dealer' },
   { icon: Receipt, label: 'E-Fatura', path: '/efatura', moduleCode: 'einvoice' },
@@ -150,18 +151,19 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isExpensesRouteActive = isExpensesRoute(location.pathname)
   const isTreasuryRouteActive = isTreasuryRoute(location.pathname)
   const isStockRouteActive = isStockRoute(location.pathname)
+  const isFieldSalesRouteActive = isFieldSalesRoute(location.pathname)
   const isHrRouteActive = isHrRoute(location.pathname)
   const isProcessRouteActive = isProcessRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
-  const isCrmRouteActive = isCrmMenuRoute(location.pathname)
+  const isCrmRouteActive = location.pathname === '/crm' || location.pathname.startsWith('/crm/')
   const isSettingsRoute = location.pathname.startsWith('/ayarlar') || isDocumentCenterRouteActive
   const [customerOpen, setCustomerOpen] = useState(isCustomerRouteActive)
   const [expensesOpen, setExpensesOpen] = useState(isExpensesRouteActive)
   const [treasuryOpen, setTreasuryOpen] = useState(isTreasuryRouteActive)
   const [stockOpen, setStockOpen] = useState(isStockRouteActive)
+  const [fieldSalesOpen, setFieldSalesOpen] = useState(isFieldSalesRouteActive)
   const [hrOpen, setHrOpen] = useState(isHrRouteActive)
   const [processOpen, setProcessOpen] = useState(isProcessRouteActive)
-  const [crmOpen, setCrmOpen] = useState(isCrmRouteActive)
   const [settingsOpen, setSettingsOpen] = useState(isSettingsRoute)
   const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
@@ -183,12 +185,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   }, [isStockRouteActive])
 
   useEffect(() => {
-    if (isHrRouteActive) setHrOpen(true)
-  }, [isHrRouteActive])
+    if (isFieldSalesRouteActive) setFieldSalesOpen(true)
+  }, [isFieldSalesRouteActive])
 
   useEffect(() => {
-    if (isCrmRouteActive) setCrmOpen(true)
-  }, [isCrmRouteActive])
+    if (isHrRouteActive) setHrOpen(true)
+  }, [isHrRouteActive])
 
   useEffect(() => {
     if (isProcessRouteActive) setProcessOpen(true)
@@ -222,6 +224,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   }, [])
 
   const menuItems = filterMenuByEntitlements(baseMenuItems, user?.entitlements)
+  const isMessageCenterActive = location.pathname === '/mesajlar' || location.pathname.startsWith('/mesajlar/')
   const brandLabel = company.companyName || 'Bach'
   const sidebarWidthClass = collapsed ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]' : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
   const sidebarPaddingClass = collapsed ? 'p-4 lg:px-2 lg:py-4' : 'px-3 py-4'
@@ -283,14 +286,36 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           {!collapsed ? <span className={menuLabelClass}>Güncel Durum</span> : null}
         </NavLink>
 
-        {/* TİCARİ İŞLEMLER */}
-        {!collapsed ? (
-          <p className="px-2.5 pt-3 pb-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--muted)]">
-            Ticari İşlemler
-          </p>
-        ) : null}
+        {/* Mesaj Merkezi — always visible */}
+        <NavLink
+          to="/mesajlar"
+          onClick={handleNavigate}
+          className={`${menuButtonBase} relative ${collapsed ? 'justify-center' : ''} ${
+            isMessageCenterActive ? 'sidebar-menu-active font-medium' : ''
+          }`}
+        >
+          <MenuIcon collapsed={collapsed}>
+            <MessageCircle className="w-4 h-4 shrink-0" />
+          </MenuIcon>
+          {!collapsed && <span className={menuLabelClass}>Mesaj Merkezi</span>}
+          {messageBadge.count > 0 && (
+            collapsed ? (
+              <span
+                className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.75)] animate-pulse"
+                aria-label={`${messageBadge.count} okunmamış mesaj`}
+              />
+            ) : (
+              <span
+                className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-500 px-1.5 text-[12px] font-black text-white shadow-[0_0_10px_rgba(244,63,94,0.55)]"
+                title={`${messageBadge.unreadTotal > 0 ? `${messageBadge.unreadTotal} yeni mesaj` : `${messageBadge.unansweredCount} cevaplanmayan konuşma`}`}
+              >
+                {messageBadge.count > 99 ? '99+' : messageBadge.count}
+              </span>
+            )
+          )}
+        </NavLink>
 
-        {/* Satışlar */}
+        {/* 2. Satışlar */}
         <div>
           <button
             type="button"
@@ -342,7 +367,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {/* Giderler */}
+        {/* 3. Giderler */}
         <div>
           <button
             type="button"
@@ -393,7 +418,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {/* Nakit */}
+        {/* 4. Nakit */}
         <div>
           <button
             type="button"
@@ -445,7 +470,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {/* Stok */}
+        {/* 5. Stok */}
         <div>
           <button
             type="button"
@@ -502,7 +527,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {/* Süreç Yönetimi */}
+        {/* 6. Süreç Yönetimi */}
         <div>
           <button
             type="button"
@@ -545,75 +570,23 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {/* Yeni Proje */}
+        {/* 7. CRM */}
         <NavLink
-          to="/projeler/yeni"
+          to="/crm"
           onClick={handleNavigate}
           className={({ isActive }) =>
             `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isActive ? 'sidebar-menu-active font-medium' : ''
+              isActive || isCrmRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`
           }
         >
           <MenuIcon collapsed={collapsed}>
-            <FolderPlus className="w-4 h-4 shrink-0" />
+            <CalendarDays className="w-4 h-4 shrink-0" />
           </MenuIcon>
-          {!collapsed && <span className={menuLabelClass}>Yeni Proje</span>}
+          {!collapsed && <span className={menuLabelClass}>Crm</span>}
         </NavLink>
 
-        {/* CRM */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setCrmOpen((open) => !open)}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isCrmRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <CalendarDays className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>CRM</span>
-                {crmOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
-              </>
-            )}
-          </button>
-
-          {crmOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
-              {crmSubMenus.map((sub) => (
-                <NavLink
-                  key={sub.path}
-                  to={sub.path}
-                  end={Boolean(sub.end)}
-                  onClick={handleNavigate}
-                  className={({ isActive }) =>
-                    `${subMenuButtonBase} relative flex items-center gap-2 ${
-                      isActive ? 'sidebar-menu-active font-medium' : ''
-                    }`
-                  }
-                >
-                  <span className="flex-1 text-left">{sub.label}</span>
-                  {sub.badge === 'messages' && messageBadge.count > 0 ? (
-                    <span
-                      className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-500 px-1.5 text-[11px] font-black text-white"
-                      title={`${messageBadge.unreadTotal > 0 ? `${messageBadge.unreadTotal} yeni mesaj` : `${messageBadge.unansweredCount} cevaplanmayan konuşma`}`}
-                    >
-                      {messageBadge.count > 99 ? '99+' : messageBadge.count}
-                    </span>
-                  ) : null}
-                </NavLink>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* İnsan Kaynakları / PDKS (+ Saha Satış) */}
+        {/* İnsan Kaynakları / PDKS */}
         <div>
           <button
             type="button"
@@ -639,14 +612,64 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           {hrOpen && !collapsed && (
             <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
               {hrSubMenus.map((sub) => {
-                const SubIcon = sub.icon
-                  ? (hrSubMenuIcons[sub.icon] || fieldSalesSubMenuIcons[sub.icon])
-                  : null
+                const SubIcon = sub.icon ? hrSubMenuIcons[sub.icon] : null
                 return (
                   <NavLink
                     key={sub.path}
                     to={sub.path}
-                    end={sub.path === HR_HOME_PATH || sub.path === FIELD_SALES_HOME_PATH}
+                    end={sub.path === HR_HOME_PATH}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex items-center gap-2 ${
+                        isActive ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
+                    {sub.label}
+                  </NavLink>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Saha Satış */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setFieldSalesOpen((open) => !open)}
+            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              isFieldSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <MapPinned className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && (
+              <>
+                <span className={menuLabelClass}>Saha Satış</span>
+                {fieldSalesOpen
+                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                }
+              </>
+            )}
+          </button>
+
+          {fieldSalesOpen && !collapsed && (
+            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+              {fieldSalesSubMenus.map((sub) => {
+                const SubIcon = sub.icon ? fieldSalesSubMenuIcons[sub.icon] : null
+                return (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    end={sub.path === FIELD_SALES_HOME_PATH}
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} flex items-center gap-2 ${

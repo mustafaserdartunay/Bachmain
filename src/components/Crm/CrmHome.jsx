@@ -41,36 +41,8 @@ import {
 import { openCrmProcessWhatsApp } from '../../utils/crmWhatsAppNotify'
 import { openCrmProcessEmail } from '../../utils/crmEmailNotify'
 
-const VIEW_CONFIG = {
-  all: {
-    title: 'Tüm Görevler',
-    kinds: null,
-    createLinks: [
-      { to: '/crm/gorev-yeni', label: 'Görev Oluştur' },
-      { to: '/crm/randevu-yeni', label: 'Randevu Oluştur' },
-      { to: '/crm/not-yeni', label: 'Not Oluştur' },
-    ],
-  },
-  note: {
-    title: 'Note Defteri',
-    kinds: ['note'],
-    createLinks: [{ to: '/crm/not-yeni', label: 'Not Oluştur' }],
-  },
-  task: {
-    title: 'Görev Oluştur',
-    kinds: ['task'],
-    createLinks: [{ to: '/crm/gorev-yeni', label: 'Görev Oluştur' }],
-  },
-  appointment: {
-    title: 'Randevu Oluştur',
-    kinds: ['appointment'],
-    createLinks: [{ to: '/crm/randevu-yeni', label: 'Randevu Oluştur' }],
-  },
-}
-
-export default function CrmHome({ view = 'all' }) {
+export default function CrmHome() {
   const navigate = useNavigate()
-  const viewConfig = VIEW_CONFIG[view] || VIEW_CONFIG.all
   const [processFilter, setProcessFilter] = useState(readCrmProcessFilter)
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState(createDefaultCrmProcessFilters)
@@ -100,20 +72,10 @@ export default function CrmHome({ view = 'all' }) {
     })
   }, [tasks, appointments, notes])
 
-  const scopedEntries = useMemo(() => {
-    if (!viewConfig.kinds) return boardEntries
-    return boardEntries.filter((entry) => viewConfig.kinds.includes(entry.kind))
-  }, [boardEntries, viewConfig.kinds])
-
   const filteredEntries = useMemo(
-    () => filterCrmBoardEntries(scopedEntries, filters, { searchQuery, processFilter }),
-    [scopedEntries, filters, searchQuery, processFilter],
+    () => filterCrmBoardEntries(boardEntries, filters, { searchQuery, processFilter }),
+    [boardEntries, filters, searchQuery, processFilter],
   )
-
-  const scopedNotes = useMemo(() => {
-    if (viewConfig.kinds && !viewConfig.kinds.includes('note')) return []
-    return notes
-  }, [notes, viewConfig.kinds])
 
   function refresh() {
     setTasks(loadTasks())
@@ -227,39 +189,48 @@ export default function CrmHome({ view = 'all' }) {
   return (
     <AppPageShell className="flex min-h-[calc(100vh-2rem)] flex-col">
       <AppPageHeader
-        title={viewConfig.title}
+        title="CRM Yönetimi"
         actions={(
           <>
-            {viewConfig.createLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 text-sm"
-              >
-                <Plus className="h-4 w-4" />
-                {link.label}
-              </Link>
-            ))}
+            <Link
+              to="/crm/gorev-yeni"
+              className="btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              Görev Oluştur
+            </Link>
+            <Link
+              to="/crm/randevu-yeni"
+              className="btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              Randevu Oluştur
+            </Link>
+            <Link
+              to="/crm/not-yeni"
+              className="btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              Not Oluştur
+            </Link>
           </>
         )}
       />
 
-      {view === 'all' ? (
-        <SummaryMetrics
-          columns={4}
-          items={[
-            { title: 'Açık görev', value: summary.tasksPending, icon: CheckSquare, tone: 'orange', valueTone: 'orange' },
-            { title: 'Bugün randevu', value: summary.appointmentsToday, icon: Calendar, tone: 'blue', valueTone: 'blue' },
-            { title: 'Geciken', value: summary.tasksOverdue, icon: AlertTriangle, tone: 'red', valueTone: 'red' },
-            { title: 'Bu hafta', value: summary.appointmentsWeek, icon: CalendarRange, tone: 'cyan', valueTone: 'cyan' },
-          ]}
-        />
-      ) : null}
+      <SummaryMetrics
+        columns={4}
+        items={[
+          { title: 'Açık görev', value: summary.tasksPending, icon: CheckSquare, tone: 'orange', valueTone: 'orange' },
+          { title: 'Bugün randevu', value: summary.appointmentsToday, icon: Calendar, tone: 'blue', valueTone: 'blue' },
+          { title: 'Geciken', value: summary.tasksOverdue, icon: AlertTriangle, tone: 'red', valueTone: 'red' },
+          { title: 'Bu hafta', value: summary.appointmentsWeek, icon: CalendarRange, tone: 'cyan', valueTone: 'cyan' },
+        ]}
+      />
 
       <CrmProcessBoardPanel
         entries={filteredEntries}
-        notes={scopedNotes}
-        noteCount={scopedNotes.length}
+        notes={notes}
+        noteCount={notes.length}
         processFilter={processFilter}
         onProcessFilterChange={setProcessFilter}
         searchQuery={searchQuery}
@@ -274,7 +245,7 @@ export default function CrmHome({ view = 'all' }) {
         onWhatsAppClick={handleProcessWhatsApp}
         onEdit={handleProcessEdit}
         onDelete={handleProcessDelete}
-        onNoteSave={(!viewConfig.kinds || viewConfig.kinds.includes('note')) ? handleSaveNote : undefined}
+        onNoteSave={handleSaveNote}
         onNoteToggleComplete={handleToggleNoteComplete}
         onNoteEdit={handleEditNote}
         onNoteDelete={handleDeleteNote}

@@ -1,5 +1,3 @@
-import { fieldSalesSubMenus, isFieldSalesRoute } from './fieldSalesMenu'
-
 export const HR_HOME_PATH = '/ik'
 
 export const hrSubMenus = [
@@ -14,10 +12,8 @@ export const hrSubMenus = [
   { label: 'Harita Takibi', path: '/ik/harita', icon: 'map' },
   { label: 'Mobil Giriş', path: '/ik/mobil', icon: 'smartphone' },
   { label: 'PDKS Ayarları', path: '/ik/ayarlar', icon: 'settings' },
-  ...fieldSalesSubMenus,
 ]
 
 export function isHrRoute(pathname) {
-  if (pathname === HR_HOME_PATH || pathname.startsWith(`${HR_HOME_PATH}/`)) return true
-  return isFieldSalesRoute(pathname)
+  return pathname === HR_HOME_PATH || pathname.startsWith(`${HR_HOME_PATH}/`)
 }

@@ -66,17 +66,15 @@ export default function CrmProcessBoardPanel({
         </div>
       )}
     >
-      {onNoteSave ? (
-        <AgendaNoteBoard
-          composerOnly
-          notes={notes}
-          totalRecordCount={noteCount}
-          onSave={onNoteSave}
-          onDeleteCompleted={onNoteDeleteCompleted}
-          composerClassName="mb-4 rounded-xl border border-[rgba(140,145,165,0.14)] bg-white/20 p-3"
-          showComposer
-        />
-      ) : null}
+      <AgendaNoteBoard
+        composerOnly
+        notes={notes}
+        totalRecordCount={noteCount}
+        onSave={onNoteSave}
+        onDeleteCompleted={onNoteDeleteCompleted}
+        composerClassName="mb-4 rounded-xl border border-[rgba(140,145,165,0.14)] bg-white/20 p-3"
+        showComposer={Boolean(onNoteSave)}
+      />
 
       <CrmProcessFilters
         searchQuery={searchQuery}
