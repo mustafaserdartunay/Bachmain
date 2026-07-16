@@ -44,6 +44,8 @@ export const ALWAYS_ALLOWED_PATHS = new Set([
   '/ayarlar',
   '/giris',
   '/kayit',
+  '/mesajlar',
+  '/whatsapp',
 ])
 
 export function hasModule(entitlements, code) {

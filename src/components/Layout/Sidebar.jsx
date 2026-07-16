@@ -62,7 +62,7 @@ import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { useAuth } from '../../auth/AuthContext'
-import { filterMenuByEntitlements, hasModule } from '../../utils/entitlements'
+import { filterMenuByEntitlements } from '../../utils/entitlements'
 import { canUseMultiCompany } from '../../utils/orgScope'
 
 const baseMenuItems = [
@@ -224,7 +224,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   }, [])
 
   const menuItems = filterMenuByEntitlements(baseMenuItems, user?.entitlements)
-  const showMessageCenter = hasModule(user?.entitlements, 'whatsapp')
   const isMessageCenterActive = location.pathname === '/mesajlar' || location.pathname.startsWith('/mesajlar/')
   const brandLabel = company.companyName || 'Bach'
   const sidebarWidthClass = collapsed ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]' : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
@@ -285,6 +284,35 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             <Gauge className="w-4 h-4 shrink-0" />
           </MenuIcon>
           {!collapsed ? <span className={menuLabelClass}>Güncel Durum</span> : null}
+        </NavLink>
+
+        {/* Mesaj Merkezi — always visible */}
+        <NavLink
+          to="/mesajlar"
+          onClick={handleNavigate}
+          className={`${menuButtonBase} relative ${collapsed ? 'justify-center' : ''} ${
+            isMessageCenterActive ? 'sidebar-menu-active font-medium' : ''
+          }`}
+        >
+          <MenuIcon collapsed={collapsed}>
+            <MessageCircle className="w-4 h-4 shrink-0" />
+          </MenuIcon>
+          {!collapsed && <span className={menuLabelClass}>Mesaj Merkezi</span>}
+          {messageBadge.count > 0 && (
+            collapsed ? (
+              <span
+                className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.75)] animate-pulse"
+                aria-label={`${messageBadge.count} okunmamış mesaj`}
+              />
+            ) : (
+              <span
+                className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-500 px-1.5 text-[12px] font-black text-white shadow-[0_0_10px_rgba(244,63,94,0.55)]"
+                title={`${messageBadge.unreadTotal > 0 ? `${messageBadge.unreadTotal} yeni mesaj` : `${messageBadge.unansweredCount} cevaplanmayan konuşma`}`}
+              >
+                {messageBadge.count > 99 ? '99+' : messageBadge.count}
+              </span>
+            )
+          )}
         </NavLink>
 
         {/* 2. Satışlar */}
@@ -557,37 +585,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </MenuIcon>
           {!collapsed && <span className={menuLabelClass}>Crm</span>}
         </NavLink>
-
-        {/* 8. Mesaj Merkezi (sosyal kanallar) */}
-        {showMessageCenter ? (
-          <NavLink
-            to="/mesajlar"
-            onClick={handleNavigate}
-            className={`${menuButtonBase} relative ${collapsed ? 'justify-center' : ''} ${
-              isMessageCenterActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <MessageCircle className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && <span className={menuLabelClass}>Mesaj Merkezi</span>}
-            {messageBadge.count > 0 && (
-              collapsed ? (
-                <span
-                  className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.75)] animate-pulse"
-                  aria-label={`${messageBadge.count} okunmamış mesaj`}
-                />
-              ) : (
-                <span
-                  className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-500 px-1.5 text-[12px] font-black text-white shadow-[0_0_10px_rgba(244,63,94,0.55)]"
-                  title={`${messageBadge.unreadTotal > 0 ? `${messageBadge.unreadTotal} yeni mesaj` : `${messageBadge.unansweredCount} cevaplanmayan konuşma`}`}
-                >
-                  {messageBadge.count > 99 ? '99+' : messageBadge.count}
-                </span>
-              )
-            )}
-          </NavLink>
-        ) : null}
 
         {/* İnsan Kaynakları / PDKS */}
         <div>
