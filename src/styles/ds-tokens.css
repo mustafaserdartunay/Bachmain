@@ -10,14 +10,14 @@
   --ds-secondary: #79a6d2;
   --ds-secondary-hover: #5f8fbf;
 
-  /* Surfaces */
-  --ds-bg: #f7f4ef;
-  --ds-bg-soft: #f0ebe3;
-  --ds-surface: #fffcf8;
+  /* Surfaces — day: clean white (no cream / dark leftovers) */
+  --ds-bg: #f1f5f9;
+  --ds-bg-soft: #e8eef5;
+  --ds-surface: #ffffff;
   --ds-surface-raised: #ffffff;
-  --ds-surface-muted: #f3efe8;
-  --ds-border: #e5e0d8;
-  --ds-border-strong: #d4cdc2;
+  --ds-surface-muted: #f8fafc;
+  --ds-border: #e2e8f0;
+  --ds-border-strong: #cbd5e1;
 
   /* Ink */
   --ds-ink: #1c1917;
@@ -110,13 +110,33 @@
   --text-strong: var(--ds-ink);
   --text-muted: var(--ds-muted);
   --text-soft: var(--ds-muted-soft);
-  --glass-bg: rgba(255, 252, 248, 0.72);
-  --glass-bg-strong: rgba(255, 252, 248, 0.9);
-  --glass-border: rgba(229, 224, 216, 0.9);
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-bg-strong: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(226, 232, 240, 0.95);
   --accent: var(--ds-secondary);
   --accent-hover: var(--ds-secondary-hover);
   --shell-rail-expanded: var(--ds-sidebar-expanded);
   --shell-rail-collapsed: var(--ds-sidebar-collapsed);
+  /* Form / search — day must stay white (index.css :root defaults are night-dark) */
+  --input-bg: #ffffff;
+  --search-bg: #ffffff;
+  --search-bg-hover: #ffffff;
+  --search-bg-focus: #ffffff;
+  --search-text: var(--ds-ink);
+  --search-placeholder: var(--ds-muted);
+  --search-border: rgba(226, 232, 240, 0.95);
+  --search-ring: rgba(121, 166, 210, 0.22);
+  --header-bg: rgba(255, 255, 255, 0.92);
+  --sidebar-bg: #ffffff;
+  --sidebar-item: #ffffff;
+  --sidebar-item-text: var(--ds-ink-body);
+  --sidebar-item-icon: var(--ds-muted);
+  --sidebar-item-hover: #f1f5f9;
+  --sidebar-item-hover-text: var(--ds-ink);
+  --sidebar-active: linear-gradient(90deg, #dbeafe 0%, #eff6ff 100%);
+  --sidebar-active-text: #1d4ed8;
+  --sidebar-item-border: rgba(148, 163, 184, 0.16);
+  --sidebar-border: rgba(148, 163, 184, 0.2);
 }
 
 html.night {
@@ -140,10 +160,33 @@ html.night {
   --ink: var(--ds-ink);
   --muted: var(--ds-muted);
   --app-bg: var(--ds-bg);
+  --app-bg-soft: var(--ds-bg-soft);
   --surface: var(--ds-surface);
+  --surface-raised: var(--ds-surface-raised);
+  --surface-soft: var(--ds-surface-muted);
+  --surface-muted: var(--ds-surface-muted);
   --text-strong: var(--ds-ink);
   --text: var(--ds-ink-body);
   --border: var(--ds-border);
+  --border-strong: var(--ds-border-strong);
+  --input-bg: #35302c;
+  --search-bg: #35302c;
+  --search-bg-hover: #3f3a36;
+  --search-bg-focus: #3f3a36;
+  --search-text: #fafaf9;
+  --search-placeholder: #a8a29e;
+  --search-border: rgba(168, 162, 158, 0.28);
+  --header-bg: rgba(41, 37, 36, 0.92);
+  --sidebar-bg: #292524;
+  --sidebar-item: rgba(255, 255, 255, 0.04);
+  --sidebar-item-text: #e7e5e4;
+  --sidebar-item-icon: #a8a29e;
+  --sidebar-item-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-item-hover-text: #fafaf9;
+  --sidebar-active: linear-gradient(90deg, rgba(121, 166, 210, 0.28), rgba(121, 166, 210, 0.1));
+  --sidebar-active-text: #ffffff;
+  --sidebar-item-border: rgba(255, 255, 255, 0.06);
+  --sidebar-border: rgba(168, 162, 158, 0.18);
 }
 
 /* Density */

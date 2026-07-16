@@ -1089,6 +1089,36 @@ textarea:not(.form-input)::placeholder {
   min-height: 2.75rem;
 }
 
+/* Day: force white fields everywhere (CRM note composer, filters, etc.) */
+html:not(.night) .app-responsive textarea.header-search-input,
+html:not(.night) .app-responsive textarea.search-pill,
+html:not(.night) .app-responsive input.header-search-input,
+html:not(.night) .app-responsive input.search-pill,
+html:not(.night) .app-responsive .form-input,
+html:not(.night) .app-responsive .form-input-readonly {
+  background: #ffffff !important;
+  border-color: rgba(226, 232, 240, 0.95) !important;
+  color: var(--ink) !important;
+}
+
+html:not(.night) .app-responsive [class*='bg-dark-'],
+html:not(.night) .app-responsive [class*='bg-black/'],
+html:not(.night) .app-responsive [class*='bg-white/'] {
+  background: #ffffff !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  color: var(--ink) !important;
+}
+
+html:not(.night) .app-responsive .text-white {
+  color: var(--ink) !important;
+}
+
+html:not(.night) .app-responsive .text-gray-300,
+html:not(.night) .app-responsive .text-gray-400,
+html:not(.night) .app-responsive .text-gray-500 {
+  color: var(--muted) !important;
+}
+
 .app-titlecase-words {
   text-transform: capitalize;
 }
@@ -1441,7 +1471,7 @@ html.special .app-sidebar .sidebar-menu-active {
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-/* Expanded / active menu group — slightly darker so open section is clear */
+/* Expanded / active menu group — clear open state without dark day surfaces */
 .glass-sidebar .sidebar-menu-group {
   border-radius: 18px;
   padding: 0.2rem;
@@ -1451,13 +1481,13 @@ html.special .app-sidebar .sidebar-menu-active {
 
 .glass-sidebar .sidebar-menu-group.is-open,
 .glass-sidebar .sidebar-menu-group.is-active {
-  background: rgba(30, 35, 60, 0.09);
-  border-color: rgba(140, 145, 165, 0.16);
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.22);
 }
 
 .glass-sidebar .sidebar-menu-group.is-open.is-active {
-  background: rgba(30, 35, 60, 0.13);
-  border-color: rgba(140, 145, 165, 0.22);
+  background: rgba(148, 163, 184, 0.18);
+  border-color: rgba(148, 163, 184, 0.28);
 }
 
 html.night .glass-sidebar .sidebar-menu-group.is-open,
@@ -2235,7 +2265,9 @@ html.night .trial-banner-cta:hover {
 }
 
 .search-pill,
-input.search-pill {
+input.search-pill,
+textarea.search-pill,
+select.search-pill {
   background: var(--search-bg) !important;
   border: 1px solid var(--search-border) !important;
   border-radius: 999px;
@@ -2250,18 +2282,23 @@ input.search-pill {
 }
 
 .search-pill::placeholder,
-input.search-pill::placeholder {
+input.search-pill::placeholder,
+textarea.search-pill::placeholder {
   color: var(--search-placeholder) !important;
 }
 
 .search-pill:hover,
-input.search-pill:hover {
+input.search-pill:hover,
+textarea.search-pill:hover,
+select.search-pill:hover {
   background: var(--search-bg-hover) !important;
   border-color: rgba(226, 232, 240, 0.95) !important;
 }
 
 .search-pill:focus,
-input.search-pill:focus {
+input.search-pill:focus,
+textarea.search-pill:focus,
+select.search-pill:focus {
   background: var(--search-bg-focus) !important;
   border-color: rgba(139, 92, 246, 0.35) !important;
   box-shadow:

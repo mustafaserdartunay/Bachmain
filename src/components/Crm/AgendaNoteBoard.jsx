@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
-import { HEADER_SEARCH_INPUT_CLASS } from '../../utils/themeMode'
 
 export function getAgendaNoteStamp() {
   const now = new Date()
@@ -250,7 +249,7 @@ export default function AgendaNoteBoard({
             }}
             placeholder="Notunuzu Yazınız..."
             rows={3}
-            className={`${HEADER_SEARCH_INPUT_CLASS} !h-auto !min-h-[82px] !resize-none !py-2.5 !pl-3 !pr-3`}
+            className="form-input !h-auto !min-h-[82px] w-full !resize-none !py-2.5 !pl-3 !pr-3 text-sm"
           />
           <div className="mt-2 flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold text-[var(--muted)]">{totalRecordCount ?? sortedNotes.length} kayıt</p>

@@ -44,7 +44,7 @@ export default function CrmProcessBoardPanel({
           <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">
             {entries.length} kayıt
           </span>
-          <div className="flex gap-1 rounded-xl border border-dark-500/50 bg-dark-700/50 p-1">
+          <div className="flex gap-1 rounded-xl border border-[rgba(148,163,184,0.25)] bg-white p-1">
             {PROCESS_SCOPE_OPTIONS.map((option) => (
               <button
                 key={option.id}
@@ -55,8 +55,8 @@ export default function CrmProcessBoardPanel({
                 }}
                 className={`rounded-lg px-3 py-1.5 text-xs font-black transition-colors ${
                   processFilter === option.id
-                    ? 'bg-blue-500/15 text-blue-300'
-                    : 'text-gray-500 hover:bg-dark-600/50 hover:text-gray-300'
+                    ? 'bg-blue-500/15 text-blue-700'
+                    : 'text-[var(--muted)] hover:bg-slate-100 hover:text-[var(--ink)]'
                 }`}
               >
                 {option.label}
@@ -73,7 +73,7 @@ export default function CrmProcessBoardPanel({
           totalRecordCount={noteCount}
           onSave={onNoteSave}
           onDeleteCompleted={onNoteDeleteCompleted}
-          composerClassName="mb-4 rounded-xl border border-[rgba(140,145,165,0.14)] bg-white/20 p-3"
+          composerClassName="mb-4 rounded-xl border border-[rgba(148,163,184,0.25)] bg-white p-3"
           showComposer
         />
       ) : null}
@@ -89,10 +89,10 @@ export default function CrmProcessBoardPanel({
 
       <div className="mt-4 space-y-2">
         {entries.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-dark-500/50 bg-dark-800/30 px-6 py-10 text-center">
-            <GitBranch className="mx-auto mb-2 h-6 w-6 text-gray-600" />
-            <p className="text-sm font-black text-white">Filtreye uygun kayıt yok</p>
-            <p className="mt-1 text-xs text-gray-500">
+          <div className="rounded-xl border border-dashed border-[rgba(148,163,184,0.35)] bg-white px-6 py-10 text-center">
+            <GitBranch className="mx-auto mb-2 h-6 w-6 text-[var(--muted)]" />
+            <p className="text-sm font-black text-[var(--ink)]">Filtreye uygun kayıt yok</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
               Filtreleri gevşetin veya yukarıdan not ekleyin; header takvim ve oluştur butonları da buraya yansır.
             </p>
           </div>
