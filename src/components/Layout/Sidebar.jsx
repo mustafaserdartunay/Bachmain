@@ -26,7 +26,6 @@ import {
   ChevronRight,
   ChevronDown,
   UserCog,
-  Workflow,
   Coins,
   Landmark,
   ScrollText,
@@ -45,13 +44,14 @@ import {
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
-import { processSubMenus, isProcessRoute } from '../../data/processMenu'
-import { customerSubMenus, isCustomerRoute } from '../../data/customerMenu'
+import { customerSubMenus, isSalesRoute } from '../../data/customerMenu'
 import { expensesSubMenus, isExpensesRoute } from '../../data/expensesMenu'
 import { treasurySubMenus, isTreasuryRoute, CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/stockMenu'
 import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '../../data/fieldSalesMenu'
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
+import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
+import { processSubMenus } from '../../data/processMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
 import {
   documentCenterChildMenus,
@@ -147,30 +147,29 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const location = useLocation()
   const { user } = useAuth()
   const [company, setCompany] = useState(() => readCompanySettings())
-  const isCustomerRouteActive = isCustomerRoute(location.pathname)
+  const isSalesRouteActive = isSalesRoute(location.pathname)
   const isExpensesRouteActive = isExpensesRoute(location.pathname)
   const isTreasuryRouteActive = isTreasuryRoute(location.pathname)
   const isStockRouteActive = isStockRoute(location.pathname)
   const isFieldSalesRouteActive = isFieldSalesRoute(location.pathname)
   const isHrRouteActive = isHrRoute(location.pathname)
-  const isProcessRouteActive = isProcessRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
-  const isCrmRouteActive = location.pathname === '/crm' || location.pathname.startsWith('/crm/')
+  const isCrmRouteActive = isCrmMenuRoute(location.pathname)
   const isSettingsRoute = location.pathname.startsWith('/ayarlar') || isDocumentCenterRouteActive
-  const [customerOpen, setCustomerOpen] = useState(isCustomerRouteActive)
+  const [customerOpen, setCustomerOpen] = useState(isSalesRouteActive)
   const [expensesOpen, setExpensesOpen] = useState(isExpensesRouteActive)
   const [treasuryOpen, setTreasuryOpen] = useState(isTreasuryRouteActive)
   const [stockOpen, setStockOpen] = useState(isStockRouteActive)
   const [fieldSalesOpen, setFieldSalesOpen] = useState(isFieldSalesRouteActive)
   const [hrOpen, setHrOpen] = useState(isHrRouteActive)
-  const [processOpen, setProcessOpen] = useState(isProcessRouteActive)
+  const [crmOpen, setCrmOpen] = useState(isCrmRouteActive)
   const [settingsOpen, setSettingsOpen] = useState(isSettingsRoute)
   const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
 
   useEffect(() => {
-    if (isCustomerRouteActive) setCustomerOpen(true)
-  }, [isCustomerRouteActive])
+    if (isSalesRouteActive) setCustomerOpen(true)
+  }, [isSalesRouteActive])
 
   useEffect(() => {
     if (isExpensesRouteActive) setExpensesOpen(true)
@@ -193,8 +192,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   }, [isHrRouteActive])
 
   useEffect(() => {
-    if (isProcessRouteActive) setProcessOpen(true)
-  }, [isProcessRouteActive])
+    if (isCrmRouteActive) setCrmOpen(true)
+  }, [isCrmRouteActive])
 
   useEffect(() => {
     if (isSettingsRoute) setSettingsOpen(true)
@@ -315,13 +314,13 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </NavLink>
 
-        {/* 2. Satışlar */}
-        <div>
+        {/* 2. Satışlar (+ Süreç Yönetimi) */}
+        <div className={`sidebar-menu-group ${customerOpen ? 'is-open' : ''} ${isSalesRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
             onClick={() => setCustomerOpen((open) => !open)}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isCustomerRouteActive ? 'sidebar-menu-active font-medium' : ''
+              isSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -339,7 +338,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {customerOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
               {customerSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? customerSubMenuIcons[sub.icon] : null
                 return (
@@ -363,12 +362,29 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
+              <p className="px-2.5 pt-2 pb-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--muted)]">
+                Süreç Yönetimi
+              </p>
+              {processSubMenus.map((sub) => (
+                <NavLink
+                  key={sub.path}
+                  to={sub.path}
+                  onClick={handleNavigate}
+                  className={({ isActive }) =>
+                    `${subMenuButtonBase} ${
+                      isActive ? 'sidebar-menu-active font-medium' : ''
+                    }`
+                  }
+                >
+                  {sub.label}
+                </NavLink>
+              ))}
             </div>
           )}
         </div>
 
         {/* 3. Giderler */}
-        <div>
+        <div className={`sidebar-menu-group ${expensesOpen ? 'is-open' : ''} ${isExpensesRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
             onClick={() => setExpensesOpen((open) => !open)}
@@ -391,7 +407,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {expensesOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
               {expensesSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? expensesSubMenuIcons[sub.icon] : null
                 return (
@@ -419,7 +435,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
 
         {/* 4. Nakit */}
-        <div>
+        <div className={`sidebar-menu-group ${treasuryOpen ? 'is-open' : ''} ${isTreasuryRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
             onClick={() => setTreasuryOpen((open) => !open)}
@@ -442,7 +458,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {treasuryOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
               {treasurySubMenus.map((sub) => {
                 const SubIcon = sub.icon ? treasurySubMenuIcons[sub.icon] : null
                 return (
@@ -471,7 +487,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
 
         {/* 5. Stok */}
-        <div>
+        <div className={`sidebar-menu-group ${stockOpen ? 'is-open' : ''} ${isStockRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
             onClick={() => setStockOpen((open) => !open)}
@@ -494,7 +510,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {stockOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
               {stockSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? stockSubMenuIcons[sub.icon] : null
                 return (
@@ -527,22 +543,22 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {/* 6. Süreç Yönetimi */}
-        <div>
+        {/* CRM */}
+        <div className={`sidebar-menu-group ${crmOpen ? 'is-open' : ''} ${isCrmRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setProcessOpen((open) => !open)}
+            onClick={() => setCrmOpen((open) => !open)}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isProcessRouteActive ? 'sidebar-menu-active font-medium' : ''
+              isCrmRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
-              <Workflow className="w-4 h-4 shrink-0" />
+              <CalendarDays className="w-4 h-4 shrink-0" />
             </MenuIcon>
             {!collapsed && (
               <>
-                <span className={menuLabelClass}>Süreç Yönetimi</span>
-                {processOpen
+                <span className={menuLabelClass}>CRM</span>
+                {crmOpen
                   ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                   : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
                 }
@@ -550,12 +566,13 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             )}
           </button>
 
-          {processOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
-              {processSubMenus.map((sub) => (
+          {crmOpen && !collapsed && (
+            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+              {crmSubMenus.map((sub) => (
                 <NavLink
                   key={sub.path}
                   to={sub.path}
+                  end={Boolean(sub.end)}
                   onClick={handleNavigate}
                   className={({ isActive }) =>
                     `${subMenuButtonBase} ${
@@ -570,24 +587,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {/* 7. CRM */}
-        <NavLink
-          to="/crm"
-          onClick={handleNavigate}
-          className={({ isActive }) =>
-            `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isActive || isCrmRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`
-          }
-        >
-          <MenuIcon collapsed={collapsed}>
-            <CalendarDays className="w-4 h-4 shrink-0" />
-          </MenuIcon>
-          {!collapsed && <span className={menuLabelClass}>Crm</span>}
-        </NavLink>
-
         {/* İnsan Kaynakları / PDKS */}
-        <div>
+        <div className={`sidebar-menu-group ${hrOpen ? 'is-open' : ''} ${isHrRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
             onClick={() => setHrOpen((open) => !open)}
@@ -639,7 +640,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
 
         {/* Saha Satış */}
-        <div>
+        <div className={`sidebar-menu-group ${fieldSalesOpen ? 'is-open' : ''} ${isFieldSalesRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
             onClick={() => setFieldSalesOpen((open) => !open)}
@@ -714,7 +715,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         ))}
 
         {/* Ayarlar */}
-        <div>
+        <div className={`sidebar-menu-group ${settingsOpen ? 'is-open' : ''} ${isSettingsRoute ? 'is-active' : ''}`}>
           <button
             type="button"
             onClick={() => setSettingsOpen((open) => !open)}

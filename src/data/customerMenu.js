@@ -1,3 +1,5 @@
+import { isProcessRoute } from './processMenu'
+
 export const customerSubMenus = [
   { label: 'Müşteriler', path: '/musteriler', icon: 'users' },
   { label: 'Müşteri Bul', path: '/musteri-bul', icon: 'user-search' },
@@ -15,4 +17,9 @@ export function isCustomerRoute(pathname) {
     || pathname === '/musteriler/tahsilat-raporu'
     || pathname === '/musteriler/gelir-gider-raporu'
     || pathname.startsWith('/musteriler/')
+}
+
+/** Satışlar menüsü: müşteri + süreç yönetimi */
+export function isSalesRoute(pathname) {
+  return isCustomerRoute(pathname) || isProcessRoute(pathname)
 }

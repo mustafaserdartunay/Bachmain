@@ -77,8 +77,6 @@ import CustomerPortalPage from './pages/portal/CustomerPortalPage'
 import OmnichannelPage from './pages/OmnichannelPage'
 import CrmPage from './pages/CrmPage'
 import CrmCreatePage from './pages/CrmCreatePage'
-import CrmTasksPage from './pages/CrmTasksPage'
-import CrmAppointmentsPage from './pages/CrmAppointmentsPage'
 import FieldSalesPage from './pages/FieldSalesPage'
 import PdksDashboardPage from './pages/hr/PdksDashboardPage'
 import AttendanceTrackingPage from './pages/hr/AttendanceTrackingPage'
@@ -207,15 +205,16 @@ export default function App() {
                 <Route path="/musteriler" element={<CustomersPage listKind="customer" />} />
                 <Route path="/musteri-bul" element={<CustomerFinderPage />} />
                 <Route path="/suppliers" element={<Navigate to="/giderler/tedarikciler" replace />} />
-                <Route path="/crm" element={<CrmPage />} />
+                <Route path="/crm" element={<CrmPage view="all" />} />
+                <Route path="/crm/notlar" element={<CrmPage view="note" />} />
+                <Route path="/crm/gorevler" element={<CrmPage view="task" />} />
+                <Route path="/crm/randevular" element={<CrmPage view="appointment" />} />
                 <Route path="/crm/gorev-yeni" element={<CrmCreatePage type="task" />} />
                 <Route path="/crm/randevu-yeni" element={<CrmCreatePage type="appointment" />} />
                 <Route path="/crm/not-yeni" element={<CrmCreatePage type="note" />} />
                 <Route path="/crm/gorev/:id/duzenle" element={<CrmCreatePage type="task" />} />
                 <Route path="/crm/randevu/:id/duzenle" element={<CrmCreatePage type="appointment" />} />
                 <Route path="/crm/not/:id/duzenle" element={<CrmCreatePage type="note" />} />
-                <Route path="/crm/gorevler" element={<CrmTasksPage />} />
-                <Route path="/crm/randevular" element={<CrmAppointmentsPage />} />
                 <Route path="/saha-satis" element={<FieldSalesPage />} />
                 <Route path="/saha-satis/temsilciler" element={<SalesRepresentativesPage />} />
                 <Route path="/saha-satis/temsilci-raporlari" element={<SalesRepReportsPage />} />

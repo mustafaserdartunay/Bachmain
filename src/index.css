@@ -1441,6 +1441,35 @@ html.special .app-sidebar .sidebar-menu-active {
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
+/* Expanded / active menu group — slightly darker so open section is clear */
+.glass-sidebar .sidebar-menu-group {
+  border-radius: 18px;
+  padding: 0.2rem;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+  border: 1px solid transparent;
+}
+
+.glass-sidebar .sidebar-menu-group.is-open,
+.glass-sidebar .sidebar-menu-group.is-active {
+  background: rgba(30, 35, 60, 0.09);
+  border-color: rgba(140, 145, 165, 0.16);
+}
+
+.glass-sidebar .sidebar-menu-group.is-open.is-active {
+  background: rgba(30, 35, 60, 0.13);
+  border-color: rgba(140, 145, 165, 0.22);
+}
+
+html.night .glass-sidebar .sidebar-menu-group.is-open,
+html.night .glass-sidebar .sidebar-menu-group.is-active {
+  background: rgba(0, 0, 0, 0.28);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html.night .glass-sidebar .sidebar-menu-group.is-open.is-active {
+  background: rgba(0, 0, 0, 0.38);
+}
+
 .glass-sidebar .sidebar-menu-button,
 .glass-sidebar .sidebar-item {
   display: flex;
