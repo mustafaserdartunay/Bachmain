@@ -37,7 +37,6 @@ import {
   APP_OMNI_SECTION_CLASS,
   APP_PANEL_TITLE_CLASS,
 } from '../utils/dashboardDesign'
-import { SocialDockMobileRow } from '../components/Layout/SocialDock'
 
 export default function OmnichannelPage() {
   const [searchParams] = useSearchParams()
@@ -323,7 +322,6 @@ export default function OmnichannelPage() {
 
   return (
     <div className="modern-dashboard space-y-4">
-      <SocialDockMobileRow />
       <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-[20px] px-4 py-3">
         <div className="flex min-w-0 items-center gap-2">
           <AppPanelDot color="emerald" />

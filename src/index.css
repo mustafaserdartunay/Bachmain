@@ -35,8 +35,6 @@ html.space *::-webkit-scrollbar-thumb {
   --shell-rail-expanded: 17.5rem; /* DS 3.0: 280px */
   --shell-rail-inset-collapsed: calc(var(--shell-gap) + var(--shell-rail-collapsed) + var(--shell-gap));
   --shell-rail-inset-expanded: calc(var(--shell-gap) + var(--shell-rail-expanded) + var(--shell-gap));
-  --shell-social-dock: 3.25rem;
-  --shell-social-gap: 0.5rem;
   --ink: #1e2235;
   --muted: #8b8fa3;
   --glass-bg: rgba(255, 255, 255, 0.55);
@@ -1413,17 +1411,15 @@ html.special .app-sidebar .sidebar-menu-active {
 /* Glass sidebar + social dock (reference design) */
 .social-dock {
   position: fixed;
-  top: var(--shell-gap);
-  bottom: var(--shell-gap);
-  z-index: 45;
-  width: var(--shell-social-dock);
-  display: none;
+  left: 1rem;
+  top: 1rem;
+  bottom: 1rem;
+  z-index: 55;
+  width: 3.25rem;
 }
 
 .social-dock-inner {
   height: 100%;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   background: var(--glass-bg);
   backdrop-filter: blur(26px) saturate(180%);
   -webkit-backdrop-filter: blur(26px) saturate(180%);
@@ -1728,32 +1724,12 @@ html.special .app-sidebar .sidebar-menu-active {
     padding: var(--shell-gap) 0 var(--shell-gap) 0;
   }
 
-  .app-shell[data-social-dock='true'] .social-dock {
-    display: block;
-  }
-
-  .app-shell[data-social-dock='true'][data-sidebar-collapsed='true'] .social-dock {
-    left: var(--shell-rail-inset-collapsed);
-  }
-
-  .app-shell[data-social-dock='true'][data-sidebar-collapsed='false'] .social-dock {
-    left: var(--shell-rail-inset-expanded);
-  }
-
   .app-shell-content[data-sidebar-collapsed='true'] {
     margin-left: var(--shell-rail-inset-collapsed);
   }
 
   .app-shell-content[data-sidebar-collapsed='false'] {
     margin-left: var(--shell-rail-inset-expanded);
-  }
-
-  .app-shell-content[data-social-dock='true'][data-sidebar-collapsed='true'] {
-    margin-left: calc(var(--shell-rail-inset-collapsed) + var(--shell-social-dock) + var(--shell-social-gap));
-  }
-
-  .app-shell-content[data-social-dock='true'][data-sidebar-collapsed='false'] {
-    margin-left: calc(var(--shell-rail-inset-expanded) + var(--shell-social-dock) + var(--shell-social-gap));
   }
 
   .app-shell-content[data-teamhub-collapsed='true'] {

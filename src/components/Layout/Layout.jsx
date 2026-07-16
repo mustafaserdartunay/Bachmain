@@ -4,7 +4,6 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
-import SocialDock from './SocialDock'
 import BottomNav from './BottomNav'
 
 const SIDEBAR_KEY = 'bach-sidebar'
@@ -81,15 +80,8 @@ export default function Layout({ children }) {
 
   const effectiveCollapsed = isTablet ? true : isMobile ? false : sidebarCollapsed
 
-  const sidebarCollapsedAttr = !isMobile && effectiveCollapsed ? 'true' : 'false'
-
   return (
-    <div
-      className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))] transition-colors"
-      data-sidebar-collapsed={sidebarCollapsedAttr}
-      data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
-      data-social-dock={!hideChrome ? 'true' : 'false'}
-    >
+    <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))] transition-colors">
       {mobileSidebarOpen && (
         <button
           type="button"
@@ -104,14 +96,10 @@ export default function Layout({ children }) {
         onCloseMobile={() => setMobileSidebarOpen(false)}
         onToggle={toggleSidebar}
       />
-      {!hideChrome ? (
-        <SocialDock className="hidden lg:block" />
-      ) : null}
       <div
         className="app-shell-content min-w-0 transition-all duration-page pb-[calc(var(--ds-bottom-nav-h,4rem)+env(safe-area-inset-bottom))] lg:pb-0"
-        data-sidebar-collapsed={sidebarCollapsedAttr}
+        data-sidebar-collapsed={!isMobile && effectiveCollapsed ? 'true' : 'false'}
         data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
-        data-social-dock={!hideChrome ? 'true' : 'false'}
       >
         {!hideChrome ? <Header onMenuClick={() => setMobileSidebarOpen(true)} /> : null}
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
