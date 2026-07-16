@@ -5,7 +5,7 @@ import { AppPageHeader } from '../Layout/AppPageLayout'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
 
 const SIDEBAR_ACTION_CLASS =
-  'glass-inset glass-inset-hover flex w-full items-center justify-between gap-2 rounded-xl px-3 py-3 text-left text-[13px] font-black uppercase tracking-wide text-[var(--text-strong)] transition-colors'
+  'glass-inset glass-inset-hover flex w-full items-center justify-between gap-2 rounded-xl px-3 py-3 text-left text-[13px] font-black uppercase tracking-wide text-[var(--ink)] transition-colors'
 
 export default function CashAccountDetailLayout({
   account,
@@ -39,7 +39,7 @@ export default function CashAccountDetailLayout({
                 <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-lg font-black uppercase tracking-wide text-[var(--text-strong)]">{account.name}</h2>
+                <h2 className="truncate text-lg font-black uppercase tracking-wide text-[var(--ink)]">{account.name}</h2>
                 <p className="mt-1 text-xs font-semibold text-[var(--muted)]">
                   {account.currency || 'TRY'} · {account.type}
                 </p>
@@ -48,7 +48,7 @@ export default function CashAccountDetailLayout({
             <button
               type="button"
               onClick={onEdit}
-              className="flex h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-black uppercase tracking-wide text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
+              className="flex h-10 items-center rounded-xl border border-[rgba(140,145,165,0.22)] bg-white px-4 text-xs font-black uppercase tracking-wide text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]"
             >
               Düzenle
             </button>

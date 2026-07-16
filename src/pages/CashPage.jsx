@@ -2022,14 +2022,14 @@ export default function CashPage() {
         <div className="glass-inset rounded-2xl p-4">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-base font-black text-[var(--text-strong)]">
+              <h2 className="text-base font-black text-[var(--ink)]">
                 {accountForm.type === 'Çek Kasası' ? 'Çek Kasası Oluştur' : 'Kasa Oluştur'}
               </h2>
             </div>
             <button
               type="button"
               onClick={() => setAccountPanelOpen(false)}
-              className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]"
+              className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[rgba(248,250,252,1)] hover:text-[var(--ink)]"
               title="Kapat"
             >
               <X className="h-4 w-4" />
@@ -2048,7 +2048,7 @@ export default function CashPage() {
                 placeholder="Kasa türü seçin"
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName="flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
+                buttonClassName="flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-[rgba(140,145,165,0.22)] bg-white px-3 text-sm font-semibold text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]"
               />
               <input value={accountForm.openingBalance} onChange={(e) => setAccountForm((c) => ({ ...c, openingBalance: e.target.value }))} type="number" placeholder="Açılış bakiyesi" className="form-input text-sm" />
               <button type="submit" className={`${BTN_PRIMARY} justify-center px-4 py-2.5 text-sm`}>
@@ -2075,7 +2075,7 @@ export default function CashPage() {
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
                       placeholder="Banka seçin"
-                      buttonClassName="flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
+                      buttonClassName="flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-[rgba(140,145,165,0.22)] bg-white px-3 text-sm font-semibold text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]"
                       searchable
                       searchPlaceholder="Banka ara..."
                       menuMaxHeight="max-h-72"

@@ -29,13 +29,13 @@ export default function CashFlowEntryPanel({
   const infoText = isIn
     ? (
       <>
-        Sadece <span className="font-semibold text-[var(--text-strong)]">satışlar</span> sayfasında{' '}
-        <span className="font-semibold text-[var(--text-strong)]">kaydedemediğiniz</span> para girişlerini ekleyin. Bu işlem müşteri/tedarikçi bakiyelerini değiştirmez.
+        Sadece <span className="font-semibold text-[var(--ink)]">satışlar</span> sayfasında{' '}
+        <span className="font-semibold text-[var(--ink)]">kaydedemediğiniz</span> para girişlerini ekleyin. Bu işlem müşteri/tedarikçi bakiyelerini değiştirmez.
       </>
     )
     : (
       <>
-        Sadece <span className="font-semibold text-[var(--text-strong)]">kaydedemediğiniz</span> para çıkışlarını ekleyin. Bu işlem müşteri/tedarikçi bakiyelerini değiştirmez.
+        Sadece <span className="font-semibold text-[var(--ink)]">kaydedemediğiniz</span> para çıkışlarını ekleyin. Bu işlem müşteri/tedarikçi bakiyelerini değiştirmez.
       </>
     )
 

@@ -1011,6 +1011,27 @@ textarea:not(.form-input)::placeholder {
   color: var(--ink);
 }
 
+/*
+  bg-dark-900 global olarak --app-bg (koyu) olur; card/glass içindeki
+  form panellerinde koyu “leke” yaratır. Nested yüzeyleri beyaz tasarıma çek.
+*/
+.app-responsive .card [class*='bg-dark-900'],
+.app-responsive .glass [class*='bg-dark-900'],
+.app-responsive .glass-inset [class*='bg-dark-900'],
+.app-responsive .app-form-field-surface [class*='bg-dark-900'],
+.app-responsive .cash-sidebar-form [class*='bg-dark-900'] {
+  background: #ffffff !important;
+  border-color: rgba(140, 145, 165, 0.2) !important;
+  color: var(--ink) !important;
+  box-shadow: none;
+}
+
+.app-responsive .cash-sidebar-form,
+.app-responsive .cash-sidebar-form .bg-white {
+  background-color: #ffffff !important;
+  color: var(--ink);
+}
+
 .app-responsive .form-input,
 .app-responsive .form-input-readonly {
   background: #ffffff !important;
@@ -2929,6 +2950,18 @@ html.night .app-form-field-surface {
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+  color: var(--ink) !important;
+}
+
+html.night .app-responsive .card [class*='bg-dark-900'],
+html.night .app-responsive .glass [class*='bg-dark-900'],
+html.night .app-responsive .glass-inset [class*='bg-dark-900'],
+html.night .app-responsive .app-form-field-surface [class*='bg-dark-900'],
+html.night .app-responsive .cash-sidebar-form [class*='bg-dark-900'],
+html.night .app-responsive .cash-sidebar-form,
+html.night .app-responsive .cash-sidebar-form .bg-white {
+  background: rgba(18, 28, 48, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
   color: var(--ink) !important;
 }
 

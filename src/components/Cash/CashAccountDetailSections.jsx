@@ -32,7 +32,7 @@ function TablePagerExportFooter({
   showPager,
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] bg-white/80 px-4 py-3">
       <div className="flex flex-wrap items-center gap-1.5">
         {showPager ? Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
           <button
@@ -42,7 +42,7 @@ function TablePagerExportFooter({
             className={`inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2.5 text-xs font-black transition-colors ${
               pageNumber === page
                 ? 'border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent)]'
-                : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]'
+                : 'border-[rgba(140,145,165,0.22)] bg-white text-[var(--muted)] hover:bg-[rgba(248,250,252,1)] hover:text-[var(--ink)]'
             }`}
           >
             {pageNumber}
@@ -106,7 +106,7 @@ export function CashMovementHistoryTable({
 
   return (
     <div className="flex min-h-[32rem] flex-col overflow-visible rounded-xl border border-[var(--border)]">
-      <div className={`grid shrink-0 ${MOVEMENT_TABLE_GRID} gap-3 border-b border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-[var(--muted)]`}>
+      <div className={`grid shrink-0 ${MOVEMENT_TABLE_GRID} gap-3 border-b border-[var(--border)] bg-white/80 px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-[var(--muted)]`}>
         <span>İşlem Türü</span>
         <span>İşlem Tarihi</span>
         <span>İlgili Hesap</span>
@@ -185,7 +185,7 @@ export function CashChequeHistoryTable({
 }) {
   return (
     <div className="overflow-visible rounded-xl border border-[var(--border)]">
-      <div className={`grid ${gridClass} gap-3 border-b border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-[var(--muted)]`}>
+      <div className={`grid ${gridClass} gap-3 border-b border-[var(--border)] bg-white/80 px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-[var(--muted)]`}>
         <span>Banka</span>
         <span>Şube</span>
         <span>Çek No</span>
@@ -318,7 +318,7 @@ function CashAccountOpsConfirm({ type, accountName, onConfirm, onCancel }) {
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[13px] font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
+          className="flex-1 rounded-xl border border-[rgba(140,145,165,0.22)] bg-white px-3 py-2 text-[13px] font-bold text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]"
         >
           Vazgeç
         </button>
@@ -515,7 +515,7 @@ export function CashDetailSidebar({
           <form onSubmit={onSaveAccountEdit} className={CASH_SIDEBAR_INNER_FORM_CLASS}>
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-xs font-black uppercase tracking-wide text-blue-600">Hesap Düzenle</h2>
-              <button type="button" onClick={onCloseEditAccount} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]">
+              <button type="button" onClick={onCloseEditAccount} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[rgba(248,250,252,1)] hover:text-[var(--ink)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -533,7 +533,7 @@ export function CashDetailSidebar({
               <h2 className={`text-xs font-black uppercase tracking-wide ${chequeSettlementMode === 'collection' ? 'text-emerald-600' : 'text-blue-600'}`}>
                 {chequeSettlementMode === 'collection' ? 'Tahsilat Ekle' : 'Ödeme Ekle'}
               </h2>
-              <button type="button" onClick={onCloseChequePanel} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]">
+              <button type="button" onClick={onCloseChequePanel} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[rgba(248,250,252,1)] hover:text-[var(--ink)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -578,7 +578,7 @@ export function CashDetailSidebar({
                   placeholder="Nakit kasa veya banka seçin"
                   includePlaceholderOption={false}
                   editable={false}
-                  buttonClassName="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
+                  buttonClassName="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-[rgba(140,145,165,0.22)] bg-white px-3 text-xs font-semibold text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]"
                 />
                 <CurrencyTextInput value={chequeSettlementForm.amount} onChange={(value) => onChequeSettlementFormChange({ ...chequeSettlementForm, amount: value })} />
                 <input value={chequeSettlementForm.expenseDescription} onChange={(event) => onChequeSettlementFormChange({ ...chequeSettlementForm, expenseDescription: event.target.value })} className="form-input h-9 text-xs" placeholder="Masraf açıklaması" />
@@ -592,7 +592,7 @@ export function CashDetailSidebar({
                   placeholder="Gider türü"
                   includePlaceholderOption={false}
                   editable={false}
-                  buttonClassName="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
+                  buttonClassName="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-[rgba(140,145,165,0.22)] bg-white px-3 text-xs font-semibold text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]"
                 />
                 <CurrencyTextInput value={chequeSettlementForm.expenseAmount} onChange={(value) => onChequeSettlementFormChange({ ...chequeSettlementForm, expenseAmount: value })} />
               </>
@@ -600,7 +600,7 @@ export function CashDetailSidebar({
             <button type="submit" className={chequeSettlementMode === 'collection' ? `${BTN_SUCCESS} w-full py-2.5 text-xs` : 'w-full rounded-xl border border-blue-500/25 bg-blue-500/10 py-2.5 text-xs font-black text-blue-300'}>
               {chequeSettlementMode === 'collection' ? 'Tahsilat Ekle' : 'Ödeme Ekle'}
             </button>
-            <button type="button" onClick={() => onEditChequeDetail(activeChequeSettlementDetail)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2 text-xs font-black text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]">
+            <button type="button" onClick={() => onEditChequeDetail(activeChequeSettlementDetail)} className="w-full rounded-xl border border-[rgba(140,145,165,0.22)] bg-white py-2 text-xs font-black text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]">
               Çek Bilgisine Dön
             </button>
           </form>
@@ -612,7 +612,7 @@ export function CashDetailSidebar({
               <h2 className="text-xs font-black uppercase tracking-wide text-blue-600">
                 {editingChequeId ? 'Çek Bilgisi Düzenle' : 'Çek Bilgisi Ekle'}
               </h2>
-              <button type="button" onClick={onCloseChequePanel} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]">
+              <button type="button" onClick={onCloseChequePanel} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[rgba(248,250,252,1)] hover:text-[var(--ink)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -625,7 +625,7 @@ export function CashDetailSidebar({
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
               placeholder="Banka seçin"
-              buttonClassName="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
+              buttonClassName="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-[rgba(140,145,165,0.22)] bg-white px-3 text-xs font-semibold text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]"
               searchable
               searchPlaceholder="Banka ara..."
             />

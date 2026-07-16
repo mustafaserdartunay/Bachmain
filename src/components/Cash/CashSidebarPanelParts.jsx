@@ -9,16 +9,17 @@ import { APP_PANEL_TITLE_CLASS } from '../../utils/dashboardDesign'
 
 const FIELD_SHELL = '[&_.form-input]:min-h-[2.5rem]'
 
+/** Beyaz / glass form kabuğu — var(--surface) kullanma (:root koyu). */
 export const CASH_SIDEBAR_FORM_SHELL =
-  'cash-sidebar-form glass-inset flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl'
+  `cash-sidebar-form ${FORM_FIELD_SURFACE_CLASS} flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl`
 
-export const CASH_SIDEBAR_BODY_CLASS = 'flex-1 overflow-y-auto px-4 py-4'
+export const CASH_SIDEBAR_BODY_CLASS = 'flex-1 overflow-y-auto bg-white px-4 py-4'
 
 export const CASH_SIDEBAR_INNER_FORM_CLASS = `${FORM_SECTION_PANEL_COMPACT_CLASS} space-y-3`
 
 export function FormRow({ label, required = false, children }) {
   return (
-    <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-2 border-b border-[var(--border)] py-2.5 last:border-b-0">
+    <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-2 border-b border-[rgba(140,145,165,0.18)] py-2.5 last:border-b-0">
       <label className={FORM_FIELD_LABEL_CLASS}>
         {label}
         {required ? ' *' : ''}
@@ -42,8 +43,8 @@ export function FormRowStacked({ label, required = false, children, className = 
 
 export function SidebarFormCard({ children }) {
   return (
-    <div className={`${FORM_SECTION_PANEL_COMPACT_CLASS} overflow-hidden !p-0`}>
-      <div className="divide-y divide-[var(--border)] px-3.5">{children}</div>
+    <div className={`${FORM_SECTION_PANEL_COMPACT_CLASS} overflow-hidden !bg-white !p-0`}>
+      <div className="divide-y divide-[rgba(140,145,165,0.18)] px-3.5">{children}</div>
     </div>
   )
 }
@@ -55,10 +56,10 @@ export function SidebarPanelHeader({ icon: Icon, title, subtitle, accent = 'blue
       ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/20'
       : accent === 'purple'
         ? 'bg-purple-500/10 text-purple-600 ring-purple-500/20'
-        : 'bg-[rgba(140,145,165,0.14)] text-[var(--muted)] ring-[var(--border)]'
+        : 'bg-[rgba(140,145,165,0.14)] text-[var(--muted)] ring-[rgba(140,145,165,0.2)]'
 
   return (
-    <div className="border-b border-[var(--border)] px-4 py-3.5">
+    <div className="border-b border-[rgba(140,145,165,0.18)] bg-white px-4 py-3.5">
       <div className="flex items-center gap-3">
         <span className={`rounded-xl p-2.5 ring-1 ${accentClass}`}>
           <Icon className="h-4 w-4" />
@@ -76,7 +77,7 @@ export function SidebarPanelHeader({ icon: Icon, title, subtitle, accent = 'blue
 
 export function SidebarInfoNote({ children }) {
   return (
-    <p className={`mb-4 rounded-xl border border-[var(--border)] ${FORM_FIELD_SURFACE_CLASS} px-3 py-2.5 text-[13px] leading-relaxed text-[var(--muted)]`}>
+    <p className="mb-4 rounded-xl border border-[rgba(140,145,165,0.18)] bg-[rgba(248,250,252,0.95)] px-3 py-2.5 text-[13px] leading-relaxed text-[var(--muted)]">
       {children}
     </p>
   )
@@ -86,11 +87,11 @@ export function SidebarPanelActions({ onCancel, submitLabel, submitDisabled = fa
   const isDisabled = submitDisabled || disabled
 
   return (
-    <div className="grid grid-cols-2 gap-2.5 border-t border-[var(--border)] p-3.5">
+    <div className="grid grid-cols-2 gap-2.5 border-t border-[rgba(140,145,165,0.18)] bg-white p-3.5">
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex h-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[13px] font-bold uppercase tracking-[0.12em] text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]"
+        className="inline-flex h-10 items-center justify-center rounded-xl border border-[rgba(140,145,165,0.22)] bg-white text-[13px] font-bold uppercase tracking-[0.12em] text-[var(--muted)] transition-colors hover:bg-[rgba(241,245,249,1)] hover:text-[var(--ink)]"
       >
         Vazgeç
       </button>
@@ -124,7 +125,7 @@ export function BalanceFooter({ rawBalance }) {
   const [liraPart, kurusPart = '00'] = formatted.replace('₺', '').split(',')
 
   return (
-    <div className={`border-t border-[var(--border)] ${FORM_FIELD_SURFACE_CLASS} rounded-none border-x-0 border-b-0 px-4 py-3`}>
+    <div className="border-t border-[rgba(140,145,165,0.18)] bg-white px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Bakiye</span>
         <span className={`font-black tabular-nums ${isNegative ? 'text-red-500' : 'text-emerald-600'}`}>
@@ -137,6 +138,6 @@ export function BalanceFooter({ rawBalance }) {
 }
 
 export const sidebarDropdownClass =
-  'flex h-10 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)] [&_span]:truncate'
+  `flex h-10 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-[rgba(140,145,165,0.22)] ${FORM_FIELD_SURFACE_CLASS} !rounded-xl px-3 text-xs font-semibold text-[var(--ink)] transition-colors hover:bg-white [&_span]:truncate`
 
 export const sidebarInputClass = 'form-input text-sm'
