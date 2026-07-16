@@ -12,6 +12,13 @@ import ActivityArchivePanel from '../Common/ActivityArchivePanel'
 import CrmProcessBoardPanel from './CrmProcessBoardPanel'
 import { getAgendaNoteStamp } from './AgendaNoteBoard'
 import { AppPageHeader, AppPageShell } from '../Layout/AppPageLayout'
+import ProcessWorkspaceShell from '../ProcessWorkspace/ProcessWorkspaceShell'
+import {
+  crmEntriesToProcessItems,
+  crmViewToModuleId,
+  deriveCrmKanbanStages,
+  resolveCrmStageChange,
+} from '../ProcessWorkspace/crmAdapter'
 import {
   deleteAppointment,
   deleteAgendaNote,
@@ -71,6 +78,7 @@ const VIEW_CONFIG = {
 export default function CrmHome({ view = 'all' }) {
   const navigate = useNavigate()
   const viewConfig = VIEW_CONFIG[view] || VIEW_CONFIG.all
+  const moduleId = crmViewToModuleId(view)
   const [processFilter, setProcessFilter] = useState(readCrmProcessFilter)
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState(createDefaultCrmProcessFilters)
@@ -110,6 +118,16 @@ export default function CrmHome({ view = 'all' }) {
     [scopedEntries, filters, searchQuery, processFilter],
   )
 
+  const processItems = useMemo(
+    () => crmEntriesToProcessItems(filteredEntries),
+    [filteredEntries],
+  )
+
+  const kanbanStages = useMemo(
+    () => deriveCrmKanbanStages(filteredEntries, moduleId),
+    [filteredEntries, moduleId],
+  )
+
   const scopedNotes = useMemo(() => {
     if (viewConfig.kinds && !viewConfig.kinds.includes('note')) return []
     return notes
@@ -134,6 +152,27 @@ export default function CrmHome({ view = 'all' }) {
   function handleProcessStageClick(entry, stageId) {
     const { kind, record } = entry
     const next = advanceCrmProcessStage(record, stageId, kind)
+    if (kind === 'task') upsertTask(next)
+    else upsertAppointment(next)
+    refresh()
+  }
+
+  function handleWorkspaceStageChange(itemId, stageId) {
+    const entry = filteredEntries.find((e) => e.id === itemId)
+    if (!entry || entry.kind === 'note') return
+    const resolved = resolveCrmStageChange(entry, stageId)
+    if (!resolved) return
+    handleProcessStageClick(entry, resolved)
+  }
+
+  function handleWorkspaceDateChange(itemId, isoDate) {
+    const entry = filteredEntries.find((e) => e.id === itemId)
+    if (!entry || entry.kind === 'note') return
+    const { kind, record } = entry
+    const next =
+      kind === 'task'
+        ? { ...record, dueDate: isoDate }
+        : { ...record, date: isoDate }
     if (kind === 'task') upsertTask(next)
     else upsertAppointment(next)
     refresh()
@@ -226,6 +265,33 @@ export default function CrmHome({ view = 'all' }) {
     return restored
   }
 
+  const boardPanel = (
+    <CrmProcessBoardPanel
+      entries={filteredEntries}
+      notes={scopedNotes}
+      noteCount={scopedNotes.length}
+      processFilter={processFilter}
+      onProcessFilterChange={setProcessFilter}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      filters={filters}
+      onFilterChange={setFilters}
+      activeMenu={activeMenu}
+      setActiveMenu={setActiveMenu}
+      onStageClick={handleProcessStageClick}
+      onStagePhotosChange={handleProcessStagePhotosChange}
+      onMailClick={handleProcessMail}
+      onWhatsAppClick={handleProcessWhatsApp}
+      onEdit={handleProcessEdit}
+      onDelete={handleProcessDelete}
+      onNoteSave={showNoteComposer ? handleSaveNote : undefined}
+      onNoteToggleComplete={handleToggleNoteComplete}
+      onNoteEdit={handleEditNote}
+      onNoteDelete={handleDeleteNote}
+      onNoteDeleteCompleted={handleDeleteCompletedNotes}
+    />
+  )
+
   return (
     <AppPageShell className="flex min-h-[calc(100vh-2rem)] flex-col">
       <AppPageHeader
@@ -258,29 +324,14 @@ export default function CrmHome({ view = 'all' }) {
         />
       ) : null}
 
-      <CrmProcessBoardPanel
-        entries={filteredEntries}
-        notes={scopedNotes}
-        noteCount={scopedNotes.length}
-        processFilter={processFilter}
-        onProcessFilterChange={setProcessFilter}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        filters={filters}
-        onFilterChange={setFilters}
-        activeMenu={activeMenu}
-        setActiveMenu={setActiveMenu}
-        onStageClick={handleProcessStageClick}
-        onStagePhotosChange={handleProcessStagePhotosChange}
-        onMailClick={handleProcessMail}
-        onWhatsAppClick={handleProcessWhatsApp}
-        onEdit={handleProcessEdit}
-        onDelete={handleProcessDelete}
-        onNoteSave={showNoteComposer ? handleSaveNote : undefined}
-        onNoteToggleComplete={handleToggleNoteComplete}
-        onNoteEdit={handleEditNote}
-        onNoteDelete={handleDeleteNote}
-        onNoteDeleteCompleted={handleDeleteCompletedNotes}
+      <ProcessWorkspaceShell
+        moduleId={moduleId}
+        items={processItems}
+        stages={kanbanStages}
+        defaultView="card"
+        boardSlot={boardPanel}
+        onStageChange={handleWorkspaceStageChange}
+        onDateChange={handleWorkspaceDateChange}
       />
       <ActivityArchivePanel
         title="CRM Arşiv ve İşlem Geçmişi"

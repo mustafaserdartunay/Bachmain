@@ -39,6 +39,7 @@ export const WORKSPACE_STORAGE_KEYS = [
   'bach-crm-appointments',
   'bach-crm-agenda-notes',
   'bach-crm-process-filter',
+  'bach-process-workspace-prefs',
   'erlenbox-treasury-accounts',
   'erlenbox-treasury-movements',
   'erlenbox-personnel',
