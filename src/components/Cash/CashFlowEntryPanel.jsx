@@ -1,6 +1,8 @@
 import { ArrowDownToLine, ArrowUpFromLine } from 'lucide-react'
 import {
   BalanceFooter,
+  CASH_SIDEBAR_BODY_CLASS,
+  CASH_SIDEBAR_FORM_SHELL,
   CurrencyField,
   FormRowStacked,
   SidebarFormCard,
@@ -27,18 +29,18 @@ export default function CashFlowEntryPanel({
   const infoText = isIn
     ? (
       <>
-        Sadece <span className="font-semibold text-gray-300">satışlar</span> sayfasında{' '}
-        <span className="font-semibold text-gray-300">kaydedemediğiniz</span> para girişlerini ekleyin. Bu işlem müşteri/tedarikçi bakiyelerini değiştirmez.
+        Sadece <span className="font-semibold text-[var(--text-strong)]">satışlar</span> sayfasında{' '}
+        <span className="font-semibold text-[var(--text-strong)]">kaydedemediğiniz</span> para girişlerini ekleyin. Bu işlem müşteri/tedarikçi bakiyelerini değiştirmez.
       </>
     )
     : (
       <>
-        Sadece <span className="font-semibold text-gray-300">kaydedemediğiniz</span> para çıkışlarını ekleyin. Bu işlem müşteri/tedarikçi bakiyelerini değiştirmez.
+        Sadece <span className="font-semibold text-[var(--text-strong)]">kaydedemediğiniz</span> para çıkışlarını ekleyin. Bu işlem müşteri/tedarikçi bakiyelerini değiştirmez.
       </>
     )
 
   return (
-    <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-dark-500/35 bg-dark-800/60 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+    <form onSubmit={onSubmit} className={CASH_SIDEBAR_FORM_SHELL}>
       <SidebarPanelHeader
         icon={Icon}
         title={title}
@@ -46,7 +48,7 @@ export default function CashFlowEntryPanel({
         accent={isIn ? 'emerald' : 'blue'}
       />
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className={CASH_SIDEBAR_BODY_CLASS}>
         <SidebarInfoNote>{infoText}</SidebarInfoNote>
 
         <SidebarFormCard>

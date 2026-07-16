@@ -11,6 +11,7 @@ import {
   CashSidebarActionButton,
   CashSidebarPrimaryButton,
 } from './CashAccountDetailLayout'
+import { CASH_SIDEBAR_INNER_FORM_CLASS } from './CashSidebarPanelParts'
 import {
   BTN_PRIMARY,
   BTN_SUCCESS,
@@ -31,7 +32,7 @@ function TablePagerExportFooter({
   showPager,
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-dark-500/40 bg-dark-800/50 px-4 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
       <div className="flex flex-wrap items-center gap-1.5">
         {showPager ? Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
           <button
@@ -40,8 +41,8 @@ function TablePagerExportFooter({
             onClick={() => onPageChange(pageNumber)}
             className={`inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2.5 text-xs font-black transition-colors ${
               pageNumber === page
-                ? 'border-blue-500/40 bg-blue-500/15 text-blue-300'
-                : 'border-dark-500/50 bg-dark-700/60 text-gray-400 hover:border-dark-400/60 hover:text-gray-200'
+                ? 'border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent)]'
+                : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]'
             }`}
           >
             {pageNumber}
@@ -104,8 +105,8 @@ export function CashMovementHistoryTable({
   }
 
   return (
-    <div className="flex min-h-[32rem] flex-col overflow-visible rounded-xl border border-dark-500/40">
-      <div className={`grid shrink-0 ${MOVEMENT_TABLE_GRID} gap-3 border-b border-dark-500/40 bg-dark-800/70 px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-gray-500`}>
+    <div className="flex min-h-[32rem] flex-col overflow-visible rounded-xl border border-[var(--border)]">
+      <div className={`grid shrink-0 ${MOVEMENT_TABLE_GRID} gap-3 border-b border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-[var(--muted)]`}>
         <span>İşlem Türü</span>
         <span>İşlem Tarihi</span>
         <span>İlgili Hesap</span>
@@ -113,7 +114,7 @@ export function CashMovementHistoryTable({
         <span className="text-right">Meblağ</span>
         <span className="text-right">Bakiye</span>
       </div>
-      <div className="min-h-[24rem] flex-1 divide-y divide-dark-500/30">
+      <div className="min-h-[24rem] flex-1 divide-y divide-[var(--border)]">
         {rows.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-gray-500">Hareket bilgisi bulunamadı.</p>
         ) : (
@@ -183,8 +184,8 @@ export function CashChequeHistoryTable({
   formatDateTr,
 }) {
   return (
-    <div className="overflow-visible rounded-xl border border-dark-500/40">
-      <div className={`grid ${gridClass} gap-3 border-b border-dark-500/40 bg-dark-800/70 px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-gray-500`}>
+    <div className="overflow-visible rounded-xl border border-[var(--border)]">
+      <div className={`grid ${gridClass} gap-3 border-b border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-[var(--muted)]`}>
         <span>Banka</span>
         <span>Şube</span>
         <span>Çek No</span>
@@ -300,7 +301,7 @@ export function CashChequeHistoryTable({
 function CashAccountOpsConfirm({ type, accountName, onConfirm, onCancel }) {
   const isArchive = type === 'archive'
   return (
-    <div className={`rounded-2xl border p-3 shadow-card ${isArchive ? 'border-amber-500/35 bg-dark-900/90 ring-1 ring-amber-500/15' : 'border-red-500/35 bg-dark-900/90 ring-1 ring-red-500/15'}`}>
+    <div className={`glass-inset rounded-2xl p-3 shadow-card ${isArchive ? 'ring-1 ring-amber-500/20' : 'ring-1 ring-red-500/20'}`}>
       <p className="text-xs font-black text-white">{isArchive ? 'Arşivlensin mi?' : 'Silinsin mi?'}</p>
       <p className="mt-1 text-[13px] leading-relaxed text-gray-500">
         <span className="font-semibold text-gray-300">{accountName}</span>
@@ -317,7 +318,7 @@ function CashAccountOpsConfirm({ type, accountName, onConfirm, onCancel }) {
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-xl border border-dark-500/50 bg-dark-700 px-3 py-2 text-[13px] font-bold text-gray-200 hover:bg-dark-600"
+          className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[13px] font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
         >
           Vazgeç
         </button>
@@ -511,10 +512,10 @@ export function CashDetailSidebar({
         ) : null}
 
         {!accountMovementPanelOpen && !transferPanelOpen && editAccountPanelOpen ? (
-          <form onSubmit={onSaveAccountEdit} className="space-y-3 rounded-xl border border-dark-500/40 bg-dark-800/65 p-3">
+          <form onSubmit={onSaveAccountEdit} className={CASH_SIDEBAR_INNER_FORM_CLASS}>
             <div className="flex items-start justify-between gap-2">
-              <h2 className="text-xs font-black uppercase tracking-wide text-blue-300">Hesap Düzenle</h2>
-              <button type="button" onClick={onCloseEditAccount} className="rounded-lg p-1.5 text-gray-500 hover:bg-dark-700 hover:text-white">
+              <h2 className="text-xs font-black uppercase tracking-wide text-blue-600">Hesap Düzenle</h2>
+              <button type="button" onClick={onCloseEditAccount} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -527,12 +528,12 @@ export function CashDetailSidebar({
         ) : null}
 
         {!accountMovementPanelOpen && !transferPanelOpen && isChequeAccount && chequePanelOpen && chequeSettlementDetailId && activeChequeSettlementDetail && chequeSettlementMode ? (
-          <form onSubmit={onSubmitChequeSettlement} className="space-y-3 rounded-xl border border-dark-500/40 bg-dark-800/65 p-3">
+          <form onSubmit={onSubmitChequeSettlement} className={CASH_SIDEBAR_INNER_FORM_CLASS}>
             <div className="flex items-start justify-between gap-2">
-              <h2 className={`text-xs font-black uppercase tracking-wide ${chequeSettlementMode === 'collection' ? 'text-emerald-300' : 'text-blue-300'}`}>
+              <h2 className={`text-xs font-black uppercase tracking-wide ${chequeSettlementMode === 'collection' ? 'text-emerald-600' : 'text-blue-600'}`}>
                 {chequeSettlementMode === 'collection' ? 'Tahsilat Ekle' : 'Ödeme Ekle'}
               </h2>
-              <button type="button" onClick={onCloseChequePanel} className="rounded-lg p-1.5 text-gray-500 hover:bg-dark-700 hover:text-white">
+              <button type="button" onClick={onCloseChequePanel} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -552,7 +553,7 @@ export function CashDetailSidebar({
                   </button>
                 )}
                 {settlementPartyMenuOpen ? (
-                  <div className="rounded-xl border border-dark-500/50 bg-dark-900/95 p-2">
+                  <div className="glass-inset rounded-xl p-2">
                     <SearchInput size="sm" value={chequePartySearch} onChange={(event) => onChequePartySearchChange(event.target.value)} placeholder="Ara..." autoFocus />
                     <div className="mt-2 max-h-44 space-y-1 overflow-y-auto">
                       {chequePartyOptions.map((option) => (
@@ -578,7 +579,6 @@ export function CashDetailSidebar({
                   includePlaceholderOption={false}
                   editable={false}
                   buttonClassName="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
-                  menuVariant="light"
                 />
                 <CurrencyTextInput value={chequeSettlementForm.amount} onChange={(value) => onChequeSettlementFormChange({ ...chequeSettlementForm, amount: value })} />
                 <input value={chequeSettlementForm.expenseDescription} onChange={(event) => onChequeSettlementFormChange({ ...chequeSettlementForm, expenseDescription: event.target.value })} className="form-input h-9 text-xs" placeholder="Masraf açıklaması" />
@@ -593,7 +593,6 @@ export function CashDetailSidebar({
                   includePlaceholderOption={false}
                   editable={false}
                   buttonClassName="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
-                  menuVariant="light"
                 />
                 <CurrencyTextInput value={chequeSettlementForm.expenseAmount} onChange={(value) => onChequeSettlementFormChange({ ...chequeSettlementForm, expenseAmount: value })} />
               </>
@@ -601,19 +600,19 @@ export function CashDetailSidebar({
             <button type="submit" className={chequeSettlementMode === 'collection' ? `${BTN_SUCCESS} w-full py-2.5 text-xs` : 'w-full rounded-xl border border-blue-500/25 bg-blue-500/10 py-2.5 text-xs font-black text-blue-300'}>
               {chequeSettlementMode === 'collection' ? 'Tahsilat Ekle' : 'Ödeme Ekle'}
             </button>
-            <button type="button" onClick={() => onEditChequeDetail(activeChequeSettlementDetail)} className="w-full rounded-xl border border-dark-500/50 bg-dark-700/70 py-2 text-xs font-black text-gray-300">
+            <button type="button" onClick={() => onEditChequeDetail(activeChequeSettlementDetail)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2 text-xs font-black text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]">
               Çek Bilgisine Dön
             </button>
           </form>
         ) : null}
 
         {isChequeAccount && chequePanelOpen && !chequeSettlementDetailId ? (
-          <form onSubmit={(event) => event.preventDefault()} className="space-y-3 rounded-xl border border-dark-500/40 bg-dark-800/65 p-3">
+          <form onSubmit={(event) => event.preventDefault()} className={CASH_SIDEBAR_INNER_FORM_CLASS}>
             <div className="flex items-start justify-between gap-2">
-              <h2 className="text-xs font-black uppercase tracking-wide text-blue-300">
+              <h2 className="text-xs font-black uppercase tracking-wide text-blue-600">
                 {editingChequeId ? 'Çek Bilgisi Düzenle' : 'Çek Bilgisi Ekle'}
               </h2>
-              <button type="button" onClick={onCloseChequePanel} className="rounded-lg p-1.5 text-gray-500 hover:bg-dark-700 hover:text-white">
+              <button type="button" onClick={onCloseChequePanel} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -627,7 +626,6 @@ export function CashDetailSidebar({
               setActiveMenu={setActiveMenu}
               placeholder="Banka seçin"
               buttonClassName="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
-              menuVariant="light"
               searchable
               searchPlaceholder="Banka ara..."
             />
@@ -648,7 +646,7 @@ export function CashDetailSidebar({
               </button>
             </div>
             {chequePartyMenuOpen ? (
-              <div className="rounded-xl border border-dark-500/50 bg-dark-900/95 p-2">
+              <div className="glass-inset rounded-xl p-2">
                 <SearchInput size="sm" value={chequePartySearch} onChange={(event) => onChequePartySearchChange(event.target.value)} placeholder="Cari ara..." autoFocus />
                 <div className="mt-2 max-h-44 space-y-1 overflow-y-auto">
                   {chequePartyOptions.map((option) => (

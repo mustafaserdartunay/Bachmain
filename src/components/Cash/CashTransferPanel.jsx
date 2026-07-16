@@ -2,6 +2,8 @@ import { ArrowLeftRight } from 'lucide-react'
 import EditableDropdownPill from '../EditableDropdownPill'
 import {
   BalanceFooter,
+  CASH_SIDEBAR_BODY_CLASS,
+  CASH_SIDEBAR_FORM_SHELL,
   CurrencyField,
   FormRowStacked,
   SidebarFormCard,
@@ -29,7 +31,7 @@ export default function CashTransferPanel({
   const canSubmit = Boolean(form.targetAccountName) && amount > 0
 
   return (
-    <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-dark-500/35 bg-dark-800/60 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+    <form onSubmit={onSubmit} className={CASH_SIDEBAR_FORM_SHELL}>
       <SidebarPanelHeader
         icon={ArrowLeftRight}
         title="Hesaba Transfer"
@@ -37,7 +39,7 @@ export default function CashTransferPanel({
         accent="blue"
       />
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className={CASH_SIDEBAR_BODY_CLASS}>
         <SidebarInfoNote>
           Bu hesaptan diğer hesaplarınıza para transfer edebilirsiniz.
         </SidebarInfoNote>
@@ -55,7 +57,6 @@ export default function CashTransferPanel({
               includePlaceholderOption={false}
               editable={false}
               buttonClassName={sidebarDropdownClass}
-              menuVariant="light"
             />
           </FormRowStacked>
           <FormRowStacked label="Tarih" required>

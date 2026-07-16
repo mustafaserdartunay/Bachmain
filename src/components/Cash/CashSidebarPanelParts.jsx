@@ -1,12 +1,25 @@
 import { formatTreasuryCurrency } from '../../utils/treasuryStore'
 import { BTN_PRIMARY } from '../../utils/buttonStyles'
+import {
+  FORM_FIELD_LABEL_CLASS,
+  FORM_FIELD_SURFACE_CLASS,
+  FORM_SECTION_PANEL_COMPACT_CLASS,
+} from '../Common/FormSectionPanel'
+import { APP_PANEL_TITLE_CLASS } from '../../utils/dashboardDesign'
 
-const FIELD_SHELL = '[&_.form-input]:h-10 [&_.form-input]:rounded-xl [&_.form-input]:border-dark-500/40 [&_.form-input]:bg-dark-800/70 [&_.form-input]:text-sm [&_.form-input]:text-gray-100 [&_.form-input]:shadow-none [&_.form-input]:transition-colors [&_.form-input:focus]:border-blue-500/35 [&_.form-input:focus]:ring-1 [&_.form-input:focus]:ring-blue-500/15'
+const FIELD_SHELL = '[&_.form-input]:min-h-[2.5rem]'
+
+export const CASH_SIDEBAR_FORM_SHELL =
+  'cash-sidebar-form glass-inset flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl'
+
+export const CASH_SIDEBAR_BODY_CLASS = 'flex-1 overflow-y-auto px-4 py-4'
+
+export const CASH_SIDEBAR_INNER_FORM_CLASS = `${FORM_SECTION_PANEL_COMPACT_CLASS} space-y-3`
 
 export function FormRow({ label, required = false, children }) {
   return (
-    <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-2 border-b border-dark-500/35 py-2.5 last:border-b-0">
-      <label className="text-[12px] font-black uppercase tracking-wide text-gray-500">
+    <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-2 border-b border-[var(--border)] py-2.5 last:border-b-0">
+      <label className={FORM_FIELD_LABEL_CLASS}>
         {label}
         {required ? ' *' : ''}
       </label>
@@ -18,9 +31,9 @@ export function FormRow({ label, required = false, children }) {
 export function FormRowStacked({ label, required = false, children, className = '' }) {
   return (
     <div className={`space-y-2 py-3.5 ${className}`}>
-      <label className="block text-[12px] font-bold uppercase tracking-[0.16em] text-gray-500">
+      <label className={`block ${FORM_FIELD_LABEL_CLASS}`}>
         {label}
-        {required ? <span className="text-blue-400/90"> *</span> : null}
+        {required ? <span className="text-[var(--accent)]"> *</span> : null}
       </label>
       <div className={`min-w-0 ${FIELD_SHELL}`}>{children}</div>
     </div>
@@ -29,31 +42,31 @@ export function FormRowStacked({ label, required = false, children, className = 
 
 export function SidebarFormCard({ children }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-dark-500/30 bg-gradient-to-b from-dark-800/55 to-dark-900/25 px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-      <div className="divide-y divide-dark-500/20">{children}</div>
+    <div className={`${FORM_SECTION_PANEL_COMPACT_CLASS} overflow-hidden !p-0`}>
+      <div className="divide-y divide-[var(--border)] px-3.5">{children}</div>
     </div>
   )
 }
 
 export function SidebarPanelHeader({ icon: Icon, title, subtitle, accent = 'blue' }) {
   const accentClass = accent === 'blue'
-    ? 'bg-blue-500/10 text-blue-300 ring-blue-500/20'
+    ? 'bg-blue-500/10 text-blue-600 ring-blue-500/20'
     : accent === 'emerald'
-      ? 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/20'
+      ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/20'
       : accent === 'purple'
-        ? 'bg-purple-500/10 text-purple-300 ring-purple-500/20'
-        : 'bg-dark-700/60 text-gray-400 ring-dark-500/30'
+        ? 'bg-purple-500/10 text-purple-600 ring-purple-500/20'
+        : 'bg-[rgba(140,145,165,0.14)] text-[var(--muted)] ring-[var(--border)]'
 
   return (
-    <div className="border-b border-dark-500/35 bg-gradient-to-r from-blue-500/[0.06] via-transparent to-transparent px-4 py-3.5">
+    <div className="border-b border-[var(--border)] px-4 py-3.5">
       <div className="flex items-center gap-3">
         <span className={`rounded-xl p-2.5 ring-1 ${accentClass}`}>
           <Icon className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <h2 className="truncate text-sm font-black tracking-tight text-white">{title}</h2>
+          <h2 className={`truncate text-sm font-black tracking-tight ${APP_PANEL_TITLE_CLASS}`}>{title}</h2>
           {subtitle ? (
-            <p className="mt-0.5 text-[12px] font-semibold text-gray-500">{subtitle}</p>
+            <p className="mt-0.5 text-[12px] font-semibold text-[var(--muted)]">{subtitle}</p>
           ) : null}
         </div>
       </div>
@@ -63,7 +76,7 @@ export function SidebarPanelHeader({ icon: Icon, title, subtitle, accent = 'blue
 
 export function SidebarInfoNote({ children }) {
   return (
-    <p className="mb-4 rounded-xl border border-dark-500/25 bg-dark-900/20 px-3 py-2.5 text-[13px] leading-relaxed text-gray-400">
+    <p className={`mb-4 rounded-xl border border-[var(--border)] ${FORM_FIELD_SURFACE_CLASS} px-3 py-2.5 text-[13px] leading-relaxed text-[var(--muted)]`}>
       {children}
     </p>
   )
@@ -73,11 +86,11 @@ export function SidebarPanelActions({ onCancel, submitLabel, submitDisabled = fa
   const isDisabled = submitDisabled || disabled
 
   return (
-    <div className="grid grid-cols-2 gap-2.5 border-t border-dark-500/35 bg-dark-900/15 p-3.5">
+    <div className="grid grid-cols-2 gap-2.5 border-t border-[var(--border)] p-3.5">
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex h-10 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-800/50 text-[13px] font-bold uppercase tracking-[0.12em] text-gray-400 transition-colors hover:border-dark-500/70 hover:bg-dark-700/60 hover:text-gray-200"
+        className="inline-flex h-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[13px] font-bold uppercase tracking-[0.12em] text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]"
       >
         Vazgeç
       </button>
@@ -100,7 +113,7 @@ export function CurrencyField({ value, onChange, CurrencyTextInput }) {
       <div className="[&_input]:pr-9">
         <CurrencyTextInput value={value} onChange={onChange} />
       </div>
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500">₺</span>
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--muted)]">₺</span>
     </div>
   )
 }
@@ -111,10 +124,10 @@ export function BalanceFooter({ rawBalance }) {
   const [liraPart, kurusPart = '00'] = formatted.replace('₺', '').split(',')
 
   return (
-    <div className="border-t border-dark-500/35 bg-dark-700/40 px-4 py-3">
+    <div className={`border-t border-[var(--border)] ${FORM_FIELD_SURFACE_CLASS} rounded-none border-x-0 border-b-0 px-4 py-3`}>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-gray-500">Bakiye</span>
-        <span className={`font-black tabular-nums ${isNegative ? 'text-red-300' : 'text-emerald-300'}`}>
+        <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Bakiye</span>
+        <span className={`font-black tabular-nums ${isNegative ? 'text-red-500' : 'text-emerald-600'}`}>
           <span className="text-base">{liraPart},</span>
           <span className="text-sm">{kurusPart}₺</span>
         </span>
@@ -123,6 +136,7 @@ export function BalanceFooter({ rawBalance }) {
   )
 }
 
-export const sidebarDropdownClass = 'flex h-10 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-dark-500/40 bg-dark-800/70 px-3 text-xs font-semibold text-gray-100 shadow-none transition-colors hover:border-blue-500/25 hover:bg-dark-700/70 [&_span]:truncate'
+export const sidebarDropdownClass =
+  'flex h-10 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)] [&_span]:truncate'
 
-export const sidebarInputClass = 'form-input h-10 rounded-xl border-dark-500/40 bg-dark-800/70 text-sm text-gray-100 shadow-none transition-colors focus:border-blue-500/35 focus:ring-1 focus:ring-blue-500/15'
+export const sidebarInputClass = 'form-input text-sm'

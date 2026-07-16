@@ -1,6 +1,9 @@
 import { Scale } from 'lucide-react'
+import { FORM_FIELD_SURFACE_CLASS } from '../Common/FormSectionPanel'
 import {
   BalanceFooter,
+  CASH_SIDEBAR_BODY_CLASS,
+  CASH_SIDEBAR_FORM_SHELL,
   CurrencyField,
   FormRowStacked,
   SidebarFormCard,
@@ -24,7 +27,7 @@ export default function CashBalanceFixPanel({
   const canSubmit = targetAmount >= 0
 
   return (
-    <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-dark-500/35 bg-dark-800/60 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+    <form onSubmit={onSubmit} className={CASH_SIDEBAR_FORM_SHELL}>
       <SidebarPanelHeader
         icon={Scale}
         title="Bakiye Sabitle"
@@ -32,14 +35,14 @@ export default function CashBalanceFixPanel({
         accent="purple"
       />
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className={CASH_SIDEBAR_BODY_CLASS}>
         <SidebarInfoNote>
           Mevcut bakiye ile hedef bakiye arasındaki fark otomatik düzeltme hareketi olarak kaydedilir.
         </SidebarInfoNote>
 
         <SidebarFormCard>
           <FormRowStacked label="Mevcut Bakiye" className="first:pt-3.5">
-            <div className="flex h-10 items-center rounded-xl border border-dark-500/45 bg-dark-900/70 px-3 text-sm font-black text-emerald-300">
+            <div className={`flex h-10 items-center px-3 text-sm font-black text-emerald-600 ${FORM_FIELD_SURFACE_CLASS}`}>
               {balance}
             </div>
           </FormRowStacked>

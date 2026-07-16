@@ -1756,7 +1756,7 @@ export default function CashPage() {
   if (accountId) {
     if (!detailAccount) {
       return (
-        <div className="space-y-4 rounded-2xl border border-dark-500/45 bg-dark-800/55 p-8 text-center shadow-card">
+        <div className="glass-inset space-y-4 rounded-2xl p-8 text-center">
           <p className="text-sm font-semibold text-gray-400">Hesap bulunamadı.</p>
           <Link to={CASH_BASE_PATH} className="inline-flex rounded-xl border border-blue-500/25 bg-blue-500/10 px-4 py-2 text-sm font-black text-blue-300">
             Kasa listesine dön
@@ -1787,7 +1787,7 @@ export default function CashPage() {
           balanceFooter={(accountMovementPanelOpen || transferPanelOpen || balanceFixPanelOpen) ? false : undefined}
           table={isChequeAccount ? (
             <>
-              <div className="mb-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3">
+              <div className="glass-inset mb-3 rounded-2xl p-3">
                 <SearchInput
                   className="font-semibold"
                   value={chequeFilters.search}
@@ -1812,7 +1812,7 @@ export default function CashPage() {
             </>
           ) : (
             <>
-              <div className="mb-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3">
+              <div className="glass-inset mb-3 rounded-2xl p-3">
                 <SearchInput
                   className="font-semibold"
                   value={accountMovementSearch}
@@ -2019,17 +2019,17 @@ export default function CashPage() {
       />
 
       {accountPanelOpen ? (
-        <div className="rounded-2xl border border-dark-500/40 bg-dark-800/65 p-4">
+        <div className="glass-inset rounded-2xl p-4">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-base font-black text-white">
+              <h2 className="text-base font-black text-[var(--text-strong)]">
                 {accountForm.type === 'Çek Kasası' ? 'Çek Kasası Oluştur' : 'Kasa Oluştur'}
               </h2>
             </div>
             <button
               type="button"
               onClick={() => setAccountPanelOpen(false)}
-              className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-dark-700 hover:text-white"
+              className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-strong)]"
               title="Kapat"
             >
               <X className="h-4 w-4" />
@@ -2049,7 +2049,6 @@ export default function CashPage() {
                 includePlaceholderOption={false}
                 editable={false}
                 buttonClassName="flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
-                menuVariant="light"
               />
               <input value={accountForm.openingBalance} onChange={(e) => setAccountForm((c) => ({ ...c, openingBalance: e.target.value }))} type="number" placeholder="Açılış bakiyesi" className="form-input text-sm" />
               <button type="submit" className={`${BTN_PRIMARY} justify-center px-4 py-2.5 text-sm`}>
@@ -2060,9 +2059,9 @@ export default function CashPage() {
               <input value={accountForm.iban} onChange={(e) => setAccountForm((c) => ({ ...c, iban: e.target.value }))} placeholder="IBAN" className="form-input text-sm" />
             )}
             {accountForm.type === 'Çek Kasası' && (
-              <div className="rounded-xl border border-dark-500/50 bg-dark-700/35 p-3">
+              <div className="glass-inset rounded-xl p-3">
                 <div className="mb-3">
-                  <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">Aktif Çek Bilgileri</p>
+                  <p className="text-[12px] font-black uppercase tracking-wider text-[var(--muted)]">Aktif Çek Bilgileri</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                   <div>
@@ -2077,7 +2076,6 @@ export default function CashPage() {
                       setActiveMenu={setActiveMenu}
                       placeholder="Banka seçin"
                       buttonClassName="flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
-                      menuVariant="light"
                       searchable
                       searchPlaceholder="Banka ara..."
                       menuMaxHeight="max-h-72"
@@ -2106,7 +2104,7 @@ export default function CashPage() {
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-dark-500/45 bg-dark-800/55 p-4 shadow-card">
+      <section className="card rounded-2xl p-4">
         <div className="grid gap-2">
           {enrichedAccounts.map((account) => {
             const Icon = account.type === 'Banka Hesabı' ? Landmark : Banknote
@@ -2115,9 +2113,9 @@ export default function CashPage() {
                 <button
                   type="button"
                   onClick={() => navigate(`${CASH_BASE_PATH}/${account.id}`)}
-                  className="flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors border-dark-500/45 bg-dark-700/35 hover:border-dark-500/70"
+                  className="glass-inset glass-inset-hover flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors"
                 >
-                  <span className={`rounded-lg bg-dark-800/80 p-1.5 ${account.color}`}>
+                  <span className={`glass-inset rounded-lg p-1.5 ${account.color}`}>
                     <Icon className="h-3.5 w-3.5" />
                   </span>
                   <div className="min-w-0 flex-1">

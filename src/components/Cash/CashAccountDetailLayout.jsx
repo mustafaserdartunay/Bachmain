@@ -4,7 +4,8 @@ import { DropdownMenuShell } from '../Common/DropdownMenu'
 import { AppPageHeader } from '../Layout/AppPageLayout'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
 
-const SIDEBAR_ACTION_CLASS = 'flex w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/55 px-3 py-3 text-left text-[13px] font-black uppercase tracking-wide text-gray-200 transition-colors hover:border-dark-500/70 hover:bg-dark-700/80'
+const SIDEBAR_ACTION_CLASS =
+  'glass-inset glass-inset-hover flex w-full items-center justify-between gap-2 rounded-xl px-3 py-3 text-left text-[13px] font-black uppercase tracking-wide text-[var(--text-strong)] transition-colors'
 
 export default function CashAccountDetailLayout({
   account,
@@ -32,14 +33,14 @@ export default function CashAccountDetailLayout({
 
       <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <section className="card flex min-h-[44rem] flex-col overflow-visible p-0">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-dark-500/45 px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
             <div className="flex min-w-0 items-center gap-4">
-              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-dark-500/45 bg-dark-700/55 ${iconTone}`}>
+              <div className={`glass-inset flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconTone}`}>
                 <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-lg font-black uppercase tracking-wide text-white">{account.name}</h2>
-                <p className="mt-1 text-xs font-semibold text-gray-500">
+                <h2 className="truncate text-lg font-black uppercase tracking-wide text-[var(--text-strong)]">{account.name}</h2>
+                <p className="mt-1 text-xs font-semibold text-[var(--muted)]">
                   {account.currency || 'TRY'} · {account.type}
                 </p>
               </div>
@@ -47,7 +48,7 @@ export default function CashAccountDetailLayout({
             <button
               type="button"
               onClick={onEdit}
-              className="flex h-10 items-center rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+              className="flex h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-black uppercase tracking-wide text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]"
             >
               Düzenle
             </button>
@@ -59,10 +60,10 @@ export default function CashAccountDetailLayout({
           {sidebar}
           {balanceFooter !== false && (
             balanceFooter ?? (
-              <div className="mt-auto border-t border-dark-500/40 pt-3">
+              <div className="mt-auto border-t border-[var(--border)] pt-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[13px] font-black uppercase tracking-wide text-gray-500">Bakiye</span>
-                  <span className={`text-sm font-black ${String(balance).includes('-') ? 'text-red-300' : 'text-emerald-300'}`}>
+                  <span className="text-[13px] font-black uppercase tracking-wide text-[var(--muted)]">Bakiye</span>
+                  <span className={`text-sm font-black ${String(balance).includes('-') ? 'text-red-500' : 'text-emerald-600'}`}>
                     {balance}
                   </span>
                 </div>
@@ -97,7 +98,7 @@ export function CashSidebarActionButton({ label, open, onClick, onClose, childre
     >
       <button type="button" onClick={onClick} className={SIDEBAR_ACTION_CLASS}>
         <span>{label}</span>
-        <ChevronDown className={`h-4 w-4 shrink-0 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open ? <DropdownMenuShell>{children}</DropdownMenuShell> : null}
     </div>
