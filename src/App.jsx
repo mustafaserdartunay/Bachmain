@@ -54,7 +54,6 @@ import StockHistoryPage from './pages/stock/StockHistoryPage'
 import StockProductsReportPage from './pages/stock/StockProductsReportPage'
 import CostCalculatorRoute, { LegacyCostCalculatorRedirect } from './pages/stock/CostCalculatorRoute'
 import DeliveredPage from './pages/process/DeliveredPage'
-import MessageCenterSettingsPage from './pages/MessageCenterSettingsPage'
 import SettingsPage from './pages/SettingsPage'
 import {
   OrgHubPage,
@@ -263,7 +262,7 @@ export default function App() {
                 <Route path="/projeler/yeni" element={<ProjectsPage />} />
                 <Route path="/ayarlar" element={<SettingsPage />} />
                 <Route path="/ayarlar/guncel-durum" element={<GuncelDurumSettingsPage />} />
-                <Route path="/ayarlar/mesaj-merkezi" element={<MessageCenterSettingsPage />} />
+                <Route path="/ayarlar/mesaj-merkezi" element={<Navigate to="/mesajlar?ayarlar=1" replace />} />
                 <Route path="/ayarlar/vergi-kdv" element={<TaxVatSettingsPage />} />
                 <Route path="/ayarlar/kasa-banka" element={<CashBankSettingsPage />} />
                 <Route path="/ayarlar/etiketler" element={<LabelsSettingsPage />} />
