@@ -1,9 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { getOpenAiApiKey } from './server/env.js'
 import { handleVoiceChatRequest } from './server/voiceChat.js'
 import { handleVoiceTranscribeRequest } from './server/voiceTranscribe.js'
 import { handleOmniAnalyzeRequest } from './server/omniChat.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 async function readJsonBody(req) {
   const chunks = []
@@ -89,6 +93,11 @@ function voiceApiPlugin() {
 export default defineConfig({
   esbuild: {
     jsx: 'automatic',
+  },
+  resolve: {
+    alias: {
+      '@bachmain/ui': path.resolve(__dirname, 'packages/ui/src/index.js'),
+    },
   },
   optimizeDeps: {
     entries: ['index.html'],

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, ChevronDown, ChevronRight, ClipboardList, Factory } from 'lucide-react'
+import { ArchiveRestore, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, Factory, Package, Trash2 } from 'lucide-react'
+import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
@@ -45,7 +46,7 @@ import {
 } from '../utils/workflowStages'
 
 const productionListGrid =
-  '96px minmax(128px, 1fr) 96px 104px 120px 96px 240px 168px'
+  '96px minmax(128px, 1fr) 96px 104px 120px 96px 240px 96px'
 
 const LIST_ROW_CELL = 'flex h-full min-w-0 items-center'
 const DATE_COL_LINE = 'min-h-[15px] leading-tight'
@@ -412,27 +413,6 @@ export default function ProductionPage() {
                     <div className={`relative z-10 ${LIST_ROW_CELL} justify-end gap-1.5`} onClick={(event) => event.stopPropagation()}>
                       <button
                         type="button"
-                        onClick={() => {
-                          cancelProductionBackToOrder(job.id)
-                          refreshJobs()
-                        }}
-                        className="whitespace-nowrap rounded-lg border border-blue-500/25 bg-blue-500/10 px-2 py-1.5 text-[11px] font-bold text-blue-300 transition-colors hover:bg-blue-500/20"
-                      >
-                        Vazgeç
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          sendProductionJobToDepo(job.id)
-                          refreshJobs()
-                          navigate('/depo')
-                        }}
-                        className="whitespace-nowrap rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2 py-1.5 text-[11px] font-bold text-emerald-300 transition-colors hover:bg-emerald-500/20"
-                      >
-                        Depoya gönder
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => toggleJobExpanded(job.id)}
                         className={`rounded-lg border p-2 transition-colors ${
                           isExpanded
@@ -448,18 +428,50 @@ export default function ProductionPage() {
                           <ChevronRight className="h-3.5 w-3.5" />
                         )}
                       </button>
-                      <DeleteTrashButton
-                        pending={pendingDeleteId === job.id}
-                        onClick={() => setPendingDeleteId(job.id)}
-                        onConfirm={() => {
-                          removeJob(job)
-                          setPendingDeleteId(null)
-                        }}
-                        onCancel={() => setPendingDeleteId(null)}
-                        title="Üretim kaydı silinsin mi?"
-                        description="Bu işlem geri alınamaz."
-                        popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
+                      <MoreMenu
+                        items={[
+                          {
+                            id: 'cancel',
+                            label: 'Vazgeç',
+                            icon: ArchiveRestore,
+                            onClick: () => {
+                              cancelProductionBackToOrder(job.id)
+                              refreshJobs()
+                            },
+                          },
+                          {
+                            id: 'depo',
+                            label: 'Depoya gönder',
+                            icon: Package,
+                            onClick: () => {
+                              sendProductionJobToDepo(job.id)
+                              refreshJobs()
+                              navigate('/depo')
+                            },
+                          },
+                          {
+                            id: 'delete',
+                            label: 'Sil',
+                            icon: Trash2,
+                            tone: 'danger',
+                            onClick: () => setPendingDeleteId(job.id),
+                          },
+                        ]}
                       />
+                      {pendingDeleteId === job.id ? (
+                        <DeleteTrashButton
+                          pending
+                          onClick={() => setPendingDeleteId(job.id)}
+                          onConfirm={() => {
+                            removeJob(job)
+                            setPendingDeleteId(null)
+                          }}
+                          onCancel={() => setPendingDeleteId(null)}
+                          title="Üretim kaydı silinsin mi?"
+                          description="Bu işlem geri alınamaz."
+                          popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
+                        />
+                      ) : null}
                     </div>
                   </div>
 

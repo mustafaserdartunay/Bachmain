@@ -1,0 +1,228 @@
+/**
+ * BachMain Design System 3.0 — tokens
+ * Import early from index.css
+ */
+
+:root {
+  /* Brand */
+  --ds-primary: #5c3d2e;
+  --ds-primary-hover: #4a3125;
+  --ds-secondary: #b87333;
+  --ds-secondary-hover: #9a5f2a;
+
+  /* Surfaces */
+  --ds-bg: #f7f4ef;
+  --ds-bg-soft: #f0ebe3;
+  --ds-surface: #fffcf8;
+  --ds-surface-raised: #ffffff;
+  --ds-surface-muted: #f3efe8;
+  --ds-border: #e5e0d8;
+  --ds-border-strong: #d4cdc2;
+
+  /* Ink */
+  --ds-ink: #1c1917;
+  --ds-ink-body: #44403c;
+  --ds-muted: #78716c;
+  --ds-muted-soft: #a8a29e;
+
+  /* Semantic */
+  --ds-success: #059669;
+  --ds-warning: #ea580c;
+  --ds-danger: #dc2626;
+  --ds-info: #2563eb;
+
+  /* Typography */
+  --ds-font-display: 2.5rem; /* 40 */
+  --ds-font-h1: 2rem; /* 32 */
+  --ds-font-h2: 1.5rem; /* 24 */
+  --ds-font-h3: 1.25rem; /* 20 */
+  --ds-font-body-lg: 1rem; /* 16 */
+  --ds-font-body: 0.9375rem; /* 15 */
+  --ds-font-small: 0.8125rem; /* 13 */
+  --ds-font-caption: 0.75rem; /* 12 */
+  --ds-font-family: Inter, system-ui, 'SF Pro Display', Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Spacing (4px grid) */
+  --ds-space-1: 0.25rem;
+  --ds-space-2: 0.5rem;
+  --ds-space-3: 0.75rem;
+  --ds-space-4: 1rem;
+  --ds-space-5: 1.25rem;
+  --ds-space-6: 1.5rem;
+  --ds-space-8: 2rem;
+  --ds-space-10: 2.5rem;
+  --ds-space-12: 3rem;
+  --ds-space-16: 4rem;
+  --ds-space-20: 5rem;
+  --ds-space-24: 6rem;
+
+  /* Radius */
+  --ds-radius-sm: 0.5rem; /* 8 */
+  --ds-radius-md: 0.75rem; /* 12 */
+  --ds-radius-lg: 1rem; /* 16 */
+  --ds-radius-xl: 1.5rem; /* 24 */
+  --ds-radius-hero: 2rem; /* 32 */
+
+  /* Shadow */
+  --ds-shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.04);
+  --ds-shadow-sm: 0 2px 6px rgba(28, 25, 23, 0.06);
+  --ds-shadow-md: 0 8px 20px -8px rgba(28, 25, 23, 0.12);
+  --ds-shadow-lg: 0 16px 40px -12px rgba(28, 25, 23, 0.16);
+  --ds-shadow-xl: 0 24px 56px -16px rgba(28, 25, 23, 0.2);
+
+  /* Controls */
+  --ds-control-h: 3rem; /* 48px standard */
+  --ds-control-h-sm: 2.25rem;
+  --ds-control-h-lg: 3.25rem;
+
+  /* Shell */
+  --ds-sidebar-expanded: 17.5rem; /* 280px */
+  --ds-sidebar-collapsed: 5.5rem; /* 88px */
+  --ds-header-h: 4.5rem; /* 72px */
+  --ds-bottom-nav-h: 4rem;
+
+  /* Motion */
+  --ds-duration-hover: 150ms;
+  --ds-duration-dropdown: 200ms;
+  --ds-duration-drawer: 250ms;
+  --ds-duration-page: 300ms;
+
+  /* Z-index */
+  --ds-z-dropdown: 1000;
+  --ds-z-sticky: 1100;
+  --ds-z-drawer: 1200;
+  --ds-z-modal: 1300;
+  --ds-z-toast: 1400;
+  --ds-z-command: 1500;
+
+  /* Bridge legacy shell tokens → DS day */
+  --ink: var(--ds-ink);
+  --muted: var(--ds-muted);
+  --app-bg: var(--ds-bg);
+  --app-bg-soft: var(--ds-bg-soft);
+  --surface: var(--ds-surface);
+  --surface-raised: var(--ds-surface-raised);
+  --surface-soft: var(--ds-surface-muted);
+  --surface-muted: var(--ds-surface-muted);
+  --border: var(--ds-border);
+  --border-strong: var(--ds-border-strong);
+  --text: var(--ds-ink-body);
+  --text-strong: var(--ds-ink);
+  --text-muted: var(--ds-muted);
+  --text-soft: var(--ds-muted-soft);
+  --glass-bg: rgba(255, 252, 248, 0.72);
+  --glass-bg-strong: rgba(255, 252, 248, 0.9);
+  --glass-border: rgba(229, 224, 216, 0.9);
+  --accent: var(--ds-secondary);
+  --accent-hover: var(--ds-secondary-hover);
+  --shell-rail-expanded: var(--ds-sidebar-expanded);
+  --shell-rail-collapsed: var(--ds-sidebar-collapsed);
+}
+
+html.night {
+  --ds-bg: #1c1917;
+  --ds-bg-soft: #292524;
+  --ds-surface: #292524;
+  --ds-surface-raised: #35302c;
+  --ds-surface-muted: #44403c;
+  --ds-border: rgba(168, 162, 158, 0.22);
+  --ds-border-strong: rgba(168, 162, 158, 0.35);
+  --ds-ink: #fafaf9;
+  --ds-ink-body: #e7e5e4;
+  --ds-muted: #a8a29e;
+  --ds-muted-soft: #78716c;
+  --ds-primary: #d4a574;
+  --ds-primary-hover: #e0b888;
+  --ds-secondary: #c9854a;
+  --glass-bg: rgba(41, 37, 36, 0.78);
+  --glass-bg-strong: rgba(53, 48, 44, 0.92);
+  --glass-border: rgba(168, 162, 158, 0.18);
+  --ink: var(--ds-ink);
+  --muted: var(--ds-muted);
+  --app-bg: var(--ds-bg);
+  --surface: var(--ds-surface);
+  --text-strong: var(--ds-ink);
+  --text: var(--ds-ink-body);
+  --border: var(--ds-border);
+}
+
+/* Density */
+html[data-density='compact'] {
+  --ds-control-h: 2.5rem;
+  --ds-row-h: 2.25rem;
+  --ds-card-pad: var(--ds-space-3);
+}
+
+html[data-density='standard'],
+html:not([data-density]) {
+  --ds-control-h: 3rem;
+  --ds-row-h: 2.75rem;
+  --ds-card-pad: var(--ds-space-4);
+}
+
+html[data-density='comfortable'] {
+  --ds-control-h: 3.25rem;
+  --ds-row-h: 3.5rem;
+  --ds-card-pad: var(--ds-space-5);
+}
+
+/* Typography utilities */
+.ds-display {
+  font-size: var(--ds-font-display);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ds-ink);
+  font-family: var(--ds-font-family);
+}
+
+.ds-h1 {
+  font-size: var(--ds-font-h1);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ds-ink);
+  font-family: var(--ds-font-family);
+}
+
+.ds-h2 {
+  font-size: var(--ds-font-h2);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ds-ink);
+  font-family: var(--ds-font-family);
+}
+
+.ds-h3 {
+  font-size: var(--ds-font-h3);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ds-ink);
+  font-family: var(--ds-font-family);
+}
+
+.ds-body-lg {
+  font-size: var(--ds-font-body-lg);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ds-ink-body);
+}
+
+.ds-body {
+  font-size: var(--ds-font-body);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ds-ink-body);
+}
+
+.ds-small {
+  font-size: var(--ds-font-small);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ds-muted);
+}
+
+.ds-caption {
+  font-size: var(--ds-font-caption);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ds-muted);
+}

@@ -1,0 +1,164 @@
+import { useMemo, useState } from 'react'
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
+import { MoreMenu } from './MoreMenu'
+import { EmptyState } from './States'
+import { Tooltip } from './Tooltip'
+
+function sortRows(rows, sort) {
+  if (!sort?.key) return rows
+  const dir = sort.dir === 'desc' ? -1 : 1
+  return [...rows].sort((a, b) => {
+    const av = a[sort.key]
+    const bv = b[sort.key]
+    if (av == null && bv == null) return 0
+    if (av == null) return 1
+    if (bv == null) return -1
+    if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir
+    return String(av).localeCompare(String(bv), 'tr') * dir
+  })
+}
+
+/**
+ * Adaptive DataTable — desktop grid, mobile cards, MoreMenu actions.
+ *
+ * columns: [{ id, header, accessorKey?, cell?, sortable?, hideOnMobile?, className? }]
+ * getRowActions?: (row) => MoreMenu items
+ */
+export function DataTable({
+  columns = [],
+  data = [],
+  getRowId = (row, index) => row.id ?? index,
+  getRowActions,
+  emptyTitle = 'Kayıt bulunamadı',
+  emptyDescription,
+  className = '',
+  onRowClick,
+}) {
+  const [sort, setSort] = useState({ key: null, dir: 'asc' })
+  const rows = useMemo(() => sortRows(data, sort), [data, sort])
+
+  function toggleSort(key) {
+    setSort((current) => {
+      if (current.key !== key) return { key, dir: 'asc' }
+      if (current.dir === 'asc') return { key, dir: 'desc' }
+      return { key: null, dir: 'asc' }
+    })
+  }
+
+  if (!rows.length) {
+    return <EmptyState title={emptyTitle} description={emptyDescription} className={className} />
+  }
+
+  return (
+    <div className={className}>
+      {/* Desktop / tablet */}
+      <div className="hidden overflow-x-auto rounded-ds-lg border border-ds-border md:block">
+        <table className="w-full min-w-[640px] border-collapse text-left">
+          <thead className="bg-[var(--ds-surface-muted)]">
+            <tr>
+              {columns.map((col) => (
+                <th
+                  key={col.id}
+                  className={`h-[var(--ds-row-h,2.75rem)] px-3 text-ds-caption font-semibold uppercase tracking-wide text-ds-muted ${col.className || ''}`}
+                >
+                  {col.sortable ? (
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 hover:text-ds-ink"
+                      onClick={() => toggleSort(col.accessorKey || col.id)}
+                    >
+                      <span className="truncate">{col.header}</span>
+                      {sort.key === (col.accessorKey || col.id) ? (
+                        sort.dir === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
+                      ) : (
+                        <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+                      )}
+                    </button>
+                  ) : (
+                    <span className="truncate">{col.header}</span>
+                  )}
+                </th>
+              ))}
+              {getRowActions ? <th className="w-12 px-2" aria-label="İşlemler" /> : null}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => {
+              const id = getRowId(row, index)
+              const actions = getRowActions?.(row) || []
+              return (
+                <tr
+                  key={id}
+                  className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${onRowClick ? 'cursor-pointer' : ''}`}
+                  onClick={() => onRowClick?.(row)}
+                >
+                  {columns.map((col) => {
+                    const raw = col.accessorKey ? row[col.accessorKey] : undefined
+                    const content = col.cell ? col.cell(row) : raw
+                    const text = content == null ? '' : String(typeof content === 'string' || typeof content === 'number' ? content : '')
+                    return (
+                      <td key={col.id} className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-ds-body text-ds-ink ${col.className || ''}`}>
+                        {typeof content === 'string' || typeof content === 'number' ? (
+                          <Tooltip content={text.length > 28 ? text : undefined}>
+                            <span className="block truncate">{content}</span>
+                          </Tooltip>
+                        ) : (
+                          content
+                        )}
+                      </td>
+                    )
+                  })}
+                  {getRowActions ? (
+                    <td className="px-2" onClick={(event) => event.stopPropagation()}>
+                      {actions.length ? <MoreMenu items={actions} /> : null}
+                    </td>
+                  ) : null}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile card view */}
+      <div className="space-y-3 md:hidden">
+        {rows.map((row, index) => {
+          const id = getRowId(row, index)
+          const actions = getRowActions?.(row) || []
+          const visibleCols = columns.filter((col) => !col.hideOnMobile)
+          return (
+            <article
+              key={id}
+              className={`rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs ${onRowClick ? 'cursor-pointer' : ''}`}
+              onClick={() => onRowClick?.(row)}
+            >
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1 space-y-2">
+                  {visibleCols.map((col) => {
+                    const raw = col.accessorKey ? row[col.accessorKey] : undefined
+                    const content = col.cell ? col.cell(row) : raw
+                    return (
+                      <div key={col.id} className="min-w-0">
+                        <p className="text-ds-caption font-semibold uppercase tracking-wide text-ds-muted">{col.header}</p>
+                        <div className="truncate text-ds-body font-medium text-ds-ink">
+                          {content ?? '—'}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {actions.length ? (
+                  <div onClick={(event) => event.stopPropagation()}>
+                    <MoreMenu items={actions} />
+                  </div>
+                ) : null}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+export default DataTable

@@ -1,5 +1,6 @@
-import { Archive, FileSpreadsheet, ImagePlus, Minus, Pencil, Plus, Scale, Trash2, X } from 'lucide-react'
+import { Archive, Banknote, FileSpreadsheet, ImagePlus, Minus, Pencil, Plus, Scale, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../Common/SearchInput'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import { DropdownMenuItem } from '../Common/DropdownMenu'
@@ -245,49 +246,48 @@ export function CashChequeHistoryTable({
                       <img src={detail.photo} alt="" className="h-full w-full object-cover" />
                     </button>
                   ) : null}
-                  <button
-                    type="button"
-                    onClick={() => onSettlement(detail, 'collection')}
-                    disabled={detail.collected}
-                    className={`inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border px-2.5 text-[12px] font-black transition-colors ${
-                      detail.collected
-                        ? 'cursor-default border-blue-500/25 bg-blue-500/10 text-blue-300'
-                        : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300 hover:border-emerald-500/35 hover:bg-emerald-500/15'
-                    }`}
-                  >
-                    {detail.collected ? 'Tahsilat Yapıldı' : 'Tahsilat Yap'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onSettlement(detail, 'payment')}
-                    disabled={detail.paid}
-                    className={`inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border px-2.5 text-[12px] font-black transition-colors ${
-                      detail.paid
-                        ? 'cursor-default border-blue-500/25 bg-blue-500/10 text-blue-300'
-                        : 'border-blue-500/25 bg-blue-500/10 text-blue-300 hover:border-blue-500/35 hover:bg-blue-500/15'
-                    }`}
-                  >
-                    {detail.paid ? 'Ödeme Yapıldı' : 'Ödeme Yap'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onEdit(detail)}
-                    className={`${DUZENLEME_KALEMI_BUTTON_CLASS} inline-flex h-8 w-8 items-center justify-center rounded-lg p-0`}
-                    title="Düzenle"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                  <DeleteTrashButton
-                    pending={pendingDeleteId === `cheque-${detail.id}`}
-                    onClick={() => onPendingDelete(`cheque-${detail.id}`)}
-                    onConfirm={() => onRemove(detail)}
-                    onCancel={onCancelDelete}
-                    title="Silinsin mi?"
-                    description="Çek bilgisi kaldırılacak."
-                    buttonClassName={`${TEKLIFLER_COP_KUTUSU_BUTTON_CLASS} inline-flex h-8 w-8 items-center justify-center rounded-lg p-0`}
-                    wrapperClassName="relative inline-flex"
-                    popoverClassName="absolute right-10 top-1/2 z-[90] w-72 -translate-y-1/2"
+                  <MoreMenu
+                    items={[
+                      {
+                        id: 'collection',
+                        label: detail.collected ? 'Tahsilat Yapıldı' : 'Tahsilat Yap',
+                        icon: Banknote,
+                        onClick: detail.collected ? undefined : () => onSettlement(detail, 'collection'),
+                      },
+                      {
+                        id: 'payment',
+                        label: detail.paid ? 'Ödeme Yapıldı' : 'Ödeme Yap',
+                        icon: Banknote,
+                        onClick: detail.paid ? undefined : () => onSettlement(detail, 'payment'),
+                      },
+                      {
+                        id: 'edit',
+                        label: 'Düzenle',
+                        icon: Pencil,
+                        onClick: () => onEdit(detail),
+                      },
+                      {
+                        id: 'delete',
+                        label: 'Sil',
+                        icon: Trash2,
+                        tone: 'danger',
+                        onClick: () => onPendingDelete(`cheque-${detail.id}`),
+                      },
+                    ].filter((item) => item.onClick)}
                   />
+                  {pendingDeleteId === `cheque-${detail.id}` ? (
+                    <DeleteTrashButton
+                      pending
+                      onClick={() => onPendingDelete(`cheque-${detail.id}`)}
+                      onConfirm={() => onRemove(detail)}
+                      onCancel={onCancelDelete}
+                      title="Silinsin mi?"
+                      description="Çek bilgisi kaldırılacak."
+                      buttonClassName={`${TEKLIFLER_COP_KUTUSU_BUTTON_CLASS} inline-flex h-8 w-8 items-center justify-center rounded-lg p-0`}
+                      wrapperClassName="relative inline-flex"
+                      popoverClassName="absolute right-10 top-1/2 z-[90] w-72 -translate-y-1/2"
+                    />
+                  ) : null}
                 </span>
               </div>
             )

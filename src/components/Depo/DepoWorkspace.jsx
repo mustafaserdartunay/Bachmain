@@ -8,8 +8,10 @@ import {
   Plus,
   Receipt,
   Truck,
+  Undo2,
   Warehouse,
 } from 'lucide-react'
+import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../Common/SearchInput'
 import ListHeaderRow from '../Common/ListHeaderRow'
 import SummaryMetrics from '../Common/SummaryMetrics'
@@ -455,24 +457,32 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
                     )}
                   </div>
                   <div className="relative z-10 flex items-center justify-end gap-1">
-                    {!isDepoItemDelivered(item, depoStages) && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleCancelDepoItem(item)}
-                          className="whitespace-nowrap rounded-lg border border-blue-500/25 bg-blue-500/10 px-2 py-1.5 text-[11px] font-bold text-blue-300 transition-colors hover:bg-blue-500/20"
-                        >
-                          Vazgeç
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeliverItem(item)}
-                          className="whitespace-nowrap rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2 py-1.5 text-[11px] font-bold text-emerald-300 transition-colors hover:bg-emerald-500/20"
-                        >
-                          Teslim et
-                        </button>
-                      </>
-                    )}
+                    {!isDepoItemDelivered(item, depoStages) ? (
+                      <MoreMenu
+                        items={[
+                          {
+                            id: 'cancel',
+                            label: 'Vazgeç',
+                            icon: Undo2,
+                            onClick: () => handleCancelDepoItem(item),
+                          },
+                          {
+                            id: 'deliver',
+                            label: 'Teslim et',
+                            icon: Truck,
+                            onClick: () => handleDeliverItem(item),
+                          },
+                          ...(!item.invoiceNo && docsReady
+                            ? [{
+                                id: 'invoice',
+                                label: 'Fatura kes',
+                                icon: Receipt,
+                                onClick: () => handleIssueInvoice(item),
+                              }]
+                            : []),
+                        ]}
+                      />
+                    ) : null}
                     {item.invoiceNo ? (
                       <span
                         className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[12px] font-black text-emerald-300"
@@ -481,16 +491,7 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
                         <Receipt className="h-3.5 w-3.5" />
                         {remainingInDepo > 0 ? 'Kısmi' : 'Fatura'}
                       </span>
-                    ) : docsReady && (
-                      <button
-                        type="button"
-                        onClick={() => handleIssueInvoice(item)}
-                        className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-1.5 text-emerald-300 transition-colors hover:bg-emerald-500/20"
-                        title="Fatura kes"
-                      >
-                        <Receipt className="h-3.5 w-3.5" />
-                      </button>
-                    )}
+                    ) : null}
                     {docsReady && !item.waybillNo && (
                       <button
                         type="button"

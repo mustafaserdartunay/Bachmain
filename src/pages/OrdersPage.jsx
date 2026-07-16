@@ -5,11 +5,14 @@ import {
   CheckCircle2,
   ChevronRight,
   ClipboardList,
+  Factory,
   Plus,
   Printer,
   Send,
   Trash2,
+  Undo2,
 } from 'lucide-react'
+import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
@@ -1144,45 +1147,55 @@ export default function OrdersPage() {
                   <span className="block min-w-0 w-full pr-2 text-right text-sm font-bold tabular-nums text-gray-200">{formatTL(totals.net)}</span>
                   <span className="block min-w-0 w-full pr-2 text-right text-sm font-black tabular-nums text-white">{formatTL(totals.grandTotal)}</span>
                   <div className="relative z-10 flex h-9 w-full items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
-                    {hasLinkedQuote && (
-                      <button
-                        type="button"
-                        onClick={(event) => handleCancelOrderFromList(order, event)}
-                        className="whitespace-nowrap rounded-lg border border-blue-500/25 bg-blue-500/10 px-2.5 py-1.5 text-[12px] font-bold text-blue-300 transition-colors hover:bg-blue-500/20"
-                      >
-                        Vazgeç
-                      </button>
-                    )}
-                    {!isInProduction && productionEntryStage && (
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          transferOrderToProduction(order, productionEntryStage)
-                          navigate('/uretim')
-                        }}
-                        className="whitespace-nowrap rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1.5 text-[12px] font-bold text-emerald-300 transition-colors hover:bg-emerald-500/20"
-                      >
-                        Üretime al
-                      </button>
-                    )}
-                    {isInProduction && (
+                    {isInProduction ? (
                       <span className="whitespace-nowrap rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-[12px] font-bold text-emerald-400/90">
                         Üretimde
                       </span>
-                    )}
-                    <DeleteTrashButton
-                      pending={pendingDeleteId === order.id}
-                      onClick={() => setPendingDeleteId(order.id)}
-                      onConfirm={() => {
-                        removeOrder(order)
-                        setPendingDeleteId(null)
-                      }}
-                      onCancel={() => setPendingDeleteId(null)}
-                      title="Sipariş silinsin mi?"
-                      description="Bu işlem geri alınamaz."
-                      popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
+                    ) : null}
+                    <MoreMenu
+                      items={[
+                        ...(hasLinkedQuote
+                          ? [{
+                              id: 'cancel',
+                              label: 'Vazgeç',
+                              icon: Undo2,
+                              onClick: () => handleCancelOrderFromList(order, { stopPropagation: () => {} }),
+                            }]
+                          : []),
+                        ...(!isInProduction && productionEntryStage
+                          ? [{
+                              id: 'produce',
+                              label: 'Üretime al',
+                              icon: Factory,
+                              onClick: () => {
+                                transferOrderToProduction(order, productionEntryStage)
+                                navigate('/uretim')
+                              },
+                            }]
+                          : []),
+                        {
+                          id: 'delete',
+                          label: 'Sil',
+                          icon: Trash2,
+                          tone: 'danger',
+                          onClick: () => setPendingDeleteId(order.id),
+                        },
+                      ]}
                     />
+                    {pendingDeleteId === order.id ? (
+                      <DeleteTrashButton
+                        pending
+                        onClick={() => setPendingDeleteId(order.id)}
+                        onConfirm={() => {
+                          removeOrder(order)
+                          setPendingDeleteId(null)
+                        }}
+                        onCancel={() => setPendingDeleteId(null)}
+                        title="Sipariş silinsin mi?"
+                        description="Bu işlem geri alınamaz."
+                        popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
+                      />
+                    ) : null}
                   </div>
                 </div>
               )

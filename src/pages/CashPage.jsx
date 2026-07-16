@@ -357,7 +357,7 @@ function resolveChequeTransactionAt(detail) {
   return detail?.settledAt || detail?.collectedAt || detail?.paidAt || ''
 }
 
-const CHEQUE_TABLE_GRID = 'grid-cols-[minmax(0,1fr)_0.75fr_0.7fr_0.75fr_0.8fr_0.55fr_minmax(0,1fr)_0.85fr_340px]'
+const CHEQUE_TABLE_GRID = 'grid-cols-[minmax(0,1fr)_0.75fr_0.7fr_0.75fr_0.8fr_0.55fr_minmax(0,1fr)_0.85fr_96px]'
 const MOVEMENT_TABLE_GRID = 'grid-cols-[1.1fr_0.95fr_1fr_1.35fr_0.85fr_0.85fr]'
 
 function parseMovementSortKey(date) {

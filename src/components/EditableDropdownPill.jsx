@@ -7,7 +7,7 @@ import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { OPTION_COLOR_PALETTE } from '../utils/customerMeta'
 
 const DEFAULT_BUTTON_CLASS =
-  'flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-xs font-bold transition-colors hover:bg-dark-700/80'
+  'flex h-control min-h-control w-full items-center justify-between gap-2 rounded-ds-md border border-ds-border bg-[var(--ds-surface-raised)] px-3 text-ds-small font-semibold text-ds-ink transition-colors duration-hover hover:bg-[var(--ds-surface-muted)]'
 
 function OptionLeading({ option, empty = false, isLightMenu = false }) {
   if (empty) {

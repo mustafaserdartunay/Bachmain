@@ -31,8 +31,8 @@ html.space *::-webkit-scrollbar-thumb {
 
 :root {
   --shell-gap: 1.25rem;
-  --shell-rail-collapsed: 4.75rem;
-  --shell-rail-expanded: 17.5rem;
+  --shell-rail-collapsed: 5.5rem; /* DS 3.0: 88px */
+  --shell-rail-expanded: 17.5rem; /* DS 3.0: 280px */
   --shell-rail-inset-collapsed: calc(var(--shell-gap) + var(--shell-rail-collapsed) + var(--shell-gap));
   --shell-rail-inset-expanded: calc(var(--shell-gap) + var(--shell-rail-expanded) + var(--shell-gap));
   --ink: #1e2235;
@@ -1034,17 +1034,16 @@ textarea:not(.form-input)::placeholder {
 
 .app-responsive .form-input,
 .app-responsive .form-input-readonly {
-  background: #ffffff !important;
-  border: 1px solid rgba(226, 232, 240, 0.9) !important;
-  border-radius: 999px !important;
-  color: var(--search-text) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 1),
-    0 1px 2px rgba(30, 35, 60, 0.04);
+  background: var(--ds-surface-raised, #ffffff) !important;
+  border: 1px solid var(--ds-border, rgba(226, 232, 240, 0.9)) !important;
+  border-radius: var(--ds-radius-md, 0.75rem) !important;
+  color: var(--ds-ink, var(--search-text)) !important;
+  font-size: var(--ds-font-body, 0.9375rem);
+  box-shadow: var(--ds-shadow-xs);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  transition: all 0.15s ease;
-  min-height: 2.5rem;
+  transition: border-color var(--ds-duration-hover, 150ms) ease, box-shadow var(--ds-duration-hover, 150ms) ease;
+  min-height: var(--ds-control-h, 3rem); /* DS 3.0: 48px */
 }
 
 .app-responsive .form-input::placeholder {
@@ -1057,11 +1056,11 @@ textarea:not(.form-input)::placeholder {
 }
 
 .app-responsive .form-input:focus {
-  background: #ffffff !important;
-  border-color: rgba(139, 92, 246, 0.35) !important;
+  background: var(--ds-surface-raised, #ffffff) !important;
+  border-color: var(--ds-secondary, rgba(184, 115, 51, 0.55)) !important;
   box-shadow:
-    0 0 0 3px var(--search-ring),
-    0 1px 2px rgba(30, 35, 60, 0.04);
+    0 0 0 3px color-mix(in srgb, var(--ds-secondary, #b87333) 22%, transparent),
+    var(--ds-shadow-xs);
   outline: none;
 }
 
@@ -1731,7 +1730,7 @@ html.special .app-sidebar .sidebar-menu-active {
 }
 
 .app-header-banner {
-  min-height: 4.75rem;
+  min-height: var(--ds-header-h, 4.5rem);
   background: var(--glass-bg-strong) !important;
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
@@ -2383,29 +2382,32 @@ input.search-pill:focus {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--purple2), var(--blue2)) !important;
+  background: var(--ds-primary, #5c3d2e) !important;
   color: #ffffff !important;
-  font-weight: 700;
-  font-size: 13.5px;
-  padding: 12px 20px;
-  border-radius: 16px;
-  box-shadow: 0 12px 26px -10px rgba(80, 80, 220, 0.5);
-  transition: transform 0.12s ease;
+  font-weight: 600;
+  font-size: var(--ds-font-small, 0.8125rem);
+  min-height: var(--ds-control-h, 3rem);
+  padding: 0 1.25rem;
+  border-radius: var(--ds-radius-md, 0.75rem);
+  box-shadow: var(--ds-shadow-sm);
+  transition: background-color var(--ds-duration-hover, 150ms) ease, transform var(--ds-duration-hover, 150ms) ease;
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  background: linear-gradient(135deg, var(--purple2), var(--blue2)) !important;
+  background: var(--ds-primary-hover, #4a3125) !important;
 }
 
-/* Olumlu yuvarlak yeşil tonu — kaydet, onay, başarı aksiyonları */
+/* Olumlu — kaydet, onay, başarı aksiyonları */
 .btn-success {
-  background-color: #10b981 !important;
+  background-color: var(--ds-success, #059669) !important;
   color: #ffffff !important;
+  min-height: var(--ds-control-h, 3rem);
+  border-radius: var(--ds-radius-md, 0.75rem);
 }
 
 .btn-success:hover {
-  background-color: #34d399 !important;
+  background-color: color-mix(in srgb, var(--ds-success, #059669) 85%, white) !important;
 }
 
 .badge-blue {
@@ -2633,8 +2635,9 @@ html.special .badge-purple {
 }
 
 @layer components {
+  /* DS 3.0: defer to global .card glass/surface rules — avoid dark @apply clash */
   .card {
-    @apply bg-dark-800 border border-dark-500/50 rounded-xl p-4;
+    @apply rounded-2xl p-4;
   }
 
   .badge {
@@ -2666,13 +2669,7 @@ html.special .badge-purple {
     @apply badge bg-gray-500/20 text-gray-400;
   }
 
-  .btn-primary {
-    @apply bg-accent-orange hover:bg-orange-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors;
-  }
-
-  .btn-success {
-    @apply bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors;
-  }
+  /* btn-primary / btn-success: defined globally with DS tokens — do not @apply here */
 
   .table-header {
     @apply text-[12px] font-bold capitalize tracking-wider text-[var(--muted)];

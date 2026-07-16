@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, Link2, Plus, Users, WalletCards } from 'lucide-react'
+import { DataTable } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import { Link, useNavigate } from 'react-router-dom'
-import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
 import DeletedRecordsPanel from '../components/Common/DeletedRecordsPanel'
@@ -10,9 +10,6 @@ import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/
 import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import {
   APP_FILTER_LABEL_CLASS,
-  APP_LABEL_CLASS,
-  APP_METRIC_ROW_CLASS,
-  APP_VALUE_CLASS,
 } from '../utils/dashboardDesign'
 import { getCustomerProfiles, restoreCustomer, restoreDeletedCustomer } from '../data/customerProfiles'
 import { appendActivity } from '../utils/customerActivity'
@@ -40,7 +37,6 @@ import {
   getPortalUrl,
 } from '../utils/b2bPortalStore'
 
-const listGrid = 'minmax(220px,1fr) 140px 140px 160px 150px 120px'
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const balanceFilterOptions = [
   filterAllOption,
@@ -306,109 +302,129 @@ export default function CustomersPage({
           </div>
         </div>
 
-        <ListHeaderRow
-          gridTemplate={listGrid}
+        <DataTable
+          className="mt-3"
+          emptyTitle={emptyTitle}
+          emptyDescription="Arama veya segment filtresini değiştirin."
+          data={filteredCustomers}
+          getRowId={(customer) => customer.id}
+          onRowClick={(customer) => navigate(`/musteriler/${customer.id}`)}
           columns={[
-            columnLabel,
-            'Tipi',
-            'Temsilci',
-            'Puantaj',
-            { label: 'Güncel Bakiye', align: 'right' },
-            { label: 'B2B', align: 'right' },
+            {
+              id: 'name',
+              header: columnLabel,
+              sortable: true,
+              accessorKey: 'name',
+              cell: (customer) => {
+                const display = getCustomerDisplay(customer)
+                return (
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="shrink-0 truncate font-semibold">{display.brandShortName}</span>
+                    <span className="truncate text-ds-caption text-ds-muted">{display.companyTitle}</span>
+                  </span>
+                )
+              },
+            },
+            {
+              id: 'type',
+              header: 'Tipi',
+              hideOnMobile: true,
+              cell: (customer) => {
+                const settings = customerSettings[customer.id] || {}
+                const meta = getCustomerMetaSelection(customer, settings)
+                return (
+                  <span onClick={(event) => event.stopPropagation()}>
+                    <EditableDropdownPill
+                      value={resolveListColumnLabel(meta.type, optionLists.type)}
+                      options={typeOptions}
+                      onOptionsChange={(next) => updateOptionList('type', next)}
+                      buttonClassName={LIST_PILL_CLASS}
+                      openKey={`${customer.id}-type`}
+                      activeMenu={activeMenu}
+                      setActiveMenu={setActiveMenu}
+                      onChange={(value) => updateCustomerSetting(customer.id, 'type', value)}
+                    />
+                  </span>
+                )
+              },
+            },
+            {
+              id: 'representative',
+              header: 'Temsilci',
+              hideOnMobile: true,
+              cell: (customer) => {
+                const settings = customerSettings[customer.id] || {}
+                const meta = getCustomerMetaSelection(customer, settings)
+                return (
+                  <span onClick={(event) => event.stopPropagation()}>
+                    <EditableDropdownPill
+                      value={resolveListColumnLabel(meta.representative, optionLists.representative)}
+                      options={optionLists.representative}
+                      onOptionsChange={(next) => updateOptionList('representative', next)}
+                      buttonClassName={LIST_PILL_CLASS}
+                      openKey={`${customer.id}-representative`}
+                      activeMenu={activeMenu}
+                      setActiveMenu={setActiveMenu}
+                      onChange={(value) => updateCustomerSetting(customer.id, 'representative', value)}
+                    />
+                  </span>
+                )
+              },
+            },
+            {
+              id: 'scoring',
+              header: 'Puantaj',
+              hideOnMobile: true,
+              cell: (customer) => {
+                const settings = customerSettings[customer.id] || {}
+                const meta = getCustomerMetaSelection(customer, settings)
+                return (
+                  <span onClick={(event) => event.stopPropagation()}>
+                    <EditableDropdownPill
+                      value={resolveListColumnLabel(meta.scoring, optionLists.scoring)}
+                      options={optionLists.scoring}
+                      onOptionsChange={(next) => updateOptionList('scoring', next)}
+                      buttonClassName={LIST_PILL_CLASS}
+                      openKey={`${customer.id}-scoring`}
+                      activeMenu={activeMenu}
+                      setActiveMenu={setActiveMenu}
+                      onChange={(value) => updateCustomerSetting(customer.id, 'scoring', value)}
+                    />
+                  </span>
+                )
+              },
+            },
+            {
+              id: 'balance',
+              header: 'Güncel Bakiye',
+              sortable: true,
+              className: 'text-right',
+              cell: (customer) => {
+                const balance = currentBalance(customer, movements)
+                return (
+                  <span className={`font-semibold tabular-nums ${balanceClass(balance)}`}>
+                    {formatTreasuryCurrency(balance)}
+                  </span>
+                )
+              },
+            },
+          ]}
+          getRowActions={(customer) => [
+            b2bMap[customer.id]?.enabled
+              ? {
+                  id: 'portal',
+                  label: 'B2B Panel',
+                  icon: Link2,
+                  onClick: () => window.open(getPortalUrl(b2bMap[customer.id].accessToken), '_blank', 'noreferrer'),
+                }
+              : {
+                  id: 'grant',
+                  label: 'B2B İzin Ver',
+                  icon: Link2,
+                  onClick: () => grantB2bAccess({ stopPropagation() {} }, customer.id),
+                },
           ]}
         />
-
-        <div className="mt-3 space-y-2 overflow-visible">
-          {filteredCustomers.map((customer) => {
-            const balance = currentBalance(customer, movements)
-            const settings = customerSettings[customer.id] || {}
-            const meta = getCustomerMetaSelection(customer, settings)
-            const display = getCustomerDisplay(customer)
-            return (
-              <div
-                key={customer.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => navigate(`/musteriler/${customer.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') navigate(`/musteriler/${customer.id}`)
-                }}
-                className={`${APP_METRIC_ROW_CLASS} app-list-row relative grid items-center gap-3 px-4 py-3`}
-                style={{ gridTemplateColumns: listGrid }}
-              >
-                <div className="min-w-0">
-                  <p className={`flex min-w-0 items-center gap-2 ${APP_LABEL_CLASS} text-[var(--ink)]`}>
-                    <span className="shrink-0 truncate">{display.brandShortName}</span>
-                    <span className="inline-flex min-w-0 items-center rounded-lg border border-white/55 bg-white/35 px-2 py-0.5 text-[12px] font-bold text-[var(--muted)]">
-                      <span className="truncate">{display.companyTitle}</span>
-                    </span>
-                  </p>
-                </div>
-                <EditableDropdownPill
-                  value={resolveListColumnLabel(meta.type, optionLists.type)}
-                  options={typeOptions}
-                  onOptionsChange={(next) => updateOptionList('type', next)}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey={`${customer.id}-type`}
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateCustomerSetting(customer.id, 'type', value)}
-                />
-                <EditableDropdownPill
-                  value={resolveListColumnLabel(meta.representative, optionLists.representative)}
-                  options={optionLists.representative}
-                  onOptionsChange={(next) => updateOptionList('representative', next)}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey={`${customer.id}-representative`}
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateCustomerSetting(customer.id, 'representative', value)}
-                />
-                <EditableDropdownPill
-                  value={resolveListColumnLabel(meta.scoring, optionLists.scoring)}
-                  options={optionLists.scoring}
-                  onOptionsChange={(next) => updateOptionList('scoring', next)}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey={`${customer.id}-scoring`}
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateCustomerSetting(customer.id, 'scoring', value)}
-                />
-                <p className={`min-w-0 pr-2 text-right ${APP_VALUE_CLASS} ${balanceClass(balance)}`}>
-                  {formatTreasuryCurrency(balance)}
-                </p>
-                <div className="flex justify-end" onClick={(event) => event.stopPropagation()}>
-                  {b2bMap[customer.id]?.enabled ? (
-                    <a
-                      href={getPortalUrl(b2bMap[customer.id].accessToken)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-xl border border-blue-500/30 bg-blue-500/10 px-2.5 py-1.5 text-[12px] font-black uppercase text-blue-300 hover:bg-blue-500/20"
-                    >
-                      <Link2 className="h-3 w-3" /> Panel
-                    </a>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={(event) => grantB2bAccess(event, customer.id)}
-                      className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[12px] font-black uppercase text-emerald-300 hover:bg-emerald-500/20"
-                    >
-                      İzin Ver
-                    </button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {filteredCustomers.length === 0 && (
-          <div className="glass-inset mt-4 p-8 text-center">
-            <Users className="mx-auto mb-3 h-8 w-8 text-[var(--muted)]" />
-            <p className="text-sm font-extrabold text-[var(--ink)]">{emptyTitle}</p>
-            <p className="mt-1 text-xs font-semibold text-[var(--muted)]">Arama veya segment filtresini değiştirin.</p>
-          </div>
-        )}
       </AppPagePanel>
 
       <DeletedRecordsPanel

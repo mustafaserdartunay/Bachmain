@@ -4,26 +4,52 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
+import BottomNav from './BottomNav'
+
+const SIDEBAR_KEY = 'bach-sidebar'
+const LEGACY_SIDEBAR_KEY = 'erlenbox-sidebar'
+
+function readSidebarCollapsed() {
+  try {
+    const next = localStorage.getItem(SIDEBAR_KEY)
+    if (next === 'collapsed' || next === 'expanded') return next === 'collapsed'
+    return localStorage.getItem(LEGACY_SIDEBAR_KEY) === 'collapsed'
+  } catch {
+    return false
+  }
+}
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
   const hideChrome = pathname === '/paketler' || pathname.startsWith('/paketler/')
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('erlenbox-sidebar') === 'collapsed')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed)
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(() => localStorage.getItem('bach-team-hub-panel') !== 'expanded')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 1024 : false))
+  const [isTablet, setIsTablet] = useState(() => (
+    typeof window !== 'undefined'
+      ? window.innerWidth >= 768 && window.innerWidth < 1024
+      : false
+  ))
 
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 1023px)')
-    function syncMobile(event) {
-      setIsMobile(event.matches)
-      if (!event.matches) setMobileSidebarOpen(false)
+    function syncViewport() {
+      const width = window.innerWidth
+      const mobile = width < 1024
+      const tablet = width >= 768 && width < 1024
+      setIsMobile(mobile)
+      setIsTablet(tablet)
+      if (!mobile) setMobileSidebarOpen(false)
+      // Tablet: auto-collapse sidebar
+      if (tablet) {
+        setSidebarCollapsed(true)
+      }
     }
 
-    syncMobile(media)
-    media.addEventListener('change', syncMobile)
-    return () => media.removeEventListener('change', syncMobile)
+    syncViewport()
+    window.addEventListener('resize', syncViewport)
+    return () => window.removeEventListener('resize', syncViewport)
   }, [])
 
   function toggleSidebar() {
@@ -34,7 +60,12 @@ export default function Layout({ children }) {
 
     setSidebarCollapsed((collapsed) => {
       const next = !collapsed
-      localStorage.setItem('erlenbox-sidebar', next ? 'collapsed' : 'expanded')
+      try {
+        localStorage.setItem(SIDEBAR_KEY, next ? 'collapsed' : 'expanded')
+        localStorage.setItem(LEGACY_SIDEBAR_KEY, next ? 'collapsed' : 'expanded')
+      } catch {
+        // ignore
+      }
       return next
     })
   }
@@ -47,8 +78,10 @@ export default function Layout({ children }) {
     })
   }
 
+  const effectiveCollapsed = isTablet ? true : isMobile ? false : sidebarCollapsed
+
   return (
-    <div className="app-shell min-h-screen bg-dark-900 transition-colors">
+    <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))] transition-colors">
       {mobileSidebarOpen && (
         <button
           type="button"
@@ -58,21 +91,22 @@ export default function Layout({ children }) {
         />
       )}
       <Sidebar
-        collapsed={isMobile ? false : sidebarCollapsed}
+        collapsed={effectiveCollapsed}
         mobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
         onToggle={toggleSidebar}
       />
       <div
-        className="app-shell-content min-w-0 transition-all duration-300"
-        data-sidebar-collapsed={!isMobile && sidebarCollapsed ? 'true' : 'false'}
+        className="app-shell-content min-w-0 transition-all duration-page pb-[calc(var(--ds-bottom-nav-h,4rem)+env(safe-area-inset-bottom))] lg:pb-0"
+        data-sidebar-collapsed={!isMobile && effectiveCollapsed ? 'true' : 'false'}
         data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
       >
         {!hideChrome ? <Header onMenuClick={() => setMobileSidebarOpen(true)} /> : null}
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
-        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden">{children}</main>
+        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">{children}</main>
       </div>
       <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
+      {!hideChrome ? <BottomNav /> : null}
     </div>
   )
 }

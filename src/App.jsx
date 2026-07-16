@@ -10,6 +10,7 @@ import LicensePage from './pages/auth/LicensePage'
 import TrialExpiredPage from './pages/auth/TrialExpiredPage'
 import OnboardingWizard from './pages/onboarding/OnboardingWizard'
 import Layout from './components/Layout/Layout'
+import { lazyPage, PageSuspense } from './components/Common/PageSuspense'
 import CashPage from './pages/CashPage'
 import ChequesPage from './pages/treasury/ChequesPage'
 import CashBankReportPage from './pages/treasury/CashBankReportPage'
@@ -33,14 +34,16 @@ import ExpensesReportPage from './pages/expenses/ExpensesReportPage'
 import PaymentsReportPage from './pages/expenses/PaymentsReportPage'
 import VatReportPage from './pages/expenses/VatReportPage'
 import DashboardPage from './pages/DashboardPage'
-import OrdersPage from './pages/OrdersPage'
 import PersonnelPage from './pages/PersonnelPage'
-import ProductionPage from './pages/ProductionPage'
 import ProductionCreatePage from './pages/ProductionCreatePage'
 import ProductionDetailPage from './pages/ProductionDetailPage'
 import ProjectsPage from './pages/ProjectsPage'
-import QuotesPage from './pages/QuotesPage'
 import ShoppingPage from './pages/ShoppingPage'
+
+const QuotesPage = lazyPage(() => import('./pages/QuotesPage'))
+const OrdersPage = lazyPage(() => import('./pages/OrdersPage'))
+const ProductionPage = lazyPage(() => import('./pages/ProductionPage'))
+const DepoPageLazy = lazyPage(() => import('./pages/process/DepoPage'))
 import ProductsPage from './pages/stock/ProductsPage'
 import WarehousesPage from './pages/stock/WarehousesPage'
 import WarehouseTransferPage from './pages/stock/WarehouseTransferPage'
@@ -50,7 +53,6 @@ import PriceListsPage from './pages/stock/PriceListsPage'
 import StockHistoryPage from './pages/stock/StockHistoryPage'
 import StockProductsReportPage from './pages/stock/StockProductsReportPage'
 import CostCalculatorRoute, { LegacyCostCalculatorRedirect } from './pages/stock/CostCalculatorRoute'
-import DepoPage from './pages/process/DepoPage'
 import DeliveredPage from './pages/process/DeliveredPage'
 import MessageCenterSettingsPage from './pages/MessageCenterSettingsPage'
 import SettingsPage from './pages/SettingsPage'
@@ -174,8 +176,8 @@ export default function App() {
                 <Layout>
                   <Routes>
                     <Route path="/" element={<DashboardPage />} />
-                <Route path="/siparisler" element={<OrdersPage />} />
-                <Route path="/uretim" element={<ProductionPage />} />
+                <Route path="/siparisler" element={<PageSuspense><OrdersPage /></PageSuspense>} />
+                <Route path="/uretim" element={<PageSuspense><ProductionPage /></PageSuspense>} />
                 <Route path="/uretim/yeni" element={<ProductionCreatePage />} />
                 <Route path="/uretim/:jobId" element={<ProductionDetailPage />} />
                 <Route path="/musteriler/faturalar" element={<SalesInvoicesPage />} />
@@ -222,7 +224,7 @@ export default function App() {
                 <Route path="/musteriler/:customerId/belge/:docType" element={<CustomerDocumentPage />} />
                 <Route path="/musteriler/:customerId/hareket/:movementId" element={<CustomerMovementDetailPage />} />
                 <Route path="/musteriler/:customerId" element={<CustomerDetailPage />} />
-                <Route path="/teklifler" element={<QuotesPage />} />
+                <Route path="/teklifler" element={<PageSuspense><QuotesPage /></PageSuspense>} />
                 <Route path="/belge-merkezi" element={<DocumentCenterPage />} />
                 <Route path="/belge-merkezi/sablonlar" element={<DocTemplatesPage />} />
                 <Route path="/belge-merkezi/tasarimci" element={<DocTemplateDesignerPage />} />
@@ -245,7 +247,7 @@ export default function App() {
                 <Route path="/belge-merkezi/arsiv" element={<DocArchivePage />} />
                 <Route path="/belge-merkezi/yazdir" element={<DocPrintPage />} />
                 <Route path="/belge-merkezi/kayitlar" element={<DocPrintJobsPage />} />
-                <Route path="/depo" element={<DepoPage />} />
+                <Route path="/depo" element={<PageSuspense><DepoPageLazy /></PageSuspense>} />
                 <Route path="/siparis-deposu" element={<Navigate to="/depo" replace />} />
                 <Route path="/stok-deposu" element={<Navigate to="/depo" replace />} />
                 <Route path="/teslim-edilenler" element={<DeliveredPage />} />

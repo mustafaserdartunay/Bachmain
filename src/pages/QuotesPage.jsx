@@ -18,7 +18,9 @@ import {
   Trash2,
   Upload,
   X,
+  ShoppingCart,
 } from 'lucide-react'
+import { MoreMenu } from '@bachmain/ui'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import ListDeleteConfirmPanel, { DeleteConfirmPopover, DeleteTrashButton, LIST_PILL_CLASS, ListInlineDeleteConfirmPopover } from '../components/Common/ListDeleteConfirmPanel'
@@ -2303,26 +2305,30 @@ export default function QuotesPage() {
                   <p className="min-w-0 pr-2 text-right text-sm font-bold text-gray-200">{formatTL(totals.net)}</p>
                   <p className="min-w-0 pr-2 text-right text-sm font-black text-white">{formatTL(totals.grandTotal)}</p>
                   <div className="relative z-10 flex h-9 w-full items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
-                    <button
-                      type="button"
-                      disabled={orderCreated}
-                      onClick={(event) => handleCreateOrderFromList(quote, event)}
-                      className={`whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-[12px] font-bold transition-colors disabled:cursor-default ${
-                        orderCreated
-                          ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400/90'
-                          : 'border-blue-500/25 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20'
-                      }`}
-                    >
-                      {orderCreated ? 'Sipariş Oluşturuldu' : 'Sipariş Oluştur'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPendingDeleteId(quote.id)}
-                      className={`rounded-lg border border-red-500/25 bg-red-500/10 p-2 text-red-300 transition-colors hover:bg-red-500/20 ${pendingDeleteId === quote.id ? 'pointer-events-none invisible' : ''}`}
-                      title="Sil"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <MoreMenu
+                      items={[
+                        ...(orderCreated
+                          ? []
+                          : [{
+                              id: 'order',
+                              label: 'Sipariş Oluştur',
+                              icon: ShoppingCart,
+                              onClick: () => handleCreateOrderFromList(quote),
+                            }]),
+                        {
+                          id: 'delete',
+                          label: 'Sil',
+                          icon: Trash2,
+                          tone: 'danger',
+                          onClick: () => setPendingDeleteId(quote.id),
+                        },
+                      ]}
+                    />
+                    {orderCreated ? (
+                      <span className="whitespace-nowrap rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-[12px] font-bold text-emerald-400/90">
+                        Sipariş Oluşturuldu
+                      </span>
+                    ) : null}
                     {pendingDeleteId === quote.id && (
                       <ListInlineDeleteConfirmPopover
                         onConfirm={() => {

@@ -32,6 +32,10 @@ export function applyAppearance(modeId) {
     root.classList.add('night')
   }
 
+  if (!root.getAttribute('data-density')) {
+    root.setAttribute('data-density', 'standard')
+  }
+
   try {
     localStorage.setItem(APPEARANCE_STORAGE_KEY, mode)
   } catch {

@@ -30,7 +30,7 @@ import { HeaderPopoverProvider, useHeaderPopover } from '../../hooks/useHeaderPo
 
 export default function Header({ onMenuClick }) {
   return (
-    <header className="app-header-banner sticky top-[var(--shell-gap)] z-40 flex min-h-[4.75rem] shrink-0 items-center px-4 py-3 sm:px-6">
+    <header className="app-header-banner sticky top-[var(--shell-gap)] z-40 flex h-[var(--ds-header-h,4.5rem)] min-h-[var(--ds-header-h,4.5rem)] shrink-0 items-center px-4 py-2 sm:px-6">
       <HeaderPopoverProvider>
         <HeaderBar onMenuClick={onMenuClick} />
       </HeaderPopoverProvider>

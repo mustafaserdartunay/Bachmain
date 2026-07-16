@@ -290,7 +290,7 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
     Object.fromEntries(TABS.map((tab) => [tab.id, getTeamHubTabBadgeCount(tab.id)]))
   ), [tick, hubState.messages, hubState.lastReadChatAt])
 
-  const panelWidthClass = collapsed ? 'lg:w-[4.75rem] w-[17.5rem]' : 'w-[17.5rem]'
+  const panelWidthClass = collapsed ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]' : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
   const panelPaddingClass = collapsed ? 'p-4 lg:px-2 lg:py-4' : 'px-3 py-4'
 
   function handleSendMessage(event) {

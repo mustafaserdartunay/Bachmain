@@ -226,7 +226,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
   const menuItems = filterMenuByEntitlements(baseMenuItems, user?.entitlements)
   const brandLabel = company.companyName || 'Bach'
-  const sidebarWidthClass = collapsed ? 'lg:w-[4.75rem] w-[17.5rem]' : 'w-[17.5rem]'
+  const sidebarWidthClass = collapsed ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]' : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
   const sidebarPaddingClass = collapsed ? 'p-4 lg:px-2 lg:py-4' : 'px-3 py-4'
   const mobileStateClass = mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
 
