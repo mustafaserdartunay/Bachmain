@@ -360,7 +360,7 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
               aria-current={active ? 'page' : undefined}
             >
               <span className={`relative flex h-8 w-8 items-center justify-center rounded-xl shadow-sm ${tab.iconWrap}`}>
-                <Icon className="h-4 w-4 text-white" />
+                <Icon className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
                 <TeamHubNoticeBadge count={tabBadges[tab.id]} />
               </span>
             </button>

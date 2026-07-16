@@ -408,6 +408,8 @@ html.space #root {
 /* Colored CTAs keep true white (logo/header quick actions, primary buttons) */
 .app-header-banner a[class*='bg-gradient'],
 .app-header-banner a[class*='bg-gradient'] *,
+.glass-team-hub [class*='bg-gradient'] svg,
+.glass-team-hub nav button span[class*='bg-gradient'] svg,
 .btn-primary,
 .btn-primary *,
 .btn-success,
