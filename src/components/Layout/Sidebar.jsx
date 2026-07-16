@@ -51,7 +51,7 @@ import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/sto
 import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '../../data/fieldSalesMenu'
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
-import { processSubMenus } from '../../data/processMenu'
+import { processSubMenus, isProcessRoute } from '../../data/processMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
 import {
   documentCenterChildMenus,
@@ -148,6 +148,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const { user } = useAuth()
   const [company, setCompany] = useState(() => readCompanySettings())
   const isSalesRouteActive = isSalesRoute(location.pathname)
+  const isProcessRouteActive = isProcessRoute(location.pathname)
   const isExpensesRouteActive = isExpensesRoute(location.pathname)
   const isTreasuryRouteActive = isTreasuryRoute(location.pathname)
   const isStockRouteActive = isStockRoute(location.pathname)
@@ -157,6 +158,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
   const isSettingsRoute = location.pathname.startsWith('/ayarlar') || isDocumentCenterRouteActive
   const [customerOpen, setCustomerOpen] = useState(isSalesRouteActive)
+  const [processOpen, setProcessOpen] = useState(isProcessRouteActive)
   const [expensesOpen, setExpensesOpen] = useState(isExpensesRouteActive)
   const [treasuryOpen, setTreasuryOpen] = useState(isTreasuryRouteActive)
   const [stockOpen, setStockOpen] = useState(isStockRouteActive)
@@ -170,6 +172,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   useEffect(() => {
     if (isSalesRouteActive) setCustomerOpen(true)
   }, [isSalesRouteActive])
+
+  useEffect(() => {
+    if (isProcessRouteActive) setProcessOpen(true)
+  }, [isProcessRouteActive])
 
   useEffect(() => {
     if (isExpensesRouteActive) setExpensesOpen(true)
@@ -362,23 +368,41 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-              <p className="px-2.5 pt-2 pb-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--muted)]">
-                Süreç Yönetimi
-              </p>
-              {processSubMenus.map((sub) => (
-                <NavLink
-                  key={sub.path}
-                  to={sub.path}
-                  onClick={handleNavigate}
-                  className={({ isActive }) =>
-                    `${subMenuButtonBase} ${
-                      isActive ? 'sidebar-menu-active font-medium' : ''
-                    }`
-                  }
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setProcessOpen((open) => !open)}
+                  className={`${subMenuButtonBase} flex w-full items-center gap-2 ${
+                    isProcessRouteActive ? 'sidebar-menu-active font-medium' : ''
+                  }`}
                 >
-                  {sub.label}
-                </NavLink>
-              ))}
+                  <SubMenuIcon>
+                    <ClipboardList className="h-3.5 w-3.5" />
+                  </SubMenuIcon>
+                  <span className="min-w-0 flex-1 text-left">Süreç Yönetimi</span>
+                  {processOpen
+                    ? <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                    : <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-60" />}
+                </button>
+                {processOpen && (
+                  <div className="mt-0.5 ml-2 space-y-0.5 border-l border-dark-500/40 pl-2">
+                    {processSubMenus.map((sub) => (
+                      <NavLink
+                        key={sub.path}
+                        to={sub.path}
+                        onClick={handleNavigate}
+                        className={({ isActive }) =>
+                          `${subMenuButtonBase} ${
+                            isActive ? 'sidebar-menu-active font-medium' : ''
+                          }`
+                        }
+                      >
+                        {sub.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
