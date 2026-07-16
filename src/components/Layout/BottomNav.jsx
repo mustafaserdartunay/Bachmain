@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { Gauge, Users, Bell, Search, UserRound } from 'lucide-react'
+import { Gauge, Users, MessageCircle, Search, UserRound } from 'lucide-react'
 
 const ITEMS = [
   { to: '/', label: 'Panel', icon: Gauge, end: true },
   { to: '/crm', label: 'CRM', icon: Users },
-  { to: '/mesajlar', label: 'Bildirim', icon: Bell },
+  { to: '/mesajlar', label: 'Mesaj', icon: MessageCircle },
   { to: '/musteri-bulucu', label: 'Arama', icon: Search },
   { to: '/profil', label: 'Profil', icon: UserRound },
 ]
