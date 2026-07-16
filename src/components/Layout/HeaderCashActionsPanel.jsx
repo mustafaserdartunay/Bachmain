@@ -93,10 +93,10 @@ function QuickActionCard({ action }) {
       title={action.title}
       className={`group flex h-[52px] min-w-[8.5rem] flex-1 items-center gap-2.5 rounded-xl bg-gradient-to-br ${action.gradient} px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0`}
     >
-      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-white ring-1 ring-white/25">
-        <Icon className="h-4 w-4" strokeWidth={2.25} />
+      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-[#ffffff] ring-1 ring-white/25">
+        <Icon className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
       </span>
-      <span className="truncate text-xs font-extrabold leading-none text-white">{action.title}</span>
+      <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">{action.title}</span>
     </Link>
   )
 }

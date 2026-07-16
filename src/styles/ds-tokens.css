@@ -4,11 +4,11 @@
  */
 
 :root {
-  /* Brand */
-  --ds-primary: #5c3d2e;
-  --ds-primary-hover: #4a3125;
-  --ds-secondary: #b87333;
-  --ds-secondary-hover: #9a5f2a;
+  /* Brand — logo navy/sky (BACHMAIN blue) */
+  --ds-primary: #203375;
+  --ds-primary-hover: #18285c;
+  --ds-secondary: #79a6d2;
+  --ds-secondary-hover: #5f8fbf;
 
   /* Surfaces */
   --ds-bg: #f7f4ef;
@@ -131,9 +131,9 @@ html.night {
   --ds-ink-body: #e7e5e4;
   --ds-muted: #a8a29e;
   --ds-muted-soft: #78716c;
-  --ds-primary: #d4a574;
-  --ds-primary-hover: #e0b888;
-  --ds-secondary: #c9854a;
+  --ds-primary: #79a6d2;
+  --ds-primary-hover: #9bbce0;
+  --ds-secondary: #a8c5e3;
   --glass-bg: rgba(41, 37, 36, 0.78);
   --glass-bg-strong: rgba(53, 48, 44, 0.92);
   --glass-border: rgba(168, 162, 158, 0.18);

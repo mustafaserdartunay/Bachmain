@@ -10,13 +10,13 @@ const SIZE = {
 
 const VARIANT = {
   primary:
-    'bg-ds-primary text-white hover:bg-[var(--ds-primary-hover)] shadow-ds-sm border border-transparent',
+    'bg-[linear-gradient(135deg,var(--bach-sky,#79a6d2),var(--bach-navy,#203375))] !text-[#ffffff] hover:brightness-105 shadow-ds-sm border border-transparent',
   secondary:
-    'bg-ds-secondary text-white hover:bg-[var(--ds-secondary-hover)] shadow-ds-sm border border-transparent',
+    'bg-ds-secondary !text-[#ffffff] hover:bg-[var(--ds-secondary-hover)] shadow-ds-sm border border-transparent',
   ghost: 'bg-transparent text-ds-ink hover:bg-ds-surface border border-transparent',
   outline: 'bg-ds-surface text-ds-ink border border-ds-border hover:bg-[var(--ds-surface-muted)]',
-  danger: 'bg-ds-danger text-white hover:opacity-90 border border-transparent',
-  success: 'bg-ds-success text-white hover:opacity-90 border border-transparent',
+  danger: 'bg-ds-danger !text-[#ffffff] hover:opacity-90 border border-transparent',
+  success: 'bg-ds-success !text-[#ffffff] hover:opacity-90 border border-transparent',
 }
 
 export const Button = forwardRef(function Button(

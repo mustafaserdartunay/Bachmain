@@ -405,6 +405,16 @@ html.space #root {
   color: var(--text-strong) !important;
 }
 
+/* Colored CTAs keep true white (logo/header quick actions, primary buttons) */
+.app-header-banner a[class*='bg-gradient'],
+.app-header-banner a[class*='bg-gradient'] *,
+.btn-primary,
+.btn-primary *,
+.btn-success,
+.btn-success * {
+  color: #ffffff !important;
+}
+
 [class*="text-gray-400"] {
   color: var(--text-muted) !important;
 }
@@ -2382,20 +2392,26 @@ input.search-pill:focus {
 }
 
 .btn-primary {
-  background: var(--ds-primary, #5c3d2e) !important;
+  background: linear-gradient(135deg, var(--bach-sky, #79a6d2), var(--bach-navy, #203375)) !important;
   color: #ffffff !important;
   font-weight: 600;
   font-size: var(--ds-font-small, 0.8125rem);
   min-height: var(--ds-control-h, 3rem);
   padding: 0 1.25rem;
   border-radius: var(--ds-radius-md, 0.75rem);
-  box-shadow: var(--ds-shadow-sm);
-  transition: background-color var(--ds-duration-hover, 150ms) ease, transform var(--ds-duration-hover, 150ms) ease;
+  box-shadow: 0 10px 24px -12px rgba(32, 51, 117, 0.55);
+  transition: filter var(--ds-duration-hover, 150ms) ease, transform var(--ds-duration-hover, 150ms) ease;
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  background: var(--ds-primary-hover, #4a3125) !important;
+  filter: brightness(1.05);
+  background: linear-gradient(135deg, var(--bach-sky, #79a6d2), var(--bach-navy, #203375)) !important;
+}
+
+.btn-primary,
+.btn-primary * {
+  color: #ffffff !important;
 }
 
 /* Olumlu — kaydet, onay, başarı aksiyonları */
