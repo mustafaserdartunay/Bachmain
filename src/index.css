@@ -2539,7 +2539,7 @@ select.search-pill:focus {
   color: #ffffff !important;
 }
 
-/* Split CTA — one body, full-height white divider between segments */
+/* Split CTA — one body, full-height white divider; hover lift like header chips */
 .btn-split {
   display: inline-flex;
   height: 3.25rem;
@@ -2547,6 +2547,12 @@ select.search-pill:focus {
   overflow: hidden;
   border-radius: 0.75rem;
   box-shadow: var(--bach-btn-shadow, 0 8px 20px -12px rgba(30, 35, 60, 0.55));
+  transition: transform 150ms ease, filter 150ms ease;
+}
+
+.btn-split:hover {
+  transform: translateY(-2px); /* match header quick-action hover:-translate-y-0.5 */
+  filter: brightness(1.04);
 }
 
 .btn-split .btn-primary,
@@ -2562,6 +2568,7 @@ select.search-pill:focus {
 .btn-split .btn-cancel:hover,
 .btn-split .btn-success:hover {
   transform: none !important;
+  filter: none !important;
 }
 
 .btn-split-divider {
