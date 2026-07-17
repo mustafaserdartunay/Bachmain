@@ -571,6 +571,9 @@ textarea:not(.form-input)::placeholder {
 
 .app-page-header {
   position: relative;
+  z-index: 30;
+  overflow: visible;
+  min-height: 4.75rem; /* match .app-header-banner cash quick-actions strip */
   background: var(--glass-bg-strong) !important;
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
@@ -2534,6 +2537,38 @@ select.search-pill:focus {
 .btn-cancel,
 .btn-cancel * {
   color: #ffffff !important;
+}
+
+/* Split CTA — one body, full-height white divider between segments */
+.btn-split {
+  display: inline-flex;
+  height: 3.25rem;
+  min-height: 3.25rem;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  box-shadow: var(--bach-btn-shadow, 0 8px 20px -12px rgba(30, 35, 60, 0.55));
+}
+
+.btn-split .btn-primary,
+.btn-split .btn-cancel,
+.btn-split .btn-success {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+.btn-split .btn-primary:hover,
+.btn-split .btn-cancel:hover,
+.btn-split .btn-success:hover {
+  transform: none !important;
+}
+
+.btn-split-divider {
+  width: 1px;
+  flex-shrink: 0;
+  align-self: stretch;
+  background: #ffffff;
 }
 
 /* Olumlu — kaydet, onay, başarı aksiyonları */

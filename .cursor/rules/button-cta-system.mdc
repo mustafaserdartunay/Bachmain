@@ -21,6 +21,11 @@ Match header quick-action chips for all page CTAs.
 - Same height/radius/shadow as create buttons
 - White bold label
 
+## Page header height
+
+`.app-page-header` matches the cash quick-actions strip (`.app-header-banner`):
+`min-h-[4.75rem]`, `px-4 py-3 sm:px-6`, centered flex row.
+
 ## Rules for new UI
 
 - Prefer `btn-primary` / `btn-cancel` or `@bachmain/ui` Button primary/cancel

@@ -87,7 +87,7 @@ export function AppPageHeader({
   showBack = true,
 }) {
   return (
-    <div className="app-page-header flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+    <div className="app-page-header relative z-30 flex min-h-[4.75rem] shrink-0 items-center justify-between gap-3 overflow-visible px-4 py-3 sm:px-6">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {showBack ? (
           <AppPageBackButton backTo={backTo} backLabel={backLabel} onBack={onBack} />
@@ -95,7 +95,7 @@ export function AppPageHeader({
         <h1 className={`${APP_PAGE_TITLE_CLASS} truncate`}>{title}</h1>
       </div>
       {actions ? (
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+        <div className="relative z-40 flex shrink-0 flex-wrap items-center justify-end gap-2 overflow-visible">
           {actions}
         </div>
       ) : null}

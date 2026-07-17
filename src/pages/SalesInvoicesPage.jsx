@@ -87,21 +87,29 @@ function NewInvoiceMenu({ onSelectCustomer, onQuickDraft }) {
   }, [])
 
   return (
-    <div ref={ref} className="relative inline-flex">
-      <button type="button" onClick={onQuickDraft} className={`${BTN_PRIMARY} inline-flex items-center gap-2 rounded-l-xl px-4 py-2.5 text-sm font-black uppercase tracking-wide`}>
-        <Plus className="h-4 w-4" />
-        Yeni Fatura Oluştur
-      </button>
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className={`${BTN_PRIMARY} rounded-l-none border-l border-white/15 px-2.5 py-2.5`}
-        aria-label="Fatura seçenekleri"
-      >
-        <ChevronDown className="h-4 w-4" />
-      </button>
+    <div ref={ref} className="relative z-50 inline-flex">
+      <div className="btn-split">
+        <button
+          type="button"
+          onClick={onQuickDraft}
+          className={`${BTN_PRIMARY} gap-2 px-4 text-sm font-black uppercase tracking-wide`}
+        >
+          <Plus className="h-4 w-4" />
+          Yeni Fatura Oluştur
+        </button>
+        <span className="btn-split-divider" aria-hidden />
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className={`${BTN_PRIMARY} w-14 px-0`}
+          aria-label="Fatura seçenekleri"
+          aria-expanded={open}
+        >
+          <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-2 min-w-[220px] overflow-hidden rounded-xl border border-dark-500/50 bg-dark-800 shadow-xl">
+        <div className="absolute right-0 top-full z-[120] mt-2 min-w-[220px] overflow-hidden rounded-xl border border-dark-500/50 bg-dark-800 shadow-xl">
           <button
             type="button"
             onClick={() => { setOpen(false); onSelectCustomer() }}
