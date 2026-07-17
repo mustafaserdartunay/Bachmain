@@ -7,7 +7,7 @@ export const logisticsSubMenus = [
   { label: 'Koli Tipleri', path: '/lojistik/koli-tipleri', icon: 'box' },
   { label: 'Paket Tipleri', path: '/lojistik/paket-tipleri', icon: 'package' },
   { label: 'Sevkiyatlar', path: '/lojistik/sevkiyatlar', icon: 'shipments' },
-  { label: 'Yükleme Planı', path: '/lojistik/yukleme-plani', icon: 'plan' },
+  { label: 'Yük Hesaplama', path: '/lojistik/yukleme-plani', icon: 'plan' },
   { label: 'Tır Yerleşimi', path: '/lojistik/tir-yerlesimi', icon: 'layout' },
   { label: 'Rotalar', path: '/lojistik/rotalar', icon: 'route' },
   { label: 'Teslimatlar', path: '/lojistik/teslimatlar', icon: 'delivery' },

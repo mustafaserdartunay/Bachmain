@@ -46,7 +46,8 @@ const ProductionPage = lazyPage(() => import('./pages/ProductionPage'))
 const DepoPageLazy = lazyPage(() => import('./pages/process/DepoPage'))
 const LogisticsHubPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.LogisticsHubPage })))
 const LogisticsMasterPage = lazyPage(() => import('./components/Logistics/LogisticsMasterPage'))
-const LoadPlanWorkspace = lazyPage(() => import('./components/Logistics/LoadPlanWorkspace'))
+const LoadPlanWorkspace = lazyPage(() => import('./components/Logistics/TruckLoadCalculator'))
+const TruckPlacementPage = lazyPage(() => import('./components/Logistics/TruckLoadCalculator'))
 const LogisticsShipmentsPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.ShipmentsPage })))
 const LogisticsRoutesPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.RoutesPage })))
 const LogisticsDeliveriesPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.DeliveriesPage })))
@@ -264,8 +265,8 @@ export default function App() {
                 <Route path="/lojistik/koli-tipleri" element={<PageSuspense><LogisticsMasterPage kind="boxes" /></PageSuspense>} />
                 <Route path="/lojistik/paket-tipleri" element={<PageSuspense><LogisticsMasterPage kind="packages" /></PageSuspense>} />
                 <Route path="/lojistik/sevkiyatlar" element={<PageSuspense><LogisticsShipmentsPage /></PageSuspense>} />
-                <Route path="/lojistik/yukleme-plani" element={<PageSuspense><LoadPlanWorkspace mode="plan" /></PageSuspense>} />
-                <Route path="/lojistik/tir-yerlesimi" element={<PageSuspense><LoadPlanWorkspace mode="placement" /></PageSuspense>} />
+                <Route path="/lojistik/yukleme-plani" element={<PageSuspense><LoadPlanWorkspace /></PageSuspense>} />
+                <Route path="/lojistik/tir-yerlesimi" element={<PageSuspense><TruckPlacementPage /></PageSuspense>} />
                 <Route path="/lojistik/rotalar" element={<PageSuspense><LogisticsRoutesPage /></PageSuspense>} />
                 <Route path="/lojistik/teslimatlar" element={<PageSuspense><LogisticsDeliveriesPage /></PageSuspense>} />
                 <Route path="/lojistik/evraklar" element={<PageSuspense><LogisticsDocumentsPage /></PageSuspense>} />

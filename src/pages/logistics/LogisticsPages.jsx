@@ -37,7 +37,7 @@ export function LogisticsHubPage() {
         actions={(
           <Link to="/lojistik/yukleme-plani" className="slp-btn slp-btn--primary">
             <Plus className="inline h-3.5 w-3.5 mr-1" />
-            Yeni yükleme
+            Yük Hesaplama
           </Link>
         )}
       />
