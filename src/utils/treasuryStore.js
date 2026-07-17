@@ -291,11 +291,14 @@ export function createCustomerCollection(collection) {
 }
 
 export function createExpensePayment(payment) {
+  const expenseCategory = payment.expenseCategory || payment.category || 'Genel Gider'
   return addTreasuryMovement({
     direction: 'out',
     type: 'Gider Ödemesi',
     description: payment.description || `${payment.vendorName || 'Gider'} ödemesi`,
     ...payment,
+    category: expenseCategory,
+    expenseCategory,
   })
 }
 
