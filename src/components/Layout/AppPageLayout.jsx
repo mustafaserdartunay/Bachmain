@@ -17,19 +17,21 @@ export function AppPageShell({ children, className = '' }) {
 const APP_PAGE_BACK_BUTTON_CLASS =
   'glass-sidebar-toggle glass-sidebar-collapse app-page-back flex h-8 w-8 shrink-0 items-center justify-center rounded-xl'
 
-function AppPageBackButton({ backTo, backLabel, onBack }) {
+function AppPageBackButton({ backTo = '/', backLabel = 'Başa dön', onBack }) {
   const navigate = useNavigate()
 
-  function handleBack() {
-    if (onBack) {
-      onBack()
-      return
-    }
-    if (window.history.length > 1) {
-      navigate(-1)
-    } else {
-      navigate('/')
-    }
+  if (onBack) {
+    return (
+      <button
+        type="button"
+        onClick={onBack}
+        className={APP_PAGE_BACK_BUTTON_CLASS}
+        aria-label={backLabel}
+        title={backLabel}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+    )
   }
 
   if (backTo) {
@@ -38,6 +40,7 @@ function AppPageBackButton({ backTo, backLabel, onBack }) {
         to={backTo}
         className={APP_PAGE_BACK_BUTTON_CLASS}
         aria-label={backLabel}
+        title={backLabel}
       >
         <ChevronLeft className="h-4 w-4" />
       </Link>
@@ -47,9 +50,13 @@ function AppPageBackButton({ backTo, backLabel, onBack }) {
   return (
     <button
       type="button"
-      onClick={handleBack}
+      onClick={() => {
+        if (window.history.length > 1) navigate(-1)
+        else navigate('/')
+      }}
       className={APP_PAGE_BACK_BUTTON_CLASS}
       aria-label={backLabel}
+      title={backLabel}
     >
       <ChevronLeft className="h-4 w-4" />
     </button>
@@ -81,10 +88,11 @@ export function AppPanelHeader({ title, action, dotColor = 'blue', className = '
 export function AppPageHeader({
   title,
   actions,
-  backTo,
-  backLabel = 'Geri',
+  backTo = '/',
+  backLabel = 'Başa dön',
   onBack,
   showBack = true,
+  titleClassName = '',
 }) {
   return (
     <div className="app-page-header relative z-30 flex min-h-[4.75rem] shrink-0 items-center justify-between gap-3 overflow-visible px-4 py-3 sm:px-6">
@@ -92,7 +100,7 @@ export function AppPageHeader({
         {showBack ? (
           <AppPageBackButton backTo={backTo} backLabel={backLabel} onBack={onBack} />
         ) : null}
-        <h1 className={`${APP_PAGE_TITLE_CLASS} truncate`}>{title}</h1>
+        <h1 className={`${APP_PAGE_TITLE_CLASS} truncate text-left ${titleClassName}`.trim()}>{title}</h1>
       </div>
       {actions ? (
         <div className="relative z-40 flex shrink-0 flex-wrap items-center justify-end gap-2 overflow-visible">

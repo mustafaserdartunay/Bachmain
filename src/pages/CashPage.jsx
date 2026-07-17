@@ -21,6 +21,7 @@ import {
 import SearchInput from '../components/Common/SearchInput'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../components/EditableDropdownPill'
 import { getCustomerProfiles } from '../data/customerProfiles'
@@ -1994,10 +1995,10 @@ export default function CashPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Kasa</h1>
-        <div className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2">
+    <AppPageShell>
+      <AppPageHeader
+        title="Kasa"
+        actions={(
           <button
             type="button"
             onClick={() => openAccountPanel('Nakit Kasa')}
@@ -2005,8 +2006,8 @@ export default function CashPage() {
           >
             <Plus className="h-4 w-4" /> Kasa Oluştur
           </button>
-        </div>
-      </div>
+        )}
+      />
 
       <SummaryMetrics
         columns={4}
@@ -2238,6 +2239,6 @@ export default function CashPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppPageShell>
   )
 }

@@ -7,6 +7,8 @@ import { emptyProduct, sampleProducts } from '../../data/productsData'
 import { DeleteTrashButton } from '../../components/Common/ListDeleteConfirmPanel'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import ActivityArchivePanel from '../../components/Common/ActivityArchivePanel'
+import { AppPageHeader, AppPageShell } from '../../components/Layout/AppPageLayout'
+import SplitCreateButton from '../../components/Common/SplitCreateButton'
 import { appendActivityEntry } from '../../utils/activityArchiveStore'
 import { BTN_SUCCESS } from '../../utils/buttonStyles'
 import { formatTL, getProductPricing } from '../../utils/productPricing'
@@ -420,98 +422,110 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Hizmet ve Ürünler</h1>
-        </div>
-
-        {view === 'list' ? (
-          <div className="absolute right-5 top-1/2 flex -translate-y-1/2 gap-2">
-            <button
-              onClick={handleNew}
-              className="btn-primary flex items-center gap-1.5 px-4 py-2.5 text-sm"
-            >
-              <Plus className="h-4 w-4" /> Yeni ürün oluştur
-            </button>
-          </div>
-        ) : (
-          <div className="absolute right-5 top-1/2 flex -translate-y-1/2 flex-wrap justify-end gap-2">
-            <button
-              onClick={handleBack}
-              className="btn-cancel flex items-center gap-1.5 px-4 text-sm"
-            >
-              <ArrowLeft className="w-4 h-4" /> Vazgeç
-            </button>
-            <button
-              onClick={() => alert('Ürün önerme modülü sonraki adımda WhatsApp / mail / görsel seçimleriyle bağlanacak.')}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm text-blue-300 bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 transition-colors"
-            >
-              <Send className="w-4 h-4" /> Ürünü Öner
-            </button>
-            {!isNew && (
-              <>
-                <button
-                  onClick={() => setView('edit')}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors"
-                >
-                  <Pencil className="w-4 h-4" /> Düzenle
-                </button>
-                <DeleteTrashButton
-                  pending={pendingProductDelete}
-                  onClick={() => setPendingProductDelete(true)}
-                  onConfirm={handleDelete}
-                  onCancel={() => setPendingProductDelete(false)}
-                  title="Ürün silinsin mi?"
-                  description={`"${selectedProduct?.name || 'Bu ürün'}" kalıcı olarak silinecek.`}
-                  buttonClassName="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300 transition-colors hover:bg-red-500/20"
-                  popoverClassName="absolute right-0 top-full z-50 mt-2"
-                  wrapperClassName="relative"
-                >
-                  <Trash2 className="w-4 h-4" /> Sil
-                </DeleteTrashButton>
-              </>
-            )}
-            <div className="relative flex">
+    <AppPageShell>
+      {view === 'list' ? (
+        <AppPageHeader
+          title="Hizmet ve Ürünler"
+          actions={(
+            <SplitCreateButton
+              label="Yeni Ürün Oluştur"
+              onPrimaryClick={handleNew}
+              menuAriaLabel="Ürün seçenekleri"
+              menuItems={[
+                {
+                  id: 'new',
+                  label: 'Hızlı Ürün Oluştur',
+                  icon: Plus,
+                  iconClassName: 'text-blue-300',
+                  onClick: handleNew,
+                },
+                {
+                  id: 'copy-hint',
+                  label: 'Listeden Kopyala',
+                  icon: Package,
+                  iconClassName: 'text-emerald-300',
+                  onClick: handleNew,
+                },
+              ]}
+            />
+          )}
+        />
+      ) : (
+        <AppPageHeader
+          title={isNew ? 'Yeni Ürün Oluştur' : 'Ürün Düzenle'}
+          onBack={handleBack}
+          backLabel="Ürün listesine dön"
+          actions={(
+            <div className="relative flex flex-wrap items-center justify-end gap-2">
               <button
-                onClick={handleSave}
-                className={`${BTN_SUCCESS} gap-1.5 rounded-r-none px-4 py-2.5 text-sm`}
+                type="button"
+                onClick={handleBack}
+                className="btn-cancel flex items-center gap-1.5 px-4 text-sm"
               >
-                Kaydet
+                <ArrowLeft className="w-4 h-4" /> Vazgeç
               </button>
               <button
-                onClick={() => setSaveMenuOpen((open) => !open)}
-                className={`${BTN_SUCCESS} rounded-l-none border-l border-emerald-400/40 px-2 py-2.5`}
-                aria-label="Kaydet menüsü"
+                type="button"
+                onClick={() => alert('Ürün önerme modülü sonraki adımda WhatsApp / mail / görsel seçimleriyle bağlanacak.')}
+                className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2.5 text-sm text-blue-300 transition-colors hover:bg-blue-500/20"
               >
-                <ChevronDown className={`w-4 h-4 transition-transform ${saveMenuOpen ? 'rotate-180' : ''}`} />
+                <Send className="w-4 h-4" /> Ürünü Öner
               </button>
-              {saveMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 rounded-xl bg-dark-800 border border-dark-500/70 shadow-2xl z-50 overflow-hidden">
+              {!isNew && (
+                <>
                   <button
-                    onClick={handleSave}
-                    className="block w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-dark-700"
+                    type="button"
+                    onClick={() => setView('edit')}
+                    className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300 transition-colors hover:bg-emerald-500/20"
                   >
+                    <Pencil className="w-4 h-4" /> Düzenle
+                  </button>
+                  <DeleteTrashButton
+                    pending={pendingProductDelete}
+                    onClick={() => setPendingProductDelete(true)}
+                    onConfirm={handleDelete}
+                    onCancel={() => setPendingProductDelete(false)}
+                    title="Ürün silinsin mi?"
+                    description={`"${selectedProduct?.name || 'Bu ürün'}" kalıcı olarak silinecek.`}
+                    buttonClassName="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300 transition-colors hover:bg-red-500/20"
+                    popoverClassName="absolute right-0 top-full z-50 mt-2"
+                    wrapperClassName="relative"
+                  >
+                    <Trash2 className="w-4 h-4" /> Sil
+                  </DeleteTrashButton>
+                </>
+              )}
+              <div className="btn-split">
+                <button type="button" onClick={handleSave} className={`${BTN_SUCCESS} gap-1.5 px-4 text-sm`}>
+                  Kaydet
+                </button>
+                <span className="btn-split-divider" aria-hidden />
+                <button
+                  type="button"
+                  onClick={() => setSaveMenuOpen((open) => !open)}
+                  className={`${BTN_SUCCESS} w-14 px-0`}
+                  aria-label="Kaydet menüsü"
+                >
+                  <ChevronDown className={`w-4 h-4 transition-transform ${saveMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+              {saveMenuOpen ? (
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-dark-500/70 bg-dark-800 shadow-2xl">
+                  <button type="button" onClick={handleSave} className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-dark-700">
                     Kaydet
                   </button>
-                  <button
-                    onClick={handleSaveAndNew}
-                    className="block w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-dark-700"
-                  >
+                  <button type="button" onClick={handleSaveAndNew} className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-dark-700">
                     Kaydet ve yeni ürün oluştur
                   </button>
-                  <button
-                    onClick={handleCopyAndCreate}
-                    className="block w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-dark-700"
-                  >
+                  <button type="button" onClick={handleCopyAndCreate} className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-dark-700">
                     Kopyala ve Oluştur
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        />
+      )}
 
       {view === 'list' && (
         <SummaryMetrics
@@ -563,6 +577,6 @@ export default function ProductsPage() {
           {toast}
         </div>
       )}
-    </div>
+    </AppPageShell>
   )
 }

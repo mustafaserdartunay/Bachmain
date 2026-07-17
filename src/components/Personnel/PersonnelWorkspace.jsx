@@ -17,6 +17,7 @@ import {
 import SearchInput from '../Common/SearchInput'
 import SummaryMetrics from '../Common/SummaryMetrics'
 import ActivityArchivePanel from '../Common/ActivityArchivePanel'
+import { AppPageHeader, AppPageShell } from '../Layout/AppPageLayout'
 import {
   ABSENCE_REASONS,
   EMPLOYMENT_STATUSES,
@@ -336,12 +337,8 @@ export default function PersonnelWorkspace() {
   )
 
   return (
-    <div className="space-y-5">
-      <div className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <div className="flex justify-center">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Personel & İK</h1>
-        </div>
-      </div>
+    <AppPageShell>
+      <AppPageHeader title="Personel & İK" />
 
       <SummaryMetrics
         columns={5}
@@ -721,6 +718,6 @@ export default function PersonnelWorkspace() {
         onRestore={handleRestoreArchiveEntry}
         emptyMessage="Henüz personel arşiv veya silme kaydı yok."
       />
-    </div>
+    </AppPageShell>
   )
 }

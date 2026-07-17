@@ -6,6 +6,7 @@ import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import SplitCreateButton from '../components/Common/SplitCreateButton'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../components/EditableDropdownPill'
 import ProductionJobFlowBadge from '../components/Production/ProductionJobFlowBadge'
@@ -272,10 +273,10 @@ export default function ProductionPage() {
   const quotes = loadQuotes()
 
   return (
-    <div className="space-y-5">
-      <div className="app-page-header relative z-30 flex min-h-[4.75rem] items-center justify-center overflow-visible px-4 py-3 text-center sm:px-6">
-        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Üretim Takibi</h1>
-        <div className="absolute right-4 top-1/2 z-40 -translate-y-1/2 sm:right-6">
+    <AppPageShell>
+      <AppPageHeader
+        title="Üretim Takibi"
+        actions={(
           <SplitCreateButton
             label="Yeni Üretim Oluştur"
             onPrimaryClick={() => navigate('/uretim/yeni')}
@@ -297,8 +298,8 @@ export default function ProductionPage() {
               },
             ]}
           />
-        </div>
-      </div>
+        )}
+      />
 
       <SummaryMetrics
         items={[
@@ -547,6 +548,6 @@ export default function ProductionPage() {
           </div>
         )}
       </Panel>
-    </div>
+    </AppPageShell>
   )
 }

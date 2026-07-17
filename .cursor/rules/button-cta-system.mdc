@@ -36,10 +36,17 @@ When the user asks for **açılır yeni oluştur butonu**, or any page-header �
 
 Reference implementation: Satış Faturaları (`SalesInvoicesPage`) and Süreç Yönetimi pages (Teklifler, Siparişler, Üretim, Depo, Teslim Edilenler).
 
-## Page header height
+## Page header (REQUIRED — all system pages)
 
-`.app-page-header` matches the cash quick-actions strip (`.app-header-banner`):
-`min-h-[4.75rem]`, `px-4 py-3 sm:px-6`, centered flex row, `overflow-visible`, `z-30`.
+Always use `AppPageHeader` from `AppPageLayout.jsx` (Customers pattern):
+
+- Title **left-aligned** (never centered page titles)
+- **Başa dön** chevron on the left (`backTo="/"` by default, `backLabel="Başa dön"`)
+- Actions on the right
+- Height matches cash banner: `min-h-[4.75rem]`, `px-4 py-3 sm:px-6`, `overflow-visible`, `z-30`
+- Nested edit screens may override with `onBack` + `backLabel` (e.g. “Listeye dön”)
+
+Do not invent centered `text-center` page title bars.
 
 ## Rules for new UI
 

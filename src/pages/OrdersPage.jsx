@@ -20,6 +20,7 @@ import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import SplitCreateButton from '../components/Common/SplitCreateButton'
 import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { customerToDocumentPatch } from '../utils/documentCustomerPatch'
 import ListDeleteConfirmPanel, { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../components/EditableDropdownPill'
@@ -908,15 +909,11 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="app-page-header relative z-30 flex min-h-[4.75rem] items-center justify-center overflow-visible px-4 py-3 text-center sm:px-6">
-        <div className="flex justify-center">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-            {viewMode === 'prepare' ? (isDraftOrder ? 'Yeni Sipariş Oluştur' : 'Sipariş Düzenle') : 'Sipariş Yönetimi'}
-          </h1>
-        </div>
-        {viewMode === 'list' ? (
-          <div className="absolute right-4 top-1/2 z-40 -translate-y-1/2 sm:right-6">
+    <AppPageShell>
+      {viewMode === 'list' ? (
+        <AppPageHeader
+          title="Sipariş Yönetimi"
+          actions={(
             <SplitCreateButton
               label="Yeni Sipariş Oluştur"
               onPrimaryClick={() => addOrder()}
@@ -938,17 +935,15 @@ export default function OrdersPage() {
                 },
               ]}
             />
-          </div>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={returnToOrderList}
-              className="absolute left-5 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> Sipariş listesine dön
-            </button>
-            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2" data-order-dropdown>
+          )}
+        />
+      ) : (
+        <AppPageHeader
+          title={isDraftOrder ? 'Yeni Sipariş Oluştur' : 'Sipariş Düzenle'}
+          onBack={returnToOrderList}
+          backLabel="Sipariş listesine dön"
+          actions={(
+            <div className="relative flex shrink-0 items-center gap-2" data-order-dropdown>
               {selectedOrder && !isDraftOrder ? (
                 <Link
                   to={`/belge-merkezi/yazdir?type=order&id=${encodeURIComponent(selectedOrder.id)}`}
@@ -1015,9 +1010,9 @@ export default function OrdersPage() {
                 </div>
               )}
             </div>
-          </>
-        )}
-      </div>
+          )}
+        />
+      )}
 
       {viewMode === 'list' && (
         <SummaryMetrics
@@ -1366,6 +1361,6 @@ export default function OrdersPage() {
         onSelect={handleCreateWithCustomer}
         description="Sipariş oluşturmak için müşteri seçin."
       />
-    </div>
+    </AppPageShell>
   )
 }

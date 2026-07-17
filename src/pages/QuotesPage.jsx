@@ -27,6 +27,7 @@ import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import SplitCreateButton from '../components/Common/SplitCreateButton'
 import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { customerToDocumentPatch } from '../utils/documentCustomerPatch'
 import ListDeleteConfirmPanel, { DeleteConfirmPopover, DeleteTrashButton, LIST_PILL_CLASS, ListInlineDeleteConfirmPopover } from '../components/Common/ListDeleteConfirmPanel'
 import NumericInput from '../components/Products/NumericInput'
@@ -2029,14 +2030,11 @@ export default function QuotesPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="app-page-header relative z-30 flex min-h-[4.75rem] items-center justify-between gap-4 overflow-visible px-4 py-3 sm:px-6">
-        {viewMode === 'list' ? (
-          <>
-            <div className="hidden w-[10.5rem] shrink-0 sm:block" aria-hidden="true" />
-            <h1 className="flex-1 text-center text-2xl font-black uppercase tracking-wide text-blue-300">
-              Teklif Yönetimi
-            </h1>
+    <AppPageShell>
+      {viewMode === 'list' ? (
+        <AppPageHeader
+          title="Teklif Yönetimi"
+          actions={(
             <SplitCreateButton
               label="Yeni Teklif Oluştur"
               onPrimaryClick={() => addQuote()}
@@ -2058,19 +2056,14 @@ export default function QuotesPage() {
                 },
               ]}
             />
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={returnToQuoteList}
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> Teklif listesine dön
-            </button>
-            <h1 className="flex-1 text-center text-2xl font-black uppercase tracking-wide text-blue-300">
-              {isDraftQuote ? 'Yeni Teklif Oluştur' : 'Teklif Düzenle'}
-            </h1>
+          )}
+        />
+      ) : (
+        <AppPageHeader
+          title={isDraftQuote ? 'Yeni Teklif Oluştur' : 'Teklif Düzenle'}
+          onBack={returnToQuoteList}
+          backLabel="Teklif listesine dön"
+          actions={(
             <div className="relative flex shrink-0 items-center gap-2" data-quote-dropdown>
               {selectedQuote ? (
                 <Link
@@ -2138,9 +2131,9 @@ export default function QuotesPage() {
                 </div>
               )}
             </div>
-          </>
-        )}
-      </div>
+          )}
+        />
+      )}
 
       {viewMode === 'list' && (
         <SummaryMetrics
@@ -2847,6 +2840,6 @@ export default function QuotesPage() {
         onSelect={handleCreateWithCustomer}
         description="Teklif oluşturmak için müşteri seçin."
       />
-    </div>
+    </AppPageShell>
   )
 }

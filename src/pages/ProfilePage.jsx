@@ -4,6 +4,7 @@ import { ImagePlus, Save, UserRound } from 'lucide-react'
 import { ensureUserProfile, updateUserProfile } from '../utils/userProfile'
 import { readCompanySettings } from '../utils/companySettings'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 
 function Field({ label, children }) {
   return (
@@ -49,11 +50,8 @@ export default function ProfilePage() {
   const initials = profile.displayName?.slice(0, 1)?.toUpperCase() || 'Y'
 
   return (
-    <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Profilim</h1>
-        <p className="mt-2 text-xs font-semibold text-gray-500">Hesap bilgilerinizi güncelleyin.</p>
-      </section>
+    <AppPageShell>
+      <AppPageHeader title="Profilim" />
 
       <form onSubmit={handleSave} className="card space-y-5">
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-dark-500/40 bg-dark-700/30 p-5 sm:flex-row">
@@ -127,6 +125,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </section>
-    </div>
+    </AppPageShell>
   )
 }

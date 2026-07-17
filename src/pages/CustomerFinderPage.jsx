@@ -14,6 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { getCustomerProfiles } from '../data/customerProfiles'
 import { getCustomerDisplay } from '../utils/customerDisplay'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_PLACES_API_KEY || ''
 const PLACE_FIELDS = [
@@ -204,15 +205,8 @@ export default function CustomerFinderPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Müşteri Bul</h1>
-          <p className="mt-2 text-xs font-semibold text-gray-500">
-            Google Maps üzerinden kategoriye göre işletme adayları bulun, seçtiklerinizi müşteri kayıt formuna aktarın.
-          </p>
-        </div>
-      </section>
+    <AppPageShell>
+      <AppPageHeader title="Müşteri Bul" />
 
       <section className="rounded-2xl border border-dark-500/45 bg-dark-800/65 p-4 shadow-card">
         <form onSubmit={searchPlaces} className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(220px,0.7fr)_auto]">
@@ -353,6 +347,6 @@ export default function CustomerFinderPage() {
           </div>
         )}
       </section>
-    </div>
+    </AppPageShell>
   )
 }

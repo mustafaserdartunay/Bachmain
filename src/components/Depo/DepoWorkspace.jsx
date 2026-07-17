@@ -19,6 +19,7 @@ import ListHeaderRow from '../Common/ListHeaderRow'
 import SummaryMetrics from '../Common/SummaryMetrics'
 import SplitCreateButton from '../Common/SplitCreateButton'
 import { LIST_PILL_CLASS } from '../Common/ListDeleteConfirmPanel'
+import { AppPageHeader, AppPageShell } from '../Layout/AppPageLayout'
 import EditableDropdownPill from '../EditableDropdownPill'
 import DepoItemStagePanel from './DepoItemStagePanel'
 import { findCustomerProfileByReference, getListCustomerDisplay } from '../../data/customerProfiles'
@@ -301,10 +302,11 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="app-page-header relative z-30 flex min-h-[4.75rem] items-center justify-center overflow-visible px-4 py-3 text-center sm:px-6">
-        <h1 className={`text-2xl font-black uppercase tracking-wide ${pageConfig.titleClass}`}>{pageConfig.title}</h1>
-        <div className="absolute right-4 top-1/2 z-40 -translate-y-1/2 sm:right-6">
+    <AppPageShell>
+      <AppPageHeader
+        title={pageConfig.title}
+        titleClassName={pageConfig.titleClass}
+        actions={(
           <SplitCreateButton
             label="Yeni Depo İşlemi"
             onPrimaryClick={() => { setShowWarehousePanel(true); setShowTransferPanel(false) }}
@@ -333,8 +335,8 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
               },
             ]}
           />
-        </div>
-      </div>
+        )}
+      />
 
       <SummaryMetrics
         items={[
@@ -697,6 +699,6 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
           </div>
         )}
       </Panel>
-    </div>
+    </AppPageShell>
   )
 }

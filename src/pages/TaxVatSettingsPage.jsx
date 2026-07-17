@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Percent, Plus, Save, Trash2 } from 'lucide-react'
+import { Plus, Save, Trash2 } from 'lucide-react'
 import {
   createIncomeTaxBracket,
   defaultTaxVatSettings,
@@ -8,6 +8,7 @@ import {
   TAX_VAT_SETTINGS_EVENT,
 } from '../utils/taxVatSettingsStore'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
+import { AppPageHeader } from '../components/Layout/AppPageLayout'
 
 function Field({ label, hint, children }) {
   return (
@@ -79,19 +80,7 @@ export default function TaxVatSettingsPage() {
 
   return (
     <div className="w-full space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 text-rose-300">
-            <Percent className="h-5 w-5" />
-          </span>
-          <div>
-            <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Vergi ve KDV Yönetimi</h1>
-            <p className="mt-1 text-xs font-semibold text-gray-500">
-              Dashboard KDV ve gelir vergisi hesapları bu oranlara göre yapılır.
-            </p>
-          </div>
-        </div>
-      </section>
+      <AppPageHeader title="Vergi ve KDV Yönetimi" />
 
       <form onSubmit={handleSave} className="space-y-4">
         <section className="card space-y-4">
