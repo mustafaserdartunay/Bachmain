@@ -44,6 +44,14 @@ const QuotesPage = lazyPage(() => import('./pages/QuotesPage'))
 const OrdersPage = lazyPage(() => import('./pages/OrdersPage'))
 const ProductionPage = lazyPage(() => import('./pages/ProductionPage'))
 const DepoPageLazy = lazyPage(() => import('./pages/process/DepoPage'))
+const LogisticsHubPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.LogisticsHubPage })))
+const LogisticsMasterPage = lazyPage(() => import('./components/Logistics/LogisticsMasterPage'))
+const LoadPlanWorkspace = lazyPage(() => import('./components/Logistics/LoadPlanWorkspace'))
+const LogisticsShipmentsPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.ShipmentsPage })))
+const LogisticsRoutesPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.RoutesPage })))
+const LogisticsDeliveriesPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.DeliveriesPage })))
+const LogisticsDocumentsPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.LogisticsDocumentsPage })))
+const LogisticsReportsPage = lazyPage(() => import('./pages/logistics/LogisticsPages').then((m) => ({ default: m.LogisticsReportsPage })))
 import ProductsPage from './pages/stock/ProductsPage'
 import WarehousesPage from './pages/stock/WarehousesPage'
 import WarehouseTransferPage from './pages/stock/WarehouseTransferPage'
@@ -249,6 +257,19 @@ export default function App() {
                 <Route path="/siparis-deposu" element={<Navigate to="/depo" replace />} />
                 <Route path="/stok-deposu" element={<Navigate to="/depo" replace />} />
                 <Route path="/teslim-edilenler" element={<DeliveredPage />} />
+                <Route path="/lojistik" element={<PageSuspense><LogisticsHubPage /></PageSuspense>} />
+                <Route path="/lojistik/araclar" element={<PageSuspense><LogisticsMasterPage kind="vehicles" /></PageSuspense>} />
+                <Route path="/lojistik/dorse-tipleri" element={<PageSuspense><LogisticsMasterPage kind="trailers" /></PageSuspense>} />
+                <Route path="/lojistik/paletler" element={<PageSuspense><LogisticsMasterPage kind="pallets" /></PageSuspense>} />
+                <Route path="/lojistik/koli-tipleri" element={<PageSuspense><LogisticsMasterPage kind="boxes" /></PageSuspense>} />
+                <Route path="/lojistik/paket-tipleri" element={<PageSuspense><LogisticsMasterPage kind="packages" /></PageSuspense>} />
+                <Route path="/lojistik/sevkiyatlar" element={<PageSuspense><LogisticsShipmentsPage /></PageSuspense>} />
+                <Route path="/lojistik/yukleme-plani" element={<PageSuspense><LoadPlanWorkspace mode="plan" /></PageSuspense>} />
+                <Route path="/lojistik/tir-yerlesimi" element={<PageSuspense><LoadPlanWorkspace mode="placement" /></PageSuspense>} />
+                <Route path="/lojistik/rotalar" element={<PageSuspense><LogisticsRoutesPage /></PageSuspense>} />
+                <Route path="/lojistik/teslimatlar" element={<PageSuspense><LogisticsDeliveriesPage /></PageSuspense>} />
+                <Route path="/lojistik/evraklar" element={<PageSuspense><LogisticsDocumentsPage /></PageSuspense>} />
+                <Route path="/lojistik/raporlar" element={<PageSuspense><LogisticsReportsPage /></PageSuspense>} />
                 <Route path={CASH_BASE_PATH} element={<CashPage />} />
                 <Route path={`${CASH_BASE_PATH}/:accountId`} element={<CashPage />} />
                 <Route path="/nakit/cekler" element={<ChequesPage />} />

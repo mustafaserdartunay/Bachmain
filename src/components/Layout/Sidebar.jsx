@@ -41,6 +41,10 @@ import {
   UserX,
   CheckSquare,
   Smartphone,
+  Container,
+  Route,
+  FileStack,
+  LayoutDashboard,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -52,6 +56,7 @@ import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '..
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { processSubMenus, isProcessRoute } from '../../data/processMenu'
+import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
 import {
   documentCenterChildMenus,
@@ -114,6 +119,20 @@ const fieldSalesSubMenuIcons = {
   users: Users,
   'bar-chart': BarChart3,
 }
+const logisticsSubMenuIcons = {
+  truck: Truck,
+  container: Container,
+  pallet: Boxes,
+  box: Package,
+  package: Package,
+  shipments: Truck,
+  plan: ClipboardList,
+  layout: LayoutDashboard,
+  route: Route,
+  delivery: MapPinned,
+  docs: FileStack,
+  report: BarChart3,
+}
 const hrSubMenuIcons = {
   gauge: Gauge,
   users: Users,
@@ -153,6 +172,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isTreasuryRouteActive = isTreasuryRoute(location.pathname)
   const isStockRouteActive = isStockRoute(location.pathname)
   const isFieldSalesRouteActive = isFieldSalesRoute(location.pathname)
+  const isLogisticsRouteActive = isLogisticsRoute(location.pathname)
   const isHrRouteActive = isHrRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
@@ -163,6 +183,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const [treasuryOpen, setTreasuryOpen] = useState(isTreasuryRouteActive)
   const [stockOpen, setStockOpen] = useState(isStockRouteActive)
   const [fieldSalesOpen, setFieldSalesOpen] = useState(isFieldSalesRouteActive)
+  const [logisticsOpen, setLogisticsOpen] = useState(isLogisticsRouteActive)
   const [hrOpen, setHrOpen] = useState(isHrRouteActive)
   const [crmOpen, setCrmOpen] = useState(isCrmRouteActive)
   const [settingsOpen, setSettingsOpen] = useState(isSettingsRoute)
@@ -192,6 +213,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   useEffect(() => {
     if (isFieldSalesRouteActive) setFieldSalesOpen(true)
   }, [isFieldSalesRouteActive])
+
+  useEffect(() => {
+    if (isLogisticsRouteActive) setLogisticsOpen(true)
+  }, [isLogisticsRouteActive])
 
   useEffect(() => {
     if (isHrRouteActive) setHrOpen(true)
@@ -695,6 +720,72 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     key={sub.path}
                     to={sub.path}
                     end={sub.path === FIELD_SALES_HOME_PATH}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex items-center gap-2 ${
+                        isActive ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
+                    {sub.label}
+                  </NavLink>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Lojistik — Smart Load Planner */}
+        <div className={`sidebar-menu-group ${logisticsOpen ? 'is-open' : ''} ${isLogisticsRouteActive ? 'is-active' : ''}`}>
+          <button
+            type="button"
+            onClick={() => setLogisticsOpen((open) => !open)}
+            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              isLogisticsRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <Container className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && (
+              <>
+                <span className={menuLabelClass}>Lojistik</span>
+                {logisticsOpen
+                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                }
+              </>
+            )}
+          </button>
+
+          {logisticsOpen && !collapsed && (
+            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+              <NavLink
+                to={LOGISTICS_HOME_PATH}
+                end
+                onClick={handleNavigate}
+                className={({ isActive }) =>
+                  `${subMenuButtonBase} flex items-center gap-2 ${
+                    isActive ? 'sidebar-menu-active font-medium' : ''
+                  }`
+                }
+              >
+                <SubMenuIcon>
+                  <LayoutDashboard className="h-3.5 w-3.5" />
+                </SubMenuIcon>
+                Genel Bakış
+              </NavLink>
+              {logisticsSubMenus.map((sub) => {
+                const SubIcon = sub.icon ? logisticsSubMenuIcons[sub.icon] : null
+                return (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} flex items-center gap-2 ${
