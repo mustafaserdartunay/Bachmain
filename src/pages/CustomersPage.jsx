@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Link2, Plus, Users, WalletCards } from 'lucide-react'
+import { CheckCircle2, Handshake, Link2, Search, UserPlus, Users, WalletCards } from 'lucide-react'
 import { DataTable } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import { Link, useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
 import DeletedRecordsPanel from '../components/Common/DeletedRecordsPanel'
+import SplitCreateButton from '../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import {
@@ -215,9 +216,53 @@ export default function CustomersPage({
       <AppPageHeader
         title={pageTitle}
         actions={(
-          <Link to={createPath} className="btn-primary flex items-center gap-1.5 px-4 py-2.5 text-sm">
-            <Plus className="h-4 w-4" /> {createLabel}
-          </Link>
+          <SplitCreateButton
+            label={createLabel}
+            onPrimaryClick={() => navigate(createPath)}
+            menuAriaLabel={listKind === 'supplier' ? 'Tedarikçi seçenekleri' : 'Müşteri seçenekleri'}
+            menuItems={
+              listKind === 'supplier'
+                ? [
+                    {
+                      id: 'supplier',
+                      label: 'Hızlı Tedarikçi Oluştur',
+                      icon: Handshake,
+                      iconClassName: 'text-blue-300',
+                      onClick: () => navigate(createPath),
+                    },
+                    {
+                      id: 'customer',
+                      label: 'Yeni Müşteri Oluştur',
+                      icon: UserPlus,
+                      iconClassName: 'text-emerald-300',
+                      onClick: () => navigate('/musteriler/yeni'),
+                    },
+                  ]
+                : [
+                    {
+                      id: 'customer',
+                      label: 'Hızlı Müşteri Oluştur',
+                      icon: UserPlus,
+                      iconClassName: 'text-blue-300',
+                      onClick: () => navigate(createPath),
+                    },
+                    {
+                      id: 'supplier',
+                      label: 'Yeni Tedarikçi Oluştur',
+                      icon: Handshake,
+                      iconClassName: 'text-emerald-300',
+                      onClick: () => navigate('/musteriler/yeni?kind=supplier'),
+                    },
+                    {
+                      id: 'finder',
+                      label: 'Müşteri Bul',
+                      icon: Search,
+                      iconClassName: 'text-orange-300',
+                      onClick: () => navigate('/musteriler/bul'),
+                    },
+                  ]
+            }
+          />
         )}
       />
 
