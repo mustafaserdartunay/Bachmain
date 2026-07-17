@@ -318,7 +318,7 @@ function CashAccountOpsConfirm({ type, accountName, onConfirm, onCancel }) {
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-xl border border-[rgba(140,145,165,0.22)] bg-white px-3 py-2 text-[13px] font-bold text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]"
+          className="btn-cancel flex-1 px-3 text-[13px] font-bold"
         >
           Vazgeç
         </button>

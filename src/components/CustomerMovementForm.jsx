@@ -157,7 +157,7 @@ export default function CustomerMovementForm({
         <button
           type="button"
           onClick={onCancel}
-          className="flex w-full items-center justify-center rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2.5 text-sm font-black text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+          className="btn-cancel flex w-full items-center justify-center px-3 text-sm font-black"
         >
           Vazgeç
         </button>

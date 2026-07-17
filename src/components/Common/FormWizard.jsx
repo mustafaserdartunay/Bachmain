@@ -55,7 +55,7 @@ export function FormWizard({
       <div className="flex flex-wrap justify-between gap-2">
         <div>
           {onCancel ? (
-            <Button type="button" variant="ghost" onClick={onCancel}>
+            <Button type="button" variant="cancel" onClick={onCancel}>
               Vazgeç
             </Button>
           ) : null}

@@ -662,7 +662,7 @@ export default function TruckLoadCalculator() {
                 İstiflenebilir (araç yüksekliğine göre üst üste sayılır)
               </label>
               <div className="tlc-modal-actions">
-                <button type="button" className="tlc-btn tlc-btn--ghost" onClick={() => setModalOpen(false)}>Vazgeç</button>
+                <button type="button" className="btn-cancel" onClick={() => setModalOpen(false)}>Vazgeç</button>
                 <button type="submit" className="tlc-btn tlc-btn--primary">Kaydet</button>
               </div>
             </form>
@@ -679,7 +679,7 @@ export default function TruckLoadCalculator() {
             <h3>Bu kalemi sil?</h3>
             <p style={{ fontSize: 14, color: 'var(--tlc-muted)', fontWeight: 600, marginTop: 8 }}>Yük planından kaldırılacak.</p>
             <div className="tlc-modal-actions">
-              <button type="button" className="tlc-btn tlc-btn--ghost" onClick={() => setConfirmId(null)}>Vazgeç</button>
+              <button type="button" className="btn-cancel" onClick={() => setConfirmId(null)}>Vazgeç</button>
               <button type="button" className="tlc-btn tlc-btn--danger" onClick={() => removeItem(confirmId)}>Sil</button>
             </div>
           </div>

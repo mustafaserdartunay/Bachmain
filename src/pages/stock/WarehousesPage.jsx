@@ -253,7 +253,7 @@ function WarehouseForm({ draft, onChange, onSave, onCancel, isNew }) {
           </div>
 
           <div className="flex justify-end gap-3 border-t border-dark-500/50 pt-4">
-            <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-dark-700 transition-colors">Vazgeç</button>
+            <button onClick={onCancel} className="btn-cancel px-4 text-sm">Vazgeç</button>
             <button onClick={onSave} className={`${BTN_SUCCESS} px-5 py-2 text-sm`}>{isNew ? 'Depo Oluştur' : 'Depoyu Kaydet'}</button>
           </div>
         </div>

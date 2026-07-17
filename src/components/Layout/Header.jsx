@@ -198,7 +198,7 @@ function HeaderBar({ onMenuClick }) {
                     <button
                       type="button"
                       onClick={() => setPendingLogout(false)}
-                      className="btn-ghost px-3 py-2 text-xs"
+                      className="btn-cancel px-3 text-xs"
                     >
                       Vazgeç
                     </button>

@@ -253,7 +253,7 @@ export default function CustomerQuickEditModal({ customer, onClose, onSaved }) {
           </div>
 
           <div className="flex items-center justify-end gap-2 border-t border-dark-500/30 pt-4">
-            <button type="button" onClick={onClose} className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300">
+            <button type="button" onClick={onClose} className="btn-cancel px-4 text-xs font-bold">
               Vazgeç
             </button>
             <button type="submit" className={`${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}>

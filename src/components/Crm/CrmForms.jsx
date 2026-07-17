@@ -21,7 +21,7 @@ import { BTN_PRIMARY } from '../../utils/buttonStyles'
 const FIELD_LABEL = 'mb-1.5 block text-[12px] font-black uppercase tracking-wider text-gray-500'
 
 const HEADER_POPOVER_BTN_CANCEL =
-  'inline-flex h-9 min-w-[5.5rem] items-center justify-center rounded-xl bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-4 text-[12px] font-bold text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5'
+  'btn-cancel !h-9 !min-h-9 min-w-[5.5rem] px-4 text-[12px] font-bold'
 
 const HEADER_POPOVER_BTN_SUBMIT =
   'inline-flex h-9 min-w-[5.5rem] items-center justify-center rounded-xl bg-gradient-to-br from-[#7cf2c6] via-[#34d399] to-[#10b981] px-4 text-[12px] font-bold text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5'
@@ -292,7 +292,7 @@ export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false, co
       <button
         type="button"
         onClick={onClose}
-        className={compact ? HEADER_POPOVER_BTN_CANCEL : 'rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300'}
+        className={compact ? HEADER_POPOVER_BTN_CANCEL : 'btn-cancel px-4 text-xs font-bold'}
       >
         Vazgeç
       </button>
@@ -531,7 +531,7 @@ export function AppointmentFormModal({ initial, onClose, onSubmit, fullPage = fa
       <button
         type="button"
         onClick={onClose}
-        className={compact ? HEADER_POPOVER_BTN_CANCEL : 'rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300'}
+        className={compact ? HEADER_POPOVER_BTN_CANCEL : 'btn-cancel px-4 text-xs font-bold'}
       >
         Vazgeç
       </button>
@@ -659,7 +659,7 @@ export function NoteFormModal({ initial, onClose, onSubmit, fullPage = false }) 
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-bold text-gray-300">
+          <button type="button" onClick={onClose} className="btn-cancel px-4 text-xs font-bold">
             Vazgeç
           </button>
           <button type="submit" className={`${BTN_PRIMARY} gap-1.5 px-4 py-2.5 text-sm`}>

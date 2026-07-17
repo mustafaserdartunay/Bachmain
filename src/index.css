@@ -1187,6 +1187,7 @@ html:not(.night) .app-responsive .text-gray-500 {
 }
 
 .app-responsive .btn-primary,
+.app-responsive .btn-cancel,
 .app-responsive .btn-success,
 .app-responsive .neon-btn,
 .app-responsive [class*='bg-gradient-to-br'],
@@ -1195,6 +1196,7 @@ html:not(.night) .app-responsive .text-gray-500 {
 }
 
 .app-responsive .btn-primary *,
+.app-responsive .btn-cancel *,
 .app-responsive .btn-success *,
 .app-responsive .neon-btn * {
   color: inherit !important;
@@ -2459,22 +2461,39 @@ select.search-pill:focus {
   }
 }
 
+/* Create / primary CTA — header “Kasa” sky→blue gradient, 52px */
 .btn-primary {
-  background: linear-gradient(135deg, var(--bach-sky, #79a6d2), var(--bach-navy, #203375)) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.375rem;
+  background: linear-gradient(
+    to bottom right,
+    var(--bach-btn-create-from, #8ad9ff),
+    var(--bach-btn-create-via, #60a5fa),
+    var(--bach-btn-create-to, #3b82f6)
+  ) !important;
   color: #ffffff !important;
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--ds-font-small, 0.8125rem);
-  min-height: var(--ds-control-h, 3rem);
+  height: 3.25rem !important; /* 52px — header quick-actions */
+  min-height: 3.25rem !important;
   padding: 0 1.25rem;
-  border-radius: var(--ds-radius-md, 0.75rem);
-  box-shadow: 0 10px 24px -12px rgba(32, 51, 117, 0.55);
+  border: 0 !important;
+  border-radius: 0.75rem;
+  box-shadow: var(--bach-btn-shadow, 0 8px 20px -12px rgba(30, 35, 60, 0.55));
   transition: filter var(--ds-duration-hover, 150ms) ease, transform var(--ds-duration-hover, 150ms) ease;
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  background: linear-gradient(135deg, var(--bach-sky, #79a6d2), var(--bach-navy, #203375)) !important;
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+  background: linear-gradient(
+    to bottom right,
+    var(--bach-btn-create-from, #8ad9ff),
+    var(--bach-btn-create-via, #60a5fa),
+    var(--bach-btn-create-to, #3b82f6)
+  ) !important;
 }
 
 .btn-primary,
@@ -2482,16 +2501,59 @@ select.search-pill:focus {
   color: #ffffff !important;
 }
 
+/* Vazgeç / cancel — header “Yeni Alış Faturası” rose gradient, 52px */
+.btn-cancel {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.375rem;
+  background: linear-gradient(
+    to bottom right,
+    var(--bach-btn-cancel-from, #fda4af),
+    var(--bach-btn-cancel-via, #f43f5e),
+    var(--bach-btn-cancel-to, #e11d48)
+  ) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: var(--ds-font-small, 0.8125rem);
+  height: 3.25rem !important; /* 52px — header quick-actions */
+  min-height: 3.25rem !important;
+  padding: 0 1.25rem;
+  border: 0 !important;
+  border-radius: 0.75rem;
+  box-shadow: var(--bach-btn-shadow, 0 8px 20px -12px rgba(30, 35, 60, 0.55));
+  transition: filter var(--ds-duration-hover, 150ms) ease, transform var(--ds-duration-hover, 150ms) ease;
+  cursor: pointer;
+}
+
+.btn-cancel:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+}
+
+.btn-cancel,
+.btn-cancel * {
+  color: #ffffff !important;
+}
+
 /* Olumlu — kaydet, onay, başarı aksiyonları */
 .btn-success {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   background-color: var(--ds-success, #059669) !important;
   color: #ffffff !important;
-  min-height: var(--ds-control-h, 3rem);
-  border-radius: var(--ds-radius-md, 0.75rem);
+  height: var(--ds-control-h, 3.25rem);
+  min-height: var(--ds-control-h, 3.25rem);
+  border-radius: 0.75rem;
+  font-weight: 700;
+  padding: 0 1.25rem;
+  box-shadow: var(--bach-btn-shadow, 0 8px 20px -12px rgba(30, 35, 60, 0.55));
 }
 
 .btn-success:hover {
   background-color: color-mix(in srgb, var(--ds-success, #059669) 85%, white) !important;
+  transform: translateY(-2px);
 }
 
 .badge-blue {

@@ -70,10 +70,17 @@
   --ds-shadow-lg: 0 16px 40px -12px rgba(28, 25, 23, 0.16);
   --ds-shadow-xl: 0 24px 56px -16px rgba(28, 25, 23, 0.2);
 
-  /* Controls */
-  --ds-control-h: 3rem; /* 48px standard */
-  --ds-control-h-sm: 2.25rem;
+  /* Controls — header banner chip height (52px) */
+  --ds-control-h: 3.25rem; /* 52px — page CTAs match header quick-actions */
+  --ds-control-h-sm: 2.5rem;
   --ds-control-h-lg: 3.25rem;
+  --bach-btn-create-from: #8ad9ff;
+  --bach-btn-create-via: #60a5fa;
+  --bach-btn-create-to: #3b82f6;
+  --bach-btn-cancel-from: #fda4af;
+  --bach-btn-cancel-via: #f43f5e;
+  --bach-btn-cancel-to: #e11d48;
+  --bach-btn-shadow: 0 8px 20px -12px rgba(30, 35, 60, 0.55);
 
   /* Shell */
   --ds-sidebar-expanded: 17.5rem; /* 280px */

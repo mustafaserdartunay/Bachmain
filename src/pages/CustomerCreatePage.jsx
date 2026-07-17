@@ -41,7 +41,7 @@ import {
   saveOptionList,
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
-import { BTN_SUCCESS } from '../utils/buttonStyles'
+import { BTN_CANCEL as BTN_CANCEL_BASE, BTN_SUCCESS } from '../utils/buttonStyles'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
 
@@ -49,8 +49,7 @@ const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 
 const CREATE_PILL_CLASS = 'glass-pill !h-8 !min-h-8 !text-[12px]'
 const META_LABEL_CLASS = 'mb-1 text-[11px] font-black capitalize tracking-wider text-[var(--muted)]'
-const BTN_CANCEL =
-  'inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-5 py-2.5 text-xs font-black uppercase text-white shadow-[0_8px_20px_-12px_rgba(225,29,72,0.55)] transition-transform hover:-translate-y-0.5'
+const BTN_CANCEL = `${BTN_CANCEL_BASE} gap-2 px-5 text-xs uppercase`
 const BTN_SAVE =
   `${BTN_SUCCESS} gap-2 rounded-xl px-5 py-2.5 text-xs uppercase shadow-[0_8px_20px_-12px_rgba(16,185,129,0.45)]`
 const BTN_SAVE_MENU =

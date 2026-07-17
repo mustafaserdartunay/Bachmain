@@ -439,7 +439,7 @@ export default function ProductsPage() {
           <div className="absolute right-5 top-1/2 flex -translate-y-1/2 flex-wrap justify-end gap-2">
             <button
               onClick={handleBack}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm text-gray-400 border border-dark-500/50 hover:bg-dark-700 hover:text-gray-200 transition-colors"
+              className="btn-cancel flex items-center gap-1.5 px-4 text-sm"
             >
               <ArrowLeft className="w-4 h-4" /> Vazgeç
             </button>

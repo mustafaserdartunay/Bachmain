@@ -360,7 +360,7 @@ export default function CustomerDocumentPage() {
         <button
           type="button"
           onClick={() => navigate(`/musteriler/${customer.id}`)}
-          className="btn-ghost !px-5 !py-2.5 text-[12px] font-bold uppercase"
+          className="btn-cancel !px-5 text-[12px] font-bold uppercase"
         >
           Vazgeç
         </button>

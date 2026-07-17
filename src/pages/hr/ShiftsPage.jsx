@@ -64,7 +64,7 @@ export default function ShiftsPage() {
               <input type="number" className="form-input text-sm" placeholder="Geç kalma toleransı (dk)" value={form.lateToleranceMin} onChange={(e) => setForm((c) => ({ ...c, lateToleranceMin: Number(e.target.value) }))} />
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={() => setOpen(false)} className="rounded-xl px-4 py-2 text-sm text-gray-400">Vazgeç</button>
+              <button type="button" onClick={() => setOpen(false)} className="btn-cancel px-4 text-sm">Vazgeç</button>
               <button type="submit" className={`${BTN_SUCCESS} px-4 py-2 text-sm`}>Kaydet</button>
             </div>
           </form>

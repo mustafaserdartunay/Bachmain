@@ -164,7 +164,7 @@ export function ListInlineActionConfirm({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-dark-500/50 bg-dark-700 px-1.5 py-1 text-[11px] font-bold text-gray-200 hover:bg-dark-600 hover:text-white"
+          className="btn-cancel px-3 text-[11px] font-bold"
         >
           Vazgeç
         </button>

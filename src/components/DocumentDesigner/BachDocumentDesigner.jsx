@@ -517,7 +517,7 @@ export default function BachDocumentDesigner({
           placeholder="Şablon adı"
         />
         <div className="bach-doc-top-actions">
-          <button type="button" className="bach-doc-btn ghost" onClick={onClose}>Vazgeç</button>
+          <button type="button" className="btn-cancel" onClick={onClose}>Vazgeç</button>
           <button type="button" className="bach-doc-btn ghost" onClick={() => setPreviewOpen(true)}><Eye className="h-3.5 w-3.5" /> Önizle</button>
           <button type="button" className="bach-doc-btn ghost" onClick={handleTestPrint}><Printer className="h-3.5 w-3.5" /> Test Yazdır</button>
           <button type="button" className={`${BTN_SUCCESS} !rounded-xl !px-4 !py-2 text-xs`} onClick={() => onSave?.()}><Save className="h-3.5 w-3.5" /> Kaydet</button>

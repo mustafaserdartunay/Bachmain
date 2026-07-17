@@ -1,0 +1,28 @@
+---
+description: BachMain CTA button colors and 52px height (header quick-actions)
+alwaysApply: true
+---
+
+# Button system (header banner tokens)
+
+Match header quick-action chips for all page CTAs.
+
+## Create / primary (“Yeni … Oluştur”, Kaydet primary, BTN_PRIMARY, `btn-primary`)
+
+- Gradient: `from-[#8ad9ff] via-[#60a5fa] to-[#3b82f6]` (CSS vars `--bach-btn-create-*`)
+- Height: **52px** (`--ds-control-h: 3.25rem`)
+- Radius: `rounded-xl` (12px)
+- Shadow: `0 8px 20px -12px rgba(30,35,60,0.55)`
+- White bold label
+
+## Cancel / Vazgeç (`btn-cancel`, Button `variant="cancel"|"danger"`)
+
+- Gradient: `from-[#fda4af] via-[#f43f5e] to-[#e11d48]` (same as “Yeni Alış Faturası” chip)
+- Same height/radius/shadow as create buttons
+- White bold label
+
+## Rules for new UI
+
+- Prefer `btn-primary` / `btn-cancel` or `@bachmain/ui` Button primary/cancel
+- Do not invent flat navy primary or gray text-only Vazgeç for page-level CTAs
+- Icon-only micro controls may stay smaller; page header and form footer actions use 52px

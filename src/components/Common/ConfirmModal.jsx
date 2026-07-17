@@ -19,7 +19,7 @@ export function ConfirmModal({
       size="sm"
       footer={(
         <>
-          <Button variant="outline" onClick={onCancel}>{cancelLabel}</Button>
+          <Button variant="cancel" onClick={onCancel}>{cancelLabel}</Button>
           <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm}>{confirmLabel}</Button>
         </>
       )}

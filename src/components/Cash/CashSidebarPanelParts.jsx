@@ -91,7 +91,7 @@ export function SidebarPanelActions({ onCancel, submitLabel, submitDisabled = fa
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex h-10 items-center justify-center rounded-xl border border-[rgba(140,145,165,0.22)] bg-white text-[13px] font-bold uppercase tracking-[0.12em] text-[var(--muted)] transition-colors hover:bg-[rgba(241,245,249,1)] hover:text-[var(--ink)]"
+        className="btn-cancel inline-flex items-center justify-center text-[13px] font-bold uppercase tracking-[0.12em]"
       >
         Vazgeç
       </button>

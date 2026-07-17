@@ -1,21 +1,24 @@
 import { forwardRef } from 'react'
 
 const SIZE = {
-  sm: 'h-9 min-h-9 px-3 text-ds-small gap-1.5',
+  sm: 'h-10 min-h-10 px-3 text-ds-small gap-1.5',
   md: 'h-control min-h-control px-4 text-ds-small gap-2',
-  lg: 'h-14 min-h-14 px-5 text-ds-body gap-2',
+  lg: 'h-control min-h-control px-5 text-ds-body gap-2',
   icon: 'h-control w-control min-h-control min-w-[var(--ds-control-h)] p-0',
   iconOnly: 'h-control w-control min-h-control min-w-[var(--ds-control-h)] p-0',
 }
 
 const VARIANT = {
   primary:
-    'bg-[linear-gradient(135deg,var(--bach-sky,#79a6d2),var(--bach-navy,#203375))] !text-[#ffffff] hover:brightness-105 shadow-ds-sm border border-transparent',
+    'bg-[linear-gradient(to_bottom_right,var(--bach-btn-create-from,#8ad9ff),var(--bach-btn-create-via,#60a5fa),var(--bach-btn-create-to,#3b82f6))] !text-[#ffffff] hover:brightness-105 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] border border-transparent rounded-xl',
   secondary:
     'bg-ds-secondary !text-[#ffffff] hover:bg-[var(--ds-secondary-hover)] shadow-ds-sm border border-transparent',
   ghost: 'bg-transparent text-ds-ink hover:bg-ds-surface border border-transparent',
   outline: 'bg-ds-surface text-ds-ink border border-ds-border hover:bg-[var(--ds-surface-muted)]',
-  danger: 'bg-ds-danger !text-[#ffffff] hover:opacity-90 border border-transparent',
+  danger:
+    'bg-[linear-gradient(to_bottom_right,var(--bach-btn-cancel-from,#fda4af),var(--bach-btn-cancel-via,#f43f5e),var(--bach-btn-cancel-to,#e11d48))] !text-[#ffffff] hover:brightness-105 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] border border-transparent rounded-xl',
+  cancel:
+    'bg-[linear-gradient(to_bottom_right,var(--bach-btn-cancel-from,#fda4af),var(--bach-btn-cancel-via,#f43f5e),var(--bach-btn-cancel-to,#e11d48))] !text-[#ffffff] hover:brightness-105 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] border border-transparent rounded-xl',
   success: 'bg-ds-success !text-[#ffffff] hover:opacity-90 border border-transparent',
 }
 

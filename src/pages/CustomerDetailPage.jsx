@@ -455,7 +455,7 @@ export default function CustomerDetailPage() {
                         <button
                           type="button"
                           onClick={() => setPendingDelete(false)}
-                          className="rounded-xl border border-dark-500/60 bg-dark-700 px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-dark-600"
+                          className="btn-cancel px-3 text-xs"
                         >
                           Vazgeç
                         </button>

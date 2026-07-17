@@ -1,15 +1,19 @@
 /**
  * Legacy class tokens — prefer `import { Button } from '@bachmain/ui'`.
- * Heights follow DS 3.0 control size (48px standard via CSS vars).
+ * Heights match header quick-actions (52px via --ds-control-h).
  */
 
-/** Yeni Teklif / birincil CTA — DS primary */
+/** Yeni oluştur / birincil CTA — Kasa sky→blue gradient */
 export const BTN_PRIMARY =
-  'btn-primary inline-flex h-control min-h-control items-center justify-center rounded-ds-md font-semibold transition-colors'
+  'btn-primary inline-flex h-control min-h-control items-center justify-center rounded-xl font-bold transition-transform'
+
+/** Vazgeç / iptal — Yeni Alış Faturası rose gradient */
+export const BTN_CANCEL =
+  'btn-cancel inline-flex h-control min-h-control items-center justify-center rounded-xl font-bold transition-transform'
 
 /** Olumlu — kaydet, onay, WhatsApp, başarı aksiyonları */
 export const BTN_SUCCESS =
-  'btn-success inline-flex h-control min-h-control items-center justify-center rounded-ds-md font-semibold transition-colors'
+  'btn-success inline-flex h-control min-h-control items-center justify-center rounded-xl font-bold transition-transform'
 
 /** Üretim sayfası artı (+) butonu — info ton */
 export const URETIM_ARTI_BUTTON_CLASS =
