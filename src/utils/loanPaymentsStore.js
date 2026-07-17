@@ -95,10 +95,10 @@ export function deleteLoanPayment(id) {
   return saveLoanPayments(loadLoanPayments().filter((item) => item.id !== id))
 }
 
-export function createEmptyLoan() {
+export function createEmptyLoan(loanType = LOAN_TYPE_OPTIONS[0]) {
   return normalizeLoan({
     id: createId(),
-    loanType: LOAN_TYPE_OPTIONS[0],
+    loanType: LOAN_TYPE_OPTIONS.includes(loanType) ? loanType : LOAN_TYPE_OPTIONS[0],
     bankName: '',
     totalAmount: 0,
     installmentCount: 12,

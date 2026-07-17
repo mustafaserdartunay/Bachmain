@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight, Landmark, Plus, Save } from 'lucide-react'
+import { ChevronDown, ChevronRight, Landmark, Save, WalletCards } from 'lucide-react'
 import SearchInput from '../../components/Common/SearchInput'
+import SplitCreateButton from '../../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPagePanel, AppPageShell, AppPanelDot } from '../../components/Layout/AppPageLayout'
 import { FORM_FIELD_ROW_CLASS, FORM_SECTION_PANEL_CLASS } from '../../components/Common/FormSectionPanel'
 import ListHeaderRow from '../../components/Common/ListHeaderRow'
@@ -310,8 +311,8 @@ export default function LoanPaymentsPage() {
     setLoans((current) => current.map((item) => (item.id === nextLoan.id ? nextLoan : item)))
   }
 
-  function handleAddLoan() {
-    const newLoan = createEmptyLoan()
+  function handleAddLoan(loanType) {
+    const newLoan = createEmptyLoan(loanType)
     setLoans((current) => [newLoan, ...current])
     setExpandedLoanIds((current) => new Set([...current, newLoan.id]))
   }
@@ -330,13 +331,27 @@ export default function LoanPaymentsPage() {
       <AppPageHeader
         title="Kredi Ödemeleri"
         actions={(
-          <button
-            type="button"
-            onClick={handleAddLoan}
-            className="btn-ghost inline-flex items-center gap-2 !px-4 !py-2 text-[12px] font-bold"
-          >
-            <Plus className="h-4 w-4" /> Yeni Kredi
-          </button>
+          <SplitCreateButton
+            label="Yeni Kredi / Borç Oluştur"
+            onPrimaryClick={() => handleAddLoan()}
+            menuAriaLabel="Kredi / borç seçenekleri"
+            menuItems={[
+              {
+                id: 'create',
+                label: 'Yeni Kredi / Borç Oluştur',
+                icon: WalletCards,
+                iconClassName: 'text-orange-300',
+                onClick: () => handleAddLoan(),
+              },
+              ...LOAN_TYPE_OPTIONS.map((type) => ({
+                id: type,
+                label: type,
+                icon: Landmark,
+                iconClassName: 'text-blue-300',
+                onClick: () => handleAddLoan(type),
+              })),
+            ]}
+          />
         )}
       />
 
@@ -399,7 +414,7 @@ export default function LoanPaymentsPage() {
           ) : null}
           {filteredLoans.length === 0 ? (
             <p className="py-10 text-center text-sm font-semibold text-[var(--muted)]">
-              Henüz kredi kaydı yok. Yeni Kredi ile ekleyin.
+              Henüz kredi kaydı yok. Yeni Kredi / Borç Oluştur ile ekleyin.
             </p>
           ) : filteredLoans.map((loan) => (
             <LoanCard
