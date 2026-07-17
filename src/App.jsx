@@ -45,6 +45,10 @@ const OrdersPage = lazyPage(() => import('./pages/OrdersPage'))
 const ProductionPage = lazyPage(() => import('./pages/ProductionPage'))
 const DepoPageLazy = lazyPage(() => import('./pages/process/DepoPage'))
 const TruckLoadCalculatorPage = lazyPage(() => import('./components/Logistics/TruckLoadCalculator'))
+const LogisticsDashboardPage = lazyPage(() => import('./pages/logistics/LogisticsFlowPages').then((m) => ({ default: m.LogisticsDashboardPage })))
+const PlannedLogisticsPage = lazyPage(() => import('./pages/logistics/LogisticsFlowPages').then((m) => ({ default: m.PlannedLogisticsPage })))
+const InTransitLogisticsPage = lazyPage(() => import('./pages/logistics/LogisticsFlowPages').then((m) => ({ default: m.InTransitLogisticsPage })))
+const DeliveredLogisticsPage = lazyPage(() => import('./pages/logistics/LogisticsFlowPages').then((m) => ({ default: m.DeliveredLogisticsPage })))
 import ProductsPage from './pages/stock/ProductsPage'
 import WarehousesPage from './pages/stock/WarehousesPage'
 import WarehouseTransferPage from './pages/stock/WarehouseTransferPage'
@@ -250,9 +254,12 @@ export default function App() {
                 <Route path="/siparis-deposu" element={<Navigate to="/depo" replace />} />
                 <Route path="/stok-deposu" element={<Navigate to="/depo" replace />} />
                 <Route path="/teslim-edilenler" element={<DeliveredPage />} />
-                <Route path="/lojistik" element={<Navigate to="/lojistik/yukleme-plani" replace />} />
+                <Route path="/lojistik" element={<PageSuspense><LogisticsDashboardPage /></PageSuspense>} />
                 <Route path="/lojistik/yukleme-plani" element={<PageSuspense><TruckLoadCalculatorPage /></PageSuspense>} />
-                <Route path="/lojistik/*" element={<Navigate to="/lojistik/yukleme-plani" replace />} />
+                <Route path="/lojistik/planlanan" element={<PageSuspense><PlannedLogisticsPage /></PageSuspense>} />
+                <Route path="/lojistik/teslimatta" element={<PageSuspense><InTransitLogisticsPage /></PageSuspense>} />
+                <Route path="/lojistik/teslim-edildi" element={<PageSuspense><DeliveredLogisticsPage /></PageSuspense>} />
+                <Route path="/lojistik/*" element={<Navigate to="/lojistik" replace />} />
                 <Route path={CASH_BASE_PATH} element={<CashPage />} />
                 <Route path={`${CASH_BASE_PATH}/:accountId`} element={<CashPage />} />
                 <Route path="/nakit/cekler" element={<ChequesPage />} />

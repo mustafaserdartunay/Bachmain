@@ -116,8 +116,13 @@ function normalizeDepoItem(item, stages = loadDepoWorkflowStages()) {
     ]
   }
 
+  const customerText = typeof item.customer === 'object'
+    ? (item.customer?.companyTitle || item.customer?.name || '')
+    : (item.customer || '')
+
   return {
     ...item,
+    stockScope: item.stockScope || (String(customerText).trim() ? 'customer' : 'general'),
     currentStageId: stage?.id || currentStageId,
     status: stage?.label || item.status || firstStage?.label || 'Beklemede',
     productionCode,
@@ -239,6 +244,8 @@ export function createDepoItemFromLine(job, line, warehouseId) {
   const pricing = resolveLinePricingFromOrder(job, line)
   const stages = loadDepoWorkflowStages()
   const firstStage = stages[0]
+  const customerName = job.customer || ''
+  const stockScope = String(customerName).trim() ? 'customer' : 'general'
 
   return {
     id: createId('dep'),
@@ -246,7 +253,9 @@ export function createDepoItemFromLine(job, line, warehouseId) {
     orderId: job.orderId || '',
     lineItemId: line.id,
     quantityRowId: '',
-    customer: job.customer || '',
+    stockScope,
+    projectId: job.projectId || '',
+    customer: customerName,
     product: line.product || job.product || 'Ürün',
     productCode: pricing.productCode,
     quantity: metrics.ordered,
@@ -287,6 +296,8 @@ export function createDepoItemFromRow(job, line, row, { quantity } = {}) {
   const stamp = nowStamp()
   const stages = loadDepoWorkflowStages()
   const firstStage = stages[0]
+  const customerName = job.customer || ''
+  const stockScope = String(customerName).trim() ? 'customer' : 'general'
 
   return {
     id: createId('dep'),
@@ -297,7 +308,9 @@ export function createDepoItemFromRow(job, line, row, { quantity } = {}) {
     source: 'production',
     sourceLabel: 'Üretim takibi',
     productionCode: row.productionCode || '',
-    customer: job.customer || '',
+    stockScope,
+    projectId: job.projectId || '',
+    customer: customerName,
     product: line.product || job.product || 'Ürün',
     productCode: pricing.productCode,
     quantity: deliveredQty,

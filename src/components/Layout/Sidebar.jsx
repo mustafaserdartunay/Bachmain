@@ -42,6 +42,8 @@ import {
   CheckSquare,
   Smartphone,
   Container,
+  LayoutDashboard,
+  PackageCheck,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -53,7 +55,7 @@ import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '..
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { processSubMenus, isProcessRoute } from '../../data/processMenu'
-import { isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
+import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
 import {
   documentCenterChildMenus,
@@ -116,6 +118,14 @@ const fieldSalesSubMenuIcons = {
   users: Users,
   'bar-chart': BarChart3,
 }
+const logisticsSubMenuIcons = {
+  report: BarChart3,
+  plan: ClipboardList,
+  shipments: Truck,
+  delivery: MapPinned,
+  docs: PackageCheck,
+  dashboard: LayoutDashboard,
+}
 const hrSubMenuIcons = {
   gauge: Gauge,
   users: Users,
@@ -166,6 +176,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const [treasuryOpen, setTreasuryOpen] = useState(isTreasuryRouteActive)
   const [stockOpen, setStockOpen] = useState(isStockRouteActive)
   const [fieldSalesOpen, setFieldSalesOpen] = useState(isFieldSalesRouteActive)
+  const [logisticsOpen, setLogisticsOpen] = useState(isLogisticsRouteActive)
   const [hrOpen, setHrOpen] = useState(isHrRouteActive)
   const [crmOpen, setCrmOpen] = useState(isCrmRouteActive)
   const [settingsOpen, setSettingsOpen] = useState(isSettingsRoute)
@@ -195,6 +206,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   useEffect(() => {
     if (isFieldSalesRouteActive) setFieldSalesOpen(true)
   }, [isFieldSalesRouteActive])
+
+  useEffect(() => {
+    if (isLogisticsRouteActive) setLogisticsOpen(true)
+  }, [isLogisticsRouteActive])
 
   useEffect(() => {
     if (isHrRouteActive) setHrOpen(true)
@@ -718,20 +733,53 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        <NavLink
-          to={LOGISTICS_HOME_PATH}
-          onClick={handleNavigate}
-          className={({ isActive }) =>
-            `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isActive || isLogisticsRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`
-          }
-        >
-          <MenuIcon collapsed={collapsed}>
-            <Container className="w-4 h-4 shrink-0" />
-          </MenuIcon>
-          {!collapsed && <span className={menuLabelClass}>Yük Hesaplama</span>}
-        </NavLink>
+        <div className={`sidebar-menu-group ${logisticsOpen ? 'is-open' : ''} ${isLogisticsRouteActive ? 'is-active' : ''}`}>
+          <button
+            type="button"
+            onClick={() => setLogisticsOpen((open) => !open)}
+            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              isLogisticsRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <Container className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && (
+              <>
+                <span className={menuLabelClass}>Lojistik</span>
+                {logisticsOpen
+                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                }
+              </>
+            )}
+          </button>
+          {logisticsOpen && !collapsed && (
+            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+              {logisticsSubMenus.map((sub) => {
+                const SubIcon = logisticsSubMenuIcons[sub.icon] || ClipboardList
+                return (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    end={sub.path === LOGISTICS_HOME_PATH}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex items-center gap-2 ${
+                        isActive ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    <SubMenuIcon>
+                      <SubIcon className="h-3.5 w-3.5" />
+                    </SubMenuIcon>
+                    {sub.label}
+                  </NavLink>
+                )
+              })}
+            </div>
+          )}
+        </div>
 
         {menuItems.map((item) => (
           <NavLink

@@ -76,6 +76,7 @@ import {
   movementAccountOptions,
   patchMovementForm,
 } from '../utils/customerMovementForm'
+import CustomerStockPanel from '../components/Customers/CustomerStockPanel'
 
 const ACTION_BTN =
   'flex w-full items-center justify-center gap-2 rounded-xl border border-dark-500/50 bg-gradient-to-b from-dark-700/95 to-dark-800 px-3 py-3 text-sm font-black text-gray-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all hover:border-dark-400/70 hover:text-white'
@@ -844,6 +845,8 @@ export default function CustomerDetailPage() {
           </section>
         </aside>
       </div>
+
+      <CustomerStockPanel customer={customer} />
 
       <EngagementPanels customer={customer} />
 

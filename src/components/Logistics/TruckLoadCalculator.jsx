@@ -9,6 +9,7 @@ import {
   Box,
   Square,
   Truck,
+  Sparkles,
 } from 'lucide-react'
 import { AppPageShell } from '../Layout/AppPageLayout'
 import {
@@ -20,7 +21,11 @@ import {
   itemInitials,
   fmtKg,
 } from '../../utils/truckLoadCalc'
+import { Link } from 'react-router-dom'
 import { upsertLoadPlan, loadLoadPlans } from '../../utils/logisticsStore'
+import { loadDepoItems } from '../../utils/depoStore'
+import { resolveStockScope } from '../../utils/stockScope'
+import { buildLoadSuggestions } from '../../utils/loadAiSuggest'
 import './truck-load-calculator.css'
 
 const STORAGE_KEY = 'bach-truck-load-calculator-v1'
@@ -63,6 +68,12 @@ const PRESET_ICONS = { square: Square, package: Package, box: Box }
 
 export default function TruckLoadCalculator() {
   const saved = readSaved()
+  const [wizardStep, setWizardStep] = useState(saved?.wizardStep || 1)
+  const [company, setCompany] = useState(saved?.company || 'Merkez Şirket')
+  const [branch, setBranch] = useState(saved?.branch || 'Merkez Şube')
+  const [warehouse, setWarehouse] = useState(saved?.warehouse || 'Merkez Depo')
+  const [stockScope, setStockScope] = useState(saved?.stockScope || 'customer')
+  const [selectMode, setSelectMode] = useState(saved?.selectMode || 'product')
   const [truckKey, setTruckKey] = useState(saved?.truckKey || 'tir')
   const [moduleKey, setModuleKey] = useState(saved?.moduleKey || 'euro')
   const [zoom, setZoom] = useState(saved?.zoom || 1)
@@ -104,12 +115,26 @@ export default function TruckLoadCalculator() {
     [truck, module, items],
   )
 
+  const ai = useMemo(
+    () => buildLoadSuggestions({ items, truckKey, moduleKey }),
+    [items, truckKey, moduleKey],
+  )
+
+  const depoOptions = useMemo(() => {
+    return loadDepoItems()
+      .filter((row) => resolveStockScope(row) === stockScope)
+      .slice(0, 40)
+  }, [stockScope, wizardStep])
+
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ truckKey, moduleKey, zoom, items, colorCounter }),
+      JSON.stringify({
+        wizardStep, company, branch, warehouse, stockScope, selectMode,
+        truckKey, moduleKey, zoom, items, colorCounter,
+      }),
     )
-  }, [truckKey, moduleKey, zoom, items, colorCounter])
+  }, [wizardStep, company, branch, warehouse, stockScope, selectMode, truckKey, moduleKey, zoom, items, colorCounter])
 
   const cell = Math.round(46 * zoom)
 
@@ -164,11 +189,46 @@ export default function TruckLoadCalculator() {
     setConfirmId(null)
   }
 
+  function importDepoRow(row) {
+    const nextIdx = colorCounter
+    setColorCounter((c) => c + 1)
+    setItems((prev) => [
+      ...prev,
+      {
+        id: uid(),
+        colorIdx: nextIdx,
+        name: `${row.product || 'Ürün'}${row.productCode ? ` (${row.productCode})` : ''}`,
+        L: 120,
+        W: 80,
+        H: 150,
+        weight: Math.max(20, Number(row.unitPrice) || 50),
+        qty: Math.max(1, Number(row.quantity) || Number(row.deliveredQuantity) || 1),
+        stackable: false,
+        customer: typeof row.customer === 'string' ? row.customer : row.customer?.companyTitle || '',
+        orderNo: row.orderId || '',
+        invoiceNo: row.invoiceNo || '',
+        depoItemId: row.id,
+      },
+    ])
+    setToast('Depo kalemi yüke eklendi')
+    window.setTimeout(() => setToast(''), 1800)
+  }
+
+  function applyAiTruck() {
+    if (ai.recommendedTruckKey) setTruckKey(ai.recommendedTruckKey)
+    setToast(ai.tips[0] || 'AI önerisi uygulandı')
+    window.setTimeout(() => setToast(''), 2200)
+  }
+
   function saveAsPlan() {
-    upsertLoadPlan({
+    const savedPlans = upsertLoadPlan({
       source: 'calculator',
-      selectionMode: 'manual',
-      status: 'draft',
+      selectionMode: selectMode,
+      status: 'planned',
+      company,
+      branch,
+      warehouse,
+      stockScope,
       truckKey,
       moduleKey,
       meta: {
@@ -176,10 +236,14 @@ export default function TruckLoadCalculator() {
         slots: calc.totalSlotsUsed,
         totalSlots: calc.totalSlots,
         fillPct: calc.fillPct,
+        aiTips: ai.tips,
       },
       pallets: items.map((it) => ({
         id: it.id,
         code: it.name,
+        customer: it.customer || '',
+        orderNo: it.orderNo || '',
+        invoiceNo: it.invoiceNo || '',
         lengthMm: it.L * 10,
         widthMm: it.W * 10,
         heightMm: it.H * 10,
@@ -188,9 +252,16 @@ export default function TruckLoadCalculator() {
       })),
       placements: [],
     })
-    setToast(`Plan kaydedildi · ${loadLoadPlans()[0]?.code || ''}`)
-    window.setTimeout(() => setToast(''), 2500)
+    setToast(`Plan kaydedildi · ${savedPlans[0]?.code || ''} → Planlanan Lojistik`)
+    window.setTimeout(() => setToast(''), 3200)
   }
+
+  const WIZARD = [
+    { id: 1, label: 'Lokasyon' },
+    { id: 2, label: 'Stok tipi' },
+    { id: 3, label: 'Seçim' },
+    { id: 4, label: 'Yükleme' },
+  ]
 
   return (
     <AppPageShell>
@@ -198,18 +269,32 @@ export default function TruckLoadCalculator() {
         <div className="tlc-head">
           <div>
             <h1>Yük Hesaplama</h1>
-            <p>Araç seçin, palet / koli / paket ekleyin — kapasite ve yerleşim anında hesaplanır.</p>
+            <p>Şirket → stok tipi → ürün seçimi → akıllı paketleme ve araç yerleşimi.</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Link to="/lojistik/planlanan" className="tlc-btn tlc-btn--ghost">Planlanan</Link>
             <button type="button" className="tlc-btn tlc-btn--ghost" onClick={saveAsPlan}>
               <Truck className="h-4 w-4" />
-              Plana Kaydet
+              Planı Kaydet
             </button>
-            <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => openNew()}>
+            <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => { setWizardStep(4); openNew() }}>
               <Plus className="h-4 w-4" />
               Yük Ekle
             </button>
           </div>
+        </div>
+
+        <div className="tlc-card" style={{ padding: 12, marginBottom: 14, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {WIZARD.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={`tlc-btn ${wizardStep === s.id ? 'tlc-btn--primary' : 'tlc-btn--ghost'}`}
+              onClick={() => setWizardStep(s.id)}
+            >
+              {s.id}. {s.label}
+            </button>
+          ))}
         </div>
 
         {toast ? (
@@ -217,6 +302,112 @@ export default function TruckLoadCalculator() {
             {toast}
           </div>
         ) : null}
+
+        {wizardStep <= 3 ? (
+          <div className="tlc-card tlc-panel" style={{ marginBottom: 16 }}>
+            {wizardStep === 1 && (
+              <div className="tlc-form">
+                <h3 style={{ margin: 0 }}>Adım 1 — Lokasyon</h3>
+                <div className="tlc-form-row">
+                  <div className="tlc-field" style={{ minWidth: 0 }}>
+                    <label>Şirket</label>
+                    <input className="tlc-input" value={company} onChange={(e) => setCompany(e.target.value)} />
+                  </div>
+                  <div className="tlc-field" style={{ minWidth: 0 }}>
+                    <label>Şube</label>
+                    <input className="tlc-input" value={branch} onChange={(e) => setBranch(e.target.value)} />
+                  </div>
+                  <div className="tlc-field" style={{ minWidth: 0 }}>
+                    <label>Depo</label>
+                    <input className="tlc-input" value={warehouse} onChange={(e) => setWarehouse(e.target.value)} />
+                  </div>
+                </div>
+                <div className="tlc-modal-actions">
+                  <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => setWizardStep(2)}>Devam</button>
+                </div>
+              </div>
+            )}
+            {wizardStep === 2 && (
+              <div className="tlc-form">
+                <h3 style={{ margin: 0 }}>Adım 2 — Stok tipi</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  {[
+                    { id: 'general', title: 'Genel Stok', desc: 'Firmaya ait · satılabilir' },
+                    { id: 'customer', title: 'Müşteri Stoğu', desc: 'Cariye özel · kilitli' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className="tlc-preset"
+                      style={stockScope === opt.id ? { borderColor: 'var(--tlc-accent)', boxShadow: '0 0 0 3px rgba(37,99,235,.15)' } : undefined}
+                      onClick={() => setStockScope(opt.id)}
+                    >
+                      <strong>{opt.title}</strong>
+                      <span>{opt.desc}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="tlc-modal-actions">
+                  <button type="button" className="tlc-btn tlc-btn--ghost" onClick={() => setWizardStep(1)}>Geri</button>
+                  <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => setWizardStep(3)}>Devam</button>
+                </div>
+              </div>
+            )}
+            {wizardStep === 3 && (
+              <div className="tlc-form">
+                <h3 style={{ margin: 0 }}>Adım 3 — Seçim</h3>
+                <div className="tlc-field" style={{ minWidth: 0 }}>
+                  <label>Seçim tipi</label>
+                  <select className="tlc-input" value={selectMode} onChange={(e) => setSelectMode(e.target.value)}>
+                    <option value="customer">Cari</option>
+                    <option value="invoice">Fatura</option>
+                    <option value="order">Sipariş</option>
+                    <option value="waybill">İrsaliye</option>
+                    <option value="product">Ürün / Depo kalemi</option>
+                  </select>
+                </div>
+                <div className="tlc-plan-list" style={{ maxHeight: 280 }}>
+                  {!depoOptions.length ? (
+                    <div className="tlc-empty">Bu stok tipinde depo kalemi yok — manuel yük ekleyebilirsiniz.</div>
+                  ) : depoOptions.map((row) => (
+                    <div key={row.id} className="tlc-plan-row" style={{ gridTemplateColumns: '2fr 1fr 1fr auto' }}>
+                      <div>
+                        <strong>{row.product}</strong>
+                        <div style={{ fontSize: 11, color: 'var(--tlc-muted)' }}>
+                          {typeof row.customer === 'string' ? row.customer : '—'} · {row.orderId || row.productionCode || '—'}
+                        </div>
+                      </div>
+                      <div>{row.productCode || '—'}</div>
+                      <div>{row.quantity || row.deliveredQuantity || 0} adet</div>
+                      <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => importDepoRow(row)}>Ekle</button>
+                    </div>
+                  ))}
+                </div>
+                <div className="tlc-modal-actions">
+                  <button type="button" className="tlc-btn tlc-btn--ghost" onClick={() => setWizardStep(2)}>Geri</button>
+                  <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => setWizardStep(4)}>Yüklemeye geç</button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {wizardStep >= 4 ? (
+          <>
+        <div className="tlc-card" style={{ padding: 14, marginBottom: 14 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Sparkles className="h-4 w-4" style={{ color: 'var(--tlc-accent)' }} />
+                AI Load Optimizer
+              </strong>
+              <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 13, fontWeight: 600, color: 'var(--tlc-muted)' }}>
+                {ai.tips.map((t) => <li key={t}>{t}</li>)}
+              </ul>
+            </div>
+            <button type="button" className="tlc-btn tlc-btn--primary" onClick={applyAiTruck}>Önerilen aracı uygula</button>
+          </div>
+        </div>
 
         <div className="tlc-card tlc-toolbar">
           <div className="tlc-field">
@@ -424,6 +615,8 @@ export default function TruckLoadCalculator() {
             })}
           </div>
         </div>
+          </>
+        ) : null}
       </div>
 
       {modalOpen && draft ? (

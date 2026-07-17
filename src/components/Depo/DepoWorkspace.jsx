@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeftRight,
   ChevronDown,
@@ -11,6 +11,8 @@ import {
   Undo2,
   Warehouse,
 } from 'lucide-react'
+import { resolveStockScope, STOCK_SCOPES } from '../../utils/stockScope'
+import { loadLoadPlans } from '../../utils/logisticsStore'
 import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../Common/SearchInput'
 import ListHeaderRow from '../Common/ListHeaderRow'
@@ -143,12 +145,24 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
     notes: '',
   })
   const [depoStages, setDepoStages] = useState(() => loadDepoWorkflowStages())
+  const [stockTab, setStockTab] = useState('customer')
+  const [loadPlans, setLoadPlans] = useState(() => loadLoadPlans())
+
+  const DEPO_STOCK_TABS = [
+    { id: 'general', label: 'Genel Stok' },
+    { id: 'customer', label: 'Müşteri Stokları' },
+    { id: 'pending_ship', label: 'Bekleyen Sevkiyatlar' },
+    { id: 'planned', label: 'Planlanan Lojistik' },
+    { id: 'in_transit', label: 'Teslimatta' },
+    { id: 'delivered', label: 'Teslim Edildi' },
+  ]
 
   function refresh() {
     syncDepoFromProduction()
     setItems(loadDepoItems())
     setWarehouses(loadDepoWarehouses())
     setTransfers(loadDepoTransfers())
+    setLoadPlans(loadLoadPlans())
   }
 
   useEffect(() => {
@@ -183,12 +197,33 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     return scopedItems.filter((item) => {
+      const scope = resolveStockScope(item)
+      if (stockTab === 'general' && scope !== 'general') return false
+      if (stockTab === 'customer' && scope !== 'customer') return false
+      if (stockTab === 'pending_ship') {
+        const label = getDepoItemStatusLabel(item, depoStages)
+        if (isDepoItemDelivered(item, depoStages)) return false
+        if (label === 'Teslim Edildi') return false
+      }
+      if (stockTab === 'delivered' && !isDepoItemDelivered(item, depoStages)) return false
+      if (stockTab === 'planned' || stockTab === 'in_transit') return false
+
       const haystack = `${item.product} ${item.orderId} ${item.productionJobId} ${customerLabel(item.customer)}`.toLowerCase()
       if (q && !haystack.includes(q)) return false
       if (filters.status !== 'Tümü' && getDepoItemStatusLabel(item, depoStages) !== filters.status) return false
       return true
     })
-  }, [scopedItems, searchQuery, filters, depoStages])
+  }, [scopedItems, searchQuery, filters, depoStages, stockTab])
+
+  const logisticsTabPlans = useMemo(() => {
+    if (stockTab === 'planned') {
+      return loadPlans.filter((p) => ['draft', 'planned', 'active'].includes(p.status || 'draft'))
+    }
+    if (stockTab === 'in_transit') {
+      return loadPlans.filter((p) => p.status === 'in_transit')
+    }
+    return []
+  }, [loadPlans, stockTab])
 
   function updateFilter(key, value) {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -357,6 +392,57 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
         )}
 
         <div className="mb-4 space-y-3">
+          <div className="flex flex-wrap gap-1.5 rounded-2xl border border-dark-500/40 bg-dark-800/60 p-1.5">
+            {DEPO_STOCK_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setStockTab(tab.id)}
+                className={`rounded-xl px-3 py-2 text-[12px] font-bold transition-colors ${
+                  stockTab === tab.id
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-400 hover:bg-dark-700/80 hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+            <Link
+              to="/lojistik/yukleme-plani"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-blue-500/15 px-3 py-2 text-[12px] font-bold text-blue-300 hover:bg-blue-500/25"
+            >
+              <Truck className="h-3.5 w-3.5" />
+              Yük Hesaplama
+            </Link>
+          </div>
+
+          {(stockTab === 'planned' || stockTab === 'in_transit') ? (
+            <div className="space-y-2 rounded-2xl border border-dark-500/40 bg-dark-800/55 p-4">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-sm font-bold text-white">
+                  {stockTab === 'planned' ? 'Planlanan lojistik planları' : 'Yoldaki sevkiyatlar'}
+                </p>
+                <Link to={stockTab === 'planned' ? '/lojistik/planlanan' : '/lojistik/teslimatta'} className="text-xs font-bold text-blue-300">
+                  Tümünü aç →
+                </Link>
+              </div>
+              {!logisticsTabPlans.length ? (
+                <p className="text-sm text-gray-500">Kayıt yok. Yük Hesaplama’dan plan kaydedin.</p>
+              ) : logisticsTabPlans.map((plan) => (
+                <div key={plan.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dark-500/40 bg-dark-900/40 px-3 py-2.5 text-sm">
+                  <div>
+                    <p className="font-bold text-white">{plan.code || plan.id}</p>
+                    <p className="text-xs text-gray-500">
+                      {(plan.pallets || []).length} palet · {plan.status || 'draft'}
+                      {plan.meta?.fillPct != null ? ` · %${plan.meta.fillPct} doluluk` : ''}
+                    </p>
+                  </div>
+                  <Link to="/lojistik/planlanan" className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white">Detay</Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
           <SearchInput
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
@@ -376,8 +462,12 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
               onChange={(value) => updateFilter('status', value)}
             />
           </div>
+            </>
+          )}
         </div>
 
+        {stockTab !== 'planned' && stockTab !== 'in_transit' ? (
+          <>
         <ListHeaderRow
           gridTemplate={depoListGrid}
           columns={[
@@ -395,6 +485,8 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
             const customerDisplay = typeof item.customer === 'object'
               ? getListCustomerDisplay(item.customer)
               : { brandShortName: item.customer, companyTitle: '' }
+            const scope = resolveStockScope(item)
+            const scopeMeta = STOCK_SCOPES[scope] || STOCK_SCOPES.general
             const isExpanded = expandedId === item.id
             const docsReady = canIssueDocuments(item)
             const incomingQuantity = Math.max(
@@ -438,6 +530,14 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
                         </span>
                       )}
                     </p>
+                    <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+                      scope === 'customer'
+                        ? 'bg-violet-500/15 text-violet-300'
+                        : 'bg-sky-500/15 text-sky-300'
+                    }`}
+                    >
+                      {scopeMeta.short}
+                    </span>
                   </div>
                   <div className="min-w-0">
                     <DepoItemStagePanel
@@ -541,6 +641,8 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
             </div>
           )}
         </div>
+          </>
+        ) : null}
 
         {transfers.filter((transfer) => {
           const from = warehouses.find((w) => w.id === transfer.fromWarehouseId)

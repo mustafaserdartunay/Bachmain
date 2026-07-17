@@ -1400,6 +1400,27 @@ export default function ProductForm({ product, onChange, isNew }) {
             {product.stockTracking ? 'Açık - stok takibi yapılıyor' : 'Kapalı - stok takibi yapılmıyor'}
           </span>
         </div>
+        <div className="mb-4 grid grid-cols-2 gap-3">
+          <Field label="Stok Tipi">
+            <select
+              value={product.stockScope || 'general'}
+              onChange={(e) => update('stockScope', e.target.value)}
+              className="form-input"
+            >
+              <option value="general">Genel Stok</option>
+              <option value="customer">Müşteri Stoğu</option>
+            </select>
+          </Field>
+          <Field label="Müşteri Stoğu Notu">
+            <input
+              value={product.customerStockCustomerId || ''}
+              onChange={(e) => update('customerStockCustomerId', e.target.value)}
+              className="form-input"
+              placeholder="Cari / müşteri referansı"
+              disabled={(product.stockScope || 'general') !== 'customer'}
+            />
+          </Field>
+        </div>
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-4">
             <Field label="Ana Depo">

@@ -74,6 +74,9 @@ export const emptyProduct = {
   productCode: '',
   gtipCode: '',
   stockTracking: true,
+  /** general | customer — Depo / lojistik stok ayrımı */
+  stockScope: 'general',
+  customerStockCustomerId: '',
   storeSalesVisible: false,
   initialStock: 0,
   criticalStock: 0,
