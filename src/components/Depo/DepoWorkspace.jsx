@@ -17,6 +17,7 @@ import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../Common/SearchInput'
 import ListHeaderRow from '../Common/ListHeaderRow'
 import SummaryMetrics from '../Common/SummaryMetrics'
+import SplitCreateButton from '../Common/SplitCreateButton'
 import { LIST_PILL_CLASS } from '../Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../EditableDropdownPill'
 import DepoItemStagePanel from './DepoItemStagePanel'
@@ -301,9 +302,37 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
 
   return (
     <div className="space-y-5">
-      <div className="relative flex min-h-[64px] items-center justify-center rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <div className="flex justify-center">
-          <h1 className={`text-2xl font-black uppercase tracking-wide ${pageConfig.titleClass}`}>{pageConfig.title}</h1>
+      <div className="app-page-header relative z-30 flex min-h-[4.75rem] items-center justify-center overflow-visible px-4 py-3 text-center sm:px-6">
+        <h1 className={`text-2xl font-black uppercase tracking-wide ${pageConfig.titleClass}`}>{pageConfig.title}</h1>
+        <div className="absolute right-4 top-1/2 z-40 -translate-y-1/2 sm:right-6">
+          <SplitCreateButton
+            label="Yeni Depo İşlemi"
+            onPrimaryClick={() => { setShowWarehousePanel(true); setShowTransferPanel(false) }}
+            menuAriaLabel="Depo seçenekleri"
+            menuItems={[
+              {
+                id: 'warehouse',
+                label: 'Yeni Depo Ekle',
+                icon: Warehouse,
+                iconClassName: 'text-blue-300',
+                onClick: () => { setShowWarehousePanel(true); setShowTransferPanel(false) },
+              },
+              {
+                id: 'transfer',
+                label: 'Transfer Oluştur',
+                icon: ArrowLeftRight,
+                iconClassName: 'text-emerald-300',
+                onClick: () => { setShowTransferPanel(true); setShowWarehousePanel(false) },
+              },
+              {
+                id: 'load',
+                label: 'Yük Hesaplama',
+                icon: Truck,
+                iconClassName: 'text-orange-300',
+                onClick: () => navigate('/lojistik/yukleme-plani'),
+              },
+            ]}
+          />
         </div>
       </div>
 

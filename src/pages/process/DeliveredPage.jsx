@@ -1,14 +1,40 @@
-import { CheckCircle2, Truck } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { CheckCircle2, Package, Truck } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import SplitCreateButton from '../../components/Common/SplitCreateButton'
 
 export default function DeliveredPage() {
+  const navigate = useNavigate()
+
   return (
     <div className="space-y-5">
-      <div className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <div className="flex justify-center">
+      <div className="app-page-header relative z-30 flex min-h-[4.75rem] items-center justify-center overflow-visible px-4 py-3 text-center sm:px-6">
+        <div>
           <h1 className="text-2xl font-black uppercase tracking-wide text-emerald-300">Teslim Edilenler</h1>
+          <p className="mt-1 text-xs text-gray-500">Müşteriye teslim edilmiş sipariş ve kalemler</p>
         </div>
-        <p className="mt-2 text-xs text-gray-500">Müşteriye teslim edilmiş sipariş ve kalemler</p>
+        <div className="absolute right-4 top-1/2 z-40 -translate-y-1/2 sm:right-6">
+          <SplitCreateButton
+            label="Yeni Teslimat İşlemi"
+            onPrimaryClick={() => navigate('/depo')}
+            menuAriaLabel="Teslimat seçenekleri"
+            menuItems={[
+              {
+                id: 'depo',
+                label: 'Depodan Devam Et',
+                icon: Package,
+                iconClassName: 'text-blue-300',
+                onClick: () => navigate('/depo'),
+              },
+              {
+                id: 'logistics',
+                label: 'Lojistik Planına Git',
+                icon: Truck,
+                iconClassName: 'text-emerald-300',
+                onClick: () => navigate('/lojistik/planlanan'),
+              },
+            ]}
+          />
+        </div>
       </div>
 
       <section className="card">
@@ -31,12 +57,6 @@ export default function DeliveredPage() {
             Depodan çıkan ve müşteriye teslim edilen kalemler; teslim tarihi, adet ve
             ilişkili sipariş bilgileriyle burada görüntülenecek.
           </p>
-          <Link
-            to="/depo"
-            className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-emerald-300 hover:text-emerald-200"
-          >
-            Sipariş deposu sayfasına git →
-          </Link>
         </div>
       </section>
     </div>

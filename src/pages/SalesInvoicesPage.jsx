@@ -7,7 +7,6 @@ import {
   FileSpreadsheet,
   FileText,
   Filter,
-  Plus,
   Printer,
   Receipt,
   Users,
@@ -15,9 +14,10 @@ import {
 import DateRangePicker from '../components/Common/DateRangePicker'
 import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
+import SplitCreateButton from '../components/Common/SplitCreateButton'
+import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
-import { getCustomerProfiles } from '../data/customerProfiles'
 import { formatTL } from '../utils/productPricing'
 import { downloadExcelCsv, sanitizeExportFilename } from '../utils/spreadsheetExport'
 import {
@@ -30,7 +30,6 @@ import {
   readSalesInvoices,
   recordInvoiceCollection,
 } from '../utils/salesInvoicesStore'
-import { BTN_PRIMARY } from '../utils/buttonStyles'
 
 const PAGE_SIZE = 10
 const LIST_GRID = '40px minmax(220px,1.4fr) 140px minmax(150px,1fr) minmax(150px,1fr) minmax(160px,1fr)'
@@ -72,116 +71,6 @@ function defaultDateRange() {
     return local.toISOString().slice(0, 10)
   }
   return { dateFrom: toIso(start), dateTo: toIso(end) }
-}
-
-function NewInvoiceMenu({ onSelectCustomer, onQuickDraft }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
-
-  useEffect(() => {
-    function handleClick(event) {
-      if (!ref.current?.contains(event.target)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  return (
-    <div ref={ref} className="relative z-50 inline-flex">
-      <div className="btn-split">
-        <button
-          type="button"
-          onClick={onQuickDraft}
-          className={`${BTN_PRIMARY} gap-2 px-4 text-sm font-black uppercase tracking-wide`}
-        >
-          <Plus className="h-4 w-4" />
-          Yeni Fatura Oluştur
-        </button>
-        <span className="btn-split-divider" aria-hidden />
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          className={`${BTN_PRIMARY} w-14 px-0`}
-          aria-label="Fatura seçenekleri"
-          aria-expanded={open}
-        >
-          <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
-      {open && (
-        <div className="absolute right-0 top-full z-[120] mt-2 min-w-[220px] overflow-hidden rounded-xl border border-dark-500/50 bg-dark-800 shadow-xl">
-          <button
-            type="button"
-            onClick={() => { setOpen(false); onSelectCustomer() }}
-            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-gray-200 transition-colors hover:bg-dark-700"
-          >
-            <Users className="h-4 w-4 text-blue-300" />
-            Müşteri Seçerek Oluştur
-          </button>
-          <button
-            type="button"
-            onClick={() => { setOpen(false); onQuickDraft() }}
-            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-gray-200 transition-colors hover:bg-dark-700"
-          >
-            <Receipt className="h-4 w-4 text-emerald-300" />
-            Hızlı Taslak Fatura
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function CustomerPickerModal({ open, onClose, onSelect }) {
-  const customers = useMemo(() => getCustomerProfiles(), [open])
-  const [search, setSearch] = useState('')
-
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    if (!query) return customers
-    return customers.filter((item) => [item.company, item.companyTitle, item.contact, item.phone, item.email]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(query)))
-  }, [customers, search])
-
-  if (!open) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-lg rounded-2xl border border-dark-500/50 bg-dark-800 shadow-2xl">
-        <div className="border-b border-dark-500/45 px-5 py-4">
-          <h3 className="text-base font-black text-white">Müşteri Seçin</h3>
-          <p className="mt-1 text-xs text-gray-500">Satış faturası oluşturmak için müşteri seçin.</p>
-          <SearchInput
-            wrapperClassName="mt-3"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Müşteri ara..."
-          />
-        </div>
-        <div className="max-h-80 overflow-y-auto p-2">
-          {filtered.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-gray-500">Müşteri bulunamadı.</p>
-          ) : filtered.map((customer) => (
-            <button
-              key={customer.id}
-              type="button"
-              onClick={() => onSelect(customer)}
-              className="flex w-full flex-col rounded-xl px-3 py-3 text-left transition-colors hover:bg-dark-700"
-            >
-              <span className="text-sm font-bold text-white">{customer.company || customer.companyTitle}</span>
-              <span className="text-xs text-gray-500">{customer.contact || customer.phone || customer.email || '—'}</span>
-            </button>
-          ))}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-dark-500/45 px-5 py-4">
-          <button type="button" onClick={onClose} className="rounded-xl px-4 py-2 text-xs font-bold text-gray-400 hover:text-white">
-            İptal
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 export default function SalesInvoicesPage() {
@@ -332,9 +221,26 @@ export default function SalesInvoicesPage() {
       <AppPageHeader
         title="Satış Faturaları"
         actions={(
-          <NewInvoiceMenu
-            onSelectCustomer={() => setCustomerModalOpen(true)}
-            onQuickDraft={handleQuickDraft}
+          <SplitCreateButton
+            label="Yeni Fatura Oluştur"
+            onPrimaryClick={handleQuickDraft}
+            menuAriaLabel="Fatura seçenekleri"
+            menuItems={[
+              {
+                id: 'customer',
+                label: 'Müşteri Seçerek Oluştur',
+                icon: Users,
+                iconClassName: 'text-blue-300',
+                onClick: () => setCustomerModalOpen(true),
+              },
+              {
+                id: 'draft',
+                label: 'Hızlı Taslak Fatura',
+                icon: Receipt,
+                iconClassName: 'text-emerald-300',
+                onClick: handleQuickDraft,
+              },
+            ]}
           />
         )}
       />
@@ -597,10 +503,11 @@ export default function SalesInvoicesPage() {
         </div>
       </AppPagePanel>
 
-      <CustomerPickerModal
+      <CreateCustomerPickModal
         open={customerModalOpen}
         onClose={() => setCustomerModalOpen(false)}
         onSelect={handleCustomerSelect}
+        description="Satış faturası oluşturmak için müşteri seçin."
       />
     </AppPageShell>
   )

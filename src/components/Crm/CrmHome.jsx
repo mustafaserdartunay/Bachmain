@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
   Calendar,
   CalendarRange,
   CheckSquare,
-  Plus,
+  NotebookPen,
 } from 'lucide-react'
 import SummaryMetrics from '../Common/SummaryMetrics'
 import ActivityArchivePanel from '../Common/ActivityArchivePanel'
+import SplitCreateButton from '../Common/SplitCreateButton'
 import CrmProcessBoardPanel from './CrmProcessBoardPanel'
 import { getAgendaNoteStamp } from './AgendaNoteBoard'
 import { AppPageHeader, AppPageShell } from '../Layout/AppPageLayout'
@@ -52,26 +53,43 @@ const VIEW_CONFIG = {
   all: {
     title: 'Tüm Görevler',
     kinds: null,
-    createLinks: [
-      { to: '/crm/gorev-yeni', label: 'Görev Oluştur' },
-      { to: '/crm/randevu-yeni', label: 'Randevu Oluştur' },
-      { to: '/crm/not-yeni', label: 'Not Oluştur' },
+    createLabel: 'Yeni Kayıt Oluştur',
+    createPrimaryTo: '/crm/gorev-yeni',
+    createMenu: [
+      { id: 'task', to: '/crm/gorev-yeni', label: 'Görev Oluştur', icon: CheckSquare, iconClassName: 'text-blue-300' },
+      { id: 'appointment', to: '/crm/randevu-yeni', label: 'Randevu Oluştur', icon: Calendar, iconClassName: 'text-emerald-300' },
+      { id: 'note', to: '/crm/not-yeni', label: 'Not Oluştur', icon: NotebookPen, iconClassName: 'text-orange-300' },
     ],
   },
   note: {
     title: 'Note Defteri',
     kinds: ['note'],
-    createLinks: [{ to: '/crm/not-yeni', label: 'Not Oluştur' }],
+    createLabel: 'Yeni Not Oluştur',
+    createPrimaryTo: '/crm/not-yeni',
+    createMenu: [
+      { id: 'note', to: '/crm/not-yeni', label: 'Hızlı Not', icon: NotebookPen, iconClassName: 'text-blue-300' },
+      { id: 'task', to: '/crm/gorev-yeni', label: 'Görev Oluştur', icon: CheckSquare, iconClassName: 'text-emerald-300' },
+    ],
   },
   task: {
     title: 'Görevler',
     kinds: ['task'],
-    createLinks: [{ to: '/crm/gorev-yeni', label: 'Görev Oluştur' }],
+    createLabel: 'Yeni Görev Oluştur',
+    createPrimaryTo: '/crm/gorev-yeni',
+    createMenu: [
+      { id: 'task', to: '/crm/gorev-yeni', label: 'Hızlı Görev', icon: CheckSquare, iconClassName: 'text-blue-300' },
+      { id: 'appointment', to: '/crm/randevu-yeni', label: 'Randevu Oluştur', icon: Calendar, iconClassName: 'text-emerald-300' },
+    ],
   },
   appointment: {
     title: 'Randevular',
     kinds: ['appointment'],
-    createLinks: [{ to: '/crm/randevu-yeni', label: 'Randevu Oluştur' }],
+    createLabel: 'Yeni Randevu Oluştur',
+    createPrimaryTo: '/crm/randevu-yeni',
+    createMenu: [
+      { id: 'appointment', to: '/crm/randevu-yeni', label: 'Hızlı Randevu', icon: Calendar, iconClassName: 'text-blue-300' },
+      { id: 'task', to: '/crm/gorev-yeni', label: 'Görev Oluştur', icon: CheckSquare, iconClassName: 'text-emerald-300' },
+    ],
   },
 }
 
@@ -297,18 +315,18 @@ export default function CrmHome({ view = 'all' }) {
       <AppPageHeader
         title={viewConfig.title}
         actions={(
-          <>
-            {viewConfig.createLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 text-sm"
-              >
-                <Plus className="h-4 w-4" />
-                {link.label}
-              </Link>
-            ))}
-          </>
+          <SplitCreateButton
+            label={viewConfig.createLabel}
+            onPrimaryClick={() => navigate(viewConfig.createPrimaryTo)}
+            menuAriaLabel="Oluşturma seçenekleri"
+            menuItems={viewConfig.createMenu.map((item) => ({
+              id: item.id,
+              label: item.label,
+              icon: item.icon,
+              iconClassName: item.iconClassName,
+              onClick: () => navigate(item.to),
+            }))}
+          />
         )}
       />
 

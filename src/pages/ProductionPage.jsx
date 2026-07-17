@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArchiveRestore, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, Factory, Package, Trash2 } from 'lucide-react'
+import { ArchiveRestore, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, Factory, Package, ShoppingCart, Trash2 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
+import SplitCreateButton from '../components/Common/SplitCreateButton'
 import { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../components/EditableDropdownPill'
 import ProductionJobFlowBadge from '../components/Production/ProductionJobFlowBadge'
@@ -272,9 +273,30 @@ export default function ProductionPage() {
 
   return (
     <div className="space-y-5">
-      <div className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <div className="flex justify-center">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Üretim Takibi</h1>
+      <div className="app-page-header relative z-30 flex min-h-[4.75rem] items-center justify-center overflow-visible px-4 py-3 text-center sm:px-6">
+        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Üretim Takibi</h1>
+        <div className="absolute right-4 top-1/2 z-40 -translate-y-1/2 sm:right-6">
+          <SplitCreateButton
+            label="Yeni Üretim Oluştur"
+            onPrimaryClick={() => navigate('/uretim/yeni')}
+            menuAriaLabel="Üretim seçenekleri"
+            menuItems={[
+              {
+                id: 'quick',
+                label: 'Hızlı Üretim Kaydı',
+                icon: Factory,
+                iconClassName: 'text-blue-300',
+                onClick: () => navigate('/uretim/yeni'),
+              },
+              {
+                id: 'from-order',
+                label: 'Siparişlerden Devam Et',
+                icon: ShoppingCart,
+                iconClassName: 'text-emerald-300',
+                onClick: () => navigate('/siparisler'),
+              },
+            ]}
+          />
         </div>
       </div>
 

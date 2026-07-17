@@ -13,16 +13,21 @@ import {
   Mail,
   Plus,
   Printer,
+  Receipt,
   Send,
   Sparkles,
   Trash2,
   Upload,
+  Users,
   X,
   ShoppingCart,
 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
+import SplitCreateButton from '../components/Common/SplitCreateButton'
+import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
+import { customerToDocumentPatch } from '../utils/documentCustomerPatch'
 import ListDeleteConfirmPanel, { DeleteConfirmPopover, DeleteTrashButton, LIST_PILL_CLASS, ListInlineDeleteConfirmPopover } from '../components/Common/ListDeleteConfirmPanel'
 import NumericInput from '../components/Products/NumericInput'
 import { formatTL } from '../utils/productPricing'
@@ -1106,6 +1111,7 @@ export default function QuotesPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [pendingHeaderQuoteDelete, setPendingHeaderQuoteDelete] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [customerModalOpen, setCustomerModalOpen] = useState(false)
   const [stageInput, setStageInput] = useState('')
   const [pendingStageDeleteId, setPendingStageDeleteId] = useState(null)
   const [isStageEditorOpen, setIsStageEditorOpen] = useState(false)
@@ -1551,11 +1557,16 @@ export default function QuotesPage() {
     }
   }
 
-  function addQuote() {
-    const next = createQuoteDraft()
+  function addQuote(customerPatch = {}) {
+    const next = { ...createQuoteDraft(), ...customerPatch }
     setDraftQuote(next)
     setSelectedId(next.id)
     setViewMode('prepare')
+  }
+
+  function handleCreateWithCustomer(customer) {
+    setCustomerModalOpen(false)
+    addQuote(customerToDocumentPatch(customer))
   }
 
   useEffect(() => {
@@ -2019,24 +2030,34 @@ export default function QuotesPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex min-h-[4.75rem] items-center justify-between gap-4 rounded-2xl border border-dark-500/50 bg-dark-800/70 px-5 py-3 shadow-card">
+      <div className="app-page-header relative z-30 flex min-h-[4.75rem] items-center justify-between gap-4 overflow-visible px-4 py-3 sm:px-6">
         {viewMode === 'list' ? (
           <>
             <div className="hidden w-[10.5rem] shrink-0 sm:block" aria-hidden="true" />
             <h1 className="flex-1 text-center text-2xl font-black uppercase tracking-wide text-blue-300">
               Teklif Yönetimi
             </h1>
-            <button
-              type="button"
-              onClick={addQuote}
-              title="Yeni Teklif"
-              className="group flex h-[52px] min-w-[8.5rem] shrink-0 items-center gap-2.5 rounded-xl bg-gradient-to-br from-[#93c5fd] via-[#3b82f6] to-[#2563eb] px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5"
-            >
-              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-white ring-1 ring-white/25">
-                <Plus className="h-4 w-4" strokeWidth={2.25} />
-              </span>
-              <span className="truncate text-xs font-extrabold leading-none text-white">Yeni Teklif</span>
-            </button>
+            <SplitCreateButton
+              label="Yeni Teklif Oluştur"
+              onPrimaryClick={() => addQuote()}
+              menuAriaLabel="Teklif seçenekleri"
+              menuItems={[
+                {
+                  id: 'customer',
+                  label: 'Müşteri Seçerek Oluştur',
+                  icon: Users,
+                  iconClassName: 'text-blue-300',
+                  onClick: () => setCustomerModalOpen(true),
+                },
+                {
+                  id: 'draft',
+                  label: 'Hızlı Taslak Teklif',
+                  icon: Receipt,
+                  iconClassName: 'text-emerald-300',
+                  onClick: () => addQuote(),
+                },
+              ]}
+            />
           </>
         ) : (
           <>
@@ -2819,6 +2840,13 @@ export default function QuotesPage() {
           )}
         </div>
       )}
+
+      <CreateCustomerPickModal
+        open={customerModalOpen}
+        onClose={() => setCustomerModalOpen(false)}
+        onSelect={handleCreateWithCustomer}
+        description="Teklif oluşturmak için müşteri seçin."
+      />
     </div>
   )
 }

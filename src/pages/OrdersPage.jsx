@@ -8,14 +8,19 @@ import {
   Factory,
   Plus,
   Printer,
+  Receipt,
   Send,
   Trash2,
   Undo2,
+  Users,
 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
+import SplitCreateButton from '../components/Common/SplitCreateButton'
+import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
+import { customerToDocumentPatch } from '../utils/documentCustomerPatch'
 import ListDeleteConfirmPanel, { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../components/EditableDropdownPill'
 import CustomerPicker, { findDocumentCustomer } from '../components/DocumentEditor/CustomerPicker'
@@ -351,6 +356,7 @@ export default function OrdersPage() {
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
   const [pendingHeaderOrderDelete, setPendingHeaderOrderDelete] = useState(false)
+  const [customerModalOpen, setCustomerModalOpen] = useState(false)
   const [isStagePanelOpen, setIsStagePanelOpen] = useState(false)
   const [stageInput, setStageInput] = useState('')
   const [pendingStageDeleteId, setPendingStageDeleteId] = useState(null)
@@ -623,11 +629,16 @@ export default function OrdersPage() {
     setOrderStage(order, stage)
   }
 
-  function addOrder() {
-    const next = createOrderDraft(orders)
+  function addOrder(customerPatch = {}) {
+    const next = { ...createOrderDraft(orders), ...customerPatch }
     setDraftOrder(next)
     setSelectedId(next.id)
     setViewMode('prepare')
+  }
+
+  function handleCreateWithCustomer(customer) {
+    setCustomerModalOpen(false)
+    addOrder(customerToDocumentPatch(customer))
   }
 
   function returnToOrderList() {
@@ -898,16 +909,36 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-5">
-      <div className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
+      <div className="app-page-header relative z-30 flex min-h-[4.75rem] items-center justify-center overflow-visible px-4 py-3 text-center sm:px-6">
         <div className="flex justify-center">
           <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
             {viewMode === 'prepare' ? (isDraftOrder ? 'Yeni Sipariş Oluştur' : 'Sipariş Düzenle') : 'Sipariş Yönetimi'}
           </h1>
         </div>
         {viewMode === 'list' ? (
-          <button onClick={addOrder} className="btn-primary absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-1.5 px-4 py-2.5 text-sm">
-            <Plus className="h-4 w-4" /> Yeni Sipariş
-          </button>
+          <div className="absolute right-4 top-1/2 z-40 -translate-y-1/2 sm:right-6">
+            <SplitCreateButton
+              label="Yeni Sipariş Oluştur"
+              onPrimaryClick={() => addOrder()}
+              menuAriaLabel="Sipariş seçenekleri"
+              menuItems={[
+                {
+                  id: 'customer',
+                  label: 'Müşteri Seçerek Oluştur',
+                  icon: Users,
+                  iconClassName: 'text-blue-300',
+                  onClick: () => setCustomerModalOpen(true),
+                },
+                {
+                  id: 'draft',
+                  label: 'Hızlı Taslak Sipariş',
+                  icon: Receipt,
+                  iconClassName: 'text-emerald-300',
+                  onClick: () => addOrder(),
+                },
+              ]}
+            />
+          </div>
         ) : (
           <>
             <button
@@ -1328,6 +1359,13 @@ export default function OrdersPage() {
           />
         </div>
       )}
+
+      <CreateCustomerPickModal
+        open={customerModalOpen}
+        onClose={() => setCustomerModalOpen(false)}
+        onSelect={handleCreateWithCustomer}
+        description="Sipariş oluşturmak için müşteri seçin."
+      />
     </div>
   )
 }
