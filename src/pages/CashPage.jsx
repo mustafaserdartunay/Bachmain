@@ -22,6 +22,7 @@ import {
 import SearchInput from '../components/Common/SearchInput'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
+import SplitCreateButton from '../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../components/EditableDropdownPill'
@@ -2188,15 +2189,43 @@ export default function CashPage() {
   return (
     <AppPageShell>
       <AppPageHeader
-        title="Kasa"
+        title="Kasalar"
         actions={(
-          <button
-            type="button"
-            onClick={() => openAccountPanel('Nakit Kasa')}
-            className="btn-primary flex items-center gap-1.5 px-4 py-2.5 text-sm"
-          >
-            <Plus className="h-4 w-4" /> Yeni Kasa Oluştur
-          </button>
+          <SplitCreateButton
+            label="Yeni Kasa Oluştur"
+            onPrimaryClick={() => openAccountPanel('Nakit Kasa')}
+            menuAriaLabel="Kasa oluşturma seçenekleri"
+            menuItems={[
+              {
+                id: 'cash',
+                label: 'Nakit Kasa Oluştur',
+                icon: Banknote,
+                iconClassName: 'text-emerald-300',
+                onClick: () => openAccountPanel('Nakit Kasa'),
+              },
+              {
+                id: 'bank',
+                label: 'Banka Hesabı Oluştur',
+                icon: Landmark,
+                iconClassName: 'text-blue-300',
+                onClick: () => openAccountPanel('Banka Hesabı'),
+              },
+              {
+                id: 'cheque',
+                label: 'Çek Kasası Oluştur',
+                icon: ScrollText,
+                iconClassName: 'text-purple-300',
+                onClick: () => openAccountPanel('Çek Kasası'),
+              },
+              {
+                id: 'promissory',
+                label: 'Senet Kasası Oluştur',
+                icon: ScrollText,
+                iconClassName: 'text-amber-300',
+                onClick: () => openAccountPanel('Senet Kasası'),
+              },
+            ]}
+          />
         )}
       />
 
