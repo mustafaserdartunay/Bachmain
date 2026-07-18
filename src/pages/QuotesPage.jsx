@@ -129,10 +129,9 @@ function StageColorSwatches({ value, onChange, size = 'md', direction = 'horizon
   )
 }
 
-const quoteItemGridClass = 'grid-cols-[72px_minmax(0,1fr)]'
-const quoteItemFieldsGridClass = 'grid-cols-[minmax(0,1.5fr)_72px_100px_72px_110px_76px]'
-const quoteItemFieldGapClass = 'gap-x-2'
-const QUOTE_CONTROL_H = 'h-9'
+const quoteItemGridClass = 'grid-cols-[150px_minmax(0,1fr)]'
+const quoteItemFieldsGridClass = 'grid-cols-[minmax(0,1.4fr)_110px_150px_110px_150px_92px]'
+const quoteItemFieldGapClass = 'gap-x-4'
 
 const statusClasses = {
   Taslak: 'badge-gray',
@@ -614,95 +613,15 @@ function Panel({ title, description, children, action }) {
 
 function Field({ label, children }) {
   return (
-    <div className="min-w-0">
-      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">{label}</label>
+    <div>
+      <label className="mb-2 block text-base font-bold text-white">{label}</label>
       {children}
     </div>
   )
 }
 
 function FieldLabelSpacer({ label = 'Alan' }) {
-  return <label className="mb-1 block text-[11px] font-bold opacity-0" aria-hidden>{label}</label>
-}
-
-function QuoteSaveSplitButton({
-  isSaving,
-  disabled,
-  menuOpen,
-  onToggleMenu,
-  onSave,
-  onSaveAndNew,
-  pendingDelete,
-  onRequestDelete,
-  onConfirmDelete,
-  onCancelDelete,
-  dropUp = false,
-}) {
-  return (
-    <div className="relative">
-      <div className="btn-split">
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={disabled || isSaving}
-          className={`${BTN_SUCCESS} min-w-[10.5rem] gap-2 px-4 text-sm font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-50`}
-        >
-          <Save className="h-4 w-4" />
-          {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
-        </button>
-        <span className="btn-split-divider" aria-hidden />
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation()
-            onToggleMenu()
-          }}
-          disabled={disabled || isSaving}
-          className={`${BTN_SUCCESS} w-14 px-0 disabled:cursor-not-allowed disabled:opacity-50`}
-          title="Kaydet seçenekleri"
-          aria-expanded={menuOpen}
-          aria-haspopup="menu"
-        >
-          <ChevronDown className={`h-4 w-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
-      {menuOpen ? (
-        <div
-          className={`absolute right-0 z-40 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card ${
-            dropUp ? 'bottom-full mb-2' : 'top-full mt-2'
-          }`}
-          role="menu"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            onClick={onSaveAndNew}
-            className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
-          >
-            Kaydet ve Yeni Ekle
-          </button>
-          <div className="my-1 border-t border-dark-500/40" />
-          {pendingDelete ? (
-            <ListDeleteConfirmPanel
-              title="Teklif silinsin mi?"
-              description="Teklif silinenlere taşınır; geri alınabilir."
-              onConfirm={onConfirmDelete}
-              onCancel={onCancelDelete}
-            />
-          ) : (
-            <button
-              type="button"
-              role="menuitem"
-              onClick={onRequestDelete}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-300 transition-colors hover:bg-red-500/15 hover:text-red-200"
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Teklifi Sil
-            </button>
-          )}
-        </div>
-      ) : null}
-    </div>
-  )
+  return <label className="mb-2 block text-base font-bold text-white opacity-0" aria-hidden>{label}</label>
 }
 
 function ProductSearchSelect({ item, onSelect, onTextChange }) {
@@ -911,8 +830,8 @@ function QuoteProcessManagement({
   onRemoveQuoteStage,
 }) {
   return (
-    <div className="space-y-2">
-      <h2 className="text-sm font-bold text-white">Süreçler</h2>
+    <div className="space-y-3">
+      <h2 className="text-base font-bold text-white">Süreçler</h2>
       <div className="grid grid-cols-2 gap-2">
           <div className="min-w-0 space-y-1">
             <h3 className="text-xs font-bold text-white">Öncelik</h3>
@@ -952,11 +871,11 @@ function QuoteProcessManagement({
 function QuoteNotesPanel({ quote, onPatch }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">Notlar</span>
+      <span className="mb-1 block text-base font-bold text-white">Notlar</span>
       <textarea
         value={quote.notes || ''}
         onChange={(event) => onPatch({ notes: event.target.value })}
-        rows={2}
+        rows={3}
         placeholder="Teklif ile ilgili genel notlar..."
         className="form-input resize-none text-xs"
       />
@@ -1089,8 +1008,8 @@ function MiniButton({ children, onClick, danger = false }) {
       onClick={onClick}
       className={
         danger
-          ? 'h-9 rounded-lg border border-red-500/30 px-3 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10'
-          : `${BTN_PRIMARY} h-9 gap-1.5 px-3 text-xs`
+          ? 'h-[38px] rounded-lg border border-red-500/30 px-3 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10'
+          : `${BTN_PRIMARY} h-[38px] gap-1.5 px-3 text-xs`
       }
     >
       {!danger && <Plus className="h-3.5 w-3.5" />}
@@ -1191,7 +1110,6 @@ export default function QuotesPage() {
   const [openItemMenuId, setOpenItemMenuId] = useState(null)
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
-  const [openBottomSaveMenu, setOpenBottomSaveMenu] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [pendingHeaderQuoteDelete, setPendingHeaderQuoteDelete] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
@@ -1271,19 +1189,18 @@ export default function QuotesPage() {
   }, [])
 
   useEffect(() => {
-    if (!openItemMenuId && !openSaveMenu && !openBottomSaveMenu) return undefined
+    if (!openItemMenuId && !openSaveMenu) return undefined
 
     function closeDropdownsOnOutsideClick(event) {
       if (event.target.closest('[data-quote-dropdown]')) return
       setOpenItemMenuId(null)
       setOpenSaveMenu(false)
-      setOpenBottomSaveMenu(false)
       setPendingHeaderQuoteDelete(false)
     }
 
     document.addEventListener('mousedown', closeDropdownsOnOutsideClick)
     return () => document.removeEventListener('mousedown', closeDropdownsOnOutsideClick)
-  }, [openItemMenuId, openSaveMenu, openBottomSaveMenu])
+  }, [openItemMenuId, openSaveMenu])
 
   useEffect(() => {
     if (!activeMenu) return undefined
@@ -1682,7 +1599,6 @@ export default function QuotesPage() {
 
     setIsSaving(true)
     setOpenSaveMenu(false)
-    setOpenBottomSaveMenu(false)
     setPendingHeaderQuoteDelete(false)
 
     let safeQuote = {
@@ -2154,29 +2070,72 @@ export default function QuotesPage() {
               {selectedQuote ? (
                 <Link
                   to={`/belge-merkezi/yazdir?type=quote&id=${encodeURIComponent(selectedQuote.id)}`}
-                  className="inline-flex h-9 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-[11px] font-black uppercase text-gray-300 hover:bg-dark-700 hover:text-white"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-xs font-black uppercase text-gray-300 hover:bg-dark-700 hover:text-white"
                 >
                   <Printer className="h-4 w-4" /> Şablonla Yazdır
                 </Link>
               ) : null}
-              <QuoteSaveSplitButton
-                isSaving={isSaving}
-                disabled={!selectedQuote}
-                menuOpen={openSaveMenu}
-                onToggleMenu={() => {
-                  setOpenBottomSaveMenu(false)
-                  setOpenSaveMenu((open) => {
-                    if (open) setPendingHeaderQuoteDelete(false)
-                    return !open
-                  })
-                }}
-                onSave={() => saveCurrentQuote({ returnToList: false })}
-                onSaveAndNew={() => saveCurrentQuote({ startNew: true })}
-                pendingDelete={pendingHeaderQuoteDelete && openSaveMenu}
-                onRequestDelete={() => setPendingHeaderQuoteDelete(true)}
-                onConfirmDelete={() => deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })}
-                onCancelDelete={() => setPendingHeaderQuoteDelete(false)}
-              />
+              <div className="relative">
+                <div className="btn-split">
+                  <button
+                    type="button"
+                    onClick={() => saveCurrentQuote({ returnToList: false })}
+                    disabled={!selectedQuote || isSaving}
+                    className={`${BTN_SUCCESS} min-w-[10.5rem] gap-2 px-4 text-sm font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    <Save className="h-4 w-4" />
+                    {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+                  </button>
+                  <span className="btn-split-divider" aria-hidden />
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setOpenSaveMenu((open) => {
+                        if (open) setPendingHeaderQuoteDelete(false)
+                        return !open
+                      })
+                    }}
+                    disabled={!selectedQuote || isSaving}
+                    className={`${BTN_SUCCESS} w-14 px-0 disabled:cursor-not-allowed disabled:opacity-50`}
+                    title="Kaydet seçenekleri"
+                    aria-expanded={openSaveMenu}
+                    aria-haspopup="menu"
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${openSaveMenu ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+                {openSaveMenu && (
+                  <div className="absolute right-0 top-full z-40 mt-2 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card" role="menu">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => saveCurrentQuote({ startNew: true })}
+                      className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
+                    >
+                      Kaydet ve Yeni Ekle
+                    </button>
+                    <div className="my-1 border-t border-dark-500/40" />
+                    {pendingHeaderQuoteDelete ? (
+                      <ListDeleteConfirmPanel
+                        title="Teklif silinsin mi?"
+                        description="Teklif silinenlere taşınır; geri alınabilir."
+                        onConfirm={() => deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })}
+                        onCancel={() => setPendingHeaderQuoteDelete(false)}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => setPendingHeaderQuoteDelete(true)}
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-300 transition-colors hover:bg-red-500/15 hover:text-red-200"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Teklifi Sil
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         />
@@ -2414,96 +2373,72 @@ export default function QuotesPage() {
           )}
         </Panel>
       ) : (
-        <div className="quote-prepare-compact space-y-3">
+        <div className="space-y-5">
           {selectedQuote && (
             <>
-              <section className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-3 shadow-card">
-                <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:items-end">
-                  <div className="col-span-2 lg:col-span-2">
-                    <Field label="Teklif Başlığı">
-                      <input value={selectedQuote.title} onChange={(e) => patchSelected({ title: e.target.value })} className="form-input" />
-                    </Field>
+              <div className="grid grid-cols-12 gap-4">
+                <section className="col-span-12 rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 flex gap-3">
+                      <div className="relative min-w-0 flex-1">
+                        <Field label="Teklif Başlığı">
+                          <input value={selectedQuote.title} onChange={(e) => patchSelected({ title: e.target.value })} className="form-input" />
+                        </Field>
+                      </div>
+                      <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
+                        <Field label="Teklif Kodu">
+                          <input
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={resolvedQuoteCode}
+                            onChange={(event) => patchQuoteCode(event.target.value)}
+                            className="form-input"
+                          />
+                        </Field>
+                      </div>
+                    </div>
+                    <CustomerPicker quote={selectedQuote} onPatch={patchSelected} allowCreate={false} />
+                    <Field label="Oluşturma Tarihi"><input type="date" value={selectedQuote.createdAt || todayIsoDate()} onChange={(e) => patchSelected({ createdAt: e.target.value })} className="form-input" /></Field>
+                    <Field label="Geçerlilik Tarihi"><input type="date" value={selectedQuote.validUntil || defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())} onChange={(e) => patchSelected({ validUntil: e.target.value })} className="form-input" /></Field>
                   </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <Field label="Teklif Kodu">
-                      <input
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={resolvedQuoteCode}
-                        onChange={(event) => patchQuoteCode(event.target.value)}
-                        className="form-input"
-                      />
-                    </Field>
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <Field label="Oluşturma">
-                      <input type="date" value={selectedQuote.createdAt || todayIsoDate()} onChange={(e) => patchSelected({ createdAt: e.target.value })} className="form-input" />
-                    </Field>
-                  </div>
-                  <div className="col-span-2 lg:col-span-2">
-                    <CustomerPicker quote={selectedQuote} onPatch={patchSelected} allowCreate={false} compact />
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <Field label="Geçerlilik">
-                      <input type="date" value={selectedQuote.validUntil || defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())} onChange={(e) => patchSelected({ validUntil: e.target.value })} className="form-input" />
-                    </Field>
-                  </div>
-                </div>
-              </section>
+                </section>
+              </div>
 
-              <section className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-3 shadow-card">
-                <QuoteProcessManagement
-                  quote={selectedQuote}
-                  onPatch={patchSelected}
-                  optionLists={optionLists}
-                  updateOptionList={updateOptionList}
-                  quoteStageRecord={quoteStageRecord}
-                  isStageEditorOpen={isStageEditorOpen}
-                  toggleStageEditor={toggleStageEditor}
-                  stageInput={stageInput}
-                  setStageInput={setStageInput}
-                  onAddQuoteStage={addQuoteStage}
-                  onSelectQuoteStage={selectQuoteStageInEditor}
-                  onUpdateQuoteStageColor={updateQuoteStageColor}
-                  onUpdateQuoteStageLabel={updateQuoteStageLabel}
-                  onReorderQuoteStages={reorderQuoteStages}
-                  pendingStageDeleteId={pendingStageDeleteId}
-                  setPendingStageDeleteId={setPendingStageDeleteId}
-                  onRemoveQuoteStage={removeQuoteStage}
-                />
-              </section>
-
-              <section className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-3 shadow-card">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <h2 className="text-sm font-bold text-white">Ürün Seçimi</h2>
+              <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-bold text-white">Ürün Seçimi</h2>
+                  </div>
                   <MiniButton onClick={addItem}>Ürün Ekle</MiniButton>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {(selectedQuote.items || []).map((item) => {
                     const totals = itemTotals(item)
                     const hasTaxExtras = item.showDiscount || item.showExciseTax || item.showAccommodationTax
                     return (
-                      <div key={item.id} className="rounded-xl border border-dark-500/45 bg-dark-700/30 p-2.5">
-                        <div className={`grid ${quoteItemGridClass} ${quoteItemFieldGapClass} items-end`}>
-                          <div className="flex flex-col">
-                            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">Görsel</label>
-                            <div className={`relative ${QUOTE_CONTROL_H} w-full overflow-hidden rounded-lg border border-dashed border-blue-500/25 bg-dark-800/40`}>
+                      <div key={item.id} className="rounded-3xl border border-dark-500/45 bg-dark-700/30 p-4">
+                        <div className={`grid ${quoteItemGridClass} ${quoteItemFieldGapClass} items-start`}>
+                          <div className="flex flex-col self-start">
+                            <label className="mb-2 block shrink-0 text-base font-bold text-white">Görsel</label>
+                            <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-dashed border-blue-500/25 bg-dark-800/40">
                               {item.lineImage ? (
                                 <>
                                   <img src={item.lineImage} alt="" className="h-full w-full object-cover object-center" />
                                   <button
                                     type="button"
                                     onClick={() => updateItem(item.id, 'lineImage', '')}
-                                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-md border border-red-500/30 bg-red-500/90 text-white"
+                                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/90 text-white shadow-lg transition-colors hover:bg-red-400"
                                     title="Görseli kaldır"
                                   >
-                                    <X className="h-3 w-3" />
+                                    <X className="h-4 w-4" />
                                   </button>
                                 </>
                               ) : (
-                                <label className="flex h-full w-full cursor-pointer items-center justify-center gap-1 px-1 text-center transition-colors hover:bg-blue-500/5">
-                                  <Upload className="h-3.5 w-3.5 text-blue-300" />
-                                  <span className="text-[10px] font-bold text-gray-400">Yükle</span>
+                                <label className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-2 px-3 py-4 text-center transition-colors hover:bg-blue-500/5">
+                                  <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/25 bg-blue-500/10 text-blue-300">
+                                    <Upload className="h-5 w-5" />
+                                  </span>
+                                  <span className="text-xs font-bold text-gray-400">Görsel Yükle</span>
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -2517,7 +2452,7 @@ export default function QuotesPage() {
                               )}
                             </div>
                           </div>
-                          <div className="flex min-h-0 flex-col gap-2 self-stretch">
+                          <div className="flex min-h-0 flex-col gap-3 self-stretch">
                           <div className={`grid ${quoteItemFieldsGridClass} ${quoteItemFieldGapClass} items-end`}>
                           <Field label="Ürün">
                             <ProductSearchSelect
@@ -2538,17 +2473,17 @@ export default function QuotesPage() {
                             </select>
                           </Field>
                           <Field label="Toplam">
-                            <div className="flex h-9 items-center justify-end rounded-lg bg-emerald-500/10 px-2 text-xs font-black tabular-nums text-white">
+                            <div className="flex h-[38px] items-center justify-end rounded-xl bg-emerald-500/10 px-3 text-sm font-black tabular-nums text-white">
                               {formatTL(totals.total)}
                             </div>
                           </Field>
                           <div className="relative">
                             <FieldLabelSpacer label="İşlem" />
-                            <div className={`flex h-9 items-center ${quoteItemFieldGapClass}`} data-quote-dropdown>
+                            <div className={`flex h-[38px] items-center ${quoteItemFieldGapClass}`} data-quote-dropdown>
                             <button
                               type="button"
                               onClick={() => setOpenItemMenuId(openItemMenuId === item.id ? null : item.id)}
-                              className="flex h-9 w-[38px] items-center justify-center rounded-xl border border-blue-500/25 bg-blue-500/10 text-blue-300 transition-colors hover:bg-blue-500/20"
+                              className="flex h-[38px] w-[38px] items-center justify-center rounded-xl border border-blue-500/25 bg-blue-500/10 text-blue-300 transition-colors hover:bg-blue-500/20"
                               title="Satıra alan ekle"
                             >
                               <Plus className="h-4 w-4" />
@@ -2556,7 +2491,7 @@ export default function QuotesPage() {
                             <button
                               type="button"
                               onClick={() => setPendingItemDeleteId(item.id)}
-                              className="flex h-9 w-[38px] items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 transition-colors hover:bg-red-500/20"
+                              className="flex h-[38px] w-[38px] items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 transition-colors hover:bg-red-500/20"
                               title="Satırı sil"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -2601,7 +2536,7 @@ export default function QuotesPage() {
                                   <button
                                     type="button"
                                     onClick={() => disableItemOption(item.id, 'showDiscount', { discountRate: 0 })}
-                                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
+                                    className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
                                   >
                                     <X className="h-3.5 w-3.5" /> Kaldır
                                   </button>
@@ -2617,7 +2552,7 @@ export default function QuotesPage() {
                                   <button
                                     type="button"
                                     onClick={() => disableItemOption(item.id, 'showExciseTax', { exciseTaxRate: 0 })}
-                                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
+                                    className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
                                   >
                                     <X className="h-3.5 w-3.5" /> Kaldır
                                   </button>
@@ -2633,7 +2568,7 @@ export default function QuotesPage() {
                                   <button
                                     type="button"
                                     onClick={() => disableItemOption(item.id, 'showAccommodationTax', { accommodationTaxRate: 0 })}
-                                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
+                                    className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
                                   >
                                     <X className="h-3.5 w-3.5" /> Kaldır
                                   </button>
@@ -2655,7 +2590,7 @@ export default function QuotesPage() {
                               <button
                                 type="button"
                                 onClick={() => disableItemOption(item.id, 'showDescription', { extraDescription: '' })}
-                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
+                                className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
                               >
                                 <X className="h-3.5 w-3.5" /> Kaldır
                               </button>
@@ -2673,13 +2608,13 @@ export default function QuotesPage() {
                   )}
 
                   {selectedQuote && (
-                    <div className="grid grid-cols-1 gap-3 border-t border-dark-500/35 pt-3 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-                      <div className="flex min-w-0 flex-col gap-3">
+                    <div className="grid grid-cols-1 gap-4 border-t border-dark-500/35 pt-4 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-start">
+                      <div className="flex min-w-0 flex-col gap-4">
                         <QuoteNotesPanel quote={selectedQuote} onPatch={patchSelected} />
                         <DocumentBankAccountsPanel quote={selectedQuote} onPatch={patchSelected} />
                       </div>
                       {selectedTotals && (
-                        <div className="w-full lg:justify-self-end">
+                        <div className="w-full max-w-[480px] lg:justify-self-end">
                           <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
                         </div>
                       )}
@@ -2688,7 +2623,7 @@ export default function QuotesPage() {
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-3 shadow-card">
+              <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
                 <DocumentTermsEditor
                   record={selectedQuote}
                   onPatch={patchSelected}
@@ -2697,54 +2632,32 @@ export default function QuotesPage() {
                   savedTermsTitle="Hazır Teklif Koşulları"
                   descriptionPlaceholder="Teklifin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
                 />
-                <div className="mt-3 grid gap-2 border-t border-dark-500/35 pt-3 sm:grid-cols-3">
+                <div className="mt-4 grid gap-2 border-t border-dark-500/35 pt-4 sm:grid-cols-3">
                   <button
                     type="button"
                     onClick={downloadQuotePdf}
                     disabled={isGeneratingPdf}
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-white px-3 text-[11px] font-black text-red-500 transition-colors hover:bg-red-50"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-red-500 transition-colors hover:bg-red-50"
                   >
-                    <FileText className="h-3.5 w-3.5" /> {isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
+                    <FileText className="h-4 w-4" /> {isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
                   </button>
                   <button
                     type="button"
                     onClick={sendQuoteByWhatsApp}
                     disabled={isGeneratingPdf}
-                    className={`${BTN_SUCCESS} h-9 gap-2 px-3 text-[11px]`}
+                    className={`${BTN_SUCCESS} h-10 gap-2 px-3 text-xs`}
                   >
-                    <Send className="h-3.5 w-3.5" /> WhatsApp PDF
+                    <Send className="h-4 w-4" /> WhatsApp PDF Gönder
                   </button>
                   <button
                     type="button"
                     onClick={sendQuoteByMail}
-                    className={`${BTN_PRIMARY} h-9 gap-2 px-3 text-[11px]`}
+                    className={`${BTN_PRIMARY} h-10 gap-2 px-3 text-xs`}
                   >
-                    <Mail className="h-3.5 w-3.5" /> Mail Gönder
+                    <Mail className="h-4 w-4" /> Mail Gönder
                   </button>
                 </div>
               </section>
-
-              <div className="flex flex-wrap items-center justify-end gap-2 rounded-2xl border border-dark-500/50 bg-dark-800/70 p-3 shadow-card" data-quote-dropdown>
-                <QuoteSaveSplitButton
-                  isSaving={isSaving}
-                  disabled={!selectedQuote}
-                  menuOpen={openBottomSaveMenu}
-                  dropUp
-                  onToggleMenu={() => {
-                    setOpenSaveMenu(false)
-                    setOpenBottomSaveMenu((open) => {
-                      if (open) setPendingHeaderQuoteDelete(false)
-                      return !open
-                    })
-                  }}
-                  onSave={() => saveCurrentQuote({ returnToList: false })}
-                  onSaveAndNew={() => saveCurrentQuote({ startNew: true })}
-                  pendingDelete={pendingHeaderQuoteDelete && openBottomSaveMenu}
-                  onRequestDelete={() => setPendingHeaderQuoteDelete(true)}
-                  onConfirmDelete={() => deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })}
-                  onCancelDelete={() => setPendingHeaderQuoteDelete(false)}
-                />
-              </div>
 
               {selectedQuote && selectedTotals && (
                 <section
