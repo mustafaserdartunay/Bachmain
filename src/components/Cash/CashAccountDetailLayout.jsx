@@ -28,7 +28,7 @@ export default function CashAccountDetailLayout({
       <AppPageHeader
         title={breadcrumbLabel}
         backTo={CASH_BASE_PATH}
-        backLabel="Kasa ve Bankalar"
+        backLabel="Kasalar"
       />
 
       <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
