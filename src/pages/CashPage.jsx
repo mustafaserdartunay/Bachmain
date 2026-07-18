@@ -2004,7 +2004,7 @@ export default function CashPage() {
             onClick={() => openAccountPanel('Nakit Kasa')}
             className="btn-primary flex items-center gap-1.5 px-4 py-2.5 text-sm"
           >
-            <Plus className="h-4 w-4" /> Kasa Oluştur
+            <Plus className="h-4 w-4" /> Yeni Kasa Oluştur
           </button>
         )}
       />
