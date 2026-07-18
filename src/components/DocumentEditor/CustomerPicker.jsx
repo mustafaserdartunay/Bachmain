@@ -308,8 +308,9 @@ function CustomerFieldActionRow({ children, actions }) {
   )
 }
 
-export default function CustomerPicker({ record, quote, onPatch, allowCreate = true }) {
+export default function CustomerPicker({ record, quote, onPatch, allowCreate = true, compact = false }) {
   const doc = record || quote
+  const controlH = compact ? 'h-9' : 'h-[38px]'
   const [isOpen, setIsOpen] = useState(false)
   const [isQuickEditOpen, setIsQuickEditOpen] = useState(false)
   const [profileVersion, setProfileVersion] = useState(0)
@@ -382,7 +383,7 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
 
   return (
     <div ref={pickerRef} className="col-span-2">
-      <DocumentField label="Müşteri">
+      <DocumentField label="Müşteri" compact={compact}>
         <CustomerFieldActionRow
           actions={(
             <div className="flex shrink-0 items-center gap-2">
@@ -390,17 +391,17 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
                 type="button"
                 disabled={!matchedCustomer}
                 onClick={() => setIsQuickEditOpen(true)}
-                className={`${BTN_PRIMARY} h-[38px] shrink-0 gap-2 px-4 text-xs disabled:cursor-not-allowed disabled:opacity-40`}
+                className={`${BTN_PRIMARY} ${controlH} shrink-0 gap-1.5 px-3 text-[11px] disabled:cursor-not-allowed disabled:opacity-40`}
               >
-                <Plus className="h-3.5 w-3.5" /> Hızlı Müşteri Düzenle
+                <Plus className="h-3.5 w-3.5" /> {compact ? 'Düzenle' : 'Hızlı Müşteri Düzenle'}
               </button>
               {allowCreate ? (
                 <button
                   type="button"
                   onClick={addNewCustomer}
-                  className={`${BTN_PRIMARY} ${DOCUMENT_SIDE_ACTION_WIDTH} h-[38px] gap-2 px-4 text-xs`}
+                  className={`${BTN_PRIMARY} ${DOCUMENT_SIDE_ACTION_WIDTH} ${controlH} gap-1.5 px-3 text-[11px]`}
                 >
-                  <Plus className="h-3.5 w-3.5" /> Yeni Müşteri Ekle
+                  <Plus className="h-3.5 w-3.5" /> Yeni Müşteri
                 </button>
               ) : null}
             </div>

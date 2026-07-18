@@ -1,14 +1,23 @@
-export function DocumentField({ label, children }) {
+export function DocumentField({ label, children, compact = false }) {
   return (
-    <div>
-      <label className="mb-2 block text-base font-bold text-white">{label}</label>
+    <div className="min-w-0">
+      <label className={`block font-bold text-white ${compact ? 'mb-1 text-[11px] uppercase tracking-wide text-[var(--muted)]' : 'mb-2 text-base'}`}>
+        {label}
+      </label>
       {children}
     </div>
   )
 }
 
-export function DocumentFieldLabelSpacer({ label = 'Alan' }) {
-  return <label className="mb-2 block text-base font-bold text-white opacity-0" aria-hidden>{label}</label>
+export function DocumentFieldLabelSpacer({ label = 'Alan', compact = false }) {
+  return (
+    <label
+      className={`block font-bold text-white opacity-0 ${compact ? 'mb-1 text-[11px]' : 'mb-2 text-base'}`}
+      aria-hidden
+    >
+      {label}
+    </label>
+  )
 }
 
 import { Plus } from 'lucide-react'

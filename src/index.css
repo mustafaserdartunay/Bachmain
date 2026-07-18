@@ -1272,6 +1272,30 @@ html:not(.night) .app-responsive .text-gray-500 {
   min-height: 2.25rem;
 }
 
+/* Yeni teklif / teklif düzenle — kompakt alanlar, eşit kontrol yüksekliği */
+.quote-prepare-compact .form-input,
+.quote-prepare-compact .form-input-readonly,
+.quote-prepare-compact select.form-input {
+  min-height: 2.25rem !important;
+  height: 2.25rem;
+  font-size: 0.8125rem;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+  border-radius: 0.625rem !important;
+}
+
+.quote-prepare-compact textarea.form-input {
+  height: auto;
+  min-height: 3.25rem !important;
+}
+
+.quote-prepare-compact .search-pill,
+.quote-prepare-compact .app-search-field {
+  min-height: 2.25rem !important;
+  height: 2.25rem;
+  font-size: 0.8125rem;
+}
+
 .app-dropdown-portal {
   z-index: 10000;
   background: rgba(255, 255, 255, 0.38) !important;
