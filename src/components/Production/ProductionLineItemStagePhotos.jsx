@@ -84,12 +84,11 @@ export function ProductionStageColumnPhotos({
   async function handleUpload(event) {
     const file = event.target.files?.[0]
     event.target.value = ''
-    if (!file || readOnly || typeof onPhotosChange !== 'function' || photo) return
+    if (!file || readOnly || typeof onPhotosChange !== 'function') return
     try {
       const dataUrl = await readImageFileAsDataUrl(file)
       const nextPhoto = createStagePhoto({ dataUrl, stageId, stageLabel })
-      const withoutStage = normalizedAll.filter((item) => item.stageId !== stageId)
-      onPhotosChange([...withoutStage, nextPhoto])
+      onPhotosChange([...normalizedAll, nextPhoto])
     } catch (error) {
       window.alert(error.message || 'Fotoğraf yüklenemedi.')
     }
@@ -165,29 +164,45 @@ export function ProductionStageColumnPhotos({
                 ? 'border-dark-500/50 hover:ring-blue-500/40'
                 : 'border-[var(--border)] hover:ring-[var(--accent)]/35'
             }`}
-            title="Büyüt"
+            title={columnPhotos.length > 1 ? `${columnPhotos.length} fotoğraf` : 'Büyüt'}
           >
             <img src={photo.dataUrl} alt="" className="h-full w-full object-cover" />
+            {columnPhotos.length > 1 ? (
+              <span className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 text-[9px] font-black text-white">
+                {columnPhotos.length}
+              </span>
+            ) : null}
             <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
               <ZoomIn className={`${iconSize} text-white opacity-0 transition-opacity group-hover:opacity-100`} />
             </span>
           </button>
           {!readOnly && (
-            <button
-              type="button"
-              onClick={handleRemove}
-              className={`inline-flex items-center gap-0.5 rounded-md transition-colors ${
-                compact ? 'p-0.5' : 'px-1.5 py-0.5 text-[11px] font-bold'
-              } ${
-                isDark
-                  ? 'text-red-300 hover:bg-red-500/10'
-                  : 'text-red-600 hover:bg-red-500/10'
-              }`}
-              title="Fotoğrafı sil"
-            >
-              <Trash2 className={iconSize} />
-              {!compact && 'Sil'}
-            </button>
+            <div className="flex items-center gap-0.5">
+              <label
+                className={`inline-flex cursor-pointer items-center gap-0.5 rounded-md transition-colors ${
+                  compact ? 'p-0.5' : 'px-1.5 py-0.5 text-[11px] font-bold'
+                } ${isDark ? 'text-blue-300 hover:bg-blue-500/10' : 'text-blue-600 hover:bg-blue-500/10'}`}
+                title="Fotoğraf ekle"
+              >
+                <Camera className={iconSize} />
+                <input type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+              </label>
+              <button
+                type="button"
+                onClick={handleRemove}
+                className={`inline-flex items-center gap-0.5 rounded-md transition-colors ${
+                  compact ? 'p-0.5' : 'px-1.5 py-0.5 text-[11px] font-bold'
+                } ${
+                  isDark
+                    ? 'text-red-300 hover:bg-red-500/10'
+                    : 'text-red-600 hover:bg-red-500/10'
+                }`}
+                title="Fotoğrafı sil"
+              >
+                <Trash2 className={iconSize} />
+                {!compact && 'Sil'}
+              </button>
+            </div>
           )}
         </>
       ) : !readOnly ? (

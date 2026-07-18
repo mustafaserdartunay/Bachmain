@@ -1,26 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArchiveRestore, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, Factory, Package, ShoppingCart, Trash2 } from 'lucide-react'
-import { MoreMenu } from '@bachmain/ui'
-import SearchInput from '../components/Common/SearchInput'
-import ListHeaderRow from '../components/Common/ListHeaderRow'
+import {
+  CheckCircle2,
+  ClipboardList,
+  Clock3,
+  Factory,
+  Layers3,
+  Package,
+  PackageOpen,
+  ShoppingCart,
+  Boxes,
+} from 'lucide-react'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import SplitCreateButton from '../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
-import { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
-import EditableDropdownPill from '../components/EditableDropdownPill'
-import ProductionJobFlowBadge from '../components/Production/ProductionJobFlowBadge'
-import ProductionListLineItemRow from '../components/Production/ProductionListLineItemRow'
-import { getListCustomerDisplay } from '../data/customerProfiles'
+import ProductionFilterBar from '../components/Production/ProductionFilterBar'
+import ProductionJobCard from '../components/Production/ProductionJobCard'
 import {
-  applyJobProductionStageToLineItems,
   ensureLineItems,
   getLineFulfillmentOptions,
-  resolveLineItemOrderQuantity,
-  resolveOrderForProductionJob,
 } from '../utils/productionLineItems'
 import {
-  formatQty,
   getJobQuantityMetrics,
   jobMatchesProductionStateFilter,
   jobMatchesQuantityFilter,
@@ -37,7 +37,6 @@ import {
   sendProductionJobToDepo,
   updateProductionJob,
 } from '../utils/productionStore'
-import { getProductionJobTimelineDates } from '../utils/productionJobTimeline'
 import { loadOrders } from '../utils/ordersStore'
 import { loadQuotes } from '../utils/quotesStore'
 import {
@@ -47,60 +46,6 @@ import {
   toStageDropdownOptions,
 } from '../utils/workflowStages'
 
-const productionListGrid =
-  '96px minmax(128px, 1fr) 96px 104px 120px 96px 240px 96px'
-
-const LIST_ROW_CELL = 'flex h-full min-w-0 items-center'
-const DATE_COL_LINE = 'min-h-[15px] leading-tight'
-const DATE_COL_CELL = 'flex h-full min-w-0 flex-col justify-center'
-
-function TwoLineDateHeader({ top }) {
-  return (
-    <>
-      <span className={DATE_COL_LINE}>{top}</span>
-      <span className={DATE_COL_LINE}>Tarihi</span>
-    </>
-  )
-}
-
-function TimelineDateCell({ value }) {
-  const formatted = formatListDateTime(value)
-
-  if (!formatted) {
-    return (
-      <div className={LIST_ROW_CELL}>
-        <p className="truncate text-[12px] font-semibold tabular-nums text-gray-400">—</p>
-      </div>
-    )
-  }
-
-  const [datePart, timePart] = formatted.split(' ')
-
-  if (timePart) {
-    return (
-      <div className={DATE_COL_CELL} title={formatted}>
-        <p className={`${DATE_COL_LINE} truncate text-[12px] font-semibold tabular-nums text-gray-400`}>
-          {datePart}
-        </p>
-        <p className={`${DATE_COL_LINE} truncate text-[12px] font-semibold tabular-nums text-gray-400`}>
-          {timePart}
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div className={LIST_ROW_CELL}>
-      <p
-        className="truncate text-[12px] font-semibold tabular-nums text-gray-400"
-        title={formatted}
-      >
-        {formatted}
-      </p>
-    </div>
-  )
-}
-
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const quantityFilterOptions = [
   filterAllOption,
@@ -109,42 +54,18 @@ const quantityFilterOptions = [
   { label: 'Fazla Üretim', color: 'bg-sky-500' },
 ]
 
-function Panel({ title, description, children, action }) {
-  return (
-    <section className="card">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold text-white">{title}</h2>
-          {description && <p className="mt-1 text-xs text-gray-500">{description}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  )
-}
-
-function formatListDate(value) {
-  if (!value) return ''
-  if (/^\d{2}\.\d{2}\.\d{4}$/.test(value)) return value
-  const [datePart] = String(value).split(' ')
-  const [year, month, day] = datePart.split('-')
-  if (!year || !month || !day) return value
-  return `${day}.${month}.${year}`
-}
-
-function formatListDateTime(value) {
-  if (!value) return ''
-  const raw = String(value).trim()
-  const trMatch = raw.match(/^(\d{2}\.\d{2}\.\d{4})(?:[, ]+\s*(\d{1,2}:\d{2}(?::\d{2})?))/)
-  if (trMatch) return trMatch[2] ? `${trMatch[1]} ${trMatch[2].slice(0, 5)}` : trMatch[1]
-
-  const formattedDate = formatListDate(raw.split(/[T ]/)[0] || raw)
-  const timePart = raw.includes('T') ? raw.split('T')[1] : raw.split(' ')[1]
-  if (!timePart || !timePart.includes(':')) return formattedDate
-  const [hours, minutes] = timePart.split(':')
-  if (!hours || !minutes) return formattedDate
-  return `${formattedDate} ${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`
+function sumOptionalPackaging(jobs, workflowStages, keys) {
+  return jobs.reduce((sum, job) => {
+    const lineItems = ensureLineItems(job, workflowStages)
+    const lineSum = lineItems.reduce((lineTotal, line) => {
+      for (const key of keys) {
+        const value = Number(line?.[key] ?? job?.[key]) || 0
+        if (value > 0) return lineTotal + value
+      }
+      return lineTotal
+    }, 0)
+    return sum + lineSum
+  }, 0)
 }
 
 export default function ProductionPage() {
@@ -156,13 +77,19 @@ export default function ProductionPage() {
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [expandedJobIds, setExpandedJobIds] = useState(() => new Set())
+  const [selectedJobIds, setSelectedJobIds] = useState(() => new Set())
   const [fulfillmentOptions, setFulfillmentOptions] = useState(() => getLineFulfillmentOptions())
+  const [entered, setEntered] = useState(false)
 
   const productionStageOptions = getProductionStageOptions(workflowStages)
   const productionStageDropdownOptions = toStageDropdownOptions(productionStageOptions)
   const productionProcessFilterOptions = [filterAllOption, ...productionStageDropdownOptions]
   const productionStatusFilterOptions = PRODUCTION_STATE_FILTER_OPTIONS
-  const productionStatusListOptions = fulfillmentOptions
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setEntered(true), 20)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     function refresh() {
@@ -218,17 +145,13 @@ export default function ProductionPage() {
     })
   }
 
-  function handleJobStageChange(job, stageLabel) {
-    const stage = productionStageOptions.find((item) => item.label === stageLabel)
-    if (!stage || job.stage === stageLabel) return
-    const nextLineItems = applyJobProductionStageToLineItems(
-      ensureLineItems(job, workflowStages),
-      stage.id,
-      workflowStages,
-    )
-    updateProductionJob(job.id, { lineItems: nextLineItems })
-    refreshJobs()
-    setActiveMenu(null)
+  function toggleJobSelected(jobId) {
+    setSelectedJobIds((current) => {
+      const next = new Set(current)
+      if (next.has(jobId)) next.delete(jobId)
+      else next.add(jobId)
+      return next
+    })
   }
 
   function getLineItemActions(job) {
@@ -259,295 +182,189 @@ export default function ProductionPage() {
     return matchesSearch && matchesProcess && matchesStatus && matchesQuantity
   })
 
-  const summary = {
-    total: filteredJobs.length,
-    active: filteredJobs.filter((job) => job.status === 'Devam Ediyor').length,
-    partial: filteredJobs.filter((job) => (
+  const summary = useMemo(() => {
+    const waiting = filteredJobs.filter((job) => job.status === 'Bekliyor').length
+    const active = filteredJobs.filter((job) => job.status === 'Devam Ediyor').length
+    const partial = filteredJobs.filter((job) => (
       job.status === 'Kısmi Üretim Bitti' || job.status === 'Kısmi Teslimat'
-    )).length,
-    completed: filteredJobs.filter((job) => job.status === 'Tamamlandı').length,
-    quantity: filteredJobs.reduce((sum, job) => sum + Number(job.quantity || 0), 0),
-  }
+    )).length
+    const completed = filteredJobs.filter((job) => job.status === 'Tamamlandı').length
+    const quantity = filteredJobs.reduce((sum, job) => {
+      const metrics = getJobQuantityMetrics(ensureLineItems(job, workflowStages))
+      return sum + metrics.ordered
+    }, 0)
+    const pallet = sumOptionalPackaging(filteredJobs, workflowStages, ['palletCount', 'palet', 'pallet'])
+    const carton = sumOptionalPackaging(filteredJobs, workflowStages, ['cartonCount', 'koli', 'carton'])
+
+    return {
+      total: filteredJobs.length,
+      active,
+      waiting,
+      partial,
+      completed,
+      quantity,
+      pallet,
+      carton,
+    }
+  }, [filteredJobs, workflowStages])
 
   const orders = loadOrders()
   const quotes = loadQuotes()
 
+  const bulkMenuItems = [
+    {
+      id: 'bulk-depo',
+      label: 'Seçilileri Depoya Gönder',
+      icon: Package,
+      iconClassName: 'text-orange-300',
+      onClick: () => {
+        selectedJobIds.forEach((jobId) => sendProductionJobToDepo(jobId))
+        refreshJobs()
+        setSelectedJobIds(new Set())
+        if (selectedJobIds.size) navigate('/depo')
+      },
+    },
+    {
+      id: 'bulk-cancel',
+      label: 'Seçililerden Vazgeç',
+      icon: ClipboardList,
+      iconClassName: 'text-blue-300',
+      onClick: () => {
+        selectedJobIds.forEach((jobId) => cancelProductionBackToOrder(jobId))
+        refreshJobs()
+        setSelectedJobIds(new Set())
+      },
+    },
+  ]
+
   return (
     <AppPageShell>
-      <AppPageHeader
-        title="Üretim Takibi"
-        actions={(
-          <SplitCreateButton
-            label="Yeni Üretim Oluştur"
-            onPrimaryClick={() => navigate('/uretim/yeni')}
-            menuAriaLabel="Üretim seçenekleri"
-            menuItems={[
-              {
-                id: 'quick',
-                label: 'Hızlı Üretim Kaydı',
-                icon: Factory,
-                iconClassName: 'text-blue-300',
-                onClick: () => navigate('/uretim/yeni'),
-              },
-              {
-                id: 'from-order',
-                label: 'Siparişlerden Devam Et',
-                icon: ShoppingCart,
-                iconClassName: 'text-emerald-300',
-                onClick: () => navigate('/siparisler'),
-              },
-            ]}
-          />
-        )}
-      />
-
-      <SummaryMetrics
-        items={[
-          { title: 'Toplam Sipariş', value: summary.total, icon: Factory },
-          { title: 'Devam Eden', value: summary.active, icon: CheckCircle2, tone: 'blue', valueTone: 'blue' },
-          { title: 'Kısmi İlerleme', value: summary.partial, icon: ClipboardList, tone: 'orange', valueTone: 'orange' },
-          { title: 'Tamamlanan', value: summary.completed, icon: CheckCircle2, tone: 'emerald', valueTone: 'emerald' },
-          { title: 'Toplam Adet', value: summary.quantity.toLocaleString('tr-TR'), icon: Factory, tone: 'purple', valueTone: 'purple' },
-        ]}
-      />
-
-      <Panel
-        title="Üretim Listesi"
-        action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{filteredJobs.length} kayıt</span>}
+      <div
+        className={`space-y-5 transition-all duration-500 ${
+          entered ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
+        }`}
       >
-        <div className="mb-4 space-y-3">
-          <SearchInput
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Sipariş kodu, müşteri veya ürün kalemi ara..."
-          />
-          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3 lg:grid-cols-3">
-            <div>
-              <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Süreç</p>
-              <EditableDropdownPill
-                value={filters.process}
-                options={productionProcessFilterOptions}
-                includePlaceholderOption={false}
-                editable={false}
-                buttonClassName={LIST_PILL_CLASS}
-                openKey="filter-process"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateFilter('process', value)}
+        <AppPageHeader
+          title="Üretim Takibi"
+          backTo="/"
+          backLabel="Güncel Durum"
+          actions={(
+            <div className="flex flex-wrap items-center gap-2">
+              <SplitCreateButton
+                label="Yeni Üretim"
+                onPrimaryClick={() => navigate('/uretim/yeni')}
+                menuAriaLabel="Üretim seçenekleri"
+                menuItems={[
+                  {
+                    id: 'quick',
+                    label: 'Hızlı Üretim Kaydı',
+                    icon: Factory,
+                    iconClassName: 'text-blue-300',
+                    onClick: () => navigate('/uretim/yeni'),
+                  },
+                  {
+                    id: 'from-order',
+                    label: 'Siparişlerden Devam Et',
+                    icon: ShoppingCart,
+                    iconClassName: 'text-emerald-300',
+                    onClick: () => navigate('/siparisler'),
+                  },
+                ]}
+              />
+              <SplitCreateButton
+                label="Toplu İşlem"
+                onPrimaryClick={() => {
+                  if (!selectedJobIds.size) {
+                    window.alert('Önce listeden üretim seçin.')
+                  }
+                }}
+                menuAriaLabel="Toplu işlemler"
+                menuItems={bulkMenuItems}
               />
             </div>
-            <div>
-              <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Durum</p>
-              <EditableDropdownPill
-                value={filters.status}
-                options={productionStatusFilterOptions}
-                includePlaceholderOption={false}
-                editable={false}
-                buttonClassName={LIST_PILL_CLASS}
-                openKey="filter-status"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateFilter('status', value)}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Adet / Teslimat</p>
-              <EditableDropdownPill
-                value={filters.quantity}
-                options={quantityFilterOptions}
-                includePlaceholderOption={false}
-                editable={false}
-                buttonClassName={LIST_PILL_CLASS}
-                openKey="filter-quantity"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateFilter('quantity', value)}
-              />
-            </div>
+          )}
+        />
+
+        <SummaryMetrics
+          columns={8}
+          items={[
+            { title: 'Toplam Sipariş', value: summary.total, icon: Factory, tone: 'blue', valueTone: 'blue' },
+            { title: 'Devam Eden', value: summary.active, icon: CheckCircle2, tone: 'blue', valueTone: 'blue' },
+            { title: 'Bekleyen', value: summary.waiting, icon: Clock3, tone: 'orange', valueTone: 'orange' },
+            { title: 'Kısmi Teslim', value: summary.partial, icon: ClipboardList, tone: 'orange', valueTone: 'orange' },
+            { title: 'Tamamlanan', value: summary.completed, icon: CheckCircle2, tone: 'emerald', valueTone: 'emerald' },
+            { title: 'Toplam Ürün', value: summary.quantity.toLocaleString('tr-TR'), icon: Layers3, tone: 'cyan', valueTone: 'cyan' },
+            { title: 'Toplam Palet', value: summary.pallet.toLocaleString('tr-TR'), icon: Boxes, tone: 'blue', valueTone: 'blue' },
+            { title: 'Toplam Koli', value: summary.carton.toLocaleString('tr-TR'), icon: PackageOpen, tone: 'emerald', valueTone: 'emerald' },
+          ]}
+        />
+
+        <ProductionFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={(event) => setSearchQuery(event.target.value)}
+          filters={filters}
+          onFilterChange={updateFilter}
+          processOptions={productionProcessFilterOptions}
+          statusOptions={productionStatusFilterOptions}
+          quantityOptions={quantityFilterOptions}
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+        />
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3 px-1">
+            <h2 className="text-[16px] font-bold text-[var(--ink)]">Üretim Listesi</h2>
+            <span className="rounded-xl bg-[rgba(121,166,210,0.12)] px-3 py-1.5 text-[12px] font-black text-[var(--bach-navy,#203375)]">
+              {filteredJobs.length} kayıt
+              {selectedJobIds.size ? ` · ${selectedJobIds.size} seçili` : ''}
+            </span>
           </div>
-        </div>
 
-        <div className="rounded-2xl border border-dark-500/40 bg-dark-800/70">
-          <ListHeaderRow
-            variant="plain"
-            gridTemplate={productionListGrid}
-            className="items-stretch gap-3 px-3 py-3 text-xs font-bold uppercase tracking-wider text-gray-500"
-            columns={[
-              { label: 'Kod', className: LIST_ROW_CELL },
-              { label: 'Müşteri Adı', className: `${LIST_ROW_CELL} -ml-3` },
-              { label: 'Teklif Tarihi', className: DATE_COL_CELL, content: <TwoLineDateHeader top="Teklif" /> },
-              { label: 'Sipariş Tarihi', className: DATE_COL_CELL, content: <TwoLineDateHeader top="Sipariş" /> },
-              { label: 'Üretim Tarihi', className: DATE_COL_CELL, content: <TwoLineDateHeader top="Üretim" /> },
-              { label: 'Teslim Tarihi', className: DATE_COL_CELL, content: <TwoLineDateHeader top="Teslim" /> },
-              { label: 'flow', className: LIST_ROW_CELL, content: '' },
-              { label: 'action', className: `${LIST_ROW_CELL} justify-end`, content: '' },
-            ]}
-          />
-        </div>
-
-        <div className="mt-3 space-y-2 overflow-visible">
-          {filteredJobs.map((job) => {
-            const customerDisplay = getListCustomerDisplay(job.customer)
-            const order = resolveOrderForProductionJob(job, orders)
-            const lineItems = ensureLineItems(job, workflowStages, order)
-            const isExpanded = expandedJobIds.has(job.id)
-            const isRowMenuOpen = Boolean(activeMenu?.startsWith(`${job.id}-`))
-            const isRowOverlayOpen = isRowMenuOpen || pendingDeleteId === job.id
-            const lineItemActions = getLineItemActions(job)
-            const timeline = getProductionJobTimelineDates(job, lineItems, { orders, quotes })
-
-            return (
-              <div
+          <div className="space-y-3">
+            {filteredJobs.map((job) => (
+              <ProductionJobCard
                 key={job.id}
-                className={`rounded-2xl border transition-all ${
-                  isRowOverlayOpen ? 'relative z-40 overflow-visible' : 'overflow-hidden'
-                } border-dark-500/45 bg-dark-800/55 hover:border-blue-500/35 hover:bg-dark-700/60`}
-              >
-                <div className={`relative px-3 ${isExpanded ? 'pt-3 pb-3' : 'py-3'}`}>
-                  <div
-                    className="grid items-stretch gap-3"
-                    style={{ gridTemplateColumns: productionListGrid }}
-                  >
-                    <div className={LIST_ROW_CELL}>
-                      <p className="text-xs font-black tabular-nums text-blue-300">{job.id}</p>
-                    </div>
-                    <div className={`${LIST_ROW_CELL} -ml-3`}>
-                      <p className="flex min-w-0 items-center gap-1.5 text-sm font-black text-white">
-                        <span className="shrink-0 truncate">{customerDisplay.brandShortName || 'Müşteri girilmedi'}</span>
-                        {customerDisplay.companyTitle && (
-                          <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[12px] font-black text-gray-400">
-                            <span className="truncate">{customerDisplay.companyTitle}</span>
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <TimelineDateCell value={timeline.quoteDate} />
-                    <TimelineDateCell value={timeline.orderDate} />
-                    <TimelineDateCell value={timeline.productionStartDate} />
-                    <TimelineDateCell value={timeline.completedDate} />
-                    <div className={`${LIST_ROW_CELL} justify-end`}>
-                      <ProductionJobFlowBadge
-                        lineItems={lineItems}
-                        jobStatus={job.status || 'Devam Ediyor'}
-                        variant="aggregate"
-                        className="sm:min-w-0"
-                      />
-                    </div>
-                    <div className={`relative z-10 ${LIST_ROW_CELL} justify-end gap-1.5`} onClick={(event) => event.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => toggleJobExpanded(job.id)}
-                        className={`rounded-lg border p-2 transition-colors ${
-                          isExpanded
-                            ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
-                            : 'border-dark-500/50 bg-dark-700/70 text-gray-400 hover:border-blue-500/35 hover:bg-dark-700/80 hover:text-blue-300'
-                        }`}
-                        title={isExpanded ? 'Kalemleri gizle' : 'Kalemleri göster'}
-                        aria-expanded={isExpanded}
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        )}
-                      </button>
-                      <MoreMenu
-                        items={[
-                          {
-                            id: 'cancel',
-                            label: 'Vazgeç',
-                            icon: ArchiveRestore,
-                            onClick: () => {
-                              cancelProductionBackToOrder(job.id)
-                              refreshJobs()
-                            },
-                          },
-                          {
-                            id: 'depo',
-                            label: 'Depoya gönder',
-                            icon: Package,
-                            onClick: () => {
-                              sendProductionJobToDepo(job.id)
-                              refreshJobs()
-                              navigate('/depo')
-                            },
-                          },
-                          {
-                            id: 'delete',
-                            label: 'Sil',
-                            icon: Trash2,
-                            tone: 'danger',
-                            onClick: () => setPendingDeleteId(job.id),
-                          },
-                        ]}
-                      />
-                      {pendingDeleteId === job.id ? (
-                        <DeleteTrashButton
-                          pending
-                          onClick={() => setPendingDeleteId(job.id)}
-                          onConfirm={() => {
-                            removeJob(job)
-                            setPendingDeleteId(null)
-                          }}
-                          onCancel={() => setPendingDeleteId(null)}
-                          title="Üretim kaydı silinsin mi?"
-                          description="Bu işlem geri alınamaz."
-                          popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
-                        />
-                      ) : null}
-                    </div>
-                  </div>
-
-                  {isExpanded && (
-                    <div className="space-y-2 border-t border-dark-500/35 pb-3 pt-2">
-                      {lineItems.map((lineItem, lineIndex) => (
-                      <ProductionListLineItemRow
-                        key={lineItem.id}
-                        lineItem={lineItem}
-                        lineIndex={lineIndex}
-                        lineCount={lineItems.length}
-                        productionJobId={job.id}
-                        productionStages={productionStageOptions}
-                        fulfillmentOptions={productionStatusListOptions}
-                        fulfillmentOpenKey={`${job.id}-${lineItem.id}-fulfillment`}
-                        activeMenu={activeMenu}
-                        setActiveMenu={setActiveMenu}
-                        onQuantityRowStageChange={(rowId, stageId) => (
-                          lineItemActions.handleQuantityRowStageChange(lineItem, rowId, stageId)
-                        )}
-                        onAddQuantityRow={(rowId) => lineItemActions.handleAddQuantityRow(lineItem, rowId)}
-                        onRemoveQuantityRow={(rowId) => lineItemActions.handleRemoveQuantityRow(lineItem, rowId)}
-                        onQuantityRowChange={(rowId, patch) => (
-                          lineItemActions.handleLineQuantityRowChange(lineItem, rowId, patch)
-                        )}
-                        onStagePhotosChange={(photos) => lineItemActions.handleStagePhotosChange(lineItem, photos)}
-                        onRemoveLineItem={() => lineItemActions.handleRemoveLineItem(lineItem)}
-                        onSendToDepo={(rowId) => {
-                          lineItemActions.handleSendRowToDepo(lineItem, rowId, resolveLineItemOrderQuantity(lineItem, order))
-                        }}
-                        onUndoSendToDepo={(rowId) => {
-                          lineItemActions.handleUndoSendRowToDepo(lineItem, rowId)
-                        }}
-                        jobStatus={job.status}
-                        orderLineQuantity={resolveLineItemOrderQuantity(lineItem, order)}
-                      />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {filteredJobs.length === 0 && (
-          <div className="mt-4 rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-8 text-center">
-            <Factory className="mx-auto mb-3 h-8 w-8 text-gray-600" />
-            <p className="text-sm font-bold text-white">Üretim kaydı bulunamadı.</p>
-            <p className="mt-1 text-xs text-gray-500">Siparişler sayfasında &quot;Üretime Alındı&quot; seçildiğinde kayıtlar buraya kopyalanır.</p>
+                job={job}
+                workflowStages={workflowStages}
+                productionStages={productionStageOptions}
+                fulfillmentOptions={fulfillmentOptions}
+                orders={orders}
+                quotes={quotes}
+                expanded={expandedJobIds.has(job.id)}
+                onToggleExpand={() => toggleJobExpanded(job.id)}
+                pendingDelete={pendingDeleteId === job.id}
+                onRequestDelete={() => setPendingDeleteId(job.id)}
+                onConfirmDelete={() => removeJob(job)}
+                onCancelDelete={() => setPendingDeleteId(null)}
+                onCancelProduction={() => {
+                  cancelProductionBackToOrder(job.id)
+                  refreshJobs()
+                }}
+                onSendToDepo={() => {
+                  sendProductionJobToDepo(job.id)
+                  refreshJobs()
+                  navigate('/depo')
+                }}
+                lineItemActions={getLineItemActions(job)}
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                selected={selectedJobIds.has(job.id)}
+                onToggleSelect={toggleJobSelected}
+              />
+            ))}
           </div>
-        )}
-      </Panel>
+
+          {filteredJobs.length === 0 ? (
+            <div className="rounded-[18px] border border-dashed border-[var(--border)] bg-white/50 p-10 text-center">
+              <Factory className="mx-auto mb-3 h-8 w-8 text-[var(--muted)]" />
+              <p className="text-sm font-bold text-[var(--ink)]">Üretim kaydı bulunamadı.</p>
+              <p className="mt-1 text-[13px] text-[var(--muted)]">
+                Siparişler sayfasında &quot;Üretime Alındı&quot; seçildiğinde kayıtlar buraya kopyalanır.
+              </p>
+            </div>
+          ) : null}
+        </section>
+      </div>
     </AppPageShell>
   )
 }

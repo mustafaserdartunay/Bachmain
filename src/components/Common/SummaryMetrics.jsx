@@ -21,7 +21,7 @@ export function SummaryMetricCard({ title, value, icon: Icon, tone = 'blue', val
   const valueToneClass = resolveToneClass(valueTone, TONE_CLASSES.white)
 
   return (
-    <div className="app-page-metric p-4">
+    <div className="app-page-metric flex min-h-[110px] flex-col justify-between rounded-[18px] p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className={APP_LABEL_CLASS}>{title}</span>
         {Icon && (
@@ -37,8 +37,16 @@ export function SummaryMetricCard({ title, value, icon: Icon, tone = 'blue', val
 }
 
 export default function SummaryMetrics({ items, columns = 5 }) {
+  const columnsClass = columns === 8
+    ? 'grid-cols-2 sm:grid-cols-4 xl:grid-cols-8'
+    : columns === 5
+      ? 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-5'
+      : columns === 4
+        ? 'grid-cols-2 lg:grid-cols-4'
+        : 'grid-cols-3'
+
   return (
-    <div className={`grid gap-4 ${columns === 5 ? 'grid-cols-5' : columns === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+    <div className={`grid gap-4 ${columnsClass}`}>
       {items.map((item) => (
         <SummaryMetricCard key={item.title} {...item} />
       ))}
