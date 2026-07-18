@@ -47,6 +47,35 @@ function resolveStatusBadge(job, metrics) {
   return { label: 'ÜRETİMDE', className: 'bg-blue-500/12 text-blue-600' }
 }
 
+function ProgressRing({ percent = 0 }) {
+  const value = Math.max(0, Math.min(100, Number(percent) || 0))
+  const radius = 22
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (value / 100) * circumference
+
+  return (
+    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center">
+      <svg className="h-14 w-14 -rotate-90" viewBox="0 0 56 56" aria-hidden>
+        <circle cx="28" cy="28" r={radius} fill="none" stroke="rgba(140,145,165,0.2)" strokeWidth="5" />
+        <circle
+          cx="28"
+          cy="28"
+          r={radius}
+          fill="none"
+          stroke="var(--bach-sky, #79a6d2)"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <span className="absolute text-[12px] font-black tabular-nums text-[var(--bach-navy,#203375)]">
+        %{value}
+      </span>
+    </div>
+  )
+}
+
 export default function ProductionJobCard({
   job,
   workflowStages,
@@ -93,6 +122,9 @@ export default function ProductionJobCard({
   const producedLabel = activeLine
     ? `${formatQty(activeLine.producedQuantity)} / ${formatQty(activeLine.quantity)}`
     : ''
+  const progressPct = metrics.ordered
+    ? Math.min(100, Math.round((metrics.produced / metrics.ordered) * 100))
+    : (metrics.produced > 0 ? 100 : 0)
 
   return (
     <article
@@ -127,12 +159,20 @@ export default function ProductionJobCard({
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-semibold text-[var(--muted)]">
               <span>Sipariş: <strong className="text-[var(--ink)]">{formatShortDate(timeline.orderDate)}</strong></span>
               <span>Teslim: <strong className="text-[var(--ink)]">{formatShortDate(timeline.completedDate || job.dueDate)}</strong></span>
-              <span>Adet: <strong className="tabular-nums text-[var(--ink)]">{formatQty(metrics.ordered)}</strong></span>
               <span>Üretilen: <strong className="tabular-nums text-blue-600">{formatQty(metrics.produced)}</strong></span>
-              <span>Teslim: <strong className="tabular-nums text-emerald-600">{formatQty(metrics.delivered)}</strong></span>
+              <span>Teslim Edilen: <strong className="tabular-nums text-emerald-600">{formatQty(metrics.delivered)}</strong></span>
               <span>Kalan: <strong className="tabular-nums text-orange-600">{formatQty(metrics.remaining)}</strong></span>
             </div>
           </button>
+        </div>
+
+        <div className="flex shrink-0 flex-col items-center gap-1 px-1">
+          <ProgressRing percent={progressPct} />
+          <div className="text-center text-[10px] font-semibold leading-tight text-[var(--muted)]">
+            <p>Üretilen {formatQty(metrics.produced)}</p>
+            <p>Teslim {formatQty(metrics.delivered)}</p>
+            <p>Kalan {formatQty(metrics.remaining)}</p>
+          </div>
         </div>
 
         <div className="min-w-0 flex-[1.2] px-1">
@@ -224,23 +264,20 @@ export default function ProductionJobCard({
                 </div>
               ) : null}
 
-              <div>
-                <h4 className="mb-2 text-[14px] font-bold text-[var(--ink)]">Süreç Detayları</h4>
-                <ProductionStageMiniCards
-                  steps={processSteps}
-                  stagePhotos={activeLine?.stagePhotos || []}
-                  producedLabel={producedLabel}
-                  readOnly={activeLine?.productionClosed === true}
-                  onStageClick={(stageId) => {
-                    if (!activeLine || !primaryRow) return
-                    lineItemActions?.handleQuantityRowStageChange(activeLine, primaryRow.id, stageId)
-                  }}
-                  onPhotosChange={(photos) => {
-                    if (!activeLine) return
-                    lineItemActions?.handleStagePhotosChange(activeLine, photos)
-                  }}
-                />
-              </div>
+              <ProductionStageMiniCards
+                steps={processSteps}
+                stagePhotos={activeLine?.stagePhotos || []}
+                producedLabel={producedLabel}
+                readOnly={activeLine?.productionClosed === true}
+                onStageClick={(stageId) => {
+                  if (!activeLine || !primaryRow) return
+                  lineItemActions?.handleQuantityRowStageChange(activeLine, primaryRow.id, stageId)
+                }}
+                onPhotosChange={(photos) => {
+                  if (!activeLine) return
+                  lineItemActions?.handleStagePhotosChange(activeLine, photos)
+                }}
+              />
 
               {activeLine ? (
                 <ProductionPartialDeliveryCards
