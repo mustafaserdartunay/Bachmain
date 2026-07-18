@@ -1531,25 +1531,15 @@ html.night .glass-sidebar .sidebar-section-divider {
   border: 1px solid transparent;
 }
 
-.glass-sidebar .sidebar-menu-group.is-open,
-.glass-sidebar .sidebar-menu-group.is-active {
-  background: rgba(148, 163, 184, 0.12);
-  border-color: rgba(148, 163, 184, 0.22);
+/* Open group: subtle container only — active page highlight stays on the leaf button */
+.glass-sidebar .sidebar-menu-group.is-open {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: rgba(148, 163, 184, 0.14);
 }
 
-.glass-sidebar .sidebar-menu-group.is-open.is-active {
-  background: rgba(148, 163, 184, 0.18);
-  border-color: rgba(148, 163, 184, 0.28);
-}
-
-html.night .glass-sidebar .sidebar-menu-group.is-open,
-html.night .glass-sidebar .sidebar-menu-group.is-active {
-  background: rgba(0, 0, 0, 0.28);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-html.night .glass-sidebar .sidebar-menu-group.is-open.is-active {
-  background: rgba(0, 0, 0, 0.38);
+html.night .glass-sidebar .sidebar-menu-group.is-open {
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 .glass-sidebar .sidebar-menu-button,

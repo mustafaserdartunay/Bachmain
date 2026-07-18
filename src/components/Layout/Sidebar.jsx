@@ -346,12 +346,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <SidebarSection label="ERP" collapsed={collapsed} />
 
         {/* 2. Satışlar (+ Süreç Yönetimi) */}
-        <div className={`sidebar-menu-group ${customerOpen ? 'is-open' : ''} ${isSalesRouteActive ? 'is-active' : ''}`}>
+        <div className={`sidebar-menu-group ${customerOpen ? 'is-open' : ''}`}>
           <button
             type="button"
             onClick={() => toggleMenu('customer')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
+              collapsed && isSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -397,9 +397,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 <button
                   type="button"
                   onClick={() => setProcessOpen((open) => !open)}
-                  className={`${subMenuButtonBase} flex w-full items-center gap-2 ${
-                    isProcessRouteActive ? 'sidebar-menu-active font-medium' : ''
-                  }`}
+                  className={`${subMenuButtonBase} flex w-full items-center gap-2`}
                 >
                   <SubMenuIcon>
                     <ClipboardList className="h-3.5 w-3.5" />
@@ -433,12 +431,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
 
         {/* 3. Giderler */}
-        <div className={`sidebar-menu-group ${expensesOpen ? 'is-open' : ''} ${isExpensesRouteActive ? 'is-active' : ''}`}>
+        <div className={`sidebar-menu-group ${expensesOpen ? 'is-open' : ''}`}>
           <button
             type="button"
             onClick={() => toggleMenu('expenses')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isExpensesRouteActive ? 'sidebar-menu-active font-medium' : ''
+              collapsed && isExpensesRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -484,12 +482,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
 
         {/* 4. Nakit */}
-        <div className={`sidebar-menu-group ${treasuryOpen ? 'is-open' : ''} ${isTreasuryRouteActive ? 'is-active' : ''}`}>
+        <div className={`sidebar-menu-group ${treasuryOpen ? 'is-open' : ''}`}>
           <button
             type="button"
             onClick={() => toggleMenu('treasury')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isTreasuryRouteActive ? 'sidebar-menu-active font-medium' : ''
+              collapsed && isTreasuryRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -536,12 +534,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
 
         {/* 5. Stok */}
-        <div className={`sidebar-menu-group ${stockOpen ? 'is-open' : ''} ${isStockRouteActive ? 'is-active' : ''}`}>
+        <div className={`sidebar-menu-group ${stockOpen ? 'is-open' : ''}`}>
           <button
             type="button"
             onClick={() => toggleMenu('stock')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isStockRouteActive ? 'sidebar-menu-active font-medium' : ''
+              collapsed && isStockRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -593,12 +591,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </div>
 
         {showProjects && (
-          <div className={`sidebar-menu-group ${projectsOpen ? 'is-open' : ''} ${isProjectsRouteActive ? 'is-active' : ''}`}>
+          <div className={`sidebar-menu-group ${projectsOpen ? 'is-open' : ''}`}>
             <button
               type="button"
               onClick={() => toggleMenu('projects')}
               className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-                isProjectsRouteActive ? 'sidebar-menu-active font-medium' : ''
+                collapsed && isProjectsRouteActive ? 'sidebar-menu-active font-medium' : ''
               }`}
             >
               <MenuIcon collapsed={collapsed}>
@@ -648,12 +646,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <SidebarSection label="CRM" collapsed={collapsed} />
 
         {/* Saha Satış */}
-        <div className={`sidebar-menu-group ${fieldSalesOpen ? 'is-open' : ''} ${isFieldSalesRouteActive ? 'is-active' : ''}`}>
+        <div className={`sidebar-menu-group ${fieldSalesOpen ? 'is-open' : ''}`}>
           <button
             type="button"
             onClick={() => toggleMenu('fieldSales')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isFieldSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
+              collapsed && isFieldSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -729,12 +727,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </NavLink>
 
         {/* Ajanda (görev / not / randevu) */}
-        <div className={`sidebar-menu-group ${crmOpen ? 'is-open' : ''} ${isCrmRouteActive ? 'is-active' : ''}`}>
+        <div className={`sidebar-menu-group ${crmOpen ? 'is-open' : ''}`}>
           <button
             type="button"
             onClick={() => toggleMenu('crm')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isCrmRouteActive ? 'sidebar-menu-active font-medium' : ''
+              collapsed && isCrmRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -775,12 +773,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <SidebarSection label="İK" collapsed={collapsed} />
 
         {/* İnsan Kaynakları / PDKS */}
-        <div className={`sidebar-menu-group ${hrOpen ? 'is-open' : ''} ${isHrRouteActive ? 'is-active' : ''}`}>
+        <div className={`sidebar-menu-group ${hrOpen ? 'is-open' : ''}`}>
           <button
             type="button"
             onClick={() => toggleMenu('hr')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isHrRouteActive ? 'sidebar-menu-active font-medium' : ''
+              collapsed && isHrRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -829,12 +827,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <SidebarSection label="LOJİSTİK" collapsed={collapsed} />
 
         {/* Lojistik */}
-        <div className={`sidebar-menu-group ${logisticsOpen ? 'is-open' : ''} ${isLogisticsRouteActive ? 'is-active' : ''}`}>
+        <div className={`sidebar-menu-group ${logisticsOpen ? 'is-open' : ''}`}>
           <button
             type="button"
             onClick={() => toggleMenu('logistics')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isLogisticsRouteActive ? 'sidebar-menu-active font-medium' : ''
+              collapsed && isLogisticsRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -901,12 +899,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         ))}
 
         {/* Ayarlar */}
-        <div className={`sidebar-menu-group ${settingsOpen ? 'is-open' : ''} ${isSettingsRoute ? 'is-active' : ''}`}>
+        <div className={`sidebar-menu-group ${settingsOpen ? 'is-open' : ''}`}>
           <button
             type="button"
             onClick={() => toggleMenu('settings')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isSettingsRoute
+              collapsed && isSettingsRoute
                 ? 'sidebar-menu-active font-medium'
                 : ''
             }`}
@@ -960,7 +958,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} flex-1 ${
-                        isActive || isDocumentCenterRouteActive
+                        isActive
                           ? 'sidebar-menu-active font-medium'
                           : ''
                       }`
