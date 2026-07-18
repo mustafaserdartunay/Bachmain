@@ -320,6 +320,15 @@ export default function ProductionPage() {
             </span>
           </div>
 
+          <div className="hidden rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2.5 text-[11px] font-black uppercase tracking-wide text-[#94A3B8] lg:grid lg:grid-cols-[minmax(180px,1.1fr)_140px_minmax(220px,1.4fr)_150px_130px_88px] lg:gap-3">
+            <span>Ürün / Sipariş</span>
+            <span>Adet / Teslimat</span>
+            <span>Süreç İlerlemesi</span>
+            <span>Durum</span>
+            <span>Teslimat</span>
+            <span className="text-right">İşlemler</span>
+          </div>
+
           <div className="space-y-3">
             {filteredJobs.map((job) => (
               <ProductionJobCard
