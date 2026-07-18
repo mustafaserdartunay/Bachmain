@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
+import FeatureToggleButton from '../components/Common/FeatureToggleButton'
 import {
   findSectoralCategory,
   isSectoralModuleEnabled,
@@ -18,31 +19,30 @@ function ModuleToggle({ categoryId, sectionId, module }) {
     return () => window.removeEventListener('bach:sectoral-settings-updated', sync)
   }, [categoryId, sectionId, module.id])
 
-  function handleToggle(event) {
-    const next = event.target.checked
+  function handleToggle(next) {
     setEnabled(next)
     setSectoralModuleEnabled(categoryId, sectionId, module.id, next)
   }
 
   return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-dark-500/45 bg-dark-800/55 px-4 py-3 transition-colors hover:border-blue-500/25">
+    <div className="flex items-start justify-between gap-4 rounded-2xl border border-dark-500/45 bg-dark-800/55 px-4 py-3 transition-colors hover:border-blue-500/25">
       <div className="min-w-0">
         <p className="text-sm font-black text-white">{module.label}</p>
         <p className="mt-1 text-xs font-semibold text-gray-500">{module.description}</p>
         {enabled && module.route ? (
           <p className="mt-2 text-[12px] font-semibold text-emerald-300">Sayfa aktif: {module.route}</p>
         ) : (
-          <p className="mt-2 text-[12px] font-semibold text-gray-600">Onay verilmediğinde menüde görünmez.</p>
+          <p className="mt-2 text-[12px] font-semibold text-gray-600">
+            {enabled ? 'Özellik açık.' : 'Kapalıyken ilgili detay alanları gizlenir.'}
+          </p>
         )}
       </div>
-      <input
-        type="checkbox"
-        checked={enabled}
+      <FeatureToggleButton
+        enabled={enabled}
         onChange={handleToggle}
-        className="mt-1 h-5 w-5 shrink-0 rounded border-dark-500 bg-dark-700 accent-emerald-500"
-        aria-label={`${module.label} onayı`}
+        ariaLabel={`${module.label} durumu`}
       />
-    </label>
+    </div>
   )
 }
 
@@ -78,7 +78,7 @@ export default function SectoralCategorySettingsPage() {
           title={section.label}
           description={section.description}
         >
-          <div className="grid gap-2 lg:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid gap-2 lg:grid-cols-1 xl:grid-cols-2">
             {section.modules.map((module) => (
               <ModuleToggle
                 key={module.id}

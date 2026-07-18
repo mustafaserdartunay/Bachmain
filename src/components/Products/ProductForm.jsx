@@ -42,6 +42,7 @@ import {
   processRecordToOptions,
 } from '../DocumentEditor/processPanelUtils'
 import { stageColors } from '../DocumentEditor/stageColors'
+import { isDetailedProductFeaturesEnabled } from '../../utils/sectoralSettings'
 
 const DISCOUNT_RATES = [10, 15, 20, 25, 30, 35, 40]
 
@@ -687,6 +688,15 @@ export default function ProductForm({ product, onChange, isNew }) {
   const [pendingUnitDeleteId, setPendingUnitDeleteId] = useState(null)
   const [categoryOptions, setCategoryOptions] = useState(() => readOptionLists().productCategory)
   const [units, setUnits] = useState(() => unitOptions.map(normalizeUnitOption))
+  const [detailedFeaturesEnabled, setDetailedFeaturesEnabled] = useState(isDetailedProductFeaturesEnabled)
+
+  useEffect(() => {
+    function syncDetailedFeatures() {
+      setDetailedFeaturesEnabled(isDetailedProductFeaturesEnabled())
+    }
+    window.addEventListener('bach:sectoral-settings-updated', syncDetailedFeatures)
+    return () => window.removeEventListener('bach:sectoral-settings-updated', syncDetailedFeatures)
+  }, [])
 
   useEffect(() => {
     function syncLists() {
@@ -1039,7 +1049,7 @@ export default function ProductForm({ product, onChange, isNew }) {
         </div>
       </div>
 
-      <Panel icon={Package} title="1. Ürün Bilgileri" description="Ürünün kimlik bilgileri, ana görseli, kategori ve tedarikçi bilgileri">
+      <Panel icon={Package} title="1. Ürün Bilgileri" description={detailedFeaturesEnabled ? "Ürünün kimlik bilgileri, ana görseli, kategori ve tedarikçi bilgileri" : "Standart ürün kimlik bilgileri"}>
         <div className="grid grid-cols-12 items-stretch gap-5">
           <div className="col-span-8 flex h-full flex-col gap-4">
             <Field label="Ürün Adı *">
@@ -1055,9 +1065,11 @@ export default function ProductForm({ product, onChange, isNew }) {
             <Field label="Barkod Kodu">
               <input value={product.barcode} onChange={(e) => update('barcode', e.target.value)} className="form-input" />
             </Field>
+            {detailedFeaturesEnabled ? (
             <Field label="GTIP Kodu">
               <input value={product.gtipCode} onChange={(e) => update('gtipCode', e.target.value)} className="form-input" />
             </Field>
+            ) : null}
             <Field label="Birim Seçenekleri">
               <ProcessPanelModule
                 activeLabel="Aktif Birim"
@@ -1114,6 +1126,8 @@ export default function ProductForm({ product, onChange, isNew }) {
                 compact
               />
             </Field>
+{detailedFeaturesEnabled ? (
+            <>
             <Field label="Mağaza Satışında Görünsün mü?">
               <StoreSalesVisibilityPanel
                 visible={Boolean(product.storeSalesVisible)}
@@ -1163,6 +1177,9 @@ export default function ProductForm({ product, onChange, isNew }) {
                 {getProducerSuppliers().length === 0 && <p className="text-xs text-gray-500">Henüz kayıt yok.</p>}
               </div>
             </Field>
+            </>
+            ) : null}
+
             <div className="flex flex-col">
               <label className="mb-2 block text-sm font-semibold text-white">Ürün Notları</label>
               <textarea
@@ -1206,6 +1223,7 @@ export default function ProductForm({ product, onChange, isNew }) {
                   </div>
                 )}
               </div>
+{detailedFeaturesEnabled ? (
               <div className="mt-auto border-t border-dark-500/50 pt-4">
                 <h4 className="mb-3 text-sm font-semibold text-white">Medya Galerisi</h4>
                 <div className="grid gap-2">
@@ -1250,6 +1268,7 @@ export default function ProductForm({ product, onChange, isNew }) {
                   ))}
                 </div>
               </div>
+              ) : null}
             </div>
 
           </div>
@@ -1286,6 +1305,7 @@ export default function ProductForm({ product, onChange, isNew }) {
           <div className="flex h-full items-center justify-center pt-7"><Toggle checked={product.useMarginPricing} onChange={(v) => update('useMarginPricing', v)} label="Satışı kar marjından belirle" /></div>
           <div className="flex h-full items-center justify-center pt-7"><Toggle checked={product.roundUpFinalPrice} onChange={(v) => update('roundUpFinalPrice', v)} label="Üst taban rakama yuvarla" /></div>
         </div>
+        {detailedFeaturesEnabled ? (
         <div className="mt-4 grid grid-cols-2 items-stretch gap-4">
           <PriceSummary product={product} pricing={pricing} rates={rates} loading={ratesLoading} />
           <div className="flex h-full flex-col rounded-2xl border border-dark-500/50 bg-dark-700/30 p-4">
@@ -1386,6 +1406,12 @@ export default function ProductForm({ product, onChange, isNew }) {
             </div>
           </div>
         </div>
+        ) : (
+        <div className="mt-4">
+          <PriceSummary product={product} pricing={pricing} rates={rates} loading={ratesLoading} />
+        </div>
+        )}
+
       </Panel>
 
       <Panel icon={Boxes} title="4. Stok Takibi" description="Depo, raf ve manuel stok giriş/çıkış işlemleri">
@@ -1400,6 +1426,7 @@ export default function ProductForm({ product, onChange, isNew }) {
             {product.stockTracking ? 'Açık - stok takibi yapılıyor' : 'Kapalı - stok takibi yapılmıyor'}
           </span>
         </div>
+{detailedFeaturesEnabled ? (
         <div className="mb-4 grid grid-cols-2 gap-3">
           <Field label="Stok Tipi">
             <select
@@ -1421,6 +1448,7 @@ export default function ProductForm({ product, onChange, isNew }) {
             />
           </Field>
         </div>
+        ) : null}
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-4">
             <Field label="Ana Depo">
@@ -1436,6 +1464,7 @@ export default function ProductForm({ product, onChange, isNew }) {
               <NumericInput value={product.criticalStock} onChange={(v) => update('criticalStock', v)} />
             </Field>
           </div>
+{detailedFeaturesEnabled ? (
           <div className="rounded-2xl border border-dark-500/50 bg-dark-700/30 p-4">
             <h4 className="mb-3 text-sm font-semibold text-white">Manuel Stok Güncelleme</h4>
             <div className="grid grid-cols-12 items-end gap-2">
@@ -1462,9 +1491,12 @@ export default function ProductForm({ product, onChange, isNew }) {
               </div>
             </div>
           </div>
+          ) : null}
         </div>
       </Panel>
 
+{detailedFeaturesEnabled ? (
+      <>
       <Panel icon={Info} title="5. Birim, Koli ve Araç Kapasitesi" description="Ambalaj birimleri, koli ölçüsü ve araç yükleme hesabı">
         <div className="space-y-4">
           <div className="grid grid-cols-12 gap-4">
@@ -1626,6 +1658,8 @@ export default function ProductForm({ product, onChange, isNew }) {
           </Field>
         </div>
       </Panel>
+      </>
+      ) : null}
 
       {previewMedia && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-6" onClick={() => setPreviewMedia(null)}>
