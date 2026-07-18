@@ -258,7 +258,7 @@ export default function CustomersPage({
                       label: 'Müşteri Bul',
                       icon: Search,
                       iconClassName: 'text-orange-300',
-                      onClick: () => navigate('/musteriler/bul'),
+                      onClick: () => navigate('/saha-satis/musteri-bul'),
                     },
                   ]
             }

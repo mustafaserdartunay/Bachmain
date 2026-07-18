@@ -208,7 +208,7 @@ export default function App() {
                 <Route path="/giderler/kdv-raporu" element={<VatReportPage />} />
                 <Route path="/giderler" element={<Navigate to="/giderler/liste" replace />} />
                 <Route path="/musteriler" element={<CustomersPage listKind="customer" />} />
-                <Route path="/musteri-bul" element={<CustomerFinderPage />} />
+                <Route path="/musteri-bul" element={<Navigate to="/saha-satis/musteri-bul" replace />} />
                 <Route path="/suppliers" element={<Navigate to="/giderler/tedarikciler" replace />} />
                 <Route path="/crm" element={<CrmPage view="all" />} />
                 <Route path="/crm/notlar" element={<CrmPage view="note" />} />
@@ -221,6 +221,7 @@ export default function App() {
                 <Route path="/crm/randevu/:id/duzenle" element={<CrmCreatePage type="appointment" />} />
                 <Route path="/crm/not/:id/duzenle" element={<CrmCreatePage type="note" />} />
                 <Route path="/saha-satis" element={<FieldSalesPage />} />
+                <Route path="/saha-satis/musteri-bul" element={<CustomerFinderPage />} />
                 <Route path="/saha-satis/temsilciler" element={<SalesRepresentativesPage />} />
                 <Route path="/saha-satis/temsilci-raporlari" element={<SalesRepReportsPage />} />
                 <Route path="/musteriler/yeni" element={<CustomerCreatePage />} />

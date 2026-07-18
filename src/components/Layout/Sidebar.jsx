@@ -115,6 +115,7 @@ const stockSubMenuIcons = {
 }
 const fieldSalesSubMenuIcons = {
   'map-pinned': MapPinned,
+  'user-search': UserSearch,
   users: Users,
   'bar-chart': BarChart3,
 }
