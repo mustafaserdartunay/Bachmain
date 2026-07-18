@@ -49,6 +49,7 @@ import { formatTL } from '../utils/productPricing'
 import { getListCustomerDisplay } from '../data/customerProfiles'
 import { sampleProducts } from '../data/productsData'
 import { cancelOrderFromQuote, deleteOrder, loadOrders, orderHasLinkedQuote, orderTotals, readOpenOrderId, clearOpenOrderId, saveOrders } from '../utils/ordersStore'
+import { flushWorkspaceNow } from '../utils/workspaceStorage'
 import { publishWorkflowStages } from '../utils/workflowStagePublish'
 import { createProductionFromOrder, loadProductionJobs } from '../utils/productionStore'
 import { syncQuoteFromOrder } from '../utils/quoteWorkflowSync'
@@ -417,7 +418,8 @@ export default function OrdersPage() {
     }
     function refreshWorkflowStages() {
       setWorkflowStages(loadWorkflowStages())
-      setOrders(loadOrders())
+      // Don't reload orders here — saveOrders(normalize) can emit workflow
+      // compaction events mid-save and would clobber in-memory list state.
     }
     window.addEventListener('bach:orders-updated', refresh)
     window.addEventListener('bach:workflow-stages-updated', refreshWorkflowStages)
@@ -487,8 +489,9 @@ export default function OrdersPage() {
   }
 
   function updateOrders(nextOrders) {
-    saveOrders(nextOrders)
+    if (!saveOrders(nextOrders)) return false
     setOrders(nextOrders)
+    return true
   }
 
   function patchOrder(id, patch) {
@@ -528,7 +531,7 @@ export default function OrdersPage() {
       const reloaded = loadOrders().map((order) => (
         order.id === selectedOrder.id ? { ...order, ...patch, stages: syncedStages } : order
       ))
-      saveOrders(reloaded)
+      if (!saveOrders(reloaded)) return
       setOrders(reloaded)
       if (patch.currentStageId) {
         const updated = reloaded.find((order) => order.id === selectedOrder.id)
@@ -664,7 +667,7 @@ export default function OrdersPage() {
   }
 
   function saveCurrentOrder({ startNew = false, returnToList = false } = {}) {
-    if (!selectedOrder || isSaving) return
+    if (!selectedOrder || isSaving) return false
     const sanitized = {
       ...selectedOrder,
       customer: String(selectedOrder.customer || '').trim(),
@@ -672,9 +675,14 @@ export default function OrdersPage() {
       items: (selectedOrder.items || []).filter((item) => item.product || item.unitPrice > 0),
     }
     if (!sanitized.customer) {
-      window.alert('Kaydetmeden önce müşteri adı girin.')
-      return
+      window.alert('Kaydetmeden önce müşteri seçin veya müşteri adı girin.')
+      return false
     }
+    if (sanitized.items.length === 0) {
+      window.alert('Kaydetmeden önce en az bir ürün satırı ekleyin.')
+      return false
+    }
+
     setIsSaving(true)
     setOpenSaveMenu(false)
     setPendingHeaderOrderDelete(false)
@@ -688,7 +696,7 @@ export default function OrdersPage() {
           {
             id: createId('act'),
             date: new Date().toLocaleString('tr-TR'),
-            text: exists ? 'Sipariş güncellenerek kaydedildi.' : 'Sipariş kaydedildi.',
+            text: 'Sipariş güncellenerek kaydedildi.',
           },
         ],
       } : order))
@@ -699,7 +707,14 @@ export default function OrdersPage() {
           { id: createId('act'), date: new Date().toLocaleString('tr-TR'), text: 'Sipariş kaydedildi.' },
         ],
       }, ...orders]
-    updateOrders(nextOrders)
+
+    const saved = updateOrders(nextOrders)
+    if (!saved) {
+      setIsSaving(false)
+      return false
+    }
+
+    flushWorkspaceNow()
 
     window.setTimeout(() => {
       if (startNew) {
@@ -712,11 +727,14 @@ export default function OrdersPage() {
       }
       setDraftOrder(null)
       setSelectedId(sanitized.id)
+      setOrders(loadOrders())
       if (returnToList) {
         setViewMode('list')
       }
       setIsSaving(false)
     }, 650)
+
+    return true
   }
 
   function deleteCurrentOrder({ navigateToList = false, skipConfirm = false } = {}) {

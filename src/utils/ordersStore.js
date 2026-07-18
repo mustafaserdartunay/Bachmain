@@ -17,8 +17,8 @@ export { DEFAULT_ORDER_STAGE_ID }
 const STORAGE_KEY = 'erlenbox-orders'
 const DELETED_COLLECTION = 'orders'
 
-function normalizeOrder(order) {
-  const stages = loadWorkflowStages()
+function normalizeOrder(order, stagesOverride = null) {
+  const stages = stagesOverride || loadWorkflowStages()
   const orderStageIds = new Set(getOrderStageOptions(stages).map((stage) => stage.id))
   let currentStageId = order?.currentStageId
 
@@ -94,9 +94,27 @@ export function loadOrders() {
   }
 }
 
-export function saveOrders(orders) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders.map(normalizeOrder)))
-  window.dispatchEvent(new CustomEvent('bach:orders-updated'))
+export function saveOrders(orders, { silent = false } = {}) {
+  try {
+    const stages = loadWorkflowStages()
+    const payload = (Array.isArray(orders) ? orders : []).map((order) => {
+      const normalized = normalizeOrder(order, stages)
+      // Persist without duplicating the full stages tree on every row.
+      const { stages: _stages, ...rest } = normalized
+      return rest
+    })
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    if (!silent) {
+      window.dispatchEvent(new CustomEvent('bach:orders-updated'))
+    }
+    return true
+  } catch (error) {
+    console.warn('[orders] save failed', error)
+    if (!silent) {
+      window.alert('Sipariş kaydedilemedi. Tarayıcı depolama alanını veya izinleri kontrol edin.')
+    }
+    return false
+  }
 }
 
 export function orderTotals(order) {
