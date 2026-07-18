@@ -2685,12 +2685,13 @@ select.search-pill:focus {
   background: #ffffff;
 }
 
-/* Olumlu — kaydet, onay, başarı aksiyonları */
+/* Olumlu — kaydet / Gelir Ekle ile aynı yeşil gradient */
 .btn-success {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background-color: var(--ds-success, #059669) !important;
+  background-color: transparent !important;
+  background-image: linear-gradient(to bottom right, #7cf2c6, #34d399, #10b981) !important;
   color: #ffffff !important;
   height: var(--ds-control-h, 3.25rem);
   min-height: var(--ds-control-h, 3.25rem);
@@ -2701,7 +2702,8 @@ select.search-pill:focus {
 }
 
 .btn-success:hover {
-  background-color: color-mix(in srgb, var(--ds-success, #059669) 85%, white) !important;
+  background-color: transparent !important;
+  filter: brightness(1.05);
   transform: translateY(-2px);
 }
 

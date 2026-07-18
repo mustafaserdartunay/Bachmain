@@ -3,17 +3,19 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   CheckCircle2,
-  ChevronRight,
+  ChevronDown,
   ClipboardList,
   Factory,
   Plus,
   Printer,
   Receipt,
+  Save,
   Send,
   Trash2,
   Undo2,
   Users,
 } from 'lucide-react'
+import { BTN_SUCCESS } from '../utils/buttonStyles'
 import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import ListHeaderRow from '../components/Common/ListHeaderRow'
@@ -356,6 +358,8 @@ export default function OrdersPage() {
   const [openItemMenuId, setOpenItemMenuId] = useState(null)
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveFlash, setSaveFlash] = useState(false)
   const [pendingHeaderOrderDelete, setPendingHeaderOrderDelete] = useState(false)
   const [customerModalOpen, setCustomerModalOpen] = useState(false)
   const [isStagePanelOpen, setIsStagePanelOpen] = useState(false)
@@ -661,7 +665,7 @@ export default function OrdersPage() {
   }
 
   function saveCurrentOrder({ startNew = false, returnToList = false } = {}) {
-    if (!selectedOrder) return
+    if (!selectedOrder || isSaving) return
     const sanitized = {
       ...selectedOrder,
       customer: String(selectedOrder.customer || '').trim(),
@@ -672,6 +676,7 @@ export default function OrdersPage() {
       window.alert('Kaydetmeden önce müşteri adı girin.')
       return
     }
+    setIsSaving(true)
     const exists = orders.some((order) => order.id === sanitized.id)
     const nextOrders = exists
       ? orders.map((order) => (order.id === sanitized.id ? {
@@ -698,12 +703,20 @@ export default function OrdersPage() {
     setOpenSaveMenu(false)
     setPendingHeaderOrderDelete(false)
     if (startNew) {
+      setIsSaving(false)
+      setSaveFlash(false)
       addOrder()
       return
     }
     if (returnToList) {
+      setIsSaving(false)
+      setSaveFlash(false)
       setViewMode('list')
+      return
     }
+    setIsSaving(false)
+    setSaveFlash(true)
+    window.setTimeout(() => setSaveFlash(false), 1800)
   }
 
   function deleteCurrentOrder({ navigateToList = false, skipConfirm = false } = {}) {
@@ -952,63 +965,75 @@ export default function OrdersPage() {
                   <Printer className="h-4 w-4" /> Şablonla Yazdır
                 </Link>
               ) : null}
-              <div className="inline-flex items-stretch overflow-hidden rounded-xl shadow-lg shadow-emerald-900/25">
-                <button
-                  type="button"
-                  onClick={() => saveCurrentOrder({ returnToList: true })}
-                  disabled={!selectedOrder}
-                  className="btn-success inline-flex h-10 items-center justify-center rounded-none px-4 text-sm font-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Kaydet
-                </button>
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    setOpenSaveMenu((open) => {
-                      if (open) setPendingHeaderOrderDelete(false)
-                      return !open
-                    })
-                  }}
-                  disabled={!selectedOrder}
-                  className="btn-success inline-flex h-10 w-10 items-center justify-center rounded-none border-l border-white/25 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                  title="Kaydet seçenekleri"
-                  aria-expanded={openSaveMenu}
-                  aria-haspopup="menu"
-                >
-                  <ChevronRight className={`h-4 w-4 transition-transform ${openSaveMenu ? '-rotate-90' : 'rotate-90'}`} />
-                </button>
-              </div>
-              {openSaveMenu && (
-                <div className="absolute right-0 top-12 z-40 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card" role="menu">
+              <div className="relative">
+                <div className="btn-split">
                   <button
                     type="button"
-                    role="menuitem"
-                    onClick={() => saveCurrentOrder({ startNew: true })}
-                    className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
+                    onClick={() => saveCurrentOrder({ returnToList: false })}
+                    disabled={!selectedOrder || isSaving}
+                    className={`${BTN_SUCCESS} min-w-[7.5rem] gap-2 px-4 text-sm font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-50`}
                   >
-                    Kaydet ve Yeni Ekle
+                    <Save className="h-4 w-4" />
+                    {isSaving ? 'Kaydediliyor...' : saveFlash ? 'Kaydedildi' : 'Kaydet'}
                   </button>
-                  <div className="my-1 border-t border-dark-500/40" />
-                  {pendingHeaderOrderDelete ? (
-                    <ListDeleteConfirmPanel
-                      title="Sipariş silinsin mi?"
-                      description="Bu işlem geri alınamaz. Sipariş kalıcı olarak silinir."
-                      onConfirm={() => deleteCurrentOrder({ navigateToList: true, skipConfirm: true })}
-                      onCancel={() => setPendingHeaderOrderDelete(false)}
-                    />
-                  ) : (
+                  <span className="btn-split-divider" aria-hidden />
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setOpenSaveMenu((open) => {
+                        if (open) setPendingHeaderOrderDelete(false)
+                        return !open
+                      })
+                    }}
+                    disabled={!selectedOrder || isSaving}
+                    className={`${BTN_SUCCESS} w-14 px-0 disabled:cursor-not-allowed disabled:opacity-50`}
+                    title="Kaydet seçenekleri"
+                    aria-expanded={openSaveMenu}
+                    aria-haspopup="menu"
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${openSaveMenu ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+                {openSaveMenu && (
+                  <div className="absolute right-0 top-full z-40 mt-2 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card" role="menu">
                     <button
                       type="button"
                       role="menuitem"
-                      onClick={() => setPendingHeaderOrderDelete(true)}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-300 transition-colors hover:bg-red-500/15 hover:text-red-200"
+                      onClick={() => saveCurrentOrder({ startNew: true })}
+                      className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
                     >
-                      <Trash2 className="h-3.5 w-3.5" /> Siparişi Sil
+                      Kaydet ve Yeni Ekle
                     </button>
-                  )}
-                </div>
-              )}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => saveCurrentOrder({ returnToList: true })}
+                      className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
+                    >
+                      Kaydet ve Listeye Dön
+                    </button>
+                    <div className="my-1 border-t border-dark-500/40" />
+                    {pendingHeaderOrderDelete ? (
+                      <ListDeleteConfirmPanel
+                        title="Sipariş silinsin mi?"
+                        description="Bu işlem geri alınamaz. Sipariş kalıcı olarak silinir."
+                        onConfirm={() => deleteCurrentOrder({ navigateToList: true, skipConfirm: true })}
+                        onCancel={() => setPendingHeaderOrderDelete(false)}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => setPendingHeaderOrderDelete(true)}
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-300 transition-colors hover:bg-red-500/15 hover:text-red-200"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Siparişi Sil
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         />

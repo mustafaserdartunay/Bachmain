@@ -6,7 +6,7 @@ import { jsPDF } from 'jspdf'
 import {
   ArrowLeft,
   CheckCircle2,
-  ChevronRight,
+  ChevronDown,
   ClipboardList,
   Clock3,
   FileText,
@@ -14,6 +14,7 @@ import {
   Plus,
   Printer,
   Receipt,
+  Save,
   Send,
   Sparkles,
   Trash2,
@@ -1110,6 +1111,7 @@ export default function QuotesPage() {
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveFlash, setSaveFlash] = useState(false)
   const [pendingHeaderQuoteDelete, setPendingHeaderQuoteDelete] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [customerModalOpen, setCustomerModalOpen] = useState(false)
@@ -1632,8 +1634,14 @@ export default function QuotesPage() {
 
     setDraftQuote(null)
     setSelectedId(safeQuote.id)
-    setViewMode(returnToList ? 'prepare' : 'prepare')
+    setViewMode('prepare')
     setIsSaving(false)
+    if (!returnToList) {
+      setSaveFlash(true)
+      window.setTimeout(() => setSaveFlash(false), 1800)
+    } else {
+      setSaveFlash(false)
+    }
   }
 
   function getSafeQuoteForOutput() {
@@ -2073,63 +2081,67 @@ export default function QuotesPage() {
                   <Printer className="h-4 w-4" /> Şablonla Yazdır
                 </Link>
               ) : null}
-              <div className="inline-flex items-stretch overflow-hidden rounded-xl shadow-lg shadow-emerald-900/25">
-                <button
-                  type="button"
-                  onClick={() => saveCurrentQuote({ returnToList: true })}
-                  disabled={!selectedQuote || isSaving}
-                  className="btn-success inline-flex h-10 min-w-[7.5rem] items-center justify-center rounded-none px-4 text-sm font-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
-                </button>
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    setOpenSaveMenu((open) => {
-                      if (open) setPendingHeaderQuoteDelete(false)
-                      return !open
-                    })
-                  }}
-                  disabled={!selectedQuote || isSaving}
-                  className="btn-success inline-flex h-10 w-10 items-center justify-center rounded-none border-l border-white/25 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                  title="Kaydet seçenekleri"
-                  aria-expanded={openSaveMenu}
-                  aria-haspopup="menu"
-                >
-                  <ChevronRight className={`h-4 w-4 transition-transform ${openSaveMenu ? '-rotate-90' : 'rotate-90'}`} />
-                </button>
-              </div>
-              {openSaveMenu && (
-                <div className="absolute right-0 top-12 z-40 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card" role="menu">
+              <div className="relative">
+                <div className="btn-split">
                   <button
                     type="button"
-                    role="menuitem"
-                    onClick={() => saveCurrentQuote({ startNew: true })}
-                    className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
+                    onClick={() => saveCurrentQuote({ returnToList: false })}
+                    disabled={!selectedQuote || isSaving}
+                    className={`${BTN_SUCCESS} min-w-[7.5rem] gap-2 px-4 text-sm font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-50`}
                   >
-                    Kaydet ve Yeni Ekle
+                    <Save className="h-4 w-4" />
+                    {isSaving ? 'Kaydediliyor...' : saveFlash ? 'Kaydedildi' : 'Kaydet'}
                   </button>
-                  <div className="my-1 border-t border-dark-500/40" />
-                  {pendingHeaderQuoteDelete ? (
-                    <ListDeleteConfirmPanel
-                      title="Teklif silinsin mi?"
-                      description="Teklif silinenlere taşınır; geri alınabilir."
-                      onConfirm={() => deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })}
-                      onCancel={() => setPendingHeaderQuoteDelete(false)}
-                    />
-                  ) : (
+                  <span className="btn-split-divider" aria-hidden />
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setOpenSaveMenu((open) => {
+                        if (open) setPendingHeaderQuoteDelete(false)
+                        return !open
+                      })
+                    }}
+                    disabled={!selectedQuote || isSaving}
+                    className={`${BTN_SUCCESS} w-14 px-0 disabled:cursor-not-allowed disabled:opacity-50`}
+                    title="Kaydet seçenekleri"
+                    aria-expanded={openSaveMenu}
+                    aria-haspopup="menu"
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${openSaveMenu ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+                {openSaveMenu && (
+                  <div className="absolute right-0 top-full z-40 mt-2 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card" role="menu">
                     <button
                       type="button"
                       role="menuitem"
-                      onClick={() => setPendingHeaderQuoteDelete(true)}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-300 transition-colors hover:bg-red-500/15 hover:text-red-200"
+                      onClick={() => saveCurrentQuote({ startNew: true })}
+                      className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
                     >
-                      <Trash2 className="h-3.5 w-3.5" /> Teklifi Sil
+                      Kaydet ve Yeni Ekle
                     </button>
-                  )}
-                </div>
-              )}
+                    <div className="my-1 border-t border-dark-500/40" />
+                    {pendingHeaderQuoteDelete ? (
+                      <ListDeleteConfirmPanel
+                        title="Teklif silinsin mi?"
+                        description="Teklif silinenlere taşınır; geri alınabilir."
+                        onConfirm={() => deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })}
+                        onCancel={() => setPendingHeaderQuoteDelete(false)}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => setPendingHeaderQuoteDelete(true)}
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-300 transition-colors hover:bg-red-500/15 hover:text-red-200"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Teklifi Sil
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         />
