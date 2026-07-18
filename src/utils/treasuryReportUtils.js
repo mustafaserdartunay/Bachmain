@@ -70,8 +70,15 @@ export function collectAllChequeRows() {
           chequeDueDate: account.chequeDueDate || '—',
           chequeOwner: account.chequeOwner || '—',
           amount: Number(account.chequeBaseAmount ?? account.openingBalance) || 0,
+          direction: account.chequeDirection || 'in',
           collected: Boolean(account.chequeCollected),
           paid: Boolean(account.chequePaid),
+          sent: Boolean(account.chequeSent),
+          returned: Boolean(account.chequeReturned),
+          deleted: Boolean(account.chequeDeleted),
+          sentAt: account.chequeSentAt || '',
+          returnedAt: account.chequeReturnedAt || '',
+          deletedAt: account.chequeDeletedAt || '',
         })
       }
 
@@ -86,8 +93,15 @@ export function collectAllChequeRows() {
           chequeDueDate: entry.chequeDueDate || '—',
           chequeOwner: entry.chequeOwner || entry.partyName || '—',
           amount: Number(entry.amount) || 0,
+          direction: entry.direction || 'in',
           collected: Boolean(entry.collected),
           paid: Boolean(entry.paid),
+          sent: Boolean(entry.sent || entry.sentAt),
+          returned: Boolean(entry.returned || entry.returnedAt),
+          deleted: Boolean(entry.deleted || entry.deletedAt),
+          sentAt: entry.sentAt || '',
+          returnedAt: entry.returnedAt || '',
+          deletedAt: entry.deletedAt || '',
         })
       })
     })
@@ -104,7 +118,15 @@ function isCustomerChequeEntry(entry = {}) {
 }
 
 function isChequeInPortfolio(entry = {}) {
-  return !entry.collected && !entry.paid
+  return !entry.collected
+    && !entry.paid
+    && !entry.deleted
+    && !entry.deletedAt
+    && !entry.returned
+    && !entry.returnedAt
+    && !entry.sent
+    && !entry.sentAt
+    && entry.direction !== 'out'
 }
 
 function normalizeChequeAmount(entry = {}) {

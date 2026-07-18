@@ -1,4 +1,18 @@
-import { Archive, Banknote, FileSpreadsheet, ImagePlus, Minus, Pencil, Plus, Scale, Trash2, X } from 'lucide-react'
+import {
+  Archive,
+  Banknote,
+  FileSpreadsheet,
+  ImagePlus,
+  Minus,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Scale,
+  Send,
+  Trash2,
+  Undo2,
+  X,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../Common/SearchInput'
@@ -21,6 +35,7 @@ import {
 } from '../../utils/buttonStyles'
 import { formatTreasuryCurrency } from '../../utils/treasuryStore'
 import { downloadExcelCsv, sanitizeExportFilename } from '../../utils/spreadsheetExport'
+import { isChequeActionAllowed } from '../../utils/chequeLifecycle'
 
 export const MOVEMENT_TABLE_GRID = 'grid-cols-[1.1fr_0.95fr_1fr_1.35fr_0.85fr_0.85fr]'
 const MOVEMENT_PAGE_SIZE = 10
@@ -175,6 +190,9 @@ export function CashChequeHistoryTable({
   gridClass,
   onPhotoPreview,
   onSettlement,
+  onSend,
+  onReturn,
+  onRestore,
   onEdit,
   onRemove,
   pendingDeleteId,
@@ -194,12 +212,13 @@ export function CashChequeHistoryTable({
         <span>İşlem Tarihi</span>
         <span>İşlem Saati</span>
         <span>Cari</span>
+        <span>Durum</span>
         <span className="text-right">Tutar</span>
         <span className="text-right">İşlem</span>
       </div>
       <div className="divide-y divide-dark-500/30">
         {rows.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-gray-500">Çek bilgisi bulunamadı.</p>
+          <p className="px-4 py-8 text-center text-sm text-gray-500">Bu sekmede çek kaydı yok.</p>
         ) : (
           rows.map((row) => {
             const transactionAt = row.transactionAt
@@ -213,6 +232,7 @@ export function CashChequeHistoryTable({
                   <span className="truncate text-xs text-gray-500">{formatTransactionDate(transactionAt)}</span>
                   <span className="truncate text-xs text-gray-500">{formatTransactionTime(transactionAt)}</span>
                   <span className="truncate text-gray-500">{row.expenseDescription || 'Masraf kalemi'}</span>
+                  <span className="truncate text-[11px] font-bold text-orange-400">Masraf</span>
                   <span className="text-right text-xs font-black text-orange-300">
                     -{formatTreasuryCurrency(Math.abs(Number(row.amount) || 0))}
                   </span>
@@ -223,8 +243,54 @@ export function CashChequeHistoryTable({
 
             const detail = row
             const isChequeOut = detail.direction === 'out' || Number(detail.amount) < 0
+            const menuItems = [
+              isChequeActionAllowed(detail, 'collection') ? {
+                id: 'collection',
+                label: 'Tahsilat Yap',
+                icon: Banknote,
+                onClick: () => onSettlement?.(detail, 'collection'),
+              } : null,
+              isChequeActionAllowed(detail, 'payment') ? {
+                id: 'payment',
+                label: 'Ödeme Yap',
+                icon: Banknote,
+                onClick: () => onSettlement?.(detail, 'payment'),
+              } : null,
+              isChequeActionAllowed(detail, 'send') ? {
+                id: 'send',
+                label: 'Gönder',
+                icon: Send,
+                onClick: () => onSend?.(detail),
+              } : null,
+              isChequeActionAllowed(detail, 'return') ? {
+                id: 'return',
+                label: 'İade Et',
+                icon: RotateCcw,
+                onClick: () => onReturn?.(detail),
+              } : null,
+              isChequeActionAllowed(detail, 'edit') ? {
+                id: 'edit',
+                label: 'Düzenle',
+                icon: Pencil,
+                onClick: () => onEdit?.(detail),
+              } : null,
+              isChequeActionAllowed(detail, 'restore') ? {
+                id: 'restore',
+                label: detail.deleted ? 'Geri Al' : 'Portföye Al',
+                icon: Undo2,
+                onClick: () => onRestore?.(detail),
+              } : null,
+              isChequeActionAllowed(detail, 'delete') ? {
+                id: 'delete',
+                label: 'Sil',
+                icon: Trash2,
+                tone: 'danger',
+                onClick: () => onPendingDelete?.(`cheque-${detail.id}`),
+              } : null,
+            ].filter(Boolean)
+
             return (
-              <div key={detail.id} className={`grid ${gridClass} items-center gap-3 px-4 py-3 text-sm`}>
+              <div key={detail.id} className={`grid ${gridClass} items-center gap-3 px-4 py-3 text-sm ${detail.deleted ? 'opacity-70' : ''}`}>
                 <span className="truncate font-semibold text-gray-200">{detail.chequeBank || '-'}</span>
                 <span className="truncate text-gray-500">{detail.chequeBranch || '-'}</span>
                 <span className="truncate text-gray-500">{detail.chequeNo || '-'}</span>
@@ -232,6 +298,9 @@ export function CashChequeHistoryTable({
                 <span className="truncate text-xs text-gray-500">{formatTransactionDate(transactionAt)}</span>
                 <span className="truncate text-xs text-gray-500">{formatTransactionTime(transactionAt)}</span>
                 <span className="truncate text-gray-500">{detail.partyName || detail.chequeOwner || '-'}</span>
+                <span className={`inline-flex w-fit ${detail.statusBadgeClass || 'badge-gray'}`}>
+                  {detail.statusLabel || 'Portföy'}
+                </span>
                 <span className={`text-right font-black ${isChequeOut ? 'text-red-300' : 'text-emerald-300'}`}>
                   {isChequeOut ? '-' : ''}{formatTreasuryCurrency(Math.abs(Number(detail.amount) || 0))}
                 </span>
@@ -246,35 +315,7 @@ export function CashChequeHistoryTable({
                       <img src={detail.photo} alt="" className="h-full w-full object-cover" />
                     </button>
                   ) : null}
-                  <MoreMenu
-                    items={[
-                      {
-                        id: 'collection',
-                        label: detail.collected ? 'Tahsilat Yapıldı' : 'Tahsilat Yap',
-                        icon: Banknote,
-                        onClick: detail.collected ? undefined : () => onSettlement(detail, 'collection'),
-                      },
-                      {
-                        id: 'payment',
-                        label: detail.paid ? 'Ödeme Yapıldı' : 'Ödeme Yap',
-                        icon: Banknote,
-                        onClick: detail.paid ? undefined : () => onSettlement(detail, 'payment'),
-                      },
-                      {
-                        id: 'edit',
-                        label: 'Düzenle',
-                        icon: Pencil,
-                        onClick: () => onEdit(detail),
-                      },
-                      {
-                        id: 'delete',
-                        label: 'Sil',
-                        icon: Trash2,
-                        tone: 'danger',
-                        onClick: () => onPendingDelete(`cheque-${detail.id}`),
-                      },
-                    ].filter((item) => item.onClick)}
-                  />
+                  {menuItems.length ? <MoreMenu items={menuItems} /> : null}
                   {pendingDeleteId === `cheque-${detail.id}` ? (
                     <DeleteTrashButton
                       pending
@@ -282,7 +323,7 @@ export function CashChequeHistoryTable({
                       onConfirm={() => onRemove(detail)}
                       onCancel={onCancelDelete}
                       title="Silinsin mi?"
-                      description="Çek bilgisi kaldırılacak."
+                      description="Çek silinenler listesine taşınacak."
                       buttonClassName={`${TEKLIFLER_COP_KUTUSU_BUTTON_CLASS} inline-flex h-8 w-8 items-center justify-center rounded-lg p-0`}
                       wrapperClassName="relative inline-flex"
                       popoverClassName="absolute right-10 top-1/2 z-[90] w-72 -translate-y-1/2"

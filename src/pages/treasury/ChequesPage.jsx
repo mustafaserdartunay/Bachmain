@@ -7,6 +7,7 @@ import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { formatTL } from '../../utils/productPricing'
 import { collectAllChequeRows, formatChequeDate } from '../../utils/treasuryReportUtils'
+import { CHEQUE_STATUS, resolveChequeStatus } from '../../utils/chequeLifecycle'
 import { getTreasuryAccounts } from '../../utils/treasuryStore'
 import { Landmark, ScrollText } from 'lucide-react'
 
@@ -26,13 +27,14 @@ export default function ChequesPage() {
   const rows = useMemo(() => {
     const query = search.trim().toLowerCase()
     return collectAllChequeRows().filter((row) => {
+      if (resolveChequeStatus(row) !== CHEQUE_STATUS.PORTFOLIO) return false
       if (!query) return true
       return [row.chequeNo, row.chequeBank, row.chequeOwner, row.accountName]
-        .some((value) => String(value).toLowerCase().includes(query))
+        .some((value) => String(value || '').toLowerCase().includes(query))
     })
   }, [accounts, search])
 
-  const portfolioTotal = rows.reduce((sum, row) => sum + row.amount, 0)
+  const portfolioTotal = rows.reduce((sum, row) => sum + Math.abs(Number(row.amount) || 0), 0)
 
   return (
     <AppPageShell>

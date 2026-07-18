@@ -47,6 +47,13 @@ import {
 } from '../utils/treasuryStore'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
+  CHEQUE_STATUS_TABS,
+  countChequesByStatus,
+  filterChequesByStatus,
+  isChequeActionAllowed,
+  normalizeChequeDetail,
+} from '../utils/chequeLifecycle'
+import {
   BTN_PRIMARY,
   BTN_SUCCESS,
   DUZENLEME_KALEMI_BUTTON_CLASS,
@@ -297,10 +304,12 @@ function getChequeDetails(account = {}) {
     || account.chequeBranch
     || account.chequeDueDate
     || account.chequeOwner
+    || account.chequeDeleted
+    || Number(account.chequeBaseAmount)
     || Number(account.openingBalance),
   )
   if (hasBaseCheque) {
-    details.push({
+    details.push(normalizeChequeDetail({
       id: `${account.id}-base-cheque`,
       chequeNo: account.chequeNo || '',
       chequeBank: account.chequeBank || '',
@@ -309,8 +318,15 @@ function getChequeDetails(account = {}) {
       chequeOwner: account.chequeOwner || '',
       photo: account.chequePhoto || '',
       amount: Number(account.chequeBaseAmount ?? (chequeEntries.length ? 0 : account.openingBalance)) || 0,
+      direction: account.chequeDirection || 'in',
       collected: Boolean(account.chequeCollected),
       paid: Boolean(account.chequePaid),
+      sent: Boolean(account.chequeSent),
+      returned: Boolean(account.chequeReturned),
+      deleted: Boolean(account.chequeDeleted),
+      sentAt: account.chequeSentAt || '',
+      returnedAt: account.chequeReturnedAt || '',
+      deletedAt: account.chequeDeletedAt || '',
       collectedAt: account.collectedAt || '',
       paidAt: account.paidAt || '',
       settledAt: account.collectedAt || account.paidAt || '',
@@ -319,19 +335,25 @@ function getChequeDetails(account = {}) {
       expenseAmount: Number(account.chequeExpenseAmount) || 0,
       expenseDescription: account.chequeExpenseDescription || '',
       expenseCategory: account.chequeExpenseCategory || '',
-    })
+    }))
   }
-  return [...details, ...chequeEntries.map((entry) => ({
-    ...entry,
-    collected: Boolean(entry.collected),
-    paid: Boolean(entry.paid),
-    collectedAt: entry.collectedAt || '',
-    paidAt: entry.paidAt || '',
-    settledAt: entry.settledAt || entry.collectedAt || entry.paidAt || '',
-    expenseAmount: Number(entry.expenseAmount) || 0,
-    expenseDescription: entry.expenseDescription || '',
-    expenseCategory: entry.expenseCategory || '',
-  }))]
+  return [
+    ...details,
+    ...chequeEntries.map((entry) => normalizeChequeDetail({
+      ...entry,
+      collected: Boolean(entry.collected),
+      paid: Boolean(entry.paid),
+      sent: Boolean(entry.sent || entry.sentAt || entry.direction === 'out'),
+      returned: Boolean(entry.returned || entry.returnedAt),
+      deleted: Boolean(entry.deleted || entry.deletedAt),
+      collectedAt: entry.collectedAt || '',
+      paidAt: entry.paidAt || '',
+      settledAt: entry.settledAt || entry.collectedAt || entry.paidAt || '',
+      expenseAmount: Number(entry.expenseAmount) || 0,
+      expenseDescription: entry.expenseDescription || '',
+      expenseCategory: entry.expenseCategory || '',
+    })),
+  ]
 }
 
 function formatDateTr(date) {
@@ -358,7 +380,7 @@ function resolveChequeTransactionAt(detail) {
   return detail?.settledAt || detail?.collectedAt || detail?.paidAt || ''
 }
 
-const CHEQUE_TABLE_GRID = 'grid-cols-[minmax(0,1fr)_0.75fr_0.7fr_0.75fr_0.8fr_0.55fr_minmax(0,1fr)_0.85fr_96px]'
+const CHEQUE_TABLE_GRID = 'grid-cols-[minmax(0,1fr)_0.7fr_0.65fr_0.7fr_0.75fr_0.5fr_minmax(0,0.9fr)_0.75fr_0.8fr_96px]'
 const MOVEMENT_TABLE_GRID = 'grid-cols-[1.1fr_0.95fr_1fr_1.35fr_0.85fr_0.85fr]'
 
 function parseMovementSortKey(date) {
@@ -593,6 +615,7 @@ export default function CashPage() {
   const [pendingChequeDirection, setPendingChequeDirection] = useState('in')
   const [chequeFilters, setChequeFilters] = useState({
     search: '',
+    status: 'portfolio',
   })
   const [photoPreview, setPhotoPreview] = useState(null)
   const [chequeSettlementDetailId, setChequeSettlementDetailId] = useState(null)
@@ -682,8 +705,17 @@ export default function CashPage() {
   useEffect(() => {
     if (!accounts.length) return
     if (accounts.some((account) => account.id === selectedAccountId)) return
-    selectAccount(accounts[0].id)
-  }, [accounts, selectedAccountId])
+
+    const fallbackId = accounts[0].id
+    setSelectedAccountId(fallbackId)
+    setCollectionForm((current) => ({ ...current, accountId: fallbackId }))
+    setExpenseForm((current) => ({ ...current, accountId: fallbackId }))
+
+    // Geçersiz detay URL'sinde listeye dön; liste görünümünde asla otomatik detaya gitme.
+    if (accountId) {
+      navigate(CASH_BASE_PATH, { replace: true })
+    }
+  }, [accountId, accounts, navigate, selectedAccountId])
 
   const enrichedAccounts = useMemo(() => accounts.map((account) => ({
     ...account,
@@ -712,11 +744,21 @@ export default function CashPage() {
     ].some((value) => normalizeText(value).includes(searchQuery)))
   }, [accountMovementSearch, detailAccount, movements])
 
+  const detailChequeDetails = useMemo(() => {
+    if (!detailAccount || detailAccount.type !== 'Çek Kasası') return []
+    return getChequeDetails(detailAccount)
+  }, [detailAccount])
+
+  const detailChequeStatusCounts = useMemo(
+    () => countChequesByStatus(detailChequeDetails),
+    [detailChequeDetails],
+  )
+
   const detailChequeListRows = useMemo(() => {
     if (!detailAccount || detailAccount.type !== 'Çek Kasası') return []
     const normalizeText = (value) => String(value || '').trim().toLocaleLowerCase('tr-TR')
     const searchQuery = normalizeText(chequeFilters.search)
-    const details = getChequeDetails(detailAccount).filter((detail) => {
+    const details = filterChequesByStatus(detailChequeDetails, chequeFilters.status).filter((detail) => {
       if (!searchQuery) return true
       return [
         detail.chequeBank,
@@ -725,12 +767,13 @@ export default function CashPage() {
         detail.chequeDueDate,
         detail.partyName,
         detail.chequeOwner,
+        detail.statusLabel,
       ].some((value) => normalizeText(value).includes(searchQuery))
     })
     return details.flatMap((detail) => {
       const rows = [{ ...detail, rowType: 'cheque' }]
       const expenseAmount = Number(detail.expenseAmount) || 0
-      if (expenseAmount > 0) {
+      if (expenseAmount > 0 && chequeFilters.status !== 'deleted') {
         rows.push({
           id: `${detail.id}-expense`,
           rowType: 'expense',
@@ -744,7 +787,7 @@ export default function CashPage() {
       }
       return rows
     })
-  }, [chequeFilters.search, detailAccount])
+  }, [chequeFilters.search, chequeFilters.status, detailAccount, detailChequeDetails])
 
   const transferTargetAccountOptions = useMemo(() => (
     enrichedAccounts
@@ -1370,9 +1413,38 @@ export default function CashPage() {
     setChequePanelOpen(true)
   }
 
+  function patchChequeDetail(detail, patch, { adjustBalanceBy = 0 } = {}) {
+    if (!selectedAccount?.id || !detail?.id) return
+    updateAccountById(selectedAccount.id, (account) => {
+      const nextOpening = Math.max(0, (Number(account.openingBalance) || 0) + Number(adjustBalanceBy || 0))
+      if (detail.id === `${account.id}-base-cheque`) {
+        return {
+          ...account,
+          openingBalance: nextOpening,
+          chequeCollected: patch.collected ?? account.chequeCollected,
+          chequePaid: patch.paid ?? account.chequePaid,
+          chequeSent: patch.sent ?? account.chequeSent,
+          chequeReturned: patch.returned ?? account.chequeReturned,
+          chequeDeleted: patch.deleted ?? account.chequeDeleted,
+          chequeSentAt: patch.sentAt ?? account.chequeSentAt,
+          chequeReturnedAt: patch.returnedAt ?? account.chequeReturnedAt,
+          chequeDeletedAt: patch.deletedAt ?? account.chequeDeletedAt,
+          chequeDirection: patch.direction ?? account.chequeDirection,
+        }
+      }
+      const entries = Array.isArray(account.chequeEntries) ? account.chequeEntries : []
+      return {
+        ...account,
+        openingBalance: nextOpening,
+        chequeEntries: entries.map((entry) => (
+          entry.id === detail.id ? { ...entry, ...patch } : entry
+        )),
+      }
+    })
+  }
+
   function openChequeSettlementPanel(detail, mode) {
-    if (mode === 'collection' && detail.collected) return
-    if (mode === 'payment' && detail.paid) return
+    if (!isChequeActionAllowed(detail, mode === 'collection' ? 'collection' : 'payment')) return
     setAccountMovementPanelOpen(false)
     setEditingChequeId(null)
     setChequeSettlementDetailId(detail.id)
@@ -1593,30 +1665,56 @@ export default function CashPage() {
     closeChequePanel()
   }
 
-  function removeChequeDetail(detail) {
-    if (!selectedAccount?.id) return
-    updateAccountById(selectedAccount.id, (account) => {
-      const entries = Array.isArray(account.chequeEntries) ? account.chequeEntries : []
-      if (detail.id === `${account.id}-base-cheque`) {
-        const baseAmount = Number(account.chequeBaseAmount ?? account.openingBalance) || 0
-        return {
-          ...account,
-          openingBalance: Math.max(0, (Number(account.openingBalance) || 0) - baseAmount),
-          chequeBaseAmount: 0,
-          chequeNo: '',
-          chequeBank: '',
-          chequeBranch: '',
-          chequeDueDate: '',
-          chequeOwner: '',
-          chequePhoto: '',
-        }
-      }
-      return {
-        ...account,
-        openingBalance: Math.max(0, (Number(account.openingBalance) || 0) - (Number(detail.amount) || 0)),
-        chequeEntries: entries.filter((entry) => entry.id !== detail.id),
-      }
+  function sendChequeDetail(detail) {
+    if (!isChequeActionAllowed(detail, 'send')) return
+    patchChequeDetail(detail, {
+      sent: true,
+      sentAt: new Date().toISOString(),
+      returned: false,
+      returnedAt: '',
     })
+  }
+
+  function returnChequeDetail(detail) {
+    if (!isChequeActionAllowed(detail, 'return')) return
+    const amount = Math.abs(Number(detail.amount) || 0)
+    const wasActive = !detail.deleted && !detail.returned && !detail.collected && !detail.paid
+    patchChequeDetail(detail, {
+      returned: true,
+      returnedAt: new Date().toISOString(),
+      sent: false,
+      sentAt: '',
+      collected: false,
+      paid: false,
+      deleted: false,
+      deletedAt: '',
+    }, { adjustBalanceBy: wasActive ? -amount : 0 })
+  }
+
+  function restoreChequeDetail(detail) {
+    if (!isChequeActionAllowed(detail, 'restore')) return
+    const amount = Math.abs(Number(detail.amount) || 0)
+    const restoreToPortfolio = Boolean(detail.deleted || detail.returned)
+    patchChequeDetail(detail, {
+      deleted: false,
+      deletedAt: '',
+      returned: false,
+      returnedAt: '',
+      sent: detail.direction === 'out',
+      sentAt: detail.direction === 'out' ? (detail.sentAt || new Date().toISOString()) : '',
+      collected: false,
+      paid: false,
+    }, { adjustBalanceBy: restoreToPortfolio ? amount : 0 })
+  }
+
+  function removeChequeDetail(detail) {
+    if (!selectedAccount?.id || !isChequeActionAllowed(detail, 'delete')) return
+    const amount = Math.abs(Number(detail.amount) || 0)
+    const wasActive = !detail.deleted && !detail.returned && !detail.collected && !detail.paid
+    patchChequeDetail(detail, {
+      deleted: true,
+      deletedAt: new Date().toISOString(),
+    }, { adjustBalanceBy: wasActive ? -amount : 0 })
     setPendingDeleteId(null)
   }
 
@@ -1788,12 +1886,35 @@ export default function CashPage() {
           balanceFooter={(accountMovementPanelOpen || transferPanelOpen || balanceFixPanelOpen) ? false : undefined}
           table={isChequeAccount ? (
             <>
-              <div className="glass-inset mb-3 rounded-2xl p-3">
+              <div className="glass-inset mb-3 space-y-3 rounded-2xl p-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {CHEQUE_STATUS_TABS.map((tab) => {
+                    const count = detailChequeStatusCounts[tab.id] || 0
+                    const active = chequeFilters.status === tab.id
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setChequeFilters((current) => ({ ...current, status: tab.id }))}
+                        className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[12px] font-bold transition-colors ${
+                          active
+                            ? 'bg-[var(--bach-sky,#79a6d2)] text-white shadow-[0_0_10px_rgba(121,166,210,0.45)]'
+                            : 'bg-white/55 text-[var(--muted)] hover:bg-white/80 hover:text-[var(--ink)]'
+                        }`}
+                      >
+                        <span>{tab.label}</span>
+                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${active ? 'bg-white/25' : 'bg-black/5'}`}>
+                          {count}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
                 <SearchInput
                   className="font-semibold"
                   value={chequeFilters.search}
-                  onChange={(event) => setChequeFilters({ search: event.target.value })}
-                  placeholder="Çek ara..."
+                  onChange={(event) => setChequeFilters((current) => ({ ...current, search: event.target.value }))}
+                  placeholder="Çek no, banka, cari veya durum ara..."
                 />
               </div>
               <CashChequeHistoryTable
@@ -1801,6 +1922,9 @@ export default function CashPage() {
                 gridClass={CHEQUE_TABLE_GRID}
                 onPhotoPreview={setPhotoPreview}
                 onSettlement={openChequeSettlementPanel}
+                onSend={sendChequeDetail}
+                onReturn={returnChequeDetail}
+                onRestore={restoreChequeDetail}
                 onEdit={editChequeDetail}
                 onRemove={removeChequeDetail}
                 pendingDeleteId={pendingDeleteId}
