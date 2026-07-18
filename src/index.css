@@ -1477,30 +1477,42 @@ html.special .app-sidebar .sidebar-menu-active {
 }
 
 .glass-sidebar .sidebar-section-label {
-  margin: 0.9rem 0.15rem 0.4rem;
-  padding: 0.5rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.85rem 0.2rem 0.35rem;
+  padding: 0.15rem 0.2rem 0.15rem 0.35rem;
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.14em;
   line-height: 1.1;
   text-transform: uppercase;
-  text-align: left;
-  color: #fff;
+  color: var(--bach-sky, #79a6d2);
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  text-shadow: none;
   opacity: 1;
   user-select: none;
-  border-radius: 12px;
-  background: linear-gradient(to bottom right, #ffd27f, #f59e0b, #ea580c);
-  box-shadow: 0 8px 20px -12px rgba(30, 35, 60, 0.55);
-  text-shadow: 0 1px 1px rgba(120, 53, 15, 0.28);
+}
+
+.glass-sidebar .sidebar-section-label::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  min-width: 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(to right, #ffd27f, #f59e0b, #ea580c);
+  opacity: 0.9;
 }
 
 .glass-sidebar .sidebar-section-label:first-child,
 .glass-sidebar nav > .sidebar-section-label:first-of-type {
-  margin-top: 0.45rem;
+  margin-top: 0.4rem;
 }
 
 .glass-sidebar .sidebar-section-divider {
-  height: 3px;
+  height: 1px;
   margin: 0.7rem 0.85rem;
   border-radius: 999px;
   background: linear-gradient(to right, #ffd27f, #f59e0b, #ea580c);
