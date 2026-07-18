@@ -359,7 +359,6 @@ export default function OrdersPage() {
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [saveFlash, setSaveFlash] = useState(false)
   const [pendingHeaderOrderDelete, setPendingHeaderOrderDelete] = useState(false)
   const [customerModalOpen, setCustomerModalOpen] = useState(false)
   const [isStagePanelOpen, setIsStagePanelOpen] = useState(false)
@@ -677,6 +676,9 @@ export default function OrdersPage() {
       return
     }
     setIsSaving(true)
+    setOpenSaveMenu(false)
+    setPendingHeaderOrderDelete(false)
+
     const exists = orders.some((order) => order.id === sanitized.id)
     const nextOrders = exists
       ? orders.map((order) => (order.id === sanitized.id ? {
@@ -698,25 +700,23 @@ export default function OrdersPage() {
         ],
       }, ...orders]
     updateOrders(nextOrders)
-    setDraftOrder(null)
-    setSelectedId(sanitized.id)
-    setOpenSaveMenu(false)
-    setPendingHeaderOrderDelete(false)
-    if (startNew) {
+
+    window.setTimeout(() => {
+      if (startNew) {
+        const next = createOrderDraft(nextOrders)
+        setDraftOrder(next)
+        setSelectedId(next.id)
+        setViewMode('prepare')
+        setIsSaving(false)
+        return
+      }
+      setDraftOrder(null)
+      setSelectedId(sanitized.id)
+      if (returnToList) {
+        setViewMode('list')
+      }
       setIsSaving(false)
-      setSaveFlash(false)
-      addOrder()
-      return
-    }
-    if (returnToList) {
-      setIsSaving(false)
-      setSaveFlash(false)
-      setViewMode('list')
-      return
-    }
-    setIsSaving(false)
-    setSaveFlash(true)
-    window.setTimeout(() => setSaveFlash(false), 1800)
+    }, 650)
   }
 
   function deleteCurrentOrder({ navigateToList = false, skipConfirm = false } = {}) {
@@ -971,10 +971,10 @@ export default function OrdersPage() {
                     type="button"
                     onClick={() => saveCurrentOrder({ returnToList: false })}
                     disabled={!selectedOrder || isSaving}
-                    className={`${BTN_SUCCESS} min-w-[7.5rem] gap-2 px-4 text-sm font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-50`}
+                    className={`${BTN_SUCCESS} min-w-[10.5rem] gap-2 px-4 text-sm font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-50`}
                   >
                     <Save className="h-4 w-4" />
-                    {isSaving ? 'Kaydediliyor...' : saveFlash ? 'Kaydedildi' : 'Kaydet'}
+                    {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
                   </button>
                   <span className="btn-split-divider" aria-hidden />
                   <button

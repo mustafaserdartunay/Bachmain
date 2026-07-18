@@ -1111,7 +1111,6 @@ export default function QuotesPage() {
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [saveFlash, setSaveFlash] = useState(false)
   const [pendingHeaderQuoteDelete, setPendingHeaderQuoteDelete] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [customerModalOpen, setCustomerModalOpen] = useState(false)
@@ -1599,6 +1598,8 @@ export default function QuotesPage() {
     }
 
     setIsSaving(true)
+    setOpenSaveMenu(false)
+    setPendingHeaderQuoteDelete(false)
 
     let safeQuote = {
       ...(existingQuote || {}),
@@ -1621,27 +1622,20 @@ export default function QuotesPage() {
       return
     }
 
-    setOpenSaveMenu(false)
-
-    if (startNew) {
-      const nextDraft = createQuoteDraft(nextQuotes)
-      setDraftQuote(nextDraft)
-      setSelectedId(nextDraft.id)
-      setViewMode('prepare')
+    window.setTimeout(() => {
+      if (startNew) {
+        const nextDraft = createQuoteDraft(nextQuotes)
+        setDraftQuote(nextDraft)
+        setSelectedId(nextDraft.id)
+        setViewMode('prepare')
+        setIsSaving(false)
+        return
+      }
+      setDraftQuote(null)
+      setSelectedId(safeQuote.id)
+      setViewMode(returnToList ? 'list' : 'prepare')
       setIsSaving(false)
-      return
-    }
-
-    setDraftQuote(null)
-    setSelectedId(safeQuote.id)
-    setViewMode('prepare')
-    setIsSaving(false)
-    if (!returnToList) {
-      setSaveFlash(true)
-      window.setTimeout(() => setSaveFlash(false), 1800)
-    } else {
-      setSaveFlash(false)
-    }
+    }, 650)
   }
 
   function getSafeQuoteForOutput() {
@@ -2087,10 +2081,10 @@ export default function QuotesPage() {
                     type="button"
                     onClick={() => saveCurrentQuote({ returnToList: false })}
                     disabled={!selectedQuote || isSaving}
-                    className={`${BTN_SUCCESS} min-w-[7.5rem] gap-2 px-4 text-sm font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-50`}
+                    className={`${BTN_SUCCESS} min-w-[10.5rem] gap-2 px-4 text-sm font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-50`}
                   >
                     <Save className="h-4 w-4" />
-                    {isSaving ? 'Kaydediliyor...' : saveFlash ? 'Kaydedildi' : 'Kaydet'}
+                    {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
                   </button>
                   <span className="btn-split-divider" aria-hidden />
                   <button
