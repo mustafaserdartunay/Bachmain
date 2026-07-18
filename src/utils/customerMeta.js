@@ -87,6 +87,7 @@ export const accountOptions = [
   { label: 'Nakit Kasa', color: 'bg-emerald-500' },
   { label: 'Banka Hesabı', color: 'bg-blue-500' },
   { label: 'Çek Kasası', color: 'bg-purple-500' },
+  { label: 'Senet Kasası', color: 'bg-amber-500' },
 ]
 
 export const cashAccountOptions = [
@@ -99,6 +100,10 @@ export const bankAccountOptions = [
 
 export const chequeAccountOptions = [
   { label: 'Merkez Çek Kasası', color: 'bg-purple-500' },
+]
+
+export const promissoryAccountOptions = [
+  { label: 'Merkez Senet Kasası', color: 'bg-amber-500' },
 ]
 
 export const OPTION_LISTS_KEY = 'erlenbox-customer-option-lists'

@@ -187,6 +187,7 @@ export function CashMovementHistoryTable({
 
 export function CashChequeHistoryTable({
   rows,
+  instrumentLabel = 'Çek',
   gridClass,
   onPhotoPreview,
   onSettlement,
@@ -207,7 +208,7 @@ export function CashChequeHistoryTable({
       <div className={`grid ${gridClass} gap-3 border-b border-[var(--border)] bg-white/80 px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider text-[var(--muted)]`}>
         <span>Banka</span>
         <span>Şube</span>
-        <span>Çek No</span>
+        <span>{instrumentLabel} No</span>
         <span>Vade</span>
         <span>İşlem Tarihi</span>
         <span>İşlem Saati</span>
@@ -218,7 +219,7 @@ export function CashChequeHistoryTable({
       </div>
       <div className="divide-y divide-dark-500/30">
         {rows.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-gray-500">Bu sekmede çek kaydı yok.</p>
+          <p className="px-4 py-8 text-center text-sm text-gray-500">Bu sekmede {instrumentLabel.toLocaleLowerCase('tr-TR')} kaydı yok.</p>
         ) : (
           rows.map((row) => {
             const transactionAt = row.transactionAt
@@ -310,7 +311,7 @@ export function CashChequeHistoryTable({
                       type="button"
                       onClick={() => onPhotoPreview(detail.photo)}
                       className="inline-flex h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-blue-500/25 bg-blue-500/10 transition-colors hover:border-blue-500/40 hover:bg-blue-500/15"
-                      title="Çek fotoğrafını büyüt"
+                      title={`${instrumentLabel} fotoğrafını büyüt`}
                     >
                       <img src={detail.photo} alt="" className="h-full w-full object-cover" />
                     </button>
@@ -323,7 +324,7 @@ export function CashChequeHistoryTable({
                       onConfirm={() => onRemove(detail)}
                       onCancel={onCancelDelete}
                       title="Silinsin mi?"
-                      description="Çek silinenler listesine taşınacak."
+                      description={`${instrumentLabel} silinenler listesine taşınacak.`}
                       buttonClassName={`${TEKLIFLER_COP_KUTUSU_BUTTON_CLASS} inline-flex h-8 w-8 items-center justify-center rounded-lg p-0`}
                       wrapperClassName="relative inline-flex"
                       popoverClassName="absolute right-10 top-1/2 z-[90] w-72 -translate-y-1/2"
@@ -371,6 +372,7 @@ function CashAccountOpsConfirm({ type, accountName, onConfirm, onCancel }) {
 export function CashDetailSidebar({
   account,
   isChequeAccount,
+  instrumentLabel = 'Çek',
   transferPanelOpen,
   onOpenTransfer,
   cashFlowMenuOpen,
@@ -493,7 +495,7 @@ export function CashDetailSidebar({
           </>
         ) : (
           <>
-            <CashSidebarPrimaryButton label="Çek Bilgisi Ekle" onClick={onOpenChequeEntry} />
+            <CashSidebarPrimaryButton label={`${instrumentLabel} Bilgisi Ekle`} onClick={onOpenChequeEntry} />
             <CashSidebarActionButton
               label="Diğer Hesap İşlemleri"
               open={otherOpsMenuOpen}
@@ -642,7 +644,7 @@ export function CashDetailSidebar({
               {chequeSettlementMode === 'collection' ? 'Tahsilat Ekle' : 'Ödeme Ekle'}
             </button>
             <button type="button" onClick={() => onEditChequeDetail(activeChequeSettlementDetail)} className="w-full rounded-xl border border-[rgba(140,145,165,0.22)] bg-white py-2 text-xs font-black text-[var(--ink)] transition-colors hover:bg-[rgba(248,250,252,1)]">
-              Çek Bilgisine Dön
+              {`${instrumentLabel} Bilgisine Dön`}
             </button>
           </form>
         ) : null}
@@ -651,7 +653,7 @@ export function CashDetailSidebar({
           <form onSubmit={(event) => event.preventDefault()} className={CASH_SIDEBAR_INNER_FORM_CLASS}>
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-xs font-black uppercase tracking-wide text-blue-600">
-                {editingChequeId ? 'Çek Bilgisi Düzenle' : 'Çek Bilgisi Ekle'}
+                {editingChequeId ? `${instrumentLabel} Bilgisi Düzenle` : `${instrumentLabel} Bilgisi Ekle`}
               </h2>
               <button type="button" onClick={onCloseChequePanel} className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[rgba(248,250,252,1)] hover:text-[var(--ink)]">
                 <X className="h-4 w-4" />
@@ -671,7 +673,7 @@ export function CashDetailSidebar({
               searchPlaceholder="Banka ara..."
             />
             <input value={chequeForm.chequeBranch} onChange={(event) => onChequeFormChange({ ...chequeForm, chequeBranch: event.target.value })} className="form-input h-9 text-xs" placeholder="Şube" />
-            <input value={chequeForm.chequeNo} onChange={(event) => onChequeFormChange({ ...chequeForm, chequeNo: event.target.value })} className="form-input h-9 text-xs" placeholder="Çek No" />
+            <input value={chequeForm.chequeNo} onChange={(event) => onChequeFormChange({ ...chequeForm, chequeNo: event.target.value })} className="form-input h-9 text-xs" placeholder={`${instrumentLabel} No`} />
             <DateTextPicker value={chequeForm.chequeDueDate} onChange={(value) => onChequeFormChange({ ...chequeForm, chequeDueDate: value })} />
             <CurrencyTextInput value={chequeForm.amount} onChange={(value) => onChequeFormChange({ ...chequeForm, amount: value })} />
             <input value={chequeForm.chequeOwner} onChange={(event) => onChequeFormChange({ ...chequeForm, chequeOwner: event.target.value })} className="form-input h-9 text-xs" placeholder="Keşideci" />
@@ -680,10 +682,10 @@ export function CashDetailSidebar({
             ) : null}
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => onSaveChequeDetail('in')} className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/15 text-xs font-black text-emerald-200">
-                <Plus className="h-3.5 w-3.5" /> Çek Girişi
+                <Plus className="h-3.5 w-3.5" /> {`${instrumentLabel} Girişi`}
               </button>
               <button type="button" onClick={() => onSaveChequeDetail('out')} className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-red-500/25 bg-red-500/15 text-xs font-black text-red-200">
-                <Minus className="h-3.5 w-3.5" /> Çek Çıkışı
+                <Minus className="h-3.5 w-3.5" /> {`${instrumentLabel} Çıkışı`}
               </button>
             </div>
             {chequePartyMenuOpen ? (

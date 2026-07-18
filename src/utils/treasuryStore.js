@@ -83,31 +83,41 @@ const ACCOUNT_TYPE_BY_METHOD = {
   Nakit: 'Nakit Kasa',
   Banka: 'Banka Hesabı',
   Çek: 'Çek Kasası',
+  Senet: 'Senet Kasası',
 }
 
 export const CASH_TREASURY_ACCOUNT_TYPE = 'Nakit Kasa'
 export const BANK_TREASURY_ACCOUNT_TYPE = 'Banka Hesabı'
 export const CHEQUE_TREASURY_ACCOUNT_TYPE = 'Çek Kasası'
+export const PROMISSORY_TREASURY_ACCOUNT_TYPE = 'Senet Kasası'
 
 export function isCashTreasuryAccount(account) {
   const type = String(account?.type || '').trim()
   if (!type) return false
-  if (type === CHEQUE_TREASURY_ACCOUNT_TYPE || type === BANK_TREASURY_ACCOUNT_TYPE) return false
+  if (
+    type === CHEQUE_TREASURY_ACCOUNT_TYPE
+    || type === PROMISSORY_TREASURY_ACCOUNT_TYPE
+    || type === BANK_TREASURY_ACCOUNT_TYPE
+  ) return false
   if (type === CASH_TREASURY_ACCOUNT_TYPE) return true
 
   const normalized = type.toLocaleLowerCase('tr-TR')
-  if (normalized.includes('çek') || normalized.includes('banka')) return false
+  if (normalized.includes('çek') || normalized.includes('senet') || normalized.includes('banka')) return false
   return normalized.includes('nakit') || normalized.includes('kasa') || normalized.includes('merkez')
 }
 
 export function isBankTreasuryAccount(account) {
   const type = String(account?.type || '').trim()
   if (!type) return false
-  if (type === CHEQUE_TREASURY_ACCOUNT_TYPE || type === CASH_TREASURY_ACCOUNT_TYPE) return false
+  if (
+    type === CHEQUE_TREASURY_ACCOUNT_TYPE
+    || type === PROMISSORY_TREASURY_ACCOUNT_TYPE
+    || type === CASH_TREASURY_ACCOUNT_TYPE
+  ) return false
   if (type === BANK_TREASURY_ACCOUNT_TYPE) return true
 
   const normalized = type.toLocaleLowerCase('tr-TR')
-  return normalized.includes('banka') && !normalized.includes('çek')
+  return normalized.includes('banka') && !normalized.includes('çek') && !normalized.includes('senet')
 }
 
 export function isChequeTreasuryAccount(account) {
@@ -115,6 +125,17 @@ export function isChequeTreasuryAccount(account) {
   if (type === CHEQUE_TREASURY_ACCOUNT_TYPE) return true
   const normalized = type.toLocaleLowerCase('tr-TR')
   return normalized.includes('çek') && normalized.includes('kasa')
+}
+
+export function isPromissoryTreasuryAccount(account) {
+  const type = String(account?.type || '').trim()
+  if (type === PROMISSORY_TREASURY_ACCOUNT_TYPE) return true
+  const normalized = type.toLocaleLowerCase('tr-TR')
+  return normalized.includes('senet') && normalized.includes('kasa')
+}
+
+export function isInstrumentTreasuryAccount(account) {
+  return isChequeTreasuryAccount(account) || isPromissoryTreasuryAccount(account)
 }
 
 export function getCashTreasuryAccounts(accounts = getTreasuryAccounts()) {
@@ -143,8 +164,19 @@ export function getChequeTreasuryAccounts(accounts = getTreasuryAccounts()) {
   return accounts.filter(isChequeTreasuryAccount)
 }
 
+export function getPromissoryTreasuryAccounts(accounts = getTreasuryAccounts()) {
+  return accounts.filter(isPromissoryTreasuryAccount)
+}
+
 export function getChequeTreasuryTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
   return getChequeTreasuryAccounts(accounts).reduce(
+    (sum, account) => sum + calculateAccountBalance(account, movements),
+    0,
+  )
+}
+
+export function getPromissoryTreasuryTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+  return getPromissoryTreasuryAccounts(accounts).reduce(
     (sum, account) => sum + calculateAccountBalance(account, movements),
     0,
   )
@@ -154,11 +186,13 @@ export function getLiveAssetTotal(movements = getTreasuryMovements(), accounts =
   const cash = getCashTreasuryTotal(movements, accounts)
   const bank = getBankTreasuryTotal(movements, accounts)
   const cheques = getChequeTreasuryTotal(movements, accounts)
+  const promissory = getPromissoryTreasuryTotal(movements, accounts)
   return {
     cash,
     bank,
     cheques,
-    total: cash + bank + cheques,
+    promissory,
+    total: cash + bank + cheques + promissory,
   }
 }
 
@@ -273,7 +307,7 @@ export function createCustomerCollection(collection) {
     amount,
   })
 
-  if (collection.method === 'Çek' && account?.type === 'Çek Kasası') {
+  if ((collection.method === 'Çek' || collection.method === 'Senet') && isInstrumentTreasuryAccount(account)) {
     appendChequeEntryToAccount(account.id, {
       amount,
       direction: 'in',
@@ -315,7 +349,7 @@ export function createCustomerPayment(payment) {
     amount,
   })
 
-  if (payment.method === 'Çek' && account?.type === 'Çek Kasası') {
+  if ((payment.method === 'Çek' || payment.method === 'Senet') && isInstrumentTreasuryAccount(account)) {
     appendChequeEntryToAccount(account.id, {
       amount,
       direction: 'out',
@@ -618,7 +652,13 @@ export function fixTreasuryAccountBalance(accountId, targetBalance, extra = {}) 
     direction: diff > 0 ? 'in' : 'out',
     type: 'Bakiye Sabitleme',
     description: extra.description?.trim() || `Bakiye ${formatTreasuryCurrency(target)} olarak sabitlendi`,
-    method: account.type === 'Banka Hesabı' ? 'Banka' : account.type === 'Çek Kasası' ? 'Çek' : 'Nakit',
+    method: account.type === 'Banka Hesabı'
+      ? 'Banka'
+      : account.type === 'Senet Kasası'
+        ? 'Senet'
+        : account.type === 'Çek Kasası'
+          ? 'Çek'
+          : 'Nakit',
     amount: Math.abs(diff),
     date: extra.date || todayForTreasury(),
   })

@@ -21,7 +21,9 @@ export default function CashAccountDetailLayout({
     ? 'text-blue-300'
     : account.type === 'Çek Kasası'
       ? 'text-purple-300'
-      : account.color || 'text-emerald-300'
+      : account.type === 'Senet Kasası'
+        ? 'text-amber-300'
+        : account.color || 'text-emerald-300'
 
   return (
     <div className="space-y-5">

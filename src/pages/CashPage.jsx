@@ -9,6 +9,7 @@ import {
   Minus,
   Pencil,
   Plus,
+  ScrollText,
   Trash2,
   X,
 } from 'lucide-react'
@@ -44,6 +45,8 @@ import {
   saveTreasuryAccounts,
   saveTreasuryMovements,
   updateTreasuryMovement,
+  isInstrumentTreasuryAccount,
+  isPromissoryTreasuryAccount,
 } from '../utils/treasuryStore'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
@@ -64,8 +67,17 @@ import { readOptionLists } from '../utils/customerMeta'
 const ACCOUNT_TYPE_OPTIONS = [
   { label: 'Nakit Kasa', color: 'bg-emerald-500' },
   { label: 'Çek Kasası', color: 'bg-purple-500' },
+  { label: 'Senet Kasası', color: 'bg-amber-500' },
   { label: 'Banka Hesabı', color: 'bg-blue-500' },
 ]
+
+function instrumentNoun(account) {
+  return isPromissoryTreasuryAccount(account) ? 'Senet' : 'Çek'
+}
+
+function instrumentAccountTitle(account) {
+  return isPromissoryTreasuryAccount(account) ? 'Senet Kasası' : 'Çek Kasası'
+}
 const EXPENSE_CATEGORY_OPTIONS = [
   { label: 'Genel Gider', color: 'bg-orange-500' },
   { label: 'Malzeme Ödemesi', color: 'bg-blue-500' },
@@ -243,7 +255,10 @@ function getTreasuryAccountOptionVisual(account) {
     return { icon: Landmark, iconTone: 'text-blue-300' }
   }
   if (account.type === 'Çek Kasası') {
-    return { icon: Banknote, iconTone: 'text-purple-300' }
+    return { icon: ScrollText, iconTone: 'text-purple-300' }
+  }
+  if (account.type === 'Senet Kasası') {
+    return { icon: ScrollText, iconTone: 'text-amber-300' }
   }
   return { icon: Banknote, iconTone: 'text-emerald-300' }
 }
@@ -258,7 +273,7 @@ function resolveAccountFromOptionLabel(label, accounts) {
 
 function emptyTransferForm(accounts = [], excludeAccountId = '') {
   const firstTarget = accounts.find((account) => (
-    account.id !== excludeAccountId && account.type !== 'Çek Kasası'
+    account.id !== excludeAccountId && !isInstrumentTreasuryAccount(account)
   ))
   return {
     targetAccountName: firstTarget ? formatTransferAccountOptionLabel(firstTarget) : '',
@@ -626,7 +641,16 @@ export default function CashPage() {
   const [expenseForm, setExpenseForm] = useState(() => emptyExpense(accounts))
 
   const selectedAccount = accounts.find((account) => account.id === selectedAccountId) || accounts[0]
-  const accountTypeOptions = optionLists.account?.length ? optionLists.account : ACCOUNT_TYPE_OPTIONS
+  const accountTypeOptions = useMemo(() => {
+    const base = optionLists.account?.length ? optionLists.account : ACCOUNT_TYPE_OPTIONS
+    if (base.some((option) => option.label === 'Senet Kasası')) return base
+    const chequeIndex = base.findIndex((option) => option.label === 'Çek Kasası')
+    const senetOption = { label: 'Senet Kasası', color: 'bg-amber-500' }
+    if (chequeIndex >= 0) {
+      return [...base.slice(0, chequeIndex + 1), senetOption, ...base.slice(chequeIndex + 1)]
+    }
+    return [...base, senetOption]
+  }, [optionLists.account])
 
   useEffect(() => {
     if (accounts.length || localStorage.getItem(CASH_PAGE_RESTORE_KEY)) return
@@ -658,6 +682,16 @@ export default function CashPage() {
         chequeEntries: [],
         color: 'text-purple-300',
       },
+      {
+        id: 'promissory-main',
+        name: 'Merkez Senet Kasası',
+        type: 'Senet Kasası',
+        currency: 'TRY',
+        openingBalance: 0,
+        chequeBaseAmount: 0,
+        chequeEntries: [],
+        color: 'text-amber-300',
+      },
     ]
     const restoredMovements = [
       {
@@ -681,6 +715,27 @@ export default function CashPage() {
     setSelectedAccountId(restoredAccounts[0].id)
   }, [])
 
+
+  useEffect(() => {
+    if (!accounts.length) return
+    if (accounts.some((account) => account.type === 'Senet Kasası' || account.id === 'promissory-main')) return
+    const nextAccounts = [
+      ...accounts,
+      {
+        id: 'promissory-main',
+        name: 'Merkez Senet Kasası',
+        type: 'Senet Kasası',
+        currency: 'TRY',
+        openingBalance: 0,
+        chequeBaseAmount: 0,
+        chequeEntries: [],
+        color: 'text-amber-300',
+      },
+    ]
+    setAccounts(nextAccounts)
+    saveTreasuryAccounts(nextAccounts)
+  }, [accounts])
+
   useEffect(() => {
     if (!activeMenu) return undefined
     function closeMenu() { setActiveMenu(null) }
@@ -694,12 +749,6 @@ export default function CashPage() {
     }
     window.addEventListener('bach:option-lists-updated', refreshOptionLists)
     return () => window.removeEventListener('bach:option-lists-updated', refreshOptionLists)
-  }, [])
-
-  useEffect(() => {
-    const firstAccount = accounts[0]
-    if (!firstAccount?.id) return
-    selectAccount(firstAccount.id)
   }, [])
 
   useEffect(() => {
@@ -727,7 +776,7 @@ export default function CashPage() {
   ), [accountId, enrichedAccounts])
 
   const detailMovementRows = useMemo(() => {
-    if (!detailAccount || detailAccount.type === 'Çek Kasası') return []
+    if (!detailAccount || isInstrumentTreasuryAccount(detailAccount)) return []
     const normalizeText = (value) => String(value || '').trim().toLocaleLowerCase('tr-TR')
     const searchQuery = normalizeText(accountMovementSearch)
     const rows = buildAccountMovementRows(detailAccount, movements)
@@ -745,7 +794,7 @@ export default function CashPage() {
   }, [accountMovementSearch, detailAccount, movements])
 
   const detailChequeDetails = useMemo(() => {
-    if (!detailAccount || detailAccount.type !== 'Çek Kasası') return []
+    if (!detailAccount || !isInstrumentTreasuryAccount(detailAccount)) return []
     return getChequeDetails(detailAccount)
   }, [detailAccount])
 
@@ -755,7 +804,7 @@ export default function CashPage() {
   )
 
   const detailChequeListRows = useMemo(() => {
-    if (!detailAccount || detailAccount.type !== 'Çek Kasası') return []
+    if (!detailAccount || !isInstrumentTreasuryAccount(detailAccount)) return []
     const normalizeText = (value) => String(value || '').trim().toLocaleLowerCase('tr-TR')
     const searchQuery = normalizeText(chequeFilters.search)
     const details = filterChequesByStatus(detailChequeDetails, chequeFilters.status).filter((detail) => {
@@ -791,7 +840,7 @@ export default function CashPage() {
 
   const transferTargetAccountOptions = useMemo(() => (
     enrichedAccounts
-      .filter((account) => account.id !== detailAccount?.id && account.type !== 'Çek Kasası')
+      .filter((account) => account.id !== detailAccount?.id && !isInstrumentTreasuryAccount(account))
       .map((account) => ({
         label: formatTransferAccountOptionLabel(account),
         ...getTreasuryAccountOptionVisual(account),
@@ -837,7 +886,16 @@ export default function CashPage() {
     const chequeBalance = enrichedAccounts
       .filter((account) => account.type === 'Çek Kasası')
       .reduce((sum, account) => sum + account.balance, 0)
-    return { cashBalance, bankBalance, chequeBalance, total: cashBalance + bankBalance + chequeBalance }
+    const promissoryBalance = enrichedAccounts
+      .filter((account) => account.type === 'Senet Kasası')
+      .reduce((sum, account) => sum + account.balance, 0)
+    return {
+      cashBalance,
+      bankBalance,
+      chequeBalance,
+      promissoryBalance,
+      total: cashBalance + bankBalance + chequeBalance + promissoryBalance,
+    }
   }, [enrichedAccounts])
   const collectionTargetAccounts = useMemo(() => (
     enrichedAccounts.filter((account) => account.type === 'Nakit Kasa' || account.type === 'Banka Hesabı')
@@ -849,10 +907,10 @@ export default function CashPage() {
     }))
   ), [collectionTargetAccounts])
   const activeChequeSettlementDetail = useMemo(() => {
-    if (!chequeSettlementDetailId || selectedAccount?.type !== 'Çek Kasası') return null
+    if (!chequeSettlementDetailId || !isInstrumentTreasuryAccount(selectedAccount)) return null
     return getChequeDetails(selectedAccount).find((item) => item.id === chequeSettlementDetailId) || null
   }, [chequeSettlementDetailId, selectedAccount, accounts])
-  const selectedChequeDetails = selectedAccount?.type === 'Çek Kasası'
+  const selectedChequeDetails = isInstrumentTreasuryAccount(selectedAccount)
     ? getChequeDetails(selectedAccount)
     : []
 
@@ -917,7 +975,7 @@ export default function CashPage() {
   ), [filteredChequeDetails])
 
   const selectedAccountMovements = useMemo(() => {
-    if (!selectedAccount?.id || selectedAccount.type === 'Çek Kasası') return []
+    if (!selectedAccount?.id || isInstrumentTreasuryAccount(selectedAccount)) return []
     const normalizeText = (value) => String(value || '').trim().toLocaleLowerCase('tr-TR')
     const searchQuery = normalizeText(accountMovementSearch)
     return movements
@@ -994,7 +1052,7 @@ export default function CashPage() {
   }
 
   useEffect(() => {
-    if (!accountId || !detailAccount || detailAccount.type === 'Çek Kasası') return
+    if (!accountId || !detailAccount || isInstrumentTreasuryAccount(detailAccount)) return
     const hareket = searchParams.get('hareket')
     if (hareket !== 'gelir' && hareket !== 'gider') return
     openMovementPanel(hareket === 'gider' ? 'out' : 'in')
@@ -1176,7 +1234,7 @@ export default function CashPage() {
     setAccountMovementPanelOpen(false)
     setChequePanelOpen(false)
     setEditingMovementId(null)
-    if (account.type === 'Çek Kasası' && direction === 'in') {
+    if (isInstrumentTreasuryAccount(account) && direction === 'in') {
       setEditingChequeId(null)
       setChequeForm(emptyChequeDetail())
       setChequePanelOpen(true)
@@ -1308,6 +1366,7 @@ export default function CashPage() {
         ...chequeForm,
         amount: signedAmount,
         direction,
+        instrumentType: isPromissoryTreasuryAccount(selectedAccount) ? 'Senet' : 'Çek',
       }
       updateAccountById(selectedAccount.id, (account) => ({
         ...account,
@@ -1337,7 +1396,7 @@ export default function CashPage() {
     const payload = {
       accountId: '',
       accountName: selectedAccount?.name || '',
-      method: 'Çek',
+      method: isPromissoryTreasuryAccount(selectedAccount) ? 'Senet' : 'Çek',
       amount: detail.amount,
       chequeNo: detail.chequeNo,
       chequeBank: detail.chequeBank,
@@ -1778,7 +1837,10 @@ export default function CashPage() {
       type: accountForm.type,
       currency: 'TRY',
       openingBalance: Number(accountForm.openingBalance) || 0,
-      chequeBaseAmount: accountForm.type === 'Çek Kasası' ? Number(accountForm.openingBalance) || 0 : 0,
+      chequeBaseAmount: (accountForm.type === 'Çek Kasası' || accountForm.type === 'Senet Kasası')
+        ? Number(accountForm.openingBalance) || 0
+        : 0,
+      chequeEntries: (accountForm.type === 'Çek Kasası' || accountForm.type === 'Senet Kasası') ? [] : undefined,
       iban: accountForm.iban.trim(),
       chequeNo: accountForm.chequeNo.trim(),
       chequeBank: accountForm.chequeBank.trim(),
@@ -1789,7 +1851,9 @@ export default function CashPage() {
         ? 'text-blue-300'
         : accountForm.type === 'Çek Kasası'
           ? 'text-purple-300'
-          : 'text-emerald-300',
+          : accountForm.type === 'Senet Kasası'
+            ? 'text-amber-300'
+            : 'text-emerald-300',
     }
 
     const nextAccounts = [...accounts, nextAccount]
@@ -1864,7 +1928,8 @@ export default function CashPage() {
       )
     }
 
-    const isChequeAccount = detailAccount.type === 'Çek Kasası'
+    const isChequeAccount = isInstrumentTreasuryAccount(detailAccount)
+    const instrumentLabel = instrumentNoun(detailAccount)
     const formattedMovementRows = detailMovementRows.map((movement) => ({
       ...movement,
       displayDate: formatMovementDateLong(movement.date),
@@ -1881,7 +1946,7 @@ export default function CashPage() {
         <CashAccountDetailLayout
           account={detailAccount}
           balance={formatTreasuryCurrency(detailAccount.balance)}
-          breadcrumbLabel={isChequeAccount ? 'Çek Kasası' : 'Kasa Hesabı'}
+          breadcrumbLabel={isChequeAccount ? instrumentAccountTitle(detailAccount) : 'Kasa Hesabı'}
           onEdit={openEditAccountPanel}
           balanceFooter={(accountMovementPanelOpen || transferPanelOpen || balanceFixPanelOpen) ? false : undefined}
           table={isChequeAccount ? (
@@ -1914,11 +1979,12 @@ export default function CashPage() {
                   className="font-semibold"
                   value={chequeFilters.search}
                   onChange={(event) => setChequeFilters((current) => ({ ...current, search: event.target.value }))}
-                  placeholder="Çek no, banka, cari veya durum ara..."
+                  placeholder={`${instrumentLabel} no, banka, cari veya durum ara...`}
                 />
               </div>
               <CashChequeHistoryTable
                 rows={detailChequeRows}
+                instrumentLabel={instrumentLabel}
                 gridClass={CHEQUE_TABLE_GRID}
                 onPhotoPreview={setPhotoPreview}
                 onSettlement={openChequeSettlementPanel}
@@ -1960,6 +2026,7 @@ export default function CashPage() {
             <CashDetailSidebar
               account={detailAccount}
               isChequeAccount={isChequeAccount}
+              instrumentLabel={instrumentLabel}
               transferPanelOpen={transferPanelOpen}
               onOpenTransfer={openTransferPanel}
               cashFlowMenuOpen={cashFlowMenuOpen}
@@ -2134,11 +2201,12 @@ export default function CashPage() {
       />
 
       <SummaryMetrics
-        columns={4}
+        columns={5}
         items={[
           { title: 'Nakit', value: formatTreasuryCurrency(totals.cashBalance), icon: Banknote, tone: 'text-emerald-300', valueTone: totals.cashBalance < 0 ? 'red' : 'emerald' },
           { title: 'Banka', value: formatTreasuryCurrency(totals.bankBalance), icon: Landmark, tone: 'text-blue-300', valueTone: totals.bankBalance < 0 ? 'red' : 'emerald' },
-          { title: 'Çek Kasası', value: formatTreasuryCurrency(totals.chequeBalance), icon: Banknote, tone: 'text-purple-300', valueTone: totals.chequeBalance < 0 ? 'red' : 'emerald' },
+          { title: 'Çek Kasası', value: formatTreasuryCurrency(totals.chequeBalance), icon: ScrollText, tone: 'text-purple-300', valueTone: totals.chequeBalance < 0 ? 'red' : 'emerald' },
+          { title: 'Senet Kasası', value: formatTreasuryCurrency(totals.promissoryBalance), icon: ScrollText, tone: 'text-amber-300', valueTone: totals.promissoryBalance < 0 ? 'red' : 'emerald' },
           { title: 'Toplam Varlık Bakiyesi', value: formatTreasuryCurrency(totals.total), icon: Banknote, tone: 'text-cyan-300', valueTone: totals.total < 0 ? 'red' : 'emerald' },
         ]}
       />
@@ -2148,7 +2216,11 @@ export default function CashPage() {
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-black text-[var(--ink)]">
-                {accountForm.type === 'Çek Kasası' ? 'Çek Kasası Oluştur' : 'Kasa Oluştur'}
+                {accountForm.type === 'Çek Kasası'
+                  ? 'Çek Kasası Oluştur'
+                  : accountForm.type === 'Senet Kasası'
+                    ? 'Senet Kasası Oluştur'
+                    : 'Kasa Oluştur'}
               </h2>
             </div>
             <button
@@ -2183,10 +2255,12 @@ export default function CashPage() {
             {accountForm.type === 'Banka Hesabı' && (
               <input value={accountForm.iban} onChange={(e) => setAccountForm((c) => ({ ...c, iban: e.target.value }))} placeholder="IBAN" className="form-input text-sm" />
             )}
-            {accountForm.type === 'Çek Kasası' && (
+            {(accountForm.type === 'Çek Kasası' || accountForm.type === 'Senet Kasası') && (
               <div className="glass-inset rounded-xl p-3">
                 <div className="mb-3">
-                  <p className="text-[12px] font-black uppercase tracking-wider text-[var(--muted)]">Aktif Çek Bilgileri</p>
+                  <p className="text-[12px] font-black uppercase tracking-wider text-[var(--muted)]">
+                    {accountForm.type === 'Senet Kasası' ? 'Aktif Senet Bilgileri' : 'Aktif Çek Bilgileri'}
+                  </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                   <div>
@@ -2207,7 +2281,7 @@ export default function CashPage() {
                     />
                   </div>
                   <div>
-                    <label className="form-label">Çek No</label>
+                    <label className="form-label">{accountForm.type === 'Senet Kasası' ? 'Senet No' : 'Çek No'}</label>
                     <input value={accountForm.chequeNo} onChange={(e) => setAccountForm((c) => ({ ...c, chequeNo: e.target.value }))} className="form-input text-sm" />
                   </div>
                   <div>
@@ -2232,7 +2306,11 @@ export default function CashPage() {
       <section className="card rounded-2xl p-4">
         <div className="grid gap-2">
           {enrichedAccounts.map((account) => {
-            const Icon = account.type === 'Banka Hesabı' ? Landmark : Banknote
+            const Icon = account.type === 'Banka Hesabı'
+              ? Landmark
+              : (account.type === 'Çek Kasası' || account.type === 'Senet Kasası')
+                ? ScrollText
+                : Banknote
             return (
               <div key={account.id} className="space-y-2">
                 <button
