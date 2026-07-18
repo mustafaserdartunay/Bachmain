@@ -1476,6 +1476,33 @@ html.special .app-sidebar .sidebar-menu-active {
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
+.glass-sidebar .sidebar-section-label {
+  margin: 0.85rem 0.35rem 0.35rem;
+  padding: 0 0.35rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.72;
+  user-select: none;
+}
+
+.glass-sidebar .sidebar-section-label:first-child,
+.glass-sidebar nav > .sidebar-section-label:first-of-type {
+  margin-top: 0.35rem;
+}
+
+.glass-sidebar .sidebar-section-divider {
+  height: 1px;
+  margin: 0.65rem 0.85rem;
+  background: rgba(148, 163, 184, 0.28);
+}
+
+html.night .glass-sidebar .sidebar-section-divider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* Expanded / active menu group — clear open state without dark day surfaces */
 .glass-sidebar .sidebar-menu-group {
   border-radius: 18px;
