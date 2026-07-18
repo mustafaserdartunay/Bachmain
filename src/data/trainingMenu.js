@@ -5,6 +5,7 @@ import { stockSubMenus } from './stockMenu'
 import { processSubMenus } from './processMenu'
 import { hrSubMenus } from './hrMenu'
 import { fieldSalesSubMenus } from './fieldSalesMenu'
+import { projectsSubMenus } from './projectsMenu'
 import { settingsSubMenus } from './settingsMenu'
 
 function mapMenuItems(items = []) {
@@ -31,9 +32,10 @@ export const TRAINING_SECTIONS = [
       ...mapMenuItems(expensesSubMenus),
       ...mapMenuItems(treasurySubMenus),
       ...mapMenuItems(stockSubMenus),
-      { label: 'Yeni Proje', path: '/projeler/yeni', videoId: '' },
+      ...mapMenuItems(projectsSubMenus),
     ],
   },
+
   {
     id: 'crm',
     title: 'CRM',

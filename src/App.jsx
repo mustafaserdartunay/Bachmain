@@ -38,6 +38,7 @@ import PersonnelPage from './pages/PersonnelPage'
 import ProductionCreatePage from './pages/ProductionCreatePage'
 import ProductionDetailPage from './pages/ProductionDetailPage'
 import ProjectsPage from './pages/ProjectsPage'
+import ProjectsListPage from './pages/ProjectsListPage'
 import ShoppingPage from './pages/ShoppingPage'
 
 const QuotesPage = lazyPage(() => import('./pages/QuotesPage'))
@@ -270,7 +271,11 @@ export default function App() {
                 <Route path="/kasa" element={<Navigate to={CASH_BASE_PATH} replace />} />
                 <Route path="/kasa/:accountId" element={<LegacyKasaAccountRedirect />} />
                 <Route path="/shopping" element={<ShoppingPage />} />
+                <Route path="/projeler" element={<ProjectsListPage scope="all" />} />
                 <Route path="/projeler/yeni" element={<ProjectsPage />} />
+                <Route path="/projeler/devam-eden" element={<ProjectsListPage scope="ongoing" />} />
+                <Route path="/projeler/tamamlanan" element={<ProjectsListPage scope="completed" />} />
+                <Route path="/projeler/iptal" element={<ProjectsListPage scope="cancelled" />} />
                 <Route path="/ayarlar" element={<SettingsPage />} />
                 <Route path="/ayarlar/guncel-durum" element={<GuncelDurumSettingsPage />} />
                 <Route path="/ayarlar/mesaj-merkezi" element={<Navigate to="/mesajlar?ayarlar=1" replace />} />

@@ -16,6 +16,11 @@ import {
   BarChart3,
   Settings,
   FolderPlus,
+  FolderKanban,
+  List,
+  PlayCircle,
+  CheckCircle2,
+  Ban,
   Wallet,
   MapPinned,
   Truck,
@@ -56,6 +61,7 @@ import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { processSubMenus, isProcessRoute } from '../../data/processMenu'
 import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
+import { projectsSubMenus, isProjectsRoute, PROJECTS_HOME_PATH } from '../../data/projectsMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
 import {
   documentCenterChildMenus,
@@ -69,10 +75,9 @@ import { useAuth } from '../../auth/AuthContext'
 import { filterMenuByEntitlements } from '../../utils/entitlements'
 import { canUseMultiCompany } from '../../utils/orgScope'
 
-const yeniProjeMenuItem = {
-  icon: FolderPlus,
-  label: 'Yeni Proje',
-  path: '/projeler/yeni',
+const projectsMenuGate = {
+  label: 'Projeler',
+  path: PROJECTS_HOME_PATH,
   moduleCode: 'crm',
 }
 
@@ -118,6 +123,13 @@ const stockSubMenuIcons = {
   history: History,
   'bar-chart': BarChart3,
   calculator: Calculator,
+}
+const projectsSubMenuIcons = {
+  'folder-plus': FolderPlus,
+  list: List,
+  play: PlayCircle,
+  check: CheckCircle2,
+  cancel: Ban,
 }
 const fieldSalesSubMenuIcons = {
   'map-pinned': MapPinned,
@@ -187,12 +199,14 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isHrRouteActive = isHrRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
+  const isProjectsRouteActive = isProjectsRoute(location.pathname)
   const isSettingsRoute = location.pathname.startsWith('/ayarlar') || isDocumentCenterRouteActive
   const [customerOpen, setCustomerOpen] = useState(isSalesRouteActive)
   const [processOpen, setProcessOpen] = useState(isProcessRouteActive)
   const [expensesOpen, setExpensesOpen] = useState(isExpensesRouteActive)
   const [treasuryOpen, setTreasuryOpen] = useState(isTreasuryRouteActive)
   const [stockOpen, setStockOpen] = useState(isStockRouteActive)
+  const [projectsOpen, setProjectsOpen] = useState(isProjectsRouteActive)
   const [fieldSalesOpen, setFieldSalesOpen] = useState(isFieldSalesRouteActive)
   const [logisticsOpen, setLogisticsOpen] = useState(isLogisticsRouteActive)
   const [hrOpen, setHrOpen] = useState(isHrRouteActive)
@@ -220,6 +234,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   useEffect(() => {
     if (isStockRouteActive) setStockOpen(true)
   }, [isStockRouteActive])
+
+  useEffect(() => {
+    if (isProjectsRouteActive) setProjectsOpen(true)
+  }, [isProjectsRouteActive])
 
   useEffect(() => {
     if (isFieldSalesRouteActive) setFieldSalesOpen(true)
@@ -265,7 +283,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   }, [])
 
   const menuItems = filterMenuByEntitlements(baseMenuItems, user?.entitlements)
-  const showYeniProje = filterMenuByEntitlements([yeniProjeMenuItem], user?.entitlements).length > 0
+  const showProjects = filterMenuByEntitlements([projectsMenuGate], user?.entitlements).length > 0
   const isMessageCenterActive = location.pathname === '/mesajlar' || location.pathname.startsWith('/mesajlar/')
   const brandLabel = company.companyName || 'Bach'
   const sidebarWidthClass = collapsed ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]' : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
@@ -577,21 +595,57 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {showYeniProje && (
-          <NavLink
-            to={yeniProjeMenuItem.path}
-            onClick={handleNavigate}
-            className={({ isActive }) =>
-              `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-                isActive ? 'sidebar-menu-active font-medium' : ''
-              }`
-            }
-          >
-            <MenuIcon collapsed={collapsed}>
-              <FolderPlus className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && <span className={menuLabelClass}>Yeni Proje</span>}
-          </NavLink>
+        {showProjects && (
+          <div className={`sidebar-menu-group ${projectsOpen ? 'is-open' : ''} ${isProjectsRouteActive ? 'is-active' : ''}`}>
+            <button
+              type="button"
+              onClick={() => setProjectsOpen((open) => !open)}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                isProjectsRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <FolderKanban className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>Projeler</span>
+                  {projectsOpen
+                    ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                    : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  }
+                </>
+              )}
+            </button>
+
+            {projectsOpen && !collapsed && (
+              <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+                {projectsSubMenus.map((sub) => {
+                  const SubIcon = sub.icon ? projectsSubMenuIcons[sub.icon] : null
+                  return (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      end={sub.path === PROJECTS_HOME_PATH}
+                      onClick={handleNavigate}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} flex items-center gap-2 ${
+                          isActive ? 'sidebar-menu-active font-medium' : ''
+                        }`
+                      }
+                    >
+                      {SubIcon ? (
+                        <SubMenuIcon>
+                          <SubIcon className="h-3.5 w-3.5" />
+                        </SubMenuIcon>
+                      ) : null}
+                      {sub.label}
+                    </NavLink>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         )}
 
         <SidebarSection label="CRM" collapsed={collapsed} />
