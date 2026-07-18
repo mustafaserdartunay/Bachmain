@@ -1977,17 +1977,21 @@ html.night .glass-sidebar .sidebar-menu-group.is-open.is-active {
 }
 
 .trial-banner-sidebar-dot {
+  position: relative;
   display: inline-flex;
   width: 1.75rem;
   height: 1.75rem;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   border-radius: 999px;
-  background: #2563eb;
+  background: var(--bach-sky, #79a6d2);
   color: #fff;
   font-size: 12px;
   font-weight: 800;
   text-decoration: none;
+  box-shadow: 0 0 10px rgba(121, 166, 210, 0.55);
+  animation: trial-cta-glow 1.6s ease-in-out infinite;
 }
 
 .trial-banner-sidebar.is-urgent .trial-banner-sidebar-dot {
@@ -2028,15 +2032,80 @@ html.night .trial-banner-sidebar.is-urgent {
 }
 
 .trial-banner-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  isolation: isolate;
+  height: 14px;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  font-size: 11px;
   font-weight: 700;
-  color: #1d4ed8;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: #fff;
   text-decoration: none;
   white-space: nowrap;
+  background: var(--bach-sky, #79a6d2);
+  box-shadow: 0 0 10px rgba(121, 166, 210, 0.55);
+  animation: trial-cta-glow 1.6s ease-in-out infinite;
+}
+
+.trial-banner-cta::after {
+  content: '';
+  position: absolute;
+  inset: -20% -40%;
+  z-index: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.62) 48%,
+    transparent 72%
+  );
+  transform: translateX(-130%);
+  animation: trial-cta-sheen 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.trial-banner-cta > * ,
+.trial-banner-cta {
+  z-index: 1;
 }
 
 .trial-banner-cta:hover {
-  color: #1e40af;
-  text-decoration: underline;
+  color: #fff;
+  text-decoration: none;
+  filter: brightness(1.06);
+}
+
+@keyframes trial-cta-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(121, 166, 210, 0.42);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(121, 166, 210, 0.82);
+  }
+}
+
+@keyframes trial-cta-sheen {
+  0%,
+  25% {
+    transform: translateX(-130%);
+  }
+  55%,
+  100% {
+    transform: translateX(130%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trial-banner-cta,
+  .trial-banner-cta::after {
+    animation: none;
+  }
 }
 
 .trial-banner-hide {
@@ -2096,11 +2165,12 @@ html.night .trial-banner-sidebar.is-urgent {
 }
 
 html.night .trial-banner-cta {
-  color: #93c5fd;
+  color: #fff;
+  background: var(--bach-sky, #79a6d2);
 }
 
 html.night .trial-banner-cta:hover {
-  color: #bfdbfe;
+  color: #fff;
 }
 
 .app-header-dropdown {
