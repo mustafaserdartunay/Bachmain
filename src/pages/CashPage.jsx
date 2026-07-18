@@ -8,7 +8,6 @@ import {
   Landmark,
   Minus,
   Pencil,
-  Plus,
   ScrollText,
   Trash2,
   X,
@@ -2189,7 +2188,7 @@ export default function CashPage() {
   return (
     <AppPageShell>
       <AppPageHeader
-        title="Kasalar"
+        title="Tüm Kasalar"
         actions={(
           <SplitCreateButton
             label="Yeni Kasa Oluştur"

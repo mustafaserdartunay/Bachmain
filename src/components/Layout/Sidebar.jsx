@@ -109,6 +109,7 @@ const expensesSubMenuIcons = {
 }
 const treasurySubMenuIcons = {
   landmark: Landmark,
+  banknote: Banknote,
   'scroll-text': ScrollText,
   'bar-chart': BarChart3,
   'arrow-left-right': ArrowLeftRight,
@@ -512,7 +513,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   <NavLink
                     key={sub.path}
                     to={sub.path}
-                    end={sub.path === CASH_BASE_PATH}
+                    end
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} flex items-center gap-2 ${

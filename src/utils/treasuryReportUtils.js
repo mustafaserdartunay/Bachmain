@@ -39,22 +39,33 @@ export function getCashBankSummary() {
   const chequeTotal = enriched
     .filter((item) => item.type === 'Çek Kasası')
     .reduce((sum, item) => sum + item.balance, 0)
+  const promissoryTotal = enriched
+    .filter((item) => item.type === 'Senet Kasası')
+    .reduce((sum, item) => sum + item.balance, 0)
 
   return {
     accounts: enriched,
     cashTotal,
     bankTotal,
     chequeTotal,
-    grandTotal: cashTotal + bankTotal + chequeTotal,
+    promissoryTotal,
+    grandTotal: cashTotal + bankTotal + chequeTotal + promissoryTotal,
   }
 }
 
-export function collectAllChequeRows() {
+export function getTreasuryTypeSummary(accountType) {
+  const summary = getCashBankSummary()
+  const accounts = summary.accounts.filter((account) => account.type === accountType)
+  const total = accounts.reduce((sum, account) => sum + account.balance, 0)
+  return { accounts, total, accountType }
+}
+
+export function collectAllChequeRows(accountType = 'Çek Kasası') {
   const accounts = getTreasuryAccounts()
   const rows = []
 
   accounts
-    .filter((account) => account.type === 'Çek Kasası')
+    .filter((account) => account.type === accountType)
     .forEach((account) => {
       const entries = Array.isArray(account.chequeEntries) ? account.chequeEntries : []
       const hasBase = Boolean(account.chequeNo || account.chequeBank || account.chequeDueDate)

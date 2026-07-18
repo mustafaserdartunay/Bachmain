@@ -13,9 +13,12 @@ import Layout from './components/Layout/Layout'
 import { lazyPage, PageSuspense } from './components/Common/PageSuspense'
 import CashPage from './pages/CashPage'
 import ChequesPage from './pages/treasury/ChequesPage'
+import PromissoryNotesPage from './pages/treasury/PromissoryNotesPage'
+import TreasuryAccountsListPage from './pages/treasury/TreasuryAccountsListPage'
+import TreasuryTypeReportPage from './pages/treasury/TreasuryTypeReportPage'
 import CashBankReportPage from './pages/treasury/CashBankReportPage'
 import CashFlowReportPage from './pages/treasury/CashFlowReportPage'
-import { CASH_BASE_PATH } from './data/treasuryMenu'
+import { CASH_BASE_PATH, TREASURY_REPORTS_PATH } from './data/treasuryMenu'
 import CustomerCreatePage from './pages/CustomerCreatePage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
@@ -264,8 +267,16 @@ export default function App() {
                 <Route path="/lojistik/*" element={<Navigate to="/lojistik" replace />} />
                 <Route path={CASH_BASE_PATH} element={<CashPage />} />
                 <Route path={`${CASH_BASE_PATH}/:accountId`} element={<CashPage />} />
+                <Route path="/nakit/nakit-kasa" element={<TreasuryAccountsListPage accountType="Nakit Kasa" title="Nakit Kasa" />} />
+                <Route path="/nakit/bankalar" element={<TreasuryAccountsListPage accountType="Banka Hesabı" title="Bankalar" />} />
                 <Route path="/nakit/cekler" element={<ChequesPage />} />
-                <Route path="/nakit/kasa-banka-raporu" element={<CashBankReportPage />} />
+                <Route path="/nakit/senetler" element={<PromissoryNotesPage />} />
+                <Route path={TREASURY_REPORTS_PATH} element={<CashBankReportPage />} />
+                <Route path="/nakit/raporlar/nakit-kasa" element={<TreasuryTypeReportPage accountType="Nakit Kasa" title="Nakit Kasa Raporu" />} />
+                <Route path="/nakit/raporlar/banka" element={<TreasuryTypeReportPage accountType="Banka Hesabı" title="Banka Raporu" />} />
+                <Route path="/nakit/raporlar/cek" element={<TreasuryTypeReportPage accountType="Çek Kasası" title="Çek Raporu" />} />
+                <Route path="/nakit/raporlar/senet" element={<TreasuryTypeReportPage accountType="Senet Kasası" title="Senet Raporu" />} />
+                <Route path="/nakit/kasa-banka-raporu" element={<Navigate to={TREASURY_REPORTS_PATH} replace />} />
                 <Route path="/nakit/nakit-akisi-raporu" element={<CashFlowReportPage />} />
                 <Route path="/nakit" element={<Navigate to={CASH_BASE_PATH} replace />} />
                 <Route path="/kasa" element={<Navigate to={CASH_BASE_PATH} replace />} />

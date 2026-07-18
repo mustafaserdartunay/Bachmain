@@ -5,12 +5,21 @@ import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layo
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { formatTL } from '../../utils/productPricing'
-import { getCashBankSummary } from '../../utils/treasuryReportUtils'
+import { getTreasuryTypeSummary } from '../../utils/treasuryReportUtils'
 import { formatTreasuryCurrency } from '../../utils/treasuryStore'
 
-export default function CashBankReportPage() {
-  const [tick, setTick] = useState(0)
+const TYPE_META = {
+  'Nakit Kasa': { icon: Banknote, tone: 'emerald' },
+  'Banka Hesabı': { icon: Landmark, tone: 'blue' },
+  'Çek Kasası': { icon: ScrollText, tone: 'purple' },
+  'Senet Kasası': { icon: ScrollText, tone: 'amber' },
+}
 
+export default function TreasuryTypeReportPage({
+  accountType = 'Nakit Kasa',
+  title = 'Nakit Kasa Raporu',
+}) {
+  const [tick, setTick] = useState(0)
   const refresh = useCallback(() => setTick((value) => value + 1), [])
 
   useEffect(() => {
@@ -18,20 +27,25 @@ export default function CashBankReportPage() {
     return () => window.removeEventListener('erlenbox:treasury-updated', refresh)
   }, [refresh])
 
-  const summary = useMemo(() => getCashBankSummary(), [tick])
+  const summary = useMemo(() => getTreasuryTypeSummary(accountType), [accountType, tick])
+  const meta = TYPE_META[accountType] || TYPE_META['Nakit Kasa']
+  const Icon = meta.icon
 
   return (
     <AppPageShell>
-      <AppPageHeader title="Tüm Kasa Raporları" />
+      <AppPageHeader title={title} />
 
       <SummaryMetrics
-        columns={5}
+        columns={2}
         items={[
-          { title: 'Nakit Kasa', value: formatTL(summary.cashTotal), icon: Banknote, tone: 'emerald', valueTone: 'emerald' },
-          { title: 'Banka', value: formatTL(summary.bankTotal), icon: Landmark, tone: 'blue', valueTone: 'blue' },
-          { title: 'Çek Portföyü', value: formatTL(summary.chequeTotal), icon: ScrollText, tone: 'purple', valueTone: 'purple' },
-          { title: 'Senet Portföyü', value: formatTL(summary.promissoryTotal), icon: ScrollText, tone: 'amber', valueTone: 'amber' },
-          { title: 'Toplam Varlık', value: formatTL(summary.grandTotal), icon: WalletCards, tone: 'cyan', valueTone: 'cyan' },
+          { title: 'Hesap Sayısı', value: summary.accounts.length, icon: Icon, tone: meta.tone, valueTone: meta.tone },
+          {
+            title: 'Toplam Bakiye',
+            value: formatTL(summary.total),
+            icon: WalletCards,
+            tone: meta.tone,
+            valueTone: summary.total < 0 ? 'red' : meta.tone,
+          },
         ]}
       />
 
