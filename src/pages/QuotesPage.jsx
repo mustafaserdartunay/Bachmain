@@ -2173,6 +2173,16 @@ export default function QuotesPage() {
                 onSave={() => saveCurrentQuote({ returnToList: false })}
                 onSaveAndNew={() => saveCurrentQuote({ startNew: true })}
                 pendingDelete={pendingHeaderQuoteDelete && openSaveMenu}
+                onRequestDelete={() => setPendingHeaderQuoteDelete(true)}
+                onConfirmDelete={() => deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })}
+                onCancelDelete={() => setPendingHeaderQuoteDelete(false)}
+              />
+            </div>
+          )}
+        />
+      )}
+
+      {viewMode === 'list' && (
         <SummaryMetrics
           items={[
             { title: 'Toplam Teklif', value: summary.total, icon: ClipboardList },
