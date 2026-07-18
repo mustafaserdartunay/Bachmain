@@ -194,7 +194,7 @@ export default function TrialBanner({
         </div>
         <div className="trial-banner-sidebar-actions">
           <Link to={ctaTo} className="trial-banner-cta">
-            {cta}
+            <span>{cta}</span>
           </Link>
           <button
             type="button"

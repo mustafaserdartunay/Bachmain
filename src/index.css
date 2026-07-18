@@ -2069,8 +2069,8 @@ html.night .trial-banner-sidebar.is-urgent {
   pointer-events: none;
 }
 
-.trial-banner-cta > * ,
-.trial-banner-cta {
+.trial-banner-cta > span {
+  position: relative;
   z-index: 1;
 }
 
