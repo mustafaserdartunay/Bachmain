@@ -201,63 +201,60 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
   const isProjectsRouteActive = isProjectsRoute(location.pathname)
   const isSettingsRoute = location.pathname.startsWith('/ayarlar') || isDocumentCenterRouteActive
-  const [customerOpen, setCustomerOpen] = useState(isSalesRouteActive)
+  const resolveOpenMenuId = () => {
+    if (isSalesRouteActive || isProcessRouteActive) return 'customer'
+    if (isExpensesRouteActive) return 'expenses'
+    if (isTreasuryRouteActive) return 'treasury'
+    if (isStockRouteActive) return 'stock'
+    if (isProjectsRouteActive) return 'projects'
+    if (isFieldSalesRouteActive) return 'fieldSales'
+    if (isCrmRouteActive) return 'crm'
+    if (isHrRouteActive) return 'hr'
+    if (isLogisticsRouteActive) return 'logistics'
+    if (isSettingsRoute) return 'settings'
+    return null
+  }
+
+  const [openMenuId, setOpenMenuId] = useState(resolveOpenMenuId)
   const [processOpen, setProcessOpen] = useState(isProcessRouteActive)
-  const [expensesOpen, setExpensesOpen] = useState(isExpensesRouteActive)
-  const [treasuryOpen, setTreasuryOpen] = useState(isTreasuryRouteActive)
-  const [stockOpen, setStockOpen] = useState(isStockRouteActive)
-  const [projectsOpen, setProjectsOpen] = useState(isProjectsRouteActive)
-  const [fieldSalesOpen, setFieldSalesOpen] = useState(isFieldSalesRouteActive)
-  const [logisticsOpen, setLogisticsOpen] = useState(isLogisticsRouteActive)
-  const [hrOpen, setHrOpen] = useState(isHrRouteActive)
-  const [crmOpen, setCrmOpen] = useState(isCrmRouteActive)
-  const [settingsOpen, setSettingsOpen] = useState(isSettingsRoute)
   const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
 
+  const customerOpen = openMenuId === 'customer'
+  const expensesOpen = openMenuId === 'expenses'
+  const treasuryOpen = openMenuId === 'treasury'
+  const stockOpen = openMenuId === 'stock'
+  const projectsOpen = openMenuId === 'projects'
+  const fieldSalesOpen = openMenuId === 'fieldSales'
+  const logisticsOpen = openMenuId === 'logistics'
+  const hrOpen = openMenuId === 'hr'
+  const crmOpen = openMenuId === 'crm'
+  const settingsOpen = openMenuId === 'settings'
+
+  function toggleMenu(menuId) {
+    setOpenMenuId((current) => (current === menuId ? null : menuId))
+  }
+
   useEffect(() => {
-    if (isSalesRouteActive) setCustomerOpen(true)
-  }, [isSalesRouteActive])
+    const next = resolveOpenMenuId()
+    if (next) setOpenMenuId(next)
+  }, [
+    isSalesRouteActive,
+    isProcessRouteActive,
+    isExpensesRouteActive,
+    isTreasuryRouteActive,
+    isStockRouteActive,
+    isProjectsRouteActive,
+    isFieldSalesRouteActive,
+    isCrmRouteActive,
+    isHrRouteActive,
+    isLogisticsRouteActive,
+    isSettingsRoute,
+  ])
 
   useEffect(() => {
     if (isProcessRouteActive) setProcessOpen(true)
   }, [isProcessRouteActive])
-
-  useEffect(() => {
-    if (isExpensesRouteActive) setExpensesOpen(true)
-  }, [isExpensesRouteActive])
-
-  useEffect(() => {
-    if (isTreasuryRouteActive) setTreasuryOpen(true)
-  }, [isTreasuryRouteActive])
-
-  useEffect(() => {
-    if (isStockRouteActive) setStockOpen(true)
-  }, [isStockRouteActive])
-
-  useEffect(() => {
-    if (isProjectsRouteActive) setProjectsOpen(true)
-  }, [isProjectsRouteActive])
-
-  useEffect(() => {
-    if (isFieldSalesRouteActive) setFieldSalesOpen(true)
-  }, [isFieldSalesRouteActive])
-
-  useEffect(() => {
-    if (isLogisticsRouteActive) setLogisticsOpen(true)
-  }, [isLogisticsRouteActive])
-
-  useEffect(() => {
-    if (isHrRouteActive) setHrOpen(true)
-  }, [isHrRouteActive])
-
-  useEffect(() => {
-    if (isCrmRouteActive) setCrmOpen(true)
-  }, [isCrmRouteActive])
-
-  useEffect(() => {
-    if (isSettingsRoute) setSettingsOpen(true)
-  }, [isSettingsRoute])
 
   useEffect(() => {
     if (isDocumentCenterRouteActive) setDocumentCenterOpen(true)
@@ -352,7 +349,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <div className={`sidebar-menu-group ${customerOpen ? 'is-open' : ''} ${isSalesRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setCustomerOpen((open) => !open)}
+            onClick={() => toggleMenu('customer')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
@@ -439,7 +436,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <div className={`sidebar-menu-group ${expensesOpen ? 'is-open' : ''} ${isExpensesRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setExpensesOpen((open) => !open)}
+            onClick={() => toggleMenu('expenses')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isExpensesRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
@@ -490,7 +487,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <div className={`sidebar-menu-group ${treasuryOpen ? 'is-open' : ''} ${isTreasuryRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setTreasuryOpen((open) => !open)}
+            onClick={() => toggleMenu('treasury')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isTreasuryRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
@@ -542,7 +539,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <div className={`sidebar-menu-group ${stockOpen ? 'is-open' : ''} ${isStockRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setStockOpen((open) => !open)}
+            onClick={() => toggleMenu('stock')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isStockRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
@@ -599,7 +596,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           <div className={`sidebar-menu-group ${projectsOpen ? 'is-open' : ''} ${isProjectsRouteActive ? 'is-active' : ''}`}>
             <button
               type="button"
-              onClick={() => setProjectsOpen((open) => !open)}
+              onClick={() => toggleMenu('projects')}
               className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
                 isProjectsRouteActive ? 'sidebar-menu-active font-medium' : ''
               }`}
@@ -654,7 +651,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <div className={`sidebar-menu-group ${fieldSalesOpen ? 'is-open' : ''} ${isFieldSalesRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setFieldSalesOpen((open) => !open)}
+            onClick={() => toggleMenu('fieldSales')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isFieldSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
@@ -735,7 +732,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <div className={`sidebar-menu-group ${crmOpen ? 'is-open' : ''} ${isCrmRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setCrmOpen((open) => !open)}
+            onClick={() => toggleMenu('crm')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isCrmRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
@@ -781,7 +778,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <div className={`sidebar-menu-group ${hrOpen ? 'is-open' : ''} ${isHrRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setHrOpen((open) => !open)}
+            onClick={() => toggleMenu('hr')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isHrRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
@@ -835,7 +832,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <div className={`sidebar-menu-group ${logisticsOpen ? 'is-open' : ''} ${isLogisticsRouteActive ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setLogisticsOpen((open) => !open)}
+            onClick={() => toggleMenu('logistics')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isLogisticsRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
@@ -907,7 +904,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <div className={`sidebar-menu-group ${settingsOpen ? 'is-open' : ''} ${isSettingsRoute ? 'is-active' : ''}`}>
           <button
             type="button"
-            onClick={() => setSettingsOpen((open) => !open)}
+            onClick={() => toggleMenu('settings')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isSettingsRoute
                 ? 'sidebar-menu-active font-medium'
