@@ -43,6 +43,8 @@ export const FORM_FIELD_ROW_COMPACT_CLASS =
   `app-form-row ${FORM_FIELD_SURFACE_CLASS} flex min-h-[2.25rem] w-full items-center gap-2 rounded-xl px-2.5 py-1`
 export const FORM_FIELD_GRID_CLASS = 'grid w-full gap-2'
 export const FORM_FIELD_STACK_CLASS = 'space-y-2'
+/** Stacked rows with equal-width input columns and fixed label rail */
+export const FORM_FIELD_STACK_ALIGNED_CLASS = 'form-field-stack-aligned space-y-2'
 
 /**
  * Compact form field: [icon + label] left, control right — fills parent panel width.

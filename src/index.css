@@ -1274,6 +1274,38 @@ html:not(.night) .app-responsive .text-gray-500 {
   justify-content: space-between;
 }
 
+/* Aligned label rail + equal input columns (e.g. Ünvan Bilgileri) */
+.form-field-stack-aligned > .app-form-row {
+  display: grid !important;
+  grid-template-columns: 8.75rem minmax(0, 1fr);
+  column-gap: 0.5rem;
+  align-items: center;
+  /* Match right inset to top/bottom (py-1); keep slightly wider left for label comfort */
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+  padding-left: 0.625rem !important;
+  padding-right: 0.25rem !important;
+  gap: 0 !important;
+}
+
+.form-field-stack-aligned > .app-form-row > span:first-child {
+  width: 100%;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.form-field-stack-aligned > .app-form-row > .min-w-0 {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.form-field-stack-aligned > .app-form-row .form-input,
+.form-field-stack-aligned > .app-form-row input.form-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* ─── iOS Settings–style form group (modern, minimal) ─── */
 .ios-form-section {
   display: flex;
