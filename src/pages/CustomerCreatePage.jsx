@@ -27,6 +27,7 @@ import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import {
   FormFieldCompact,
   FormIosRow,
+  FormIosSection,
   FormSectionPanel,
   FORM_FIELD_GRID_CLASS,
   FORM_IOS_LIST_CLASS,
@@ -438,25 +439,27 @@ export default function CustomerCreatePage() {
             </div>
           </FormSectionPanel>
 
-          <FormSectionPanel compact icon={Building2} title="Ünvan Bilgileri" dotColor="violet">
+          <FormIosSection title="Ünvan Bilgileri">
             <div className={FORM_IOS_LIST_CLASS}>
-              <FormIosRow icon={Building2} label="Kısa Marka Adı">
+              <FormIosRow label="Kısa Marka Adı">
                 <input
                   name="shortBrandName"
                   defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''}
                   placeholder="Marka adı"
                   className="form-input"
+                  autoComplete="organization"
                 />
               </FormIosRow>
-              <FormIosRow icon={Building2} label="Firma Ünvanı">
+              <FormIosRow label="Firma Ünvanı">
                 <input
                   name="companyTitle"
                   defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''}
                   placeholder="Firma ünvanı"
                   className="form-input"
+                  autoComplete="organization"
                 />
               </FormIosRow>
-              <FormIosRow icon={Landmark} label="Vergi Dairesi">
+              <FormIosRow label="Vergi Dairesi">
                 <input
                   name="taxOffice"
                   defaultValue={editingCustomer?.taxOffice || ''}
@@ -464,16 +467,17 @@ export default function CustomerCreatePage() {
                   className="form-input"
                 />
               </FormIosRow>
-              <FormIosRow icon={Landmark} label="Vergi Numarası" last>
+              <FormIosRow label="Vergi Numarası" last>
                 <input
                   name="taxNumber"
                   defaultValue={editingCustomer?.taxNumber || ''}
                   placeholder="Vergi numarası"
                   className="form-input"
+                  inputMode="numeric"
                 />
               </FormIosRow>
             </div>
-          </FormSectionPanel>
+          </FormIosSection>
 
           <FormSectionPanel compact icon={MapPin} title="Adres Bilgileri" dotColor="emerald">
             <div className="space-y-2">
