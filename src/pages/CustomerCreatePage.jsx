@@ -229,7 +229,11 @@ export default function CustomerCreatePage() {
       lat: incomingDraft?.lat ?? editingCustomer?.lat ?? null,
       lng: incomingDraft?.lng ?? editingCustomer?.lng ?? null,
       website: incomingDraft?.website || editingCustomer?.website || '',
-      googleMapsUrl: incomingDraft?.mapsUrl || editingCustomer?.googleMapsUrl || '',
+      googleMapsUrl:
+        payload[`mapsUrl-${addressId}`]
+        || incomingDraft?.mapsUrl
+        || editingCustomer?.googleMapsUrl
+        || '',
       googlePlaceId: incomingDraft?.placeId || editingCustomer?.googlePlaceId || '',
       taxOffice: payload.taxOffice || editingCustomer?.taxOffice || '',
       taxNumber: payload.taxNumber || editingCustomer?.taxNumber || '',
@@ -390,7 +394,7 @@ export default function CustomerCreatePage() {
         </div>
       </section>
 
-      <div className="space-y-3 py-5 sm:py-6">
+      <div className="space-y-5 py-5 sm:py-6">
           <FormSectionPanel
             compact
             icon={UserRound}
@@ -487,6 +491,7 @@ export default function CustomerCreatePage() {
                   defaultTitle={index === 0 && editingCustomer ? 'Merkez Adres' : ''}
                   defaultAddress={index === 0 ? incomingDraft?.address || editingCustomer?.address || '' : ''}
                   defaultLocation={index === 0 ? incomingDraft ? [incomingDraft.city, incomingDraft.district].filter(Boolean).join(' / ') : editingCustomer?.city || '' : ''}
+                  defaultMapsUrl={index === 0 ? incomingDraft?.mapsUrl || editingCustomer?.googleMapsUrl || '' : ''}
                   deleteState={deleteDialog?.key === `address-${row.id}` ? deleteDialog : null}
                   onDelete={() => confirmTwoStepDelete('Adres', () => setAddressRows((rows) => rows.filter((item) => item.id !== row.id)), `address-${row.id}`)}
                   onCancel={closeDeleteDialog}
@@ -584,19 +589,6 @@ function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', 
   )
 }
 
-function TextareaLine({ icon: Icon, label, name, defaultValue = '', placeholder = '' }) {
-  return (
-    <FormFieldCompact icon={Icon} label={label} as="label" className="items-start py-2">
-      <textarea
-        name={name}
-        defaultValue={defaultValue}
-        placeholder={placeholder}
-        className="form-input min-h-[2.5rem] resize-none"
-      />
-    </FormFieldCompact>
-  )
-}
-
 function DeleteConfirmInline({ deleteState, onDelete, onCancel, onApprove, title, description = 'Bu işlem geri alınamaz.' }) {
   return (
     <DeleteTrashButton
@@ -613,7 +605,17 @@ function DeleteConfirmInline({ deleteState, onDelete, onCancel, onApprove, title
   )
 }
 
-function AddressLine({ id, defaultTitle = '', defaultAddress = '', defaultLocation = '', deleteState, onDelete, onCancel, onApprove }) {
+function AddressLine({
+  id,
+  defaultTitle = '',
+  defaultAddress = '',
+  defaultLocation = '',
+  defaultMapsUrl = '',
+  deleteState,
+  onDelete,
+  onCancel,
+  onApprove,
+}) {
   const [city = '', district = ''] = String(defaultLocation).split('/').map((part) => part.trim())
 
   return (
@@ -625,15 +627,17 @@ function AddressLine({ id, defaultTitle = '', defaultAddress = '', defaultLocati
           name={`addressTitle-${id}`}
           defaultValue={defaultTitle}
         />
-        <TextareaLine
+        <FieldLine
           icon={MapPin}
           label="Adres:"
           name={`address-${id}`}
           defaultValue={defaultAddress}
-          placeholder="Açık adres..."
         />
         <FieldLine icon={MapPin} label="İlçe:" name={`district-${id}`} defaultValue={district} />
         <FieldLine icon={MapPin} label="İl:" name={`city-${id}`} defaultValue={city} />
+        <FormFieldCompact icon={MapPin} label="Konum:" as="label">
+          <ContactLinkInput name={`mapsUrl-${id}`} defaultValue={defaultMapsUrl} />
+        </FormFieldCompact>
       </div>
       <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
     </div>

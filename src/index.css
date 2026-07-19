@@ -516,6 +516,25 @@ textarea:not(.form-input)::placeholder {
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
+/* Müşteri formu: satırlar panel zeminine karışsın (beyaz hücre yok) */
+#customer-edit-form .app-form-field-surface {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#customer-edit-form .glass-pill {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#customer-edit-form .glass-pill:hover {
+  background: rgba(140, 145, 165, 0.1) !important;
+}
+
 .glass-inset-hover {
   transition:
     background-color 0.18s ease,
@@ -1371,23 +1390,6 @@ html.night .form-field-stack-aligned > .app-form-row.app-form-field-surface {
   height: 1px;
   background: rgba(60, 60, 67, 0.14);
   pointer-events: none;
-}
-
-.form-ruled-stack > .app-form-row.items-start {
-  align-items: flex-start !important;
-}
-
-.form-ruled-stack > .app-form-row textarea.form-input {
-  min-height: 2.5rem !important;
-  height: auto !important;
-  padding: 0.35rem 0 !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  color: var(--ink) !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  resize: none;
 }
 
 .form-ruled-stack > .app-form-row select.form-input {
@@ -3610,6 +3612,22 @@ html.night .app-form-field-surface {
     0 1px 2px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
   color: var(--ink) !important;
+}
+
+html.night #customer-edit-form .app-form-field-surface {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html.night #customer-edit-form .glass-pill {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html.night #customer-edit-form .glass-pill:hover {
+  background: rgba(148, 163, 184, 0.12) !important;
 }
 
 html.night .app-responsive .card [class*='bg-dark-900'],
