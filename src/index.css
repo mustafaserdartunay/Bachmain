@@ -1346,6 +1346,34 @@ html.night .form-field-stack-aligned > .app-form-row.app-form-field-surface {
   box-shadow: none !important;
 }
 
+/* Ünvan: sol sütun dar kalır, satır çizgisi panel sağına kadar uzar */
+.form-unvan-ruled {
+  width: 100%;
+}
+
+.form-unvan-ruled > .app-form-row {
+  position: relative;
+  width: 100%;
+  grid-template-columns: 8.75rem minmax(0, min(18.375rem, calc(50% - 4.875rem))) !important;
+  padding-bottom: 0.5rem !important;
+  margin-bottom: 0.125rem !important;
+}
+
+.form-unvan-ruled > .app-form-row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: rgba(60, 60, 67, 0.14);
+  pointer-events: none;
+}
+
+html.night .form-unvan-ruled > .app-form-row::after {
+  background: rgba(235, 235, 245, 0.16);
+}
+
 /* ─── iOS Settings–style form group (modern, minimal) ─── */
 .ios-form-section {
   display: flex;

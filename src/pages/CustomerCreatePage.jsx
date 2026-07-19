@@ -446,33 +446,31 @@ export default function CustomerCreatePage() {
           </FormSectionPanel>
 
           <FormSectionPanel compact icon={Building2} title="Ünvan Bilgileri" dotColor="violet">
-            <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2`}>
-              <div className={`${FORM_FIELD_STACK_ALIGNED_CLASS}`}>
-                <FieldLine
-                  icon={Building2}
-                  label="Kısa Marka Adı"
-                  name="shortBrandName"
-                  defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''}
-                />
-                <FieldLine
-                  icon={Building2}
-                  label="Firma Ünvanı"
-                  name="companyTitle"
-                  defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''}
-                />
-                <FieldLine
-                  icon={Landmark}
-                  label="Vergi Dairesi"
-                  name="taxOffice"
-                  defaultValue={editingCustomer?.taxOffice || ''}
-                />
-                <FieldLine
-                  icon={Landmark}
-                  label="Vergi Numarası"
-                  name="taxNumber"
-                  defaultValue={editingCustomer?.taxNumber || ''}
-                />
-              </div>
+            <div className={`${FORM_FIELD_STACK_ALIGNED_CLASS} form-unvan-ruled`}>
+              <FieldLine
+                icon={Building2}
+                label="Kısa Marka Adı"
+                name="shortBrandName"
+                defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''}
+              />
+              <FieldLine
+                icon={Building2}
+                label="Firma Ünvanı"
+                name="companyTitle"
+                defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''}
+              />
+              <FieldLine
+                icon={Landmark}
+                label="Vergi Dairesi"
+                name="taxOffice"
+                defaultValue={editingCustomer?.taxOffice || ''}
+              />
+              <FieldLine
+                icon={Landmark}
+                label="Vergi Numarası"
+                name="taxNumber"
+                defaultValue={editingCustomer?.taxNumber || ''}
+              />
             </div>
           </FormSectionPanel>
 
