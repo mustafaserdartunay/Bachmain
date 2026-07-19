@@ -5,6 +5,11 @@ import { getOpenAiApiKey } from './env.js'
 import { handleVoiceChatRequest } from './voiceChat.js'
 import { handleVoiceTranscribeRequest } from './voiceTranscribe.js'
 import { handleOmniAnalyzeRequest } from './omniChat.js'
+import {
+  handleGrowthChatRequest,
+  handleGrowthHealthRequest,
+  handleGrowthModelsRequest,
+} from './growthAi.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -54,6 +59,30 @@ app.post('/api/omni/analyze', async (req, res) => {
     res.json(result)
   } catch (error) {
     res.status(500).json({ error: error.message || 'Omnichannel AI hatası' })
+  }
+})
+
+app.get('/api/growth/health', async (req, res) => {
+  try {
+    res.json(await handleGrowthHealthRequest(req.headers))
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Growth health hatası' })
+  }
+})
+
+app.get('/api/growth/models', async (req, res) => {
+  try {
+    res.json(await handleGrowthModelsRequest(req.headers))
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Growth models hatası' })
+  }
+})
+
+app.post('/api/growth/chat', async (req, res) => {
+  try {
+    res.json(await handleGrowthChatRequest(req.body, req.headers))
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Growth AI hatası' })
   }
 })
 

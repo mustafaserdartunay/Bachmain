@@ -49,6 +49,24 @@ import {
   Container,
   LayoutDashboard,
   PackageCheck,
+  Sparkles,
+  Share2,
+  BookOpen,
+  Search,
+  Megaphone,
+  Clapperboard,
+  Mail,
+  PanelsTopLeft,
+  Binoculars,
+  KeyRound,
+  Palette,
+  Image,
+  Frame,
+  Camera,
+  Film,
+  Bot,
+  Network,
+  Workflow,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -58,6 +76,7 @@ import { treasurySubMenus, isTreasuryRoute, CASH_BASE_PATH } from '../../data/tr
 import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/stockMenu'
 import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '../../data/fieldSalesMenu'
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
+import { aiGrowthSubMenus, isAiGrowthRoute, AI_GROWTH_HOME_PATH } from '../../data/aiGrowthMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { processSubMenus, isProcessRoute } from '../../data/processMenu'
 import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
@@ -159,6 +178,31 @@ const hrSubMenuIcons = {
   smartphone: Smartphone,
   settings: Settings,
 }
+const aiGrowthSubMenuIcons = {
+  'layout-dashboard': LayoutDashboard,
+  sparkles: Sparkles,
+  'share-2': Share2,
+  'book-open': BookOpen,
+  search: Search,
+  megaphone: Megaphone,
+  clapperboard: Clapperboard,
+  mail: Mail,
+  'message-circle': MessageCircle,
+  'panels-top-left': PanelsTopLeft,
+  binoculars: Binoculars,
+  'trending-up': TrendingUp,
+  'key-round': KeyRound,
+  palette: Palette,
+  image: Image,
+  frame: Frame,
+  camera: Camera,
+  film: Film,
+  bot: Bot,
+  network: Network,
+  workflow: Workflow,
+  'bar-chart-3': BarChart3,
+  settings: Settings,
+}
 const menuButtonBase = 'sidebar-menu-button sidebar-item w-full flex items-center gap-2.5 transition-colors'
 const menuLabelClass = 'sidebar-menu-label flex-1 text-left'
 const subMenuButtonBase = 'sidebar-menu-button block w-full px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-colors whitespace-nowrap'
@@ -198,6 +242,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isFieldSalesRouteActive = isFieldSalesRoute(location.pathname)
   const isLogisticsRouteActive = isLogisticsRoute(location.pathname)
   const isHrRouteActive = isHrRoute(location.pathname)
+  const isAiGrowthRouteActive = isAiGrowthRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
   const isProjectsRouteActive = isProjectsRoute(location.pathname)
@@ -210,6 +255,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     if (isProjectsRouteActive) return 'projects'
     if (isFieldSalesRouteActive) return 'fieldSales'
     if (isCrmRouteActive) return 'crm'
+    if (isAiGrowthRouteActive) return 'aiGrowth'
     if (isHrRouteActive) return 'hr'
     if (isLogisticsRouteActive) return 'logistics'
     if (isSettingsRoute) return 'settings'
@@ -229,6 +275,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const fieldSalesOpen = openMenuId === 'fieldSales'
   const logisticsOpen = openMenuId === 'logistics'
   const hrOpen = openMenuId === 'hr'
+  const aiGrowthOpen = openMenuId === 'aiGrowth'
   const crmOpen = openMenuId === 'crm'
   const settingsOpen = openMenuId === 'settings'
 
@@ -248,6 +295,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     isProjectsRouteActive,
     isFieldSalesRouteActive,
     isCrmRouteActive,
+    isAiGrowthRouteActive,
     isHrRouteActive,
     isLogisticsRouteActive,
     isSettingsRoute,
@@ -763,6 +811,56 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                         <SubIcon className="h-3.5 w-3.5" />
                       </SubMenuIcon>
                     ) : null}
+                    {sub.label}
+                  </NavLink>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <SidebarSection label="AI GROWTH" collapsed={collapsed} />
+
+        <div className={`sidebar-menu-group ${aiGrowthOpen ? 'is-open' : ''}`}>
+          <button
+            type="button"
+            onClick={() => toggleMenu('aiGrowth')}
+            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              collapsed && isAiGrowthRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <Sparkles className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && (
+              <>
+                <span className={menuLabelClass}>AI Growth Center</span>
+                {aiGrowthOpen
+                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                }
+              </>
+            )}
+          </button>
+          {aiGrowthOpen && !collapsed && (
+            <div className="mt-0.5 ml-3 max-h-[50vh] space-y-0.5 overflow-y-auto border-l border-dark-500/50 pl-3">
+              {aiGrowthSubMenus.map((sub) => {
+                const SubIcon = aiGrowthSubMenuIcons[sub.icon] || Sparkles
+                return (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    end={sub.path === AI_GROWTH_HOME_PATH}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex items-center gap-2 ${
+                        isActive ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    <SubMenuIcon>
+                      <SubIcon className="h-3.5 w-3.5" />
+                    </SubMenuIcon>
                     {sub.label}
                   </NavLink>
                 )

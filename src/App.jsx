@@ -98,6 +98,33 @@ import TaskTrackingPage from './pages/hr/TaskTrackingPage'
 import MapTrackingPage from './pages/hr/MapTrackingPage'
 import MobileCheckInPage from './pages/hr/MobileCheckInPage'
 import PdksSettingsPage from './pages/hr/PdksSettingsPage'
+import AiGrowthDashboardPage from './pages/aiGrowth/AiGrowthDashboardPage'
+import AiGrowthSettingsPage from './pages/aiGrowth/AiGrowthSettingsPage'
+import AiGrowthCalendarPage from './pages/aiGrowth/AiGrowthCalendarPage'
+import AiGrowthAgentsPage, { AiGrowthAssistantPage } from './pages/aiGrowth/AiGrowthAgentsPage'
+import AiGrowthAutomationPage from './pages/aiGrowth/AiGrowthAutomationPage'
+import AiGrowthAnalyticsPage from './pages/aiGrowth/AiGrowthAnalyticsPage'
+import AiSettingsHubPage from './pages/settings/AiSettingsHubPage'
+import OpenAiSettingsPage from './pages/settings/OpenAiSettingsPage'
+import {
+  AiContentCenterPage,
+  AiSocialStudioPage,
+  AiBlogCenterPage,
+  AiSeoCenterPage,
+  AiAdsCenterPage,
+  AiVideoCenterPage,
+  AiEmailMarketingPage,
+  AiWhatsappCampaignsPage,
+  AiLandingPageStudioPage,
+  AiCompetitorAnalysisPage,
+  AiTrendAnalysisPage,
+  AiKeywordCenterPage,
+  AiDesignStudioPage,
+  AiVisualStudioPage,
+  AiBannerStudioPage,
+  AiProductPhotoPage,
+  AiVideoScriptPage,
+} from './pages/aiGrowth/AiGrowthStudioPages'
 import SalesRepresentativesPage from './pages/fieldSales/SalesRepresentativesPage'
 import SalesRepReportsPage from './pages/fieldSales/SalesRepReportsPage'
 import CourierTrackingPage from './pages/CourierTrackingPage'
@@ -209,6 +236,31 @@ export default function App() {
                 <Route path="/ik/ayarlar" element={<PdksSettingsPage />} />
                 <Route path="/personel" element={<Navigate to="/ik/personeller" replace />} />
                 <Route path="/giderler/calisanlar" element={<Navigate to="/ik/personeller" replace />} />
+
+                <Route path="/ai-buyume" element={<AiGrowthDashboardPage />} />
+                <Route path="/ai-buyume/icerik" element={<AiContentCenterPage />} />
+                <Route path="/ai-buyume/sosyal" element={<AiGrowthCalendarPage />} />
+                <Route path="/ai-buyume/sosyal/studio" element={<AiSocialStudioPage />} />
+                <Route path="/ai-buyume/blog" element={<AiBlogCenterPage />} />
+                <Route path="/ai-buyume/seo" element={<AiSeoCenterPage />} />
+                <Route path="/ai-buyume/reklam" element={<AiAdsCenterPage />} />
+                <Route path="/ai-buyume/video" element={<AiVideoCenterPage />} />
+                <Route path="/ai-buyume/email" element={<AiEmailMarketingPage />} />
+                <Route path="/ai-buyume/whatsapp" element={<AiWhatsappCampaignsPage />} />
+                <Route path="/ai-buyume/landing" element={<AiLandingPageStudioPage />} />
+                <Route path="/ai-buyume/rakip" element={<AiCompetitorAnalysisPage />} />
+                <Route path="/ai-buyume/trend" element={<AiTrendAnalysisPage />} />
+                <Route path="/ai-buyume/anahtar-kelime" element={<AiKeywordCenterPage />} />
+                <Route path="/ai-buyume/tasarim" element={<AiDesignStudioPage />} />
+                <Route path="/ai-buyume/gorsel" element={<AiVisualStudioPage />} />
+                <Route path="/ai-buyume/banner" element={<AiBannerStudioPage />} />
+                <Route path="/ai-buyume/urun-fotografi" element={<AiProductPhotoPage />} />
+                <Route path="/ai-buyume/video-senaryosu" element={<AiVideoScriptPage />} />
+                <Route path="/ai-buyume/asistan" element={<AiGrowthAssistantPage />} />
+                <Route path="/ai-buyume/ajanlar" element={<AiGrowthAgentsPage />} />
+                <Route path="/ai-buyume/otomasyon" element={<AiGrowthAutomationPage />} />
+                <Route path="/ai-buyume/analitik" element={<AiGrowthAnalyticsPage />} />
+                <Route path="/ai-buyume/ayarlar" element={<AiGrowthSettingsPage />} />
                 <Route path="/giderler/giderler-raporu" element={<ExpensesReportPage />} />
                 <Route path="/giderler/odemeler-raporu" element={<PaymentsReportPage />} />
                 <Route path="/giderler/kdv-raporu" element={<VatReportPage />} />
@@ -290,6 +342,8 @@ export default function App() {
                 <Route path="/projeler/tamamlanan" element={<ProjectsListPage scope="completed" />} />
                 <Route path="/projeler/iptal" element={<ProjectsListPage scope="cancelled" />} />
                 <Route path="/ayarlar" element={<SettingsPage />} />
+                <Route path="/ayarlar/ai" element={<AiSettingsHubPage />} />
+                <Route path="/ayarlar/ai/openai" element={<OpenAiSettingsPage />} />
                 <Route path="/ayarlar/guncel-durum" element={<GuncelDurumSettingsPage />} />
                 <Route path="/ayarlar/mesaj-merkezi" element={<Navigate to="/mesajlar?ayarlar=1" replace />} />
                 <Route path="/ayarlar/vergi-kdv" element={<TaxVatSettingsPage />} />
