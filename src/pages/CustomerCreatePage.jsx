@@ -156,6 +156,20 @@ export default function CustomerCreatePage() {
     return () => document.removeEventListener('click', closeActiveMenu)
   }, [activeMenu])
 
+  useEffect(() => {
+    if (!actionMenuOpen) return undefined
+
+    function closeActionMenu(event) {
+      const target = event.target
+      if (actionMenuAnchorRef.current?.contains(target)) return
+      if (actionMenuRef.current?.contains(target)) return
+      setActionMenuOpen(false)
+    }
+
+    document.addEventListener('mousedown', closeActionMenu)
+    return () => document.removeEventListener('mousedown', closeActionMenu)
+  }, [actionMenuOpen, actionMenuAnchorRef, actionMenuRef])
+
   function updateOptionList(field, nextOptions) {
     setOptionLists((current) => ({ ...current, [field]: nextOptions }))
     saveOptionList(field, nextOptions)
