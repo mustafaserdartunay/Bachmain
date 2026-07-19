@@ -17,10 +17,11 @@ export const CASH_SIDEBAR_BODY_CLASS = 'flex-1 overflow-y-auto bg-white px-4 py-
 
 export const CASH_SIDEBAR_INNER_FORM_CLASS = `${FORM_SECTION_PANEL_COMPACT_CLASS} space-y-3`
 
-export function FormRow({ label, required = false, children }) {
+export function FormRow({ label, required = false, children, icon: Icon }) {
   return (
-    <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-2 border-b border-[rgba(140,145,165,0.18)] py-2.5 last:border-b-0">
-      <label className={FORM_FIELD_LABEL_CLASS}>
+    <div className="grid grid-cols-[minmax(4.75rem,auto)_minmax(0,1fr)] items-center gap-2 border-b border-[rgba(140,145,165,0.18)] py-2.5 last:border-b-0">
+      <label className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-black capitalize tracking-wider text-[var(--muted)] whitespace-nowrap">
+        {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
         {label}
         {required ? ' *' : ''}
       </label>

@@ -2,25 +2,32 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ArrowLeft,
+  BadgeCheck,
   Building2,
   CheckCircle2,
   ChevronDown,
   ExternalLink,
+  Gauge,
+  Hash,
+  Instagram,
   Landmark,
+  Mail,
   MapPin,
   Phone,
   Plus,
   Save,
   Tags,
   UserRound,
+  Users,
   WalletCards,
   X,
 } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import {
+  FormFieldCompact,
   FormSectionPanel,
-  FORM_FIELD_CELL_COMPACT_CLASS,
+  FORM_FIELD_GRID_CLASS,
 } from '../components/Common/FormSectionPanel'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
@@ -47,8 +54,7 @@ import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
 
 const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 
-const CREATE_PILL_CLASS = 'glass-pill !h-8 !min-h-8 !text-[12px]'
-const META_LABEL_CLASS = 'mb-1 text-[11px] font-black capitalize tracking-wider text-[var(--muted)]'
+const CREATE_PILL_CLASS = 'glass-pill !h-8 !min-h-8 !w-full !justify-between !text-[12px]'
 const BTN_CANCEL = `${BTN_CANCEL_BASE} gap-2 px-5 text-xs uppercase`
 const BTN_SAVE =
   `${BTN_SUCCESS} gap-2 px-4 text-sm font-black uppercase tracking-wide`
@@ -378,9 +384,8 @@ export default function CustomerCreatePage() {
       <section className="card overflow-visible p-0">
         <div className="space-y-3 p-5 sm:p-6">
           <FormSectionPanel compact icon={UserRound} title="Müşteri Bilgileri" dotColor="blue">
-            <div className="grid max-w-5xl grid-cols-2 gap-2 sm:grid-cols-4">
-              <div className={FORM_FIELD_CELL_COMPACT_CLASS}>
-                <p className={META_LABEL_CLASS}>Tipi</p>
+            <div className={`${FORM_FIELD_GRID_CLASS} grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`}>
+              <FormFieldCompact icon={BadgeCheck} label="Tipi">
                 <EditableDropdownPill
                   value={meta.type}
                   options={optionLists.type}
@@ -391,9 +396,8 @@ export default function CustomerCreatePage() {
                   onChange={(value) => updateMetaField('type', value)}
                   buttonClassName={CREATE_PILL_CLASS}
                 />
-              </div>
-              <div className={FORM_FIELD_CELL_COMPACT_CLASS}>
-                <p className={META_LABEL_CLASS}>Temsilci</p>
+              </FormFieldCompact>
+              <FormFieldCompact icon={Users} label="Temsilci">
                 <EditableDropdownPill
                   value={meta.representative}
                   options={optionLists.representative}
@@ -404,9 +408,8 @@ export default function CustomerCreatePage() {
                   onChange={(value) => updateMetaField('representative', value)}
                   buttonClassName={CREATE_PILL_CLASS}
                 />
-              </div>
-              <div className={FORM_FIELD_CELL_COMPACT_CLASS}>
-                <p className={META_LABEL_CLASS}>Puantaj</p>
+              </FormFieldCompact>
+              <FormFieldCompact icon={Gauge} label="Puantaj">
                 <EditableDropdownPill
                   value={meta.scoring}
                   options={optionLists.scoring}
@@ -417,11 +420,8 @@ export default function CustomerCreatePage() {
                   onChange={(value) => updateMetaField('scoring', value)}
                   buttonClassName={CREATE_PILL_CLASS}
                 />
-              </div>
-              <div className={FORM_FIELD_CELL_COMPACT_CLASS}>
-                <p className={`flex items-center gap-1 ${META_LABEL_CLASS}`}>
-                  <Tags className="h-3 w-3" /> Kategori
-                </p>
+              </FormFieldCompact>
+              <FormFieldCompact icon={Tags} label="Kategori">
                 <EditableDropdownPill
                   value={meta.category}
                   options={optionLists.category}
@@ -432,12 +432,12 @@ export default function CustomerCreatePage() {
                   onChange={(value) => updateMetaField('category', value)}
                   buttonClassName={CREATE_PILL_CLASS}
                 />
-              </div>
+              </FormFieldCompact>
             </div>
           </FormSectionPanel>
 
           <FormSectionPanel compact icon={Building2} title="Ünvan Bilgileri" dotColor="violet">
-            <div className="grid max-w-5xl gap-2 sm:grid-cols-2">
+            <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2`}>
               <FieldLine icon={Building2} label="Kısa Marka Adı" name="shortBrandName" defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''} />
               <FieldLine icon={Building2} label="Firma Ünvanı" name="companyTitle" defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''} />
               <FieldLine icon={Landmark} label="Vergi Dairesi" name="taxOffice" defaultValue={editingCustomer?.taxOffice || ''} />
@@ -499,14 +499,11 @@ export default function CustomerCreatePage() {
           </FormSectionPanel>
 
           <FormSectionPanel compact icon={WalletCards} title="Finans Ayarları" dotColor="orange">
-            <div className="grid max-w-5xl gap-2 sm:grid-cols-2">
+            <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2`}>
               <SelectLine icon={WalletCards} label="Fiyat Listesi" name="priceList" options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']} />
               <SelectLine icon={WalletCards} label="Döviz Kuru" name="currencyRate" options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']} />
-              <div className={`${FORM_FIELD_CELL_COMPACT_CLASS} space-y-1`}>
-                <p className={`flex items-center gap-1.5 ${META_LABEL_CLASS}`}>
-                  <WalletCards className="h-3.5 w-3.5 shrink-0" /> Açılış Bakiyesi
-                </p>
-                <label className="flex min-h-8 items-center gap-3 px-1 text-[12px] font-semibold text-[var(--muted)]">
+              <FormFieldCompact icon={WalletCards} label="Açılış Bakiyesi">
+                <label className="flex min-h-8 items-center gap-3 text-[12px] font-semibold text-[var(--muted)]">
                   <input
                     name="hasOpeningBalance"
                     type="checkbox"
@@ -516,7 +513,7 @@ export default function CustomerCreatePage() {
                   />
                   Hareketlere eklensin
                 </label>
-              </div>
+              </FormFieldCompact>
               <FieldLine icon={WalletCards} label="Açılış Tutarı" name="openingBalanceAmount" type="number" disabled={!openingEnabled} />
             </div>
           </FormSectionPanel>
@@ -544,40 +541,31 @@ export default function CustomerCreatePage() {
 
 function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', large = false, disabled = false }) {
   return (
-    <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1`}>
-      <span className={`flex items-center gap-1.5 ${META_LABEL_CLASS}`}>
-        <Icon className="h-3.5 w-3.5 shrink-0" /> {label}
-      </span>
+    <FormFieldCompact icon={Icon} label={label} as="label">
       <input
         name={name}
         type={type}
         defaultValue={defaultValue}
         disabled={disabled}
-        className={`form-input !py-1.5 ${large ? 'text-base font-extrabold uppercase tracking-wide' : ''} ${disabled ? 'opacity-60' : ''}`}
+        className={`form-input !h-8 !min-h-8 !py-1 ${large ? 'text-base font-extrabold uppercase tracking-wide' : ''} ${disabled ? 'opacity-60' : ''}`}
       />
-    </label>
+    </FormFieldCompact>
   )
 }
 
 function CompactFieldLine({ icon: Icon, label, name, defaultValue = '' }) {
   return (
-    <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1`}>
-      <span className={`flex items-center gap-1.5 ${META_LABEL_CLASS}`}>
-        <Icon className="h-3.5 w-3.5 shrink-0" /> {label}
-      </span>
-      <input name={name} defaultValue={defaultValue} className="form-input !py-1.5" />
-    </label>
+    <FormFieldCompact icon={Icon} label={label} as="label">
+      <input name={name} defaultValue={defaultValue} className="form-input !h-8 !min-h-8 !py-1" />
+    </FormFieldCompact>
   )
 }
 
 function TextareaLine({ icon: Icon, label, name, defaultValue = '' }) {
   return (
-    <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1`}>
-      <span className={`flex items-center gap-1.5 ${META_LABEL_CLASS}`}>
-        <Icon className="h-3.5 w-3.5" /> {label}
-      </span>
+    <FormFieldCompact icon={Icon} label={label} as="label" className="!items-start !py-2">
       <textarea name={name} defaultValue={defaultValue} className="form-input min-h-20 resize-none" />
-    </label>
+    </FormFieldCompact>
   )
 }
 
@@ -601,37 +589,30 @@ function AddressLine({ id, defaultTitle = '', defaultAddress = '', defaultLocati
   const [city = '', district = ''] = String(defaultLocation).split('/').map((part) => part.trim())
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2">
-      <div className="grid gap-2 sm:grid-cols-2">
-        <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1`}>
-          <span className={META_LABEL_CLASS}>Adres başlığı</span>
-          <input name={`addressTitle-${id}`} defaultValue={defaultTitle} placeholder="Örn. Merkez Adres" className="form-input !py-1.5" />
-        </label>
-        <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1 sm:col-span-2`}>
-          <span className={META_LABEL_CLASS}>Adres</span>
+    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-center gap-2">
+      <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2`}>
+        <FormFieldCompact icon={Hash} label="Adres başlığı" as="label">
+          <input name={`addressTitle-${id}`} defaultValue={defaultTitle} placeholder="Örn. Merkez Adres" className="form-input !h-8 !min-h-8 !py-1" />
+        </FormFieldCompact>
+        <FormFieldCompact icon={MapPin} label="Adres" as="label" className="sm:col-span-2 !items-start !py-2">
           <textarea name={`address-${id}`} defaultValue={defaultAddress} placeholder="Açık adres..." className="form-input min-h-[2.5rem] resize-none !py-1.5" />
-        </label>
+        </FormFieldCompact>
         <CompactFieldLine icon={MapPin} label="İlçe" name={`district-${id}`} defaultValue={district} />
         <CompactFieldLine icon={MapPin} label="İl" name={`city-${id}`} defaultValue={city} />
       </div>
-      <div className="pt-6">
-        <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
-      </div>
+      <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
     </div>
   )
 }
 
 function SelectLine({ icon: Icon, label, name, options }) {
   return (
-    <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1`}>
-      <span className={`flex items-center gap-1.5 ${META_LABEL_CLASS}`}>
-        <Icon className="h-3.5 w-3.5 shrink-0" /> {label}
-      </span>
-      <select name={name} defaultValue="" className="form-input !py-1.5">
+    <FormFieldCompact icon={Icon} label={label} as="label">
+      <select name={name} defaultValue="" className="form-input !h-8 !min-h-8 !py-1">
         <option value="">Seçiniz</option>
         {options.map((option) => <option key={option}>{option}</option>)}
       </select>
-    </label>
+    </FormFieldCompact>
   )
 }
 
@@ -646,7 +627,7 @@ function ContactLinkInput({ name, defaultValue = '', placeholder }) {
         value={value}
         onChange={(event) => setValue(event.target.value)}
         placeholder={placeholder}
-        className="form-input min-w-0 flex-1 !py-1.5"
+        className="form-input min-w-0 flex-1 !h-8 !min-h-8 !py-1"
       />
       {href && (
         <a
@@ -665,39 +646,32 @@ function ContactLinkInput({ name, defaultValue = '', placeholder }) {
 
 function ContactLine({ id, defaultTitle = '', lockedTitle = false, defaultValue = '', phoneDefault = '', emailDefault = '', instagramDefault = '', deleteState, onDelete, onCancel, onApprove }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2">
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-        <div className={`${FORM_FIELD_CELL_COMPACT_CLASS} space-y-1`}>
-          <p className={META_LABEL_CLASS}>Başlık</p>
+    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-center gap-2">
+      <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2 lg:grid-cols-5`}>
+        <FormFieldCompact icon={Hash} label="Başlık">
           {lockedTitle ? (
             <div className="flex min-h-8 items-center rounded-lg bg-[rgba(140,145,165,0.12)] px-2.5 text-[11px] font-bold uppercase tracking-wider text-[var(--ink)]">
               {defaultTitle}
               <input type="hidden" name={`contactTitle-${id}`} value={defaultTitle} />
             </div>
           ) : (
-            <input name={`contactTitle-${id}`} defaultValue={defaultTitle} placeholder="Başlık..." className="form-input !py-1.5 text-[11px] font-bold uppercase tracking-wider" />
+            <input name={`contactTitle-${id}`} defaultValue={defaultTitle} placeholder="Başlık..." className="form-input !h-8 !min-h-8 !py-1 text-[11px] font-bold uppercase tracking-wider" />
           )}
-        </div>
-        <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1`}>
-          <span className={META_LABEL_CLASS}>İsim</span>
-          <input name={`contactName-${id}`} defaultValue={defaultValue} placeholder="İsim..." className="form-input !py-1.5" />
-        </label>
-        <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1`}>
-          <span className={META_LABEL_CLASS}>Telefon</span>
-          <input name={`contactPhone-${id}`} defaultValue={phoneDefault} placeholder="Telefon..." className="form-input !py-1.5" />
-        </label>
-        <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1`}>
-          <span className={META_LABEL_CLASS}>E-posta</span>
-          <input name={`contactEmail-${id}`} defaultValue={emailDefault} placeholder="E-posta..." className="form-input !py-1.5" />
-        </label>
-        <label className={`${FORM_FIELD_CELL_COMPACT_CLASS} block space-y-1`}>
-          <span className={META_LABEL_CLASS}>Instagram</span>
+        </FormFieldCompact>
+        <FormFieldCompact icon={UserRound} label="İsim" as="label">
+          <input name={`contactName-${id}`} defaultValue={defaultValue} placeholder="İsim..." className="form-input !h-8 !min-h-8 !py-1" />
+        </FormFieldCompact>
+        <FormFieldCompact icon={Phone} label="Telefon" as="label">
+          <input name={`contactPhone-${id}`} defaultValue={phoneDefault} placeholder="Telefon..." className="form-input !h-8 !min-h-8 !py-1" />
+        </FormFieldCompact>
+        <FormFieldCompact icon={Mail} label="E-posta" as="label">
+          <input name={`contactEmail-${id}`} defaultValue={emailDefault} placeholder="E-posta..." className="form-input !h-8 !min-h-8 !py-1" />
+        </FormFieldCompact>
+        <FormFieldCompact icon={Instagram} label="Instagram" as="label">
           <ContactLinkInput name={`contactInstagram-${id}`} defaultValue={instagramDefault} placeholder="Instagram..." />
-        </label>
+        </FormFieldCompact>
       </div>
-      <div className="pt-6">
-        <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
-      </div>
+      <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
     </div>
   )
 }

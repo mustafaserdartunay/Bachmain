@@ -1269,7 +1269,9 @@ html:not(.night) .app-responsive .text-gray-500 {
 }
 
 .app-form-row .glass-pill {
-  min-height: 2.25rem;
+  min-height: 2rem;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .app-dropdown-portal {

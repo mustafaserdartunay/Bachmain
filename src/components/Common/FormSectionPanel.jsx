@@ -27,7 +27,13 @@ export function FormSectionPanel({ icon: Icon, title, children, dotColor = 'blue
 
 export default FormSectionPanel
 
-export const FORM_FIELD_LABEL_CLASS = 'mb-0 text-[12px] font-black capitalize tracking-wider text-[var(--muted)]'
+/** Stacked label (legacy) */
+export const FORM_FIELD_LABEL_CLASS = 'mb-0 text-[11px] font-black capitalize tracking-wider text-[var(--muted)]'
+
+/** Inline label — always sits left of the control, with optional leading icon */
+export const FORM_FIELD_INLINE_LABEL_CLASS =
+  'inline-flex shrink-0 items-center gap-1.5 text-[11px] font-black capitalize tracking-wider text-[var(--muted)] whitespace-nowrap'
+
 export const FORM_FIELD_SURFACE_CLASS = 'app-form-field-surface'
 export const FORM_FIELD_CELL_CLASS = `${FORM_FIELD_SURFACE_CLASS} rounded-[16px] p-3`
 export const FORM_FIELD_CELL_COMPACT_CLASS = `${FORM_FIELD_SURFACE_CLASS} rounded-xl px-2.5 py-1.5`
@@ -35,5 +41,28 @@ export const FORM_FIELD_ROW_CLASS =
   `app-form-row ${FORM_FIELD_SURFACE_CLASS} flex min-h-[2.5625rem] w-full items-center gap-3 rounded-[16px] px-3 py-2`
 export const FORM_FIELD_ROW_COMPACT_CLASS =
   `app-form-row ${FORM_FIELD_SURFACE_CLASS} flex min-h-[2.25rem] w-full items-center gap-2 rounded-xl px-2.5 py-1`
-export const FORM_FIELD_GRID_CLASS = 'grid gap-3'
-export const FORM_FIELD_STACK_CLASS = 'space-y-3'
+export const FORM_FIELD_GRID_CLASS = 'grid w-full gap-2'
+export const FORM_FIELD_STACK_CLASS = 'space-y-2'
+
+/**
+ * Compact form field: [icon + label] left, control right — fills parent panel width.
+ */
+export function FormFieldCompact({
+  icon: Icon,
+  label,
+  children,
+  as: Tag = 'div',
+  className = '',
+  labelClassName = '',
+  controlClassName = '',
+}) {
+  return (
+    <Tag className={`${FORM_FIELD_ROW_COMPACT_CLASS} ${className}`.trim()}>
+      <span className={`${FORM_FIELD_INLINE_LABEL_CLASS} ${labelClassName}`.trim()}>
+        {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
+        {label}
+      </span>
+      <div className={`min-w-0 flex-1 ${controlClassName}`.trim()}>{children}</div>
+    </Tag>
+  )
+}

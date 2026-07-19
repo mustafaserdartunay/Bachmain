@@ -21,7 +21,7 @@ import { appendActivity } from '../utils/customerActivity'
 import { formatTL } from '../utils/productPricing'
 import NumericInput from '../components/Products/NumericInput'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
-import { FormSectionPanel, FORM_FIELD_LABEL_CLASS, FORM_FIELD_ROW_CLASS } from '../components/Common/FormSectionPanel'
+import { FormSectionPanel, FORM_FIELD_ROW_CLASS } from '../components/Common/FormSectionPanel'
 
 const DOCUMENT_CONFIG = {
   'satis-faturasi': {
@@ -376,11 +376,14 @@ export default function CustomerDocumentPage() {
   )
 }
 
-function Field({ label, children, full = false }) {
+function Field({ label, children, full = false, icon: Icon }) {
   return (
-    <label className={`glass-inset flex flex-col gap-1.5 rounded-[16px] p-3 ${full ? 'col-span-2' : ''}`}>
-      <span className={FORM_FIELD_LABEL_CLASS}>{label}</span>
-      {children}
+    <label className={`app-form-row app-form-field-surface flex items-center gap-2 rounded-xl px-2.5 py-1.5 ${full ? 'col-span-2' : ''}`}>
+      <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-black capitalize tracking-wider text-[var(--muted)] whitespace-nowrap">
+        {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
+        {label}
+      </span>
+      <div className="min-w-0 flex-1">{children}</div>
     </label>
   )
 }

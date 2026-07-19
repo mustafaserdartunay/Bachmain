@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight, Landmark, Save, WalletCards } from 'lucide-react'
+import { ChevronDown, ChevronRight, CalendarDays, Landmark, ListOrdered, Save, WalletCards } from 'lucide-react'
 import SearchInput from '../../components/Common/SearchInput'
 import SplitCreateButton from '../../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPagePanel, AppPageShell, AppPanelDot } from '../../components/Layout/AppPageLayout'
-import { FORM_FIELD_ROW_CLASS, FORM_SECTION_PANEL_CLASS } from '../../components/Common/FormSectionPanel'
+import { FormFieldCompact, FORM_SECTION_PANEL_CLASS } from '../../components/Common/FormSectionPanel'
 import ListHeaderRow from '../../components/Common/ListHeaderRow'
 import { DeleteTrashButton } from '../../components/Common/ListDeleteConfirmPanel'
 import NumericInput from '../../components/Products/NumericInput'
 import { formatTL } from '../../utils/productPricing'
 import { BTN_SUCCESS } from '../../utils/buttonStyles'
 import {
-  APP_FILTER_LABEL_CLASS,
   APP_ICON_SM_CLASS,
   APP_ICON_WRAP_CLASS,
   APP_METRIC_ROW_CLASS,
@@ -119,30 +118,27 @@ function LoanCard({ loan, expanded, onToggle, onChange, onDelete }) {
           className="space-y-4 border-t border-white/40 p-4"
           onClick={(event) => event.stopPropagation()}
         >
-      <div className="grid gap-2" style={{ gridTemplateColumns: LOAN_GRID }}>
-        <label className={`${FORM_FIELD_ROW_CLASS} !grid !grid-cols-1 !gap-1 !px-3 !py-2`}>
-          <span className={APP_FILTER_LABEL_CLASS}>Kredi Türü</span>
+      <div className="grid w-full gap-2" style={{ gridTemplateColumns: LOAN_GRID }}>
+        <FormFieldCompact icon={ListOrdered} label="Kredi Türü" as="label">
           <select
             value={loan.loanType}
             onChange={(e) => patchLoan({ loanType: e.target.value })}
-            className="form-input text-xs"
+            className="form-input !h-8 !min-h-8 text-xs"
           >
             {LOAN_TYPE_OPTIONS.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
-        </label>
-        <label className={`${FORM_FIELD_ROW_CLASS} !grid !grid-cols-1 !gap-1 !px-3 !py-2`}>
-          <span className={APP_FILTER_LABEL_CLASS}>Banka Adı</span>
+        </FormFieldCompact>
+        <FormFieldCompact icon={Landmark} label="Banka Adı" as="label">
           <input
             value={loan.bankName}
             onChange={(e) => patchLoan({ bankName: e.target.value })}
             placeholder="Banka adı"
-            className="form-input text-xs"
+            className="form-input !h-8 !min-h-8 text-xs"
           />
-        </label>
-        <label className={`${FORM_FIELD_ROW_CLASS} !grid !grid-cols-1 !gap-1 !px-3 !py-2`}>
-          <span className={APP_FILTER_LABEL_CLASS}>Tutar</span>
+        </FormFieldCompact>
+        <FormFieldCompact icon={WalletCards} label="Tutar" as="label">
           <NumericInput
             value={loan.totalAmount}
             onChange={(value) => patchLoan({ totalAmount: value })}
@@ -150,27 +146,25 @@ function LoanCard({ loan, expanded, onToggle, onChange, onDelete }) {
             formatMode="price"
             className="text-xs"
           />
-        </label>
-        <label className={`${FORM_FIELD_ROW_CLASS} !grid !grid-cols-1 !gap-1 !px-3 !py-2`}>
-          <span className={APP_FILTER_LABEL_CLASS}>Taksit</span>
+        </FormFieldCompact>
+        <FormFieldCompact icon={ListOrdered} label="Taksit" as="label">
           <input
             type="number"
             min={1}
             max={360}
             value={loan.installmentCount}
             onChange={(e) => patchLoan({ installmentCount: Number(e.target.value) || 1 })}
-            className="form-input text-xs"
+            className="form-input !h-8 !min-h-8 text-xs"
           />
-        </label>
-        <label className={`${FORM_FIELD_ROW_CLASS} !grid !grid-cols-1 !gap-1 !px-3 !py-2`}>
-          <span className={APP_FILTER_LABEL_CLASS}>İlk Vade</span>
+        </FormFieldCompact>
+        <FormFieldCompact icon={CalendarDays} label="İlk Vade" as="label">
           <input
             type="date"
             value={loan.startDate}
             onChange={(e) => patchLoan({ startDate: e.target.value })}
-            className="form-input text-xs"
+            className="form-input !h-8 !min-h-8 text-xs"
           />
-        </label>
+        </FormFieldCompact>
       </div>
 
       <div className="flex flex-wrap gap-2">
