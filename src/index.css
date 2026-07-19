@@ -2954,14 +2954,21 @@ select.search-pill:focus {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
-/* Split chevron: aynı çerçeve, biraz daha sıkı */
+/* Açılır menü tetikleyici (chevron / w-14): ikon dışı çerçeve yok */
 .btn-split .btn-primary.w-14 > svg,
 .btn-split .btn-cancel.w-14 > svg,
 .btn-split .btn-success.w-14 > svg,
-.btn-split button.w-14 > svg {
-  padding: 0.375rem;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+.btn-split button.w-14 > svg,
+.btn-primary.w-14 > svg,
+.btn-cancel.w-14 > svg,
+.btn-success.w-14 > svg,
+button.btn-primary[aria-expanded] > svg,
+button.btn-cancel[aria-expanded] > svg,
+button.btn-success[aria-expanded] > svg {
+  padding: 0 !important;
+  border-radius: 0 !important;
   background: transparent !important;
+  box-shadow: none !important;
 }
 
 .badge-blue {
