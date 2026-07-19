@@ -27,6 +27,7 @@ import {
   FormFieldCompact,
   FormSectionPanel,
   FORM_FIELD_GRID_CLASS,
+  FORM_FIELD_STACK_ALIGNED_CLASS,
 } from '../components/Common/FormSectionPanel'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
@@ -446,7 +447,7 @@ export default function CustomerCreatePage() {
 
           <FormSectionPanel compact icon={Building2} title="Ünvan Bilgileri" dotColor="violet">
             <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2`}>
-              <div className="space-y-2">
+              <div className={`${FORM_FIELD_STACK_ALIGNED_CLASS}`}>
                 <FieldLine
                   icon={Building2}
                   label="Kısa Marka Adı"
