@@ -34,6 +34,7 @@ import { flushWorkspaceNow } from '../utils/workspaceStorage'
 import { getTreasuryAccounts, getTreasuryMovements, saveTreasuryMovements } from '../utils/treasuryStore'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
+  createNextContactRow,
   initialContactRowsFromCustomer,
   parseContactsFromFormPayload,
   resolveContactLinkHref,
@@ -529,7 +530,7 @@ export default function CustomerCreatePage() {
             </div>
             <button
               type="button"
-              onClick={() => setContactRows((rows) => [...rows, { id: Date.now(), title: '' }])}
+              onClick={() => setContactRows((rows) => [...rows, createNextContactRow(rows)])}
               className="btn-ghost mt-2 inline-flex items-center gap-2 !px-3 !py-1.5 text-[12px] font-bold"
             >
               <Plus className="h-3.5 w-3.5" /> İletişim Ekle
@@ -557,20 +558,20 @@ export default function CustomerCreatePage() {
           </FormSectionPanel>
       </div>
 
-      <div className="flex items-center justify-between px-1 py-5 sm:px-2">
-          <div className="flex items-center gap-3 text-xs font-semibold text-gray-500">
-            <UserRound className="h-4 w-4" />
-            Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.
-          </div>
-          <div className="flex items-center gap-2.5 bg-transparent">
-            <button type="button" onClick={() => navigate(-1)} className={BTN_CANCEL}>
-              <X className="h-4 w-4" /> Vazgeç
-            </button>
-            <button type="submit" className={BTN_SAVE}>
-              <Save className="h-4 w-4" /> Kaydet
-            </button>
-          </div>
-      </div>
+      <section className="relative flex min-h-[4.625rem] items-center justify-between rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
+        <div className="flex min-w-0 items-center gap-3 text-xs font-semibold text-gray-500">
+          <UserRound className="h-4 w-4 shrink-0" />
+          <span className="truncate">Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.</span>
+        </div>
+        <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
+          <button type="button" onClick={() => navigate(-1)} className={BTN_CANCEL}>
+            <X className="h-4 w-4" /> Vazgeç
+          </button>
+          <button type="submit" className={BTN_SAVE}>
+            <Save className="h-4 w-4" /> Kaydet
+          </button>
+        </div>
+      </section>
     </form>
   )
 }
@@ -697,22 +698,21 @@ function ContactLine({ id, defaultTitle = '', lockedTitle = false, defaultValue 
             <input
               name={`contactTitle-${id}`}
               defaultValue={defaultTitle}
-              placeholder="Başlık..."
               className="form-input !h-8 !min-h-8 !py-1 text-[12px] font-semibold uppercase tracking-wide"
             />
           )}
         </FormFieldCompact>
         <FormFieldCompact icon={UserRound} label="İsim:" as="label">
-          <input name={`contactName-${id}`} defaultValue={defaultValue} placeholder="İsim..." className="form-input !h-8 !min-h-8 !py-1" />
+          <input name={`contactName-${id}`} defaultValue={defaultValue} className="form-input !h-8 !min-h-8 !py-1" />
         </FormFieldCompact>
         <FormFieldCompact icon={Phone} label="Telefon:" as="label">
-          <input name={`contactPhone-${id}`} defaultValue={phoneDefault} placeholder="Telefon..." className="form-input !h-8 !min-h-8 !py-1" />
+          <input name={`contactPhone-${id}`} defaultValue={phoneDefault} className="form-input !h-8 !min-h-8 !py-1" />
         </FormFieldCompact>
         <FormFieldCompact icon={Mail} label="E-posta:" as="label">
-          <input name={`contactEmail-${id}`} defaultValue={emailDefault} placeholder="E-posta..." className="form-input !h-8 !min-h-8 !py-1" />
+          <input name={`contactEmail-${id}`} defaultValue={emailDefault} className="form-input !h-8 !min-h-8 !py-1" />
         </FormFieldCompact>
         <FormFieldCompact icon={Instagram} label="Instagram:" as="label">
-          <ContactLinkInput name={`contactInstagram-${id}`} defaultValue={instagramDefault} placeholder="Instagram..." />
+          <ContactLinkInput name={`contactInstagram-${id}`} defaultValue={instagramDefault} />
         </FormFieldCompact>
       </div>
       <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />

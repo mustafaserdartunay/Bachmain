@@ -4,6 +4,13 @@ const DEFAULT_CONTACT_TITLES = [
   { id: 'other', title: 'Diğer Sorumlu', locked: true },
 ]
 
+export function createNextContactRow(existingRows = []) {
+  const usedIds = new Set(existingRows.map((row) => String(row.id)))
+  const nextPreset = DEFAULT_CONTACT_TITLES.find((row) => !usedIds.has(row.id))
+  if (nextPreset) return { ...nextPreset }
+  return { id: `contact-${Date.now()}`, title: '' }
+}
+
 export function resolveContactLinkHref(value = '', { instagram = false } = {}) {
   const clean = String(value).trim()
   if (!clean) return ''
@@ -50,7 +57,7 @@ export function parseContactsFromFormPayload(payload, contactRows = []) {
 
 export function initialContactRowsFromCustomer(customer) {
   if (!customer) {
-    return DEFAULT_CONTACT_TITLES.map((row) => ({ ...row }))
+    return [{ ...DEFAULT_CONTACT_TITLES[0] }]
   }
 
   const savedContacts = Array.isArray(customer.contacts) ? customer.contacts.map(normalizeContactRow) : []
@@ -90,7 +97,16 @@ export function initialContactRowsFromCustomer(customer) {
       })
     })
 
-  return rows
+  const filled = rows.filter((row) => (
+    row.defaultName
+    || row.defaultPhone
+    || row.defaultEmail
+    || row.defaultInstagram
+    || row.id === 'owner'
+    || !row.locked
+  ))
+
+  return filled.length ? filled : [{ ...DEFAULT_CONTACT_TITLES[0] }]
 }
 
 function pickContactByPriority(contacts, priorityIds) {
