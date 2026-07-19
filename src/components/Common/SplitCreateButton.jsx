@@ -38,7 +38,7 @@ export default function SplitCreateButton({
         <button
           type="button"
           onClick={onPrimaryClick}
-          className={`${BTN_PRIMARY} gap-2.5 px-3 uppercase tracking-wide`}
+          className={`${BTN_PRIMARY} gap-2.5 px-3 tracking-wide`}
         >
           <Plus className="h-4 w-4" />
           {label}

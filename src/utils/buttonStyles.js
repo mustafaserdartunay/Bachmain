@@ -1,19 +1,24 @@
 /**
  * Legacy class tokens — prefer `import { Button } from '@bachmain/ui'`.
  * Heights match header quick-actions (52px via --ds-control-h).
+ * Label casing matches header chips (e.g. “Gelir Ekle”) — sentence case, not ALL CAPS.
  */
 
 /** Yeni oluştur / birincil CTA — Kasa sky→blue gradient */
 export const BTN_PRIMARY =
-  'btn-primary inline-flex h-control min-h-control items-center justify-center rounded-xl font-extrabold uppercase tracking-wide transition-transform'
+  'btn-primary inline-flex h-control min-h-control items-center justify-center rounded-xl font-extrabold tracking-wide transition-transform'
 
 /** Vazgeç / iptal — Yeni Alış Faturası rose gradient */
 export const BTN_CANCEL =
-  'btn-cancel inline-flex h-control min-h-control items-center justify-center rounded-xl font-extrabold uppercase tracking-wide transition-transform'
+  'btn-cancel inline-flex h-control min-h-control items-center justify-center rounded-xl font-extrabold tracking-wide transition-transform'
 
 /** Olumlu — kaydet, onay, WhatsApp, başarı aksiyonları */
 export const BTN_SUCCESS =
-  'btn-success inline-flex h-control min-h-control items-center justify-center rounded-xl font-extrabold uppercase tracking-wide transition-transform'
+  'btn-success inline-flex h-control min-h-control items-center justify-center rounded-xl font-extrabold tracking-wide transition-transform'
+
+/** Form geri / nötr chip — header quick-action boyutu, renksiz */
+export const BTN_BACK =
+  'btn-back inline-flex h-control min-h-control items-center justify-center gap-2.5 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-xs font-extrabold tracking-wide text-gray-300 transition-transform hover:-translate-y-0.5 hover:bg-dark-700 hover:text-white'
 
 /** Üretim sayfası artı (+) butonu — info ton */
 export const URETIM_ARTI_BUTTON_CLASS =

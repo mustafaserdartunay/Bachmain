@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   BadgeCheck,
   Building2,
-  CheckCircle2,
   ChevronDown,
   ExternalLink,
   Gauge,
@@ -49,7 +48,7 @@ import {
   saveOptionList,
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
-import { BTN_CANCEL as BTN_CANCEL_BASE, BTN_SUCCESS } from '../utils/buttonStyles'
+import { BTN_BACK, BTN_CANCEL as BTN_CANCEL_BASE, BTN_SUCCESS } from '../utils/buttonStyles'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
 
@@ -332,7 +331,7 @@ export default function CustomerCreatePage() {
         <button
           type="button"
           onClick={() => navigate(backPath)}
-          className="absolute left-5 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-5 py-2.5 text-xs font-black uppercase text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+          className={`${BTN_BACK} absolute left-5 top-1/2 -translate-y-1/2 hover:!-translate-y-[calc(50%+0.125rem)]`}
         >
           <ArrowLeft className="h-4 w-4" /> {isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'}
         </button>
@@ -372,9 +371,9 @@ export default function CustomerCreatePage() {
               <button
                 type="button"
                 onClick={saveAndContinue}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-black uppercase tracking-wide text-[var(--ink)] transition-colors hover:bg-white/45"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-extrabold tracking-wide text-[var(--ink)] transition-colors hover:bg-white/45"
               >
-                <CheckCircle2 className="h-4 w-4 text-emerald-300" /> Kaydet ve Devam Et
+                <Save className="h-4 w-4 text-emerald-300" /> Kaydet ve devam et
               </button>
             </div>,
             document.body,
@@ -551,7 +550,7 @@ export default function CustomerCreatePage() {
               <X className="h-4 w-4" /> Vazgeç
             </button>
             <button type="submit" className={BTN_SAVE}>
-              <CheckCircle2 className="h-4 w-4" /> Kaydet
+              <Save className="h-4 w-4" /> Kaydet
             </button>
           </div>
         </div>

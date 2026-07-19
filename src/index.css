@@ -2815,6 +2815,12 @@ select.search-pill:focus {
   color: #ffffff !important;
 }
 
+.btn-primary,
+.btn-cancel,
+.btn-success {
+  text-transform: none !important; /* sentence case like header “Gelir Ekle” */
+}
+
 /* Vazgeç / cancel — header “Yeni Alış Faturası” rose gradient, 52px */
 .btn-cancel {
   display: inline-flex !important;
@@ -2923,7 +2929,8 @@ select.search-pill:focus {
 /* Header quick-action ikon çerçevesi: dolgu yok, yalnızca ring (Yeni Fatura boyutu) */
 .btn-primary > svg,
 .btn-cancel > svg,
-.btn-success > svg {
+.btn-success > svg,
+.btn-back > svg {
   width: 1rem !important;
   height: 1rem !important;
   flex-shrink: 0;
@@ -2933,6 +2940,18 @@ select.search-pill:focus {
   background: transparent !important;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
   stroke-width: 2.25;
+}
+
+.btn-back {
+  height: 3.25rem !important;
+  min-height: 3.25rem !important;
+  font-size: 0.75rem !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+}
+
+.btn-back > svg {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 /* Split chevron: aynı çerçeve, biraz daha sıkı */
