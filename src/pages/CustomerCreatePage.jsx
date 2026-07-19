@@ -55,9 +55,9 @@ import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
 const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 
 const CREATE_PILL_CLASS = 'glass-pill !h-8 !min-h-8 !w-full !justify-between !text-[12px]'
-const BTN_CANCEL = `${BTN_CANCEL_BASE} gap-2 px-5 text-xs uppercase`
+const BTN_CANCEL = `${BTN_CANCEL_BASE} gap-2.5 px-3`
 const BTN_SAVE =
-  `${BTN_SUCCESS} gap-2 px-4 text-sm font-black uppercase tracking-wide`
+  `${BTN_SUCCESS} gap-2.5 px-3`
 const BTN_SAVE_MENU =
   `${BTN_SUCCESS} w-14 px-0`
 

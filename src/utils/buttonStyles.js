@@ -5,15 +5,15 @@
 
 /** Yeni oluştur / birincil CTA — Kasa sky→blue gradient */
 export const BTN_PRIMARY =
-  'btn-primary inline-flex h-control min-h-control items-center justify-center rounded-xl font-bold transition-transform'
+  'btn-primary inline-flex h-control min-h-control items-center justify-center rounded-xl font-extrabold uppercase tracking-wide transition-transform'
 
 /** Vazgeç / iptal — Yeni Alış Faturası rose gradient */
 export const BTN_CANCEL =
-  'btn-cancel inline-flex h-control min-h-control items-center justify-center rounded-xl font-bold transition-transform'
+  'btn-cancel inline-flex h-control min-h-control items-center justify-center rounded-xl font-extrabold uppercase tracking-wide transition-transform'
 
 /** Olumlu — kaydet, onay, WhatsApp, başarı aksiyonları */
 export const BTN_SUCCESS =
-  'btn-success inline-flex h-control min-h-control items-center justify-center rounded-xl font-bold transition-transform'
+  'btn-success inline-flex h-control min-h-control items-center justify-center rounded-xl font-extrabold uppercase tracking-wide transition-transform'
 
 /** Üretim sayfası artı (+) butonu — info ton */
 export const URETIM_ARTI_BUTTON_CLASS =

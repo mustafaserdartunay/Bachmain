@@ -460,7 +460,7 @@ export default function ProductsPage() {
               <button
                 type="button"
                 onClick={handleBack}
-                className="btn-cancel flex items-center gap-1.5 px-4 text-sm"
+                className="btn-cancel flex items-center gap-2.5 px-3"
               >
                 <ArrowLeft className="w-4 h-4" /> Vazgeç
               </button>

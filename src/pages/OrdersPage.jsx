@@ -989,7 +989,7 @@ export default function OrdersPage() {
                     type="button"
                     onClick={() => saveCurrentOrder({ returnToList: false })}
                     disabled={!selectedOrder || isSaving}
-                    className={`${BTN_SUCCESS} min-w-[10.5rem] gap-2 px-4 text-sm font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-50`}
+                    className={`${BTN_SUCCESS} min-w-[10.5rem] gap-2.5 px-3 disabled:cursor-not-allowed disabled:opacity-50`}
                   >
                     <Save className="h-4 w-4" />
                     {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
