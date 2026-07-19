@@ -26,11 +26,9 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import {
   FormFieldCompact,
-  FormIosRow,
-  FormIosSection,
   FormSectionPanel,
   FORM_FIELD_GRID_CLASS,
-  FORM_IOS_LIST_CLASS,
+  FORM_FIELD_STACK_CLASS,
 } from '../components/Common/FormSectionPanel'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
@@ -439,45 +437,34 @@ export default function CustomerCreatePage() {
             </div>
           </FormSectionPanel>
 
-          <FormIosSection title="Ünvan Bilgileri">
-            <div className={FORM_IOS_LIST_CLASS}>
-              <FormIosRow label="Kısa Marka Adı">
-                <input
-                  name="shortBrandName"
-                  defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''}
-                  placeholder="Marka adı"
-                  className="form-input"
-                  autoComplete="organization"
-                />
-              </FormIosRow>
-              <FormIosRow label="Firma Ünvanı">
-                <input
-                  name="companyTitle"
-                  defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''}
-                  placeholder="Firma ünvanı"
-                  className="form-input"
-                  autoComplete="organization"
-                />
-              </FormIosRow>
-              <FormIosRow label="Vergi Dairesi">
-                <input
-                  name="taxOffice"
-                  defaultValue={editingCustomer?.taxOffice || ''}
-                  placeholder="Vergi dairesi"
-                  className="form-input"
-                />
-              </FormIosRow>
-              <FormIosRow label="Vergi Numarası" last>
-                <input
-                  name="taxNumber"
-                  defaultValue={editingCustomer?.taxNumber || ''}
-                  placeholder="Vergi numarası"
-                  className="form-input"
-                  inputMode="numeric"
-                />
-              </FormIosRow>
+          <FormSectionPanel compact icon={Building2} title="Ünvan Bilgileri" dotColor="violet">
+            <div className={FORM_FIELD_STACK_CLASS}>
+              <FieldLine
+                icon={Building2}
+                label="Kısa Marka Adı"
+                name="shortBrandName"
+                defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''}
+              />
+              <FieldLine
+                icon={Building2}
+                label="Firma Ünvanı"
+                name="companyTitle"
+                defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''}
+              />
+              <FieldLine
+                icon={Landmark}
+                label="Vergi Dairesi"
+                name="taxOffice"
+                defaultValue={editingCustomer?.taxOffice || ''}
+              />
+              <FieldLine
+                icon={Landmark}
+                label="Vergi Numarası"
+                name="taxNumber"
+                defaultValue={editingCustomer?.taxNumber || ''}
+              />
             </div>
-          </FormIosSection>
+          </FormSectionPanel>
 
           <FormSectionPanel compact icon={MapPin} title="Adres Bilgileri" dotColor="emerald">
             <div className="space-y-2">
