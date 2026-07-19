@@ -2649,8 +2649,8 @@ select.search-pill:focus {
 /* Split CTA — one body, full-height white divider; hover lift like header chips */
 .btn-split {
   display: inline-flex;
-  height: 3.25rem;
-  min-height: 3.25rem;
+  height: 3.25rem !important; /* 52px — Gelir Ekle / header quick-actions */
+  min-height: 3.25rem !important;
   overflow: hidden;
   border-radius: 0.75rem;
   box-shadow: var(--bach-btn-shadow, 0 8px 20px -12px rgba(30, 35, 60, 0.55));
@@ -2685,7 +2685,7 @@ select.search-pill:focus {
   background: #ffffff;
 }
 
-/* Olumlu — kaydet / Gelir Ekle ile aynı yeşil gradient */
+/* Olumlu — kaydet / Gelir Ekle ile aynı yeşil gradient, 52px */
 .btn-success {
   display: inline-flex !important;
   align-items: center !important;
@@ -2693,8 +2693,8 @@ select.search-pill:focus {
   background-color: transparent !important;
   background-image: linear-gradient(to bottom right, #7cf2c6, #34d399, #10b981) !important;
   color: #ffffff !important;
-  height: var(--ds-control-h, 3.25rem);
-  min-height: var(--ds-control-h, 3.25rem);
+  height: 3.25rem !important;
+  min-height: 3.25rem !important;
   border-radius: 0.75rem;
   font-weight: 700;
   padding: 0 1.25rem;

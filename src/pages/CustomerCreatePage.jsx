@@ -51,9 +51,9 @@ const CREATE_PILL_CLASS = 'glass-pill !h-8 !min-h-8 !text-[12px]'
 const META_LABEL_CLASS = 'mb-1 text-[11px] font-black capitalize tracking-wider text-[var(--muted)]'
 const BTN_CANCEL = `${BTN_CANCEL_BASE} gap-2 px-5 text-xs uppercase`
 const BTN_SAVE =
-  `${BTN_SUCCESS} gap-2 rounded-xl px-5 py-2.5 text-xs uppercase shadow-[0_8px_20px_-12px_rgba(16,185,129,0.45)]`
+  `${BTN_SUCCESS} gap-2 px-4 text-sm font-black uppercase tracking-wide`
 const BTN_SAVE_MENU =
-  `${BTN_SUCCESS} flex h-[36px] w-10 items-center justify-center rounded-xl px-0 shadow-[0_8px_20px_-12px_rgba(16,185,129,0.45)]`
+  `${BTN_SUCCESS} w-14 px-0`
 
 function emptyMeta(defaultType = '') {
   return { type: defaultType, representative: '', scoring: '', category: '' }
@@ -340,10 +340,11 @@ export default function CustomerCreatePage() {
           >
             <X className="h-4 w-4" /> Vazgeç
           </button>
-          <div className="flex items-center gap-1.5 bg-transparent">
+          <div className="btn-split">
             <button type="submit" className={BTN_SAVE}>
               <Save className="h-4 w-4" /> Kaydet
             </button>
+            <span className="btn-split-divider" aria-hidden />
             <button
               type="button"
               onClick={() => setActionMenuOpen((open) => !open)}
