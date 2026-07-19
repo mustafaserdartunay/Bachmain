@@ -66,3 +66,28 @@ export function FormFieldCompact({
     </Tag>
   )
 }
+
+/** iOS-style grouped list shell — no nested column cards */
+export const FORM_IOS_LIST_CLASS = 'form-ios-list'
+
+/**
+ * iOS settings row: label left, value/input right; amber hairline below (except last).
+ */
+export function FormIosRow({
+  icon: Icon,
+  label,
+  children,
+  as: Tag = 'label',
+  className = '',
+  last = false,
+}) {
+  return (
+    <Tag className={`form-ios-row ${last ? 'is-last' : ''} ${className}`.trim()}>
+      <span className="form-ios-row-label">
+        {Icon ? <Icon className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden /> : null}
+        {label}
+      </span>
+      <div className="form-ios-row-control">{children}</div>
+    </Tag>
+  )
+}
