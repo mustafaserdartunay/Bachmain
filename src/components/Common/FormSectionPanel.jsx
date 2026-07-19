@@ -8,9 +8,9 @@ import {
 export const FORM_SECTION_PANEL_CLASS = 'glass-inset space-y-4 rounded-[20px] p-4'
 export const FORM_SECTION_PANEL_COMPACT_CLASS = 'glass-inset space-y-2 rounded-2xl p-3'
 
-export function FormSectionPanel({ icon: Icon, title, children, dotColor = 'blue', compact = false }) {
+export function FormSectionPanel({ icon: Icon, title, children, dotColor = 'blue', compact = false, className = '' }) {
   return (
-    <section className={compact ? FORM_SECTION_PANEL_COMPACT_CLASS : FORM_SECTION_PANEL_CLASS}>
+    <section className={`${compact ? FORM_SECTION_PANEL_COMPACT_CLASS : FORM_SECTION_PANEL_CLASS} ${className}`.trim()}>
       <div className={`flex items-center gap-2 ${compact ? 'min-h-0' : ''}`}>
         <AppPanelDot color={dotColor} />
         {Icon ? (
