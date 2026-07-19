@@ -27,7 +27,7 @@ import {
   FormFieldCompact,
   FormSectionPanel,
   FORM_FIELD_GRID_CLASS,
-  FORM_FIELD_STACK_ALIGNED_CLASS,
+  FORM_FIELD_RULED_STACK_CLASS,
 } from '../components/Common/FormSectionPanel'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
@@ -450,7 +450,7 @@ export default function CustomerCreatePage() {
           </FormSectionPanel>
 
           <FormSectionPanel compact icon={Building2} title="Firma Bilgileri" dotColor="violet">
-            <div className={`${FORM_FIELD_STACK_ALIGNED_CLASS} form-unvan-ruled`}>
+            <div className={FORM_FIELD_RULED_STACK_CLASS}>
               <FieldLine
                 icon={Building2}
                 label="Kısa Marka Adı:"
@@ -532,11 +532,11 @@ export default function CustomerCreatePage() {
           </FormSectionPanel>
 
           <FormSectionPanel compact icon={WalletCards} title="Finans Ayarları" dotColor="orange">
-            <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2`}>
-              <SelectLine icon={WalletCards} label="Fiyat Listesi" name="priceList" options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']} />
-              <SelectLine icon={WalletCards} label="Döviz Kuru" name="currencyRate" options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']} />
-              <FormFieldCompact icon={WalletCards} label="Açılış Bakiyesi">
-                <label className="flex min-h-8 items-center gap-3 text-[12px] font-semibold text-[var(--muted)]">
+            <div className={FORM_FIELD_RULED_STACK_CLASS}>
+              <SelectLine icon={WalletCards} label="Fiyat Listesi:" name="priceList" options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']} />
+              <SelectLine icon={WalletCards} label="Döviz Kuru:" name="currencyRate" options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']} />
+              <FormFieldCompact icon={WalletCards} label="Açılış Bakiyesi:">
+                <label className="flex min-h-8 items-center gap-3 text-[12px] font-semibold text-[var(--ink)]">
                   <input
                     name="hasOpeningBalance"
                     type="checkbox"
@@ -547,7 +547,7 @@ export default function CustomerCreatePage() {
                   Hareketlere eklensin
                 </label>
               </FormFieldCompact>
-              <FieldLine icon={WalletCards} label="Açılış Tutarı" name="openingBalanceAmount" type="number" disabled={!openingEnabled} />
+              <FieldLine icon={WalletCards} label="Açılış Tutarı:" name="openingBalanceAmount" type="number" disabled={!openingEnabled} />
             </div>
           </FormSectionPanel>
       </div>
@@ -584,18 +584,15 @@ function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', 
   )
 }
 
-function CompactFieldLine({ icon: Icon, label, name, defaultValue = '' }) {
-  return (
-    <FormFieldCompact icon={Icon} label={label} as="label">
-      <input name={name} defaultValue={defaultValue} className="form-input !h-8 !min-h-8 !py-1" />
-    </FormFieldCompact>
-  )
-}
-
-function TextareaLine({ icon: Icon, label, name, defaultValue = '' }) {
+function TextareaLine({ icon: Icon, label, name, defaultValue = '', placeholder = '' }) {
   return (
     <FormFieldCompact icon={Icon} label={label} as="label" className="!items-start !py-2">
-      <textarea name={name} defaultValue={defaultValue} className="form-input min-h-20 resize-none" />
+      <textarea
+        name={name}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        className="form-input min-h-[2.5rem] resize-none"
+      />
     </FormFieldCompact>
   )
 }
@@ -620,16 +617,23 @@ function AddressLine({ id, defaultTitle = '', defaultAddress = '', defaultLocati
   const [city = '', district = ''] = String(defaultLocation).split('/').map((part) => part.trim())
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-center gap-2">
-      <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2`}>
-        <FormFieldCompact icon={Hash} label="Adres başlığı" as="label">
-          <input name={`addressTitle-${id}`} defaultValue={defaultTitle} placeholder="Örn. Merkez Adres" className="form-input !h-8 !min-h-8 !py-1" />
-        </FormFieldCompact>
-        <FormFieldCompact icon={MapPin} label="Adres" as="label" className="sm:col-span-2 !items-start !py-2">
-          <textarea name={`address-${id}`} defaultValue={defaultAddress} placeholder="Açık adres..." className="form-input min-h-[2.5rem] resize-none !py-1.5" />
-        </FormFieldCompact>
-        <CompactFieldLine icon={MapPin} label="İlçe" name={`district-${id}`} defaultValue={district} />
-        <CompactFieldLine icon={MapPin} label="İl" name={`city-${id}`} defaultValue={city} />
+    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2">
+      <div className={FORM_FIELD_RULED_STACK_CLASS}>
+        <FieldLine
+          icon={Hash}
+          label="Adres Başlığı:"
+          name={`addressTitle-${id}`}
+          defaultValue={defaultTitle}
+        />
+        <TextareaLine
+          icon={MapPin}
+          label="Adres:"
+          name={`address-${id}`}
+          defaultValue={defaultAddress}
+          placeholder="Açık adres..."
+        />
+        <FieldLine icon={MapPin} label="İlçe:" name={`district-${id}`} defaultValue={district} />
+        <FieldLine icon={MapPin} label="İl:" name={`city-${id}`} defaultValue={city} />
       </div>
       <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
     </div>
@@ -677,28 +681,33 @@ function ContactLinkInput({ name, defaultValue = '', placeholder }) {
 
 function ContactLine({ id, defaultTitle = '', lockedTitle = false, defaultValue = '', phoneDefault = '', emailDefault = '', instagramDefault = '', deleteState, onDelete, onCancel, onApprove }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-center gap-2">
-      <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2 lg:grid-cols-5`}>
-        <FormFieldCompact icon={Hash} label="Başlık">
+    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2">
+      <div className={FORM_FIELD_RULED_STACK_CLASS}>
+        <FormFieldCompact icon={Hash} label="Başlık:">
           {lockedTitle ? (
-            <div className="flex min-h-8 items-center rounded-lg bg-[rgba(140,145,165,0.12)] px-2.5 text-[11px] font-bold uppercase tracking-wider text-[var(--ink)]">
+            <div className="flex min-h-8 items-center text-[12px] font-semibold uppercase tracking-wide text-[var(--ink)]">
               {defaultTitle}
               <input type="hidden" name={`contactTitle-${id}`} value={defaultTitle} />
             </div>
           ) : (
-            <input name={`contactTitle-${id}`} defaultValue={defaultTitle} placeholder="Başlık..." className="form-input !h-8 !min-h-8 !py-1 text-[11px] font-bold uppercase tracking-wider" />
+            <input
+              name={`contactTitle-${id}`}
+              defaultValue={defaultTitle}
+              placeholder="Başlık..."
+              className="form-input !h-8 !min-h-8 !py-1 text-[12px] font-semibold uppercase tracking-wide"
+            />
           )}
         </FormFieldCompact>
-        <FormFieldCompact icon={UserRound} label="İsim" as="label">
+        <FormFieldCompact icon={UserRound} label="İsim:" as="label">
           <input name={`contactName-${id}`} defaultValue={defaultValue} placeholder="İsim..." className="form-input !h-8 !min-h-8 !py-1" />
         </FormFieldCompact>
-        <FormFieldCompact icon={Phone} label="Telefon" as="label">
+        <FormFieldCompact icon={Phone} label="Telefon:" as="label">
           <input name={`contactPhone-${id}`} defaultValue={phoneDefault} placeholder="Telefon..." className="form-input !h-8 !min-h-8 !py-1" />
         </FormFieldCompact>
-        <FormFieldCompact icon={Mail} label="E-posta" as="label">
+        <FormFieldCompact icon={Mail} label="E-posta:" as="label">
           <input name={`contactEmail-${id}`} defaultValue={emailDefault} placeholder="E-posta..." className="form-input !h-8 !min-h-8 !py-1" />
         </FormFieldCompact>
-        <FormFieldCompact icon={Instagram} label="Instagram" as="label">
+        <FormFieldCompact icon={Instagram} label="Instagram:" as="label">
           <ContactLinkInput name={`contactInstagram-${id}`} defaultValue={instagramDefault} placeholder="Instagram..." />
         </FormFieldCompact>
       </div>

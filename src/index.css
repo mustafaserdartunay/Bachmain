@@ -1346,20 +1346,23 @@ html.night .form-field-stack-aligned > .app-form-row.app-form-field-surface {
   box-shadow: none !important;
 }
 
-/* Ünvan: sol sütun dar kalır, satır çizgisi panel sağına kadar uzar */
-.form-unvan-ruled {
+/* Ruled rows: sol sütun dar, çizgi panel sağına kadar (Firma / Adres / İletişim / Finans) */
+.form-unvan-ruled,
+.form-ruled-stack {
   width: 100%;
 }
 
-.form-unvan-ruled > .app-form-row {
+.form-unvan-ruled > .app-form-row,
+.form-ruled-stack > .app-form-row {
   position: relative;
   width: 100%;
-  grid-template-columns: 9.5rem minmax(0, min(18.375rem, calc(50% - 5.25rem))) !important;
+  grid-template-columns: 10rem minmax(0, min(20rem, calc(50% - 5.5rem))) !important;
   padding-bottom: 0.5rem !important;
   margin-bottom: 0.125rem !important;
 }
 
-.form-unvan-ruled > .app-form-row::after {
+.form-unvan-ruled > .app-form-row::after,
+.form-ruled-stack > .app-form-row::after {
   content: '';
   position: absolute;
   left: 0;
@@ -1370,7 +1373,38 @@ html.night .form-field-stack-aligned > .app-form-row.app-form-field-surface {
   pointer-events: none;
 }
 
-html.night .form-unvan-ruled > .app-form-row::after {
+.form-ruled-stack > .app-form-row.!items-start,
+.form-ruled-stack > .app-form-row.items-start {
+  align-items: flex-start !important;
+}
+
+.form-ruled-stack > .app-form-row textarea.form-input {
+  min-height: 2.5rem !important;
+  height: auto !important;
+  padding: 0.35rem 0 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--ink) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  resize: none;
+}
+
+.form-ruled-stack > .app-form-row select.form-input {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--ink) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 2rem !important;
+  height: 2rem !important;
+}
+
+html.night .form-unvan-ruled > .app-form-row::after,
+html.night .form-ruled-stack > .app-form-row::after {
   background: rgba(235, 235, 245, 0.16);
 }
 
