@@ -1375,7 +1375,7 @@ html.night .form-field-stack-aligned > .app-form-row.app-form-field-surface {
 .form-ruled-stack > .app-form-row {
   position: relative;
   width: 100%;
-  grid-template-columns: 10rem minmax(0, min(20rem, calc(50% - 5.5rem))) !important;
+  grid-template-columns: 10rem minmax(0, 1fr) !important;
   padding-bottom: 0.5rem !important;
   margin-bottom: 0.125rem !important;
 }
