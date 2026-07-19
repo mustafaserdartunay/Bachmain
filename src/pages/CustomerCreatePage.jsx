@@ -453,25 +453,25 @@ export default function CustomerCreatePage() {
             <div className={`${FORM_FIELD_STACK_ALIGNED_CLASS} form-unvan-ruled`}>
               <FieldLine
                 icon={Building2}
-                label="Kısa Marka Adı"
+                label="Kısa Marka Adı:"
                 name="shortBrandName"
                 defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''}
               />
               <FieldLine
                 icon={Building2}
-                label="Firma Ünvanı"
+                label="Firma Ünvanı:"
                 name="companyTitle"
                 defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''}
               />
               <FieldLine
                 icon={Landmark}
-                label="Vergi Dairesi"
+                label="Vergi Dairesi:"
                 name="taxOffice"
                 defaultValue={editingCustomer?.taxOffice || ''}
               />
               <FieldLine
                 icon={Landmark}
-                label="Vergi Numarası"
+                label="Vergi Numarası:"
                 name="taxNumber"
                 defaultValue={editingCustomer?.taxNumber || ''}
               />

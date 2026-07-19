@@ -1354,7 +1354,7 @@ html.night .form-field-stack-aligned > .app-form-row.app-form-field-surface {
 .form-unvan-ruled > .app-form-row {
   position: relative;
   width: 100%;
-  grid-template-columns: 8.75rem minmax(0, min(18.375rem, calc(50% - 4.875rem))) !important;
+  grid-template-columns: 9.5rem minmax(0, min(18.375rem, calc(50% - 5.25rem))) !important;
   padding-bottom: 0.5rem !important;
   margin-bottom: 0.125rem !important;
 }
