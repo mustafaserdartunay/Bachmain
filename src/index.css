@@ -1274,102 +1274,173 @@ html:not(.night) .app-responsive .text-gray-500 {
   justify-content: space-between;
 }
 
-/* iOS settings-style form list — label left, value right, amber hairlines */
-.form-ios-list {
+/* ─── iOS Settings–style form group (modern, minimal) ─── */
+.ios-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.ios-form-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0 0.2rem;
+}
+
+.ios-form-section-title {
+  margin: 0;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--muted, #64748b) 92%, var(--ink, #0f172a));
+  text-transform: none;
+}
+
+.ios-form-section-header.is-tinted::after {
+  content: '';
+  display: block;
+  width: 2.75rem;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #ffd27f, #f59e0b, #ea580c);
+  opacity: 0.9;
+}
+
+.ios-group {
   display: flex;
   flex-direction: column;
   width: 100%;
   margin: 0;
   padding: 0;
-  border-radius: 14px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--ds-surface-raised, #ffffff) 88%, transparent);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 0.5px 1px rgba(15, 23, 42, 0.04);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
-.form-ios-row {
+.ios-cell {
   position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  min-height: 2.75rem;
+  min-height: 2.75rem; /* 44pt Apple HIG */
   width: 100%;
   margin: 0;
-  padding: 0.55rem 0.85rem;
+  padding: 0.7rem 1rem;
   background: transparent;
   cursor: text;
+  transition: background-color 0.15s ease;
 }
 
-.form-ios-row:not(.is-last)::after {
+.ios-cell:focus-within {
+  background: color-mix(in srgb, var(--ink, #0f172a) 3.5%, transparent);
+}
+
+.ios-cell:not(.is-last)::after {
   content: '';
   position: absolute;
-  left: 0.85rem;
-  right: 0.85rem;
+  left: 1rem;
+  right: 0;
   bottom: 0;
-  height: 1px;
-  border-radius: 999px;
-  background: linear-gradient(to right, #ffd27f, #f59e0b, #ea580c);
-  opacity: 0.55;
+  height: 0.5px;
+  background: rgba(60, 60, 67, 0.18);
+  pointer-events: none;
 }
 
-.form-ios-row-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+.ios-cell-title {
   flex: 0 0 auto;
-  min-width: 7.5rem;
-  max-width: 42%;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--ink, #1e293b);
-  letter-spacing: -0.01em;
+  min-width: 8.25rem;
+  max-width: 40%;
+  font-size: 0.9375rem; /* ~15–17pt */
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  line-height: 1.25;
+  color: var(--ink, #0f172a);
 }
 
-.form-ios-row-control {
+.ios-cell-value {
   flex: 1 1 auto;
   min-width: 0;
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.form-ios-row-control .form-input,
-.form-ios-row-control input.form-input,
-.form-ios-row-control select.form-input,
-.form-ios-row-control textarea.form-input {
+.ios-cell-value .form-input,
+.ios-cell-value input.form-input,
+.ios-cell-value select.form-input,
+.ios-cell-value textarea.form-input {
   width: 100%;
-  min-height: 1.75rem !important;
+  min-height: 1.5rem !important;
   height: auto;
   margin: 0;
-  padding: 0.15rem 0 !important;
+  padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
   text-align: right;
   font-size: 0.9375rem !important;
-  font-weight: 500;
-  color: var(--ink, #1e293b) !important;
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  line-height: 1.25;
+  color: var(--ink, #0f172a) !important;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.form-ios-row-control .form-input:hover,
-.form-ios-row-control .form-input:focus,
-.form-ios-row-control input.form-input:focus {
+.ios-cell-value .form-input:hover,
+.ios-cell-value .form-input:focus,
+.ios-cell-value input.form-input:focus {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
   outline: none;
 }
 
-.form-ios-row-control .form-input::placeholder {
-  color: var(--muted, #94a3b8) !important;
+.ios-cell-value .form-input::placeholder {
+  color: rgba(60, 60, 67, 0.36) !important;
   font-weight: 400;
 }
 
-html.night .form-ios-list {
-  background: rgba(255, 255, 255, 0.04);
+html.night .ios-form-section-title {
+  color: rgba(235, 235, 245, 0.6);
 }
 
-html.night .form-ios-row:not(.is-last)::after {
-  opacity: 0.7;
+html.night .ios-group {
+  background: rgba(28, 28, 30, 0.78);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0.5px 1px rgba(0, 0, 0, 0.35);
+}
+
+html.night .ios-cell:focus-within {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+html.night .ios-cell:not(.is-last)::after {
+  background: rgba(84, 84, 88, 0.65);
+}
+
+html.night .ios-cell-title,
+html.night .ios-cell-value .form-input,
+html.night .ios-cell-value input.form-input {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.night .ios-cell-value .form-input::placeholder {
+  color: rgba(235, 235, 245, 0.3) !important;
 }
 
 .app-dropdown-portal {

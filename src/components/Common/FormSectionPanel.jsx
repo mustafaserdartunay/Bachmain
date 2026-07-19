@@ -67,14 +67,30 @@ export function FormFieldCompact({
   )
 }
 
-/** iOS-style grouped list shell — no nested column cards */
-export const FORM_IOS_LIST_CLASS = 'form-ios-list'
+/** iOS Settings–style section: caption outside, rounded group inside */
+export const FORM_IOS_SECTION_CLASS = 'ios-form-section'
+export const FORM_IOS_LIST_CLASS = 'ios-group'
 
 /**
- * iOS settings row: label left, value/input right; amber hairline below (except last).
+ * Section chrome: small caption + optional gold underline (sidebar accent).
+ */
+export function FormIosSection({ title, children, className = '', tinted = true }) {
+  return (
+    <section className={`${FORM_IOS_SECTION_CLASS} ${className}`.trim()}>
+      {title ? (
+        <header className={`ios-form-section-header ${tinted ? 'is-tinted' : ''}`.trim()}>
+          <h3 className="ios-form-section-title">{title}</h3>
+        </header>
+      ) : null}
+      {children}
+    </section>
+  )
+}
+
+/**
+ * iOS settings cell: title left, value/input right; system hairline (except last).
  */
 export function FormIosRow({
-  icon: Icon,
   label,
   children,
   as: Tag = 'label',
@@ -82,12 +98,9 @@ export function FormIosRow({
   last = false,
 }) {
   return (
-    <Tag className={`form-ios-row ${last ? 'is-last' : ''} ${className}`.trim()}>
-      <span className="form-ios-row-label">
-        {Icon ? <Icon className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden /> : null}
-        {label}
-      </span>
-      <div className="form-ios-row-control">{children}</div>
+    <Tag className={`ios-cell ${last ? 'is-last' : ''} ${className}`.trim()}>
+      <span className="ios-cell-title">{label}</span>
+      <div className="ios-cell-value">{children}</div>
     </Tag>
   )
 }
