@@ -390,8 +390,9 @@ export default function CustomerCreatePage() {
         </div>
       </section>
 
-      <div className="space-y-5">
-          <FormSectionPanel compact icon={UserRound} title="Müşteri Bilgileri" dotColor="blue" className="!p-5 sm:!p-6">
+      <section className="card overflow-visible p-0">
+        <div className="space-y-3 p-5 sm:p-6">
+          <FormSectionPanel compact icon={UserRound} title="Müşteri Bilgileri" dotColor="blue">
             <div className={`${FORM_FIELD_GRID_CLASS} grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`}>
               <FormFieldCompact icon={BadgeCheck} label="Tipi">
                 <EditableDropdownPill
@@ -444,7 +445,7 @@ export default function CustomerCreatePage() {
             </div>
           </FormSectionPanel>
 
-          <FormSectionPanel compact icon={Building2} title="Ünvan Bilgileri" dotColor="violet" className="!p-5 sm:!p-6">
+          <FormSectionPanel compact icon={Building2} title="Ünvan Bilgileri" dotColor="violet">
             <div className={FORM_FIELD_STACK_ALIGNED_CLASS}>
               <FieldLine
                 icon={Building2}
@@ -473,7 +474,7 @@ export default function CustomerCreatePage() {
             </div>
           </FormSectionPanel>
 
-          <FormSectionPanel compact icon={MapPin} title="Adres Bilgileri" dotColor="emerald" className="!p-5 sm:!p-6">
+          <FormSectionPanel compact icon={MapPin} title="Adres Bilgileri" dotColor="emerald">
             <div className="space-y-2">
               {addressRows.map((row, index) => (
                 <AddressLine
@@ -498,7 +499,7 @@ export default function CustomerCreatePage() {
             </button>
           </FormSectionPanel>
 
-          <FormSectionPanel compact icon={Phone} title="İletişim Bilgileri" dotColor="blue" className="!p-5 sm:!p-6">
+          <FormSectionPanel compact icon={Phone} title="İletişim Bilgileri" dotColor="blue">
             <div className="space-y-2">
               {contactRows.map((row) => (
                 <ContactLine
@@ -526,7 +527,7 @@ export default function CustomerCreatePage() {
             </button>
           </FormSectionPanel>
 
-          <FormSectionPanel compact icon={WalletCards} title="Finans Ayarları" dotColor="orange" className="!p-5 sm:!p-6">
+          <FormSectionPanel compact icon={WalletCards} title="Finans Ayarları" dotColor="orange">
             <div className={`${FORM_FIELD_GRID_CLASS} sm:grid-cols-2`}>
               <SelectLine icon={WalletCards} label="Fiyat Listesi" name="priceList" options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']} />
               <SelectLine icon={WalletCards} label="Döviz Kuru" name="currencyRate" options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']} />
@@ -545,9 +546,10 @@ export default function CustomerCreatePage() {
               <FieldLine icon={WalletCards} label="Açılış Tutarı" name="openingBalanceAmount" type="number" disabled={!openingEnabled} />
             </div>
           </FormSectionPanel>
-      </div>
 
-      <div className="flex items-center justify-between px-1 py-1 sm:px-2">
+        </div>
+
+        <div className="mx-6 flex items-center justify-between px-0 py-5 sm:mx-8">
           <div className="flex items-center gap-3 text-xs font-semibold text-gray-500">
             <UserRound className="h-4 w-4" />
             Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.
@@ -560,7 +562,8 @@ export default function CustomerCreatePage() {
               <Save className="h-4 w-4" /> Kaydet
             </button>
           </div>
-      </div>
+        </div>
+      </section>
     </form>
   )
 }
