@@ -19,6 +19,7 @@ export default function SearchInput({
     <div className={`relative ${wrapperClassName}`.trim()}>
       <Search className={iconClass} aria-hidden="true" />
       <input
+        type="search"
         className={`${inputClass} app-search-field transition-all focus:outline-none ${className}`.trim()}
         {...inputProps}
       />

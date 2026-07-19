@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { installAutoCapitalize } from './utils/autoCapitalize'
+import { installFormSubmitGuard } from './utils/formSubmitGuard'
 import { cleanupDemoDataOnce } from './utils/demoDataCleanup'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { OrgProvider } from './org/OrgContext'
@@ -144,6 +145,7 @@ export default function App() {
   useEffect(() => {
     cleanupDemoDataOnce()
     installAutoCapitalize()
+    return installFormSubmitGuard()
   }, [])
 
   return (
