@@ -1274,18 +1274,26 @@ html:not(.night) .app-responsive .text-gray-500 {
   justify-content: space-between;
 }
 
-/* Aligned label rail + equal input columns (e.g. Ünvan Bilgileri) */
+/* Aligned label rail + equal input columns — no row chrome (Ünvan Bilgileri) */
 .form-field-stack-aligned > .app-form-row {
   display: grid !important;
   grid-template-columns: 8.75rem minmax(0, 1fr);
   column-gap: 0.5rem;
   align-items: center;
-  /* Match right inset to top/bottom (py-1); keep slightly wider left for label comfort */
-  padding-top: 0.25rem !important;
-  padding-bottom: 0.25rem !important;
-  padding-left: 0.625rem !important;
-  padding-right: 0.25rem !important;
+  min-height: 2rem !important;
+  margin: 0 !important;
+  padding: 0.25rem 0 !important;
   gap: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.form-field-stack-aligned > .app-form-row.app-form-field-surface {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 .form-field-stack-aligned > .app-form-row > span:first-child {
@@ -1304,6 +1312,38 @@ html:not(.night) .app-responsive .text-gray-500 {
 .form-field-stack-aligned > .app-form-row input.form-input {
   width: 100%;
   box-sizing: border-box;
+  min-height: 2rem !important;
+  height: 2rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: var(--ink) !important;
+}
+
+.form-field-stack-aligned > .app-form-row .form-input:hover,
+.form-field-stack-aligned > .app-form-row .form-input:focus,
+.form-field-stack-aligned > .app-form-row input.form-input:focus {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+.form-field-stack-aligned > .app-form-row .form-input::placeholder {
+  color: var(--muted) !important;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+html.night .form-field-stack-aligned > .app-form-row.app-form-field-surface {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 /* ─── iOS Settings–style form group (modern, minimal) ─── */
