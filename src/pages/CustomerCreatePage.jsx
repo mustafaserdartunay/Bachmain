@@ -444,7 +444,7 @@ export default function CustomerCreatePage() {
             </div>
           </FormSectionPanel>
 
-          <FormSectionPanel compact icon={Building2} title="Ünvan Bilgileri" dotColor="violet">
+          <FormSectionPanel compact icon={Building2} title="Firma Bilgileri" dotColor="violet">
             <div className={`${FORM_FIELD_STACK_ALIGNED_CLASS} form-unvan-ruled`}>
               <FieldLine
                 icon={Building2}
