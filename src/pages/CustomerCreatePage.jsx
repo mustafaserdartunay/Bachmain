@@ -121,8 +121,8 @@ export default function CustomerCreatePage() {
   const [successVisible, setSuccessVisible] = useState(false)
   const [meta, setMeta] = useState(() => (
     incomingDraft?.category
-      ? { ...emptyMeta(defaultPartyType), category: incomingDraft.category }
-      : readMetaFor(editingCustomer?.id, defaultPartyType)
+      ? { ...emptyMeta(), category: incomingDraft.category }
+      : readMetaFor(editingCustomer?.id, '')
   ))
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
@@ -140,8 +140,8 @@ export default function CustomerCreatePage() {
     setActionMenuOpen(false)
     setDeleteDialog(null)
     setMeta(incomingDraft?.category
-      ? { ...emptyMeta(defaultPartyType), category: incomingDraft.category }
-      : readMetaFor(editingCustomer?.id, defaultPartyType))
+      ? { ...emptyMeta(), category: incomingDraft.category }
+      : readMetaFor(editingCustomer?.id, ''))
   }, [defaultPartyType, editingCustomer?.id, formRouteKey, incomingDraft])
 
   useEffect(() => {
@@ -179,7 +179,7 @@ export default function CustomerCreatePage() {
       ...current,
       [customerId]: {
         ...(current[customerId] || {}),
-        type: meta.type || defaultPartyType,
+        type: meta.type,
         representative: meta.representative,
         scoring: meta.scoring,
         category: meta.category,
@@ -269,6 +269,10 @@ export default function CustomerCreatePage() {
 
   function collectAndSave(event) {
     event?.preventDefault()
+    if (!String(meta.type || '').trim()) {
+      window.alert('Kaydetmeden önce Tipi alanını seçin.')
+      return
+    }
     const formData = new FormData(event.currentTarget)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
@@ -280,7 +284,7 @@ export default function CustomerCreatePage() {
     setAddressRows([{ id: 0 }])
     setContactRows(initialContactRows(null, null))
     setOpeningEnabled(false)
-    setMeta(emptyMeta(defaultPartyType))
+    setMeta(emptyMeta())
     showSavedMessage()
     flushWorkspaceNow()
     setTimeout(() => navigate(-1), 900)
@@ -289,6 +293,11 @@ export default function CustomerCreatePage() {
   function saveAndContinue() {
     const form = document.getElementById('customer-edit-form')
     if (!form) return
+    if (!String(meta.type || '').trim()) {
+      window.alert('Kaydetmeden önce Tipi alanını seçin.')
+      setActionMenuOpen(false)
+      return
+    }
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
@@ -300,7 +309,7 @@ export default function CustomerCreatePage() {
     setAddressRows([{ id: 0 }])
     setContactRows(initialContactRows(null, null))
     setOpeningEnabled(false)
-    setMeta(emptyMeta(defaultPartyType))
+    setMeta(emptyMeta())
     setActionMenuOpen(false)
     showSavedMessage()
     flushWorkspaceNow()
