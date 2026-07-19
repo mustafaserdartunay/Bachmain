@@ -1373,7 +1373,6 @@ html.night .form-field-stack-aligned > .app-form-row.app-form-field-surface {
   pointer-events: none;
 }
 
-.form-ruled-stack > .app-form-row.!items-start,
 .form-ruled-stack > .app-form-row.items-start {
   align-items: flex-start !important;
 }

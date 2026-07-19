@@ -586,7 +586,7 @@ function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', 
 
 function TextareaLine({ icon: Icon, label, name, defaultValue = '', placeholder = '' }) {
   return (
-    <FormFieldCompact icon={Icon} label={label} as="label" className="!items-start !py-2">
+    <FormFieldCompact icon={Icon} label={label} as="label" className="items-start py-2">
       <textarea
         name={name}
         defaultValue={defaultValue}
