@@ -341,6 +341,7 @@ export default function CustomerCreatePage() {
         </div>
       )}
 
+      <div className="space-y-2.5">
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
         <button
           type="button"
@@ -395,7 +396,7 @@ export default function CustomerCreatePage() {
         </div>
       </section>
 
-      <div className="space-y-5 py-5 sm:py-6">
+      <div className="space-y-5">
           <FormSectionPanel
             compact
             icon={UserRound}
@@ -530,7 +531,7 @@ export default function CustomerCreatePage() {
             </div>
             <button
               type="button"
-              onClick={() => setContactRows((rows) => [...rows, createNextContactRow(rows)])}
+              onClick={() => setContactRows((rows) => [...rows, createNextContactRow()])}
               className="btn-ghost mt-2 inline-flex items-center gap-2 !px-3 !py-1.5 text-[12px] font-bold"
             >
               <Plus className="h-3.5 w-3.5" /> İletişim Ekle
@@ -556,6 +557,7 @@ export default function CustomerCreatePage() {
               <FieldLine icon={WalletCards} label="Açılış Tutarı:" name="openingBalanceAmount" type="number" disabled={!openingEnabled} />
             </div>
           </FormSectionPanel>
+      </div>
       </div>
 
       <section className="relative flex min-h-[4.625rem] items-center justify-between rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">

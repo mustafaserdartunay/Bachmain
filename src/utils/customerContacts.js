@@ -1,14 +1,9 @@
-const DEFAULT_CONTACT_TITLES = [
-  { id: 'owner', title: 'Firma Sahibi', locked: true },
-  { id: 'authorized', title: 'Yetkili Kişi', locked: true },
-  { id: 'other', title: 'Diğer Sorumlu', locked: true },
-]
+function blankContactRow(id = `contact-${Date.now()}`) {
+  return { id, title: '', locked: false }
+}
 
-export function createNextContactRow(existingRows = []) {
-  const usedIds = new Set(existingRows.map((row) => String(row.id)))
-  const nextPreset = DEFAULT_CONTACT_TITLES.find((row) => !usedIds.has(row.id))
-  if (nextPreset) return { ...nextPreset }
-  return { id: `contact-${Date.now()}`, title: '' }
+export function createNextContactRow() {
+  return blankContactRow()
 }
 
 export function resolveContactLinkHref(value = '', { instagram = false } = {}) {
@@ -57,56 +52,34 @@ export function parseContactsFromFormPayload(payload, contactRows = []) {
 
 export function initialContactRowsFromCustomer(customer) {
   if (!customer) {
-    return [{ ...DEFAULT_CONTACT_TITLES[0] }]
+    return [blankContactRow('contact-1')]
   }
 
   const savedContacts = Array.isArray(customer.contacts) ? customer.contacts.map(normalizeContactRow) : []
-  const byId = new Map(savedContacts.map((row) => [row.id, row]))
-  const rows = DEFAULT_CONTACT_TITLES.map((row) => {
-    const saved = byId.get(row.id)
-    if (saved) {
-      return {
-        ...row,
-        defaultName: saved.name,
-        defaultPhone: saved.phone,
-        defaultEmail: saved.email,
-        defaultInstagram: saved.instagram,
-      }
-    }
-    if (row.id === 'authorized') {
-      return {
-        ...row,
-        defaultName: customer.contact || '',
-        defaultPhone: customer.phone || '',
-        defaultEmail: customer.email || '',
-      }
-    }
-    return { ...row }
-  })
+  const filledSaved = savedContacts.filter((row) => row.name || row.phone || row.email || row.instagram || row.title)
 
-  savedContacts
-    .filter((row) => !DEFAULT_CONTACT_TITLES.some((item) => item.id === row.id))
-    .forEach((row) => {
-      rows.push({
-        id: row.id,
-        title: row.title || '',
-        defaultName: row.name,
-        defaultPhone: row.phone,
-        defaultEmail: row.email,
-        defaultInstagram: row.instagram,
-      })
-    })
+  if (filledSaved.length) {
+    return filledSaved.map((row, index) => ({
+      id: row.id || `contact-${index + 1}`,
+      title: row.title || '',
+      locked: false,
+      defaultName: row.name,
+      defaultPhone: row.phone,
+      defaultEmail: row.email,
+      defaultInstagram: row.instagram,
+    }))
+  }
 
-  const filled = rows.filter((row) => (
-    row.defaultName
-    || row.defaultPhone
-    || row.defaultEmail
-    || row.defaultInstagram
-    || row.id === 'owner'
-    || !row.locked
-  ))
+  if (customer.contact || customer.phone || customer.email) {
+    return [{
+      ...blankContactRow('contact-1'),
+      defaultName: customer.contact || '',
+      defaultPhone: customer.phone || '',
+      defaultEmail: customer.email || '',
+    }]
+  }
 
-  return filled.length ? filled : [{ ...DEFAULT_CONTACT_TITLES[0] }]
+  return [blankContactRow('contact-1')]
 }
 
 function pickContactByPriority(contacts, priorityIds) {
