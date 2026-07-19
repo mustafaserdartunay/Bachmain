@@ -390,8 +390,7 @@ export default function CustomerCreatePage() {
         </div>
       </section>
 
-      <section className="card overflow-visible p-0">
-        <div className="space-y-3 py-5 sm:py-6">
+      <div className="space-y-3 py-5 sm:py-6">
           <FormSectionPanel compact icon={UserRound} title="Müşteri Bilgileri" dotColor="blue">
             <div className={`${FORM_FIELD_GRID_CLASS} grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`}>
               <FormFieldCompact icon={BadgeCheck} label="Tipi">
@@ -546,10 +545,9 @@ export default function CustomerCreatePage() {
               <FieldLine icon={WalletCards} label="Açılış Tutarı" name="openingBalanceAmount" type="number" disabled={!openingEnabled} />
             </div>
           </FormSectionPanel>
+      </div>
 
-        </div>
-
-        <div className="mx-6 flex items-center justify-between px-0 py-5 sm:mx-8">
+      <div className="flex items-center justify-between px-1 py-5 sm:px-2">
           <div className="flex items-center gap-3 text-xs font-semibold text-gray-500">
             <UserRound className="h-4 w-4" />
             Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.
@@ -562,8 +560,7 @@ export default function CustomerCreatePage() {
               <Save className="h-4 w-4" /> Kaydet
             </button>
           </div>
-        </div>
-      </section>
+      </div>
     </form>
   )
 }
