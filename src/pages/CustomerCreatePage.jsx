@@ -391,7 +391,7 @@ export default function CustomerCreatePage() {
       </section>
 
       <section className="card overflow-visible p-0">
-        <div className="space-y-3 p-5 sm:p-6">
+        <div className="space-y-3 py-5 sm:py-6">
           <FormSectionPanel compact icon={UserRound} title="Müşteri Bilgileri" dotColor="blue">
             <div className={`${FORM_FIELD_GRID_CLASS} grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`}>
               <FormFieldCompact icon={BadgeCheck} label="Tipi">
