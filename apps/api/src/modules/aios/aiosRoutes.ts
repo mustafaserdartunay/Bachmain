@@ -24,6 +24,13 @@ import {
   upsertAgentConfig,
 } from './aiosService.js'
 import { listProviders } from './gateway.js'
+import {
+  autonomousEveningReport,
+  autonomousMorningReport,
+  autonomousOverview,
+  autonomousRunScenario,
+  autonomousSuggestionFeedback,
+} from './autonomousService.js'
 
 export async function aiosRoutes(app: FastifyInstance) {
   app.get('/v1/aios/catalog', { preHandler: [authenticate] }, async () => ({
@@ -90,6 +97,55 @@ export async function aiosRoutes(app: FastifyInstance) {
       ok: true,
       ...getOrganization(),
     }),
+  )
+
+  app.get(
+    '/v1/aios/autonomous/overview',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const data = await autonomousOverview(companyId)
+      return { ok: true, ...data }
+    },
+  )
+
+  app.get(
+    '/v1/aios/autonomous/reports/morning',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async () => ({ ok: true, report: autonomousMorningReport() }),
+  )
+
+  app.get(
+    '/v1/aios/autonomous/reports/evening',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async () => ({ ok: true, report: autonomousEveningReport() }),
+  )
+
+  app.post(
+    '/v1/aios/autonomous/suggestions/:id/feedback',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const id = (req.params as { id: string }).id
+      const body = z
+        .object({
+          decision: z.enum(['accept', 'reject', 'edit']),
+          note: z.string().max(1000).optional(),
+        })
+        .parse(req.body || {})
+      const row = autonomousSuggestionFeedback(companyId, id, body.decision, body.note)
+      return { ok: true, ...row }
+    },
+  )
+
+  app.post(
+    '/v1/aios/autonomous/scenarios/run',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const body = z.object({ scenarioId: z.string().min(1) }).parse(req.body || {})
+      const result = autonomousRunScenario(body.scenarioId)
+      return { ok: true, result }
+    },
   )
 
   app.post(

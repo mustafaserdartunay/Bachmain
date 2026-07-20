@@ -78,6 +78,16 @@ export const NODE_CATALOG = [
   { id: 'trigger.ai.result', category: 'trigger', label: 'AI Sonuç Üretti' },
   { id: 'trigger.aios.chat.completed', category: 'trigger', label: 'AIOS Chat Tamamlandı' },
   { id: 'trigger.aios.org.dispatch', category: 'trigger', label: 'AI Org Orchestrator Dispatch' },
+  {
+    id: 'trigger.aios.autonomous.feedback',
+    category: 'trigger',
+    label: 'Autonomous Öneri Feedback',
+  },
+  {
+    id: 'trigger.aios.autonomous.scenario',
+    category: 'trigger',
+    label: 'Autonomous Senaryo Çalıştı',
+  },
   { id: 'trigger.commerce.order.received', category: 'trigger', label: 'Commerce Sipariş Geldi' },
   {
     id: 'trigger.commerce.order.promoted',

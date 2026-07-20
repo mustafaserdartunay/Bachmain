@@ -36,6 +36,8 @@ export const ROUTE_MODULE_MAP = {
   '/ai-beyin': 'ai_growth',
   '/ai-organizasyon': 'ai_growth',
   '/ai-enterprise-org': 'ai_growth',
+  '/ai-otonom': 'ai_growth',
+  '/autonomous-company': 'ai_growth',
   '/analitik': 'reporting',
   '/raporlar': 'reporting',
   '/platform': 'dashboard_basic',

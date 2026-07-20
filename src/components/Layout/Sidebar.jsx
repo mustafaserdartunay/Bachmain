@@ -66,6 +66,7 @@ import {
   Film,
   Bot,
   Network,
+  Activity,
   Workflow,
   Target,
   GitBranch,
@@ -117,6 +118,7 @@ const baseMenuItems = [
   { icon: BarChart3, label: 'Analytics', path: '/analitik', moduleCode: 'reporting' },
   { icon: Bot, label: 'AIOS', path: '/aios', moduleCode: 'ai_growth' },
   { icon: Network, label: 'AI Org', path: '/ai-organizasyon', moduleCode: 'ai_growth' },
+  { icon: Activity, label: 'Otonom', path: '/ai-otonom', moduleCode: 'ai_growth' },
   { icon: Settings, label: 'Platform', path: '/platform', moduleCode: 'dashboard_basic' },
 ]
 

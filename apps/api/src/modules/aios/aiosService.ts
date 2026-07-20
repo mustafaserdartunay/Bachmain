@@ -14,6 +14,7 @@ import { AIOS_AGENTS, getAgentById } from './agentsCatalog.js'
 import { AIOS_TOOLS, getToolById } from './toolsCatalog.js'
 import { gatewayChat, listProviders, type ChatMessage, type ModelProviderId } from './gateway.js'
 import { getOrganizationCatalog, getOrgNodeById } from './organizationCatalog.js'
+import { getAutonomousCatalog } from './autonomousCatalog.js'
 
 export function getCatalog() {
   return {
@@ -21,6 +22,7 @@ export function getCatalog() {
     tools: AIOS_TOOLS,
     providers: listProviders(),
     organization: getOrganizationCatalog(),
+    autonomous: getAutonomousCatalog(),
   }
 }
 
