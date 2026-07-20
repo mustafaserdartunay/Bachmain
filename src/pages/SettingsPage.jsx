@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Building2, ImagePlus, Save, ShieldCheck } from 'lucide-react'
+import { Building2, GitBranch, ImagePlus, Save, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { defaultCompanySettings, readCompanySettings, saveCompanySettings } from '../utils/companySettings'
+import {
+  defaultCompanySettings,
+  readCompanySettings,
+  saveCompanySettings,
+} from '../utils/companySettings'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
 
@@ -53,8 +57,35 @@ export default function SettingsPage() {
   return (
     <div className="w-full space-y-5">
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">Yönetici Ayarları</h1>
-        <p className="mt-2 text-xs font-semibold text-gray-500">Firma bilgileri ekstre PDF ve sistem genelinde kullanılır.</p>
+        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
+          Yönetici Ayarları
+        </h1>
+        <p className="mt-2 text-xs font-semibold text-gray-500">
+          Firma bilgileri ekstre PDF ve sistem genelinde kullanılır.
+        </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <Link
+            to="/ayarlar/master-data"
+            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-blue-200 transition-colors hover:bg-dark-700 hover:text-white"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Master Data (MDM)
+          </Link>
+          <Link
+            to="/otomasyon"
+            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-emerald-200 transition-colors hover:bg-dark-700 hover:text-white"
+          >
+            <GitBranch className="h-4 w-4" />
+            Workflow Engine
+          </Link>
+          <Link
+            to="/ayarlar/kurumsal-yapi"
+            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+          >
+            <Building2 className="h-4 w-4" />
+            Kurumsal Yapı
+          </Link>
+        </div>
       </section>
 
       <form onSubmit={handleSave} className="space-y-4">
@@ -65,14 +96,20 @@ export default function SettingsPage() {
             </span>
             <div>
               <h2 className="text-base font-black text-white">Firma Bilgileri</h2>
-              <p className="text-xs font-semibold text-gray-500">Logo, ünvan, iletişim ve vergi bilgileri</p>
+              <p className="text-xs font-semibold text-gray-500">
+                Logo, ünvan, iletişim ve vergi bilgileri
+              </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-4 rounded-2xl border border-dark-500/40 bg-dark-700/30 p-4 sm:flex-row sm:items-center">
             <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dark-500/50 bg-dark-800">
               {settings.logoDataUrl ? (
-                <img src={settings.logoDataUrl} alt="Firma logosu" className="h-full w-full object-contain" />
+                <img
+                  src={settings.logoDataUrl}
+                  alt="Firma logosu"
+                  className="h-full w-full object-contain"
+                />
               ) : (
                 <Building2 className="h-8 w-8 text-gray-600" />
               )}
@@ -86,28 +123,60 @@ export default function SettingsPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Firma Adı">
-              <input value={settings.companyName} onChange={(e) => updateField('companyName', e.target.value)} className="form-input" />
+              <input
+                value={settings.companyName}
+                onChange={(e) => updateField('companyName', e.target.value)}
+                className="form-input"
+              />
             </Field>
             <Field label="Yasal Ünvan">
-              <input value={settings.legalTitle} onChange={(e) => updateField('legalTitle', e.target.value)} className="form-input" />
+              <input
+                value={settings.legalTitle}
+                onChange={(e) => updateField('legalTitle', e.target.value)}
+                className="form-input"
+              />
             </Field>
             <Field label="Telefon">
-              <input value={settings.phone} onChange={(e) => updateField('phone', e.target.value)} className="form-input" />
+              <input
+                value={settings.phone}
+                onChange={(e) => updateField('phone', e.target.value)}
+                className="form-input"
+              />
             </Field>
             <Field label="E-posta">
-              <input value={settings.email} onChange={(e) => updateField('email', e.target.value)} className="form-input" />
+              <input
+                value={settings.email}
+                onChange={(e) => updateField('email', e.target.value)}
+                className="form-input"
+              />
             </Field>
             <Field label="Web Sitesi">
-              <input value={settings.website} onChange={(e) => updateField('website', e.target.value)} className="form-input" />
+              <input
+                value={settings.website}
+                onChange={(e) => updateField('website', e.target.value)}
+                className="form-input"
+              />
             </Field>
             <Field label="Vergi Dairesi">
-              <input value={settings.taxOffice} onChange={(e) => updateField('taxOffice', e.target.value)} className="form-input" />
+              <input
+                value={settings.taxOffice}
+                onChange={(e) => updateField('taxOffice', e.target.value)}
+                className="form-input"
+              />
             </Field>
             <Field label="Vergi Numarası">
-              <input value={settings.taxNumber} onChange={(e) => updateField('taxNumber', e.target.value)} className="form-input" />
+              <input
+                value={settings.taxNumber}
+                onChange={(e) => updateField('taxNumber', e.target.value)}
+                className="form-input"
+              />
             </Field>
             <Field label="Adres">
-              <input value={settings.address} onChange={(e) => updateField('address', e.target.value)} className="form-input" />
+              <input
+                value={settings.address}
+                onChange={(e) => updateField('address', e.target.value)}
+                className="form-input"
+              />
             </Field>
           </div>
         </section>
@@ -123,10 +192,17 @@ export default function SettingsPage() {
             </Link>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={resetDefaults} className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-3 text-xs font-black text-gray-300 hover:text-white">
+            <button
+              type="button"
+              onClick={resetDefaults}
+              className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-3 text-xs font-black text-gray-300 hover:text-white"
+            >
               Varsayılana Dön
             </button>
-            <button type="submit" className={`${BTN_SUCCESS} gap-2 px-4 py-3 text-xs uppercase tracking-wide`}>
+            <button
+              type="submit"
+              className={`${BTN_SUCCESS} gap-2 px-4 py-3 text-xs uppercase tracking-wide`}
+            >
               <Save className="h-4 w-4" />
               {saved ? 'Kaydedildi' : 'Kaydet'}
             </button>

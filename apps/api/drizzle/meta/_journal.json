@@ -8,6 +8,20 @@
       "when": 1783840930901,
       "tag": "0000_melted_jubilee",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784550000000,
+      "tag": "0001_mdm_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784560000000,
+      "tag": "0002_workflow_engine",
+      "breakpoints": true
     }
   ]
 }

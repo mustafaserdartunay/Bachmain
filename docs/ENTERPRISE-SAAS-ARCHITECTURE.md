@@ -12,6 +12,8 @@
 
 **MDM docs:** [64 Gap](./64_MDM_GAP_REPORT.md) · [65 Architecture/Roadmap](./65_MDM_ARCHITECTURE_ROADMAP.md)
 
+**Workflow Engine:** [66 Gap](./66_WORKFLOW_ENGINE_GAP_REPORT.md) · [67 Architecture/Roadmap](./67_WORKFLOW_ENGINE_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target

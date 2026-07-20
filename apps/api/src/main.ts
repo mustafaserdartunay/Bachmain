@@ -15,6 +15,8 @@ import { registerRealtime } from './realtime/socket.js'
 import { bindNotificationIo } from './modules/notifications/notificationService.js'
 import { adminRoutes } from './modules/admin/adminRoutes.js'
 import { crmRoutes } from './modules/crm/crmRoutes.js'
+import { mdmRoutes } from './modules/mdm/mdmRoutes.js'
+import { workflowRoutes } from './modules/workflow/workflowRoutes.js'
 
 async function main() {
   const app = Fastify({
@@ -57,7 +59,10 @@ async function main() {
     if (!env.REDIS_URL) return
     if (req.url.startsWith('/v1/health') || req.url.startsWith('/v1/billing/webhooks/')) return
     const { hitDistributedRateLimit } = await import('./shared/redisRateLimit.js')
-    const ok = await hitDistributedRateLimit(`${req.ip}:${req.method}`, { limit: 300, windowSec: 60 })
+    const ok = await hitDistributedRateLimit(`${req.ip}:${req.method}`, {
+      limit: 300,
+      windowSec: 60,
+    })
     if (!ok) {
       return reply.status(429).send({ error: 'RATE_LIMIT', message: 'Çok fazla istek' })
     }
@@ -93,6 +98,8 @@ async function main() {
   await app.register(billingRoutes)
   await app.register(adminRoutes)
   await app.register(crmRoutes)
+  await app.register(mdmRoutes)
+  await app.register(workflowRoutes)
 
   await app.ready()
 

@@ -22,16 +22,20 @@ function readSidebarCollapsed() {
 export default function Layout({ children }) {
   const { pathname } = useLocation()
   const hideChrome = pathname === '/paketler' || pathname.startsWith('/paketler/')
+  const fullscreenWorkspace =
+    pathname === '/otomasyon/designer' || pathname.startsWith('/otomasyon/designer/')
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed)
-  const [teamHubCollapsed, setTeamHubCollapsed] = useState(() => localStorage.getItem('bach-team-hub-panel') !== 'expanded')
+  const [teamHubCollapsed, setTeamHubCollapsed] = useState(
+    () => localStorage.getItem('bach-team-hub-panel') !== 'expanded',
+  )
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 1024 : false))
-  const [isTablet, setIsTablet] = useState(() => (
-    typeof window !== 'undefined'
-      ? window.innerWidth >= 768 && window.innerWidth < 1024
-      : false
-  ))
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 1024 : false,
+  )
+  const [isTablet, setIsTablet] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 && window.innerWidth < 1024 : false,
+  )
 
   useEffect(() => {
     function syncViewport() {
@@ -80,6 +84,14 @@ export default function Layout({ children }) {
 
   const effectiveCollapsed = isTablet ? true : isMobile ? false : sidebarCollapsed
 
+  if (fullscreenWorkspace) {
+    return (
+      <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))]">
+        <main className="min-h-screen w-full overflow-hidden p-0">{children}</main>
+      </div>
+    )
+  }
+
   return (
     <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))] transition-colors">
       {mobileSidebarOpen && (
@@ -103,7 +115,9 @@ export default function Layout({ children }) {
       >
         {!hideChrome ? <Header onMenuClick={() => setMobileSidebarOpen(true)} /> : null}
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
-        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">{children}</main>
+        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">
+          {children}
+        </main>
       </div>
       <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
       {!hideChrome ? <BottomNav /> : null}

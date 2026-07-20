@@ -37,7 +37,12 @@ import {
 } from '../components/Common/FormSectionPanel'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
-import { getTreasuryAccounts, getTreasuryMovements, saveTreasuryMovements } from '../utils/treasuryStore'
+import { publishDomainEvent } from '../workflow/eventBus'
+import {
+  getTreasuryAccounts,
+  getTreasuryMovements,
+  saveTreasuryMovements,
+} from '../utils/treasuryStore'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
   createNextContactRow,
@@ -58,16 +63,15 @@ import EditableDropdownPill from '../components/EditableDropdownPill'
 import { BTN_BACK, BTN_CANCEL as BTN_CANCEL_BASE, BTN_SUCCESS } from '../utils/buttonStyles'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
+import { checkCustomerDuplicates } from '../utils/mdmDuplicateCheck'
 import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 
 const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 
 const CREATE_PILL_CLASS = 'glass-pill !h-8 !min-h-8 !w-full !justify-between !text-[12px]'
 const BTN_CANCEL = `${BTN_CANCEL_BASE} gap-2.5 px-3`
-const BTN_SAVE =
-  `${BTN_SUCCESS} gap-2.5 px-3`
-const BTN_SAVE_MENU =
-  `${BTN_SUCCESS} w-14 px-0`
+const BTN_SAVE = `${BTN_SUCCESS} gap-2.5 px-3`
+const BTN_SAVE_MENU = `${BTN_SUCCESS} w-14 px-0`
 
 function emptyMeta(defaultType = '') {
   return { type: defaultType, representative: '', scoring: '', category: '' }
@@ -86,14 +90,16 @@ function readMetaFor(customerId, defaultType = '') {
 
 function initialContactRows(customer, draft) {
   if (!customer && draft && (draft.phone || draft.email)) {
-    return [{
-      id: 0,
-      title: 'Google Maps',
-      locked: false,
-      defaultName: '',
-      defaultPhone: draft.phone || '',
-      defaultEmail: draft.email || '',
-    }]
+    return [
+      {
+        id: 0,
+        title: 'Google Maps',
+        locked: false,
+        defaultName: '',
+        defaultPhone: draft.phone || '',
+        defaultEmail: draft.email || '',
+      },
+    ]
   }
   return initialContactRowsFromCustomer(customer)
 }
@@ -113,29 +119,41 @@ export default function CustomerCreatePage() {
   const location = useLocation()
   const [searchParams] = useSearchParams()
   const formRouteKey = searchParams.toString()
-  const editingCustomer = searchParams.get('edit') ? findCustomerProfile(searchParams.get('edit')) : null
+  const editingCustomer = searchParams.get('edit')
+    ? findCustomerProfile(searchParams.get('edit'))
+    : null
   const isSupplierForm = searchParams.get('kind') === 'supplier'
   const defaultPartyType = isSupplierForm ? SUPPLIER_TYPE_LABEL : 'Müşteri'
   const backPath = isSupplierForm ? '/suppliers' : '/musteriler'
   const pageHeading = editingCustomer
-    ? (isSupplierForm ? 'Tedarikçi Düzenle' : 'Müşteri Düzenle')
-    : (isSupplierForm ? 'Yeni Tedarikçi' : 'Yeni Müşteri')
+    ? isSupplierForm
+      ? 'Tedarikçi Düzenle'
+      : 'Müşteri Düzenle'
+    : isSupplierForm
+      ? 'Yeni Tedarikçi'
+      : 'Yeni Müşteri'
   const incomingDraft = !editingCustomer ? location.state?.customerDraft : null
   const [actionMenuOpen, setActionMenuOpen] = useState(false)
   const [openingEnabled, setOpeningEnabled] = useState(false)
   const [addressRows, setAddressRows] = useState([{ id: 0 }])
-  const [contactRows, setContactRows] = useState(() => initialContactRows(editingCustomer, incomingDraft))
+  const [contactRows, setContactRows] = useState(() =>
+    initialContactRows(editingCustomer, incomingDraft),
+  )
   const [deleteDialog, setDeleteDialog] = useState(null)
   const [successVisible, setSuccessVisible] = useState(false)
-  const [meta, setMeta] = useState(() => (
+  const [meta, setMeta] = useState(() =>
     incomingDraft?.category
       ? { ...emptyMeta(), category: incomingDraft.category }
-      : readMetaFor(editingCustomer?.id, '')
-  ))
+      : readMetaFor(editingCustomer?.id, ''),
+  )
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const successTimer = useRef(null)
-  const { anchorRef: actionMenuAnchorRef, menuRef: actionMenuRef, style: actionMenuStyle } = useAnchoredPortal(actionMenuOpen, {
+  const {
+    anchorRef: actionMenuAnchorRef,
+    menuRef: actionMenuRef,
+    style: actionMenuStyle,
+  } = useAnchoredPortal(actionMenuOpen, {
     align: 'right',
     width: 224,
     matchWidth: false,
@@ -147,9 +165,11 @@ export default function CustomerCreatePage() {
     setOpeningEnabled(false)
     setActionMenuOpen(false)
     setDeleteDialog(null)
-    setMeta(incomingDraft?.category
-      ? { ...emptyMeta(), category: incomingDraft.category }
-      : readMetaFor(editingCustomer?.id, ''))
+    setMeta(
+      incomingDraft?.category
+        ? { ...emptyMeta(), category: incomingDraft.category }
+        : readMetaFor(editingCustomer?.id, ''),
+    )
   }, [defaultPartyType, editingCustomer?.id, formRouteKey, incomingDraft])
 
   useEffect(() => {
@@ -220,20 +240,24 @@ export default function CustomerCreatePage() {
   function saveDraft(payload) {
     const saved = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}')
     const draftId = editingCustomer?.id || `NEW-${Date.now()}`
-    localStorage.setItem(DRAFTS_KEY, JSON.stringify({
-      ...saved,
-      [draftId]: {
-        ...payload,
-        savedAt: new Date().toISOString(),
-      },
-    }))
+    localStorage.setItem(
+      DRAFTS_KEY,
+      JSON.stringify({
+        ...saved,
+        [draftId]: {
+          ...payload,
+          savedAt: new Date().toISOString(),
+        },
+      }),
+    )
   }
 
   function buildCustomerProfile(payload, rows = contactRows) {
     const addressId = addressRows[0]?.id ?? 0
     const city = payload[`city-${addressId}`] || ''
     const district = payload[`district-${addressId}`] || ''
-    const companyTitle = payload.companyTitle || editingCustomer?.company || payload.shortBrandName || ''
+    const companyTitle =
+      payload.companyTitle || editingCustomer?.company || payload.shortBrandName || ''
     const shortBrandName = payload.shortBrandName || getCustomerDisplay(companyTitle).brandShortName
     const contacts = parseContactsFromFormPayload(payload, rows)
     const primary = resolvePrimaryContact(contacts, editingCustomer || {})
@@ -247,19 +271,22 @@ export default function CustomerCreatePage() {
       phone: primary.phone,
       contacts,
       city: [city, district].filter(Boolean).join(' / '),
-      address: payload[`address-${addressId}`] || incomingDraft?.address || editingCustomer?.address || '',
+      address:
+        payload[`address-${addressId}`] || incomingDraft?.address || editingCustomer?.address || '',
       lat: incomingDraft?.lat ?? editingCustomer?.lat ?? null,
       lng: incomingDraft?.lng ?? editingCustomer?.lng ?? null,
       website: primary.website || incomingDraft?.website || editingCustomer?.website || '',
       googleMapsUrl:
-        payload[`mapsUrl-${addressId}`]
-        || incomingDraft?.mapsUrl
-        || editingCustomer?.googleMapsUrl
-        || '',
+        payload[`mapsUrl-${addressId}`] ||
+        incomingDraft?.mapsUrl ||
+        editingCustomer?.googleMapsUrl ||
+        '',
       googlePlaceId: incomingDraft?.placeId || editingCustomer?.googlePlaceId || '',
       taxOffice: payload.taxOffice || editingCustomer?.taxOffice || '',
       taxNumber: payload.taxNumber || editingCustomer?.taxNumber || '',
-      balance: payload.hasOpeningBalance ? Number(payload.openingBalanceAmount || 0) : Number(editingCustomer?.balance || 0),
+      balance: payload.hasOpeningBalance
+        ? Number(payload.openingBalanceAmount || 0)
+        : Number(editingCustomer?.balance || 0),
     }
   }
 
@@ -293,7 +320,30 @@ export default function CustomerCreatePage() {
     ])
   }
 
-  function collectAndSave(event) {
+  async function assertNoStrongDuplicates(payload) {
+    if (editingCustomer?.id) return true
+    const primary = resolvePrimaryContact(contactRows)
+    const { matches } = await checkCustomerDuplicates(
+      {
+        name: payload.companyTitle || payload.shortBrandName,
+        email: primary.email || payload.email,
+        phone: primary.phone || payload.phone,
+        taxNo: payload.taxNumber,
+      },
+      { excludeId: editingCustomer?.id },
+    )
+    const strong = matches.filter((m) => m.score >= 0.7)
+    if (!strong.length) return true
+    const lines = strong
+      .slice(0, 5)
+      .map((m) => `• ${m.name || m.id} (%${Math.round(m.score * 100)} · ${m.reasons.join(', ')})`)
+      .join('\n')
+    return window.confirm(
+      `MDM: Olası çift kayıt bulundu.\n\n${lines}\n\nYine de kaydetmek istiyor musunuz?`,
+    )
+  }
+
+  async function collectAndSave(event) {
     event?.preventDefault()
     if (!String(meta.type || '').trim()) {
       window.alert('Kaydetmeden önce Tipi alanını seçin.')
@@ -302,10 +352,19 @@ export default function CustomerCreatePage() {
     const formData = new FormData(event.currentTarget)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
+    if (!(await assertNoStrongDuplicates(payload))) return
     saveDraft(payload)
     const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
     persistMeta(savedProfile.id)
     syncOpeningBalance(payload)
+    publishDomainEvent(
+      'trigger.customer.created',
+      {
+        customerId: savedProfile.id,
+        name: savedProfile.name || payload.name || payload.firmaAdi,
+      },
+      { source: 'CustomerCreatePage' },
+    )
     event.currentTarget.reset()
     setAddressRows([{ id: 0 }])
     setContactRows(initialContactRows(null, null))
@@ -316,7 +375,7 @@ export default function CustomerCreatePage() {
     setTimeout(() => navigate(-1), 900)
   }
 
-  function saveAndContinue() {
+  async function saveAndContinue() {
     const form = document.getElementById('customer-edit-form')
     if (!form) return
     if (!String(meta.type || '').trim()) {
@@ -327,10 +386,22 @@ export default function CustomerCreatePage() {
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
+    if (!(await assertNoStrongDuplicates(payload))) {
+      setActionMenuOpen(false)
+      return
+    }
     saveDraft(payload)
     const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
     persistMeta(savedProfile.id)
     syncOpeningBalance(payload)
+    publishDomainEvent(
+      'trigger.customer.created',
+      {
+        customerId: savedProfile.id,
+        name: savedProfile.name || payload.name || payload.firmaAdi,
+      },
+      { source: 'CustomerCreatePage' },
+    )
     form.reset()
     setAddressRows([{ id: 0 }])
     setContactRows(initialContactRows(null, null))
@@ -363,61 +434,66 @@ export default function CustomerCreatePage() {
       )}
 
       <div className="space-y-5">
-      <section className={`${APP_SURFACE_PANEL_CLASS} p-5 text-center`}>
-        <button
-          type="button"
-          onClick={() => navigate(backPath)}
-          className={`${BTN_BACK} absolute left-5 top-1/2 -translate-y-1/2 hover:!-translate-y-[calc(50%+0.125rem)]`}
-        >
-          <ArrowLeft className="h-4 w-4" /> {isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'}
-        </button>
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">{pageHeading}</h1>
-        </div>
-        <div ref={actionMenuAnchorRef} className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2.5 bg-transparent">
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 text-center`}>
           <button
             type="button"
             onClick={() => navigate(backPath)}
-            className={BTN_CANCEL}
+            className={`${BTN_BACK} absolute left-5 top-1/2 -translate-y-1/2 hover:!-translate-y-[calc(50%+0.125rem)]`}
           >
-            <X className="h-4 w-4" /> Vazgeç
+            <ArrowLeft className="h-4 w-4" /> {isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'}
           </button>
-          <div className="btn-split">
-            <button type="submit" className={BTN_SAVE}>
-              <Save className="h-4 w-4" /> Kaydet
-            </button>
-            <span className="btn-split-divider" aria-hidden />
-            <button
-              type="button"
-              onClick={() => setActionMenuOpen((open) => !open)}
-              className={BTN_SAVE_MENU}
-              aria-label="Kaydet işlemleri"
-              aria-expanded={actionMenuOpen}
-            >
-              <ChevronDown className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
+          <div className="mx-auto max-w-2xl">
+            <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
+              {pageHeading}
+            </h1>
           </div>
-          {actionMenuOpen && actionMenuStyle && createPortal(
-            <div
-              ref={actionMenuRef}
-              style={actionMenuStyle}
-              className={`${DROPDOWN_MENU_PORTAL_CLASS} w-56`}
-              onClick={(event) => event.stopPropagation()}
-            >
+          <div
+            ref={actionMenuAnchorRef}
+            className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2.5 bg-transparent"
+          >
+            <button type="button" onClick={() => navigate(backPath)} className={BTN_CANCEL}>
+              <X className="h-4 w-4" /> Vazgeç
+            </button>
+            <div className="btn-split">
+              <button type="submit" className={BTN_SAVE}>
+                <Save className="h-4 w-4" /> Kaydet
+              </button>
+              <span className="btn-split-divider" aria-hidden />
               <button
                 type="button"
-                onClick={saveAndContinue}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-extrabold tracking-wide text-[var(--ink)] transition-colors hover:bg-white/45"
+                onClick={() => setActionMenuOpen((open) => !open)}
+                className={BTN_SAVE_MENU}
+                aria-label="Kaydet işlemleri"
+                aria-expanded={actionMenuOpen}
               >
-                <Save className="h-4 w-4 text-emerald-300" /> Kaydet ve devam et
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
+                />
               </button>
-            </div>,
-            document.body,
-          )}
-        </div>
-      </section>
+            </div>
+            {actionMenuOpen &&
+              actionMenuStyle &&
+              createPortal(
+                <div
+                  ref={actionMenuRef}
+                  style={actionMenuStyle}
+                  className={`${DROPDOWN_MENU_PORTAL_CLASS} w-56`}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={saveAndContinue}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-extrabold tracking-wide text-[var(--ink)] transition-colors hover:bg-white/45"
+                  >
+                    <Save className="h-4 w-4 text-emerald-300" /> Kaydet ve devam et
+                  </button>
+                </div>,
+                document.body,
+              )}
+          </div>
+        </section>
 
-      <div className="space-y-5">
+        <div className="space-y-5">
           <FormSectionPanel
             compact
             icon={UserRound}
@@ -482,13 +558,21 @@ export default function CustomerCreatePage() {
                 icon={Building2}
                 label="Kısa Marka Adı:"
                 name="shortBrandName"
-                defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).brandShortName : incomingDraft?.shortBrandName || ''}
+                defaultValue={
+                  editingCustomer
+                    ? getCustomerDisplay(editingCustomer).brandShortName
+                    : incomingDraft?.shortBrandName || ''
+                }
               />
               <FieldLine
                 icon={Building2}
                 label="Firma Ünvanı:"
                 name="companyTitle"
-                defaultValue={editingCustomer ? getCustomerDisplay(editingCustomer).companyTitle : incomingDraft?.companyTitle || ''}
+                defaultValue={
+                  editingCustomer
+                    ? getCustomerDisplay(editingCustomer).companyTitle
+                    : incomingDraft?.companyTitle || ''
+                }
               />
               <FieldLine
                 icon={Landmark}
@@ -512,12 +596,30 @@ export default function CustomerCreatePage() {
                   key={row.id}
                   id={row.id}
                   defaultTitle={index === 0 && editingCustomer ? 'Merkez Adres' : ''}
-                  defaultAddress={index === 0 ? incomingDraft?.address || editingCustomer?.address || '' : ''}
-                  defaultLocation={index === 0 ? incomingDraft ? [incomingDraft.city, incomingDraft.district].filter(Boolean).join(' / ') : editingCustomer?.city || '' : ''}
-                  defaultMapsUrl={index === 0 ? incomingDraft?.mapsUrl || editingCustomer?.googleMapsUrl || '' : ''}
+                  defaultAddress={
+                    index === 0 ? incomingDraft?.address || editingCustomer?.address || '' : ''
+                  }
+                  defaultLocation={
+                    index === 0
+                      ? incomingDraft
+                        ? [incomingDraft.city, incomingDraft.district].filter(Boolean).join(' / ')
+                        : editingCustomer?.city || ''
+                      : ''
+                  }
+                  defaultMapsUrl={
+                    index === 0
+                      ? incomingDraft?.mapsUrl || editingCustomer?.googleMapsUrl || ''
+                      : ''
+                  }
                   canDelete={addressRows.length > 1}
                   deleteState={deleteDialog?.key === `address-${row.id}` ? deleteDialog : null}
-                  onDelete={() => confirmTwoStepDelete('Adres', () => setAddressRows((rows) => rows.filter((item) => item.id !== row.id)), `address-${row.id}`)}
+                  onDelete={() =>
+                    confirmTwoStepDelete(
+                      'Adres',
+                      () => setAddressRows((rows) => rows.filter((item) => item.id !== row.id)),
+                      `address-${row.id}`,
+                    )
+                  }
                   onCancel={closeDeleteDialog}
                   onApprove={approveDeleteDialog}
                 />
@@ -552,7 +654,13 @@ export default function CustomerCreatePage() {
                   tiktokDefault={row.defaultTiktok || ''}
                   canDelete={contactRows.length > 1}
                   deleteState={deleteDialog?.key === `contact-${row.id}` ? deleteDialog : null}
-                  onDelete={() => confirmTwoStepDelete('İletişim satırı', () => setContactRows((rows) => rows.filter((item) => item.id !== row.id)), `contact-${row.id}`)}
+                  onDelete={() =>
+                    confirmTwoStepDelete(
+                      'İletişim satırı',
+                      () => setContactRows((rows) => rows.filter((item) => item.id !== row.id)),
+                      `contact-${row.id}`,
+                    )
+                  }
                   onCancel={closeDeleteDialog}
                   onApprove={approveDeleteDialog}
                 />
@@ -569,8 +677,18 @@ export default function CustomerCreatePage() {
 
           <FormSectionPanel compact icon={WalletCards} title="Finans Ayarları" dotColor="orange">
             <div className={FORM_FIELD_RULED_STACK_CLASS}>
-              <SelectLine icon={WalletCards} label="Fiyat Listesi:" name="priceList" options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']} />
-              <SelectLine icon={WalletCards} label="Döviz Kuru:" name="currencyRate" options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']} />
+              <SelectLine
+                icon={WalletCards}
+                label="Fiyat Listesi:"
+                name="priceList"
+                options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']}
+              />
+              <SelectLine
+                icon={WalletCards}
+                label="Döviz Kuru:"
+                name="currencyRate"
+                options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']}
+              />
               <FormFieldCompact icon={WalletCards} label="Açılış Bakiyesi:">
                 <label className="flex min-h-8 items-center gap-3 text-[12px] font-semibold text-[var(--ink)]">
                   <input
@@ -583,16 +701,26 @@ export default function CustomerCreatePage() {
                   Hareketlere eklensin
                 </label>
               </FormFieldCompact>
-              <FieldLine icon={WalletCards} label="Açılış Tutarı:" name="openingBalanceAmount" type="number" disabled={!openingEnabled} />
+              <FieldLine
+                icon={WalletCards}
+                label="Açılış Tutarı:"
+                name="openingBalanceAmount"
+                type="number"
+                disabled={!openingEnabled}
+              />
             </div>
           </FormSectionPanel>
-      </div>
+        </div>
       </div>
 
-      <section className={`${APP_SURFACE_PANEL_CLASS} flex h-[4.625rem] items-center justify-between px-5`}>
+      <section
+        className={`${APP_SURFACE_PANEL_CLASS} flex h-[4.625rem] items-center justify-between px-5`}
+      >
         <div className="flex min-w-0 items-center gap-3 text-xs font-semibold text-gray-500">
           <UserRound className="h-4 w-4 shrink-0" />
-          <span className="truncate">Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.</span>
+          <span className="truncate">
+            Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.
+          </span>
         </div>
         <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
           <button type="button" onClick={() => navigate(-1)} className={BTN_CANCEL}>
@@ -607,7 +735,15 @@ export default function CustomerCreatePage() {
   )
 }
 
-function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', large = false, disabled = false }) {
+function FieldLine({
+  icon: Icon,
+  label,
+  name,
+  defaultValue = '',
+  type = 'text',
+  large = false,
+  disabled = false,
+}) {
   return (
     <FormFieldCompact icon={Icon} label={label} as="label">
       <input
@@ -621,7 +757,14 @@ function FieldLine({ icon: Icon, label, name, defaultValue = '', type = 'text', 
   )
 }
 
-function DeleteConfirmInline({ deleteState, onDelete, onCancel, onApprove, title, description = 'Bu işlem geri alınamaz.' }) {
+function DeleteConfirmInline({
+  deleteState,
+  onDelete,
+  onCancel,
+  onApprove,
+  title,
+  description = 'Bu işlem geri alınamaz.',
+}) {
   return (
     <DeleteTrashButton
       pending={deleteState}
@@ -649,7 +792,9 @@ function AddressLine({
   onCancel,
   onApprove,
 }) {
-  const [city = '', district = ''] = String(defaultLocation).split('/').map((part) => part.trim())
+  const [city = '', district = ''] = String(defaultLocation)
+    .split('/')
+    .map((part) => part.trim())
 
   return (
     <div className={canDelete ? 'grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2' : 'w-full'}>
@@ -673,7 +818,13 @@ function AddressLine({
         </FormFieldCompact>
       </div>
       {canDelete ? (
-        <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
+        <DeleteConfirmInline
+          deleteState={deleteState}
+          onDelete={onDelete}
+          onCancel={onCancel}
+          onApprove={onApprove}
+          title="Sil"
+        />
       ) : null}
     </div>
   )
@@ -684,7 +835,9 @@ function SelectLine({ icon: Icon, label, name, options }) {
     <FormFieldCompact icon={Icon} label={label} as="label">
       <select name={name} defaultValue="" className="form-input !h-8 !min-h-8 !py-1">
         <option value="">Seçiniz</option>
-        {options.map((option) => <option key={option}>{option}</option>)}
+        {options.map((option) => (
+          <option key={option}>{option}</option>
+        ))}
       </select>
     </FormFieldCompact>
   )
@@ -756,38 +909,80 @@ function ContactLine({
           )}
         </FormFieldCompact>
         <FormFieldCompact icon={UserRound} label="İsim:" as="label">
-          <input name={`contactName-${id}`} defaultValue={defaultValue} className="form-input !h-8 !min-h-8 !py-1" />
+          <input
+            name={`contactName-${id}`}
+            defaultValue={defaultValue}
+            className="form-input !h-8 !min-h-8 !py-1"
+          />
         </FormFieldCompact>
         <FormFieldCompact icon={Phone} label="Telefon:" as="label">
-          <input name={`contactPhone-${id}`} defaultValue={phoneDefault} className="form-input !h-8 !min-h-8 !py-1" />
+          <input
+            name={`contactPhone-${id}`}
+            defaultValue={phoneDefault}
+            className="form-input !h-8 !min-h-8 !py-1"
+          />
         </FormFieldCompact>
         <FormFieldCompact icon={Mail} label="E-posta:" as="label">
-          <input name={`contactEmail-${id}`} defaultValue={emailDefault} className="form-input !h-8 !min-h-8 !py-1" />
+          <input
+            name={`contactEmail-${id}`}
+            defaultValue={emailDefault}
+            className="form-input !h-8 !min-h-8 !py-1"
+          />
         </FormFieldCompact>
         <FormFieldCompact icon={Globe} label="Web:" as="label">
-          <ContactLinkInput name={`contactWebsite-${id}`} defaultValue={websiteDefault} platform="web" />
+          <ContactLinkInput
+            name={`contactWebsite-${id}`}
+            defaultValue={websiteDefault}
+            platform="web"
+          />
         </FormFieldCompact>
         <FormFieldCompact icon={Instagram} label="Instagram:" as="label">
-          <ContactLinkInput name={`contactInstagram-${id}`} defaultValue={instagramDefault} platform="instagram" />
+          <ContactLinkInput
+            name={`contactInstagram-${id}`}
+            defaultValue={instagramDefault}
+            platform="instagram"
+          />
         </FormFieldCompact>
         <FormFieldCompact icon={Facebook} label="Facebook:" as="label">
-          <ContactLinkInput name={`contactFacebook-${id}`} defaultValue={facebookDefault} platform="facebook" />
+          <ContactLinkInput
+            name={`contactFacebook-${id}`}
+            defaultValue={facebookDefault}
+            platform="facebook"
+          />
         </FormFieldCompact>
         <FormFieldCompact icon={Youtube} label="YouTube:" as="label">
-          <ContactLinkInput name={`contactYoutube-${id}`} defaultValue={youtubeDefault} platform="youtube" />
+          <ContactLinkInput
+            name={`contactYoutube-${id}`}
+            defaultValue={youtubeDefault}
+            platform="youtube"
+          />
         </FormFieldCompact>
         <FormFieldCompact icon={Twitter} label="X:" as="label">
           <ContactLinkInput name={`contactX-${id}`} defaultValue={xDefault} platform="x" />
         </FormFieldCompact>
         <FormFieldCompact icon={Pin} label="Pinterest:" as="label">
-          <ContactLinkInput name={`contactPinterest-${id}`} defaultValue={pinterestDefault} platform="pinterest" />
+          <ContactLinkInput
+            name={`contactPinterest-${id}`}
+            defaultValue={pinterestDefault}
+            platform="pinterest"
+          />
         </FormFieldCompact>
         <FormFieldCompact icon={Music2} label="TikTok:" as="label">
-          <ContactLinkInput name={`contactTiktok-${id}`} defaultValue={tiktokDefault} platform="tiktok" />
+          <ContactLinkInput
+            name={`contactTiktok-${id}`}
+            defaultValue={tiktokDefault}
+            platform="tiktok"
+          />
         </FormFieldCompact>
       </div>
       {canDelete ? (
-        <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
+        <DeleteConfirmInline
+          deleteState={deleteState}
+          onDelete={onDelete}
+          onCancel={onCancel}
+          onApprove={onApprove}
+          title="Sil"
+        />
       ) : null}
     </div>
   )

@@ -19,10 +19,9 @@ Kod yazmadan önce ilgili `docs/*.md` dosyasını oku. Geliştirmeyi bu teknik �
 ```
 docs/
   01_FOUNDATION.md
-  02_DESIGN_SYSTEM.md
-  03_COMPONENT_LIBRARY.md
   …
-  50_TESTING_QA.md
+  66_WORKFLOW_ENGINE_GAP_REPORT.md
+  67_WORKFLOW_ENGINE_ARCHITECTURE_ROADMAP.md
 ```
 
 Bu numaralı dosyalar henüz yoksa, geçici olarak ilgili mevcut dokümanları kullan:
@@ -38,6 +37,8 @@ Bu numaralı dosyalar henüz yoksa, geçici olarak ilgili mevcut dokümanları k
 | Security | `docs/51`–`53`, `docs/54` cutover, `docs/55` ops |
 | Database | `docs/56`–`58` |
 | DevOps / CI | `docs/59`–`63`, `.github/workflows/ci.yml` |
+| MDM | `docs/64`–`65` |
+| Workflow Engine | `docs/66`–`67` |
 
 ## Yapma
 
