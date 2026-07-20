@@ -355,7 +355,7 @@ export default function CustomerCreatePage() {
         </div>
       )}
 
-      <div className="space-y-2.5">
+      <div className="space-y-5">
       <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
         <button
           type="button"
