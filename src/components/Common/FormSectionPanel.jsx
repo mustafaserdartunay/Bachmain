@@ -3,14 +3,15 @@ import {
   APP_ICON_SM_CLASS,
   APP_ICON_WRAP_CLASS,
   APP_PANEL_TITLE_CLASS,
+  APP_SURFACE_PANEL_CLASS,
 } from '../../utils/dashboardDesign'
 
-export const FORM_SECTION_PANEL_CLASS = 'glass-inset space-y-4 rounded-[20px] p-4'
-export const FORM_SECTION_PANEL_COMPACT_CLASS = 'glass-inset space-y-2 rounded-2xl p-3'
+export const FORM_SECTION_PANEL_CLASS = `${APP_SURFACE_PANEL_CLASS} space-y-4 rounded-[20px] p-4`
+export const FORM_SECTION_PANEL_COMPACT_CLASS = `${APP_SURFACE_PANEL_CLASS} space-y-2 rounded-2xl p-3`
 
-export function FormSectionPanel({ icon: Icon, title, children, dotColor = 'blue', compact = false }) {
+export function FormSectionPanel({ icon: Icon, title, children, dotColor = 'blue', compact = false, className = '' }) {
   return (
-    <section className={compact ? FORM_SECTION_PANEL_COMPACT_CLASS : FORM_SECTION_PANEL_CLASS}>
+    <section className={`${compact ? FORM_SECTION_PANEL_COMPACT_CLASS : FORM_SECTION_PANEL_CLASS} ${className}`.trim()}>
       <div className={`flex items-center gap-2 ${compact ? 'min-h-0' : ''}`}>
         <AppPanelDot color={dotColor} />
         {Icon ? (

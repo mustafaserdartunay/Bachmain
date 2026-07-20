@@ -52,6 +52,7 @@ import EditableDropdownPill from '../components/EditableDropdownPill'
 import { BTN_BACK, BTN_CANCEL as BTN_CANCEL_BASE, BTN_SUCCESS } from '../utils/buttonStyles'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
+import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 
 const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 
@@ -356,7 +357,7 @@ export default function CustomerCreatePage() {
       )}
 
       <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
+      <section className={`${APP_SURFACE_PANEL_CLASS} p-5 text-center`}>
         <button
           type="button"
           onClick={() => navigate(backPath)}
@@ -574,7 +575,7 @@ export default function CustomerCreatePage() {
       </div>
       </div>
 
-      <section className="relative flex h-[4.625rem] items-center justify-between rounded-2xl border border-dark-500/50 bg-dark-800/70 px-5 shadow-card">
+      <section className={`${APP_SURFACE_PANEL_CLASS} flex h-[4.625rem] items-center justify-between px-5`}>
         <div className="flex min-w-0 items-center gap-3 text-xs font-semibold text-gray-500">
           <UserRound className="h-4 w-4 shrink-0" />
           <span className="truncate">Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.</span>

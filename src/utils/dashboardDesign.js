@@ -1,5 +1,13 @@
 /** Güncel Durum / ModernDashboard ile uyumlu ortak tasarım sınıfları */
 
+/**
+ * Canonical zemin paneli — page header kartı ile aynı yüzey.
+ * “Zemin paneli ekle” denince her zaman bunu kullan.
+ * CSS: `.app-surface-panel` (src/index.css)
+ */
+export const APP_SURFACE_PANEL_CLASS =
+  'app-surface-panel relative rounded-2xl border border-dark-500/50 bg-dark-800/70 shadow-card'
+
 export const APP_PANEL_CLASS = 'glass flex flex-col px-4 py-3'
 export const APP_DASHBOARD_PANEL_SIZE_CLASS = 'h-auto w-full shrink-0'
 export const APP_DASHBOARD_PANEL_BODY_CLASS = 'flex flex-col justify-start gap-1'
