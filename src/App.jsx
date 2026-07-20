@@ -631,6 +631,8 @@ export default function App() {
                       <Route path="/bilgi-merkezi" element={<KnowledgeCenterPage />} />
                       <Route path="/dijital-ikiz" element={<DigitalTwinCenterPage />} />
                       <Route path="/ticaret" element={<CommerceCenterPage />} />
+                      <Route path="/commerce" element={<Navigate to="/ticaret" replace />} />
+                      <Route path="/bayi" element={<Navigate to="/ticaret?tab=dealer" replace />} />
                       <Route path="/ayarlar/ai" element={<AiSettingsHubPage />} />
                       <Route path="/ayarlar/ai/openai" element={<OpenAiSettingsPage />} />
                       <Route path="/ayarlar/guncel-durum" element={<GuncelDurumSettingsPage />} />

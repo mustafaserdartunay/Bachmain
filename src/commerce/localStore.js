@@ -106,7 +106,9 @@ export function commerceOverviewLocal() {
     listingsTotal: s.listings.length,
     activePriceRules: s.priceRules.filter((r) => r.active).length,
     productMaster: 'erp_mdm',
-    phase: 'GC-1',
+    phase: 'GC-Cloud',
+    cloud: true,
+    singleOrderModel: true,
   }
 }
 

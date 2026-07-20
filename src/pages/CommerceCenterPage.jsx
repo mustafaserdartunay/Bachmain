@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import {
   Boxes,
   Building2,
+  Cable,
   Globe2,
   Package,
   RefreshCw,
@@ -13,6 +14,7 @@ import {
   Truck,
   Workflow,
 } from 'lucide-react'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 import { commerceSubMenus } from '../data/commerceMenu'
 import { publishDomainEvent } from '../workflow/eventBus'
@@ -52,6 +54,28 @@ import {
 } from '../commerce/localStore'
 
 const TABS = commerceSubMenus
+
+function CloudStub({ title, children, links = [] }) {
+  return (
+    <section className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
+      <h2 className="text-sm font-black uppercase text-[var(--ink)]">{title}</h2>
+      <div className="mt-2 text-xs text-[var(--muted)]">{children}</div>
+      {links.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {links.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className="rounded-xl border px-3 py-2 text-[10px] font-black uppercase"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  )
+}
 
 export default function CommerceCenterPage() {
   const [params, setParams] = useSearchParams()
@@ -242,46 +266,84 @@ export default function CommerceCenterPage() {
   ]
 
   return (
-    <div className="w-full space-y-5 pb-8">
-      <section className={`${APP_SURFACE_PANEL_CLASS} p-5`}>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-amber-300">
-              <Store className="h-5 w-5" />
-              <h1 className="text-xl font-black uppercase tracking-wide">Commerce Center</h1>
-            </div>
-            <p className="mt-2 max-w-2xl text-sm text-gray-400">
-              Global ticaret katmanı. Ürün sadece ERP/MDM’de; kanallar listing ile yayınlanır.
-              Siparişler tek inbox’a akar, event bus ile ERP → üretim → depo → lojistik tetiklenir.
-              GC-1: Product AI, i18n, AI Order Manager, Shipping/Payment/Return.
-            </p>
-          </div>
+    <AppPageShell>
+      <AppPageHeader
+        title="Global Commerce Cloud"
+        actions={
           <div className="flex flex-wrap gap-2">
             <Link
               to="/stok/urunler"
-              className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-black uppercase text-emerald-200"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
-              <Boxes className="h-4 w-4" />
-              Product Master
+              <Boxes className="h-4 w-4" /> Product Master
+            </Link>
+            <Link
+              to="/siparisler"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <ShoppingBag className="h-4 w-4" /> Siparişler
+            </Link>
+            <Link
+              to="/teklifler"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <Tags className="h-4 w-4" /> Teklifler
             </Link>
             <Link
               to="/otomasyon"
-              className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-black uppercase text-blue-200"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
-              <Workflow className="h-4 w-4" />
-              Workflow
+              <Workflow className="h-4 w-4" /> Workflow
             </Link>
             <Link
               to="/aios"
-              className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-black uppercase text-violet-200"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
-              <Sparkles className="h-4 w-4" />
-              AIOS
+              <Sparkles className="h-4 w-4" /> AIOS
+            </Link>
+            <Link
+              to="/entegrasyon"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <Cable className="h-4 w-4" /> Entegrasyon
+            </Link>
+            <Link
+              to="/marketplace"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <Store className="h-4 w-4" /> Marketplace
             </Link>
           </div>
-        </div>
-        {msg ? <p className="mt-2 text-xs font-bold text-emerald-300">{msg}</p> : null}
-      </section>
+        }
+      />
+
+      <div className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
+        <p className="text-sm text-[var(--ink)]">
+          AI Native B2B · B2C · Dealer · Customer — dijital satış merkezi. Ayrı e-ticaret yok; ERP
+          uzantısı. Tek ürün / tek sipariş modeli · inbox → event bus → üretim / depo / lojistik /
+          finans. Phase {overview.phase}.
+        </p>
+        {msg ? <p className="mt-2 text-xs font-bold text-emerald-600">{msg}</p> : null}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {[
+          { to: '/lojistik', label: 'Lojistik' },
+          { to: '/finans', label: 'Finans' },
+          { to: '/belge-merkezi', label: 'Belgeler' },
+          { to: '/depo', label: 'Depo' },
+          { to: '/mes', label: 'MES' },
+          { to: '/analitik', label: 'Analytics' },
+        ].map((l) => (
+          <Link
+            key={l.to}
+            to={l.to}
+            className="rounded-xl border px-3 py-2 text-[10px] font-black uppercase text-[var(--muted)]"
+          >
+            {l.label}
+          </Link>
+        ))}
+      </div>
 
       <div className="flex flex-wrap gap-1.5">
         {TABS.map((t) => (
@@ -289,10 +351,10 @@ export default function CommerceCenterPage() {
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-black uppercase tracking-wide ${
+            className={`min-h-10 rounded-xl border px-2.5 text-[11px] font-black uppercase ${
               tab === t.id
-                ? 'border-amber-400/50 bg-amber-500/15 text-amber-100'
-                : 'border-dark-500/40 bg-dark-800/60 text-gray-400 hover:text-gray-200'
+                ? 'border-[var(--ink)]/20 bg-white/55 text-[var(--ink)]'
+                : 'border-dark-500/30 text-[var(--muted)]'
             }`}
           >
             {t.label}
@@ -316,24 +378,24 @@ export default function CommerceCenterPage() {
 
       {tab === 'dashboard' && (
         <section className={`${APP_SURFACE_PANEL_CLASS} p-5 space-y-3`}>
-          <h2 className="text-sm font-black uppercase text-gray-300">GC-0 akış</h2>
-          <p className="text-sm text-gray-400">
+          <h2 className="text-sm font-black uppercase text-[var(--ink)]">Cloud akış</h2>
+          <p className="text-sm text-[var(--muted)]">
             Product Master → Channel Listings → Order Inbox →{' '}
-            <code className="text-amber-200">trigger.order.created</code> → ERP üretim / depo /
-            lojistik / AIOS.
+            <code className="text-emerald-700">trigger.order.created</code> → ERP (tek kayıt) →
+            üretim / depo / lojistik / AIOS. İkinci sipariş yok.
           </p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={handleDemoOrder}
-              className="rounded-xl border border-amber-400/40 bg-amber-500/15 px-3 py-2 text-xs font-black uppercase text-amber-100"
+              className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-3 py-2 text-xs font-black uppercase text-emerald-800"
             >
               Demo kanal siparişi
             </button>
             <button
               type="button"
               onClick={handleStockSync}
-              className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-black uppercase text-gray-200"
+              className="rounded-xl border px-3 py-2 text-xs font-black uppercase"
             >
               <span className="inline-flex items-center gap-1.5">
                 <RefreshCw className="h-3.5 w-3.5" /> Stock Sync
@@ -352,11 +414,8 @@ export default function CommerceCenterPage() {
             {tab === 'dealer' && 'Dealer Portal'}
           </h2>
           <p className="mt-1 text-xs text-gray-500">
-            GC-0: bağlantı stub. Gerçek adapter’lar GC-2. Mevcut{' '}
-            <Link to="/bayi" className="text-amber-300 underline">
-              /bayi
-            </Link>{' '}
-            ve portal bozulmaz.
+            Bağlantı stub · gerçek adapter GC-2 / Integration Hub. Eski /bayi bu Dealer sekmesine
+            yönlendirilir.
           </p>
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {(tab === 'marketplace'
@@ -402,6 +461,129 @@ export default function CommerceCenterPage() {
             </p>
           )}
         </section>
+      )}
+
+      {tab === 'categories' && (
+        <CloudStub title="Categories" links={[{ to: '/stok/urunler', label: 'Product Master' }]}>
+          Kategori ağacı Product Master / MDM ile paylaşılır — kanal listing’e yayınlanır.
+        </CloudStub>
+      )}
+      {tab === 'brands' && (
+        <CloudStub title="Brands" links={[{ to: '/stok/urunler', label: 'Ürünler' }]}>
+          Marka SoT stok/MDM; storefront vitrin GC-2.
+        </CloudStub>
+      )}
+      {tab === 'collections' && (
+        <CloudStub title="Collections">
+          Kampanya / sezon koleksiyonları — listing grupları (GC-2).
+        </CloudStub>
+      )}
+      {tab === 'experience' && (
+        <CloudStub title="Product Experience Center">
+          360° · 3D · Video · AR · teknik çizim · sertifika · kılavuz · stok · teslim — Document
+          Platform + MDM (GC-3).
+        </CloudStub>
+      )}
+      {tab === 'configurator' && (
+        <CloudStub
+          title="AI Product Configurator"
+          links={[{ to: '/ticaret?tab=cpq', label: 'CPQ' }]}
+        >
+          Ölçü · kapak · malzeme · renk · baskı → AI anlık fiyat (GC-2).
+        </CloudStub>
+      )}
+      {tab === 'cpq' && (
+        <CloudStub
+          title="CPQ — Configure · Price · Quote"
+          links={[
+            { to: '/teklifler', label: 'Teklifler SoT' },
+            { to: '/ticaret?tab=configurator', label: 'Configurator' },
+          ]}
+        >
+          Kurumsal teklif ERP Quotes SoT; Commerce yapılandırma + fiyat çözümler.
+        </CloudStub>
+      )}
+      {tab === 'customer' && (
+        <CloudStub
+          title="Customer Portal"
+          links={[
+            { to: '/musteriler', label: 'Müşteriler' },
+            { to: '/mesajlar', label: 'Mesajlar' },
+            { to: '/belge-merkezi', label: 'Belgeler' },
+          ]}
+        >
+          Sipariş takibi · destek · invoice · teklif · AI asistan — CRM + Document + AIOS.
+        </CloudStub>
+      )}
+      {tab === 'supplier' && (
+        <CloudStub
+          title="Supplier Portal"
+          links={[{ to: '/giderler/tedarikciler', label: 'Tedarikçiler' }]}
+        >
+          Satın alma · teklif · teslim · kalite · performans (GC-2).
+        </CloudStub>
+      )}
+      {tab === 'quotes' && (
+        <CloudStub title="Quotes" links={[{ to: '/teklifler', label: 'Teklifler SoT' }]}>
+          Teklif kaydı çoğaltılmaz — ERP Quotes.
+        </CloudStub>
+      )}
+      {tab === 'giftCards' && (
+        <CloudStub title="Gift Cards">Hediye kartı motoru · kupon altyapısı (GC-2).</CloudStub>
+      )}
+      {tab === 'loyalty' && (
+        <CloudStub title="Loyalty">
+          Puan · Silver / Gold / Platinum / VIP — CRM müşteri skoru (GC-2).
+        </CloudStub>
+      )}
+      {tab === 'aiCommerce' && (
+        <CloudStub
+          title="AI Commerce"
+          links={[
+            { to: '/ticaret?tab=productAi', label: 'Product AI' },
+            { to: '/aios', label: 'AIOS' },
+            { to: '/ai-buyume', label: 'AI Growth' },
+          ]}
+        >
+          Açıklama · SEO · reklam · blog · mail · kampanya — AIOS + Growth.
+        </CloudStub>
+      )}
+      {tab === 'checkout' && (
+        <CloudStub
+          title="Checkout"
+          links={[
+            { to: '/ticaret?tab=payments', label: 'Payments' },
+            { to: '/ticaret?tab=shipping', label: 'Shipping' },
+          ]}
+        >
+          Tek sayfa adres · teslimat · ödeme · onay — B2C shell (GC-2).
+        </CloudStub>
+      )}
+      {tab === 'global' && (
+        <CloudStub
+          title="Global"
+          links={[
+            { to: '/platform?tab=localization', label: 'Localization' },
+            { to: '/ayarlar/vergi-kdv', label: 'Vergi/KDV' },
+          ]}
+        >
+          Çoklu dil · para · vergi · şirket — Platform + Finance.
+        </CloudStub>
+      )}
+      {tab === 'showroom' && (
+        <CloudStub title="Showroom">Dijital vitrin — B2C + Product Experience (GC-3).</CloudStub>
+      )}
+      {tab === 'settings' && (
+        <CloudStub
+          title="Settings"
+          links={[
+            { to: '/entegrasyon', label: 'Integration Hub' },
+            { to: '/platform?tab=integrations', label: 'Platform' },
+            { to: '/ayarlar', label: 'Ayarlar' },
+          ]}
+        >
+          Kanal varsayılanları · para · vergi · sandbox.
+        </CloudStub>
       )}
 
       {tab === 'orders' && (
@@ -772,11 +954,11 @@ export default function CommerceCenterPage() {
           </p>
           <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
             <Building2 className="h-4 w-4 text-amber-300" />
-            <Link to="/musteriler" className="text-amber-300 underline">
+            <Link to="/musteriler" className="text-emerald-700 underline">
               Müşteriler
             </Link>
-            <Link to="/bayi" className="text-amber-300 underline">
-              Bayi
+            <Link to="/ticaret?tab=dealer" className="text-emerald-700 underline">
+              Bayi Portal
             </Link>
           </div>
         </section>
@@ -843,6 +1025,6 @@ export default function CommerceCenterPage() {
           ) : null}
         </section>
       )}
-    </div>
+    </AppPageShell>
   )
 }

@@ -114,7 +114,6 @@ const projectsMenuGate = {
 const baseMenuItems = [
   { icon: Truck, label: 'Kurye Takip', path: '/kurye-takip', moduleCode: 'courier' },
   { icon: ShoppingBag, label: 'Pos', path: '/shopping', moduleCode: 'pos' },
-  { icon: Store, label: 'Bayi Yönetimi', path: '/bayi', moduleCode: 'dealer' },
   { icon: Landmark, label: 'Finans', path: '/finans', moduleCode: 'finance' },
   { icon: Receipt, label: 'E-Fatura', path: '/finans?tab=einvoice', moduleCode: 'einvoice' },
   { icon: BarChart3, label: 'Analytics', path: '/analitik', moduleCode: 'reporting' },
@@ -124,6 +123,7 @@ const baseMenuItems = [
   { icon: Puzzle, label: 'App Builder', path: '/ai-uygulama', moduleCode: 'ai_growth' },
   { icon: Boxes, label: 'Marketplace', path: '/marketplace', moduleCode: 'dashboard_basic' },
   { icon: Cable, label: 'Entegrasyon', path: '/entegrasyon', moduleCode: 'dashboard_basic' },
+  { icon: Store, label: 'Commerce Cloud', path: '/ticaret', moduleCode: 'dashboard_basic' },
   { icon: Settings, label: 'Platform', path: '/platform', moduleCode: 'dashboard_basic' },
 ]
 

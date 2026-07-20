@@ -94,7 +94,9 @@ export async function overview(companyId: string) {
     activePriceRules: rulesCount?.count ?? 0,
     productMaster: 'erp_mdm',
     eventDriven: true,
-    phase: 'GC-0',
+    phase: 'GC-Cloud',
+    cloud: true,
+    singleOrderModel: true,
   }
 }
 

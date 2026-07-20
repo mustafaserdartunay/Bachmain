@@ -48,6 +48,9 @@ export const ROUTE_MODULE_MAP = {
   '/magaza': 'dashboard_basic',
   '/entegrasyon': 'dashboard_basic',
   '/integration-hub': 'dashboard_basic',
+  '/ticaret': 'dashboard_basic',
+  '/commerce': 'dashboard_basic',
+  '/bayi': 'dashboard_basic',
   '/ayarlar/kurumsal-yapi': 'multi_company',
 }
 
