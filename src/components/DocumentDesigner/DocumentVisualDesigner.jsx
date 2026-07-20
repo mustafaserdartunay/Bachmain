@@ -105,7 +105,9 @@ function ToolbarButton({ onClick, disabled, active, title, children }) {
 }
 
 function FieldLabel({ children }) {
-  return <span className="text-[10px] font-black uppercase tracking-wide text-gray-500">{children}</span>
+  return (
+    <span className="text-[10px] font-black uppercase tracking-wide text-gray-500">{children}</span>
+  )
 }
 
 function BlockPreviewContent({ block }) {
@@ -138,14 +140,15 @@ function BlockPreviewContent({ block }) {
         <div className="flex h-full w-full items-center">
           <div
             className="w-full"
-            style={{ borderTop: `${p.strokeWidth || 1}px ${p.style || 'solid'} ${p.stroke || '#111'}` }}
+            style={{
+              borderTop: `${p.strokeWidth || 1}px ${p.style || 'solid'} ${p.stroke || '#111'}`,
+            }}
           />
         </div>
       )
     case 'image':
     case 'logo':
       return p.src ? (
-        // eslint-disable-next-line jsx-a11y/alt-text
         <img src={p.src} alt={p.alt || ''} className="h-full w-full object-contain" />
       ) : (
         <div className="flex h-full w-full items-center justify-center border border-dashed border-gray-300 bg-gray-50 text-[10px] text-gray-400">
@@ -349,7 +352,12 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
 
   function insertVariable(path) {
     const token = variableToken(path)
-    if (selected && ['text', 'title', 'paragraph', 'variable', 'date', 'pageNumber', 'barcode', 'qr'].includes(selected.type)) {
+    if (
+      selected &&
+      ['text', 'title', 'paragraph', 'variable', 'date', 'pageNumber', 'barcode', 'qr'].includes(
+        selected.type,
+      )
+    ) {
       commitBlocks((prev) =>
         prev.map((b) => {
           if (b.id !== selected.id) return b
@@ -389,9 +397,7 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
 
   function updateSelectedMeta(patch) {
     if (!selected) return
-    commitBlocks((prev) =>
-      prev.map((b) => (b.id === selected.id ? { ...b, ...patch } : b)),
-    )
+    commitBlocks((prev) => prev.map((b) => (b.id === selected.id ? { ...b, ...patch } : b)))
   }
 
   function deleteSelected() {
@@ -404,7 +410,8 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
   useEffect(() => {
     function onKeyDown(e) {
       const tag = e.target?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) return
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable)
+        return
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
         e.preventDefault()
         commitBlocks((prev) => prev.filter((b) => b.id !== selectedId))
@@ -488,7 +495,8 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
 
   function onDropElement(e) {
     e.preventDefault()
-    const type = e.dataTransfer.getData('application/x-bach-element') || e.dataTransfer.getData('text/plain')
+    const type =
+      e.dataTransfer.getData('application/x-bach-element') || e.dataTransfer.getData('text/plain')
     if (!type) return
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) {
@@ -515,13 +523,19 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
           <Redo2 className="h-3.5 w-3.5" /> Redo
         </ToolbarButton>
         <div className="mx-1 h-5 w-px bg-dark-500/50" />
-        <ToolbarButton title="Uzaklaştır" onClick={() => setZoom((z) => Math.max(0.4, Math.round((z - 0.1) * 10) / 10))}>
+        <ToolbarButton
+          title="Uzaklaştır"
+          onClick={() => setZoom((z) => Math.max(0.4, Math.round((z - 0.1) * 10) / 10))}
+        >
           <ZoomOut className="h-3.5 w-3.5" />
         </ToolbarButton>
         <span className="min-w-[3rem] text-center text-[11px] font-black text-gray-400">
           {Math.round(zoom * 100)}%
         </span>
-        <ToolbarButton title="Yakınlaştır" onClick={() => setZoom((z) => Math.min(2, Math.round((z + 0.1) * 10) / 10))}>
+        <ToolbarButton
+          title="Yakınlaştır"
+          onClick={() => setZoom((z) => Math.min(2, Math.round((z + 0.1) * 10) / 10))}
+        >
           <ZoomIn className="h-3.5 w-3.5" />
         </ToolbarButton>
         <div className="mx-1 h-5 w-px bg-dark-500/50" />
@@ -628,22 +642,26 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
 
             {leftTab === 'layers' ? (
               <div className="space-y-1">
-                {[...blocks].sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0)).map((block) => (
-                  <button
-                    key={block.id}
-                    type="button"
-                    onClick={() => setSelectedId(block.id)}
-                    className={[
-                      'flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs font-bold transition-colors',
-                      selectedId === block.id
-                        ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
-                        : 'border-dark-500/40 bg-dark-700/40 text-gray-300 hover:bg-dark-700/70',
-                    ].join(' ')}
-                  >
-                    <Layers className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                    <span className="truncate">{block.label || getElementDef(block.type)?.label || block.type}</span>
-                  </button>
-                ))}
+                {[...blocks]
+                  .sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0))
+                  .map((block) => (
+                    <button
+                      key={block.id}
+                      type="button"
+                      onClick={() => setSelectedId(block.id)}
+                      className={[
+                        'flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs font-bold transition-colors',
+                        selectedId === block.id
+                          ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
+                          : 'border-dark-500/40 bg-dark-700/40 text-gray-300 hover:bg-dark-700/70',
+                      ].join(' ')}
+                    >
+                      <Layers className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                      <span className="truncate">
+                        {block.label || getElementDef(block.type)?.label || block.type}
+                      </span>
+                    </button>
+                  ))}
                 {blocks.length === 0 ? (
                   <p className="px-2 py-4 text-center text-[11px] font-semibold text-gray-500">
                     Henüz öğe yok — soldan sürükleyin
@@ -703,7 +721,9 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
                       onPointerDown={(e) => onCanvasDragStart(e, block, 'move')}
                       className={[
                         'absolute cursor-move select-none',
-                        isSelected ? 'ring-2 ring-cyan-500 ring-offset-1' : 'hover:ring-1 hover:ring-cyan-400/50',
+                        isSelected
+                          ? 'ring-2 ring-cyan-500 ring-offset-1'
+                          : 'hover:ring-1 hover:ring-cyan-400/50',
                       ].join(' ')}
                       style={{
                         left: block.x,
@@ -748,22 +768,35 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
                   </p>
                 </div>
 
-                {['text', 'title', 'paragraph', 'variable', 'date', 'pageNumber', 'signature', 'stamp'].includes(selected.type) ? (
+                {[
+                  'text',
+                  'title',
+                  'paragraph',
+                  'variable',
+                  'date',
+                  'pageNumber',
+                  'signature',
+                  'stamp',
+                ].includes(selected.type) ? (
                   <label className="block space-y-1">
                     <FieldLabel>Metin</FieldLabel>
                     <textarea
                       className="form-input min-h-16 text-xs"
                       value={selected.props?.text ?? selected.props?.label ?? ''}
                       onChange={(e) => {
-                        if (selected.type === 'signature') updateSelectedProps({ label: e.target.value })
-                        else if (selected.type === 'stamp') updateSelectedProps({ text: e.target.value })
+                        if (selected.type === 'signature')
+                          updateSelectedProps({ label: e.target.value })
+                        else if (selected.type === 'stamp')
+                          updateSelectedProps({ text: e.target.value })
                         else updateSelectedProps({ text: e.target.value })
                       }}
                     />
                   </label>
                 ) : null}
 
-                {['text', 'title', 'paragraph', 'variable', 'date', 'pageNumber'].includes(selected.type) ? (
+                {['text', 'title', 'paragraph', 'variable', 'date', 'pageNumber'].includes(
+                  selected.type,
+                ) ? (
                   <>
                     <label className="block space-y-1">
                       <FieldLabel>Yazı boyutu</FieldLabel>
@@ -771,7 +804,9 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
                         type="number"
                         className="form-input text-xs"
                         value={selected.props?.fontSize ?? 14}
-                        onChange={(e) => updateSelectedProps({ fontSize: Number(e.target.value) || 14 })}
+                        onChange={(e) =>
+                          updateSelectedProps({ fontSize: Number(e.target.value) || 14 })
+                        }
                       />
                     </label>
                     <label className="block space-y-1">
@@ -819,7 +854,8 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
                       onChange={(e) => {
                         const path = e.target.value
                         const patch = { variablePath: path }
-                        if (['barcode', 'qr'].includes(selected.type)) patch.value = path ? variableToken(path) : selected.props?.value
+                        if (['barcode', 'qr'].includes(selected.type))
+                          patch.value = path ? variableToken(path) : selected.props?.value
                         else if (path) patch.text = variableToken(path)
                         updateSelectedProps(patch)
                       }}
@@ -846,7 +882,10 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
                       className="form-input text-xs"
                       value={(selected.props?.columns || []).map((c) => c.label).join(', ')}
                       onChange={(e) => {
-                        const labels = e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                        const labels = e.target.value
+                          .split(',')
+                          .map((s) => s.trim())
+                          .filter(Boolean)
                         updateSelectedProps({
                           columns: labels.map((label, i) => ({
                             key: `col${i}`,
@@ -895,7 +934,9 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
                       type="number"
                       className="form-input text-xs"
                       value={Math.round(selected.w)}
-                      onChange={(e) => updateSelectedMeta({ w: Math.max(16, Number(e.target.value) || 16) })}
+                      onChange={(e) =>
+                        updateSelectedMeta({ w: Math.max(16, Number(e.target.value) || 16) })
+                      }
                     />
                   </label>
                   <label className="block space-y-1">
@@ -904,7 +945,9 @@ export default function DocumentVisualDesigner({ template, onChange, onSave }) {
                       type="number"
                       className="form-input text-xs"
                       value={Math.round(selected.h)}
-                      onChange={(e) => updateSelectedMeta({ h: Math.max(12, Number(e.target.value) || 12) })}
+                      onChange={(e) =>
+                        updateSelectedMeta({ h: Math.max(12, Number(e.target.value) || 12) })
+                      }
                     />
                   </label>
                 </div>

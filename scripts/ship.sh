@@ -1,10 +1,19 @@
 #!/bin/bash
 # ship.sh — build (gerekirse) + commit edilmemişleri uyarı + push + prod deploy
+# DevOps: Prefer PR → develop/staging → main. Direct main ship remains for transition/hotfix.
+# See docs/62_BRANCHING_STRATEGY.md and docs/63_STAGING_AND_PREVIEW.md
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ORG="team_6Bs45GjLiuQAkKP5eE6fUOsf"
 WEB_ID="prj_1IxdJq7c8Kamffare0gLAskdoD9k"
 ADMIN_ID="prj_58uYNTn8uZNfSaNF53pg5mHkosf9"
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
+if [ "$BRANCH" = "main" ]; then
+  echo "!! Shipping from main (transition mode). Prefer PR merge after CI green."
+elif [ "$BRANCH" = "staging" ] || [ "$BRANCH" = "develop" ]; then
+  echo "==> Branch $BRANCH — consider Preview/Staging deploy before production promote."
+fi
 
 NEED_WEB=0
 NEED_ADMIN=0

@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, staging]
+  pull_request:
+    branches: [main, develop, staging]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (warn-first)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - name: Format check (soft)
+        run: npm run format:check
+        continue-on-error: true
+
+  api-typecheck:
+    name: API typecheck
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+      - run: npm ci --prefix apps/api
+      - run: npm --prefix apps/api run typecheck
+
+  build-crm:
+    name: Build CRM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Soft bundle size note
+        run: |
+          SIZE=$(du -sk dist | cut -f1)
+          echo "CRM dist size: ${SIZE}KB"
+          # Soft budget ~8MB; warn only
+          if [ "$SIZE" -gt 8192 ]; then
+            echo "::warning::CRM dist exceeds soft budget (8MB)"
+          fi
+
+  build-api:
+    name: Build API
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+      - run: npm ci --prefix apps/api
+      - run: npm --prefix apps/api run build
+
+  build-admin:
+    name: Build Admin
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/admin/package-lock.json
+      - run: npm ci --prefix apps/admin
+      - run: npm --prefix apps/admin run build
+
+  audit:
+    name: npm audit (soft)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
+      - run: npm audit --prefix apps/api --omit=dev --audit-level=high
+        continue-on-error: true
+
+  secret-scan:
+    name: Secret scan (soft)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/ci-secret-scan.mjs
+
+  test-placeholder:
+    name: Tests (placeholder)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Unit/integration tests expand in D3; smoke = build jobs above."

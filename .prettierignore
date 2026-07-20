@@ -1,0 +1,13 @@
+dist
+dist-static
+node_modules
+apps/**/dist
+apps/**/node_modules
+.tmp-vercel
+.vercel
+restore-backups
+coverage
+*.min.js
+package-lock.json
+BACHMAIN_DOCUMENT_CENTER
+docs/exports

@@ -35,9 +35,14 @@ Bu numaralı dosyalar henüz yoksa, geçici olarak ilgili mevcut dokümanları k
 | Document center | `BACHMAIN_DOCUMENT_CENTER/*.md` |
 | Architecture | `docs/ENTERPRISE-SAAS-ARCHITECTURE.md` |
 | Production | `docs/PRODUCTION.md` |
+| Security | `docs/51`–`53`, `docs/54` cutover, `docs/55` ops |
+| Database | `docs/56`–`58` |
+| DevOps / CI | `docs/59`–`63`, `.github/workflows/ci.yml` |
 
 ## Yapma
 
 - Dokümanda olmayan yeni katman / state / API şekli icat etme
 - “Geçici” diye spec’i bypass etme
 - Breaking change’i sessizce alma — uyumluluk koru veya açıkça sor
+- Conventional commits tercih et (`feat`/`fix`/`docs`/`ci`/`chore`); geçişte commitlint uyarı seviyesinde
+- Mümkünse `feature/*` → PR → CI; acil durumda `hotfix/*` dokümante et

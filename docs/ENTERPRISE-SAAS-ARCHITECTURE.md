@@ -2,23 +2,25 @@
 
 **Status:** Implementation in progress — `apps/api` scaffold live (auth, billing, leads, support, Socket.IO, CRM customers)  
 **Domains:** `bachmain.com` · `uygulama.bachmain.com` · `yonetim.bachmain.com`  
-**Principle:** One API · One PostgreSQL · Multi-tenant · No duplicated databases  
+**Principle:** One API · One PostgreSQL · Multi-tenant · No duplicated databases
 
 **Security docs:** [51 Gap Report](./51_ENTERPRISE_SECURITY_GAP_REPORT.md) · [52 Roadmap](./52_ENTERPRISE_SECURITY_ROADMAP.md) · [53 Report](./53_ENTERPRISE_SECURITY_REPORT.md) · [54 CRM Cutover](./54_CRM_TENANT_CUTOVER.md) · [55 Ops/DR](./55_OPS_BACKUP_DR.md)
 
 **Database docs:** [56 Current State](./56_DATABASE_CURRENT_STATE.md) · [57 Gap Report](./57_DATABASE_GAP_REPORT.md) · [58 Migration Plan](./58_DATABASE_MIGRATION_PLAN.md)
 
+**DevOps docs:** [59 Gap](./59_ENTERPRISE_DEVOPS_GAP_REPORT.md) · [60 Roadmap](./60_ENTERPRISE_DEVOPS_ROADMAP.md) · [61 Report](./61_ENTERPRISE_DEVOPS_REPORT.md) · [62 Branching](./62_BRANCHING_STRATEGY.md) · [63 Staging/Preview](./63_STAGING_AND_PREVIEW.md)
+
 ---
 
 ## 0. Current → Target
 
-| Today | Target |
-|-------|--------|
-| Admin JSON/`app_state` blob + partial Neon | Normalized Postgres (all modules) |
-| CRM mostly `localStorage` + optional tenant sync | CRM reads/writes platform API only |
-| Landing posts to a few public endpoints | Same API (`/v1/...`) for marketing leads + auth |
-| Payments Stripe/manual in admin process | Stripe + iyzico + webhooks + invoices |
-| No Socket.IO | Socket.IO on API for chat/tickets/presence |
+| Today                                            | Target                                          |
+| ------------------------------------------------ | ----------------------------------------------- |
+| Admin JSON/`app_state` blob + partial Neon       | Normalized Postgres (all modules)               |
+| CRM mostly `localStorage` + optional tenant sync | CRM reads/writes platform API only              |
+| Landing posts to a few public endpoints          | Same API (`/v1/...`) for marketing leads + auth |
+| Payments Stripe/manual in admin process          | Stripe + iyzico + webhooks + invoices           |
+| No Socket.IO                                     | Socket.IO on API for chat/tickets/presence      |
 
 ---
 
@@ -69,6 +71,7 @@ Bach Crm/
 ## 2. Backend architecture
 
 ### Style
+
 - **Clean architecture** per module: `controller → service → repository → DB`
 - **DTO validation** (Zod / class-validator) at HTTP boundary
 - **Repository pattern** (Prisma/Drizzle) — no SQL in controllers
@@ -79,19 +82,21 @@ Bach Crm/
 - **Horizontal scale:** stateless API pods + sticky or Redis adapter for Socket.IO
 
 ### Runtime recommendation
-| Layer | Choice |
-|-------|--------|
-| API | Node.js 22 + Fastify (or NestJS if team prefers DI) |
-| ORM | Drizzle or Prisma |
-| DB | PostgreSQL 16 (Neon / RDS / Cloud SQL) |
-| Cache / queues | Redis |
-| Realtime | Socket.IO + `@socket.io/redis-adapter` |
-| Files | Cloudflare R2 (S3 API) |
-| Email | Resend / SES |
-| Hosting API | Fly.io / Railway / Render / K8s (not Vercel serverless for Socket.IO) |
-| Frontends | Keep on Vercel |
+
+| Layer          | Choice                                                                |
+| -------------- | --------------------------------------------------------------------- |
+| API            | Node.js 22 + Fastify (or NestJS if team prefers DI)                   |
+| ORM            | Drizzle or Prisma                                                     |
+| DB             | PostgreSQL 16 (Neon / RDS / Cloud SQL)                                |
+| Cache / queues | Redis                                                                 |
+| Realtime       | Socket.IO + `@socket.io/redis-adapter`                                |
+| Files          | Cloudflare R2 (S3 API)                                                |
+| Email          | Resend / SES                                                          |
+| Hosting API    | Fly.io / Railway / Render / K8s (not Vercel serverless for Socket.IO) |
+| Frontends      | Keep on Vercel                                                        |
 
 ### Multi-tenancy model
+
 - **Tenant = `companies` row** (`tenant_id` UUID)
 - Every business table has `company_id` (tenant FK)
 - Super-admin (`yonetim`) users have `platform_role` and **no** tenant scope (or `company_id IS NULL`)
@@ -99,11 +104,13 @@ Bach Crm/
 - Row-level enforcement in repository base class (never trust client `companyId`)
 
 ### API versioning
+
 ```
 https://api.bachmain.com/v1/...
 ```
 
 Public (marketing):
+
 - `POST /v1/auth/register`
 - `POST /v1/auth/login`
 - `POST /v1/leads/demo`
@@ -111,22 +118,25 @@ Public (marketing):
 - `POST /v1/billing/webhooks/iyzico`
 
 Tenant-authenticated:
+
 - `/v1/crm/*`, `/v1/inventory/*`, `/v1/support/*`, …
 
 Platform-admin:
+
 - `/v1/admin/*` (staff JWT + `platform:admin` permission)
 
 ---
 
 ## 3. Frontend architecture
 
-| App | Domain | Talks to | Auth |
-|-----|--------|----------|------|
-| Marketing | bachmain.com | Public + auth endpoints | Optional session for “Giriş” |
-| CRM | uygulama.bachmain.com | Full tenant API + Socket.IO | Tenant JWT |
-| Admin | yonetim.bachmain.com | `/v1/admin/*` + Socket.IO support rooms | Staff JWT |
+| App       | Domain                | Talks to                                | Auth                         |
+| --------- | --------------------- | --------------------------------------- | ---------------------------- |
+| Marketing | bachmain.com          | Public + auth endpoints                 | Optional session for “Giriş” |
+| CRM       | uygulama.bachmain.com | Full tenant API + Socket.IO             | Tenant JWT                   |
+| Admin     | yonetim.bachmain.com  | `/v1/admin/*` + Socket.IO support rooms | Staff JWT                    |
 
 Shared:
+
 - `@bachmain/api-client` generated from OpenAPI
 - Token storage: memory + httpOnly refresh cookie (preferred) or secure cookie + short access JWT
 - Cross-subdomain cookies: `Domain=.bachmain.com`, `Secure`, `SameSite=None` only if needed; prefer token handoff for CRM after marketing login (already partially implemented)
@@ -138,6 +148,7 @@ CRM must **stop** persisting business entities only in `localStorage`; local cac
 ## 4. Database ERD (logical)
 
 ### Core identity & tenancy
+
 ```
 users ──< company_memberships >── companies
 users ──< user_roles >── roles ──< role_permissions >── permissions
@@ -147,6 +158,7 @@ companies ──< feature_flag_overrides
 ```
 
 ### Billing
+
 ```
 subscriptions ──< payments
 subscriptions ──< invoices
@@ -154,6 +166,7 @@ payments ── webhook_events (idempotent)
 ```
 
 ### CRM / ERP (all keyed by company_id)
+
 ```
 customers, suppliers
 categories ──< products
@@ -167,6 +180,7 @@ files (url + meta)
 ```
 
 ### Support & realtime
+
 ```
 support_tickets ──< ticket_messages
 live_conversations ──< chat_messages
@@ -176,6 +190,7 @@ audit_logs
 ```
 
 ### Soft delete & audit columns (every table)
+
 ```sql
 id UUID PK
 company_id UUID NULL  -- NULL only for platform-global rows
@@ -184,6 +199,7 @@ created_by, updated_by
 ```
 
 ### Critical indexes
+
 - `(company_id, deleted_at)` on all tenant tables
 - `(company_id, email)` unique on customers
 - `(user_id, created_at DESC)` on activity_logs / notifications
@@ -220,6 +236,7 @@ sequenceDiagram
 ```
 
 ### JWT claims
+
 ```json
 {
   "sub": "user_uuid",
@@ -231,6 +248,7 @@ sequenceDiagram
 ```
 
 ### RBAC
+
 - **Roles** (tenant): `owner`, `admin`, `sales`, `warehouse`, `accountant`, `support`, `viewer`
 - **Permissions:** `resource.action` (`invoice.create`, `ticket.assign`, …)
 - **Staff (platform):** `platform.superadmin`, `platform.support`, `platform.billing`
@@ -241,14 +259,16 @@ sequenceDiagram
 ## 6. Subscription & payment flow
 
 ### Plans
-| Plan | Entitlement examples |
-|------|----------------------|
-| Free | 1 user, limited modules, 7–14d trial |
-| Basic | Core CRM + stock |
-| Pro | Full ERP + AI quotas |
-| Enterprise | SSO, custom limits, SLA |
+
+| Plan       | Entitlement examples                 |
+| ---------- | ------------------------------------ |
+| Free       | 1 user, limited modules, 7–14d trial |
+| Basic      | Core CRM + stock                     |
+| Pro        | Full ERP + AI quotas                 |
+| Enterprise | SSO, custom limits, SLA              |
 
 ### Checkout
+
 ```mermaid
 sequenceDiagram
   participant C as CRM
@@ -315,6 +335,7 @@ sequenceDiagram
 ```
 
 Rooms:
+
 - `user:{userId}`
 - `company:{companyId}`
 - `admin:support`
@@ -361,6 +382,7 @@ Types: `ticket`, `payment`, `plan`, `invoice`, `chat`, `system`
 ```
 
 Env (API):
+
 - `DATABASE_URL`, `REDIS_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 - `IYZICO_API_KEY`, `IYZICO_SECRET_KEY`
@@ -377,7 +399,7 @@ Env (API):
 services:
   api:
     build: ./apps/api
-    ports: ["8080:8080", "8081:8081"]  # http + optional metrics
+    ports: ['8080:8080', '8081:8081'] # http + optional metrics
     environment:
       DATABASE_URL: postgres://bach:bach@db:5432/bachmain
       REDIS_URL: redis://redis:6379
@@ -389,17 +411,17 @@ services:
       POSTGRES_USER: bach
       POSTGRES_PASSWORD: bach
       POSTGRES_DB: bachmain
-    ports: ["5432:5432"]
+    ports: ['5432:5432']
     volumes: [pgdata:/var/lib/postgresql/data]
 
   redis:
     image: redis:7
-    ports: ["6379:6379"]
+    ports: ['6379:6379']
 
-  minio:  # local R2/S3
+  minio: # local R2/S3
     image: minio/minio
     command: server /data --console-address ":9001"
-    ports: ["9000:9000", "9001:9001"]
+    ports: ['9000:9000', '9001:9001']
 
 volumes:
   pgdata:
@@ -437,67 +459,67 @@ Migrations: `pnpm --filter api db:migrate` on deploy before traffic.
 
 ## REST module map (generate OpenAPI from this)
 
-| Module | Prefix | Key endpoints |
-|--------|--------|----------------|
-| Auth | `/v1/auth` | register, login, refresh, logout, forgot-password, reset-password, verify-email, me |
-| Users | `/v1/users` | CRUD (tenant), invite |
-| Companies | `/v1/companies` | me, update, branding |
-| Admin companies | `/v1/admin/companies` | list, suspend, impersonate (audited) |
-| Roles | `/v1/roles` | CRUD + assign |
-| Billing | `/v1/billing` | plans, checkout, portal, invoices, payments |
-| Customers | `/v1/customers` | CRUD + search |
-| Suppliers | `/v1/suppliers` | CRUD |
-| Products | `/v1/products` | CRUD |
-| Categories | `/v1/categories` | CRUD |
-| Warehouses | `/v1/warehouses` | CRUD |
-| Stock | `/v1/stock-movements` | list, create |
-| Purchases | `/v1/purchase-orders` | CRUD + status |
-| Sales | `/v1/sales-orders` | CRUD + status |
-| Quotes | `/v1/quotes` | CRUD + convert |
-| Invoices | `/v1/invoices` | CRUD + PDF |
-| Tasks | `/v1/tasks` | CRUD |
-| Calendar | `/v1/calendar` | events CRUD |
-| Files | `/v1/files` | presign upload, confirm |
-| Notifications | `/v1/notifications` | list, read, read-all |
-| Activity | `/v1/activity-logs` | list (admin/tenant) |
-| Tickets | `/v1/support/tickets` | CRUD, messages, assign |
-| Chat | `/v1/support/chat` | conversations, messages |
-| Settings | `/v1/settings` | get/set |
-| Feature flags | `/v1/admin/feature-flags` | CRUD |
-| Health | `/v1/health` | live, ready, deps |
+| Module          | Prefix                    | Key endpoints                                                                       |
+| --------------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| Auth            | `/v1/auth`                | register, login, refresh, logout, forgot-password, reset-password, verify-email, me |
+| Users           | `/v1/users`               | CRUD (tenant), invite                                                               |
+| Companies       | `/v1/companies`           | me, update, branding                                                                |
+| Admin companies | `/v1/admin/companies`     | list, suspend, impersonate (audited)                                                |
+| Roles           | `/v1/roles`               | CRUD + assign                                                                       |
+| Billing         | `/v1/billing`             | plans, checkout, portal, invoices, payments                                         |
+| Customers       | `/v1/customers`           | CRUD + search                                                                       |
+| Suppliers       | `/v1/suppliers`           | CRUD                                                                                |
+| Products        | `/v1/products`            | CRUD                                                                                |
+| Categories      | `/v1/categories`          | CRUD                                                                                |
+| Warehouses      | `/v1/warehouses`          | CRUD                                                                                |
+| Stock           | `/v1/stock-movements`     | list, create                                                                        |
+| Purchases       | `/v1/purchase-orders`     | CRUD + status                                                                       |
+| Sales           | `/v1/sales-orders`        | CRUD + status                                                                       |
+| Quotes          | `/v1/quotes`              | CRUD + convert                                                                      |
+| Invoices        | `/v1/invoices`            | CRUD + PDF                                                                          |
+| Tasks           | `/v1/tasks`               | CRUD                                                                                |
+| Calendar        | `/v1/calendar`            | events CRUD                                                                         |
+| Files           | `/v1/files`               | presign upload, confirm                                                             |
+| Notifications   | `/v1/notifications`       | list, read, read-all                                                                |
+| Activity        | `/v1/activity-logs`       | list (admin/tenant)                                                                 |
+| Tickets         | `/v1/support/tickets`     | CRUD, messages, assign                                                              |
+| Chat            | `/v1/support/chat`        | conversations, messages                                                             |
+| Settings        | `/v1/settings`            | get/set                                                                             |
+| Feature flags   | `/v1/admin/feature-flags` | CRUD                                                                                |
+| Health          | `/v1/health`              | live, ready, deps                                                                   |
 
 ---
 
 ## Admin panel feature → API mapping
 
-| UI | API |
-|----|-----|
-| Dashboard | `/v1/admin/metrics` |
-| Users | `/v1/admin/users` |
-| Companies | `/v1/admin/companies` |
-| Subscriptions | `/v1/admin/subscriptions` |
-| Payments | `/v1/admin/payments` |
-| CRM monitoring | `/v1/admin/crm/overview` |
-| Live sessions | Socket presence + `/v1/admin/sessions` |
-| Support / tickets / chat | `/v1/admin/support/*` + sockets |
-| Analytics | `/v1/admin/analytics/*` |
-| Logs | `/v1/admin/activity-logs`, `/v1/admin/audit-logs` |
-| System health | `/v1/health` + infra metrics |
-| Backups | runbook + provider API status |
-| Feature flags | `/v1/admin/feature-flags` |
-| Settings | `/v1/admin/settings` |
+| UI                       | API                                               |
+| ------------------------ | ------------------------------------------------- |
+| Dashboard                | `/v1/admin/metrics`                               |
+| Users                    | `/v1/admin/users`                                 |
+| Companies                | `/v1/admin/companies`                             |
+| Subscriptions            | `/v1/admin/subscriptions`                         |
+| Payments                 | `/v1/admin/payments`                              |
+| CRM monitoring           | `/v1/admin/crm/overview`                          |
+| Live sessions            | Socket presence + `/v1/admin/sessions`            |
+| Support / tickets / chat | `/v1/admin/support/*` + sockets                   |
+| Analytics                | `/v1/admin/analytics/*`                           |
+| Logs                     | `/v1/admin/activity-logs`, `/v1/admin/audit-logs` |
+| System health            | `/v1/health` + infra metrics                      |
+| Backups                  | runbook + provider API status                     |
+| Feature flags            | `/v1/admin/feature-flags`                         |
+| Settings                 | `/v1/admin/settings`                              |
 
 ---
 
 ## Migration plan (from current BachMain)
 
-1. **Stand up `apps/api`** with identity + tenancy + billing only  
-2. **Migrate Neon `app_state` JSON** → normalized `users/companies/subscriptions`  
-3. Point landing auth/demo to `/v1`  
-4. Move CRM entities module-by-module off localStorage  
-5. Add Socket.IO support chat/tickets  
-6. Add iyzico alongside Stripe  
-7. Shrink admin server to pure SPA; delete duplicate API in `apps/admin/server`  
+1. **Stand up `apps/api`** with identity + tenancy + billing only
+2. **Migrate Neon `app_state` JSON** → normalized `users/companies/subscriptions`
+3. Point landing auth/demo to `/v1`
+4. Move CRM entities module-by-module off localStorage
+5. Add Socket.IO support chat/tickets
+6. Add iyzico alongside Stripe
+7. Shrink admin server to pure SPA; delete duplicate API in `apps/admin/server`
 
 ---
 

@@ -44,9 +44,21 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react'
-import { ELEMENT_LIBRARY, TABLE_COLUMN_CATALOG, getElementDef } from '../../data/docDesignerElements'
-import { DOC_VARIABLE_GROUPS, buildSamplePreviewContext, variableToken } from '../../data/docVariableCatalog'
-import { DOC_READY_TEMPLATES, DOC_TYPE_FILTERS, materializeReadyTemplate } from '../../data/docReadyTemplates'
+import {
+  ELEMENT_LIBRARY,
+  TABLE_COLUMN_CATALOG,
+  getElementDef,
+} from '../../data/docDesignerElements'
+import {
+  DOC_VARIABLE_GROUPS,
+  buildSamplePreviewContext,
+  variableToken,
+} from '../../data/docVariableCatalog'
+import {
+  DOC_READY_TEMPLATES,
+  DOC_TYPE_FILTERS,
+  materializeReadyTemplate,
+} from '../../data/docReadyTemplates'
 import {
   PAGE_PRESET_LIST,
   blocksToHtml,
@@ -56,7 +68,12 @@ import {
 } from '../../utils/docCanvasEngine'
 import { resolveTemplateString } from '../../utils/docVariableEngine'
 import { downloadPdfFromHtml, openPrintWindow } from '../../utils/docPrint'
-import { listFavoriteTemplateIds, listRecentTemplates, pushRecentTemplate, toggleFavoriteTemplate } from '../../utils/docDesignerPrefs'
+import {
+  listFavoriteTemplateIds,
+  listRecentTemplates,
+  pushRecentTemplate,
+  toggleFavoriteTemplate,
+} from '../../utils/docDesignerPrefs'
 import { DOCUMENT_CENTER_BASE } from '../../data/documentCenterMenu'
 import { BTN_PRIMARY, BTN_SUCCESS } from '../../utils/buttonStyles'
 
@@ -64,8 +81,28 @@ const HISTORY_MAX = 80
 const SNAP_GRID = 8
 
 const ICON_MAP = {
-  Type, Heading, AlignLeft: Type, Braces, Calendar, Hash, Image, BadgeCheck, PenLine, Stamp,
-  Square, Circle, Minus, SeparatorHorizontal, Table, Building2, User, Calculator, Barcode, QrCode, Users, Receipt,
+  Type,
+  Heading,
+  AlignLeft: Type,
+  Braces,
+  Calendar,
+  Hash,
+  Image,
+  BadgeCheck,
+  PenLine,
+  Stamp,
+  Square,
+  Circle,
+  Minus,
+  SeparatorHorizontal,
+  Table,
+  Building2,
+  User,
+  Calculator,
+  Barcode,
+  QrCode,
+  Users,
+  Receipt,
 }
 
 function cloneBlocks(blocks) {
@@ -89,26 +126,45 @@ function BlockPreviewContent({ block }) {
       return <div className="h-full w-full border border-dashed border-slate-200 bg-transparent" />
     case 'rect':
       return (
-        <div className="h-full w-full" style={{ background: p.fill || '#e5e7eb', border: `${p.strokeWidth || 1}px solid ${p.stroke || '#9ca3af'}`, borderRadius: p.borderRadius || 0 }} />
+        <div
+          className="h-full w-full"
+          style={{
+            background: p.fill || '#e5e7eb',
+            border: `${p.strokeWidth || 1}px solid ${p.stroke || '#9ca3af'}`,
+            borderRadius: p.borderRadius || 0,
+          }}
+        />
       )
     case 'circle':
       return (
-        <div className="h-full w-full rounded-full" style={{ background: p.fill || '#e5e7eb', border: `${p.strokeWidth || 1}px solid ${p.stroke || '#9ca3af'}` }} />
+        <div
+          className="h-full w-full rounded-full"
+          style={{
+            background: p.fill || '#e5e7eb',
+            border: `${p.strokeWidth || 1}px solid ${p.stroke || '#9ca3af'}`,
+          }}
+        />
       )
     case 'line':
     case 'divider':
       return (
         <div className="flex h-full w-full items-center">
-          <div className="w-full" style={{ borderTop: `${p.strokeWidth || 1}px ${p.style || 'solid'} ${p.stroke || '#111'}` }} />
+          <div
+            className="w-full"
+            style={{
+              borderTop: `${p.strokeWidth || 1}px ${p.style || 'solid'} ${p.stroke || '#111'}`,
+            }}
+          />
         </div>
       )
     case 'image':
     case 'logo':
       return p.src ? (
-        // eslint-disable-next-line jsx-a11y/alt-text
         <img src={p.src} alt={p.alt || ''} className="h-full w-full object-contain" />
       ) : (
-        <div className="flex h-full w-full items-center justify-center border border-dashed border-slate-300 bg-slate-50 text-[10px] text-slate-400">{p.alt || block.label}</div>
+        <div className="flex h-full w-full items-center justify-center border border-dashed border-slate-300 bg-slate-50 text-[10px] text-slate-400">
+          {p.alt || block.label}
+        </div>
       )
     case 'barcode':
       return (
@@ -120,7 +176,12 @@ function BlockPreviewContent({ block }) {
     case 'qr':
       return (
         <div className="flex h-full w-full items-center justify-center border border-slate-300 bg-white">
-          <div className="h-3/4 w-3/4 border-2 border-slate-900" style={{ background: 'repeating-conic-gradient(#111 0% 25%, #fff 0% 50%) 50% / 8px 8px' }} />
+          <div
+            className="h-3/4 w-3/4 border-2 border-slate-900"
+            style={{
+              background: 'repeating-conic-gradient(#111 0% 25%, #fff 0% 50%) 50% / 8px 8px',
+            }}
+          />
         </div>
       )
     case 'table': {
@@ -130,7 +191,9 @@ function BlockPreviewContent({ block }) {
           <thead>
             <tr style={{ background: p.headerBg || '#f3f4f6' }}>
               {cols.map((col) => (
-                <th key={col.key} className="border border-slate-200 px-1 py-0.5 text-left">{col.label}</th>
+                <th key={col.key} className="border border-slate-200 px-1 py-0.5 text-left">
+                  {col.label}
+                </th>
               ))}
             </tr>
           </thead>
@@ -146,7 +209,9 @@ function BlockPreviewContent({ block }) {
       )
     case 'stamp':
       return (
-        <div className="flex h-full w-full -rotate-12 items-center justify-center rounded-full border-2 border-slate-400 text-[10px] font-bold text-slate-400">{p.text || 'KAŞE'}</div>
+        <div className="flex h-full w-full -rotate-12 items-center justify-center rounded-full border-2 border-slate-400 text-[10px] font-bold text-slate-400">
+          {p.text || 'KAŞE'}
+        </div>
       )
     case 'companyBlock':
       return (
@@ -203,7 +268,10 @@ export default function BachDocumentDesigner({
   autosaveHint = '',
 }) {
   const migrated = useMemo(() => migrateTemplateToVisual(template || {}), [template?.id])
-  const page = getPagePreset(template?.pageSize || migrated.pageSize || 'A4', template?.orientation || 'portrait')
+  const page = getPagePreset(
+    template?.pageSize || migrated.pageSize || 'A4',
+    template?.orientation || 'portrait',
+  )
 
   const [blocks, setBlocks] = useState(() => cloneBlocks(migrated.blocks))
   const [selectedIds, setSelectedIds] = useState([])
@@ -228,7 +296,10 @@ export default function BachDocumentDesigner({
   onChangeRef.current = onChange
 
   const selectedId = selectedIds[0] || null
-  const selected = useMemo(() => blocks.find((b) => b.id === selectedId) || null, [blocks, selectedId])
+  const selected = useMemo(
+    () => blocks.find((b) => b.id === selectedId) || null,
+    [blocks, selectedId],
+  )
   const margins = template?.margins || { top: 15, right: 15, bottom: 15, left: 15 }
 
   useEffect(() => {
@@ -256,13 +327,16 @@ export default function BachDocumentDesigner({
     setHistoryTick((t) => t + 1)
   }, [])
 
-  const commitBlocks = useCallback((updater, { recordHistory = true } = {}) => {
-    setBlocks((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
-      if (recordHistory) pushHistory(prev)
-      return next
-    })
-  }, [pushHistory])
+  const commitBlocks = useCallback(
+    (updater, { recordHistory = true } = {}) => {
+      setBlocks((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater
+        if (recordHistory) pushHistory(prev)
+        return next
+      })
+    },
+    [pushHistory],
+  )
 
   function handleUndo() {
     const hist = historyRef.current
@@ -286,7 +360,10 @@ export default function BachDocumentDesigner({
 
   function addBlock(type, at = null, label) {
     const maxZ = blocks.reduce((m, b) => Math.max(m, b.zIndex || 0), 0)
-    const drop = at || { x: snapValue(48 + (blocks.length % 5) * 12, snap), y: snapValue(48 + (blocks.length % 7) * 16, snap) }
+    const drop = at || {
+      x: snapValue(48 + (blocks.length % 5) * 12, snap),
+      y: snapValue(48 + (blocks.length % 7) * 16, snap),
+    }
     const block = createBlock(type, { ...drop, zIndex: maxZ + 1, label })
     commitBlocks((prev) => [...prev, block])
     setSelectedIds([block.id])
@@ -307,7 +384,9 @@ export default function BachDocumentDesigner({
 
   function updateSelectedProps(patch) {
     if (!selected) return
-    commitBlocks((prev) => prev.map((b) => (b.id === selected.id ? { ...b, props: { ...b.props, ...patch } } : b)))
+    commitBlocks((prev) =>
+      prev.map((b) => (b.id === selected.id ? { ...b, props: { ...b.props, ...patch } } : b)),
+    )
   }
 
   function updateSelectedMeta(patch) {
@@ -363,7 +442,9 @@ export default function BachDocumentDesigner({
   function groupSelected() {
     if (selectedIds.length < 2) return
     const gid = `grp-${Date.now()}`
-    commitBlocks((prev) => prev.map((b) => (selectedIds.includes(b.id) ? { ...b, groupId: gid } : b)))
+    commitBlocks((prev) =>
+      prev.map((b) => (selectedIds.includes(b.id) ? { ...b, groupId: gid } : b)),
+    )
   }
 
   function ungroupSelected() {
@@ -376,7 +457,9 @@ export default function BachDocumentDesigner({
     if (block.locked) return
     e.preventDefault()
     e.stopPropagation()
-    setSelectedIds((ids) => (e.shiftKey ? (ids.includes(block.id) ? ids : [...ids, block.id]) : [block.id]))
+    setSelectedIds((ids) =>
+      e.shiftKey ? (ids.includes(block.id) ? ids : [...ids, block.id]) : [block.id],
+    )
     setRightTab('props')
     dragRef.current = {
       id: block.id,
@@ -420,15 +503,25 @@ export default function BachDocumentDesigner({
           }
           for (const other of prev) {
             if (other.id === drag.id) continue
-            if (Math.abs(nextX - other.x) < 5) { nextX = other.x; gx = other.x }
-            if (Math.abs(nextY - other.y) < 5) { nextY = other.y; gy = other.y }
+            if (Math.abs(nextX - other.x) < 5) {
+              nextX = other.x
+              gx = other.x
+            }
+            if (Math.abs(nextY - other.y) < 5) {
+              nextY = other.y
+              gy = other.y
+            }
           }
         }
         setGuides({ x: gx, y: gy })
         return prev.map((b) => {
           if (b.id !== drag.id) return b
           if (drag.mode === 'move') return { ...b, x: nextX, y: nextY }
-          return { ...b, w: Math.max(20, snapValue(drag.origW + dx, snap)), h: Math.max(16, snapValue(drag.origH + dy, snap)) }
+          return {
+            ...b,
+            w: Math.max(20, snapValue(drag.origW + dx, snap)),
+            h: Math.max(16, snapValue(drag.origH + dy, snap)),
+          }
         })
       })
     }
@@ -446,7 +539,8 @@ export default function BachDocumentDesigner({
 
   function onDropElement(e) {
     e.preventDefault()
-    const type = e.dataTransfer.getData('application/x-bach-element') || e.dataTransfer.getData('text/plain')
+    const type =
+      e.dataTransfer.getData('application/x-bach-element') || e.dataTransfer.getData('text/plain')
     if (!type) return
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) {
@@ -461,15 +555,25 @@ export default function BachDocumentDesigner({
   useEffect(() => {
     function onKeyDown(e) {
       const tag = e.target?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) return
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable)
+        return
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.length) {
         e.preventDefault()
         commitBlocks((prev) => prev.filter((b) => !selectedIds.includes(b.id)))
         setSelectedIds([])
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); handleUndo() }
-      if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); handleRedo() }
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); onSave?.() }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        handleUndo()
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault()
+        handleRedo()
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        onSave?.()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -479,23 +583,37 @@ export default function BachDocumentDesigner({
   const canRedo = historyTick >= 0 && historyRef.current.future.length > 0
 
   const previewHtml = useMemo(() => {
-    const raw = blocksToHtml(blocks, { pageSize: template?.pageSize || page.id, orientation: template?.orientation || 'portrait', unit: 'px' })
+    const raw = blocksToHtml(blocks, {
+      pageSize: template?.pageSize || page.id,
+      orientation: template?.orientation || 'portrait',
+      unit: 'px',
+    })
     const ctx = buildSamplePreviewContext()
     return resolveTemplateString(raw, ctx)
   }, [blocks, page.id, template?.pageSize, template?.orientation])
 
   async function handleTestPrint() {
-    openPrintWindow(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Test</title></head><body>${previewHtml}</body></html>`)
+    openPrintWindow(
+      `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Test</title></head><body>${previewHtml}</body></html>`,
+    )
   }
 
   async function handlePdf() {
-    await downloadPdfFromHtml(`<!DOCTYPE html><html><body>${previewHtml}</body></html>`, `${template?.name || 'belge'}.pdf`)
+    await downloadPdfFromHtml(
+      `<!DOCTYPE html><html><body>${previewHtml}</body></html>`,
+      `${template?.name || 'belge'}.pdf`,
+    )
   }
 
-  const readyList = DOC_READY_TEMPLATES.filter((t) => leftFilter === 'all' || t.docType === leftFilter)
+  const readyList = DOC_READY_TEMPLATES.filter(
+    (t) => leftFilter === 'all' || t.docType === leftFilter,
+  )
   const filteredLibrary = ELEMENT_LIBRARY.map((g) => ({
     ...g,
-    items: g.items.filter((i) => !compFilter || i.label.toLocaleLowerCase('tr').includes(compFilter.toLocaleLowerCase('tr'))),
+    items: g.items.filter(
+      (i) =>
+        !compFilter || i.label.toLocaleLowerCase('tr').includes(compFilter.toLocaleLowerCase('tr')),
+    ),
   })).filter((g) => g.items.length)
 
   const ui = (
@@ -517,10 +635,22 @@ export default function BachDocumentDesigner({
           placeholder="Şablon adı"
         />
         <div className="bach-doc-top-actions">
-          <button type="button" className="btn-cancel" onClick={onClose}>Vazgeç</button>
-          <button type="button" className="bach-doc-btn ghost" onClick={() => setPreviewOpen(true)}><Eye className="h-3.5 w-3.5" /> Önizle</button>
-          <button type="button" className="bach-doc-btn ghost" onClick={handleTestPrint}><Printer className="h-3.5 w-3.5" /> Test Yazdır</button>
-          <button type="button" className={`${BTN_SUCCESS} !rounded-xl !px-4 !py-2 text-xs`} onClick={() => onSave?.()}><Save className="h-3.5 w-3.5" /> Kaydet</button>
+          <button type="button" className="btn-cancel" onClick={onClose}>
+            Vazgeç
+          </button>
+          <button type="button" className="bach-doc-btn ghost" onClick={() => setPreviewOpen(true)}>
+            <Eye className="h-3.5 w-3.5" /> Önizle
+          </button>
+          <button type="button" className="bach-doc-btn ghost" onClick={handleTestPrint}>
+            <Printer className="h-3.5 w-3.5" /> Test Yazdır
+          </button>
+          <button
+            type="button"
+            className={`${BTN_SUCCESS} !rounded-xl !px-4 !py-2 text-xs`}
+            onClick={() => onSave?.()}
+          >
+            <Save className="h-3.5 w-3.5" /> Kaydet
+          </button>
         </div>
       </header>
 
@@ -532,48 +662,168 @@ export default function BachDocumentDesigner({
             onChange={(e) => onChange?.({ pageSize: e.target.value })}
           >
             {PAGE_PRESET_LIST.map((p) => (
-              <option key={p.id} value={p.id}>{p.label}</option>
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
             ))}
           </select>
         </label>
         <div className="bach-doc-orient">
-          <button type="button" className={(template?.orientation || 'portrait') === 'portrait' ? 'is-active' : ''} onClick={() => onChange?.({ orientation: 'portrait' })}>Dikey</button>
-          <button type="button" className={template?.orientation === 'landscape' ? 'is-active' : ''} onClick={() => onChange?.({ orientation: 'landscape' })}>Yatay</button>
+          <button
+            type="button"
+            className={(template?.orientation || 'portrait') === 'portrait' ? 'is-active' : ''}
+            onClick={() => onChange?.({ orientation: 'portrait' })}
+          >
+            Dikey
+          </button>
+          <button
+            type="button"
+            className={template?.orientation === 'landscape' ? 'is-active' : ''}
+            onClick={() => onChange?.({ orientation: 'landscape' })}
+          >
+            Yatay
+          </button>
         </div>
         <label className="bach-doc-field compact">
           <span>Üst</span>
-          <input type="number" value={margins.top} onChange={(e) => onChange?.({ margins: { ...margins, top: Number(e.target.value) || 0 } })} />
+          <input
+            type="number"
+            value={margins.top}
+            onChange={(e) =>
+              onChange?.({ margins: { ...margins, top: Number(e.target.value) || 0 } })
+            }
+          />
         </label>
         <label className="bach-doc-field compact">
           <span>Alt</span>
-          <input type="number" value={margins.bottom} onChange={(e) => onChange?.({ margins: { ...margins, bottom: Number(e.target.value) || 0 } })} />
+          <input
+            type="number"
+            value={margins.bottom}
+            onChange={(e) =>
+              onChange?.({ margins: { ...margins, bottom: Number(e.target.value) || 0 } })
+            }
+          />
         </label>
         <label className="bach-doc-field compact">
           <span>Sol</span>
-          <input type="number" value={margins.left} onChange={(e) => onChange?.({ margins: { ...margins, left: Number(e.target.value) || 0 } })} />
+          <input
+            type="number"
+            value={margins.left}
+            onChange={(e) =>
+              onChange?.({ margins: { ...margins, left: Number(e.target.value) || 0 } })
+            }
+          />
         </label>
         <label className="bach-doc-field compact">
           <span>Sağ</span>
-          <input type="number" value={margins.right} onChange={(e) => onChange?.({ margins: { ...margins, right: Number(e.target.value) || 0 } })} />
+          <input
+            type="number"
+            value={margins.right}
+            onChange={(e) =>
+              onChange?.({ margins: { ...margins, right: Number(e.target.value) || 0 } })
+            }
+          />
         </label>
-        <button type="button" className={`bach-doc-tool ${showGrid ? 'is-active' : ''}`} onClick={() => setShowGrid((v) => !v)} title="Izgara">Izgara</button>
-        <button type="button" className={`bach-doc-tool ${snap ? 'is-active' : ''}`} onClick={() => setSnap((v) => !v)} title="Snap"><Magnet className="h-3.5 w-3.5" /></button>
-        <button type="button" className={`bach-doc-tool ${showRulers ? 'is-active' : ''}`} onClick={() => setShowRulers((v) => !v)}>Cetvel</button>
+        <button
+          type="button"
+          className={`bach-doc-tool ${showGrid ? 'is-active' : ''}`}
+          onClick={() => setShowGrid((v) => !v)}
+          title="Izgara"
+        >
+          Izgara
+        </button>
+        <button
+          type="button"
+          className={`bach-doc-tool ${snap ? 'is-active' : ''}`}
+          onClick={() => setSnap((v) => !v)}
+          title="Snap"
+        >
+          <Magnet className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          className={`bach-doc-tool ${showRulers ? 'is-active' : ''}`}
+          onClick={() => setShowRulers((v) => !v)}
+        >
+          Cetvel
+        </button>
         <div className="bach-doc-sep" />
-        <button type="button" className="bach-doc-tool" disabled={!canUndo} onClick={handleUndo}><Undo2 className="h-3.5 w-3.5" /></button>
-        <button type="button" className="bach-doc-tool" disabled={!canRedo} onClick={handleRedo}><Redo2 className="h-3.5 w-3.5" /></button>
-        <button type="button" className="bach-doc-tool" onClick={() => setZoom((z) => Math.max(0.35, Math.round((z - 0.1) * 10) / 10))}><ZoomOut className="h-3.5 w-3.5" /></button>
+        <button type="button" className="bach-doc-tool" disabled={!canUndo} onClick={handleUndo}>
+          <Undo2 className="h-3.5 w-3.5" />
+        </button>
+        <button type="button" className="bach-doc-tool" disabled={!canRedo} onClick={handleRedo}>
+          <Redo2 className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          className="bach-doc-tool"
+          onClick={() => setZoom((z) => Math.max(0.35, Math.round((z - 0.1) * 10) / 10))}
+        >
+          <ZoomOut className="h-3.5 w-3.5" />
+        </button>
         <span className="bach-doc-zoom">{Math.round(zoom * 100)}%</span>
-        <button type="button" className="bach-doc-tool" onClick={() => setZoom((z) => Math.min(2, Math.round((z + 0.1) * 10) / 10))}><ZoomIn className="h-3.5 w-3.5" /></button>
+        <button
+          type="button"
+          className="bach-doc-tool"
+          onClick={() => setZoom((z) => Math.min(2, Math.round((z + 0.1) * 10) / 10))}
+        >
+          <ZoomIn className="h-3.5 w-3.5" />
+        </button>
         <div className="bach-doc-sep" />
-        <button type="button" className="bach-doc-tool" title="Sola" onClick={() => alignSelection('left')}><AlignStartVertical className="h-3.5 w-3.5" /></button>
-        <button type="button" className="bach-doc-tool" title="Ortala" onClick={() => alignSelection('centerX')}><AlignCenterVertical className="h-3.5 w-3.5" /></button>
-        <button type="button" className="bach-doc-tool" title="Sağa" onClick={() => alignSelection('right')}><AlignEndVertical className="h-3.5 w-3.5" /></button>
-        <button type="button" className="bach-doc-tool" title="Üste" onClick={() => alignSelection('top')}><AlignStartHorizontal className="h-3.5 w-3.5" /></button>
-        <button type="button" className="bach-doc-tool" title="Alta" onClick={() => alignSelection('bottom')}><AlignEndHorizontal className="h-3.5 w-3.5" /></button>
-        <button type="button" className="bach-doc-tool" title="Eşit dağıt" onClick={() => alignSelection('distributeX')}><AlignCenterHorizontal className="h-3.5 w-3.5" /></button>
-        <button type="button" className="bach-doc-tool" onClick={groupSelected}>Grupla</button>
-        <button type="button" className="bach-doc-tool" onClick={ungroupSelected}>Çöz</button>
+        <button
+          type="button"
+          className="bach-doc-tool"
+          title="Sola"
+          onClick={() => alignSelection('left')}
+        >
+          <AlignStartVertical className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          className="bach-doc-tool"
+          title="Ortala"
+          onClick={() => alignSelection('centerX')}
+        >
+          <AlignCenterVertical className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          className="bach-doc-tool"
+          title="Sağa"
+          onClick={() => alignSelection('right')}
+        >
+          <AlignEndVertical className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          className="bach-doc-tool"
+          title="Üste"
+          onClick={() => alignSelection('top')}
+        >
+          <AlignStartHorizontal className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          className="bach-doc-tool"
+          title="Alta"
+          onClick={() => alignSelection('bottom')}
+        >
+          <AlignEndHorizontal className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          className="bach-doc-tool"
+          title="Eşit dağıt"
+          onClick={() => alignSelection('distributeX')}
+        >
+          <AlignCenterHorizontal className="h-3.5 w-3.5" />
+        </button>
+        <button type="button" className="bach-doc-tool" onClick={groupSelected}>
+          Grupla
+        </button>
+        <button type="button" className="bach-doc-tool" onClick={ungroupSelected}>
+          Çöz
+        </button>
       </div>
 
       <div className="bach-doc-designer-body">
@@ -581,7 +831,14 @@ export default function BachDocumentDesigner({
           <h3>Şablonlar</h3>
           <div className="bach-doc-chip-row">
             {DOC_TYPE_FILTERS.map((f) => (
-              <button key={f.id} type="button" className={leftFilter === f.id ? 'is-active' : ''} onClick={() => setLeftFilter(f.id)}>{f.label}</button>
+              <button
+                key={f.id}
+                type="button"
+                className={leftFilter === f.id ? 'is-active' : ''}
+                onClick={() => setLeftFilter(f.id)}
+              >
+                {f.label}
+              </button>
             ))}
           </div>
           <p className="bach-doc-section-label">Hazır Şablonlar</p>
@@ -603,7 +860,9 @@ export default function BachDocumentDesigner({
                   }}
                   aria-label="Favori"
                 >
-                  <Star className={`h-3.5 w-3.5 ${favorites.includes(t.id) ? 'fill-amber-400 text-amber-400' : ''}`} />
+                  <Star
+                    className={`h-3.5 w-3.5 ${favorites.includes(t.id) ? 'fill-amber-400 text-amber-400' : ''}`}
+                  />
                 </button>
               </button>
             ))}
@@ -611,7 +870,14 @@ export default function BachDocumentDesigner({
           <p className="bach-doc-section-label">Favoriler</p>
           <div className="bach-doc-ready-list">
             {DOC_READY_TEMPLATES.filter((t) => favorites.includes(t.id)).map((t) => (
-              <button key={`fav-${t.id}`} type="button" className="bach-doc-ready-item" onClick={() => applyReady(t)}>{t.name}</button>
+              <button
+                key={`fav-${t.id}`}
+                type="button"
+                className="bach-doc-ready-item"
+                onClick={() => applyReady(t)}
+              >
+                {t.name}
+              </button>
             ))}
             {!favorites.length ? <p className="bach-doc-empty">Favori yok</p> : null}
           </div>
@@ -620,7 +886,16 @@ export default function BachDocumentDesigner({
             {recents.map((r) => {
               const t = DOC_READY_TEMPLATES.find((x) => x.id === r.id)
               if (!t) return null
-              return <button key={`r-${r.id}`} type="button" className="bach-doc-ready-item" onClick={() => applyReady(t)}>{r.name}</button>
+              return (
+                <button
+                  key={`r-${r.id}`}
+                  type="button"
+                  className="bach-doc-ready-item"
+                  onClick={() => applyReady(t)}
+                >
+                  {r.name}
+                </button>
+              )
             })}
             {!recents.length ? <p className="bach-doc-empty">Henüz yok</p> : null}
           </div>
@@ -631,7 +906,13 @@ export default function BachDocumentDesigner({
             {showRulers ? <div className="bach-doc-ruler-h" /> : null}
             {showRulers ? <div className="bach-doc-ruler-v" /> : null}
             <div className="bach-doc-canvas-scroll">
-              <div style={{ width: page.widthPx * zoom + 48, height: page.heightPx * zoom + 48, padding: 24 }}>
+              <div
+                style={{
+                  width: page.widthPx * zoom + 48,
+                  height: page.heightPx * zoom + 48,
+                  padding: 24,
+                }}
+              >
                 <div style={{ width: page.widthPx * zoom, height: page.heightPx * zoom }}>
                   <div
                     ref={canvasRef}
@@ -657,8 +938,12 @@ export default function BachDocumentDesigner({
                         inset: `${(margins.top / page.heightMm) * page.heightPx}px ${(margins.right / page.widthMm) * page.widthPx}px ${(margins.bottom / page.heightMm) * page.heightPx}px ${(margins.left / page.widthMm) * page.widthPx}px`,
                       }}
                     />
-                    {guides.x != null ? <div className="bach-doc-smart-guide-v" style={{ left: guides.x }} /> : null}
-                    {guides.y != null ? <div className="bach-doc-smart-guide-h" style={{ top: guides.y }} /> : null}
+                    {guides.x != null ? (
+                      <div className="bach-doc-smart-guide-v" style={{ left: guides.x }} />
+                    ) : null}
+                    {guides.y != null ? (
+                      <div className="bach-doc-smart-guide-h" style={{ top: guides.y }} />
+                    ) : null}
                     {blocks.map((block) => {
                       if (block.visible === false) return null
                       const isSelected = selectedIds.includes(block.id)
@@ -669,7 +954,13 @@ export default function BachDocumentDesigner({
                           tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation()
-                            setSelectedIds((ids) => (e.shiftKey ? (ids.includes(block.id) ? ids : [...ids, block.id]) : [block.id]))
+                            setSelectedIds((ids) =>
+                              e.shiftKey
+                                ? ids.includes(block.id)
+                                  ? ids
+                                  : [...ids, block.id]
+                                : [block.id],
+                            )
                             setRightTab('props')
                           }}
                           onPointerDown={(e) => onCanvasDragStart(e, block, 'move')}
@@ -708,14 +999,26 @@ export default function BachDocumentDesigner({
               { id: 'props', label: 'Özellikler' },
               { id: 'layers', label: 'Katmanlar' },
             ].map((tab) => (
-              <button key={tab.id} type="button" className={rightTab === tab.id ? 'is-active' : ''} onClick={() => setRightTab(tab.id)}>{tab.label}</button>
+              <button
+                key={tab.id}
+                type="button"
+                className={rightTab === tab.id ? 'is-active' : ''}
+                onClick={() => setRightTab(tab.id)}
+              >
+                {tab.label}
+              </button>
             ))}
           </div>
 
           <div className="bach-doc-right-body">
             {rightTab === 'components' ? (
               <>
-                <input className="bach-doc-search" placeholder="Bileşen ara…" value={compFilter} onChange={(e) => setCompFilter(e.target.value)} />
+                <input
+                  className="bach-doc-search"
+                  placeholder="Bileşen ara…"
+                  value={compFilter}
+                  onChange={(e) => setCompFilter(e.target.value)}
+                />
                 {filteredLibrary.map((group) => (
                   <div key={group.id} className="bach-doc-comp-group">
                     <p>{group.label}</p>
@@ -743,33 +1046,43 @@ export default function BachDocumentDesigner({
                 <p className="bach-doc-hint">Bileşeni eklemek için sürükleyip bırakın</p>
                 <p className="bach-doc-section-label">Değişkenler</p>
                 <div className="bach-doc-var-list">
-                  {DOC_VARIABLE_GROUPS.slice(0, 4).flatMap((g) => g.variables.slice(0, 4).map((v) => (
-                    <button
-                      key={v.path}
-                      type="button"
-                      className="bach-doc-var-btn"
-                      onClick={() => {
-                        if (selected && ['text', 'title', 'paragraph', 'variable', 'date'].includes(selected.type)) {
-                          updateSelectedProps({ text: `${selected.props?.text || ''}${variableToken(v.path)}`, variablePath: v.path })
-                          return
-                        }
-                        const maxZ = blocks.reduce((m, b) => Math.max(m, b.zIndex || 0), 0)
-                        const block = createBlock('variable', {
-                          x: snapValue(48 + (blocks.length % 5) * 12, snap),
-                          y: snapValue(48 + (blocks.length % 7) * 16, snap),
-                          zIndex: maxZ + 1,
-                          label: v.label,
-                          props: { text: variableToken(v.path), variablePath: v.path },
-                        })
-                        commitBlocks((prev) => [...prev, block])
-                        setSelectedIds([block.id])
-                        setRightTab('props')
-                      }}
-                    >
-                      <span>{v.label}</span>
-                      <code>{`{{${v.path}}}`}</code>
-                    </button>
-                  )))}
+                  {DOC_VARIABLE_GROUPS.slice(0, 4).flatMap((g) =>
+                    g.variables.slice(0, 4).map((v) => (
+                      <button
+                        key={v.path}
+                        type="button"
+                        className="bach-doc-var-btn"
+                        onClick={() => {
+                          if (
+                            selected &&
+                            ['text', 'title', 'paragraph', 'variable', 'date'].includes(
+                              selected.type,
+                            )
+                          ) {
+                            updateSelectedProps({
+                              text: `${selected.props?.text || ''}${variableToken(v.path)}`,
+                              variablePath: v.path,
+                            })
+                            return
+                          }
+                          const maxZ = blocks.reduce((m, b) => Math.max(m, b.zIndex || 0), 0)
+                          const block = createBlock('variable', {
+                            x: snapValue(48 + (blocks.length % 5) * 12, snap),
+                            y: snapValue(48 + (blocks.length % 7) * 16, snap),
+                            zIndex: maxZ + 1,
+                            label: v.label,
+                            props: { text: variableToken(v.path), variablePath: v.path },
+                          })
+                          commitBlocks((prev) => [...prev, block])
+                          setSelectedIds([block.id])
+                          setRightTab('props')
+                        }}
+                      >
+                        <span>{v.label}</span>
+                        <code>{`{{${v.path}}}`}</code>
+                      </button>
+                    )),
+                  )}
                 </div>
               </>
             ) : null}
@@ -779,7 +1092,9 @@ export default function BachDocumentDesigner({
                 <p className="bach-doc-empty">Bir nesne seçin</p>
               ) : (
                 <div className="bach-doc-props">
-                  <div className="bach-doc-props-title">{selected.label || getElementDef(selected.type)?.label}</div>
+                  <div className="bach-doc-props-title">
+                    {selected.label || getElementDef(selected.type)?.label}
+                  </div>
                   <div className="bach-doc-props-2">
                     {['x', 'y', 'w', 'h'].map((key) => (
                       <label key={key}>
@@ -787,7 +1102,14 @@ export default function BachDocumentDesigner({
                         <input
                           type="number"
                           value={Math.round(selected[key])}
-                          onChange={(e) => updateSelectedMeta({ [key]: Math.max(key === 'w' || key === 'h' ? 8 : 0, Number(e.target.value) || 0) })}
+                          onChange={(e) =>
+                            updateSelectedMeta({
+                              [key]: Math.max(
+                                key === 'w' || key === 'h' ? 8 : 0,
+                                Number(e.target.value) || 0,
+                              ),
+                            })
+                          }
                         />
                       </label>
                     ))}
@@ -795,17 +1117,41 @@ export default function BachDocumentDesigner({
                   <div className="bach-doc-props-2">
                     <label>
                       <span>Opacity</span>
-                      <input type="number" min={0} max={1} step={0.05} value={selected.opacity ?? 1} onChange={(e) => updateSelectedMeta({ opacity: Number(e.target.value) })} />
+                      <input
+                        type="number"
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        value={selected.opacity ?? 1}
+                        onChange={(e) => updateSelectedMeta({ opacity: Number(e.target.value) })}
+                      />
                     </label>
                     <label>
                       <span>Rotate</span>
-                      <input type="number" value={selected.rotation || 0} onChange={(e) => updateSelectedMeta({ rotation: Number(e.target.value) || 0 })} />
+                      <input
+                        type="number"
+                        value={selected.rotation || 0}
+                        onChange={(e) =>
+                          updateSelectedMeta({ rotation: Number(e.target.value) || 0 })
+                        }
+                      />
                     </label>
                   </div>
-                  {['text', 'title', 'paragraph', 'variable', 'date', 'pageNumber', 'stamp'].includes(selected.type) ? (
+                  {[
+                    'text',
+                    'title',
+                    'paragraph',
+                    'variable',
+                    'date',
+                    'pageNumber',
+                    'stamp',
+                  ].includes(selected.type) ? (
                     <label>
                       <span>Metin</span>
-                      <textarea value={selected.props?.text || ''} onChange={(e) => updateSelectedProps({ text: e.target.value })} />
+                      <textarea
+                        value={selected.props?.text || ''}
+                        onChange={(e) => updateSelectedProps({ text: e.target.value })}
+                      />
                     </label>
                   ) : null}
                   {['text', 'title', 'paragraph', 'variable', 'date'].includes(selected.type) ? (
@@ -813,18 +1159,55 @@ export default function BachDocumentDesigner({
                       <div className="bach-doc-props-2">
                         <label>
                           <span>Font</span>
-                          <input type="number" value={selected.props?.fontSize || 14} onChange={(e) => updateSelectedProps({ fontSize: Number(e.target.value) || 14 })} />
+                          <input
+                            type="number"
+                            value={selected.props?.fontSize || 14}
+                            onChange={(e) =>
+                              updateSelectedProps({ fontSize: Number(e.target.value) || 14 })
+                            }
+                          />
                         </label>
                         <label>
                           <span>Renk</span>
-                          <input type="color" value={selected.props?.color || '#111827'} onChange={(e) => updateSelectedProps({ color: e.target.value })} />
+                          <input
+                            type="color"
+                            value={selected.props?.color || '#111827'}
+                            onChange={(e) => updateSelectedProps({ color: e.target.value })}
+                          />
                         </label>
                       </div>
                       <div className="bach-doc-font-tools">
-                        <button type="button" className={selected.props?.fontWeight >= 700 ? 'is-active' : ''} onClick={() => updateSelectedProps({ fontWeight: selected.props?.fontWeight >= 700 ? 400 : 700 })}>B</button>
-                        <button type="button" className={selected.props?.italic ? 'is-active' : ''} onClick={() => updateSelectedProps({ italic: !selected.props?.italic })}>I</button>
-                        <button type="button" className={selected.props?.underline ? 'is-active' : ''} onClick={() => updateSelectedProps({ underline: !selected.props?.underline })}>U</button>
-                        <select value={selected.props?.align || 'left'} onChange={(e) => updateSelectedProps({ align: e.target.value })}>
+                        <button
+                          type="button"
+                          className={selected.props?.fontWeight >= 700 ? 'is-active' : ''}
+                          onClick={() =>
+                            updateSelectedProps({
+                              fontWeight: selected.props?.fontWeight >= 700 ? 400 : 700,
+                            })
+                          }
+                        >
+                          B
+                        </button>
+                        <button
+                          type="button"
+                          className={selected.props?.italic ? 'is-active' : ''}
+                          onClick={() => updateSelectedProps({ italic: !selected.props?.italic })}
+                        >
+                          I
+                        </button>
+                        <button
+                          type="button"
+                          className={selected.props?.underline ? 'is-active' : ''}
+                          onClick={() =>
+                            updateSelectedProps({ underline: !selected.props?.underline })
+                          }
+                        >
+                          U
+                        </button>
+                        <select
+                          value={selected.props?.align || 'left'}
+                          onChange={(e) => updateSelectedProps({ align: e.target.value })}
+                        >
                           <option value="left">Sol</option>
                           <option value="center">Orta</option>
                           <option value="right">Sağ</option>
@@ -836,7 +1219,10 @@ export default function BachDocumentDesigner({
                           value={selected.props?.variablePath || ''}
                           onChange={(e) => {
                             const path = e.target.value
-                            updateSelectedProps({ variablePath: path, text: path ? variableToken(path) : selected.props?.text })
+                            updateSelectedProps({
+                              variablePath: path,
+                              text: path ? variableToken(path) : selected.props?.text,
+                            })
                           }}
                           placeholder="firma_unvani"
                         />
@@ -868,7 +1254,9 @@ export default function BachDocumentDesigner({
                           <button
                             type="button"
                             onClick={() => {
-                              const columns = (selected.props.columns || []).filter((_, i) => i !== idx)
+                              const columns = (selected.props.columns || []).filter(
+                                (_, i) => i !== idx,
+                              )
                               updateSelectedProps({ columns })
                             }}
                           >
@@ -881,14 +1269,19 @@ export default function BachDocumentDesigner({
                         onChange={(e) => {
                           const found = TABLE_COLUMN_CATALOG.find((c) => c.key === e.target.value)
                           if (!found) return
-                          const columns = [...(selected.props?.columns || []), { ...found, width: '12%' }]
+                          const columns = [
+                            ...(selected.props?.columns || []),
+                            { ...found, width: '12%' },
+                          ]
                           updateSelectedProps({ columns })
                           e.target.value = ''
                         }}
                       >
                         <option value="">+ Kolon ekle</option>
                         {TABLE_COLUMN_CATALOG.map((c) => (
-                          <option key={c.key} value={c.key}>{c.label}</option>
+                          <option key={c.key} value={c.key}>
+                            {c.label}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -896,14 +1289,34 @@ export default function BachDocumentDesigner({
                   {['rect', 'circle'].includes(selected.type) ? (
                     <label>
                       <span>Arkaplan</span>
-                      <input type="color" value={selected.props?.fill || '#e5e7eb'} onChange={(e) => updateSelectedProps({ fill: e.target.value })} />
+                      <input
+                        type="color"
+                        value={selected.props?.fill || '#e5e7eb'}
+                        onChange={(e) => updateSelectedProps({ fill: e.target.value })}
+                      />
                     </label>
                   ) : null}
                   <div className="bach-doc-props-actions">
-                    <button type="button" onClick={() => updateSelectedMeta({ locked: !selected.locked })}>{selected.locked ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />} {selected.locked ? 'Kilidi Aç' : 'Kilitle'}</button>
-                    <button type="button" onClick={() => updateSelectedMeta({ visible: false })}><EyeOff className="h-3.5 w-3.5" /> Gizle</button>
-                    <button type="button" onClick={bringForward}>Öne Al</button>
-                    <button type="button" onClick={sendBackward}>Arkaya</button>
+                    <button
+                      type="button"
+                      onClick={() => updateSelectedMeta({ locked: !selected.locked })}
+                    >
+                      {selected.locked ? (
+                        <Unlock className="h-3.5 w-3.5" />
+                      ) : (
+                        <Lock className="h-3.5 w-3.5" />
+                      )}{' '}
+                      {selected.locked ? 'Kilidi Aç' : 'Kilitle'}
+                    </button>
+                    <button type="button" onClick={() => updateSelectedMeta({ visible: false })}>
+                      <EyeOff className="h-3.5 w-3.5" /> Gizle
+                    </button>
+                    <button type="button" onClick={bringForward}>
+                      Öne Al
+                    </button>
+                    <button type="button" onClick={sendBackward}>
+                      Arkaya
+                    </button>
                     <button
                       type="button"
                       className="danger"
@@ -921,37 +1334,58 @@ export default function BachDocumentDesigner({
 
             {rightTab === 'layers' ? (
               <div className="bach-doc-layers">
-                {[...blocks].sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0)).map((block) => (
-                  <button
-                    key={block.id}
-                    type="button"
-                    className={`bach-doc-layer-item ${selectedIds.includes(block.id) ? 'is-active' : ''}`}
-                    onClick={() => { setSelectedIds([block.id]); setRightTab('props') }}
-                  >
-                    <Layers className="h-3.5 w-3.5 opacity-50" />
-                    <span>{block.label || getElementDef(block.type)?.label || block.type}</span>
-                    <span className="ml-auto flex gap-1">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          commitBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, visible: b.visible === false } : b)))
-                        }}
-                      >
-                        {block.visible === false ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          commitBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, locked: !b.locked } : b)))
-                        }}
-                      >
-                        {block.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
-                      </button>
-                    </span>
-                  </button>
-                ))}
+                {[...blocks]
+                  .sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0))
+                  .map((block) => (
+                    <button
+                      key={block.id}
+                      type="button"
+                      className={`bach-doc-layer-item ${selectedIds.includes(block.id) ? 'is-active' : ''}`}
+                      onClick={() => {
+                        setSelectedIds([block.id])
+                        setRightTab('props')
+                      }}
+                    >
+                      <Layers className="h-3.5 w-3.5 opacity-50" />
+                      <span>{block.label || getElementDef(block.type)?.label || block.type}</span>
+                      <span className="ml-auto flex gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            commitBlocks((prev) =>
+                              prev.map((b) =>
+                                b.id === block.id ? { ...b, visible: b.visible === false } : b,
+                              ),
+                            )
+                          }}
+                        >
+                          {block.visible === false ? (
+                            <EyeOff className="h-3 w-3" />
+                          ) : (
+                            <Eye className="h-3 w-3" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            commitBlocks((prev) =>
+                              prev.map((b) =>
+                                b.id === block.id ? { ...b, locked: !b.locked } : b,
+                              ),
+                            )
+                          }}
+                        >
+                          {block.locked ? (
+                            <Lock className="h-3 w-3" />
+                          ) : (
+                            <Unlock className="h-3 w-3" />
+                          )}
+                        </button>
+                      </span>
+                    </button>
+                  ))}
                 {!blocks.length ? <p className="bach-doc-empty">Katman yok</p> : null}
               </div>
             ) : null}
@@ -965,12 +1399,26 @@ export default function BachDocumentDesigner({
             <div className="bach-doc-preview-bar">
               <strong>Önizleme · örnek veri</strong>
               <div className="flex gap-2">
-                <button type="button" className="bach-doc-btn ghost" onClick={handlePdf}>PDF</button>
-                <button type="button" className="bach-doc-btn ghost" onClick={handleTestPrint}>Yazdır</button>
-                <button type="button" className={`${BTN_PRIMARY} !rounded-xl !px-3 !py-2 text-xs`} onClick={() => setPreviewOpen(false)}>Kapat</button>
+                <button type="button" className="bach-doc-btn ghost" onClick={handlePdf}>
+                  PDF
+                </button>
+                <button type="button" className="bach-doc-btn ghost" onClick={handleTestPrint}>
+                  Yazdır
+                </button>
+                <button
+                  type="button"
+                  className={`${BTN_PRIMARY} !rounded-xl !px-3 !py-2 text-xs`}
+                  onClick={() => setPreviewOpen(false)}
+                >
+                  Kapat
+                </button>
               </div>
             </div>
-            <iframe title="Önizleme" className="bach-doc-preview-frame" srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;background:#e2e8f0;padding:24px">${previewHtml}</body></html>`} />
+            <iframe
+              title="Önizleme"
+              className="bach-doc-preview-frame"
+              srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;background:#e2e8f0;padding:24px">${previewHtml}</body></html>`}
+            />
           </div>
         </div>
       ) : null}

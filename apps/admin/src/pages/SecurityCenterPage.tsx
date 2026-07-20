@@ -6,6 +6,7 @@ import {
   HardDrive,
   KeyRound,
   Lock,
+  Rocket,
   Server,
   Shield,
   ShieldCheck,
@@ -17,7 +18,11 @@ import { MetricCard, PageHeader } from '@/components/ui/MetricCard'
 import { MetricSkeleton } from '@/components/ui/Skeleton'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { usePageState } from '@/hooks/usePageState'
-import { platformAdminApi, type SecurityOverview, type ServiceStatus } from '@/services/platformAdminApi'
+import {
+  platformAdminApi,
+  type SecurityOverview,
+  type ServiceStatus,
+} from '@/services/platformAdminApi'
 import type { BadgeVariant } from '@/types'
 
 function statusLabel(s: ServiceStatus) {
@@ -47,6 +52,7 @@ const PANEL_ICONS: Record<string, typeof Shield> = {
   api: Server,
   openai: Activity,
   rateLimit: Wifi,
+  deploy: Rocket,
   backup: Database,
   storage: HardDrive,
 }
@@ -102,7 +108,12 @@ export function SecurityCenterPage() {
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-2 md:col-span-2">
-          <MetricCard label="Veri düzlemi" value={overview.database} change="Neon / JSON store" trend="neutral" />
+          <MetricCard
+            label="Veri düzlemi"
+            value={overview.database}
+            change="Neon / JSON store"
+            trend="neutral"
+          />
           <MetricCard
             label="Öneri"
             value={String(overview.recommendations?.length ?? 0)}

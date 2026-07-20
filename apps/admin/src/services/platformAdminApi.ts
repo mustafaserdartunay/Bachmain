@@ -184,6 +184,7 @@ export interface SecurityPanel {
   immutable?: boolean
   placeholder?: boolean
   checks?: Record<string, boolean>
+  links?: Record<string, string>
 }
 
 export interface SecurityOverview {
@@ -220,7 +221,7 @@ export const platformAdminApi = {
   listUsers: async (): Promise<PlatformUserRow[]> => {
     try {
       const res = await api.get<{ rows: PlatformUserRow[] } | PlatformUserRow[]>('/v1/admin/users')
-      return Array.isArray(res) ? res : res.rows ?? []
+      return Array.isArray(res) ? res : (res.rows ?? [])
     } catch (err) {
       if (isNotFoundOrUnavailable(err) || err instanceof ApiError) return MOCK_USERS
       throw err
@@ -264,9 +265,8 @@ export const platformAdminApi = {
       return { rows: res.rows ?? [], immutable: true }
     } catch (err) {
       if (isNotFoundOrUnavailable(err) || err instanceof ApiError) {
-        const rows = action && action !== 'all'
-          ? MOCK_AUDIT.filter((r) => r.action === action)
-          : MOCK_AUDIT
+        const rows =
+          action && action !== 'all' ? MOCK_AUDIT.filter((r) => r.action === action) : MOCK_AUDIT
         return { rows, immutable: true }
       }
       throw err
@@ -287,14 +287,34 @@ export const platformAdminApi = {
           production: false,
           database: 'unknown',
           panels: {
-            audit: { status: 'degraded', label: 'Audit log', detail: 'API henüz yanıt vermedi', immutable: true },
+            audit: {
+              status: 'degraded',
+              label: 'Audit log',
+              detail: 'API henüz yanıt vermedi',
+              immutable: true,
+            },
             sessions: { status: 'unknown', label: 'Oturumlar', detail: '—' },
             env: { status: 'unknown', label: 'ENV health', detail: '—' },
             api: { status: 'down', label: 'API', detail: 'Security overview endpoint unreachable' },
             openai: { status: 'unknown', label: 'OpenAI', detail: '—' },
             rateLimit: { status: 'unknown', label: 'Rate limit', detail: '—' },
-            backup: { status: 'degraded', label: 'Backup', detail: 'Placeholder', placeholder: true },
-            storage: { status: 'degraded', label: 'Storage', detail: 'Placeholder', placeholder: true },
+            deploy: {
+              status: 'degraded',
+              label: 'CI / Deploy',
+              detail: 'Security overview endpoint unreachable',
+            },
+            backup: {
+              status: 'degraded',
+              label: 'Backup',
+              detail: 'Placeholder',
+              placeholder: true,
+            },
+            storage: {
+              status: 'degraded',
+              label: 'Storage',
+              detail: 'Placeholder',
+              placeholder: true,
+            },
           },
           recommendations: ['Admin API /security/overview erişimini doğrulayın'],
           mock: true,

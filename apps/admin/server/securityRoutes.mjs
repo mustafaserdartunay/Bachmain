@@ -74,6 +74,17 @@ export async function handleSecurityApi(req, res, path) {
         label: 'Rate limit',
         detail: envSnap.checks.redis ? 'Redis URL mevcut' : 'In-memory fallback',
       },
+      deploy: {
+        status: 'degraded',
+        label: 'CI / Deploy',
+        detail:
+          'GitHub Actions CI iskeleti aktif (lint soft). Rollback: Vercel → previous Ready deploy. Bkz. docs/63_STAGING_AND_PREVIEW.md',
+        links: {
+          actions: 'https://github.com/mustafaserdartunay/Bachmain/actions',
+          vercelCrm: 'https://vercel.com/bachmain/bachmain',
+          vercelAdmin: 'https://vercel.com/bachmain/bachmain-admin',
+        },
+      },
       backup: {
         status: 'degraded',
         label: 'Backup',
@@ -89,14 +100,15 @@ export async function handleSecurityApi(req, res, path) {
     }
 
     const weights = {
-      env: 20,
-      api: 15,
-      openai: 15,
-      audit: 15,
+      env: 18,
+      api: 14,
+      openai: 14,
+      audit: 14,
       rateLimit: 10,
-      sessions: 10,
-      backup: 10,
-      storage: 5,
+      sessions: 8,
+      deploy: 8,
+      backup: 8,
+      storage: 6,
     }
     const statusPoints = { healthy: 1, degraded: 0.45, down: 0 }
     let weighted = 0
@@ -125,7 +137,35 @@ export async function handleSecurityApi(req, res, path) {
         !envSnap.checks.aiProxySecret ? 'AI_PROXY_SECRET ile AI proxy’yi kilitleyin' : null,
         !envSnap.checks.redis ? 'REDIS_URL ile dağıtık rate limit açın' : null,
         panels.backup.placeholder ? 'Backup/DR runbook’u operasyon takviminde doğrulayın' : null,
+        'CI: PR açın — Preview deploy + Actions; prod için staging soak tercih edin',
       ].filter(Boolean),
+    })
+    return true
+  }
+
+  if (method === 'GET' && path === 'security/deploy') {
+    if (!requireStaffOrFail(req, res)) return true
+    sendJson(req, res, 200, {
+      ok: true,
+      sampledAt: new Date().toISOString(),
+      ci: {
+        status: 'degraded',
+        detail: 'GitHub Actions workflow ci.yml (lint soft-fail during transition)',
+        url: 'https://github.com/mustafaserdartunay/Bachmain/actions',
+      },
+      rollback: {
+        steps: [
+          'Vercel → Project → Deployments',
+          'Previous Ready deployment → Promote / Instant Rollback',
+          'Smoke: login + one CRM page + /api/health',
+        ],
+        docs: 'docs/63_STAGING_AND_PREVIEW.md',
+      },
+      environments: {
+        production: ['uygulama.bachmain.com', 'yonetim.bachmain.com', 'bachmain.com'],
+        staging: 'Configure staging Neon + Vercel Staging env (docs/63)',
+        preview: 'Automatic on PR when Git connected to Vercel',
+      },
     })
     return true
   }

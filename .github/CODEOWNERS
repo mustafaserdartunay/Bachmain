@@ -1,0 +1,6 @@
+# CODEOWNERS — gradual ownership (optional enforcement via branch protection)
+*       @mustafaserdartunay
+/apps/api/ @mustafaserdartunay
+/apps/admin/ @mustafaserdartunay
+/.github/ @mustafaserdartunay
+/docs/ @mustafaserdartunay
