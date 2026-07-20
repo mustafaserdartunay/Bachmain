@@ -63,6 +63,13 @@ function blank() {
       },
     ],
     stockJobs: [],
+    i18n: [],
+    analyses: [],
+    returns: [],
+    subscriptions: [],
+    shipments: [],
+    payments: [],
+    coupons: [],
   }
 }
 
@@ -99,7 +106,7 @@ export function commerceOverviewLocal() {
     listingsTotal: s.listings.length,
     activePriceRules: s.priceRules.filter((r) => r.active).length,
     productMaster: 'erp_mdm',
-    phase: 'GC-0',
+    phase: 'GC-1',
   }
 }
 
@@ -208,6 +215,201 @@ export function runStockSyncLocal(channelKey) {
 
 export function listStockJobsLocal() {
   return read().stockJobs
+}
+
+const LOCALES = ['tr', 'en', 'de', 'fr', 'es', 'it', 'ar', 'ru']
+
+export function generateProductAiLocal(productId, productName = 'Demo Ürün') {
+  const s = read()
+  if (!s.i18n) s.i18n = []
+  const row = {
+    id: `i18n_${Date.now().toString(36)}`,
+    productId,
+    locale: 'tr',
+    title: productName,
+    description: `${productName} — Product AI açıklama (GC-1 stub).`,
+    seoTitle: `${productName} | BachMain`,
+    seoDescription: 'SEO meta stub',
+    keywords: [productName.toLowerCase(), 'bachmain'],
+    socialCopy: `Yeni: ${productName} 🚀`,
+    merchantFeed: `${productName} | Hızlı kargo`,
+  }
+  s.i18n = s.i18n.filter((x) => !(x.productId === productId && x.locale === 'tr'))
+  s.i18n.unshift(row)
+  write(s)
+  return row
+}
+
+export function expandI18nLocal(productId) {
+  const s = read()
+  if (!s.i18n) s.i18n = []
+  const base = s.i18n.find((x) => x.productId === productId && x.locale === 'tr')
+  const title = base?.title || `Product ${productId}`
+  for (const locale of LOCALES) {
+    if (locale === 'tr') continue
+    if (s.i18n.some((x) => x.productId === productId && x.locale === locale)) continue
+    s.i18n.push({
+      id: `i18n_${locale}_${Date.now().toString(36)}`,
+      productId,
+      locale,
+      title: `[${locale.toUpperCase()}] ${title}`,
+      description: `(${locale}) ${base?.description || title}`,
+    })
+  }
+  write(s)
+  return s.i18n.filter((x) => x.productId === productId)
+}
+
+export function listI18nLocal() {
+  return read().i18n || []
+}
+
+export function analyzeOrderLocal(id) {
+  const s = read()
+  const order = s.inbox.find((o) => o.id === id)
+  if (!order) return null
+  const amount = Number(order.totalAmount || 0)
+  let fraudScore = order.riskScore || 0
+  if (amount > 50000) fraudScore += 20
+  const riskScore = Math.min(100, fraudScore + 15)
+  const recommendation = riskScore >= 70 ? 'hold' : riskScore >= 45 ? 'review' : 'promote'
+  const analysis = {
+    id: `an_${Date.now().toString(36)}`,
+    inboxId: id,
+    orderRef: order.externalOrderId,
+    riskScore,
+    fraudScore,
+    stockRisk: 12,
+    deliveryRisk: 18,
+    recommendation,
+    summary: `${order.channelKey} · ${order.totalAmount} ${order.currency}`,
+  }
+  if (!s.analyses) s.analyses = []
+  s.analyses.unshift(analysis)
+  const idx = s.inbox.findIndex((o) => o.id === id)
+  if (idx >= 0) s.inbox[idx] = { ...s.inbox[idx], riskScore, analysisId: analysis.id }
+  write(s)
+  return analysis
+}
+
+export function listAnalysesLocal() {
+  return read().analyses || []
+}
+
+export function addReturnLocal(orderRef, kind = 'return') {
+  const s = read()
+  if (!s.returns) s.returns = []
+  const row = { id: `ret_${Date.now().toString(36)}`, orderRef, kind, status: 'open' }
+  s.returns.unshift(row)
+  write(s)
+  return row
+}
+
+export function listReturnsLocal() {
+  return read().returns || []
+}
+
+export function addSubscriptionLocal(customerRef, productId) {
+  const s = read()
+  if (!s.subscriptions) s.subscriptions = []
+  const row = {
+    id: `sub_${Date.now().toString(36)}`,
+    customerRef,
+    productId,
+    status: 'active',
+    interval: 'month',
+    amount: '999',
+    currency: 'TRY',
+  }
+  s.subscriptions.unshift(row)
+  write(s)
+  return row
+}
+
+export function listSubscriptionsLocal() {
+  return read().subscriptions || []
+}
+
+export function addShipmentLocal(orderRef, carrier) {
+  const s = read()
+  if (!s.shipments) s.shipments = []
+  const row = {
+    id: `sh_${Date.now().toString(36)}`,
+    orderRef,
+    carrier,
+    trackingNo: `TRK${Date.now().toString().slice(-8)}`,
+    status: 'labeled',
+  }
+  s.shipments.unshift(row)
+  write(s)
+  return row
+}
+
+export function listShipmentsLocal() {
+  return read().shipments || []
+}
+
+export function addPaymentLocal(provider, amount) {
+  const s = read()
+  if (!s.payments) s.payments = []
+  const row = {
+    id: `pay_${Date.now().toString(36)}`,
+    provider,
+    amount,
+    currency: 'TRY',
+    status: 'pending',
+  }
+  s.payments.unshift(row)
+  write(s)
+  return row
+}
+
+export function listPaymentsLocal() {
+  return read().payments || []
+}
+
+export function addCouponLocal(code, discountValue = '10') {
+  const s = read()
+  if (!s.coupons) s.coupons = []
+  const row = {
+    id: `cp_${Date.now().toString(36)}`,
+    code: code.toUpperCase(),
+    discountType: 'percent',
+    discountValue,
+    active: true,
+  }
+  s.coupons.unshift(row)
+  write(s)
+  return row
+}
+
+export function listCouponsLocal() {
+  return read().coupons || []
+}
+
+export function analyticsLocal() {
+  return {
+    sales: 186400,
+    byChannel: [
+      { channel: 'trendyol', revenue: 62000 },
+      { channel: 'b2b', revenue: 54000 },
+      { channel: 'amazon', revenue: 38400 },
+    ],
+    roi: 1.8,
+    roas: 2.4,
+    profit: 41200,
+  }
+}
+
+export function aiSalesForecastLocal() {
+  return {
+    country: 'DE',
+    suggestedPrice: 129.9,
+    currency: 'EUR',
+    suggestedChannel: 'amazon',
+    suggestedAd: 'Google Shopping + Meta',
+    upliftPct: 18,
+  }
 }
 
 export { EVT as COMMERCE_UPDATED_EVENT }

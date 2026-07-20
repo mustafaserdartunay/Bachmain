@@ -1465,3 +1465,118 @@ export const growthAuditLog = pgTable(
   },
   (t) => [index('growth_audit_log_company_idx').on(t.companyId, t.createdAt)],
 )
+
+/** Commerce GC-1 — returns, subscriptions, shipping, payments, AI order analyses */
+export const commerceReturns = pgTable(
+  'commerce_returns',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    orderRef: text('order_ref').notNull(),
+    kind: text('kind').default('return').notNull(), // return | exchange | service | warranty
+    status: text('status').default('open').notNull(), // open | approved | rejected | completed
+    reason: text('reason'),
+    channelKey: text('channel_key'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('commerce_returns_company_idx').on(t.companyId, t.status)],
+)
+
+export const commerceSubscriptions = pgTable(
+  'commerce_subscriptions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    customerRef: text('customer_ref').notNull(),
+    productId: text('product_id').notNull(),
+    status: text('status').default('active').notNull(), // active | paused | cancelled | past_due
+    interval: text('interval').default('month').notNull(), // week | month | year
+    amount: numeric('amount', { precision: 18, scale: 4 }),
+    currency: text('currency').default('TRY'),
+    nextRenewalAt: timestamp('next_renewal_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('commerce_subscriptions_company_idx').on(t.companyId, t.status)],
+)
+
+export const commerceShipments = pgTable(
+  'commerce_shipments',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    orderRef: text('order_ref').notNull(),
+    carrier: text('carrier').notNull(),
+    trackingNo: text('tracking_no'),
+    status: text('status').default('created').notNull(), // created | labeled | in_transit | delivered | failed
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('commerce_shipments_company_idx').on(t.companyId, t.status)],
+)
+
+export const commercePaymentIntents = pgTable(
+  'commerce_payment_intents',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    orderRef: text('order_ref'),
+    provider: text('provider').notNull(), // stripe | iyzico | …
+    amount: numeric('amount', { precision: 18, scale: 4 }).notNull(),
+    currency: text('currency').default('TRY').notNull(),
+    status: text('status').default('pending').notNull(), // pending | succeeded | failed | refunded
+    externalId: text('external_id'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('commerce_payments_company_idx').on(t.companyId, t.status)],
+)
+
+export const commerceOrderAnalyses = pgTable(
+  'commerce_order_analyses',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    inboxId: uuid('inbox_id').references(() => commerceOrdersInbox.id),
+    orderRef: text('order_ref'),
+    riskScore: integer('risk_score').default(0),
+    fraudScore: integer('fraud_score').default(0),
+    stockRisk: integer('stock_risk').default(0),
+    deliveryRisk: integer('delivery_risk').default(0),
+    repeatOrder: boolean('repeat_order').default(false),
+    flags: jsonb('flags').$type<string[]>().default([]),
+    summary: text('summary'),
+    recommendation: text('recommendation'), // promote | hold | reject
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('commerce_order_analyses_company_idx').on(t.companyId, t.createdAt)],
+)
+
+export const commerceCoupons = pgTable(
+  'commerce_coupons',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    code: text('code').notNull(),
+    discountType: text('discount_type').default('percent').notNull(),
+    discountValue: numeric('discount_value', { precision: 18, scale: 4 }).notNull(),
+    active: boolean('active').default(true).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('commerce_coupons_code_uidx').on(t.companyId, t.code)],
+)

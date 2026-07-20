@@ -18,16 +18,33 @@ import { commerceSubMenus } from '../data/commerceMenu'
 import { publishDomainEvent } from '../workflow/eventBus'
 import {
   COMMERCE_UPDATED_EVENT,
+  addCouponLocal,
+  addPaymentLocal,
   addPriceRuleLocal,
+  addReturnLocal,
+  addShipmentLocal,
+  addSubscriptionLocal,
+  aiSalesForecastLocal,
+  analyticsLocal,
+  analyzeOrderLocal,
   commerceOverviewLocal,
   connectChannelLocal,
   ensureCommerceSeed,
+  expandI18nLocal,
+  generateProductAiLocal,
   ingestOrderLocal,
+  listAnalysesLocal,
   listChannelsLocal,
+  listCouponsLocal,
+  listI18nLocal,
   listInboxLocal,
   listListingsLocal,
+  listPaymentsLocal,
   listPriceRulesLocal,
+  listReturnsLocal,
+  listShipmentsLocal,
   listStockJobsLocal,
+  listSubscriptionsLocal,
   marketplaceCatalogLocal,
   promoteOrderLocal,
   publishListingLocal,
@@ -45,8 +62,17 @@ export default function CommerceCenterPage() {
   const [rules, setRules] = useState([])
   const [listings, setListings] = useState([])
   const [jobs, setJobs] = useState([])
+  const [i18n, setI18n] = useState([])
+  const [analyses, setAnalyses] = useState([])
+  const [returns, setReturns] = useState([])
+  const [subs, setSubs] = useState([])
+  const [shipments, setShipments] = useState([])
+  const [payments, setPayments] = useState([])
+  const [coupons, setCoupons] = useState([])
   const [msg, setMsg] = useState('')
   const catalog = useMemo(() => marketplaceCatalogLocal(), [])
+  const analytics = useMemo(() => analyticsLocal(), [])
+  const forecast = useMemo(() => aiSalesForecastLocal(), [])
 
   function refresh() {
     setOverview(commerceOverviewLocal())
@@ -55,6 +81,13 @@ export default function CommerceCenterPage() {
     setRules(listPriceRulesLocal())
     setListings(listListingsLocal())
     setJobs(listStockJobsLocal())
+    setI18n(listI18nLocal())
+    setAnalyses(listAnalysesLocal())
+    setReturns(listReturnsLocal())
+    setSubs(listSubscriptionsLocal())
+    setShipments(listShipmentsLocal())
+    setPayments(listPaymentsLocal())
+    setCoupons(listCouponsLocal())
   }
 
   useEffect(() => {
@@ -124,6 +157,48 @@ export default function CommerceCenterPage() {
     refresh()
   }
 
+  function handleAnalyze(id) {
+    const analysis = analyzeOrderLocal(id)
+    if (!analysis) return
+    publishDomainEvent(
+      'trigger.commerce.order.analyzed',
+      {
+        inboxId: id,
+        riskScore: analysis.riskScore,
+        recommendation: analysis.recommendation,
+      },
+      { source: 'commerce' },
+    )
+    flash(`AI analiz: ${analysis.recommendation} (risk ${analysis.riskScore})`)
+    refresh()
+  }
+
+  function handleProductAi() {
+    const productId = `prd_${Date.now().toString(36)}`
+    generateProductAiLocal(productId, 'Global Commerce Ürün')
+    publishDomainEvent(
+      'trigger.commerce.product.ai',
+      { productId, locale: 'tr' },
+      { source: 'commerce' },
+    )
+    flash('Product AI paket üretildi')
+    refresh()
+  }
+
+  function handleExpandI18n() {
+    const last = listI18nLocal()[0]
+    const productId = last?.productId || `prd_${Date.now().toString(36)}`
+    if (!last) generateProductAiLocal(productId, 'Global Commerce Ürün')
+    expandI18nLocal(productId)
+    publishDomainEvent(
+      'trigger.commerce.product.i18n',
+      { productId, locales: 8 },
+      { source: 'commerce' },
+    )
+    flash('8 dil üretildi (TR/EN/DE/FR/ES/IT/AR/RU)')
+    refresh()
+  }
+
   function handleStockSync() {
     const job = runStockSyncLocal('all')
     publishDomainEvent(
@@ -178,6 +253,7 @@ export default function CommerceCenterPage() {
             <p className="mt-2 max-w-2xl text-sm text-gray-400">
               Global ticaret katmanı. Ürün sadece ERP/MDM’de; kanallar listing ile yayınlanır.
               Siparişler tek inbox’a akar, event bus ile ERP → üretim → depo → lojistik tetiklenir.
+              GC-1: Product AI, i18n, AI Order Manager, Shipping/Payment/Return.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -359,13 +435,22 @@ export default function CommerceCenterPage() {
                     </p>
                   </div>
                   {o.status !== 'promoted' ? (
-                    <button
-                      type="button"
-                      onClick={() => handlePromote(o.id)}
-                      className="rounded-lg border border-emerald-400/40 px-2.5 py-1.5 text-[10px] font-black uppercase text-emerald-200"
-                    >
-                      ERP’ye aktar
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAnalyze(o.id)}
+                        className="rounded-lg border border-violet-400/40 px-2.5 py-1.5 text-[10px] font-black uppercase text-violet-200"
+                      >
+                        AI Analiz
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePromote(o.id)}
+                        className="rounded-lg border border-emerald-400/40 px-2.5 py-1.5 text-[10px] font-black uppercase text-emerald-200"
+                      >
+                        ERP’ye aktar
+                      </button>
+                    </div>
                   ) : (
                     <span className="text-[10px] font-bold uppercase text-emerald-300">
                       {o.erpOrderId}
@@ -440,6 +525,43 @@ export default function CommerceCenterPage() {
         </section>
       )}
 
+      {tab === 'productAi' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 space-y-3`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Product AI</h2>
+          <p className="text-xs text-gray-500">
+            Açıklama · SEO · Meta · Anahtar kelime · Alt text · Teknik · Pazarlama · Instagram ·
+            Google Merchant — Product Master üzerinden (ERP’de oluşturulur).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleProductAi}
+              className="rounded-xl border border-amber-400/40 bg-amber-500/15 px-3 py-2 text-xs font-black uppercase text-amber-100"
+            >
+              AI içerik üret
+            </button>
+            <button
+              type="button"
+              onClick={handleExpandI18n}
+              className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-black uppercase text-gray-200"
+            >
+              8 dil genişlet
+            </button>
+          </div>
+          <ul className="space-y-2">
+            {i18n.map((r) => (
+              <li
+                key={r.id}
+                className="rounded-xl border border-dark-500/40 bg-dark-800/50 px-3 py-2 text-sm text-gray-200"
+              >
+                {r.locale.toUpperCase()} · {r.title}
+                {r.seoTitle ? ` · SEO: ${r.seoTitle}` : ''}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {tab === 'stock' && (
         <section className={`${APP_SURFACE_PANEL_CLASS} p-5 space-y-3`}>
           <h2 className="text-sm font-black uppercase text-gray-300">Stock Sync</h2>
@@ -464,34 +586,261 @@ export default function CommerceCenterPage() {
         </section>
       )}
 
-      {(tab === 'shipping' ||
-        tab === 'returns' ||
-        tab === 'subscriptions' ||
-        tab === 'campaigns' ||
-        tab === 'coupons' ||
-        tab === 'accounts' ||
-        tab === 'reviews') && (
-        <section className={`${APP_SURFACE_PANEL_CLASS} p-5`}>
-          <h2 className="text-sm font-black uppercase text-gray-300">
-            {TABS.find((t) => t.id === tab)?.label}
-          </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            GC-0 kabuk. Shipping (UPS/DHL/FedEx/Yurtiçi/MNG/Aras/Sürat/PTT), Payment
-            (Stripe/iyzico/PayTR/PayPal/Wise/havale), Return Center ve Subscription Commerce GC-3
-            roadmap’te.
+      {tab === 'shipping' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 space-y-3`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Shipping Center</h2>
+          <p className="text-xs text-gray-500">
+            UPS · DHL · FedEx · Yurtiçi · MNG · Aras · Sürat · PTT
           </p>
-          {tab === 'shipping' && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
-              <Truck className="h-4 w-4 text-amber-300" />
-              Carrier adapter iskeleti hazırlanacak
+          <button
+            type="button"
+            onClick={() => {
+              const row = addShipmentLocal('ORD-DEMO', 'Yurtiçi')
+              publishDomainEvent(
+                'trigger.commerce.shipment.created',
+                { shipmentId: row.id, carrier: row.carrier },
+                { source: 'commerce' },
+              )
+              flash('Kargo etiketi oluşturuldu')
+              refresh()
+            }}
+            className="inline-flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/15 px-3 py-2 text-xs font-black uppercase text-amber-100"
+          >
+            <Truck className="h-3.5 w-3.5" /> Demo kargo
+          </button>
+          <ul className="space-y-2">
+            {shipments.map((s) => (
+              <li
+                key={s.id}
+                className="rounded-xl border border-dark-500/40 bg-dark-800/50 px-3 py-2 text-sm text-gray-200"
+              >
+                {s.carrier} · {s.trackingNo} · {s.status} · {s.orderRef}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {tab === 'payments' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 space-y-3`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Payment Center</h2>
+          <p className="text-xs text-gray-500">
+            Stripe · iyzico · PayTR · PayPal · Wise · Banka havalesi
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {['stripe', 'iyzico', 'paytr'].map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => {
+                  const row = addPaymentLocal(p, '1500')
+                  publishDomainEvent(
+                    'trigger.commerce.payment.created',
+                    { paymentId: row.id, provider: p },
+                    { source: 'commerce' },
+                  )
+                  flash(`${p} intent`)
+                  refresh()
+                }}
+                className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-black uppercase text-gray-200"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <ul className="space-y-2">
+            {payments.map((p) => (
+              <li
+                key={p.id}
+                className="rounded-xl border border-dark-500/40 bg-dark-800/50 px-3 py-2 text-sm text-gray-200"
+              >
+                {p.provider} · {p.amount} {p.currency} · {p.status}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {tab === 'returns' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 space-y-3`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Return Center</h2>
+          <p className="text-xs text-gray-500">İade · Değişim · Servis · Garanti — tek panel</p>
+          <button
+            type="button"
+            onClick={() => {
+              const row = addReturnLocal('ORD-DEMO', 'return')
+              publishDomainEvent(
+                'trigger.commerce.return.opened',
+                { returnId: row.id },
+                { source: 'commerce' },
+              )
+              flash('İade kaydı açıldı')
+              refresh()
+            }}
+            className="rounded-xl border border-amber-400/40 bg-amber-500/15 px-3 py-2 text-xs font-black uppercase text-amber-100"
+          >
+            İade aç
+          </button>
+          <ul className="space-y-2">
+            {returns.map((r) => (
+              <li
+                key={r.id}
+                className="rounded-xl border border-dark-500/40 bg-dark-800/50 px-3 py-2 text-sm text-gray-200"
+              >
+                {r.kind} · {r.orderRef} · {r.status}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {tab === 'subscriptions' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 space-y-3`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Subscription Commerce</h2>
+          <button
+            type="button"
+            onClick={() => {
+              const row = addSubscriptionLocal('cust_demo', 'prd_sub')
+              publishDomainEvent(
+                'trigger.commerce.subscription.created',
+                { subscriptionId: row.id },
+                { source: 'commerce' },
+              )
+              flash('Abonelik oluşturuldu')
+              refresh()
+            }}
+            className="rounded-xl border border-amber-400/40 bg-amber-500/15 px-3 py-2 text-xs font-black uppercase text-amber-100"
+          >
+            Abonelik ekle
+          </button>
+          <ul className="space-y-2">
+            {subs.map((r) => (
+              <li
+                key={r.id}
+                className="rounded-xl border border-dark-500/40 bg-dark-800/50 px-3 py-2 text-sm text-gray-200"
+              >
+                {r.customerRef} · {r.productId} · {r.interval} · {r.amount} {r.currency} ·{' '}
+                {r.status}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {tab === 'coupons' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 space-y-3`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Coupons</h2>
+          <button
+            type="button"
+            onClick={() => {
+              addCouponLocal(`SAVE${Math.floor(Math.random() * 90 + 10)}`, '10')
+              flash('Kupon eklendi')
+              refresh()
+            }}
+            className="rounded-xl border border-amber-400/40 bg-amber-500/15 px-3 py-2 text-xs font-black uppercase text-amber-100"
+          >
+            Kupon oluştur
+          </button>
+          <ul className="space-y-2">
+            {coupons.map((c) => (
+              <li
+                key={c.id}
+                className="rounded-xl border border-dark-500/40 bg-dark-800/50 px-3 py-2 text-sm text-gray-200"
+              >
+                {c.code} · %{c.discountValue} · {c.active ? 'aktif' : 'pasif'}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {tab === 'campaigns' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Campaigns</h2>
+          <p className="mt-2 text-sm text-gray-400">
+            Price Engine kampanya kuralları + Growth Campaign Center ile ortak çalışır. Price
+            Management sekmesinden kural ekleyin.
+          </p>
+        </section>
+      )}
+
+      {tab === 'accounts' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Customer Accounts</h2>
+          <p className="mt-2 text-sm text-gray-400">
+            B2B / bayi hesapları CRM müşteri kaydı ile bağlanır.
+          </p>
+          <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+            <Building2 className="h-4 w-4 text-amber-300" />
+            <Link to="/musteriler" className="text-amber-300 underline">
+              Müşteriler
+            </Link>
+            <Link to="/bayi" className="text-amber-300 underline">
+              Bayi
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {tab === 'reviews' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Reviews</h2>
+          <p className="mt-2 text-sm text-gray-400">
+            Kanal yorum senkronu GC-2. Product Master ürününe bağlanır.
+          </p>
+        </section>
+      )}
+
+      {tab === 'analytics' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 space-y-4`}>
+          <h2 className="text-sm font-black uppercase text-gray-300">Analytics</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-dark-500/40 p-3">
+              <p className="text-[10px] uppercase text-gray-500">Satış</p>
+              <p className="text-xl font-black text-white">
+                {analytics.sales.toLocaleString('tr-TR')} ₺
+              </p>
             </div>
-          )}
-          {tab === 'accounts' && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
-              <Building2 className="h-4 w-4 text-amber-300" />
-              B2B / bayi hesapları CRM müşteri kaydı ile bağlanır
+            <div className="rounded-xl border border-dark-500/40 p-3">
+              <p className="text-[10px] uppercase text-gray-500">ROI</p>
+              <p className="text-xl font-black text-white">{analytics.roi}</p>
             </div>
-          )}
+            <div className="rounded-xl border border-dark-500/40 p-3">
+              <p className="text-[10px] uppercase text-gray-500">ROAS</p>
+              <p className="text-xl font-black text-white">{analytics.roas}</p>
+            </div>
+            <div className="rounded-xl border border-dark-500/40 p-3">
+              <p className="text-[10px] uppercase text-gray-500">Kâr</p>
+              <p className="text-xl font-black text-white">
+                {analytics.profit.toLocaleString('tr-TR')} ₺
+              </p>
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase text-gray-400">Kanal</p>
+            {analytics.byChannel.map((c) => (
+              <p key={c.channel} className="text-sm text-gray-300">
+                {c.channel}: {c.revenue.toLocaleString('tr-TR')} ₺
+              </p>
+            ))}
+          </div>
+          <div className="rounded-xl border border-violet-400/30 bg-violet-500/10 p-3">
+            <p className="text-xs font-black uppercase text-violet-200">AI Sales tahmini</p>
+            <p className="mt-1 text-sm text-gray-200">
+              {forecast.country} · {forecast.suggestedPrice} {forecast.currency} ·{' '}
+              {forecast.suggestedChannel} · +%{forecast.upliftPct} · {forecast.suggestedAd}
+            </p>
+          </div>
+          {analyses.length > 0 ? (
+            <div>
+              <p className="mb-2 text-xs font-bold uppercase text-gray-400">AI Order Manager</p>
+              {analyses.slice(0, 5).map((a) => (
+                <p key={a.id} className="text-sm text-gray-300">
+                  {a.orderRef} · risk {a.riskScore} · {a.recommendation}
+                </p>
+              ))}
+            </div>
+          ) : null}
         </section>
       )}
     </div>

@@ -17,6 +17,25 @@ import {
   publishListing,
   resolvePrice,
 } from './commerceService.js'
+import {
+  aiSalesForecast,
+  analyzeInboxOrder,
+  analyticsOverview,
+  createCoupon,
+  createPaymentIntent,
+  createReturn,
+  createShipment,
+  createSubscription,
+  expandProductI18n,
+  generateProductAi,
+  listCoupons,
+  listOrderAnalyses,
+  listPayments,
+  listProductI18n,
+  listReturns,
+  listShipments,
+  listSubscriptions,
+} from './commerceGc1.js'
 
 export async function commerceRoutes(app: FastifyInstance) {
   app.get('/v1/commerce/catalog/marketplaces', { preHandler: [authenticate] }, async () => ({
@@ -203,5 +222,204 @@ export async function commerceRoutes(app: FastifyInstance) {
       const job = await enqueueStockSync(companyId, body.channelKey)
       return { ok: true, job }
     },
+  )
+
+  // —— GC-1 ——
+  app.post(
+    '/v1/commerce/products/ai',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z
+        .object({
+          productId: z.string().min(1),
+          productName: z.string().optional(),
+          locale: z.string().optional(),
+        })
+        .parse(req.body || {})
+      const row = await generateProductAi(companyId, body)
+      return { ok: true, i18n: row }
+    },
+  )
+
+  app.post(
+    '/v1/commerce/products/:productId/i18n/expand',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const { productId } = z.object({ productId: z.string().min(1) }).parse(req.params)
+      return { ok: true, ...(await expandProductI18n(companyId, productId)) }
+    },
+  )
+
+  app.get(
+    '/v1/commerce/products/i18n',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const q = z.object({ productId: z.string().optional() }).parse(req.query || {})
+      return { ok: true, rows: await listProductI18n(companyId, q.productId) }
+    },
+  )
+
+  app.post(
+    '/v1/commerce/orders/inbox/:id/analyze',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const { id } = z.object({ id: z.string().uuid() }).parse(req.params)
+      return { ok: true, analysis: await analyzeInboxOrder(companyId, id) }
+    },
+  )
+
+  app.get(
+    '/v1/commerce/orders/analyses',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      return { ok: true, analyses: await listOrderAnalyses(companyId) }
+    },
+  )
+
+  app.get(
+    '/v1/commerce/returns',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      return { ok: true, returns: await listReturns(companyId) }
+    },
+  )
+
+  app.post(
+    '/v1/commerce/returns',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z
+        .object({
+          orderRef: z.string().min(1),
+          kind: z.string().optional(),
+          reason: z.string().optional(),
+          channelKey: z.string().optional(),
+        })
+        .parse(req.body || {})
+      return { ok: true, return: await createReturn(companyId, body) }
+    },
+  )
+
+  app.get(
+    '/v1/commerce/subscriptions',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      return { ok: true, subscriptions: await listSubscriptions(companyId) }
+    },
+  )
+
+  app.post(
+    '/v1/commerce/subscriptions',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z
+        .object({
+          customerRef: z.string().min(1),
+          productId: z.string().min(1),
+          interval: z.string().optional(),
+          amount: z.string().optional(),
+          currency: z.string().optional(),
+        })
+        .parse(req.body || {})
+      return { ok: true, subscription: await createSubscription(companyId, body) }
+    },
+  )
+
+  app.get(
+    '/v1/commerce/shipments',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      return { ok: true, shipments: await listShipments(companyId) }
+    },
+  )
+
+  app.post(
+    '/v1/commerce/shipments',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z
+        .object({ orderRef: z.string().min(1), carrier: z.string().min(1) })
+        .parse(req.body || {})
+      return { ok: true, shipment: await createShipment(companyId, body) }
+    },
+  )
+
+  app.get(
+    '/v1/commerce/payments',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      return { ok: true, payments: await listPayments(companyId) }
+    },
+  )
+
+  app.post(
+    '/v1/commerce/payments',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z
+        .object({
+          provider: z.string().min(1),
+          amount: z.string().min(1),
+          currency: z.string().optional(),
+          orderRef: z.string().optional(),
+        })
+        .parse(req.body || {})
+      return { ok: true, payment: await createPaymentIntent(companyId, body) }
+    },
+  )
+
+  app.get(
+    '/v1/commerce/coupons',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      return { ok: true, coupons: await listCoupons(companyId) }
+    },
+  )
+
+  app.post(
+    '/v1/commerce/coupons',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z
+        .object({
+          code: z.string().min(1),
+          discountType: z.string().optional(),
+          discountValue: z.string().min(1),
+        })
+        .parse(req.body || {})
+      return { ok: true, coupon: await createCoupon(companyId, body) }
+    },
+  )
+
+  app.get(
+    '/v1/commerce/ai-sales/forecast',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const q = z
+        .object({ productId: z.string().optional(), country: z.string().optional() })
+        .parse(req.query || {})
+      return { ok: true, ...aiSalesForecast(q) }
+    },
+  )
+
+  app.get(
+    '/v1/commerce/analytics',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async () => ({ ok: true, ...analyticsOverview() }),
   )
 }

@@ -62,15 +62,21 @@ flowchart LR
 
 ## Phases
 
-### GC-0 — Foundation (this sprint)
+### GC-0 — Foundation ✅
 
 Docs · schema · API · Commerce Center · demo channels/orders · price rules · stock sync stub · event promote
 
-### GC-1 — Product publish + i18n + AI content hooks
+### GC-1 — Product AI + i18n + Order AI + ops shells ✅
+
+- Product AI content pack → `commerce_product_i18n`
+- Multi-language expand (TR/EN/DE/FR/ES/IT/AR/RU)
+- AI Order Manager (risk / fraud / stock / delivery)
+- Return Center · Subscriptions · Shipping · Payments · Coupons
+- AI Sales forecast stub · Analytics overview
 
 ### GC-2 — Real adapters (Trendyol, Shopify, …) + stock push
 
-### GC-3 — Returns, subscriptions, shipping/payment centers, analytics ROAS
+### GC-3 — Live ROAS feeds · Landing/AR B2C · full carrier/payment adapters
 
 ## Integration
 
