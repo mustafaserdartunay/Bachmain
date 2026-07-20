@@ -6,9 +6,11 @@
 
 **Security docs:** [51 Gap Report](./51_ENTERPRISE_SECURITY_GAP_REPORT.md) · [52 Roadmap](./52_ENTERPRISE_SECURITY_ROADMAP.md) · [53 Report](./53_ENTERPRISE_SECURITY_REPORT.md) · [54 CRM Cutover](./54_CRM_TENANT_CUTOVER.md) · [55 Ops/DR](./55_OPS_BACKUP_DR.md)
 
+**DevOps docs (plan paths):** [54 DevOps Gap](./54_ENTERPRISE_DEVOPS_GAP_REPORT.md) · [55 DevOps Roadmap](./55_ENTERPRISE_DEVOPS_ROADMAP.md) · [56 DevOps Report](./56_ENTERPRISE_DEVOPS_REPORT.md) · [62 Branching](./62_BRANCHING_STRATEGY.md) · [63 Staging/Preview](./63_STAGING_AND_PREVIEW.md)
+
 **Database docs:** [56 Current State](./56_DATABASE_CURRENT_STATE.md) · [57 Gap Report](./57_DATABASE_GAP_REPORT.md) · [58 Migration Plan](./58_DATABASE_MIGRATION_PLAN.md)
 
-**DevOps docs:** [59 Gap](./59_ENTERPRISE_DEVOPS_GAP_REPORT.md) · [60 Roadmap](./60_ENTERPRISE_DEVOPS_ROADMAP.md) · [61 Report](./61_ENTERPRISE_DEVOPS_REPORT.md) · [62 Branching](./62_BRANCHING_STRATEGY.md) · [63 Staging/Preview](./63_STAGING_AND_PREVIEW.md)
+**MDM docs:** [64 Gap](./64_MDM_GAP_REPORT.md) · [65 Architecture/Roadmap](./65_MDM_ARCHITECTURE_ROADMAP.md)
 
 ---
 
