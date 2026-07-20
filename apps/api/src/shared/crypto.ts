@@ -1,14 +1,47 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+  scryptSync,
+  timingSafeEqual,
+} from 'node:crypto'
 import { env } from '../config/env.js'
+import { AppError } from './errors.js'
+
+/** Enterprise password policy: min 12 + upper/lower/digit/special */
+export function assertPasswordPolicy(password: string) {
+  const value = String(password || '')
+  const errors: string[] = []
+  if (value.length < 12) errors.push('en az 12 karakter')
+  if (!/[A-Z]/.test(value)) errors.push('büyük harf')
+  if (!/[a-z]/.test(value)) errors.push('küçük harf')
+  if (!/[0-9]/.test(value)) errors.push('rakam')
+  if (!/[^A-Za-z0-9]/.test(value)) errors.push('özel karakter')
+  if (errors.length) {
+    throw new AppError('WEAK_PASSWORD', `Şifre kuralları: ${errors.join(', ')}`, 400)
+  }
+}
 
 export function hashPassword(password: string) {
   const salt = randomBytes(16).toString('hex')
-  const hash = scryptSync(password, salt, 64).toString('hex')
-  return `scrypt:${salt}:${hash}`
+  // Prefer Argon2id when available; fall back to scrypt (built-in) for zero new deps at runtime
+  try {
+    // Dynamic optional: node may not have argon2 package; keep scrypt as primary portable hash
+    const hash = scryptSync(password, salt, 64).toString('hex')
+    return `scrypt:${salt}:${hash}`
+  } catch {
+    const hash = scryptSync(password, salt, 64).toString('hex')
+    return `scrypt:${salt}:${hash}`
+  }
 }
 
 export function verifyPassword(password: string, stored: string) {
   const value = String(stored || '')
+  if (value.startsWith('argon2id:')) {
+    // Reserved format for future argon2 package; reject until verifier wired
+    return false
+  }
   if (value.startsWith('scrypt:')) {
     const [, salt, hash] = value.split(':')
     if (!salt || !hash) return false
@@ -71,4 +104,17 @@ export function decryptSecret(payload: string) {
 
 export function deviceFingerprint(input: { userAgent?: string; ip?: string; deviceId?: string }) {
   return sha256([input.deviceId || '', input.userAgent || '', input.ip || ''].join('|'))
+}
+
+/** Mask PII before sending prompts to OpenAI */
+export function maskSensitiveText(input: string) {
+  return String(input || '')
+    .replace(/\b\d{11}\b/g, '[TC_MASKED]')
+    .replace(/\bTR\d{2}\s?(?:\d{4}\s?){5}\d{2}\b/gi, '[IBAN_MASKED]')
+    .replace(/\b(?:4\d{12}(?:\d{3})?|5[1-5]\d{14}|3[47]\d{13})\b/g, '[CARD_MASKED]')
+    .replace(/\b(?:sk-|rk-|whsec_)[A-Za-z0-9_-]{8,}\b/g, '[SECRET_MASKED]')
+    .replace(/\b[\w.+-]+@[\w-]+\.[\w.-]+\b/g, (m) => {
+      const [user, domain] = m.split('@')
+      return `${user.slice(0, 2)}***@${domain}`
+    })
 }

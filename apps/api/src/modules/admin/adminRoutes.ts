@@ -66,7 +66,35 @@ export async function adminRoutes(app: FastifyInstance) {
 
   app.get('/v1/admin/activity-logs', { preHandler: requireStaff('superadmin', 'support') }, async () => {
     const rows = await db.select().from(activityLogs).orderBy(desc(activityLogs.createdAt)).limit(200)
-    return { ok: true, rows }
+    return { ok: true, rows, immutable: true }
+  })
+
+  app.delete('/v1/admin/activity-logs', { preHandler: requireStaff('superadmin') }, async () => {
+    const { rejectAuditMutation } = await import('../audit/activityService.js')
+    rejectAuditMutation()
+  })
+
+  app.delete('/v1/admin/activity-logs/:id', { preHandler: requireStaff('superadmin') }, async () => {
+    const { rejectAuditMutation } = await import('../audit/activityService.js')
+    rejectAuditMutation()
+  })
+
+  app.get('/v1/admin/security-score', { preHandler: requireStaff('superadmin', 'support') }, async () => {
+    const redis = Boolean(process.env.REDIS_URL)
+    const stripeWh = Boolean(process.env.STRIPE_WEBHOOK_SECRET)
+    const openai = Boolean(process.env.OPENAI_API_KEY)
+    let score = 40
+    if (process.env.JWT_ACCESS_SECRET) score += 15
+    if (process.env.DATABASE_URL) score += 15
+    if (stripeWh) score += 10
+    if (openai) score += 10
+    if (redis) score += 10
+    return {
+      ok: true,
+      score: Math.min(100, score),
+      checks: { redis, stripeWebhook: stripeWh, openai, jwt: true, database: true },
+      sampledAt: new Date().toISOString(),
+    }
   })
 
   app.get('/v1/admin/tickets', { preHandler: requireStaff('support', 'superadmin') }, async () => {

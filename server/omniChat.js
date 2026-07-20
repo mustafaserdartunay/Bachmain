@@ -1,4 +1,15 @@
-import { requireOpenAiApiKey, resolveRequestApiKey } from './env.js'
+import {
+  assertAiProxyAuthorized,
+  hitAiRateLimit,
+  requireOpenAiApiKey,
+  resolveRequestApiKey,
+} from './env.js'
+
+function guardAiRequest(reqHeaders = {}) {
+  assertAiProxyAuthorized(reqHeaders)
+  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon').split(',')[0].trim()
+  hitAiRateLimit(ip)
+}
 
 const BASE_SYSTEM_PROMPT = `Sen Erlenbox ambalaj/kutu üretimi firmasının omnichannel müşteri iletişim asistanısın.
 WhatsApp, Instagram, Messenger, e-posta ve TikTok lead kanallarından gelen müşteri mesajlarına profesyonel Türkçe yanıtlar üretirsin.
@@ -136,6 +147,7 @@ export async function runOmniAnalyze({
 }
 
 export async function handleOmniAnalyzeRequest(reqBody, reqHeaders = {}) {
+  guardAiRequest(reqHeaders)
   const {
     messages = [],
     context = {},

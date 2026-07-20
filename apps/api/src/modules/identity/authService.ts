@@ -10,7 +10,7 @@ import {
   users,
 } from '../../db/schema/index.js'
 import { AppError } from '../../shared/errors.js'
-import { hashPassword, randomToken, sha256, slugify, verifyPassword } from '../../shared/crypto.js'
+import { assertPasswordPolicy, hashPassword, randomToken, sha256, slugify, verifyPassword } from '../../shared/crypto.js'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../shared/jwt.js'
 import { env } from '../../config/env.js'
 import { logActivity } from '../audit/activityService.js'
@@ -39,7 +39,7 @@ export async function registerUser(input: {
 }) {
   const email = input.email.trim().toLowerCase()
   if (!email.includes('@')) throw new AppError('INVALID_EMAIL', 'Geçerli e-posta girin')
-  if (input.password.length < 6) throw new AppError('WEAK_PASSWORD', 'Şifre en az 6 karakter olmalı')
+  assertPasswordPolicy(input.password)
   if (!input.fullName.trim() || !input.companyName.trim()) {
     throw new AppError('MISSING_FIELDS', 'Ad soyad ve firma adı zorunlu')
   }
@@ -280,7 +280,7 @@ export async function requestPasswordReset(emailRaw: string) {
 }
 
 export async function resetPassword(token: string, password: string) {
-  if (password.length < 6) throw new AppError('WEAK_PASSWORD', 'Şifre en az 6 karakter olmalı')
+  assertPasswordPolicy(password)
   const [row] = await db
     .select()
     .from(emailTokens)

@@ -1,0 +1,16 @@
+{
+  "customers": [],
+  "supportTickets": [],
+  "customerExtras": {},
+  "dashboard": {},
+  "modules": {},
+  "accounts": [
+    {
+      "id": "example-account",
+      "email": "admin@example.com",
+      "passwordHash": "REDACTED:scrypt:example-salt:example-hash",
+      "fullName": "Example Admin",
+      "role": "admin"
+    }
+  ]
+}

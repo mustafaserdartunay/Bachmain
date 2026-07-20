@@ -1,4 +1,16 @@
-import { getOpenAiApiKey, requireOpenAiApiKey, resolveRequestApiKey } from './env.js'
+import {
+  assertAiProxyAuthorized,
+  getOpenAiApiKey,
+  hitAiRateLimit,
+  requireOpenAiApiKey,
+  resolveRequestApiKey,
+} from './env.js'
+
+function guardAiRequest(reqHeaders = {}) {
+  assertAiProxyAuthorized(reqHeaders)
+  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon').split(',')[0].trim()
+  hitAiRateLimit(ip)
+}
 
 const DEFAULT_MODELS = [
   { id: 'gpt-5.5', label: 'GPT-5.5' },
@@ -74,6 +86,7 @@ export async function handleGrowthModelsRequest(reqHeaders = {}) {
 }
 
 export async function handleGrowthChatRequest(reqBody = {}, reqHeaders = {}) {
+  guardAiRequest(reqHeaders)
   const {
     messages = [],
     model,

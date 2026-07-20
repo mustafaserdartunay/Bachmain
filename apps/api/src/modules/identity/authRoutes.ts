@@ -39,7 +39,7 @@ export async function authRoutes(app: FastifyInstance) {
     const body = z
       .object({
         email: z.string().email(),
-        password: z.string().min(6),
+        password: z.string().min(12),
         fullName: z.string().min(1),
         companyName: z.string().min(1),
         phone: z.string().optional(),
@@ -126,7 +126,7 @@ export async function authRoutes(app: FastifyInstance) {
     const body = z
       .object({
         token: z.string().min(10),
-        password: z.string().min(6),
+        password: z.string().min(12),
       })
       .parse(req.body)
     return resetPassword(body.token, body.password)

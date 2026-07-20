@@ -6,6 +6,7 @@ import { SupportDetailPage } from '@/pages/SupportDetailPage'
 import { PlatformOpsPage } from '@/pages/PlatformOpsPage'
 import { UserManagementPage } from '@/pages/UserManagementPage'
 import { AuditLogPage } from '@/pages/AuditLogPage'
+import { SecurityCenterPage } from '@/pages/SecurityCenterPage'
 import {
   BillingCampaignsPage,
   BillingCouponsPage,
@@ -45,6 +46,7 @@ export function AppRoutes() {
         <Route path="platform-ops" element={<PlatformOpsPage />} />
         <Route path="user-management" element={<UserManagementPage />} />
         <Route path="audit-logs" element={<AuditLogPage />} />
+        <Route path="guvenlik" element={<SecurityCenterPage />} />
 
         <Route path="abonelik/paketler" element={<BillingPlansPage />} />
         <Route path="abonelik/moduller" element={<BillingModulesPage />} />
@@ -71,7 +73,7 @@ export function AppRoutes() {
         <Route path="destek/:id/duzenle" element={<ModuleFormPage moduleId="support" mode="edit" />} />
 
         {moduleIds
-          .filter((id) => id !== 'customers' && id !== 'support')
+          .filter((id) => id !== 'customers' && id !== 'support' && id !== 'security')
           .map((id) => {
             const config = moduleConfigs[id]
             const segment = config.path.replace(/^\//, '')

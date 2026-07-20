@@ -7,6 +7,8 @@ export type AccessClaims = {
   kind: 'tenant' | 'staff'
   role?: string
   platformRole?: string
+  /** Permission codes for Least Privilege checks */
+  perms?: string[]
 }
 
 const accessSecret = () => new TextEncoder().encode(env.JWT_ACCESS_SECRET)

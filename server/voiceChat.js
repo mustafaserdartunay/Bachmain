@@ -1,4 +1,15 @@
-import { requireOpenAiApiKey, resolveRequestApiKey } from './env.js'
+import {
+  assertAiProxyAuthorized,
+  hitAiRateLimit,
+  requireOpenAiApiKey,
+  resolveRequestApiKey,
+} from './env.js'
+
+function guardAiRequest(reqHeaders = {}) {
+  assertAiProxyAuthorized(reqHeaders)
+  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon').split(',')[0].trim()
+  hitAiRateLimit(ip)
+}
 
 const SYSTEM_PROMPT = `Sen BACHMAIN CRM için Türkçe konuşan yapay zeka asistanısın. Kullanıcının isteğini anlayıp sistemi kontrol ederek işlemleri otomatik yaparsın.
 
@@ -86,6 +97,7 @@ export async function runVoiceChat({ messages, context, apiKey, model = 'gpt-4o-
 }
 
 export async function handleVoiceChatRequest(reqBody, reqHeaders = {}) {
+  guardAiRequest(reqHeaders)
   const { messages = [], context = {} } = reqBody || {}
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 

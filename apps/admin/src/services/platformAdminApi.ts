@@ -176,6 +176,28 @@ const MOCK_AUDIT: AuditLogEntry[] = [
   },
 ]
 
+export interface SecurityPanel {
+  status: ServiceStatus
+  label: string
+  detail: string
+  count?: number
+  immutable?: boolean
+  placeholder?: boolean
+  checks?: Record<string, boolean>
+}
+
+export interface SecurityOverview {
+  ok: boolean
+  score: number
+  sampledAt: string
+  production: boolean
+  database: string
+  panels: Record<string, SecurityPanel>
+  recommendations: string[]
+  mock?: boolean
+  source: string
+}
+
 function isNotFoundOrUnavailable(err: unknown) {
   return err instanceof ApiError && (err.status === 404 || err.status === 501 || err.status >= 500)
 }
@@ -246,6 +268,38 @@ export const platformAdminApi = {
           ? MOCK_AUDIT.filter((r) => r.action === action)
           : MOCK_AUDIT
         return { rows, immutable: true }
+      }
+      throw err
+    }
+  },
+
+  /** GET /security/overview — live Security Center score + panels */
+  getSecurityOverview: async (): Promise<SecurityOverview> => {
+    try {
+      const data = await api.get<SecurityOverview>('/security/overview')
+      return { ...data, mock: false, source: '/security/overview' }
+    } catch (err) {
+      if (isNotFoundOrUnavailable(err) || err instanceof ApiError) {
+        return {
+          ok: true,
+          score: 42,
+          sampledAt: new Date().toISOString(),
+          production: false,
+          database: 'unknown',
+          panels: {
+            audit: { status: 'degraded', label: 'Audit log', detail: 'API henüz yanıt vermedi', immutable: true },
+            sessions: { status: 'unknown', label: 'Oturumlar', detail: '—' },
+            env: { status: 'unknown', label: 'ENV health', detail: '—' },
+            api: { status: 'down', label: 'API', detail: 'Security overview endpoint unreachable' },
+            openai: { status: 'unknown', label: 'OpenAI', detail: '—' },
+            rateLimit: { status: 'unknown', label: 'Rate limit', detail: '—' },
+            backup: { status: 'degraded', label: 'Backup', detail: 'Placeholder', placeholder: true },
+            storage: { status: 'degraded', label: 'Storage', detail: 'Placeholder', placeholder: true },
+          },
+          recommendations: ['Admin API /security/overview erişimini doğrulayın'],
+          mock: true,
+          source: '/security/overview',
+        }
       }
       throw err
     }

@@ -3,11 +3,11 @@ import { z } from 'zod'
 import { and, desc, eq, isNull } from 'drizzle-orm'
 import { db } from '../../db/client.js'
 import { customers } from '../../db/schema/index.js'
-import { authenticate, requireTenant } from '../../shared/authGuard.js'
+import { authenticate, requirePermission, requireTenant } from '../../shared/authGuard.js'
 import { logActivity } from '../audit/activityService.js'
 
 export async function crmRoutes(app: FastifyInstance) {
-  app.get('/v1/customers', { preHandler: authenticate }, async (req) => {
+  app.get('/v1/customers', { preHandler: [authenticate, requirePermission('crm.customers.view')] }, async (req) => {
     const companyId = requireTenant(req)
     const rows = await db
       .select()
@@ -18,7 +18,7 @@ export async function crmRoutes(app: FastifyInstance) {
     return { ok: true, rows }
   })
 
-  app.post('/v1/customers', { preHandler: authenticate }, async (req) => {
+  app.post('/v1/customers', { preHandler: [authenticate, requirePermission('crm.customers.create')] }, async (req) => {
     const companyId = requireTenant(req)
     const body = z
       .object({

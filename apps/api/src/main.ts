@@ -22,6 +22,17 @@ async function main() {
     trustProxy: true,
   })
 
+  // Preserve raw JSON for Stripe webhook signature verification
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+    const raw = typeof body === 'string' ? body : Buffer.from(body as Buffer).toString('utf8')
+    ;(req as { rawBody?: string }).rawBody = raw
+    try {
+      done(null, raw ? JSON.parse(raw) : {})
+    } catch (err) {
+      done(err as Error, undefined)
+    }
+  })
+
   await app.register(sensible)
   await app.register(cookie)
   await app.register(helmet, { global: true })
@@ -35,6 +46,21 @@ async function main() {
   await app.register(rateLimit, {
     max: 300,
     timeWindow: '1 minute',
+    hook: 'onRequest',
+    allowList: (req) =>
+      req.url.startsWith('/v1/health') || req.url.startsWith('/v1/billing/webhooks/'),
+    keyGenerator: (req) => req.ip,
+  })
+
+  // Distributed Redis limiter when REDIS_URL is set (in-memory fallback inside helper)
+  app.addHook('onRequest', async (req, reply) => {
+    if (!env.REDIS_URL) return
+    if (req.url.startsWith('/v1/health') || req.url.startsWith('/v1/billing/webhooks/')) return
+    const { hitDistributedRateLimit } = await import('./shared/redisRateLimit.js')
+    const ok = await hitDistributedRateLimit(`${req.ip}:${req.method}`, { limit: 300, windowSec: 60 })
+    if (!ok) {
+      return reply.status(429).send({ error: 'RATE_LIMIT', message: 'Çok fazla istek' })
+    }
   })
 
   app.setErrorHandler((err, req, reply) => {

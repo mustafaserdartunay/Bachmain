@@ -4,6 +4,8 @@
 **Domains:** `bachmain.com` · `uygulama.bachmain.com` · `yonetim.bachmain.com`  
 **Principle:** One API · One PostgreSQL · Multi-tenant · No duplicated databases  
 
+**Security docs:** [51 Gap Report](./51_ENTERPRISE_SECURITY_GAP_REPORT.md) · [52 Roadmap](./52_ENTERPRISE_SECURITY_ROADMAP.md) · [53 Report](./53_ENTERPRISE_SECURITY_REPORT.md) · [54 CRM Cutover](./54_CRM_TENANT_CUTOVER.md) · [55 Ops/DR](./55_OPS_BACKUP_DR.md)
+
 ---
 
 ## 0. Current → Target

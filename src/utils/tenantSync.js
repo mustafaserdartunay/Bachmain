@@ -1,6 +1,9 @@
 /**
  * Sync selected CRM collections to platform Postgres (tenant_data).
  * Falls back silently when DATABASE_URL is not configured on the API.
+ *
+ * Phase 4 dual-write: enable via VITE_CRM_DUAL_WRITE=1 (see crmApiDualWrite.js).
+ * Cutover checklist: docs/54_CRM_TENANT_CUTOVER.md
  */
 import { getStoredSession } from './platformAuth'
 

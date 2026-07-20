@@ -1,4 +1,15 @@
-import { requireOpenAiApiKey, resolveRequestApiKey } from './env.js'
+import {
+  assertAiProxyAuthorized,
+  hitAiRateLimit,
+  requireOpenAiApiKey,
+  resolveRequestApiKey,
+} from './env.js'
+
+function guardAiRequest(reqHeaders = {}) {
+  assertAiProxyAuthorized(reqHeaders)
+  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon').split(',')[0].trim()
+  hitAiRateLimit(ip)
+}
 
 function buildMultipartBody({ fields, fileName, fileBuffer, mimeType }) {
   const boundary = `----Erlenbox${Date.now()}${Math.random().toString(16).slice(2)}`
@@ -68,6 +79,7 @@ export async function transcribeAudioBuffer({ buffer, mimeType = 'audio/webm', a
 }
 
 export async function handleVoiceTranscribeRequest(reqBody, reqHeaders = {}) {
+  guardAiRequest(reqHeaders)
   const { audio, mimeType = 'audio/webm' } = reqBody || {}
 
   if (!audio) {

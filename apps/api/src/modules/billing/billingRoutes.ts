@@ -112,12 +112,33 @@ export async function billingRoutes(app: FastifyInstance) {
     }
   })
 
-  app.post('/v1/billing/webhooks/stripe', async (req, reply) => {
-    const event = req.body as {
+  app.post('/v1/billing/webhooks/stripe', {
+    config: { rawBody: true },
+  }, async (req, reply) => {
+    const rawBody = (req as { rawBody?: string }).rawBody
+      || (typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {}))
+    let event = req.body as {
       id?: string
       type?: string
       data?: { object?: Record<string, unknown> }
     }
+
+    if (env.STRIPE_WEBHOOK_SECRET) {
+      try {
+        const { verifyStripeWebhookSignature } = await import('../../shared/stripeWebhook.js')
+        event = verifyStripeWebhookSignature(
+          rawBody,
+          req.headers['stripe-signature'],
+          env.STRIPE_WEBHOOK_SECRET,
+        )
+      } catch (error) {
+        const status = (error as { statusCode?: number }).statusCode || 400
+        throw new AppError('STRIPE_SIGNATURE', (error as Error).message, status)
+      }
+    } else if (env.NODE_ENV === 'production') {
+      throw new AppError('STRIPE_WEBHOOK_SECRET', 'STRIPE_WEBHOOK_SECRET is required in production', 500)
+    }
+
     if (!event?.id || !event.type) throw new AppError('INVALID_EVENT', 'Geçersiz Stripe event')
 
     const [dup] = await db

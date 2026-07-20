@@ -11,10 +11,12 @@ const envSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ACCESS_TTL_SECONDS: z.coerce.number().default(900),
-  JWT_REFRESH_TTL_SECONDS: z.coerce.number().default(1_209_600),
+  JWT_REFRESH_TTL_SECONDS: z.coerce.number().default(2_592_000),
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
+  AI_PROXY_SECRET: z.string().optional(),
   IYZICO_API_KEY: z.string().optional(),
   IYZICO_SECRET_KEY: z.string().optional(),
   IYZICO_BASE_URL: z.string().default('https://sandbox-api.iyzipay.com'),
@@ -34,7 +36,11 @@ function loadEnv(): Env {
     const details = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
     throw new Error(`Invalid environment: ${details}`)
   }
-  return parsed.data
+  const data = parsed.data
+  if (data.NODE_ENV === 'production' && data.STRIPE_SECRET_KEY && !data.STRIPE_WEBHOOK_SECRET) {
+    throw new Error('Invalid environment: STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set')
+  }
+  return data
 }
 
 export const env = loadEnv()

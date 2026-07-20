@@ -10,6 +10,10 @@ import { handleBillingApi } from './billingRoutes.mjs'
 import { handlePaymentsApi } from './payments.mjs'
 import { seedBillingIfEmpty } from './subscriptionService.mjs'
 import { handleMailApi } from './mailRoutes.mjs'
+import { assertAdminEnv } from './assertEnv.mjs'
+import { handleSecurityApi } from './securityRoutes.mjs'
+
+assertAdminEnv()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -35,10 +39,12 @@ function computeMetrics(rows) {
 
 function parseBody(req) {
   return new Promise((resolve, reject) => {
-    let body = ''
-    req.on('data', (chunk) => { body += chunk })
+    const chunks = []
+    req.on('data', (chunk) => { chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)) })
     req.on('end', () => {
-      try { resolve(body ? JSON.parse(body) : {}) }
+      const raw = Buffer.concat(chunks).toString('utf8')
+      req.rawBody = raw
+      try { resolve(raw ? JSON.parse(raw) : {}) }
       catch { reject(new Error('INVALID_JSON')) }
     })
     req.on('error', reject)
@@ -91,6 +97,11 @@ async function handle(req, res, url) {
       if (await handlePaymentsApi(req, res, apiPath, body)) return
       if (await handleWhatsAppApi(req, res, apiPath, body)) return
       if (await handleMailApi(req, res, apiPath, body)) return
+      if (await handleSecurityApi(req, res, apiPath)) return
+    }
+
+    if (method === 'GET' && pathname.startsWith('/api/security')) {
+      if (await handleSecurityApi(req, res, pathname.replace(/^\/api\/?/, '') || '')) return
     }
 
     if (method === 'GET' && pathname === '/api/health') {

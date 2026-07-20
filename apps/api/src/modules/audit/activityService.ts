@@ -1,5 +1,11 @@
 import { db } from '../../db/client.js'
 import { activityLogs } from '../../db/schema/index.js'
+import { AppError } from '../../shared/errors.js'
+
+/** Append-only: activity / audit rows must never be deleted via API. */
+export function rejectAuditMutation() {
+  throw new AppError('AUDIT_IMMUTABLE', 'Audit log append-only; silme desteklenmez', 405)
+}
 
 export async function logActivity(input: {
   companyId?: string | null

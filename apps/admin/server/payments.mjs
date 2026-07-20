@@ -5,6 +5,7 @@ import { withStore, newId, loadStore } from './store.mjs'
 import { insertPaymentEvent, hasDatabase } from './db.mjs'
 import { sendJson } from './authRoutes.mjs'
 import { getBearerOrCookieToken, getAccountFromToken } from './auth.mjs'
+import { claimStripeEventId, verifyStripeWebhookSignature } from './stripeWebhook.mjs'
 
 const PLANS = {
   Starter: { label: 'Başlangıç', mrr: 990, stripePriceEnv: 'STRIPE_PRICE_STARTER' },
@@ -180,32 +181,56 @@ export async function handlePaymentsApi(req, res, path, body = {}) {
   }
 
   if (method === 'POST' && path === 'payments/webhook') {
+    let bodyEvent = body
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+    const signature = req.headers['stripe-signature']
+    if (webhookSecret) {
+      try {
+        bodyEvent = verifyStripeWebhookSignature(
+          req.rawBody || JSON.stringify(body),
+          signature,
+          webhookSecret,
+        )
+      } catch (error) {
+        sendJson(req, res, error.statusCode || 400, { ok: false, error: error.message })
+        return true
+      }
+    } else if (String(process.env.NODE_ENV || '').toLowerCase() === 'production') {
+      sendJson(req, res, 500, { ok: false, error: 'STRIPE_WEBHOOK_SECRET is required in production' })
+      return true
+    }
+
+    if (bodyEvent?.id && !claimStripeEventId(bodyEvent.id)) {
+      sendJson(req, res, 200, { ok: true, duplicate: true })
+      return true
+    }
+
     const eventId = newId('pay')
-    const eventType = body.type || body.event || 'payment.received'
+    const eventType = bodyEvent.type || bodyEvent.event || 'payment.received'
     const customerId =
-      body.customerId ||
-      body.data?.object?.metadata?.customerId ||
-      body.data?.object?.client_reference_id ||
+      bodyEvent.customerId ||
+      bodyEvent.data?.object?.metadata?.customerId ||
+      bodyEvent.data?.object?.client_reference_id ||
       null
-    const plan = normalizePlan(body.plan || body.data?.object?.metadata?.plan || 'Pro')
-    const months = Number(body.months || 1)
+    const plan = normalizePlan(bodyEvent.plan || bodyEvent.data?.object?.metadata?.plan || 'Pro')
+    const months = Number(bodyEvent.months || 1)
 
     // Stripe checkout.session.completed
-    const stripeType = body.type
-    const stripeObj = body.data?.object
+    const stripeType = bodyEvent.type
+    const stripeObj = bodyEvent.data?.object
     if (stripeType === 'checkout.session.completed' && stripeObj) {
       // fall through with extracted fields
     }
 
     await insertPaymentEvent({
       id: eventId,
-      provider: body.provider || (stripeType ? 'stripe' : 'manual'),
+      provider: bodyEvent.provider || (stripeType ? 'stripe' : 'manual'),
       customerId,
-      accountId: body.accountId || null,
+      accountId: bodyEvent.accountId || null,
       eventType: stripeType || eventType,
-      amountCents: body.amountCents ?? stripeObj?.amount_total ?? null,
-      currency: body.currency || stripeObj?.currency || 'TRY',
-      raw: body,
+      amountCents: bodyEvent.amountCents ?? stripeObj?.amount_total ?? null,
+      currency: bodyEvent.currency || stripeObj?.currency || 'TRY',
+      raw: bodyEvent,
     })
 
     if (customerId) {
@@ -220,7 +245,7 @@ export async function handlePaymentsApi(req, res, path, body = {}) {
           customer.plan = plan
           const planMeta = PLANS[plan]
           if (planMeta?.mrr) customer.mrr = planMeta.mrr
-          if (body.mrr != null) customer.mrr = body.mrr
+          if (bodyEvent.mrr != null) customer.mrr = bodyEvent.mrr
         }
         return store
       })

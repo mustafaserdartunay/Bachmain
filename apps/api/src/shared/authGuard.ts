@@ -36,3 +36,17 @@ export function requireTenant(req: FastifyRequest) {
   if (!req.auth?.cid) throw new AppError('TENANT_REQUIRED', 'Firma bağlamı gerekli', 403)
   return req.auth.cid
 }
+
+/** Least Privilege: require permission codes on JWT `perms` claim (or staff bypass).
+ * Legacy tokens without `perms` remain allowed (backward compatible).
+ */
+export function requirePermission(...codes: string[]) {
+  return async (req: FastifyRequest) => {
+    await authenticate(req, {} as FastifyReply)
+    if (req.auth?.platformRole && req.auth.platformRole !== 'none') return
+    const perms = Array.isArray(req.auth?.perms) ? req.auth.perms : null
+    if (!perms || perms.length === 0) return
+    const ok = codes.every((code) => perms.includes(code) || perms.includes('*'))
+    if (!ok) throw new AppError('FORBIDDEN', `İzin gerekli: ${codes.join(', ')}`, 403)
+  }
+}
