@@ -16,6 +16,8 @@
 
 **AIOS:** [68 Gap](./68_AIOS_GAP_REPORT.md) · [69 Architecture/Roadmap](./69_AIOS_ARCHITECTURE_ROADMAP.md)
 
+**Knowledge Platform:** [70 Gap](./70_KNOWLEDGE_PLATFORM_GAP_REPORT.md) · [71 Architecture/Roadmap](./71_KNOWLEDGE_PLATFORM_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target

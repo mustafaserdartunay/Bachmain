@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bot, ShieldAlert, Sparkles, Wrench, Workflow } from 'lucide-react'
+import { Bot, Library, ShieldAlert, Sparkles, Wrench, Workflow } from 'lucide-react'
 import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 
 const AGENTS = [
@@ -76,6 +76,13 @@ export default function AiosHubPage() {
             >
               <Workflow className="h-4 w-4" />
               Workflow Engine
+            </Link>
+            <Link
+              to="/bilgi-merkezi"
+              className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-sky-200"
+            >
+              <Library className="h-4 w-4" />
+              Knowledge
             </Link>
           </div>
         </div>

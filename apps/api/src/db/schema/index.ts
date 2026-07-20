@@ -994,3 +994,135 @@ export const aiosSchedules = pgTable(
   },
   (t) => [index('aios_schedules_company_idx').on(t.companyId, t.enabled)],
 )
+
+/** Knowledge Platform (KP-0) */
+export const knowledgeDocuments = pgTable(
+  'knowledge_documents',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    title: text('title').notNull(),
+    docType: text('doc_type').default('txt').notNull(), // pdf | docx | md | …
+    category: text('category').default('general').notNull(), // policy | sop | faq | wiki | …
+    language: text('language').default('tr'),
+    status: text('status').default('indexed').notNull(), // draft | processing | indexed | ocr_pending | archived
+    summary: text('summary'),
+    keywords: jsonb('keywords').$type<string[]>().default([]),
+    tags: jsonb('tags').$type<string[]>().default([]),
+    currentVersion: integer('current_version').default(1).notNull(),
+    branchId: uuid('branch_id'),
+    warehouseId: uuid('warehouse_id'),
+    departmentId: text('department_id'),
+    roleCodes: jsonb('role_codes').$type<string[]>().default([]),
+    sourceModule: text('source_module'),
+    mimeType: text('mime_type'),
+    byteSize: integer('byte_size'),
+    ocrStatus: text('ocr_status').default('none'), // none | pending | done | failed
+    indexStatus: text('index_status').default('pending'), // pending | ready | stale | failed
+    createdBy: uuid('created_by').references(() => users.id),
+    updatedBy: uuid('updated_by').references(() => users.id),
+    ...timestamps,
+  },
+  (t) => [
+    index('knowledge_docs_company_idx').on(t.companyId, t.status),
+    index('knowledge_docs_category_idx').on(t.companyId, t.category),
+  ],
+)
+
+export const knowledgeVersions = pgTable(
+  'knowledge_versions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    documentId: uuid('document_id')
+      .notNull()
+      .references(() => knowledgeDocuments.id),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    version: integer('version').notNull(),
+    contentText: text('content_text').default('').notNull(),
+    changelog: text('changelog'),
+    createdBy: uuid('created_by').references(() => users.id),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('knowledge_versions_uidx').on(t.documentId, t.version)],
+)
+
+export const knowledgeChunks = pgTable(
+  'knowledge_chunks',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    documentId: uuid('document_id')
+      .notNull()
+      .references(() => knowledgeDocuments.id),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    version: integer('version').notNull(),
+    chunkIndex: integer('chunk_index').notNull(),
+    content: text('content').notNull(),
+    tokens: jsonb('tokens').$type<string[]>().default([]),
+    /** KP-0 stub vector; KP-2 → pgvector */
+    embedding: jsonb('embedding').$type<number[]>().default([]),
+    ...timestamps,
+  },
+  (t) => [
+    index('knowledge_chunks_doc_idx').on(t.documentId, t.version),
+    index('knowledge_chunks_company_idx').on(t.companyId),
+  ],
+)
+
+export const knowledgeLinks = pgTable(
+  'knowledge_links',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    documentId: uuid('document_id')
+      .notNull()
+      .references(() => knowledgeDocuments.id),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    entityType: text('entity_type').notNull(), // customer | quote | order | production | warehouse | invoice | logistics | task
+    entityId: text('entity_id').notNull(),
+    label: text('label'),
+    ...timestamps,
+  },
+  (t) => [
+    index('knowledge_links_doc_idx').on(t.documentId),
+    index('knowledge_links_entity_idx').on(t.companyId, t.entityType, t.entityId),
+  ],
+)
+
+export const knowledgeFaq = pgTable(
+  'knowledge_faq',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    question: text('question').notNull(),
+    answer: text('answer').notNull(),
+    tags: jsonb('tags').$type<string[]>().default([]),
+    documentId: uuid('document_id').references(() => knowledgeDocuments.id),
+    ...timestamps,
+  },
+  (t) => [index('knowledge_faq_company_idx').on(t.companyId)],
+)
+
+export const knowledgeSearchLog = pgTable(
+  'knowledge_search_log',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    userId: uuid('user_id').references(() => users.id),
+    query: text('query').notNull(),
+    hitCount: integer('hit_count').default(0),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('knowledge_search_log_company_idx').on(t.companyId, t.createdAt)],
+)

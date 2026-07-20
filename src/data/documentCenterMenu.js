@@ -3,6 +3,7 @@ export const DOCUMENT_CENTER_BASE = '/belge-merkezi'
 /** Full Document Center navigation (nested under Ayarlar → Belge Merkezi) */
 export const documentCenterSubMenus = [
   { label: 'Özet', path: DOCUMENT_CENTER_BASE, icon: 'gauge' },
+  { label: 'Knowledge Center', path: '/bilgi-merkezi', icon: 'library' },
   { label: 'Şablonlar', path: `${DOCUMENT_CENTER_BASE}/sablonlar`, icon: 'templates' },
   { label: 'Belge Tasarımcısı', path: `${DOCUMENT_CENTER_BASE}/tasarimci`, icon: 'pen' },
   { label: 'Label Designer', path: `${DOCUMENT_CENTER_BASE}/etiket`, icon: 'tag' },

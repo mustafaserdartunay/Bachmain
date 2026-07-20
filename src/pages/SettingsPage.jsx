@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Building2, GitBranch, ImagePlus, Save, ShieldCheck, Sparkles } from 'lucide-react'
+import { Building2, GitBranch, ImagePlus, Library, Save, ShieldCheck, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
   defaultCompanySettings,
@@ -84,6 +84,13 @@ export default function SettingsPage() {
           >
             <Sparkles className="h-4 w-4" />
             AIOS
+          </Link>
+          <Link
+            to="/bilgi-merkezi"
+            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-sky-200 transition-colors hover:bg-dark-700 hover:text-white"
+          >
+            <Library className="h-4 w-4" />
+            Knowledge
           </Link>
           <Link
             to="/ayarlar/kurumsal-yapi"

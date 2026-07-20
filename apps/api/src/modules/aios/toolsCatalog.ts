@@ -11,6 +11,15 @@ export type AiosTool = {
 
 export const AIOS_TOOLS: AiosTool[] = [
   {
+    id: 'search_documents',
+    label: 'Search Documents',
+    description: 'Knowledge Platform belge arama (RAG).',
+    modules: ['knowledge'],
+    permission: 'knowledge.search',
+    requiresHumanApproval: false,
+    inputSchema: { query: 'string', limit: 'number' },
+  },
+  {
     id: 'customer.search',
     label: 'Customer Search',
     description: 'Müşteri ara (okuma).',
