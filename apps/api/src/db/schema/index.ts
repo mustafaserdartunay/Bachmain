@@ -1758,3 +1758,147 @@ export const mesOeeSamples = pgTable(
   },
   (t) => [index('mes_oee_samples_company_idx').on(t.companyId, t.sampledAt)],
 )
+
+/** Financial Suite (FS-0) — GL projection layer; does not replace treasury SoT */
+export const financeAccounts = pgTable(
+  'finance_accounts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    code: text('code').notNull(),
+    name: text('name').notNull(),
+    type: text('type').notNull(), // asset | liability | equity | revenue | expense
+    currency: text('currency').default('TRY'),
+    parentCode: text('parent_code'),
+    active: boolean('active').default(true).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('finance_accounts_code_uidx').on(t.companyId, t.code),
+    index('finance_accounts_company_idx').on(t.companyId, t.type),
+  ],
+)
+
+export const financeJournals = pgTable(
+  'finance_journals',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    branchId: uuid('branch_id'),
+    journalNo: text('journal_no').notNull(),
+    status: text('status').default('draft').notNull(), // draft | posted | void
+    source: text('source').default('manual').notNull(), // manual | treasury | invoice | expense | mes | commerce
+    currency: text('currency').default('TRY'),
+    memo: text('memo'),
+    treasuryMovementId: text('treasury_movement_id'),
+    invoiceId: text('invoice_id'),
+    orderId: text('order_id'),
+    productionJobId: text('production_job_id'),
+    customerId: text('customer_id'),
+    postedAt: timestamp('posted_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('finance_journals_no_uidx').on(t.companyId, t.journalNo),
+    index('finance_journals_company_idx').on(t.companyId, t.status),
+  ],
+)
+
+export const financeJournalLines = pgTable(
+  'finance_journal_lines',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    journalId: uuid('journal_id')
+      .notNull()
+      .references(() => financeJournals.id),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    accountCode: text('account_code').notNull(),
+    debit: numeric('debit', { precision: 18, scale: 4 }).default('0'),
+    credit: numeric('credit', { precision: 18, scale: 4 }).default('0'),
+    currency: text('currency').default('TRY'),
+    memo: text('memo'),
+    ...timestamps,
+  },
+  (t) => [index('finance_journal_lines_journal_idx').on(t.journalId)],
+)
+
+export const financeBudgets = pgTable(
+  'finance_budgets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    year: integer('year').notNull(),
+    status: text('status').default('draft').notNull(),
+    currency: text('currency').default('TRY'),
+    lines: jsonb('lines').$type<Record<string, unknown>[]>().default([]),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('finance_budgets_company_idx').on(t.companyId, t.year)],
+)
+
+export const financeCostEntries = pgTable(
+  'finance_cost_entries',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    dimension: text('dimension').notNull(), // product | order | machine | operator | customer
+    dimensionId: text('dimension_id').notNull(),
+    amount: numeric('amount', { precision: 18, scale: 4 }).notNull(),
+    currency: text('currency').default('TRY'),
+    productionJobId: text('production_job_id'),
+    memo: text('memo'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('finance_cost_entries_company_idx').on(t.companyId, t.dimension)],
+)
+
+export const financeAssets = pgTable(
+  'finance_assets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    code: text('code').notNull(),
+    name: text('name').notNull(),
+    status: text('status').default('active').notNull(),
+    acquisitionCost: numeric('acquisition_cost', { precision: 18, scale: 4 }),
+    currency: text('currency').default('TRY'),
+    acquiredAt: timestamp('acquired_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('finance_assets_code_uidx').on(t.companyId, t.code)],
+)
+
+export const financeReconciliations = pgTable(
+  'finance_reconciliations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    bankAccountRef: text('bank_account_ref').notNull(),
+    status: text('status').default('open').notNull(), // open | matched | closed
+    statementDate: timestamp('statement_date', { withTimezone: true }),
+    matchedCount: integer('matched_count').default(0),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('finance_reconciliations_company_idx').on(t.companyId, t.status)],
+)

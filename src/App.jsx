@@ -35,6 +35,7 @@ import DigitalTwinCenterPage from './pages/DigitalTwinCenterPage'
 import CommerceCenterPage from './pages/CommerceCenterPage'
 import ManufacturingCenterPage from './pages/mes/ManufacturingCenterPage'
 import MesOperatorTabletPage from './pages/mes/MesOperatorTabletPage'
+import FinanceCenterPage from './pages/FinanceCenterPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
 import CustomerDocumentPage from './pages/CustomerDocumentPage'
@@ -271,6 +272,11 @@ export default function App() {
                       <Route path="/uretim/:jobId" element={<ProductionDetailPage />} />
                       <Route path="/mes" element={<ManufacturingCenterPage />} />
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
+                      <Route path="/finans" element={<FinanceCenterPage />} />
+                      <Route
+                        path="/efatura"
+                        element={<Navigate to="/finans?tab=einvoice" replace />}
+                      />
                       <Route path="/musteriler/faturalar" element={<SalesInvoicesPage />} />
                       <Route path="/musteriler/satis-raporu" element={<SalesReportPage />} />
                       <Route

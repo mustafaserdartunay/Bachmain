@@ -112,7 +112,8 @@ const baseMenuItems = [
   { icon: Truck, label: 'Kurye Takip', path: '/kurye-takip', moduleCode: 'courier' },
   { icon: ShoppingBag, label: 'Pos', path: '/shopping', moduleCode: 'pos' },
   { icon: Store, label: 'Bayi Yönetimi', path: '/bayi', moduleCode: 'dealer' },
-  { icon: Receipt, label: 'E-Fatura', path: '/efatura', moduleCode: 'einvoice' },
+  { icon: Landmark, label: 'Finans', path: '/finans', moduleCode: 'finance' },
+  { icon: Receipt, label: 'E-Fatura', path: '/finans?tab=einvoice', moduleCode: 'einvoice' },
   { icon: BarChart3, label: 'Raporlar', path: '/raporlar', moduleCode: 'reporting' },
 ]
 

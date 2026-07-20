@@ -28,6 +28,8 @@
 
 **MES:** [80 Gap](./80_MES_GAP_REPORT.md) · [81 Architecture/Roadmap](./81_MES_ARCHITECTURE_ROADMAP.md)
 
+**Financial Suite:** [82 Gap](./82_FINANCE_SUITE_GAP_REPORT.md) · [83 Architecture/Roadmap](./83_FINANCE_SUITE_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target
