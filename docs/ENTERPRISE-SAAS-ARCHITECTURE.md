@@ -20,7 +20,8 @@
 **AI Enterprise Organization:** [96 Gap](./96_AI_ENTERPRISE_ORG_GAP_REPORT.md) · [97 Architecture/Roadmap](./97_AI_ENTERPRISE_ORG_ARCHITECTURE_ROADMAP.md)  
 **AI Autonomous Company:** [98 Gap](./98_AI_AUTONOMOUS_COMPANY_GAP_REPORT.md) · [99 Architecture/Roadmap](./99_AI_AUTONOMOUS_COMPANY_ARCHITECTURE_ROADMAP.md)  
 **AI App Builder:** [100 Gap](./100_AI_APP_BUILDER_GAP_REPORT.md) · [101 Architecture/Roadmap](./101_AI_APP_BUILDER_ARCHITECTURE_ROADMAP.md)  
-**Marketplace:** [102 Gap](./102_MARKETPLACE_GAP_REPORT.md) · [103 Architecture/Roadmap](./103_MARKETPLACE_ARCHITECTURE_ROADMAP.md)
+**Marketplace:** [102 Gap](./102_MARKETPLACE_GAP_REPORT.md) · [103 Architecture/Roadmap](./103_MARKETPLACE_ARCHITECTURE_ROADMAP.md)  
+**Enterprise Integration Hub:** [104 Gap](./104_INTEGRATION_HUB_GAP_REPORT.md) · [105 Architecture/Roadmap](./105_INTEGRATION_HUB_ARCHITECTURE_ROADMAP.md)
 
 **Knowledge Platform:** [70 Gap](./70_KNOWLEDGE_PLATFORM_GAP_REPORT.md) · [71 Architecture/Roadmap](./71_KNOWLEDGE_PLATFORM_ARCHITECTURE_ROADMAP.md)
 

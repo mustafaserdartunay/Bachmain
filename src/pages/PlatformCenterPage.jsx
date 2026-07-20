@@ -105,6 +105,12 @@ export default function PlatformCenterPage() {
               <Boxes className="h-4 w-4" /> Marketplace
             </Link>
             <Link
+              to="/entegrasyon"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <Puzzle className="h-4 w-4" /> Entegrasyon
+            </Link>
+            <Link
               to="/ayarlar"
               className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
@@ -394,15 +400,28 @@ export default function PlatformCenterPage() {
       )}
 
       {tab === 'integrations' && (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {integrations.map((i) => (
-            <div key={i.code} className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
-              <p className="font-bold">{i.label}</p>
-              <p className={`text-[10px] font-black uppercase ${statusTone(i.status)}`}>
-                {i.status}
-              </p>
-            </div>
-          ))}
+        <div className="space-y-3">
+          <div className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
+            <p className="text-xs text-[var(--muted)]">
+              Bağlantı işletimi, webhook, ETL ve AI wizard için Enterprise Integration Hub.
+            </p>
+            <Link
+              to="/entegrasyon"
+              className="mt-2 inline-block text-xs font-black uppercase text-emerald-700"
+            >
+              Entegrasyon Merkezi →
+            </Link>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {integrations.map((i) => (
+              <div key={i.code} className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
+                <p className="font-bold">{i.label}</p>
+                <p className={`text-[10px] font-black uppercase ${statusTone(i.status)}`}>
+                  {i.status}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

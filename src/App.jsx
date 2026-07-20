@@ -42,6 +42,7 @@ import FinanceCenterPage from './pages/FinanceCenterPage'
 import AnalyticsCenterPage from './pages/AnalyticsCenterPage'
 import PlatformCenterPage from './pages/PlatformCenterPage'
 import MarketplacePage from './pages/MarketplacePage'
+import IntegrationHubPage from './pages/IntegrationHubPage'
 import CustomerExperienceCloudPage from './pages/CustomerExperienceCloudPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
@@ -294,6 +295,11 @@ export default function App() {
                       <Route path="/cekirdek" element={<Navigate to="/platform" replace />} />
                       <Route path="/marketplace" element={<MarketplacePage />} />
                       <Route path="/magaza" element={<Navigate to="/marketplace" replace />} />
+                      <Route path="/entegrasyon" element={<IntegrationHubPage />} />
+                      <Route
+                        path="/integration-hub"
+                        element={<Navigate to="/entegrasyon" replace />}
+                      />
                       <Route path="/musteri-deneyimi" element={<CustomerExperienceCloudPage />} />
                       <Route path="/cxc" element={<Navigate to="/musteri-deneyimi" replace />} />
                       <Route

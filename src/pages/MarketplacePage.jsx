@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Download, Puzzle, ShieldCheck, Sparkles, Star, Store } from 'lucide-react'
+import { Cable, Download, Puzzle, ShieldCheck, Sparkles, Star, Store } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 import { marketplaceSubMenus } from '../data/marketplaceMenu'
@@ -158,6 +158,12 @@ export default function MarketplacePage() {
               className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
               <Store className="h-4 w-4" /> Belge Store
+            </Link>
+            <Link
+              to="/entegrasyon"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <Cable className="h-4 w-4" /> Entegrasyon
             </Link>
           </div>
         }

@@ -29,6 +29,7 @@ import { documentsRoutes } from './modules/documents/documentsRoutes.js'
 import { analyticsRoutes } from './modules/analytics/analyticsRoutes.js'
 import { platformRoutes } from './modules/platform/platformRoutes.js'
 import { marketplaceRoutes } from './modules/marketplace/marketplaceRoutes.js'
+import { integrationRoutes } from './modules/integrations/integrationRoutes.js'
 
 async function main() {
   const app = Fastify({
@@ -124,6 +125,7 @@ async function main() {
   await app.register(analyticsRoutes)
   await app.register(platformRoutes)
   await app.register(marketplaceRoutes)
+  await app.register(integrationRoutes)
 
   await app.ready()
 

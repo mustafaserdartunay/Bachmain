@@ -108,6 +108,26 @@ export const NODE_CATALOG = [
     category: 'trigger',
     label: 'Marketplace Paket Kaldırıldı',
   },
+  {
+    id: 'trigger.integration.connected',
+    category: 'trigger',
+    label: 'Entegrasyon Bağlandı',
+  },
+  {
+    id: 'trigger.integration.disconnected',
+    category: 'trigger',
+    label: 'Entegrasyon Kesildi',
+  },
+  {
+    id: 'trigger.integration.wizard.drafted',
+    category: 'trigger',
+    label: 'Entegrasyon Wizard Taslağı',
+  },
+  {
+    id: 'trigger.integration.retry',
+    category: 'trigger',
+    label: 'Entegrasyon Retry',
+  },
   { id: 'trigger.commerce.order.received', category: 'trigger', label: 'Commerce Sipariş Geldi' },
   {
     id: 'trigger.commerce.order.promoted',

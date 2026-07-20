@@ -46,6 +46,8 @@ export const ROUTE_MODULE_MAP = {
   '/cekirdek': 'dashboard_basic',
   '/marketplace': 'dashboard_basic',
   '/magaza': 'dashboard_basic',
+  '/entegrasyon': 'dashboard_basic',
+  '/integration-hub': 'dashboard_basic',
   '/ayarlar/kurumsal-yapi': 'multi_company',
 }
 
