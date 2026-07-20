@@ -21,6 +21,7 @@ import { aiosRoutes } from './modules/aios/aiosRoutes.js'
 import { knowledgeRoutes } from './modules/knowledge/knowledgeRoutes.js'
 import { twinRoutes } from './modules/twin/twinRoutes.js'
 import { commerceRoutes } from './modules/commerce/commerceRoutes.js'
+import { growthRoutes } from './modules/growth/growthRoutes.js'
 
 async function main() {
   const app = Fastify({
@@ -108,6 +109,7 @@ async function main() {
   await app.register(knowledgeRoutes)
   await app.register(twinRoutes)
   await app.register(commerceRoutes)
+  await app.register(growthRoutes)
 
   await app.ready()
 

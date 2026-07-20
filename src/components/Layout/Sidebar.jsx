@@ -67,6 +67,10 @@ import {
   Bot,
   Network,
   Workflow,
+  Target,
+  GitBranch,
+  UserPlus,
+  FileBarChart,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -74,7 +78,11 @@ import { customerSubMenus, isSalesRoute } from '../../data/customerMenu'
 import { expensesSubMenus, isExpensesRoute } from '../../data/expensesMenu'
 import { treasurySubMenus, isTreasuryRoute, CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/stockMenu'
-import { fieldSalesSubMenus, isFieldSalesRoute, FIELD_SALES_HOME_PATH } from '../../data/fieldSalesMenu'
+import {
+  fieldSalesSubMenus,
+  isFieldSalesRoute,
+  FIELD_SALES_HOME_PATH,
+} from '../../data/fieldSalesMenu'
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { aiGrowthSubMenus, isAiGrowthRoute, AI_GROWTH_HOME_PATH } from '../../data/aiGrowthMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
@@ -188,7 +196,12 @@ const aiGrowthSubMenuIcons = {
   clapperboard: Clapperboard,
   mail: Mail,
   'message-circle': MessageCircle,
+  smartphone: Smartphone,
+  target: Target,
   'panels-top-left': PanelsTopLeft,
+  'git-branch': GitBranch,
+  'user-plus': UserPlus,
+  users: Users,
   binoculars: Binoculars,
   'trending-up': TrendingUp,
   'key-round': KeyRound,
@@ -201,22 +214,21 @@ const aiGrowthSubMenuIcons = {
   network: Network,
   workflow: Workflow,
   'bar-chart-3': BarChart3,
+  'file-bar-chart': FileBarChart,
   settings: Settings,
 }
-const menuButtonBase = 'sidebar-menu-button sidebar-item w-full flex items-center gap-2.5 transition-colors'
+const menuButtonBase =
+  'sidebar-menu-button sidebar-item w-full flex items-center gap-2.5 transition-colors'
 const menuLabelClass = 'sidebar-menu-label flex-1 text-left'
-const subMenuButtonBase = 'sidebar-menu-button block w-full px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-colors whitespace-nowrap'
+const subMenuButtonBase =
+  'sidebar-menu-button block w-full px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-colors whitespace-nowrap'
 
 function SubMenuIcon({ children }) {
   return <span className="submenu-icon-wrap shrink-0">{children}</span>
 }
 
 function MenuIcon({ children, collapsed }) {
-  return (
-    <span className={`icon-wrap ${collapsed ? 'mx-auto' : ''}`}>
-      {children}
-    </span>
-  )
+  return <span className={`icon-wrap ${collapsed ? 'mx-auto' : ''}`}>{children}</span>
 }
 
 function SidebarSection({ label, collapsed }) {
@@ -330,9 +342,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
   const menuItems = filterMenuByEntitlements(baseMenuItems, user?.entitlements)
   const showProjects = filterMenuByEntitlements([projectsMenuGate], user?.entitlements).length > 0
-  const isMessageCenterActive = location.pathname === '/mesajlar' || location.pathname.startsWith('/mesajlar/')
+  const isMessageCenterActive =
+    location.pathname === '/mesajlar' || location.pathname.startsWith('/mesajlar/')
   const brandLabel = company.companyName || 'Bach'
-  const sidebarWidthClass = collapsed ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]' : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
+  const sidebarWidthClass = collapsed
+    ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]'
+    : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
   const sidebarPaddingClass = collapsed ? 'p-4 lg:px-2 lg:py-4' : 'px-3 py-4'
   const mobileStateClass = mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
 
@@ -345,7 +360,9 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
       data-collapsed={collapsed ? 'true' : 'false'}
       className={`glass-sidebar app-sidebar fixed top-[var(--shell-gap)] bottom-[var(--shell-gap)] left-0 z-50 flex h-[calc(100dvh-(2*var(--shell-gap)))] flex-col transition-all duration-300 lg:left-[var(--shell-gap)] ${sidebarPaddingClass} ${sidebarWidthClass} ${mobileStateClass}`}
     >
-      <div className={`flex w-full items-center gap-1.5 ${collapsed ? 'flex-col justify-center px-0 pt-2' : 'justify-between px-1 pt-1 pb-1'}`}>
+      <div
+        className={`flex w-full items-center gap-1.5 ${collapsed ? 'flex-col justify-center px-0 pt-2' : 'justify-between px-1 pt-1 pb-1'}`}
+      >
         <NavLink
           to="/"
           onClick={handleNavigate}
@@ -356,7 +373,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             <img
               src={company.logoDataUrl}
               alt={brandLabel}
-              className={collapsed ? 'h-8 w-8 object-contain' : 'h-9 max-h-9 w-auto max-w-[10rem] shrink-0 object-contain object-center'}
+              className={
+                collapsed
+                  ? 'h-8 w-8 object-contain'
+                  : 'h-9 max-h-9 w-auto max-w-[10rem] shrink-0 object-contain object-center'
+              }
             />
           ) : (
             <BrandLogo collapsed={collapsed} />
@@ -373,8 +394,9 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         </button>
       </div>
 
-      <nav className={`flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 ${collapsed ? 'px-0' : 'px-1'}`}>
-
+      <nav
+        className={`flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 ${collapsed ? 'px-0' : 'px-1'}`}
+      >
         {/* 1. Güncel Durum */}
         <NavLink
           to="/"
@@ -409,10 +431,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>Satışlar</span>
-                {customerOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {customerOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -452,9 +475,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     <ClipboardList className="h-3.5 w-3.5" />
                   </SubMenuIcon>
                   <span className="min-w-0 flex-1 text-left">Süreç Yönetimi</span>
-                  {processOpen
-                    ? <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                    : <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-60" />}
+                  {processOpen ? (
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                  )}
                 </button>
                 {processOpen && (
                   <div className="mt-0.5 ml-2 space-y-0.5 border-l border-dark-500/40 pl-2">
@@ -494,10 +519,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>Giderler</span>
-                {expensesOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {expensesOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -545,10 +571,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>Nakit</span>
-                {treasuryOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {treasuryOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -597,10 +624,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>Stok</span>
-                {stockOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {stockOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -654,10 +682,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               {!collapsed && (
                 <>
                   <span className={menuLabelClass}>Projeler</span>
-                  {projectsOpen
-                    ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                    : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  }
+                  {projectsOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
                 </>
               )}
             </button>
@@ -709,10 +738,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>Ajanda</span>
-                {crmOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {crmOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -726,9 +756,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   end={Boolean(sub.end)}
                   onClick={handleNavigate}
                   className={({ isActive }) =>
-                    `${subMenuButtonBase} ${
-                      isActive ? 'sidebar-menu-active font-medium' : ''
-                    }`
+                    `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
                   }
                 >
                   {sub.label}
@@ -750,8 +778,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             <MessageCircle className="w-4 h-4 shrink-0" />
           </MenuIcon>
           {!collapsed && <span className={menuLabelClass}>Mesaj Merkezi</span>}
-          {messageBadge.count > 0 && (
-            collapsed ? (
+          {messageBadge.count > 0 &&
+            (collapsed ? (
               <span
                 className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.75)] animate-pulse"
                 aria-label={`${messageBadge.count} okunmamış mesaj`}
@@ -763,8 +791,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               >
                 {messageBadge.count > 99 ? '99+' : messageBadge.count}
               </span>
-            )
-          )}
+            ))}
         </NavLink>
 
         {/* Saha Satış */}
@@ -782,10 +809,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>Saha Satış</span>
-                {fieldSalesOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {fieldSalesOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -835,10 +863,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>AI Growth Center</span>
-                {aiGrowthOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {aiGrowthOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -886,10 +915,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>İnsan Kaynakları</span>
-                {hrOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {hrOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -940,10 +970,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>Lojistik</span>
-                {logisticsOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {logisticsOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -1003,9 +1034,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             type="button"
             onClick={() => toggleMenu('settings')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isSettingsRoute
-                ? 'sidebar-menu-active font-medium'
-                : ''
+              collapsed && isSettingsRoute ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -1014,10 +1043,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>Ayarlar</span>
-                {settingsOpen
-                  ? <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  : <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                }
+                {settingsOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
               </>
             )}
           </button>
@@ -1032,22 +1062,18 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   return true
                 })
                 .map((sub) => (
-                <NavLink
-                  key={sub.path}
-                  to={sub.path}
-                  end={sub.path === '/ayarlar'}
-                  onClick={handleNavigate}
-                  className={({ isActive }) =>
-                    `${subMenuButtonBase} ${
-                      isActive
-                        ? 'sidebar-menu-active font-medium'
-                        : ''
-                    }`
-                  }
-                >
-                  {sub.label}
-                </NavLink>
-              ))}
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    end={sub.path === '/ayarlar'}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
+                    }
+                  >
+                    {sub.label}
+                  </NavLink>
+                ))}
 
               <div>
                 <div className="flex items-center gap-0.5">
@@ -1057,9 +1083,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} flex-1 ${
-                        isActive
-                          ? 'sidebar-menu-active font-medium'
-                          : ''
+                        isActive ? 'sidebar-menu-active font-medium' : ''
                       }`
                     }
                   >
@@ -1069,11 +1093,17 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     type="button"
                     onClick={() => setDocumentCenterOpen((open) => !open)}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white/20"
-                    aria-label={documentCenterOpen ? 'Belge Merkezi menüsünü kapat' : 'Belge Merkezi menüsünü aç'}
+                    aria-label={
+                      documentCenterOpen
+                        ? 'Belge Merkezi menüsünü kapat'
+                        : 'Belge Merkezi menüsünü aç'
+                    }
                   >
-                    {documentCenterOpen
-                      ? <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                      : <ChevronRight className="h-3.5 w-3.5 opacity-60" />}
+                    {documentCenterOpen ? (
+                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                    )}
                   </button>
                 </div>
                 {documentCenterOpen && (

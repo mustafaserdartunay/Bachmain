@@ -24,6 +24,8 @@
 
 **Commerce:** [76 Gap](./76_COMMERCE_PLATFORM_GAP_REPORT.md) · [77 Architecture/Roadmap](./77_COMMERCE_PLATFORM_ARCHITECTURE_ROADMAP.md)
 
+**AI Growth Center:** [78 Gap](./78_AI_GROWTH_CENTER_GAP_REPORT.md) · [79 Architecture/Roadmap](./79_AI_GROWTH_CENTER_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target

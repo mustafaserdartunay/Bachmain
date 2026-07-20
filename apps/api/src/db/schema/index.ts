@@ -1305,3 +1305,163 @@ export const commerceProductI18n = pgTable(
     index('commerce_product_i18n_product_idx').on(t.companyId, t.productId),
   ],
 )
+
+/** AI Growth Center (AG-0) */
+export const growthLeads = pgTable(
+  'growth_leads',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    source: text('source').notNull(), // web_form | qr | ocr | phone | whatsapp | instagram | facebook | linkedin | api
+    name: text('name'),
+    email: text('email'),
+    phone: text('phone'),
+    companyName: text('company_name'),
+    message: text('message'),
+    status: text('status').default('new').notNull(), // new | scored | warm | hot | cold | converted | discarded
+    score: integer('score').default(0),
+    temperature: text('temperature').default('cold'), // hot | warm | cold
+    purchaseProbability: numeric('purchase_probability', { precision: 5, scale: 2 }),
+    estimatedRevenue: numeric('estimated_revenue', { precision: 18, scale: 2 }),
+    customerId: text('customer_id'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    index('growth_leads_company_idx').on(t.companyId, t.status),
+    index('growth_leads_source_idx').on(t.companyId, t.source),
+  ],
+)
+
+export const growthCampaigns = pgTable(
+  'growth_campaigns',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    channel: text('channel').default('multi').notNull(), // email | whatsapp | sms | ads | social | multi
+    status: text('status').default('draft').notNull(), // draft | scheduled | running | paused | done
+    budget: numeric('budget', { precision: 18, scale: 2 }),
+    currency: text('currency').default('TRY'),
+    startsAt: timestamp('starts_at', { withTimezone: true }),
+    endsAt: timestamp('ends_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('growth_campaigns_company_idx').on(t.companyId, t.status)],
+)
+
+export const growthContentAssets = pgTable(
+  'growth_content_assets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    kind: text('kind').notNull(), // blog | product | social | ads | email | landing
+    locale: text('locale').default('tr').notNull(),
+    title: text('title'),
+    body: text('body'),
+    status: text('status').default('draft').notNull(), // draft | review | approved | published
+    channelTargets: jsonb('channel_targets').$type<string[]>().default([]),
+    parentId: uuid('parent_id'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    createdBy: uuid('created_by').references(() => users.id),
+    ...timestamps,
+  },
+  (t) => [
+    index('growth_content_company_idx').on(t.companyId, t.kind, t.status),
+    index('growth_content_locale_idx').on(t.companyId, t.locale),
+  ],
+)
+
+export const growthSeoAudits = pgTable(
+  'growth_seo_audits',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    url: text('url'),
+    score: integer('score').default(0),
+    findings: jsonb('findings').$type<Record<string, unknown>[]>().default([]),
+    recommendations: jsonb('recommendations').$type<string[]>().default([]),
+    status: text('status').default('done').notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('growth_seo_audits_company_idx').on(t.companyId, t.createdAt)],
+)
+
+export const growthCompetitors = pgTable(
+  'growth_competitors',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    website: text('website'),
+    notes: text('notes'),
+    lastAnalysis: jsonb('last_analysis').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('growth_competitors_company_idx').on(t.companyId)],
+)
+
+export const growthFunnels = pgTable(
+  'growth_funnels',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    status: text('status').default('draft').notNull(),
+    stages: jsonb('stages').$type<Record<string, unknown>[]>().default([]),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('growth_funnels_company_idx').on(t.companyId, t.status)],
+)
+
+export const growthChannelAccounts = pgTable(
+  'growth_channel_accounts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    channelKey: text('channel_key').notNull(), // instagram | google_ads | …
+    name: text('name').notNull(),
+    status: text('status').default('disconnected').notNull(),
+    credentialsRef: text('credentials_ref'),
+    config: jsonb('config').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('growth_channel_accounts_uidx').on(t.companyId, t.channelKey),
+    index('growth_channel_accounts_company_idx').on(t.companyId, t.status),
+  ],
+)
+
+export const growthAuditLog = pgTable(
+  'growth_audit_log',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    action: text('action').notNull(),
+    entityType: text('entity_type'),
+    entityId: text('entity_id'),
+    actorUserId: uuid('actor_user_id').references(() => users.id),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('growth_audit_log_company_idx').on(t.companyId, t.createdAt)],
+)
