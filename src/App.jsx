@@ -55,6 +55,7 @@ import IncomingEInvoicesPage from './pages/expenses/IncomingEInvoicesPage'
 import ExpensesReportPage from './pages/expenses/ExpensesReportPage'
 import PaymentsReportPage from './pages/expenses/PaymentsReportPage'
 import VatReportPage from './pages/expenses/VatReportPage'
+import AiCommandCenterPage from './pages/AiCommandCenterPage'
 import DashboardPage from './pages/DashboardPage'
 import PersonnelPage from './pages/PersonnelPage'
 import ProductionCreatePage from './pages/ProductionCreatePage'
@@ -258,7 +259,10 @@ export default function App() {
                 <RequireAuth>
                   <Layout>
                     <Routes>
-                      <Route path="/" element={<DashboardPage />} />
+                      <Route path="/" element={<AiCommandCenterPage />} />
+                      <Route path="/ai-komut" element={<Navigate to="/" replace />} />
+                      <Route path="/command-center" element={<Navigate to="/" replace />} />
+                      <Route path="/guncel-durum" element={<DashboardPage />} />
                       <Route
                         path="/siparisler"
                         element={

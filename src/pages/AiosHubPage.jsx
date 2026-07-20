@@ -115,6 +115,12 @@ export default function AiosHubPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
+              to="/"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <Sparkles className="h-4 w-4" /> Command
+            </Link>
+            <Link
               to="/otomasyon"
               className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >

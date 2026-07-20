@@ -149,7 +149,7 @@ export default function AnalyticsCenterPage() {
               to="/"
               className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
-              <LayoutDashboard className="h-4 w-4" /> Güncel Durum
+              <LayoutDashboard className="h-4 w-4" /> AI Command
             </Link>
             <Link
               to="/otomasyon"

@@ -4,6 +4,9 @@
 
 export const ROUTE_MODULE_MAP = {
   '/': 'dashboard_basic',
+  '/ai-komut': 'dashboard_basic',
+  '/command-center': 'dashboard_basic',
+  '/guncel-durum': 'dashboard_basic',
   '/musteriler': 'crm',
   '/musteri-deneyimi': 'crm',
   '/tedarikciler': 'crm',
