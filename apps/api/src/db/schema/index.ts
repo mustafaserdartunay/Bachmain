@@ -2212,3 +2212,152 @@ export const docMarketplaceItems = pgTable(
   },
   (t) => [uniqueIndex('doc_marketplace_items_slug_uidx').on(t.slug)],
 )
+
+/** Enterprise Analytics Platform — layout/KPI projection (docs/89). No parallel ledgers. */
+export const analyticsDashboards = pgTable(
+  'analytics_dashboards',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    slug: text('slug').notNull(),
+    kind: text('kind').default('custom').notNull(),
+    layout: jsonb('layout').$type<unknown[]>().default([]),
+    isDefault: boolean('is_default').default(false).notNull(),
+    roleScope: text('role_scope'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('analytics_dashboards_slug_uidx').on(t.companyId, t.slug),
+    index('analytics_dashboards_company_idx').on(t.companyId, t.kind),
+  ],
+)
+
+export const analyticsKpis = pgTable(
+  'analytics_kpis',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    code: text('code').notNull(),
+    label: text('label').notNull(),
+    source: text('source').default('custom').notNull(),
+    formula: text('formula'),
+    unit: text('unit').default('number'),
+    target: numeric('target', { precision: 18, scale: 4 }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('analytics_kpis_code_uidx').on(t.companyId, t.code)],
+)
+
+export const analyticsAlerts = pgTable(
+  'analytics_alerts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    kpiCode: text('kpi_code'),
+    operator: text('operator').default('gt').notNull(),
+    threshold: numeric('threshold', { precision: 18, scale: 4 }),
+    channels: jsonb('channels').$type<unknown[]>().default([]),
+    active: boolean('active').default(true).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('analytics_alerts_company_idx').on(t.companyId, t.active)],
+)
+
+export const analyticsGoals = pgTable(
+  'analytics_goals',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    title: text('title').notNull(),
+    scope: text('scope').default('company').notNull(),
+    ownerRef: text('owner_ref'),
+    targetValue: numeric('target_value', { precision: 18, scale: 4 }),
+    actualValue: numeric('actual_value', { precision: 18, scale: 4 }),
+    period: text('period'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('analytics_goals_company_idx').on(t.companyId, t.scope)],
+)
+
+export const analyticsOkrs = pgTable(
+  'analytics_okrs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    objective: text('objective').notNull(),
+    scope: text('scope').default('company').notNull(),
+    ownerRef: text('owner_ref'),
+    keyResults: jsonb('key_results').$type<unknown[]>().default([]),
+    progressPct: integer('progress_pct').default(0),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('analytics_okrs_company_idx').on(t.companyId, t.scope)],
+)
+
+export const analyticsInsights = pgTable(
+  'analytics_insights',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    headline: text('headline').notNull(),
+    severity: text('severity').default('info').notNull(),
+    domain: text('domain'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('analytics_insights_company_idx').on(t.companyId, t.severity)],
+)
+
+export const analyticsForecasts = pgTable(
+  'analytics_forecasts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    kind: text('kind').notNull(),
+    horizon: text('horizon').default('30d'),
+    value: numeric('value', { precision: 18, scale: 4 }),
+    unit: text('unit').default('TRY'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('analytics_forecasts_company_idx').on(t.companyId, t.kind)],
+)
+
+export const analyticsExports = pgTable(
+  'analytics_exports',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    format: text('format').default('csv').notNull(),
+    status: text('status').default('queued').notNull(),
+    source: text('source'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('analytics_exports_company_idx').on(t.companyId, t.status)],
+)

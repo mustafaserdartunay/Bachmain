@@ -29,6 +29,7 @@ export const ROUTE_MODULE_MAP = {
   '/kurye': 'courier',
   '/ik': 'hr',
   '/ai-buyume': 'ai_growth',
+  '/analitik': 'reporting',
   '/raporlar': 'reporting',
   '/ayarlar/kurumsal-yapi': 'multi_company',
 }

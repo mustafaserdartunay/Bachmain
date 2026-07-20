@@ -92,6 +92,13 @@
       "when": 1784660000000,
       "tag": "0012_document_platform",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1784670000000,
+      "tag": "0013_analytics_platform",
+      "breakpoints": true
     }
   ]
 }

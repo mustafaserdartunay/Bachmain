@@ -50,6 +50,22 @@ export const NODE_CATALOG = [
   { id: 'trigger.document.pdf.downloaded', category: 'trigger', label: 'PDF İndirildi' },
   { id: 'trigger.document.print.queued', category: 'trigger', label: 'Yazdırma Kuyruğa Alındı' },
   { id: 'trigger.document.ai.designed', category: 'trigger', label: 'AI Belge Tasarladı' },
+  {
+    id: 'trigger.analytics.dashboard.created',
+    category: 'trigger',
+    label: 'Analytics Dashboard Oluştu',
+  },
+  {
+    id: 'trigger.analytics.dashboard.layout_saved',
+    category: 'trigger',
+    label: 'Analytics Layout Kaydedildi',
+  },
+  { id: 'trigger.analytics.alert.created', category: 'trigger', label: 'Analytics Uyarı Oluştu' },
+  {
+    id: 'trigger.analytics.export.queued',
+    category: 'trigger',
+    label: 'Analytics Export Kuyrukta',
+  },
   { id: 'trigger.package.purchased', category: 'trigger', label: 'Paket Satın Alındı' },
   { id: 'trigger.package.expiring', category: 'trigger', label: 'Paket Süresi Doluyor' },
   { id: 'trigger.user.created', category: 'trigger', label: 'Yeni Kullanıcı' },

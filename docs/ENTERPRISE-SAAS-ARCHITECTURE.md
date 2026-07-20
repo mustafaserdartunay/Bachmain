@@ -34,6 +34,8 @@
 
 **Document Platform:** [86 Gap](./86_DOCUMENT_PLATFORM_GAP_REPORT.md) · [87 Architecture/Roadmap](./87_DOCUMENT_PLATFORM_ARCHITECTURE_ROADMAP.md)
 
+**Analytics Platform:** [88 Gap](./88_ANALYTICS_PLATFORM_GAP_REPORT.md) · [89 Architecture/Roadmap](./89_ANALYTICS_PLATFORM_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target

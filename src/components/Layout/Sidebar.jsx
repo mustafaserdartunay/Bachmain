@@ -114,7 +114,7 @@ const baseMenuItems = [
   { icon: Store, label: 'Bayi Yönetimi', path: '/bayi', moduleCode: 'dealer' },
   { icon: Landmark, label: 'Finans', path: '/finans', moduleCode: 'finance' },
   { icon: Receipt, label: 'E-Fatura', path: '/finans?tab=einvoice', moduleCode: 'einvoice' },
-  { icon: BarChart3, label: 'Raporlar', path: '/raporlar', moduleCode: 'reporting' },
+  { icon: BarChart3, label: 'Analytics', path: '/analitik', moduleCode: 'reporting' },
 ]
 
 const customerSubMenuIcons = {
