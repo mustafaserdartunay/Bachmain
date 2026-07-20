@@ -16,12 +16,12 @@ import {
   Wrench,
   Zap,
 } from 'lucide-react'
-import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
-import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
-import { mesSubMenus } from '../data/mesMenu'
-import { loadProductionJobs } from '../utils/productionStore'
-import { getProductionStageOptions, loadWorkflowStages } from '../utils/workflowStages'
-import { publishDomainEvent } from '../workflow/eventBus'
+import { AppPageHeader, AppPageShell } from '../../components/Layout/AppPageLayout'
+import { APP_SURFACE_PANEL_CLASS } from '../../utils/dashboardDesign'
+import { mesSubMenus } from '../../data/mesMenu'
+import { loadProductionJobs } from '../../utils/productionStore'
+import { getProductionStageOptions, loadWorkflowStages } from '../../utils/workflowStages'
+import { publishDomainEvent } from '../../workflow/eventBus'
 import {
   MES_UPDATED_EVENT,
   addBomLocal,
@@ -37,7 +37,7 @@ import {
   listShiftsLocal,
   listWorkCentersLocal,
   mesOverviewLocal,
-} from '../mes/localStore'
+} from '../../mes/localStore'
 
 function Kpi({ label, value, hint, to }) {
   const body = (

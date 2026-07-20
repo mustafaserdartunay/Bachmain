@@ -11,10 +11,10 @@ import {
   Users,
   Workflow,
 } from 'lucide-react'
-import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
-import { BTN_PRIMARY } from '../utils/buttonStyles'
-import { publishDomainEvent } from '../workflow/eventBus'
-import { aiGrowthStudioExtras } from '../data/aiGrowthMenu'
+import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
+import { BTN_PRIMARY } from '../../utils/buttonStyles'
+import { publishDomainEvent } from '../../workflow/eventBus'
+import { aiGrowthStudioExtras } from '../../data/aiGrowthMenu'
 import {
   GROWTH_UPDATED_EVENT,
   addCampaignLocal,
@@ -26,7 +26,7 @@ import {
   listLeadsLocal,
   listSmsLocal,
   scoreLeadLocal,
-} from '../growth/localStore'
+} from '../../growth/localStore'
 
 function Shell({ title, children, actions }) {
   return (
