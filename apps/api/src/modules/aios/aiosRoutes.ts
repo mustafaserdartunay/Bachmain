@@ -31,6 +31,13 @@ import {
   autonomousRunScenario,
   autonomousSuggestionFeedback,
 } from './autonomousService.js'
+import {
+  appBuilderOverview,
+  createAppBuilderDraft,
+  listAppBuilderDrafts,
+  nlAppBuilder,
+  publishAppBuilderDraft,
+} from './appBuilderService.js'
 
 export async function aiosRoutes(app: FastifyInstance) {
   app.get('/v1/aios/catalog', { preHandler: [authenticate] }, async () => ({
@@ -145,6 +152,57 @@ export async function aiosRoutes(app: FastifyInstance) {
       const body = z.object({ scenarioId: z.string().min(1) }).parse(req.body || {})
       const result = autonomousRunScenario(body.scenarioId)
       return { ok: true, result }
+    },
+  )
+
+  app.get(
+    '/v1/aios/app-builder/overview',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      return { ok: true, ...appBuilderOverview(companyId) }
+    },
+  )
+
+  app.get(
+    '/v1/aios/app-builder/drafts',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      return { ok: true, rows: listAppBuilderDrafts(companyId) }
+    },
+  )
+
+  app.post(
+    '/v1/aios/app-builder/drafts',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z.object({ prompt: z.string().min(1).max(2000) }).parse(req.body || {})
+      const row = createAppBuilderDraft(companyId, body.prompt)
+      return { ok: true, row }
+    },
+  )
+
+  app.post(
+    '/v1/aios/app-builder/nl',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z.object({ prompt: z.string().min(1).max(2000) }).parse(req.body || {})
+      const row = nlAppBuilder(companyId, body.prompt)
+      return { ok: true, row }
+    },
+  )
+
+  app.post(
+    '/v1/aios/app-builder/publish',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z.object({ draftId: z.string().min(1) }).parse(req.body || {})
+      const row = publishAppBuilderDraft(companyId, body.draftId)
+      return { ok: true, row }
     },
   )
 

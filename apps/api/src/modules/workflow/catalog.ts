@@ -114,6 +114,16 @@ export const NODE_CATALOG: CatalogNode[] = [
     category: 'trigger',
     label: 'Autonomous Senaryo Çalıştı',
   },
+  {
+    id: 'trigger.aios.app_builder.drafted',
+    category: 'trigger',
+    label: 'App Builder Taslak Oluştu',
+  },
+  {
+    id: 'trigger.aios.app_builder.published',
+    category: 'trigger',
+    label: 'App Builder Yayınlandı',
+  },
   { id: 'trigger.commerce.order.received', category: 'trigger', label: 'Commerce Sipariş Geldi' },
   {
     id: 'trigger.commerce.order.promoted',

@@ -306,6 +306,21 @@ export default function AiosHubPage() {
         </section>
       )}
 
+      {tab === 'app-builder' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
+          <h2 className="text-sm font-black uppercase">AI App Builder</h2>
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Low-code NL → modül / form / workflow iskeleti · Plugin publish.
+          </p>
+          <Link
+            to="/ai-uygulama"
+            className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-4 text-xs font-black uppercase text-emerald-800"
+          >
+            App Center’ı aç →
+          </Link>
+        </section>
+      )}
+
       {tab === 'agents' && (
         <section className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
           <h2 className="text-sm font-black uppercase">AI Agents ({agents.length})</h2>

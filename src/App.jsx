@@ -32,6 +32,7 @@ import WorkflowHubPage from './pages/WorkflowHubPage'
 import AiosHubPage from './pages/AiosHubPage'
 import AiEnterpriseOrgPage from './pages/AiEnterpriseOrgPage'
 import AiAutonomousCompanyPage from './pages/AiAutonomousCompanyPage'
+import AiAppBuilderPage from './pages/AiAppBuilderPage'
 import KnowledgeCenterPage from './pages/KnowledgeCenterPage'
 import DigitalTwinCenterPage from './pages/DigitalTwinCenterPage'
 import CommerceCenterPage from './pages/CommerceCenterPage'
@@ -612,6 +613,11 @@ export default function App() {
                       <Route
                         path="/autonomous-company"
                         element={<Navigate to="/ai-otonom" replace />}
+                      />
+                      <Route path="/ai-uygulama" element={<AiAppBuilderPage />} />
+                      <Route
+                        path="/ai-app-builder"
+                        element={<Navigate to="/ai-uygulama" replace />}
                       />
                       <Route path="/bilgi-merkezi" element={<KnowledgeCenterPage />} />
                       <Route path="/dijital-ikiz" element={<DigitalTwinCenterPage />} />

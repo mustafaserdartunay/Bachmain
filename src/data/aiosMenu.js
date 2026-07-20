@@ -4,6 +4,7 @@ export const aiosSubMenus = [
   { id: 'home', label: 'AI Home' },
   { id: 'organization', label: 'Enterprise Org' },
   { id: 'autonomous', label: 'Autonomous Co' },
+  { id: 'app-builder', label: 'App Builder' },
   { id: 'agents', label: 'AI Agents' },
   { id: 'orchestrator', label: 'Orchestrator' },
   { id: 'memory', label: 'AI Memory' },

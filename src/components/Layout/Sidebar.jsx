@@ -67,6 +67,7 @@ import {
   Bot,
   Network,
   Activity,
+  Puzzle,
   Workflow,
   Target,
   GitBranch,
@@ -119,6 +120,7 @@ const baseMenuItems = [
   { icon: Bot, label: 'AIOS', path: '/aios', moduleCode: 'ai_growth' },
   { icon: Network, label: 'AI Org', path: '/ai-organizasyon', moduleCode: 'ai_growth' },
   { icon: Activity, label: 'Otonom', path: '/ai-otonom', moduleCode: 'ai_growth' },
+  { icon: Puzzle, label: 'App Builder', path: '/ai-uygulama', moduleCode: 'ai_growth' },
   { icon: Settings, label: 'Platform', path: '/platform', moduleCode: 'dashboard_basic' },
 ]
 

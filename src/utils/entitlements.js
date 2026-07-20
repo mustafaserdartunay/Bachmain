@@ -38,6 +38,8 @@ export const ROUTE_MODULE_MAP = {
   '/ai-enterprise-org': 'ai_growth',
   '/ai-otonom': 'ai_growth',
   '/autonomous-company': 'ai_growth',
+  '/ai-uygulama': 'ai_growth',
+  '/ai-app-builder': 'ai_growth',
   '/analitik': 'reporting',
   '/raporlar': 'reporting',
   '/platform': 'dashboard_basic',
