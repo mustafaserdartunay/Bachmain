@@ -2,7 +2,8 @@ import { env } from '../../config/env.js'
 import { AppError } from '../../shared/errors.js'
 import { maskSensitiveText } from '../../shared/crypto.js'
 
-export type ModelProviderId = 'openai' | 'anthropic' | 'gemini' | 'azure_openai' | 'local'
+export type ModelProviderId =
+  'openai' | 'anthropic' | 'gemini' | 'deepseek' | 'mistral' | 'azure_openai' | 'local'
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string }
 
@@ -45,6 +46,18 @@ export function listProviders() {
       label: 'Google Gemini',
       configured: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY),
       models: ['gemini-1.5-pro', 'gemini-1.5-flash'],
+    },
+    {
+      id: 'deepseek' as const,
+      label: 'DeepSeek',
+      configured: Boolean(process.env.DEEPSEEK_API_KEY),
+      models: ['deepseek-chat', 'deepseek-reasoner'],
+    },
+    {
+      id: 'mistral' as const,
+      label: 'Mistral',
+      configured: Boolean(process.env.MISTRAL_API_KEY),
+      models: ['mistral-large', 'mistral-small'],
     },
     {
       id: 'azure_openai' as const,
@@ -133,6 +146,6 @@ export async function gatewayChat(input: {
     if (!env.OPENAI_API_KEY) return stubProvider(provider, model, messages)
     return callOpenAi(model, messages)
   }
-  // Anthropic / Gemini / Azure / local — adapters land in AIOS-3; stub keeps architecture stable
+  // Anthropic / Gemini / DeepSeek / Mistral / Azure / local — adapters land in AIOS-3; stub keeps architecture stable
   return stubProvider(provider, model, messages)
 }

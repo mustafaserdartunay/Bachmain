@@ -596,6 +596,7 @@ export default function App() {
                         }
                       />
                       <Route path="/aios" element={<AiosHubPage />} />
+                      <Route path="/ai-beyin" element={<Navigate to="/aios" replace />} />
                       <Route path="/bilgi-merkezi" element={<KnowledgeCenterPage />} />
                       <Route path="/dijital-ikiz" element={<DigitalTwinCenterPage />} />
                       <Route path="/ticaret" element={<CommerceCenterPage />} />

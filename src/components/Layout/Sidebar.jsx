@@ -115,6 +115,7 @@ const baseMenuItems = [
   { icon: Landmark, label: 'Finans', path: '/finans', moduleCode: 'finance' },
   { icon: Receipt, label: 'E-Fatura', path: '/finans?tab=einvoice', moduleCode: 'einvoice' },
   { icon: BarChart3, label: 'Analytics', path: '/analitik', moduleCode: 'reporting' },
+  { icon: Bot, label: 'AIOS', path: '/aios', moduleCode: 'ai_growth' },
   { icon: Settings, label: 'Platform', path: '/platform', moduleCode: 'dashboard_basic' },
 ]
 

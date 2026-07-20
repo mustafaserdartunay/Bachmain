@@ -102,6 +102,7 @@ export const NODE_CATALOG: CatalogNode[] = [
   { id: 'trigger.webhook.received', category: 'trigger', label: 'API Webhook Geldi' },
   { id: 'trigger.cron.fired', category: 'trigger', label: 'Cron Çalıştı' },
   { id: 'trigger.ai.result', category: 'trigger', label: 'AI Sonuç Üretti' },
+  { id: 'trigger.aios.chat.completed', category: 'trigger', label: 'AIOS Chat Tamamlandı' },
   { id: 'trigger.commerce.order.received', category: 'trigger', label: 'Commerce Sipariş Geldi' },
   {
     id: 'trigger.commerce.order.promoted',

@@ -29,6 +29,8 @@ export const ROUTE_MODULE_MAP = {
   '/kurye': 'courier',
   '/ik': 'hr',
   '/ai-buyume': 'ai_growth',
+  '/aios': 'ai_growth',
+  '/ai-beyin': 'ai_growth',
   '/analitik': 'reporting',
   '/raporlar': 'reporting',
   '/platform': 'dashboard_basic',

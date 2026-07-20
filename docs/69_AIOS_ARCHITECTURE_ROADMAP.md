@@ -63,9 +63,13 @@ CEO, Operasyon, Satış, CRM, Üretim, Kalite, Depo, Lojistik, Satın Alma, Muha
 
 ## Phases
 
-### AIOS-0 — Foundation (this sprint)
+### AIOS-0 — Foundation (shipped)
 
-Docs 68/69 · schema · gateway (OpenAI live + stubs) · catalogs · audit runs · admin Control Center · CRM hub · approval stubs
+Docs 68/69 · schema · gateway (OpenAI live + stubs) · catalogs · audit runs · admin Control Center · CRM hub shell · approval stubs
+
+### AIOS-0.5 — Enterprise AI Brain hub
+
+Docs 92/93 · tabbed `/aios` Center · Prompt Studio surface · Model Center (+ DeepSeek/Mistral stubs) · deep-links · localStore · gateway chat from CRM
 
 ### AIOS-1 — Tools runtime
 

@@ -14,7 +14,8 @@
 
 **Workflow Engine:** [66 Gap](./66_WORKFLOW_ENGINE_GAP_REPORT.md) · [67 Architecture/Roadmap](./67_WORKFLOW_ENGINE_ARCHITECTURE_ROADMAP.md)
 
-**AIOS:** [68 Gap](./68_AIOS_GAP_REPORT.md) · [69 Architecture/Roadmap](./69_AIOS_ARCHITECTURE_ROADMAP.md)
+**AIOS:** [68 Gap](./68_AIOS_GAP_REPORT.md) · [69 Architecture/Roadmap](./69_AIOS_ARCHITECTURE_ROADMAP.md)  
+**Enterprise AI Brain:** [92 Gap](./92_AI_BRAIN_GAP_REPORT.md) · [93 Architecture/Roadmap](./93_AI_BRAIN_ARCHITECTURE_ROADMAP.md)
 
 **Knowledge Platform:** [70 Gap](./70_KNOWLEDGE_PLATFORM_GAP_REPORT.md) · [71 Architecture/Roadmap](./71_KNOWLEDGE_PLATFORM_ARCHITECTURE_ROADMAP.md)
 

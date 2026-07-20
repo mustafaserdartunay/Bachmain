@@ -97,7 +97,9 @@ export async function aiosRoutes(app: FastifyInstance) {
               }),
             )
             .min(1),
-          provider: z.enum(['openai', 'anthropic', 'gemini', 'azure_openai', 'local']).optional(),
+          provider: z
+            .enum(['openai', 'anthropic', 'gemini', 'deepseek', 'mistral', 'azure_openai', 'local'])
+            .optional(),
           model: z.string().optional(),
         })
         .parse(req.body)

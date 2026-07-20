@@ -1,7 +1,7 @@
 # BachMain AI Operating System (AIOS) — Gap Report
 
 **Version:** 2026-07-20 Enterprise  
-**Status:** Foundation in progress (AIOS-0)  
+**Status:** Foundation shipped (AIOS-0) · Hub elevation via [92/93 AI Brain](./92_AI_BRAIN_GAP_REPORT.md)  
 **Constraint:** Additive · Zero-trust gateway · No direct browser→model · Do not break Growth/Voice/Omni proxies
 
 ## 1. Goal
