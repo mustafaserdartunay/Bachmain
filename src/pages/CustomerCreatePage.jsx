@@ -574,7 +574,7 @@ export default function CustomerCreatePage() {
       </div>
       </div>
 
-      <section className="relative flex min-h-[4.625rem] items-center justify-between rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
+      <section className="relative flex h-[4.625rem] items-center justify-between rounded-2xl border border-dark-500/50 bg-dark-800/70 px-5 shadow-card">
         <div className="flex min-w-0 items-center gap-3 text-xs font-semibold text-gray-500">
           <UserRound className="h-4 w-4 shrink-0" />
           <span className="truncate">Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.</span>
