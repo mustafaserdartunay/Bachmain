@@ -20,6 +20,7 @@ import { workflowRoutes } from './modules/workflow/workflowRoutes.js'
 import { aiosRoutes } from './modules/aios/aiosRoutes.js'
 import { knowledgeRoutes } from './modules/knowledge/knowledgeRoutes.js'
 import { twinRoutes } from './modules/twin/twinRoutes.js'
+import { commerceRoutes } from './modules/commerce/commerceRoutes.js'
 
 async function main() {
   const app = Fastify({
@@ -106,6 +107,7 @@ async function main() {
   await app.register(aiosRoutes)
   await app.register(knowledgeRoutes)
   await app.register(twinRoutes)
+  await app.register(commerceRoutes)
 
   await app.ready()
 

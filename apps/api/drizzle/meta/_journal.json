@@ -43,6 +43,13 @@
       "when": 1784590000000,
       "tag": "0005_digital_twin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784600000000,
+      "tag": "0006_commerce_platform",
+      "breakpoints": true
     }
   ]
 }

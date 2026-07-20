@@ -70,6 +70,13 @@ export const NODE_CATALOG: CatalogNode[] = [
   { id: 'trigger.webhook.received', category: 'trigger', label: 'API Webhook Geldi' },
   { id: 'trigger.cron.fired', category: 'trigger', label: 'Cron Çalıştı' },
   { id: 'trigger.ai.result', category: 'trigger', label: 'AI Sonuç Üretti' },
+  { id: 'trigger.commerce.order.received', category: 'trigger', label: 'Commerce Sipariş Geldi' },
+  {
+    id: 'trigger.commerce.order.promoted',
+    category: 'trigger',
+    label: 'Commerce Sipariş ERP’ye Aktı',
+  },
+  { id: 'trigger.commerce.stock.synced', category: 'trigger', label: 'Commerce Stok Senkron' },
   // Conditions
   { id: 'condition.if', category: 'condition', label: 'IF' },
   { id: 'condition.else', category: 'condition', label: 'ELSE' },

@@ -1157,3 +1157,151 @@ export const twinSnapshots = pgTable(
   },
   (t) => [index('twin_snapshots_company_idx').on(t.companyId, t.sampledAt)],
 )
+
+/** Commerce Platform (GC-0) — channels, listings, price rules, order inbox, stock sync */
+export const commerceChannels = pgTable(
+  'commerce_channels',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    channelKey: text('channel_key').notNull(), // amazon | trendyol | b2b | …
+    name: text('name').notNull(),
+    status: text('status').default('disconnected').notNull(), // disconnected | connected | error | syncing
+    credentialsRef: text('credentials_ref'),
+    config: jsonb('config').$type<Record<string, unknown>>().default({}),
+    lastSyncAt: timestamp('last_sync_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('commerce_channels_company_key_uidx').on(t.companyId, t.channelKey),
+    index('commerce_channels_company_idx').on(t.companyId, t.status),
+  ],
+)
+
+export const commerceListings = pgTable(
+  'commerce_listings',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    channelId: uuid('channel_id')
+      .notNull()
+      .references(() => commerceChannels.id),
+    productId: text('product_id').notNull(), // MDM / ERP product id (SoT external)
+    sku: text('sku'),
+    externalId: text('external_id'),
+    status: text('status').default('draft').notNull(), // draft | published | paused | error
+    title: text('title'),
+    price: numeric('price', { precision: 18, scale: 4 }),
+    currency: text('currency').default('TRY'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    index('commerce_listings_company_idx').on(t.companyId, t.status),
+    index('commerce_listings_product_idx').on(t.companyId, t.productId),
+    uniqueIndex('commerce_listings_channel_product_uidx').on(t.channelId, t.productId),
+  ],
+)
+
+export const commercePriceRules = pgTable(
+  'commerce_price_rules',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    priority: integer('priority').default(100).notNull(),
+    active: boolean('active').default(true).notNull(),
+    scope: text('scope').default('global').notNull(), // global | customer | dealer | country | currency | campaign | min_order
+    customerId: text('customer_id'),
+    dealerId: text('dealer_id'),
+    countryCode: text('country_code'),
+    currency: text('currency'),
+    productId: text('product_id'),
+    minQty: integer('min_qty'),
+    adjustmentType: text('adjustment_type').default('percent').notNull(), // percent | fixed | override
+    adjustmentValue: numeric('adjustment_value', { precision: 18, scale: 4 }).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('commerce_price_rules_company_idx').on(t.companyId, t.active, t.priority)],
+)
+
+export const commerceOrdersInbox = pgTable(
+  'commerce_orders_inbox',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    channelId: uuid('channel_id').references(() => commerceChannels.id),
+    channelKey: text('channel_key').notNull(),
+    externalOrderId: text('external_order_id').notNull(),
+    status: text('status').default('received').notNull(), // received | risk_review | promoted | rejected | error
+    currency: text('currency').default('TRY'),
+    totalAmount: numeric('total_amount', { precision: 18, scale: 4 }),
+    customerName: text('customer_name'),
+    customerEmail: text('customer_email'),
+    lines: jsonb('lines').$type<Record<string, unknown>[]>().default([]),
+    rawPayload: jsonb('raw_payload').$type<Record<string, unknown>>().default({}),
+    riskScore: integer('risk_score').default(0),
+    erpOrderId: text('erp_order_id'),
+    promotedAt: timestamp('promoted_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('commerce_orders_inbox_ext_uidx').on(t.companyId, t.channelKey, t.externalOrderId),
+    index('commerce_orders_inbox_company_idx').on(t.companyId, t.status),
+  ],
+)
+
+export const commerceStockSyncJobs = pgTable(
+  'commerce_stock_sync_jobs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    channelKey: text('channel_key'), // null = all
+    status: text('status').default('queued').notNull(), // queued | running | done | failed
+    productsTouched: integer('products_touched').default(0),
+    errorMessage: text('error_message'),
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('commerce_stock_sync_jobs_company_idx').on(t.companyId, t.status)],
+)
+
+export const commerceProductI18n = pgTable(
+  'commerce_product_i18n',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    productId: text('product_id').notNull(),
+    locale: text('locale').notNull(), // tr | en | de | …
+    title: text('title'),
+    description: text('description'),
+    seoTitle: text('seo_title'),
+    seoDescription: text('seo_description'),
+    keywords: jsonb('keywords').$type<string[]>().default([]),
+    altText: text('alt_text'),
+    techSpecs: text('tech_specs'),
+    marketingCopy: text('marketing_copy'),
+    socialCopy: text('social_copy'),
+    merchantFeed: text('merchant_feed'),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('commerce_product_i18n_uidx').on(t.companyId, t.productId, t.locale),
+    index('commerce_product_i18n_product_idx').on(t.companyId, t.productId),
+  ],
+)

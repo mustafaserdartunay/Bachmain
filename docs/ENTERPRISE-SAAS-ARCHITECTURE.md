@@ -20,6 +20,10 @@
 
 **Digital Twin:** [72 Gap](./72_DIGITAL_TWIN_GAP_REPORT.md) · [73 Architecture/Roadmap](./73_DIGITAL_TWIN_ARCHITECTURE_ROADMAP.md)
 
+**App Store:** [74 Gap](./74_APP_STORE_GAP_REPORT.md)
+
+**Commerce:** [76 Gap](./76_COMMERCE_PLATFORM_GAP_REPORT.md) · [77 Architecture/Roadmap](./77_COMMERCE_PLATFORM_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target
