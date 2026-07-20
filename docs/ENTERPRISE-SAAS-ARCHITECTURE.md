@@ -6,6 +6,8 @@
 
 **Security docs:** [51 Gap Report](./51_ENTERPRISE_SECURITY_GAP_REPORT.md) · [52 Roadmap](./52_ENTERPRISE_SECURITY_ROADMAP.md) · [53 Report](./53_ENTERPRISE_SECURITY_REPORT.md) · [54 CRM Cutover](./54_CRM_TENANT_CUTOVER.md) · [55 Ops/DR](./55_OPS_BACKUP_DR.md)
 
+**Database docs:** [56 Current State](./56_DATABASE_CURRENT_STATE.md) · [57 Gap Report](./57_DATABASE_GAP_REPORT.md) · [58 Migration Plan](./58_DATABASE_MIGRATION_PLAN.md)
+
 ---
 
 ## 0. Current → Target
