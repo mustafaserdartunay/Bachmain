@@ -1,0 +1,43 @@
+---
+description: Kod yazmadan önce docs/*.md teknik şartnameye uy — mimariyi uydurma
+alwaysApply: true
+---
+
+# Docs-first development (REQUIRED)
+
+Kod yazmadan önce ilgili `docs/*.md` dosyasını oku. Geliştirmeyi bu teknik şartnameye uygun yap.
+
+## Zorunlu sıra
+
+1. Göreve uygun dokümanı bul ve oku (`docs/`, alt klasörler, ve varsa numaralı şartname).
+2. Dokümanda tanımlı olmayan mimari kararları kendin verme.
+3. Mevcut sistemi bozmadan, geriye dönük uyumluluğu koruyarak ilerle.
+4. Doküman yoksa veya yetersizse: tahminle mimari kurma — önce kullanıcıya sor veya mevcut kod/convention’a sıkı bağlı kal.
+
+## Şartname haritası (hedef)
+
+```
+docs/
+  01_FOUNDATION.md
+  02_DESIGN_SYSTEM.md
+  03_COMPONENT_LIBRARY.md
+  …
+  50_TESTING_QA.md
+```
+
+Bu numaralı dosyalar henüz yoksa, geçici olarak ilgili mevcut dokümanları kullan:
+
+| Konu | Mevcut kaynak |
+|------|----------------|
+| Design / UI | `docs/design-system/DESIGN_SYSTEM.md`, `COLOR_SYSTEM.md`, `TYPOGRAPHY.md`, `COMPONENT_GUIDE.md`, `RESPONSIVE_GUIDE.md` |
+| Surface panel | `.cursor/rules/surface-panel-system.mdc`, `APP_SURFACE_PANEL_CLASS` |
+| Buttons / CTA | `.cursor/rules/button-cta-system.mdc` |
+| Document center | `BACHMAIN_DOCUMENT_CENTER/*.md` |
+| Architecture | `docs/ENTERPRISE-SAAS-ARCHITECTURE.md` |
+| Production | `docs/PRODUCTION.md` |
+
+## Yapma
+
+- Dokümanda olmayan yeni katman / state / API şekli icat etme
+- “Geçici” diye spec’i bypass etme
+- Breaking change’i sessizce alma — uyumluluk koru veya açıkça sor
