@@ -30,6 +30,8 @@
 
 **Financial Suite:** [82 Gap](./82_FINANCE_SUITE_GAP_REPORT.md) · [83 Architecture/Roadmap](./83_FINANCE_SUITE_ARCHITECTURE_ROADMAP.md)
 
+**Customer Experience Cloud:** [84 Gap](./84_CXC_GAP_REPORT.md) · [85 Architecture/Roadmap](./85_CXC_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target

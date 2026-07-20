@@ -124,6 +124,7 @@ const customerSubMenuIcons = {
   'bar-chart': BarChart3,
   wallet: Wallet,
   'pie-chart': PieChart,
+  sparkles: Sparkles,
 }
 const expensesSubMenuIcons = {
   list: ClipboardList,

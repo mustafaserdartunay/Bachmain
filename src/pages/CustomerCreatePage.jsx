@@ -358,7 +358,7 @@ export default function CustomerCreatePage() {
     persistMeta(savedProfile.id)
     syncOpeningBalance(payload)
     publishDomainEvent(
-      'trigger.customer.created',
+      editingCustomer?.id ? 'trigger.customer.updated' : 'trigger.customer.created',
       {
         customerId: savedProfile.id,
         name: savedProfile.name || payload.name || payload.firmaAdi,
@@ -395,7 +395,7 @@ export default function CustomerCreatePage() {
     persistMeta(savedProfile.id)
     syncOpeningBalance(payload)
     publishDomainEvent(
-      'trigger.customer.created',
+      editingCustomer?.id ? 'trigger.customer.updated' : 'trigger.customer.created',
       {
         customerId: savedProfile.id,
         name: savedProfile.name || payload.name || payload.firmaAdi,

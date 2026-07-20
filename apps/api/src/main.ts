@@ -24,6 +24,7 @@ import { commerceRoutes } from './modules/commerce/commerceRoutes.js'
 import { growthRoutes } from './modules/growth/growthRoutes.js'
 import { mesRoutes } from './modules/mes/mesRoutes.js'
 import { financeRoutes } from './modules/finance/financeRoutes.js'
+import { cxcRoutes } from './modules/cxc/cxcRoutes.js'
 
 async function main() {
   const app = Fastify({
@@ -114,6 +115,7 @@ async function main() {
   await app.register(growthRoutes)
   await app.register(mesRoutes)
   await app.register(financeRoutes)
+  await app.register(cxcRoutes)
 
   await app.ready()
 

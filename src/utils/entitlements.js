@@ -5,6 +5,7 @@
 export const ROUTE_MODULE_MAP = {
   '/': 'dashboard_basic',
   '/musteriler': 'crm',
+  '/musteri-deneyimi': 'crm',
   '/tedarikciler': 'crm',
   '/siparisler': 'orders',
   '/teklifler': 'quotes',
@@ -64,13 +65,19 @@ export function canAccessPath(entitlements, pathname) {
   if (pathname.startsWith('/ayarlar/kurumsal-yapi')) {
     return hasModule(entitlements, 'multi_company')
   }
-  if (pathname.startsWith('/profil') || pathname.startsWith('/ayarlar') || pathname.startsWith('/hesap')) {
+  if (
+    pathname.startsWith('/profil') ||
+    pathname.startsWith('/ayarlar') ||
+    pathname.startsWith('/hesap')
+  ) {
     return true
   }
   const exact = ROUTE_MODULE_MAP[pathname]
   if (exact) return hasModule(entitlements, exact)
   // prefix match
-  const entry = Object.entries(ROUTE_MODULE_MAP).find(([path]) => path !== '/' && pathname.startsWith(path))
+  const entry = Object.entries(ROUTE_MODULE_MAP).find(
+    ([path]) => path !== '/' && pathname.startsWith(path),
+  )
   if (entry) return hasModule(entitlements, entry[1])
   return true
 }

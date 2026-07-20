@@ -36,6 +36,7 @@ import CommerceCenterPage from './pages/CommerceCenterPage'
 import ManufacturingCenterPage from './pages/mes/ManufacturingCenterPage'
 import MesOperatorTabletPage from './pages/mes/MesOperatorTabletPage'
 import FinanceCenterPage from './pages/FinanceCenterPage'
+import CustomerExperienceCloudPage from './pages/CustomerExperienceCloudPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
 import CustomerDocumentPage from './pages/CustomerDocumentPage'
@@ -273,6 +274,8 @@ export default function App() {
                       <Route path="/mes" element={<ManufacturingCenterPage />} />
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/finans" element={<FinanceCenterPage />} />
+                      <Route path="/musteri-deneyimi" element={<CustomerExperienceCloudPage />} />
+                      <Route path="/cxc" element={<Navigate to="/musteri-deneyimi" replace />} />
                       <Route
                         path="/efatura"
                         element={<Navigate to="/finans?tab=einvoice" replace />}

@@ -43,6 +43,15 @@ export type CatalogNode = {
 export const NODE_CATALOG: CatalogNode[] = [
   // Triggers
   { id: 'trigger.customer.created', category: 'trigger', label: 'Yeni Müşteri' },
+  { id: 'trigger.customer.updated', category: 'trigger', label: 'Müşteri Güncellendi' },
+  { id: 'trigger.customer.archived', category: 'trigger', label: 'Müşteri Arşivlendi' },
+  { id: 'trigger.cxc.opportunity.created', category: 'trigger', label: 'CXC Fırsat Oluştu' },
+  {
+    id: 'trigger.cxc.opportunity.stage_changed',
+    category: 'trigger',
+    label: 'CXC Pipeline Değişti',
+  },
+  { id: 'trigger.cxc.ticket.created', category: 'trigger', label: 'CXC Destek Talebi' },
   { id: 'trigger.quote.created', category: 'trigger', label: 'Yeni Teklif' },
   { id: 'trigger.quote.approved', category: 'trigger', label: 'Teklif Onaylandı' },
   { id: 'trigger.order.created', category: 'trigger', label: 'Sipariş Oluştu' },

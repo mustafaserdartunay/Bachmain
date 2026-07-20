@@ -1902,3 +1902,169 @@ export const financeReconciliations = pgTable(
   },
   (t) => [index('finance_reconciliations_company_idx').on(t.companyId, t.status)],
 )
+
+/** Customer Experience Cloud — projection / insight layer (docs/85). Master customer stays CRM SoT. */
+export const cxcPipelineStages = pgTable(
+  'cxc_pipeline_stages',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    code: text('code').notNull(),
+    label: text('label').notNull(),
+    sortOrder: integer('sort_order').default(0).notNull(),
+    color: text('color'),
+    isWon: boolean('is_won').default(false).notNull(),
+    isLost: boolean('is_lost').default(false).notNull(),
+    active: boolean('active').default(true).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('cxc_pipeline_stages_code_uidx').on(t.companyId, t.code),
+    index('cxc_pipeline_stages_company_idx').on(t.companyId, t.sortOrder),
+  ],
+)
+
+export const cxcOpportunities = pgTable(
+  'cxc_opportunities',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    customerId: text('customer_id').notNull(),
+    title: text('title').notNull(),
+    stageCode: text('stage_code').notNull(),
+    amount: numeric('amount', { precision: 18, scale: 4 }).default('0'),
+    currency: text('currency').default('TRY'),
+    ownerId: text('owner_id'),
+    source: text('source'),
+    probability: integer('probability').default(0),
+    expectedCloseAt: timestamp('expected_close_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    index('cxc_opportunities_company_idx').on(t.companyId, t.stageCode),
+    index('cxc_opportunities_customer_idx').on(t.companyId, t.customerId),
+  ],
+)
+
+export const cxcTimelineEvents = pgTable(
+  'cxc_timeline_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    customerId: text('customer_id').notNull(),
+    kind: text('kind').notNull(), // call | whatsapp | email | quote | order | task | note | meeting | support | invoice | payment | production | warehouse | delivery | visit
+    title: text('title').notNull(),
+    summary: text('summary'),
+    sourceRef: text('source_ref'),
+    sourceModule: text('source_module'),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    index('cxc_timeline_events_customer_idx').on(t.companyId, t.customerId, t.occurredAt),
+    index('cxc_timeline_events_kind_idx').on(t.companyId, t.kind),
+  ],
+)
+
+export const cxcHealthScores = pgTable(
+  'cxc_health_scores',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    customerId: text('customer_id').notNull(),
+    score: integer('score').default(50).notNull(),
+    factors: jsonb('factors').$type<Record<string, unknown>>().default({}),
+    churnRisk: text('churn_risk').default('medium'),
+    computedAt: timestamp('computed_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('cxc_health_scores_customer_uidx').on(t.companyId, t.customerId)],
+)
+
+export const cxcLoyalty = pgTable(
+  'cxc_loyalty',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    customerId: text('customer_id').notNull(),
+    tier: text('tier').default('bronze').notNull(), // bronze | silver | gold | platinum | vip
+    points: integer('points').default(0).notNull(),
+    discountPct: numeric('discount_pct', { precision: 8, scale: 2 }).default('0'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('cxc_loyalty_customer_uidx').on(t.companyId, t.customerId)],
+)
+
+export const cxcSupportTickets = pgTable(
+  'cxc_support_tickets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    customerId: text('customer_id').notNull(),
+    subject: text('subject').notNull(),
+    channel: text('channel').default('portal').notNull(), // whatsapp | email | phone | portal
+    priority: text('priority').default('normal').notNull(),
+    status: text('status').default('open').notNull(),
+    slaDueAt: timestamp('sla_due_at', { withTimezone: true }),
+    aiSummary: text('ai_summary'),
+    portalTicketRef: text('portal_ticket_ref'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    index('cxc_support_tickets_company_idx').on(t.companyId, t.status),
+    index('cxc_support_tickets_customer_idx').on(t.companyId, t.customerId),
+  ],
+)
+
+export const cxcAiInsights = pgTable(
+  'cxc_ai_insights',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    customerId: text('customer_id'),
+    kind: text('kind').notNull(),
+    title: text('title').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('cxc_ai_insights_company_idx').on(t.companyId, t.kind)],
+)
+
+export const cxcNextActions = pgTable(
+  'cxc_next_actions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    customerId: text('customer_id').notNull(),
+    action: text('action').notNull(),
+    reason: text('reason'),
+    priority: integer('priority').default(50).notNull(),
+    status: text('status').default('pending').notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('cxc_next_actions_company_idx').on(t.companyId, t.status)],
+)
