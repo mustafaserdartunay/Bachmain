@@ -6,20 +6,26 @@ import {
   Building2,
   ChevronDown,
   ExternalLink,
+  Facebook,
   Gauge,
+  Globe,
   Hash,
   Instagram,
   Landmark,
   Mail,
   MapPin,
+  Music2,
   Phone,
+  Pin,
   Plus,
   Save,
   Tags,
+  Twitter,
   UserRound,
   Users,
   WalletCards,
   X,
+  Youtube,
 } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
@@ -244,7 +250,7 @@ export default function CustomerCreatePage() {
       address: payload[`address-${addressId}`] || incomingDraft?.address || editingCustomer?.address || '',
       lat: incomingDraft?.lat ?? editingCustomer?.lat ?? null,
       lng: incomingDraft?.lng ?? editingCustomer?.lng ?? null,
-      website: incomingDraft?.website || editingCustomer?.website || '',
+      website: primary.website || incomingDraft?.website || editingCustomer?.website || '',
       googleMapsUrl:
         payload[`mapsUrl-${addressId}`]
         || incomingDraft?.mapsUrl
@@ -509,6 +515,7 @@ export default function CustomerCreatePage() {
                   defaultAddress={index === 0 ? incomingDraft?.address || editingCustomer?.address || '' : ''}
                   defaultLocation={index === 0 ? incomingDraft ? [incomingDraft.city, incomingDraft.district].filter(Boolean).join(' / ') : editingCustomer?.city || '' : ''}
                   defaultMapsUrl={index === 0 ? incomingDraft?.mapsUrl || editingCustomer?.googleMapsUrl || '' : ''}
+                  canDelete={addressRows.length > 1}
                   deleteState={deleteDialog?.key === `address-${row.id}` ? deleteDialog : null}
                   onDelete={() => confirmTwoStepDelete('Adres', () => setAddressRows((rows) => rows.filter((item) => item.id !== row.id)), `address-${row.id}`)}
                   onCancel={closeDeleteDialog}
@@ -536,7 +543,14 @@ export default function CustomerCreatePage() {
                   defaultValue={row.defaultName || ''}
                   phoneDefault={row.defaultPhone || ''}
                   emailDefault={row.defaultEmail || ''}
+                  websiteDefault={row.defaultWebsite || ''}
                   instagramDefault={row.defaultInstagram || ''}
+                  facebookDefault={row.defaultFacebook || ''}
+                  youtubeDefault={row.defaultYoutube || ''}
+                  xDefault={row.defaultX || ''}
+                  pinterestDefault={row.defaultPinterest || ''}
+                  tiktokDefault={row.defaultTiktok || ''}
+                  canDelete={contactRows.length > 1}
                   deleteState={deleteDialog?.key === `contact-${row.id}` ? deleteDialog : null}
                   onDelete={() => confirmTwoStepDelete('İletişim satırı', () => setContactRows((rows) => rows.filter((item) => item.id !== row.id)), `contact-${row.id}`)}
                   onCancel={closeDeleteDialog}
@@ -629,6 +643,7 @@ function AddressLine({
   defaultAddress = '',
   defaultLocation = '',
   defaultMapsUrl = '',
+  canDelete = false,
   deleteState,
   onDelete,
   onCancel,
@@ -637,7 +652,7 @@ function AddressLine({
   const [city = '', district = ''] = String(defaultLocation).split('/').map((part) => part.trim())
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2">
+    <div className={canDelete ? 'grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2' : 'w-full'}>
       <div className={FORM_FIELD_RULED_STACK_CLASS}>
         <FieldLine
           icon={Hash}
@@ -654,10 +669,12 @@ function AddressLine({
         <FieldLine icon={MapPin} label="İlçe:" name={`district-${id}`} defaultValue={district} />
         <FieldLine icon={MapPin} label="İl:" name={`city-${id}`} defaultValue={city} />
         <FormFieldCompact icon={MapPin} label="Konum:" as="label">
-          <ContactLinkInput name={`mapsUrl-${id}`} defaultValue={defaultMapsUrl} />
+          <ContactLinkInput name={`mapsUrl-${id}`} defaultValue={defaultMapsUrl} platform="web" />
         </FormFieldCompact>
       </div>
-      <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
+      {canDelete ? (
+        <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
+      ) : null}
     </div>
   )
 }
@@ -673,9 +690,9 @@ function SelectLine({ icon: Icon, label, name, options }) {
   )
 }
 
-function ContactLinkInput({ name, defaultValue = '', placeholder }) {
+function ContactLinkInput({ name, defaultValue = '', placeholder, platform = 'web' }) {
   const [value, setValue] = useState(defaultValue)
-  const href = resolveContactLinkHref(value, { instagram: true })
+  const href = resolveContactLinkHref(value, { platform })
 
   return (
     <div className="flex min-w-0 items-center gap-1">
@@ -701,9 +718,28 @@ function ContactLinkInput({ name, defaultValue = '', placeholder }) {
   )
 }
 
-function ContactLine({ id, defaultTitle = '', lockedTitle = false, defaultValue = '', phoneDefault = '', emailDefault = '', instagramDefault = '', deleteState, onDelete, onCancel, onApprove }) {
+function ContactLine({
+  id,
+  defaultTitle = '',
+  lockedTitle = false,
+  defaultValue = '',
+  phoneDefault = '',
+  emailDefault = '',
+  websiteDefault = '',
+  instagramDefault = '',
+  facebookDefault = '',
+  youtubeDefault = '',
+  xDefault = '',
+  pinterestDefault = '',
+  tiktokDefault = '',
+  canDelete = false,
+  deleteState,
+  onDelete,
+  onCancel,
+  onApprove,
+}) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2">
+    <div className={canDelete ? 'grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2' : 'w-full'}>
       <div className={FORM_FIELD_RULED_STACK_CLASS}>
         <FormFieldCompact icon={Hash} label="Başlık:">
           {lockedTitle ? (
@@ -728,11 +764,31 @@ function ContactLine({ id, defaultTitle = '', lockedTitle = false, defaultValue 
         <FormFieldCompact icon={Mail} label="E-posta:" as="label">
           <input name={`contactEmail-${id}`} defaultValue={emailDefault} className="form-input !h-8 !min-h-8 !py-1" />
         </FormFieldCompact>
+        <FormFieldCompact icon={Globe} label="Web:" as="label">
+          <ContactLinkInput name={`contactWebsite-${id}`} defaultValue={websiteDefault} platform="web" />
+        </FormFieldCompact>
         <FormFieldCompact icon={Instagram} label="Instagram:" as="label">
-          <ContactLinkInput name={`contactInstagram-${id}`} defaultValue={instagramDefault} />
+          <ContactLinkInput name={`contactInstagram-${id}`} defaultValue={instagramDefault} platform="instagram" />
+        </FormFieldCompact>
+        <FormFieldCompact icon={Facebook} label="Facebook:" as="label">
+          <ContactLinkInput name={`contactFacebook-${id}`} defaultValue={facebookDefault} platform="facebook" />
+        </FormFieldCompact>
+        <FormFieldCompact icon={Youtube} label="YouTube:" as="label">
+          <ContactLinkInput name={`contactYoutube-${id}`} defaultValue={youtubeDefault} platform="youtube" />
+        </FormFieldCompact>
+        <FormFieldCompact icon={Twitter} label="X:" as="label">
+          <ContactLinkInput name={`contactX-${id}`} defaultValue={xDefault} platform="x" />
+        </FormFieldCompact>
+        <FormFieldCompact icon={Pin} label="Pinterest:" as="label">
+          <ContactLinkInput name={`contactPinterest-${id}`} defaultValue={pinterestDefault} platform="pinterest" />
+        </FormFieldCompact>
+        <FormFieldCompact icon={Music2} label="TikTok:" as="label">
+          <ContactLinkInput name={`contactTiktok-${id}`} defaultValue={tiktokDefault} platform="tiktok" />
         </FormFieldCompact>
       </div>
-      <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
+      {canDelete ? (
+        <DeleteConfirmInline deleteState={deleteState} onDelete={onDelete} onCancel={onCancel} onApprove={onApprove} title="Sil" />
+      ) : null}
     </div>
   )
 }
