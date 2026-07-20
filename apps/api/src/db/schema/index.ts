@@ -1580,3 +1580,181 @@ export const commerceCoupons = pgTable(
   },
   (t) => [uniqueIndex('commerce_coupons_code_uidx').on(t.companyId, t.code)],
 )
+
+/** MES (MES-0) — additive manufacturing execution layer */
+export const mesWorkCenters = pgTable(
+  'mes_work_centers',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    code: text('code').notNull(),
+    name: text('name').notNull(),
+    kind: text('kind').default('machine').notNull(), // machine | cell | line
+    status: text('status').default('idle').notNull(), // idle | running | down | maintenance
+    capacityPerHour: numeric('capacity_per_hour', { precision: 12, scale: 2 }),
+    oee: numeric('oee', { precision: 5, scale: 2 }),
+    energyKw: numeric('energy_kw', { precision: 12, scale: 2 }),
+    operatorId: uuid('operator_id'),
+    photoUrl: text('photo_url'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('mes_work_centers_code_uidx').on(t.companyId, t.code),
+    index('mes_work_centers_company_idx').on(t.companyId, t.status),
+  ],
+)
+
+export const mesOperators = pgTable(
+  'mes_operators',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    code: text('code').notNull(),
+    name: text('name').notNull(),
+    status: text('status').default('available').notNull(), // available | busy | off
+    userId: uuid('user_id').references(() => users.id),
+    skills: jsonb('skills').$type<string[]>().default([]),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('mes_operators_code_uidx').on(t.companyId, t.code),
+    index('mes_operators_company_idx').on(t.companyId, t.status),
+  ],
+)
+
+export const mesShifts = pgTable(
+  'mes_shifts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    startTime: text('start_time').notNull(), // HH:mm
+    endTime: text('end_time').notNull(),
+    active: boolean('active').default(true).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('mes_shifts_company_idx').on(t.companyId, t.active)],
+)
+
+export const mesBoms = pgTable(
+  'mes_boms',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    productId: text('product_id').notNull(),
+    name: text('name').notNull(),
+    version: text('version').default('1').notNull(),
+    status: text('status').default('active').notNull(),
+    lines: jsonb('lines').$type<Record<string, unknown>[]>().default([]),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('mes_boms_company_idx').on(t.companyId, t.productId)],
+)
+
+export const mesRoutings = pgTable(
+  'mes_routings',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    productId: text('product_id').notNull(),
+    name: text('name').notNull(),
+    operations: jsonb('operations').$type<Record<string, unknown>[]>().default([]),
+    status: text('status').default('active').notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('mes_routings_company_idx').on(t.companyId, t.productId)],
+)
+
+export const mesEvents = pgTable(
+  'mes_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    productionJobId: text('production_job_id'),
+    workCenterId: uuid('work_center_id').references(() => mesWorkCenters.id),
+    operatorId: uuid('operator_id').references(() => mesOperators.id),
+    action: text('action').notNull(), // start | pause | resume | finish | scrap | qc_call | photo | barcode
+    qtyGood: integer('qty_good').default(0),
+    qtyScrap: integer('qty_scrap').default(0),
+    note: text('note'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    index('mes_events_company_idx').on(t.companyId, t.createdAt),
+    index('mes_events_job_idx').on(t.companyId, t.productionJobId),
+  ],
+)
+
+export const mesScrap = pgTable(
+  'mes_scrap',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    productionJobId: text('production_job_id'),
+    workCenterId: uuid('work_center_id').references(() => mesWorkCenters.id),
+    operatorId: uuid('operator_id').references(() => mesOperators.id),
+    productId: text('product_id'),
+    qty: integer('qty').default(1).notNull(),
+    reason: text('reason'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('mes_scrap_company_idx').on(t.companyId, t.createdAt)],
+)
+
+export const mesMaintenance = pgTable(
+  'mes_maintenance',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    workCenterId: uuid('work_center_id').references(() => mesWorkCenters.id),
+    kind: text('kind').default('preventive').notNull(), // preventive | periodic | breakdown | ai
+    status: text('status').default('open').notNull(), // open | in_progress | done
+    title: text('title').notNull(),
+    dueAt: timestamp('due_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('mes_maintenance_company_idx').on(t.companyId, t.status)],
+)
+
+export const mesOeeSamples = pgTable(
+  'mes_oee_samples',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    workCenterId: uuid('work_center_id').references(() => mesWorkCenters.id),
+    availability: numeric('availability', { precision: 5, scale: 2 }),
+    performance: numeric('performance', { precision: 5, scale: 2 }),
+    quality: numeric('quality', { precision: 5, scale: 2 }),
+    oee: numeric('oee', { precision: 5, scale: 2 }),
+    sampledAt: timestamp('sampled_at', { withTimezone: true }).defaultNow().notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('mes_oee_samples_company_idx').on(t.companyId, t.sampledAt)],
+)

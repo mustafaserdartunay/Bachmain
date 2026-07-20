@@ -2,6 +2,7 @@ export const processSubMenus = [
   { label: 'Teklifler', path: '/teklifler' },
   { label: 'Siparişler', path: '/siparisler' },
   { label: 'Üretim Takibi', path: '/uretim' },
+  { label: 'Manufacturing Center', path: '/mes' },
   { label: 'Depo', path: '/depo' },
   { label: 'Teslim Edilenler', path: '/teslim-edilenler' },
   { label: 'Workflow Engine', path: '/otomasyon' },

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   CheckCircle2,
   ClipboardList,
@@ -16,10 +16,7 @@ import SplitCreateButton from '../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import ProductionFilterBar from '../components/Production/ProductionFilterBar'
 import ProductionJobCard from '../components/Production/ProductionJobCard'
-import {
-  ensureLineItems,
-  getLineFulfillmentOptions,
-} from '../utils/productionLineItems'
+import { ensureLineItems, getLineFulfillmentOptions } from '../utils/productionLineItems'
 import {
   getJobQuantityMetrics,
   jobMatchesProductionStateFilter,
@@ -171,11 +168,12 @@ export default function ProductionPage() {
     const activeStage = resolveProductionActiveStage(job, workflowStages)
     const q = searchQuery.toLowerCase()
     const lineItems = ensureLineItems(job, workflowStages)
-    const matchesSearch = !q
-      || job.id.toLowerCase().includes(q)
-      || (job.customer || '').toLowerCase().includes(q)
-      || (job.title || '').toLowerCase().includes(q)
-      || lineItems.some((line) => (line.product || '').toLowerCase().includes(q))
+    const matchesSearch =
+      !q ||
+      job.id.toLowerCase().includes(q) ||
+      (job.customer || '').toLowerCase().includes(q) ||
+      (job.title || '').toLowerCase().includes(q) ||
+      lineItems.some((line) => (line.product || '').toLowerCase().includes(q))
     const matchesProcess = filters.process === 'Tümü' || activeStage?.label === filters.process
     const matchesStatus = jobMatchesProductionStateFilter(job, filters.status, workflowStages)
     const matchesQuantity = jobMatchesQuantityFilter(job, filters.quantity, workflowStages)
@@ -185,16 +183,24 @@ export default function ProductionPage() {
   const summary = useMemo(() => {
     const waiting = filteredJobs.filter((job) => job.status === 'Bekliyor').length
     const active = filteredJobs.filter((job) => job.status === 'Devam Ediyor').length
-    const partial = filteredJobs.filter((job) => (
-      job.status === 'Kısmi Üretim Bitti' || job.status === 'Kısmi Teslimat'
-    )).length
+    const partial = filteredJobs.filter(
+      (job) => job.status === 'Kısmi Üretim Bitti' || job.status === 'Kısmi Teslimat',
+    ).length
     const completed = filteredJobs.filter((job) => job.status === 'Tamamlandı').length
     const quantity = filteredJobs.reduce((sum, job) => {
       const metrics = getJobQuantityMetrics(ensureLineItems(job, workflowStages))
       return sum + metrics.ordered
     }, 0)
-    const pallet = sumOptionalPackaging(filteredJobs, workflowStages, ['palletCount', 'palet', 'pallet'])
-    const carton = sumOptionalPackaging(filteredJobs, workflowStages, ['cartonCount', 'koli', 'carton'])
+    const pallet = sumOptionalPackaging(filteredJobs, workflowStages, [
+      'palletCount',
+      'palet',
+      'pallet',
+    ])
+    const carton = sumOptionalPackaging(filteredJobs, workflowStages, [
+      'cartonCount',
+      'koli',
+      'carton',
+    ])
 
     return {
       total: filteredJobs.length,
@@ -248,8 +254,14 @@ export default function ProductionPage() {
           title="Üretim Takibi"
           backTo="/"
           backLabel="Güncel Durum"
-          actions={(
+          actions={
             <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to="/mes"
+                className="inline-flex min-h-11 items-center rounded-xl border border-dark-500/40 px-3 text-xs font-black uppercase"
+              >
+                MES
+              </Link>
               <SplitCreateButton
                 label="Yeni Üretim"
                 onPrimaryClick={() => navigate('/uretim/yeni')}
@@ -282,20 +294,68 @@ export default function ProductionPage() {
                 menuItems={bulkMenuItems}
               />
             </div>
-          )}
+          }
         />
 
         <SummaryMetrics
           columns={8}
           items={[
-            { title: 'Toplam Sipariş', value: summary.total, icon: Factory, tone: 'blue', valueTone: 'blue' },
-            { title: 'Devam Eden', value: summary.active, icon: CheckCircle2, tone: 'blue', valueTone: 'blue' },
-            { title: 'Bekleyen', value: summary.waiting, icon: Clock3, tone: 'orange', valueTone: 'orange' },
-            { title: 'Kısmi Teslim', value: summary.partial, icon: ClipboardList, tone: 'orange', valueTone: 'orange' },
-            { title: 'Tamamlanan', value: summary.completed, icon: CheckCircle2, tone: 'emerald', valueTone: 'emerald' },
-            { title: 'Toplam Ürün', value: summary.quantity.toLocaleString('tr-TR'), icon: Layers3, tone: 'cyan', valueTone: 'cyan' },
-            { title: 'Toplam Palet', value: summary.pallet.toLocaleString('tr-TR'), icon: Boxes, tone: 'blue', valueTone: 'blue' },
-            { title: 'Toplam Koli', value: summary.carton.toLocaleString('tr-TR'), icon: PackageOpen, tone: 'emerald', valueTone: 'emerald' },
+            {
+              title: 'Toplam Sipariş',
+              value: summary.total,
+              icon: Factory,
+              tone: 'blue',
+              valueTone: 'blue',
+            },
+            {
+              title: 'Devam Eden',
+              value: summary.active,
+              icon: CheckCircle2,
+              tone: 'blue',
+              valueTone: 'blue',
+            },
+            {
+              title: 'Bekleyen',
+              value: summary.waiting,
+              icon: Clock3,
+              tone: 'orange',
+              valueTone: 'orange',
+            },
+            {
+              title: 'Kısmi Teslim',
+              value: summary.partial,
+              icon: ClipboardList,
+              tone: 'orange',
+              valueTone: 'orange',
+            },
+            {
+              title: 'Tamamlanan',
+              value: summary.completed,
+              icon: CheckCircle2,
+              tone: 'emerald',
+              valueTone: 'emerald',
+            },
+            {
+              title: 'Toplam Ürün',
+              value: summary.quantity.toLocaleString('tr-TR'),
+              icon: Layers3,
+              tone: 'cyan',
+              valueTone: 'cyan',
+            },
+            {
+              title: 'Toplam Palet',
+              value: summary.pallet.toLocaleString('tr-TR'),
+              icon: Boxes,
+              tone: 'blue',
+              valueTone: 'blue',
+            },
+            {
+              title: 'Toplam Koli',
+              value: summary.carton.toLocaleString('tr-TR'),
+              icon: PackageOpen,
+              tone: 'emerald',
+              valueTone: 'emerald',
+            },
           ]}
         />
 
@@ -368,7 +428,8 @@ export default function ProductionPage() {
               <Factory className="mx-auto mb-3 h-8 w-8 text-[var(--muted)]" />
               <p className="text-sm font-bold text-[var(--ink)]">Üretim kaydı bulunamadı.</p>
               <p className="mt-1 text-[13px] text-[var(--muted)]">
-                Siparişler sayfasında &quot;Üretime Alındı&quot; seçildiğinde kayıtlar buraya kopyalanır.
+                Siparişler sayfasında &quot;Üretime Alındı&quot; seçildiğinde kayıtlar buraya
+                kopyalanır.
               </p>
             </div>
           ) : null}

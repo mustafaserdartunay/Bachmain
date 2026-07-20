@@ -33,6 +33,8 @@ import AiosHubPage from './pages/AiosHubPage'
 import KnowledgeCenterPage from './pages/KnowledgeCenterPage'
 import DigitalTwinCenterPage from './pages/DigitalTwinCenterPage'
 import CommerceCenterPage from './pages/CommerceCenterPage'
+import ManufacturingCenterPage from './pages/mes/ManufacturingCenterPage'
+import MesOperatorTabletPage from './pages/mes/MesOperatorTabletPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
 import CustomerDocumentPage from './pages/CustomerDocumentPage'
@@ -267,6 +269,8 @@ export default function App() {
                       />
                       <Route path="/uretim/yeni" element={<ProductionCreatePage />} />
                       <Route path="/uretim/:jobId" element={<ProductionDetailPage />} />
+                      <Route path="/mes" element={<ManufacturingCenterPage />} />
+                      <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/musteriler/faturalar" element={<SalesInvoicesPage />} />
                       <Route path="/musteriler/satis-raporu" element={<SalesReportPage />} />
                       <Route

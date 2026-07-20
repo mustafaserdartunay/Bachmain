@@ -23,7 +23,10 @@ export default function Layout({ children }) {
   const { pathname } = useLocation()
   const hideChrome = pathname === '/paketler' || pathname.startsWith('/paketler/')
   const fullscreenWorkspace =
-    pathname === '/otomasyon/designer' || pathname.startsWith('/otomasyon/designer/')
+    pathname === '/otomasyon/designer' ||
+    pathname.startsWith('/otomasyon/designer/') ||
+    pathname === '/mes/operator' ||
+    pathname.startsWith('/mes/operator/')
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed)
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(

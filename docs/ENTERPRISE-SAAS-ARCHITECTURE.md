@@ -26,6 +26,8 @@
 
 **AI Growth Center:** [78 Gap](./78_AI_GROWTH_CENTER_GAP_REPORT.md) · [79 Architecture/Roadmap](./79_AI_GROWTH_CENTER_ARCHITECTURE_ROADMAP.md)
 
+**MES:** [80 Gap](./80_MES_GAP_REPORT.md) · [81 Architecture/Roadmap](./81_MES_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target
