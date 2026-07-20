@@ -2068,3 +2068,147 @@ export const cxcNextActions = pgTable(
   },
   (t) => [index('cxc_next_actions_company_idx').on(t.companyId, t.status)],
 )
+
+/** Enterprise Document Platform — dual-write ready (docs/87). Client stores remain SoT in DP-0. */
+export const docTemplates = pgTable(
+  'doc_templates',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    docType: text('doc_type').default('generic').notNull(),
+    status: text('status').default('draft').notNull(),
+    pageSize: text('page_size').default('A4'),
+    orientation: text('orientation').default('portrait'),
+    locale: text('locale').default('tr'),
+    version: integer('version').default(1).notNull(),
+    design: jsonb('design').$type<Record<string, unknown>>().default({}),
+    sourceModule: text('source_module'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('doc_templates_company_idx').on(t.companyId, t.docType, t.status)],
+)
+
+export const docLabels = pgTable(
+  'doc_labels',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    widthMm: numeric('width_mm', { precision: 10, scale: 2 }).notNull(),
+    heightMm: numeric('height_mm', { precision: 10, scale: 2 }).notNull(),
+    labelKind: text('label_kind').default('product').notNull(),
+    design: jsonb('design').$type<Record<string, unknown>>().default({}),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('doc_labels_company_idx').on(t.companyId, t.labelKind)],
+)
+
+export const docPrintProfiles = pgTable(
+  'doc_print_profiles',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    brand: text('brand'),
+    deviceClass: text('device_class').default('laser').notNull(),
+    target: text('target').default('browser').notNull(),
+    paper: text('paper').default('A4'),
+    settings: jsonb('settings').$type<Record<string, unknown>>().default({}),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('doc_print_profiles_company_idx').on(t.companyId, t.deviceClass)],
+)
+
+export const docPrintJobs = pgTable(
+  'doc_print_jobs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    templateId: text('template_id'),
+    docType: text('doc_type'),
+    sourceRef: text('source_ref'),
+    status: text('status').default('queued').notNull(),
+    output: text('output').default('pdf'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('doc_print_jobs_company_idx').on(t.companyId, t.status)],
+)
+
+export const docAssets = pgTable(
+  'doc_assets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    kind: text('kind').default('image').notNull(),
+    url: text('url'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('doc_assets_company_idx').on(t.companyId, t.kind)],
+)
+
+export const docFonts = pgTable(
+  'doc_fonts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    family: text('family').notNull(),
+    source: text('source').default('system').notNull(),
+    weights: jsonb('weights').$type<unknown[]>().default([]),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('doc_fonts_family_uidx').on(t.companyId, t.family)],
+)
+
+export const docAiDesigns = pgTable(
+  'doc_ai_designs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    prompt: text('prompt').notNull(),
+    docType: text('doc_type').default('generic'),
+    status: text('status').default('draft').notNull(),
+    result: jsonb('result').$type<Record<string, unknown>>().default({}),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('doc_ai_designs_company_idx').on(t.companyId, t.status)],
+)
+
+export const docMarketplaceItems = pgTable(
+  'doc_marketplace_items',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id').references(() => companies.id),
+    slug: text('slug').notNull(),
+    title: text('title').notNull(),
+    sector: text('sector'),
+    locale: text('locale').default('tr'),
+    premium: boolean('premium').default(false).notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('doc_marketplace_items_slug_uidx').on(t.slug)],
+)

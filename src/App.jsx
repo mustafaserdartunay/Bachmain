@@ -184,15 +184,19 @@ import DocPrintJobsPage from './pages/documentCenter/DocPrintJobsPage'
 import DocPrintProfilesPage from './pages/documentCenter/DocPrintProfilesPage'
 import {
   DocArchivePage,
+  DocAiDesignerPage,
+  DocApprovalPage,
   DocAssetsPage,
   DocBarcodeDesignerPage,
   DocComponentsPage,
   DocEmailTemplatesPage,
   DocFontsPage,
+  DocLocalizationPage,
   DocMarketplacePage,
   DocPdfDesignerPage,
   DocPermissionsPage,
   DocQrDesignerPage,
+  DocSmsTemplatesPage,
   DocThemesPage,
   DocVariablesPage,
   DocVersionsPage,
@@ -409,6 +413,10 @@ export default function App() {
                         }
                       />
                       <Route path="/belge-merkezi" element={<DocumentCenterPage />} />
+                      <Route
+                        path="/belge-platformu"
+                        element={<Navigate to="/belge-merkezi" replace />}
+                      />
                       <Route path="/belge-merkezi/sablonlar" element={<DocTemplatesPage />} />
                       <Route
                         path="/belge-merkezi/tasarimci"
@@ -418,7 +426,9 @@ export default function App() {
                       <Route path="/belge-merkezi/barkod" element={<DocBarcodeDesignerPage />} />
                       <Route path="/belge-merkezi/qr" element={<DocQrDesignerPage />} />
                       <Route path="/belge-merkezi/pdf" element={<DocPdfDesignerPage />} />
+                      <Route path="/belge-merkezi/ai-designer" element={<DocAiDesignerPage />} />
                       <Route path="/belge-merkezi/eposta" element={<DocEmailTemplatesPage />} />
+                      <Route path="/belge-merkezi/sms" element={<DocSmsTemplatesPage />} />
                       <Route
                         path="/belge-merkezi/whatsapp"
                         element={<DocWhatsAppTemplatesPage />}
@@ -432,6 +442,8 @@ export default function App() {
                       <Route path="/belge-merkezi/assets" element={<DocAssetsPage />} />
                       <Route path="/belge-merkezi/fonts" element={<DocFontsPage />} />
                       <Route path="/belge-merkezi/temalar" element={<DocThemesPage />} />
+                      <Route path="/belge-merkezi/localization" element={<DocLocalizationPage />} />
+                      <Route path="/belge-merkezi/onay" element={<DocApprovalPage />} />
                       <Route path="/belge-merkezi/workflow" element={<DocWorkflowPage />} />
                       <Route path="/belge-merkezi/izinler" element={<DocPermissionsPage />} />
                       <Route path="/belge-merkezi/marketplace" element={<DocMarketplacePage />} />

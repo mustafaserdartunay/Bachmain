@@ -85,6 +85,13 @@
       "when": 1784650000000,
       "tag": "0011_cxc_cloud",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1784660000000,
+      "tag": "0012_document_platform",
+      "breakpoints": true
     }
   ]
 }

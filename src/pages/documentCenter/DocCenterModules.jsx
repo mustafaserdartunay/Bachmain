@@ -5,14 +5,24 @@ const MODULES = {
   barkod: {
     title: 'Barcode Designer',
     description: 'Code128, EAN-13, Code39 barkodlarını görsel olarak tasarlayın.',
-    bullets: ['Sembol seçimi', 'İnsan okunur metin', 'Etiket boyutlarına gömme', 'Değişken bağlama'],
+    bullets: [
+      'Sembol seçimi',
+      'İnsan okunur metin',
+      'Etiket boyutlarına gömme',
+      'Değişken bağlama',
+    ],
     ctaTo: `${DOCUMENT_CENTER_BASE}/etiket`,
     ctaLabel: 'Etiket tasarımcısına git',
   },
   qr: {
     title: 'QR Designer',
     description: 'URL, belge doğrulama, WhatsApp ve özel veri QR kodları.',
-    bullets: ['ECC seviyesi', 'Boyut / kenar boşluğu', 'Belge token bağlama', 'Logo ortası (yakında)'],
+    bullets: [
+      'ECC seviyesi',
+      'Boyut / kenar boşluğu',
+      'Belge token bağlama',
+      'Logo ortası (yakında)',
+    ],
     ctaTo: `${DOCUMENT_CENTER_BASE}/etiket`,
     ctaLabel: 'Etiket tasarımcısına git',
   },
@@ -43,7 +53,12 @@ const MODULES = {
   degiskenler: {
     title: 'Değişkenler',
     description: 'Tüm BachMain modüllerinden otomatik alan kataloğu.',
-    bullets: ['Şirket / müşteri / belge', 'Stok / üretim / sevkiyat', 'İK / proje', 'Görsel ekleme'],
+    bullets: [
+      'Şirket / müşteri / belge',
+      'Stok / üretim / sevkiyat',
+      'İK / proje',
+      'Görsel ekleme',
+    ],
     ctaTo: `${DOCUMENT_CENTER_BASE}/tasarimci`,
     ctaLabel: 'Tasarımcıda kullan',
   },
@@ -95,6 +110,34 @@ const MODULES = {
     bullets: ['Soft-delete', 'Geri yükle', 'Kalıcı silme politikası'],
     ctaTo: `${DOCUMENT_CENTER_BASE}/sablonlar`,
     ctaLabel: 'Şablonlar',
+  },
+  'ai-designer': {
+    title: 'AI Document Designer',
+    description: 'Prompt yazın; AI şablon iskeleti üretsin.',
+    bullets: ['Modern teklif', 'Minimal invoice', 'Packing list', 'Palet etiketi', 'Üretim formu'],
+    ctaTo: `${DOCUMENT_CENTER_BASE}?tab=ai`,
+    ctaLabel: 'AI Designer hub',
+  },
+  sms: {
+    title: 'SMS Şablonları',
+    description: 'Belge bildirim SMS metinleri ve değişken slotları.',
+    bullets: ['Sipariş onayı', 'Teslimat', 'Tahsilat hatırlatma'],
+    ctaTo: `${DOCUMENT_CENTER_BASE}?tab=variables`,
+    ctaLabel: 'Değişkenler',
+  },
+  localization: {
+    title: 'Localization',
+    description: 'TR / EN / DE / FR / ES / IT / AR şablon sürümleri.',
+    bullets: ['Locale alanı', 'Çeviri paketleri', 'RTL (AR)'],
+    ctaTo: `${DOCUMENT_CENTER_BASE}?tab=localization`,
+    ctaLabel: 'Localization hub',
+  },
+  onay: {
+    title: 'Approval Center',
+    description: 'Yayın öncesi Workflow Engine onayı.',
+    bullets: ['Draft → Review → Publish', 'Rollback', 'Audit'],
+    ctaTo: '/otomasyon',
+    ctaLabel: 'Workflow Engine',
   },
 }
 
@@ -161,4 +204,16 @@ export function DocVersionsPage() {
 }
 export function DocArchivePage() {
   return <DocCenterModulePage moduleKey="arsiv" />
+}
+export function DocAiDesignerPage() {
+  return <DocCenterModulePage moduleKey="ai-designer" />
+}
+export function DocSmsTemplatesPage() {
+  return <DocCenterModulePage moduleKey="sms" />
+}
+export function DocLocalizationPage() {
+  return <DocCenterModulePage moduleKey="localization" />
+}
+export function DocApprovalPage() {
+  return <DocCenterModulePage moduleKey="onay" />
 }

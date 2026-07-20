@@ -32,6 +32,8 @@
 
 **Customer Experience Cloud:** [84 Gap](./84_CXC_GAP_REPORT.md) · [85 Architecture/Roadmap](./85_CXC_ARCHITECTURE_ROADMAP.md)
 
+**Document Platform:** [86 Gap](./86_DOCUMENT_PLATFORM_GAP_REPORT.md) · [87 Architecture/Roadmap](./87_DOCUMENT_PLATFORM_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target
