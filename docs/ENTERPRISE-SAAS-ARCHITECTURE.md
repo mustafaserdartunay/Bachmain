@@ -36,6 +36,8 @@
 
 **Analytics Platform:** [88 Gap](./88_ANALYTICS_PLATFORM_GAP_REPORT.md) · [89 Architecture/Roadmap](./89_ANALYTICS_PLATFORM_ARCHITECTURE_ROADMAP.md)
 
+**Platform Core:** [90 Gap](./90_PLATFORM_CORE_GAP_REPORT.md) · [91 Architecture/Roadmap](./91_PLATFORM_CORE_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target

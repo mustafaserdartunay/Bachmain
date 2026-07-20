@@ -31,6 +31,8 @@ export const ROUTE_MODULE_MAP = {
   '/ai-buyume': 'ai_growth',
   '/analitik': 'reporting',
   '/raporlar': 'reporting',
+  '/platform': 'dashboard_basic',
+  '/cekirdek': 'dashboard_basic',
   '/ayarlar/kurumsal-yapi': 'multi_company',
 }
 

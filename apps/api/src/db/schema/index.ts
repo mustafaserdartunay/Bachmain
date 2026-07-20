@@ -2361,3 +2361,94 @@ export const analyticsExports = pgTable(
   },
   (t) => [index('analytics_exports_company_idx').on(t.companyId, t.status)],
 )
+
+/** Platform Core — module registry / jobs / health (docs/91). Domain tables stay in domains. */
+export const platformModules = pgTable(
+  'platform_modules',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id').references(() => companies.id),
+    code: text('code').notNull(),
+    label: text('label').notNull(),
+    route: text('route'),
+    apiPrefix: text('api_prefix'),
+    entitlementCode: text('entitlement_code'),
+    domain: text('domain').default('platform').notNull(),
+    status: text('status').default('active').notNull(),
+    version: text('version').default('2026'),
+    dependencies: jsonb('dependencies').$type<unknown[]>().default([]),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('platform_modules_code_uidx').on(t.code),
+    index('platform_modules_status_idx').on(t.status, t.domain),
+  ],
+)
+
+export const platformJobs = pgTable(
+  'platform_jobs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id').references(() => companies.id),
+    name: text('name').notNull(),
+    queue: text('queue').default('default').notNull(),
+    status: text('status').default('queued').notNull(),
+    priority: integer('priority').default(50).notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    runAt: timestamp('run_at', { withTimezone: true }),
+    attempts: integer('attempts').default(0).notNull(),
+    lastError: text('last_error'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('platform_jobs_status_idx').on(t.status, t.queue, t.priority)],
+)
+
+export const platformHealthSnapshots = pgTable(
+  'platform_health_snapshots',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    service: text('service').notNull(),
+    status: text('status').default('unknown').notNull(),
+    latencyMs: integer('latency_ms'),
+    detail: jsonb('detail').$type<Record<string, unknown>>().default({}),
+    checkedAt: timestamp('checked_at', { withTimezone: true }).defaultNow().notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('platform_health_service_idx').on(t.service, t.checkedAt)],
+)
+
+export const platformIntegrations = pgTable(
+  'platform_integrations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id').references(() => companies.id),
+    code: text('code').notNull(),
+    label: text('label').notNull(),
+    kind: text('kind').default('api').notNull(),
+    status: text('status').default('configured').notNull(),
+    config: jsonb('config').$type<Record<string, unknown>>().default({}),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('platform_integrations_code_uidx').on(t.code)],
+)
+
+export const platformPlugins = pgTable(
+  'platform_plugins',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id').references(() => companies.id),
+    slug: text('slug').notNull(),
+    title: text('title').notNull(),
+    kind: text('kind').default('widget').notNull(),
+    status: text('status').default('available').notNull(),
+    version: text('version').default('0.1.0'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('platform_plugins_slug_uidx').on(t.slug)],
+)

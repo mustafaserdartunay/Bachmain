@@ -66,6 +66,7 @@ export const NODE_CATALOG = [
     category: 'trigger',
     label: 'Analytics Export Kuyrukta',
   },
+  { id: 'trigger.platform.job.queued', category: 'trigger', label: 'Platform Job Kuyrukta' },
   { id: 'trigger.package.purchased', category: 'trigger', label: 'Paket Satın Alındı' },
   { id: 'trigger.package.expiring', category: 'trigger', label: 'Paket Süresi Doluyor' },
   { id: 'trigger.user.created', category: 'trigger', label: 'Yeni Kullanıcı' },
