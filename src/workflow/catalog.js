@@ -77,6 +77,7 @@ export const NODE_CATALOG = [
   { id: 'trigger.cron.fired', category: 'trigger', label: 'Cron Çalıştı' },
   { id: 'trigger.ai.result', category: 'trigger', label: 'AI Sonuç Üretti' },
   { id: 'trigger.aios.chat.completed', category: 'trigger', label: 'AIOS Chat Tamamlandı' },
+  { id: 'trigger.aios.org.dispatch', category: 'trigger', label: 'AI Org Orchestrator Dispatch' },
   { id: 'trigger.commerce.order.received', category: 'trigger', label: 'Commerce Sipariş Geldi' },
   {
     id: 'trigger.commerce.order.promoted',

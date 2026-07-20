@@ -30,6 +30,7 @@ import CustomerCreatePage from './pages/CustomerCreatePage'
 import MasterDataHubPage from './pages/MasterDataHubPage'
 import WorkflowHubPage from './pages/WorkflowHubPage'
 import AiosHubPage from './pages/AiosHubPage'
+import AiEnterpriseOrgPage from './pages/AiEnterpriseOrgPage'
 import KnowledgeCenterPage from './pages/KnowledgeCenterPage'
 import DigitalTwinCenterPage from './pages/DigitalTwinCenterPage'
 import CommerceCenterPage from './pages/CommerceCenterPage'
@@ -601,6 +602,11 @@ export default function App() {
                       />
                       <Route path="/aios" element={<AiosHubPage />} />
                       <Route path="/ai-beyin" element={<Navigate to="/aios" replace />} />
+                      <Route path="/ai-organizasyon" element={<AiEnterpriseOrgPage />} />
+                      <Route
+                        path="/ai-enterprise-org"
+                        element={<Navigate to="/ai-organizasyon" replace />}
+                      />
                       <Route path="/bilgi-merkezi" element={<KnowledgeCenterPage />} />
                       <Route path="/dijital-ikiz" element={<DigitalTwinCenterPage />} />
                       <Route path="/ticaret" element={<CommerceCenterPage />} />

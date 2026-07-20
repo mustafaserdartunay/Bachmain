@@ -115,6 +115,12 @@ export default function AiosHubPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
+              to="/ai-organizasyon"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <Bot className="h-4 w-4" /> Org
+            </Link>
+            <Link
               to="/"
               className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
@@ -261,6 +267,22 @@ export default function AiosHubPage() {
             <DeepLinkCard to="/analitik?tab=ai" title="AI Analytics" desc="Dashboard içgörüleri." />
           </div>
         </>
+      )}
+
+      {tab === 'organization' && (
+        <section className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
+          <h2 className="text-sm font-black uppercase">AI Enterprise Organization</h2>
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Dijital işgücü katmanı — CEO / C-Suite / Directors. Peer chat yok; Orchestrator +
+            Explainable AI.
+          </p>
+          <Link
+            to="/ai-organizasyon"
+            className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-4 text-xs font-black uppercase text-emerald-800"
+          >
+            Organizasyon şemasını aç →
+          </Link>
+        </section>
       )}
 
       {tab === 'agents' && (

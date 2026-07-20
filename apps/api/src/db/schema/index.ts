@@ -924,7 +924,7 @@ export const aiosRunSteps = pgTable(
     companyId: uuid('company_id')
       .notNull()
       .references(() => companies.id),
-    kind: text('kind').notNull(), // model | tool | memory | approval
+    kind: text('kind').notNull(), // model | tool | memory | approval | orchestrator
     name: text('name'),
     status: text('status').default('success').notNull(),
     durationMs: integer('duration_ms'),

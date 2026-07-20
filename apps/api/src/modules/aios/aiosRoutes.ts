@@ -9,7 +9,9 @@ import {
 import {
   createSchedule,
   decideApproval,
+  dispatchOrganizationMessage,
   getCatalog,
+  getOrganization,
   invokeTool,
   listAgentsForCompany,
   listApprovals,
@@ -80,6 +82,40 @@ export async function aiosRoutes(app: FastifyInstance) {
     ok: true,
     rows: listProviders(),
   }))
+
+  app.get(
+    '/v1/aios/organization',
+    { preHandler: [authenticate, requirePermission('crm.customers.view')] },
+    async () => ({
+      ok: true,
+      ...getOrganization(),
+    }),
+  )
+
+  app.post(
+    '/v1/aios/organization/dispatch',
+    { preHandler: [authenticate, requirePermission('crm.customers.create')] },
+    async (req) => {
+      const companyId = requireTenant(req)
+      const body = z
+        .object({
+          fromOrgId: z.string().min(1),
+          toOrgId: z.string().min(1),
+          intent: z.string().min(1).max(500),
+          payload: z.record(z.unknown()).optional(),
+        })
+        .parse(req.body || {})
+      const result = await dispatchOrganizationMessage({
+        companyId,
+        userId: req.auth?.sub,
+        fromOrgId: body.fromOrgId,
+        toOrgId: body.toOrgId,
+        intent: body.intent,
+        payload: body.payload as Record<string, unknown> | undefined,
+      })
+      return { ok: true, ...result }
+    },
+  )
 
   app.post(
     '/v1/aios/gateway/chat',
@@ -268,6 +304,7 @@ export async function aiosRoutes(app: FastifyInstance) {
         providers: catalog.providers,
         sections: [
           'Dashboard',
+          'Enterprise Organization',
           'Agent Manager',
           'Model Manager',
           'Prompt Library',
@@ -282,6 +319,7 @@ export async function aiosRoutes(app: FastifyInstance) {
           'Alerts',
           'Settings',
         ],
+        organization: catalog.organization?.counts || null,
       }
     },
   )

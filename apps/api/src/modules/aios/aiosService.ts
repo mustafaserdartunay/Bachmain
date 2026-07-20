@@ -13,9 +13,19 @@ import { maskSensitiveText } from '../../shared/crypto.js'
 import { AIOS_AGENTS, getAgentById } from './agentsCatalog.js'
 import { AIOS_TOOLS, getToolById } from './toolsCatalog.js'
 import { gatewayChat, listProviders, type ChatMessage, type ModelProviderId } from './gateway.js'
+import { getOrganizationCatalog, getOrgNodeById } from './organizationCatalog.js'
 
 export function getCatalog() {
-  return { agents: AIOS_AGENTS, tools: AIOS_TOOLS, providers: listProviders() }
+  return {
+    agents: AIOS_AGENTS,
+    tools: AIOS_TOOLS,
+    providers: listProviders(),
+    organization: getOrganizationCatalog(),
+  }
+}
+
+export function getOrganization() {
+  return getOrganizationCatalog()
 }
 
 export async function overview(companyId: string) {
@@ -429,4 +439,78 @@ export async function createSchedule(input: {
     })
     .returning()
   return row
+}
+
+/**
+ * Orchestrator-only agent communication. Never peer-to-peer.
+ * Records an audited run + returns explainable event payload.
+ */
+export async function dispatchOrganizationMessage(input: {
+  companyId: string
+  userId?: string
+  fromOrgId: string
+  toOrgId: string
+  intent: string
+  payload?: Record<string, unknown>
+}) {
+  const from = getOrgNodeById(input.fromOrgId)
+  const to = getOrgNodeById(input.toOrgId)
+  if (!from || !to) throw new AppError('NOT_FOUND', 'Org düğümü bulunamadı', 404)
+
+  const agent = getAgentById(to.agentId)
+  if (!agent) throw new AppError('NOT_FOUND', 'Hedef agent bulunamadı', 404)
+
+  const [run] = await db
+    .insert(aiosRuns)
+    .values({
+      companyId: input.companyId,
+      agentId: agent.id,
+      userId: input.userId || null,
+      provider: agent.defaultProvider,
+      model: agent.defaultModel,
+      status: 'completed',
+      promptTokens: 0,
+      completionTokens: 0,
+      estimatedCostUsd: '0',
+      durationMs: 0,
+      finishedAt: new Date(),
+      meta: {
+        kind: 'org_orchestrator_dispatch',
+        fromOrgId: from.id,
+        toOrgId: to.id,
+        intent: input.intent,
+        explainWhy: to.explainWhy,
+        criticalApprovalRequired: to.criticalApprovalRequired,
+        payload: input.payload || {},
+      },
+    })
+    .returning()
+
+  await db.insert(aiosRunSteps).values({
+    runId: run.id,
+    companyId: input.companyId,
+    kind: 'orchestrator',
+    name: `${from.title} → ${to.title}`,
+    status: 'success',
+    durationMs: 0,
+    output: {
+      intent: input.intent,
+      explainWhy: to.explainWhy,
+      peerChat: false,
+    },
+  })
+
+  return {
+    event: {
+      id: run.id,
+      type: 'aios.org.dispatch',
+      from: { orgId: from.id, title: from.title, agentId: from.agentId },
+      to: { orgId: to.id, title: to.title, agentId: to.agentId },
+      intent: input.intent,
+      explainWhy: to.explainWhy,
+      criticalApprovalRequired: to.criticalApprovalRequired,
+      at: new Date().toISOString(),
+    },
+    run,
+  }
 }
