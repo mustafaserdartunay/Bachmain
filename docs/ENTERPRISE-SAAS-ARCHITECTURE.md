@@ -14,6 +14,8 @@
 
 **Workflow Engine:** [66 Gap](./66_WORKFLOW_ENGINE_GAP_REPORT.md) · [67 Architecture/Roadmap](./67_WORKFLOW_ENGINE_ARCHITECTURE_ROADMAP.md)
 
+**AIOS:** [68 Gap](./68_AIOS_GAP_REPORT.md) · [69 Architecture/Roadmap](./69_AIOS_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target

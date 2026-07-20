@@ -12,6 +12,7 @@ import { seedBillingIfEmpty } from './subscriptionService.mjs'
 import { handleMailApi } from './mailRoutes.mjs'
 import { assertAdminEnv } from './assertEnv.mjs'
 import { handleSecurityApi } from './securityRoutes.mjs'
+import { handleAiosApi } from './aiosRoutes.mjs'
 
 assertAdminEnv()
 
@@ -31,21 +32,44 @@ function computeMetrics(rows) {
   const pendingStatuses = ['Bekleyen', 'Bekliyor', 'Taslak', 'Planlandı', 'Açık', 'Gecikmiş']
   return [
     { label: 'Toplam', value: String(rows.length), change: 'Kayıt', trend: 'neutral' },
-    { label: 'Aktif', value: String(rows.filter((r) => activeStatuses.includes(r.status)).length || Math.floor(rows.length * 0.7)), change: '—', trend: 'up' },
-    { label: 'Bekleyen', value: String(rows.filter((r) => pendingStatuses.includes(r.status)).length), change: '—', trend: 'neutral' },
-    { label: 'Bu Ay', value: String(Math.max(1, Math.floor(rows.length * 0.3))), change: 'Yeni', trend: 'up' },
+    {
+      label: 'Aktif',
+      value: String(
+        rows.filter((r) => activeStatuses.includes(r.status)).length ||
+          Math.floor(rows.length * 0.7),
+      ),
+      change: '—',
+      trend: 'up',
+    },
+    {
+      label: 'Bekleyen',
+      value: String(rows.filter((r) => pendingStatuses.includes(r.status)).length),
+      change: '—',
+      trend: 'neutral',
+    },
+    {
+      label: 'Bu Ay',
+      value: String(Math.max(1, Math.floor(rows.length * 0.3))),
+      change: 'Yeni',
+      trend: 'up',
+    },
   ]
 }
 
 function parseBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = []
-    req.on('data', (chunk) => { chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)) })
+    req.on('data', (chunk) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    })
     req.on('end', () => {
       const raw = Buffer.concat(chunks).toString('utf8')
       req.rawBody = raw
-      try { resolve(raw ? JSON.parse(raw) : {}) }
-      catch { reject(new Error('INVALID_JSON')) }
+      try {
+        resolve(raw ? JSON.parse(raw) : {})
+      } catch {
+        reject(new Error('INVALID_JSON'))
+      }
     })
     req.on('error', reject)
   })
@@ -53,19 +77,28 @@ function parseBody(req) {
 
 async function serveStatic(res, pathname) {
   const safe = pathname.split('?')[0]
-  const tryPaths = safe === '/' || !path.extname(safe)
-    ? [path.join(DIST, 'index.html')]
-    : [path.join(DIST, safe), path.join(PUBLIC, safe.replace(/^\//, ''))]
+  const tryPaths =
+    safe === '/' || !path.extname(safe)
+      ? [path.join(DIST, 'index.html')]
+      : [path.join(DIST, safe), path.join(PUBLIC, safe.replace(/^\//, ''))]
 
   for (const filePath of tryPaths) {
     try {
       const data = await fs.readFile(filePath)
       const ext = path.extname(filePath)
-      const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml' }
+      const types = {
+        '.html': 'text/html',
+        '.js': 'text/javascript',
+        '.css': 'text/css',
+        '.png': 'image/png',
+        '.svg': 'image/svg+xml',
+      }
       res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream' })
       res.end(data)
       return true
-    } catch { /* try next */ }
+    } catch {
+      /* try next */
+    }
   }
   return false
 }
@@ -98,28 +131,52 @@ async function handle(req, res, url) {
       if (await handleWhatsAppApi(req, res, apiPath, body)) return
       if (await handleMailApi(req, res, apiPath, body)) return
       if (await handleSecurityApi(req, res, apiPath)) return
+      if (await handleAiosApi(req, res, apiPath)) return
     }
 
     if (method === 'GET' && pathname.startsWith('/api/security')) {
       if (await handleSecurityApi(req, res, pathname.replace(/^\/api\/?/, '') || '')) return
     }
 
+    if (method === 'GET' && pathname.startsWith('/api/aios')) {
+      if (await handleAiosApi(req, res, pathname.replace(/^\/api\/?/, '') || '')) return
+    }
+
     if (method === 'GET' && pathname === '/api/health') {
-      return sendJson(req, res, 200, { status: 'ok', service: 'bachmain-control-center-api', timestamp: new Date().toISOString() })
+      return sendJson(req, res, 200, {
+        status: 'ok',
+        service: 'bachmain-control-center-api',
+        timestamp: new Date().toISOString(),
+      })
     }
 
     if (method === 'GET' && pathname === '/api/dashboard') {
       const store = await loadStore()
-      const expiringLicenses = store.customers.filter((c) => ['active', 'trial'].includes(c.status)).filter((c) => new Date(c.licenseExpiry) < new Date('2026-03-01')).slice(0, 5)
-      const openTickets = store.supportTickets.filter((t) => !['resolved', 'closed'].includes(t.status))
+      const expiringLicenses = store.customers
+        .filter((c) => ['active', 'trial'].includes(c.status))
+        .filter((c) => new Date(c.licenseExpiry) < new Date('2026-03-01'))
+        .slice(0, 5)
+      const openTickets = store.supportTickets.filter(
+        (t) => !['resolved', 'closed'].includes(t.status),
+      )
       return sendJson(req, res, 200, {
         ...store.dashboard,
         expiringLicenses,
         openTickets,
         kpis: [
-          { label: 'Aktif Müşteri', value: String(store.customers.filter((c) => c.status === 'active').length), change: '+12 bu ay', trend: 'up' },
+          {
+            label: 'Aktif Müşteri',
+            value: String(store.customers.filter((c) => c.status === 'active').length),
+            change: '+12 bu ay',
+            trend: 'up',
+          },
           { label: 'Aylık Gelir (MRR)', value: '₺1.24M', change: '+8.3%', trend: 'up' },
-          { label: 'Açık Ticket', value: String(openTickets.length), change: '-3 dünden', trend: 'down' },
+          {
+            label: 'Açık Ticket',
+            value: String(openTickets.length),
+            change: '-3 dünden',
+            trend: 'down',
+          },
           { label: 'Sistem Uptime', value: '99.97%', change: 'Son 30 gün', trend: 'neutral' },
         ],
       })
@@ -136,15 +193,42 @@ async function handle(req, res, url) {
       const customer = store.customers.find((c) => c.id === customerMatch[1])
       if (!customer) return sendJson(req, res, 404, { error: 'Müşteri bulunamadı' })
       const tickets = store.supportTickets.filter((t) => t.customerId === customer.id)
-      return sendJson(req, res, 200, { ...customer, userList: store.customerExtras.users, invoices: store.customerExtras.invoices, payments: store.customerExtras.payments, aiUsage: store.customerExtras.aiUsage, loginHistory: store.customerExtras.loginHistory, timeline: store.customerExtras.timeline, supportTickets: tickets })
+      return sendJson(req, res, 200, {
+        ...customer,
+        userList: store.customerExtras.users,
+        invoices: store.customerExtras.invoices,
+        payments: store.customerExtras.payments,
+        aiUsage: store.customerExtras.aiUsage,
+        loginHistory: store.customerExtras.loginHistory,
+        timeline: store.customerExtras.timeline,
+        supportTickets: tickets,
+      })
     }
 
     if (method === 'POST' && pathname === '/api/customers') {
       const body = await parseBody(req)
       const result = await withStore((store) => {
-        const customer = { id: newId('c'), status: 'trial', mrr: 0, users: 1, balance: 0, createdAt: new Date().toISOString().slice(0, 10), licenseExpiry: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10), ...body }
+        const customer = {
+          id: newId('c'),
+          status: 'trial',
+          mrr: 0,
+          users: 1,
+          balance: 0,
+          createdAt: new Date().toISOString().slice(0, 10),
+          licenseExpiry: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10),
+          ...body,
+        }
         store.customers.unshift(customer)
-        store.modules.customers.unshift({ id: customer.id, company: customer.company, contact: customer.contact, city: customer.city, plan: customer.plan, mrr: '₺0', status: 'Deneme', licenseExpiry: customer.licenseExpiry })
+        store.modules.customers.unshift({
+          id: customer.id,
+          company: customer.company,
+          contact: customer.contact,
+          city: customer.city,
+          plan: customer.plan,
+          mrr: '₺0',
+          status: 'Deneme',
+          licenseExpiry: customer.licenseExpiry,
+        })
         return customer
       })
       return sendJson(req, res, 201, result)
@@ -187,7 +271,27 @@ async function handle(req, res, url) {
     if (method === 'POST' && pathname === '/api/support/tickets') {
       const body = await parseBody(req)
       const result = await withStore((store) => {
-        const ticket = { id: newId('t'), status: 'open', priority: 'medium', assignee: 'Atanmadı', tags: [], internalNotes: [], attachments: [], timeline: [{ id: newId('tl'), title: 'Ticket oluşturuldu', date: new Date().toISOString(), type: 'info' }], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), slaDeadline: new Date(Date.now() + 24 * 3600000).toISOString(), ...body }
+        const ticket = {
+          id: newId('t'),
+          status: 'open',
+          priority: 'medium',
+          assignee: 'Atanmadı',
+          tags: [],
+          internalNotes: [],
+          attachments: [],
+          timeline: [
+            {
+              id: newId('tl'),
+              title: 'Ticket oluşturuldu',
+              date: new Date().toISOString(),
+              type: 'info',
+            },
+          ],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          slaDeadline: new Date(Date.now() + 24 * 3600000).toISOString(),
+          ...body,
+        }
         store.supportTickets.unshift(ticket)
         return ticket
       })
@@ -200,9 +304,21 @@ async function handle(req, res, url) {
       const result = await withStore((store) => {
         const ticket = store.supportTickets.find((t) => t.id === noteMatch[1])
         if (!ticket) throw new Error('NOT_FOUND')
-        const note = { id: newId('n'), author: body.author || 'Admin', content: body.content, date: new Date().toISOString() }
+        const note = {
+          id: newId('n'),
+          author: body.author || 'Admin',
+          content: body.content,
+          date: new Date().toISOString(),
+        }
         ticket.internalNotes.push(note)
-        ticket.timeline.push({ id: newId('tl'), title: 'İç not eklendi', description: note.content, date: note.date, type: 'warning', user: note.author })
+        ticket.timeline.push({
+          id: newId('tl'),
+          title: 'İç not eklendi',
+          description: note.content,
+          date: note.date,
+          type: 'warning',
+          user: note.author,
+        })
         ticket.updatedAt = new Date().toISOString()
         return note
       }).catch((e) => (e.message === 'NOT_FOUND' ? null : Promise.reject(e)))
@@ -255,15 +371,18 @@ async function handle(req, res, url) {
         if (e.message === 'ITEM_NOT_FOUND') return { error: 'ITEM_NOT_FOUND' }
         throw e
       })
-      if (result?.error === 'NOT_FOUND') return sendJson(req, res, 404, { error: 'Modül bulunamadı' })
-      if (result?.error === 'ITEM_NOT_FOUND') return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+      if (result?.error === 'NOT_FOUND')
+        return sendJson(req, res, 404, { error: 'Modül bulunamadı' })
+      if (result?.error === 'ITEM_NOT_FOUND')
+        return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
       return sendJson(req, res, 200, result)
     }
 
     if (method === 'DELETE' && moduleItemMatch) {
       await withStore((store) => {
         const rows = store.modules[moduleItemMatch[1]]
-        if (rows) store.modules[moduleItemMatch[1]] = rows.filter((r) => r.id !== moduleItemMatch[2])
+        if (rows)
+          store.modules[moduleItemMatch[1]] = rows.filter((r) => r.id !== moduleItemMatch[2])
       })
       res.writeHead(204, { 'Access-Control-Allow-Origin': '*' })
       return res.end()
@@ -281,7 +400,7 @@ async function handle(req, res, url) {
     }
 
     if (!pathname.startsWith('/api')) {
-      if (SERVE_STATIC && method === 'GET' && await serveStatic(res, pathname)) return
+      if (SERVE_STATIC && method === 'GET' && (await serveStatic(res, pathname))) return
       if (!SERVE_STATIC) return sendJson(req, res, 404, { error: 'Endpoint bulunamadı' })
       return sendJson(req, res, 404, { error: 'Dosya bulunamadı' })
     }

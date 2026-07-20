@@ -199,6 +199,44 @@ export interface SecurityOverview {
   source: string
 }
 
+export interface AiosProviderRow {
+  id: string
+  label: string
+  configured: boolean
+  models?: string[]
+}
+
+export interface AiosAgentRow {
+  id: string
+  name: string
+  role: string
+  modules: string[]
+  defaultProvider: string
+  defaultModel: string
+  costLimitUsd: number
+}
+
+export interface AiosToolRow {
+  id: string
+  label: string
+  description: string
+  requiresHumanApproval: boolean
+}
+
+export interface AiosOverview {
+  ok: boolean
+  agentsTotal: number
+  toolsTotal: number
+  providersConfigured: number
+  providers: AiosProviderRow[]
+  agents?: AiosAgentRow[]
+  tools?: AiosToolRow[]
+  sections?: string[]
+  mock?: boolean
+  source: string
+  sampledAt?: string
+}
+
 function isNotFoundOrUnavailable(err: unknown) {
   return err instanceof ApiError && (err.status === 404 || err.status === 501 || err.status >= 500)
 }
@@ -319,6 +357,42 @@ export const platformAdminApi = {
           recommendations: ['Admin API /security/overview erişimini doğrulayın'],
           mock: true,
           source: '/security/overview',
+        }
+      }
+      throw err
+    }
+  },
+
+  /** GET /aios/overview — AI Control Center */
+  getAiosOverview: async (): Promise<AiosOverview> => {
+    try {
+      const data = await api.get<AiosOverview>('/aios/overview')
+      return {
+        ...data,
+        mock: false,
+        source: data.source || '/aios/overview',
+        providersConfigured:
+          data.providersConfigured ?? data.providers?.filter((p) => p.configured).length ?? 0,
+      }
+    } catch (err) {
+      if (isNotFoundOrUnavailable(err) || err instanceof ApiError) {
+        return {
+          ok: true,
+          agentsTotal: 23,
+          toolsTotal: 19,
+          providersConfigured: 0,
+          providers: [
+            { id: 'openai', label: 'OpenAI', configured: false, models: ['gpt-4o'] },
+            { id: 'anthropic', label: 'Anthropic Claude', configured: false },
+            { id: 'gemini', label: 'Google Gemini', configured: false },
+            { id: 'azure_openai', label: 'Azure OpenAI', configured: false },
+            { id: 'local', label: 'Yerel LLM', configured: false },
+          ],
+          agents: [],
+          tools: [],
+          mock: true,
+          source: '/aios/overview',
+          sampledAt: new Date().toISOString(),
         }
       }
       throw err

@@ -1,0 +1,188 @@
+export type AiosTool = {
+  id: string
+  label: string
+  description: string
+  modules: string[]
+  permission: string
+  /** If true, invoke enqueues human approval instead of executing */
+  requiresHumanApproval: boolean
+  inputSchema: Record<string, string>
+}
+
+export const AIOS_TOOLS: AiosTool[] = [
+  {
+    id: 'customer.search',
+    label: 'Customer Search',
+    description: 'Müşteri ara (okuma).',
+    modules: ['crm'],
+    permission: 'customer.search',
+    requiresHumanApproval: false,
+    inputSchema: { q: 'string' },
+  },
+  {
+    id: 'quote.create',
+    label: 'Create Quote',
+    description: 'Teklif taslağı oluştur.',
+    modules: ['sales', 'quotes'],
+    permission: 'quote.draft',
+    requiresHumanApproval: false,
+    inputSchema: { customerId: 'string', items: 'array' },
+  },
+  {
+    id: 'order.create',
+    label: 'Create Order',
+    description: 'Sipariş oluştur.',
+    modules: ['orders'],
+    permission: 'order.create',
+    requiresHumanApproval: true,
+    inputSchema: { quoteId: 'string' },
+  },
+  {
+    id: 'task.update',
+    label: 'Update Task',
+    description: 'Görev güncelle.',
+    modules: ['crm'],
+    permission: 'task.update',
+    requiresHumanApproval: false,
+    inputSchema: { taskId: 'string', status: 'string' },
+  },
+  {
+    id: 'invoice.draft',
+    label: 'Generate Invoice Draft',
+    description: 'Fatura taslağı üret.',
+    modules: ['accounting'],
+    permission: 'invoice.draft',
+    requiresHumanApproval: false,
+    inputSchema: { orderId: 'string' },
+  },
+  {
+    id: 'truck.load',
+    label: 'Calculate Truck Load',
+    description: 'Kamyon yük hesabı.',
+    modules: ['logistics'],
+    permission: 'truck.load',
+    requiresHumanApproval: false,
+    inputSchema: { shipmentId: 'string' },
+  },
+  {
+    id: 'document.generate',
+    label: 'Generate Document',
+    description: 'Belge üret.',
+    modules: ['documents'],
+    permission: 'document.generate',
+    requiresHumanApproval: false,
+    inputSchema: { templateId: 'string' },
+  },
+  {
+    id: 'email.send',
+    label: 'Send Email',
+    description: 'E-posta gönder.',
+    modules: ['omnichannel'],
+    permission: 'email.send',
+    requiresHumanApproval: true,
+    inputSchema: { to: 'string', subject: 'string', body: 'string' },
+  },
+  {
+    id: 'whatsapp.send',
+    label: 'Send WhatsApp',
+    description: 'WhatsApp gönder.',
+    modules: ['omnichannel'],
+    permission: 'whatsapp.send',
+    requiresHumanApproval: true,
+    inputSchema: { to: 'string', body: 'string' },
+  },
+  {
+    id: 'route.create',
+    label: 'Create Route',
+    description: 'Rota oluştur.',
+    modules: ['logistics'],
+    permission: 'route.create',
+    requiresHumanApproval: false,
+    inputSchema: { stops: 'array' },
+  },
+  {
+    id: 'inventory.search',
+    label: 'Search Inventory',
+    description: 'Stok ara.',
+    modules: ['warehouse', 'inventory'],
+    permission: 'inventory.search',
+    requiresHumanApproval: false,
+    inputSchema: { sku: 'string' },
+  },
+  {
+    id: 'order.cancel',
+    label: 'Cancel Order',
+    description: 'Sipariş iptali.',
+    modules: ['orders'],
+    permission: 'order.cancel',
+    requiresHumanApproval: true,
+    inputSchema: { orderId: 'string' },
+  },
+  {
+    id: 'invoice.cancel',
+    label: 'Cancel Invoice',
+    description: 'Fatura iptali.',
+    modules: ['accounting'],
+    permission: 'invoice.cancel',
+    requiresHumanApproval: true,
+    inputSchema: { invoiceId: 'string' },
+  },
+  {
+    id: 'price.bulk_update',
+    label: 'Bulk Price Update',
+    description: 'Toplu fiyat güncelleme.',
+    modules: ['inventory'],
+    permission: 'price.bulk_update',
+    requiresHumanApproval: true,
+    inputSchema: { updates: 'array' },
+  },
+  {
+    id: 'stock.delete',
+    label: 'Delete Stock',
+    description: 'Stok silme.',
+    modules: ['warehouse'],
+    permission: 'stock.delete',
+    requiresHumanApproval: true,
+    inputSchema: { sku: 'string' },
+  },
+  {
+    id: 'user.delete',
+    label: 'Delete User',
+    description: 'Kullanıcı silme.',
+    modules: ['admin'],
+    permission: 'user.delete',
+    requiresHumanApproval: true,
+    inputSchema: { userId: 'string' },
+  },
+  {
+    id: 'package.change',
+    label: 'Change Package',
+    description: 'Paket değiştirme.',
+    modules: ['billing'],
+    permission: 'package.change',
+    requiresHumanApproval: true,
+    inputSchema: { planCode: 'string' },
+  },
+  {
+    id: 'role.elevate',
+    label: 'Elevate Role',
+    description: 'Yetki yükseltme.',
+    modules: ['admin'],
+    permission: 'role.elevate',
+    requiresHumanApproval: true,
+    inputSchema: { userId: 'string', role: 'string' },
+  },
+  {
+    id: 'data.bulk_import',
+    label: 'Bulk Data Import',
+    description: 'Toplu veri aktarımı.',
+    modules: ['mdm'],
+    permission: 'data.bulk_import',
+    requiresHumanApproval: true,
+    inputSchema: { entityType: 'string', rows: 'array' },
+  },
+]
+
+export function getToolById(id: string) {
+  return AIOS_TOOLS.find((t) => t.id === id) || null
+}

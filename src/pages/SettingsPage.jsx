@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Building2, GitBranch, ImagePlus, Save, ShieldCheck } from 'lucide-react'
+import { Building2, GitBranch, ImagePlus, Save, ShieldCheck, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
   defaultCompanySettings,
@@ -77,6 +77,13 @@ export default function SettingsPage() {
           >
             <GitBranch className="h-4 w-4" />
             Workflow Engine
+          </Link>
+          <Link
+            to="/aios"
+            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-violet-200 transition-colors hover:bg-dark-700 hover:text-white"
+          >
+            <Sparkles className="h-4 w-4" />
+            AIOS
           </Link>
           <Link
             to="/ayarlar/kurumsal-yapi"

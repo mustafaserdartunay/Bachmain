@@ -5,10 +5,12 @@ export const processSubMenus = [
   { label: 'Depo', path: '/depo' },
   { label: 'Teslim Edilenler', path: '/teslim-edilenler' },
   { label: 'Workflow Engine', path: '/otomasyon' },
+  { label: 'AI Operating System', path: '/aios' },
 ]
 
 export function isProcessRoute(pathname) {
   if (pathname === '/otomasyon' || pathname.startsWith('/otomasyon/')) return true
+  if (pathname === '/aios' || pathname.startsWith('/aios/')) return true
   return processSubMenus.some(
     (item) => pathname === item.path || pathname.startsWith(`${item.path}/`),
   )

@@ -39,6 +39,7 @@ Bu numaralı dosyalar henüz yoksa, geçici olarak ilgili mevcut dokümanları k
 | DevOps / CI | `docs/59`–`63`, `.github/workflows/ci.yml` |
 | MDM | `docs/64`–`65` |
 | Workflow Engine | `docs/66`–`67` |
+| AIOS | `docs/68`–`69` |
 
 ## Yapma
 

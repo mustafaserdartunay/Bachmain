@@ -22,6 +22,13 @@
       "when": 1784560000000,
       "tag": "0002_workflow_engine",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784570000000,
+      "tag": "0003_aios_foundation",
+      "breakpoints": true
     }
   ]
 }

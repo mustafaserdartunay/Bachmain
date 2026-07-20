@@ -17,6 +17,7 @@ import { adminRoutes } from './modules/admin/adminRoutes.js'
 import { crmRoutes } from './modules/crm/crmRoutes.js'
 import { mdmRoutes } from './modules/mdm/mdmRoutes.js'
 import { workflowRoutes } from './modules/workflow/workflowRoutes.js'
+import { aiosRoutes } from './modules/aios/aiosRoutes.js'
 
 async function main() {
   const app = Fastify({
@@ -100,6 +101,7 @@ async function main() {
   await app.register(crmRoutes)
   await app.register(mdmRoutes)
   await app.register(workflowRoutes)
+  await app.register(aiosRoutes)
 
   await app.ready()
 

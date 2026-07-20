@@ -861,3 +861,136 @@ export const workflowEvents = pgTable(
     index('workflow_events_status_idx').on(t.companyId, t.status, t.eventType),
   ],
 )
+
+/** AI Operating System (AIOS-0) */
+export const aiosAgentConfigs = pgTable(
+  'aios_agent_configs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    agentId: text('agent_id').notNull(),
+    enabled: boolean('enabled').default(true).notNull(),
+    modelProvider: text('model_provider'),
+    modelId: text('model_id'),
+    costLimitUsd: numeric('cost_limit_usd', { precision: 12, scale: 4 }),
+    modules: jsonb('modules').$type<string[]>().default([]),
+    permissions: jsonb('permissions').$type<string[]>().default([]),
+    workHours: jsonb('work_hours').$type<Record<string, unknown>>().default({}),
+    memoryEnabled: boolean('memory_enabled').default(true).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('aios_agent_configs_uidx').on(t.companyId, t.agentId)],
+)
+
+export const aiosRuns = pgTable(
+  'aios_runs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    agentId: text('agent_id').notNull(),
+    userId: uuid('user_id').references(() => users.id),
+    provider: text('provider'),
+    model: text('model'),
+    status: text('status').default('running').notNull(), // running | completed | failed | awaiting_approval
+    promptTokens: integer('prompt_tokens').default(0),
+    completionTokens: integer('completion_tokens').default(0),
+    estimatedCostUsd: numeric('estimated_cost_usd', { precision: 12, scale: 6 }),
+    durationMs: integer('duration_ms'),
+    requiresApproval: boolean('requires_approval').default(false).notNull(),
+    error: text('error'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    index('aios_runs_company_idx').on(t.companyId, t.startedAt),
+    index('aios_runs_agent_idx').on(t.companyId, t.agentId),
+  ],
+)
+
+export const aiosRunSteps = pgTable(
+  'aios_run_steps',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    runId: uuid('run_id')
+      .notNull()
+      .references(() => aiosRuns.id),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    kind: text('kind').notNull(), // model | tool | memory | approval
+    name: text('name'),
+    status: text('status').default('success').notNull(),
+    durationMs: integer('duration_ms'),
+    input: jsonb('input').$type<Record<string, unknown>>().default({}),
+    output: jsonb('output').$type<Record<string, unknown>>().default({}),
+    error: text('error'),
+    ...timestamps,
+  },
+  (t) => [index('aios_run_steps_run_idx').on(t.runId)],
+)
+
+export const aiosApprovals = pgTable(
+  'aios_approvals',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    runId: uuid('run_id').references(() => aiosRuns.id),
+    toolId: text('tool_id').notNull(),
+    agentId: text('agent_id'),
+    requestedBy: uuid('requested_by').references(() => users.id),
+    status: text('status').default('pending').notNull(), // pending | approved | rejected
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    decidedBy: uuid('decided_by').references(() => users.id),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    reason: text('reason'),
+    ...timestamps,
+  },
+  (t) => [index('aios_approvals_company_idx').on(t.companyId, t.status, t.createdAt)],
+)
+
+export const aiosMemory = pgTable(
+  'aios_memory',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    scope: text('scope').default('company').notNull(), // company | user | agent | module
+    scopeId: text('scope_id'),
+    key: text('key').notNull(),
+    value: jsonb('value').$type<Record<string, unknown>>().default({}),
+    sensitivity: text('sensitivity').default('internal').notNull(), // public | internal | restricted
+    createdBy: uuid('created_by').references(() => users.id),
+    ...timestamps,
+  },
+  (t) => [index('aios_memory_company_idx').on(t.companyId, t.scope, t.key)],
+)
+
+export const aiosSchedules = pgTable(
+  'aios_schedules',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    agentId: text('agent_id').notNull(),
+    cadence: text('cadence').notNull(), // once | hourly | daily | weekly | monthly | event
+    cronExpr: text('cron_expr'),
+    eventType: text('event_type'),
+    enabled: boolean('enabled').default(true).notNull(),
+    nextRunAt: timestamp('next_run_at', { withTimezone: true }),
+    lastRunAt: timestamp('last_run_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('aios_schedules_company_idx').on(t.companyId, t.enabled)],
+)

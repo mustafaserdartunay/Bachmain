@@ -7,6 +7,7 @@ import { PlatformOpsPage } from '@/pages/PlatformOpsPage'
 import { UserManagementPage } from '@/pages/UserManagementPage'
 import { AuditLogPage } from '@/pages/AuditLogPage'
 import { SecurityCenterPage } from '@/pages/SecurityCenterPage'
+import { AiControlCenterPage } from '@/pages/AiControlCenterPage'
 import {
   BillingCampaignsPage,
   BillingCouponsPage,
@@ -47,6 +48,8 @@ export function AppRoutes() {
         <Route path="user-management" element={<UserManagementPage />} />
         <Route path="audit-logs" element={<AuditLogPage />} />
         <Route path="guvenlik" element={<SecurityCenterPage />} />
+        <Route path="ai-yonetimi" element={<AiControlCenterPage />} />
+        <Route path="ai-control" element={<Navigate to="/ai-yonetimi" replace />} />
 
         <Route path="abonelik/paketler" element={<BillingPlansPage />} />
         <Route path="abonelik/moduller" element={<BillingModulesPage />} />
@@ -63,14 +66,23 @@ export function AppRoutes() {
         <Route path="eposta" element={<MailCenterPage />} />
 
         <Route path="musteriler" element={<ModuleListPage moduleId="customers" />} />
-        <Route path="musteriler/yeni" element={<ModuleFormPage moduleId="customers" mode="create" />} />
+        <Route
+          path="musteriler/yeni"
+          element={<ModuleFormPage moduleId="customers" mode="create" />}
+        />
         <Route path="musteriler/:id" element={<CustomerDetailPage />} />
-        <Route path="musteriler/:id/duzenle" element={<ModuleFormPage moduleId="customers" mode="edit" />} />
+        <Route
+          path="musteriler/:id/duzenle"
+          element={<ModuleFormPage moduleId="customers" mode="edit" />}
+        />
 
         <Route path="destek" element={<ModuleListPage moduleId="support" />} />
         <Route path="destek/yeni" element={<ModuleFormPage moduleId="support" mode="create" />} />
         <Route path="destek/:id" element={<SupportDetailPage />} />
-        <Route path="destek/:id/duzenle" element={<ModuleFormPage moduleId="support" mode="edit" />} />
+        <Route
+          path="destek/:id/duzenle"
+          element={<ModuleFormPage moduleId="support" mode="edit" />}
+        />
 
         {moduleIds
           .filter((id) => id !== 'customers' && id !== 'support' && id !== 'security')
@@ -80,9 +92,15 @@ export function AppRoutes() {
             return (
               <Route key={id}>
                 <Route path={segment} element={<ModuleListPage moduleId={id} />} />
-                <Route path={`${segment}/yeni`} element={<ModuleFormPage moduleId={id} mode="create" />} />
+                <Route
+                  path={`${segment}/yeni`}
+                  element={<ModuleFormPage moduleId={id} mode="create" />}
+                />
                 <Route path={`${segment}/:itemId`} element={<ModuleDetailPage moduleId={id} />} />
-                <Route path={`${segment}/:itemId/duzenle`} element={<ModuleFormPage moduleId={id} mode="edit" />} />
+                <Route
+                  path={`${segment}/:itemId/duzenle`}
+                  element={<ModuleFormPage moduleId={id} mode="edit" />}
+                />
               </Route>
             )
           })}

@@ -106,13 +106,18 @@ export function deviceFingerprint(input: { userAgent?: string; ip?: string; devi
   return sha256([input.deviceId || '', input.userAgent || '', input.ip || ''].join('|'))
 }
 
-/** Mask PII before sending prompts to OpenAI */
+/** Mask PII / secrets before sending prompts to model providers */
 export function maskSensitiveText(input: string) {
   return String(input || '')
     .replace(/\b\d{11}\b/g, '[TC_MASKED]')
     .replace(/\bTR\d{2}\s?(?:\d{4}\s?){5}\d{2}\b/gi, '[IBAN_MASKED]')
     .replace(/\b(?:4\d{12}(?:\d{3})?|5[1-5]\d{14}|3[47]\d{13})\b/g, '[CARD_MASKED]')
-    .replace(/\b(?:sk-|rk-|whsec_)[A-Za-z0-9_-]{8,}\b/g, '[SECRET_MASKED]')
+    .replace(
+      /\b(?:sk-|rk-|whsec_|xox[baprs]-|ghp_|gho_|AKIA)[A-Za-z0-9_-]{8,}\b/g,
+      '[SECRET_MASKED]',
+    )
+    .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, '[JWT_MASKED]')
+    .replace(/\b(?:password|passwd|api[_-]?key|secret|token)\s*[:=]\s*\S+/gi, '[CREDENTIAL_MASKED]')
     .replace(/\b[\w.+-]+@[\w-]+\.[\w.-]+\b/g, (m) => {
       const [user, domain] = m.split('@')
       return `${user.slice(0, 2)}***@${domain}`

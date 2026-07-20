@@ -29,6 +29,7 @@ import { CASH_BASE_PATH, TREASURY_REPORTS_PATH } from './data/treasuryMenu'
 import CustomerCreatePage from './pages/CustomerCreatePage'
 import MasterDataHubPage from './pages/MasterDataHubPage'
 import WorkflowHubPage from './pages/WorkflowHubPage'
+import AiosHubPage from './pages/AiosHubPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
 import CustomerDocumentPage from './pages/CustomerDocumentPage'
@@ -541,6 +542,7 @@ export default function App() {
                           </PageSuspense>
                         }
                       />
+                      <Route path="/aios" element={<AiosHubPage />} />
                       <Route path="/ayarlar/ai" element={<AiSettingsHubPage />} />
                       <Route path="/ayarlar/ai/openai" element={<OpenAiSettingsPage />} />
                       <Route path="/ayarlar/guncel-durum" element={<GuncelDurumSettingsPage />} />
