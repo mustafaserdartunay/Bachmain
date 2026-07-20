@@ -1126,3 +1126,34 @@ export const knowledgeSearchLog = pgTable(
   },
   (t) => [index('knowledge_search_log_company_idx').on(t.companyId, t.createdAt)],
 )
+
+/** Digital Twin (DT-0) — preferences + KPI snapshots (visualization layer) */
+export const twinPreferences = pgTable(
+  'twin_preferences',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    enable3d: boolean('enable_3d').default(false).notNull(),
+    defaultView: text('default_view').default('factory').notNull(),
+    layout: jsonb('layout').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('twin_preferences_company_uidx').on(t.companyId)],
+)
+
+export const twinSnapshots = pgTable(
+  'twin_snapshots',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    kind: text('kind').default('overview').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    sampledAt: timestamp('sampled_at', { withTimezone: true }).defaultNow().notNull(),
+    ...timestamps,
+  },
+  (t) => [index('twin_snapshots_company_idx').on(t.companyId, t.sampledAt)],
+)

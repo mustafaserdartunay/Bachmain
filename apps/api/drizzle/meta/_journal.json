@@ -36,6 +36,13 @@
       "when": 1784580000000,
       "tag": "0004_knowledge_platform",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784590000000,
+      "tag": "0005_digital_twin",
+      "breakpoints": true
     }
   ]
 }

@@ -31,6 +31,7 @@ import MasterDataHubPage from './pages/MasterDataHubPage'
 import WorkflowHubPage from './pages/WorkflowHubPage'
 import AiosHubPage from './pages/AiosHubPage'
 import KnowledgeCenterPage from './pages/KnowledgeCenterPage'
+import DigitalTwinCenterPage from './pages/DigitalTwinCenterPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
 import CustomerDocumentPage from './pages/CustomerDocumentPage'
@@ -545,6 +546,7 @@ export default function App() {
                       />
                       <Route path="/aios" element={<AiosHubPage />} />
                       <Route path="/bilgi-merkezi" element={<KnowledgeCenterPage />} />
+                      <Route path="/dijital-ikiz" element={<DigitalTwinCenterPage />} />
                       <Route path="/ayarlar/ai" element={<AiSettingsHubPage />} />
                       <Route path="/ayarlar/ai/openai" element={<OpenAiSettingsPage />} />
                       <Route path="/ayarlar/guncel-durum" element={<GuncelDurumSettingsPage />} />

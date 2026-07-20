@@ -2,6 +2,7 @@ export const LOGISTICS_HOME_PATH = '/lojistik'
 
 export const logisticsSubMenus = [
   { label: 'Dashboard', path: '/lojistik', icon: 'report' },
+  { label: 'Digital Twin', path: '/dijital-ikiz', icon: 'dashboard' },
   { label: 'Yük Hesaplama', path: '/lojistik/yukleme-plani', icon: 'plan' },
   { label: 'Planlanan Lojistik', path: '/lojistik/planlanan', icon: 'shipments' },
   { label: 'Teslimatta', path: '/lojistik/teslimatta', icon: 'delivery' },
@@ -9,6 +10,5 @@ export const logisticsSubMenus = [
 ]
 
 export function isLogisticsRoute(pathname) {
-  return pathname === LOGISTICS_HOME_PATH
-    || pathname.startsWith(`${LOGISTICS_HOME_PATH}/`)
+  return pathname === LOGISTICS_HOME_PATH || pathname.startsWith(`${LOGISTICS_HOME_PATH}/`)
 }

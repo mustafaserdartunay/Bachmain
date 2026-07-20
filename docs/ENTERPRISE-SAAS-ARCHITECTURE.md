@@ -18,6 +18,8 @@
 
 **Knowledge Platform:** [70 Gap](./70_KNOWLEDGE_PLATFORM_GAP_REPORT.md) · [71 Architecture/Roadmap](./71_KNOWLEDGE_PLATFORM_ARCHITECTURE_ROADMAP.md)
 
+**Digital Twin:** [72 Gap](./72_DIGITAL_TWIN_GAP_REPORT.md) · [73 Architecture/Roadmap](./73_DIGITAL_TWIN_ARCHITECTURE_ROADMAP.md)
+
 ---
 
 ## 0. Current → Target
