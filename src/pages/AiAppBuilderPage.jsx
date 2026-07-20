@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Boxes, FileCode2, LayoutDashboard, Puzzle, Sparkles, Workflow } from 'lucide-react'
+import { Boxes, FileCode2, LayoutDashboard, Puzzle, Sparkles, Store, Workflow } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 import { appBuilderSubMenus } from '../data/aiAppBuilderMenu'
@@ -119,6 +119,12 @@ export default function AiAppBuilderPage() {
               className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
               <Puzzle className="h-4 w-4" /> Plugins
+            </Link>
+            <Link
+              to="/marketplace"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <Store className="h-4 w-4" /> Marketplace
             </Link>
           </div>
         }
@@ -413,7 +419,16 @@ export default function AiAppBuilderPage() {
 
       {tab === 'marketplace' && (
         <section className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
-          <h2 className="text-sm font-black uppercase">Marketplace</h2>
+          <h2 className="text-sm font-black uppercase">App Builder Packs</h2>
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Tam ekosistem kataloğu BachMain Marketplace’te. Burada App Builder şablon paketleri.
+          </p>
+          <Link
+            to="/marketplace?tab=applications"
+            className="mt-2 inline-block text-xs font-black uppercase text-emerald-700"
+          >
+            Marketplace Applications →
+          </Link>
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {MARKETPLACE_PACKS.map((p) => (
               <div key={p.id} className="rounded-xl border p-3">

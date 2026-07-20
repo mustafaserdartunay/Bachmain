@@ -41,6 +41,7 @@ import MesOperatorTabletPage from './pages/mes/MesOperatorTabletPage'
 import FinanceCenterPage from './pages/FinanceCenterPage'
 import AnalyticsCenterPage from './pages/AnalyticsCenterPage'
 import PlatformCenterPage from './pages/PlatformCenterPage'
+import MarketplacePage from './pages/MarketplacePage'
 import CustomerExperienceCloudPage from './pages/CustomerExperienceCloudPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
@@ -291,6 +292,8 @@ export default function App() {
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
                       <Route path="/platform" element={<PlatformCenterPage />} />
                       <Route path="/cekirdek" element={<Navigate to="/platform" replace />} />
+                      <Route path="/marketplace" element={<MarketplacePage />} />
+                      <Route path="/magaza" element={<Navigate to="/marketplace" replace />} />
                       <Route path="/musteri-deneyimi" element={<CustomerExperienceCloudPage />} />
                       <Route path="/cxc" element={<Navigate to="/musteri-deneyimi" replace />} />
                       <Route

@@ -99,6 +99,12 @@ export default function PlatformCenterPage() {
               <Bot className="h-4 w-4" /> AIOS
             </Link>
             <Link
+              to="/marketplace"
+              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
+            >
+              <Boxes className="h-4 w-4" /> Marketplace
+            </Link>
+            <Link
               to="/ayarlar"
               className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
@@ -319,22 +325,35 @@ export default function PlatformCenterPage() {
       )}
 
       {tab === 'plugins' && (
-        <div className="grid gap-3 md:grid-cols-2">
-          {plugins.map((p) => (
-            <div key={p.slug} className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
-              <p className="font-bold">{p.title}</p>
-              <p className="text-[10px] font-black uppercase text-[var(--muted)]">
-                {p.kind} · {p.slug}
-              </p>
-              <button
-                type="button"
-                className="mt-3 min-h-10 rounded-xl border px-3 text-[11px] font-black uppercase"
-                onClick={() => flash('Plugin SDK PC-2 — kayıt stub')}
-              >
-                Kur
-              </button>
-            </div>
-          ))}
+        <div className="space-y-3">
+          <div className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
+            <p className="text-xs text-[var(--muted)]">
+              Merkezi katalog ve tek tık kurulum için BachMain Marketplace.
+            </p>
+            <Link
+              to="/marketplace"
+              className="mt-2 inline-block text-xs font-black uppercase text-emerald-700"
+            >
+              Marketplace’i aç →
+            </Link>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {plugins.map((p) => (
+              <div key={p.slug} className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
+                <p className="font-bold">{p.title}</p>
+                <p className="text-[10px] font-black uppercase text-[var(--muted)]">
+                  {p.kind} · {p.slug}
+                </p>
+                <button
+                  type="button"
+                  className="mt-3 min-h-10 rounded-xl border px-3 text-[11px] font-black uppercase"
+                  onClick={() => flash('Plugin SDK PC-2 — kayıt stub')}
+                >
+                  Kur
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

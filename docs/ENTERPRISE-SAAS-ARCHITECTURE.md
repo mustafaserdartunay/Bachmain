@@ -19,13 +19,14 @@
 **AI Command Center:** [94 Gap](./94_AI_COMMAND_CENTER_GAP_REPORT.md) · [95 Architecture/Roadmap](./95_AI_COMMAND_CENTER_ARCHITECTURE_ROADMAP.md)  
 **AI Enterprise Organization:** [96 Gap](./96_AI_ENTERPRISE_ORG_GAP_REPORT.md) · [97 Architecture/Roadmap](./97_AI_ENTERPRISE_ORG_ARCHITECTURE_ROADMAP.md)  
 **AI Autonomous Company:** [98 Gap](./98_AI_AUTONOMOUS_COMPANY_GAP_REPORT.md) · [99 Architecture/Roadmap](./99_AI_AUTONOMOUS_COMPANY_ARCHITECTURE_ROADMAP.md)  
-**AI App Builder:** [100 Gap](./100_AI_APP_BUILDER_GAP_REPORT.md) · [101 Architecture/Roadmap](./101_AI_APP_BUILDER_ARCHITECTURE_ROADMAP.md)
+**AI App Builder:** [100 Gap](./100_AI_APP_BUILDER_GAP_REPORT.md) · [101 Architecture/Roadmap](./101_AI_APP_BUILDER_ARCHITECTURE_ROADMAP.md)  
+**Marketplace:** [102 Gap](./102_MARKETPLACE_GAP_REPORT.md) · [103 Architecture/Roadmap](./103_MARKETPLACE_ARCHITECTURE_ROADMAP.md)
 
 **Knowledge Platform:** [70 Gap](./70_KNOWLEDGE_PLATFORM_GAP_REPORT.md) · [71 Architecture/Roadmap](./71_KNOWLEDGE_PLATFORM_ARCHITECTURE_ROADMAP.md)
 
 **Digital Twin:** [72 Gap](./72_DIGITAL_TWIN_GAP_REPORT.md) · [73 Architecture/Roadmap](./73_DIGITAL_TWIN_ARCHITECTURE_ROADMAP.md)
 
-**App Store:** [74 Gap](./74_APP_STORE_GAP_REPORT.md)
+**App Store (legacy → Marketplace):** [74 Gap](./74_APP_STORE_GAP_REPORT.md) · [102/103 Marketplace](./102_MARKETPLACE_GAP_REPORT.md)
 
 **Commerce:** [76 Gap](./76_COMMERCE_PLATFORM_GAP_REPORT.md) · [77 Architecture/Roadmap](./77_COMMERCE_PLATFORM_ARCHITECTURE_ROADMAP.md)
 

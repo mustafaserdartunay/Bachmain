@@ -121,6 +121,7 @@ const baseMenuItems = [
   { icon: Network, label: 'AI Org', path: '/ai-organizasyon', moduleCode: 'ai_growth' },
   { icon: Activity, label: 'Otonom', path: '/ai-otonom', moduleCode: 'ai_growth' },
   { icon: Puzzle, label: 'App Builder', path: '/ai-uygulama', moduleCode: 'ai_growth' },
+  { icon: Boxes, label: 'Marketplace', path: '/marketplace', moduleCode: 'dashboard_basic' },
   { icon: Settings, label: 'Platform', path: '/platform', moduleCode: 'dashboard_basic' },
 ]
 

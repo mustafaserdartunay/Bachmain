@@ -124,6 +124,16 @@ export const NODE_CATALOG: CatalogNode[] = [
     category: 'trigger',
     label: 'App Builder Yayınlandı',
   },
+  {
+    id: 'trigger.marketplace.installed',
+    category: 'trigger',
+    label: 'Marketplace Paket Kuruldu',
+  },
+  {
+    id: 'trigger.marketplace.uninstalled',
+    category: 'trigger',
+    label: 'Marketplace Paket Kaldırıldı',
+  },
   { id: 'trigger.commerce.order.received', category: 'trigger', label: 'Commerce Sipariş Geldi' },
   {
     id: 'trigger.commerce.order.promoted',
