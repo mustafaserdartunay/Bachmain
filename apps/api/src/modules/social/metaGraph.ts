@@ -3,32 +3,47 @@ import { env } from '../../config/env.js'
 import { AppError } from '../../shared/errors.js'
 import { META_OAUTH_SCOPES } from './catalog.js'
 
-export function metaConfigured() {
-  return Boolean(
-    (env as any).META_APP_ID ||
-    (process.env.META_APP_ID && (env as any).META_APP_SECRET) ||
-    (process.env.META_APP_SECRET && (env as any).META_REDIRECT_URI) ||
-    process.env.META_REDIRECT_URI,
-  )
+export type MetaCredentials = {
+  appId: string
+  appSecret: string
+  redirectUri: string
+}
+
+export function platformMetaCredentials(): MetaCredentials {
+  return {
+    appId: String(
+      (env as { META_APP_ID?: string }).META_APP_ID || process.env.META_APP_ID || '',
+    ).trim(),
+    appSecret: String(
+      (env as { META_APP_SECRET?: string }).META_APP_SECRET || process.env.META_APP_SECRET || '',
+    ).trim(),
+    redirectUri: String(
+      (env as { META_REDIRECT_URI?: string }).META_REDIRECT_URI ||
+        process.env.META_REDIRECT_URI ||
+        '',
+    ).trim(),
+  }
+}
+
+export function metaConfigured(creds?: Partial<MetaCredentials> | null) {
+  const c = {
+    ...platformMetaCredentials(),
+    ...(creds?.appId ? { appId: creds.appId } : {}),
+    ...(creds?.appSecret ? { appSecret: creds.appSecret } : {}),
+    ...(creds?.redirectUri ? { redirectUri: creds.redirectUri } : {}),
+  }
+  return Boolean(c.appId && c.appSecret && c.redirectUri)
 }
 
 export function graphVersion() {
-  return (env as any).META_GRAPH_VERSION || process.env.META_GRAPH_VERSION || 'v21.0'
+  return (
+    (env as { META_GRAPH_VERSION?: string }).META_GRAPH_VERSION ||
+    process.env.META_GRAPH_VERSION ||
+    'v21.0'
+  )
 }
 
-export function metaAppId() {
-  return (env as any).META_APP_ID || process.env.META_APP_ID || ''
-}
-
-export function metaAppSecret() {
-  return (env as any).META_APP_SECRET || process.env.META_APP_SECRET || ''
-}
-
-export function metaRedirectUri() {
-  return (env as any).META_REDIRECT_URI || process.env.META_REDIRECT_URI || ''
-}
-
-export function signOAuthState(payload: { cid: string; uid: string; nonce: string }) {
+export function signOAuthState(payload: Record<string, string>) {
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
   const sig = createHmac('sha256', env.JWT_ACCESS_SECRET).update(body).digest('base64url')
   return `${body}.${sig}`
@@ -47,16 +62,18 @@ export function verifyOAuthState(state: string) {
     cid: string
     uid: string
     nonce: string
+    appId?: string
   }
 }
 
-export function buildOAuthUrl(state: string) {
-  if (!metaConfigured()) {
+export function buildOAuthUrl(state: string, creds?: MetaCredentials) {
+  const c = creds || platformMetaCredentials()
+  if (!metaConfigured(c)) {
     throw new AppError('META_NOT_CONFIGURED', 'META_APP_ID / SECRET / REDIRECT_URI gerekli', 503)
   }
   const u = new URL(`https://www.facebook.com/${graphVersion()}/dialog/oauth`)
-  u.searchParams.set('client_id', metaAppId())
-  u.searchParams.set('redirect_uri', metaRedirectUri())
+  u.searchParams.set('client_id', c.appId)
+  u.searchParams.set('redirect_uri', c.redirectUri)
   u.searchParams.set('state', state)
   u.searchParams.set('scope', META_OAUTH_SCOPES)
   u.searchParams.set('response_type', 'code')
@@ -92,20 +109,20 @@ async function graphPost(path: string, token: string, body: Record<string, unkno
   return data
 }
 
-export async function exchangeCodeForToken(code: string) {
+export async function exchangeCodeForToken(code: string, creds: MetaCredentials) {
   return graphGet('/oauth/access_token', '', {
-    client_id: metaAppId(),
-    client_secret: metaAppSecret(),
-    redirect_uri: metaRedirectUri(),
+    client_id: creds.appId,
+    client_secret: creds.appSecret,
+    redirect_uri: creds.redirectUri,
     code,
   }) as Promise<{ access_token: string; expires_in?: number }>
 }
 
-export async function exchangeLongLived(shortToken: string) {
+export async function exchangeLongLived(shortToken: string, creds: MetaCredentials) {
   return graphGet('/oauth/access_token', '', {
     grant_type: 'fb_exchange_token',
-    client_id: metaAppId(),
-    client_secret: metaAppSecret(),
+    client_id: creds.appId,
+    client_secret: creds.appSecret,
     fb_exchange_token: shortToken,
   }) as Promise<{ access_token: string; expires_in?: number }>
 }

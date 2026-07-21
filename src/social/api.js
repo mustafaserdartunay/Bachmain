@@ -1,8 +1,8 @@
 import { getStoredSession } from '../utils/platformAuth'
+import { readLocalMetaApp } from './metaLocalStore'
 
-const API_BASE =
+const PLATFORM_API =
   import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_PLATFORM_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname.endsWith('bachmain.com')
     ? 'https://api.bachmain.com'
     : typeof window !== 'undefined' &&
@@ -10,14 +10,32 @@ const API_BASE =
       ? 'http://127.0.0.1:8080'
       : '')
 
-async function socialFetch(path, { method = 'GET', body } = {}) {
+async function crmSocial(path, { method = 'GET', body } = {}) {
+  const res = await fetch(`/api/social${path}`, {
+    method,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const err = new Error(data.message || data.error || `HTTP_${res.status}`)
+    err.code = data.error
+    err.status = res.status
+    err.data = data
+    throw err
+  }
+  return data
+}
+
+async function platformSocial(path, { method = 'GET', body } = {}) {
   const { token } = getStoredSession()
-  if (!API_BASE || !token) {
+  if (!PLATFORM_API || !token) {
     const err = new Error('API_UNAVAILABLE')
     err.code = 'API_UNAVAILABLE'
     throw err
   }
-  const res = await fetch(`${String(API_BASE).replace(/\/$/, '')}${path}`, {
+  const res = await fetch(`${String(PLATFORM_API).replace(/\/$/, '')}/v1/social${path}`, {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -28,47 +46,123 @@ async function socialFetch(path, { method = 'GET', body } = {}) {
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     const err = new Error(data.message || data.error || `HTTP_${res.status}`)
-    err.code = data.error || data.code
+    err.code = data.error
     err.status = res.status
+    err.data = data
     throw err
   }
   return data
 }
 
+async function socialFetch(path, opts = {}) {
+  try {
+    return await platformSocial(path, opts)
+  } catch (e) {
+    if (path.startsWith('/instagram/oauth') || path.startsWith('/meta') || path === '/health') {
+      throw e
+    }
+    throw e
+  }
+}
+
 export const smcApi = {
-  health: () => socialFetch('/v1/social/health'),
-  overview: () => socialFetch('/v1/social/overview'),
-  oauthStart: () => socialFetch('/v1/social/instagram/oauth/start'),
-  accounts: () => socialFetch('/v1/social/instagram/accounts'),
-  disconnect: (id) => socialFetch(`/v1/social/instagram/accounts/${id}`, { method: 'DELETE' }),
-  refresh: (id) => socialFetch(`/v1/social/instagram/accounts/${id}/refresh`, { method: 'POST' }),
-  generate: (body) => socialFetch('/v1/social/ai/generate', { method: 'POST', body }),
-  content: () => socialFetch('/v1/social/content'),
-  patchContent: (id, body) => socialFetch(`/v1/social/content/${id}`, { method: 'PATCH', body }),
-  templates: () => socialFetch('/v1/social/templates'),
-  brandKits: () => socialFetch('/v1/social/brand-kits'),
-  saveBrandKit: (body) => socialFetch('/v1/social/brand-kits', { method: 'POST', body }),
-  media: () => socialFetch('/v1/social/media'),
-  addMedia: (body) => socialFetch('/v1/social/media', { method: 'POST', body }),
-  campaigns: () => socialFetch('/v1/social/campaigns'),
-  createCampaign: (name) => socialFetch('/v1/social/campaigns', { method: 'POST', body: { name } }),
-  schedules: () => socialFetch('/v1/social/schedules'),
-  createSchedule: (body) => socialFetch('/v1/social/schedules', { method: 'POST', body }),
-  patchSchedule: (id, body) => socialFetch(`/v1/social/schedules/${id}`, { method: 'PATCH', body }),
-  approvals: () => socialFetch('/v1/social/approvals'),
+  health: async () => {
+    try {
+      return await platformSocial('/health')
+    } catch {
+      return crmSocial('/health')
+    }
+  },
+  metaSetup: async () => {
+    try {
+      return await platformSocial('/meta/setup')
+    } catch {
+      const h = await crmSocial('/health')
+      const local = readLocalMetaApp()
+      return {
+        ...h,
+        tenantConfigured: Boolean(local?.appId),
+        tenantAppId: local?.appId || null,
+        tenantRedirectUri: local?.redirectUri || null,
+        ready: Boolean(local?.appId && local?.appSecret) || h.metaConfigured,
+      }
+    }
+  },
+  saveMetaSetup: async (body) => {
+    try {
+      return await platformSocial('/meta/setup', { method: 'POST', body })
+    } catch {
+      // CRM path: credentials stay local; oauth-start receives them
+      return { ok: true, ready: true, tenantConfigured: true, ...body, local: true }
+    }
+  },
+  oauthStart: async () => {
+    const local = readLocalMetaApp()
+    const { user } = getStoredSession()
+    try {
+      return await platformSocial('/instagram/oauth/start')
+    } catch {
+      return crmSocial('/oauth-start', {
+        method: 'POST',
+        body: {
+          appId: local?.appId,
+          appSecret: local?.appSecret,
+          redirectUri: local?.redirectUri,
+          companyId: user?.companyId || user?.cid || 'local',
+          userId: user?.id || 'user',
+        },
+      })
+    }
+  },
+  accounts: async () => {
+    try {
+      return await platformSocial('/instagram/accounts')
+    } catch {
+      return crmSocial('/accounts')
+    }
+  },
+  disconnect: async (id) => {
+    try {
+      return await platformSocial(`/instagram/accounts/${id}`, { method: 'DELETE' })
+    } catch {
+      return crmSocial('/accounts', { method: 'DELETE' })
+    }
+  },
+  refresh: (id) => socialFetch(`/instagram/accounts/${id}/refresh`, { method: 'POST' }),
+  generate: (body) => socialFetch('/ai/generate', { method: 'POST', body }),
+  reelMedia: async (body) => {
+    try {
+      return await platformSocial('/ai/reel-media', { method: 'POST', body })
+    } catch {
+      return crmSocial('/reel-media', { method: 'POST', body })
+    }
+  },
+  content: () => socialFetch('/content'),
+  patchContent: (id, body) => socialFetch(`/content/${id}`, { method: 'PATCH', body }),
+  templates: () => socialFetch('/templates'),
+  brandKits: () => socialFetch('/brand-kits'),
+  saveBrandKit: (body) => socialFetch('/brand-kits', { method: 'POST', body }),
+  media: () => socialFetch('/media'),
+  addMedia: (body) => socialFetch('/media', { method: 'POST', body }),
+  campaigns: () => socialFetch('/campaigns'),
+  createCampaign: (name) => socialFetch('/campaigns', { method: 'POST', body: { name } }),
+  schedules: () => socialFetch('/schedules'),
+  createSchedule: (body) => socialFetch('/schedules', { method: 'POST', body }),
+  patchSchedule: (id, body) => socialFetch(`/schedules/${id}`, { method: 'PATCH', body }),
+  approvals: () => socialFetch('/approvals'),
   requestApproval: (contentId) =>
-    socialFetch('/v1/social/approvals', { method: 'POST', body: { contentId } }),
+    socialFetch('/approvals', { method: 'POST', body: { contentId } }),
   decideApproval: (id, decision, note) =>
-    socialFetch(`/v1/social/approvals/${id}/decide`, { method: 'POST', body: { decision, note } }),
-  queue: () => socialFetch('/v1/social/queue'),
+    socialFetch(`/approvals/${id}/decide`, { method: 'POST', body: { decision, note } }),
+  queue: () => socialFetch('/queue'),
   publish: (contentId, scheduledAt) =>
-    socialFetch(`/v1/social/publish/${contentId}`, {
+    socialFetch(`/publish/${contentId}`, {
       method: 'POST',
       body: scheduledAt ? { scheduledAt } : {},
     }),
-  notifications: () => socialFetch('/v1/social/notifications'),
-  analytics: () => socialFetch('/v1/social/analytics'),
-  tick: () => socialFetch('/v1/social/internal/tick', { method: 'POST' }),
+  notifications: () => socialFetch('/notifications'),
+  analytics: () => socialFetch('/analytics'),
+  tick: () => socialFetch('/internal/tick', { method: 'POST' }),
 }
 
-export { API_BASE as SMC_API_BASE }
+export { PLATFORM_API as SMC_API_BASE }

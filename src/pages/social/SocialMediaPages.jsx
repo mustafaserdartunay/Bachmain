@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   BarChart3,
   Bot,
@@ -34,6 +34,11 @@ import {
 } from '../../social/localFallback'
 import { runAiGrowthGenerate } from '../../utils/aiGrowthApi'
 import { readAiGrowthSettings } from '../../utils/aiGrowthSettings'
+import {
+  defaultCrmRedirectUri,
+  readLocalMetaApp,
+  saveLocalMetaApp,
+} from '../../social/metaLocalStore'
 
 function Shell({ title, children, actions }) {
   return (
@@ -154,6 +159,7 @@ export function SocialMediaDashboardPage() {
 }
 
 export function SocialAccountsPage() {
+  const navigate = useNavigate()
   const [params] = useSearchParams()
   const [accounts, setAccounts] = useState([])
   const [health, setHealth] = useState(null)
@@ -174,7 +180,10 @@ export function SocialAccountsPage() {
   useEffect(() => {
     refresh()
     const oauth = params.get('oauth')
-    if (oauth === 'ok') setMsg('Instagram bağlandı.')
+    if (oauth === 'ok') {
+      const u = params.get('u')
+      setMsg(u ? `Instagram bağlandı: @${u}` : 'Instagram bağlandı.')
+    }
     if (oauth === 'error') setMsg(params.get('msg') || 'OAuth hatası')
   }, [params])
 
@@ -182,10 +191,21 @@ export function SocialAccountsPage() {
     setBusy(true)
     setMsg('')
     try {
+      const setup = await smcApi.metaSetup()
+      const ready = setup.ready || setup.metaConfigured || setup.tenantConfigured
+      if (!ready) {
+        navigate('/sosyal-medya/meta-kurulum')
+        return
+      }
       const data = await smcApi.oauthStart()
       window.location.href = data.url
     } catch (e) {
-      setMsg(e.message || 'OAuth başlatılamadı — META_* env kontrol edin')
+      if (e.code === 'META_NOT_CONFIGURED' || e.status === 503) {
+        navigate('/sosyal-medya/meta-kurulum')
+        return
+      }
+      // API yoksa da kurulum sayfasına git — kullanıcı App ID girebilsin
+      navigate('/sosyal-medya/meta-kurulum')
     } finally {
       setBusy(false)
     }
@@ -207,19 +227,15 @@ export function SocialAccountsPage() {
       }
     >
       {msg ? <p className="text-sm text-emerald-700">{msg}</p> : null}
-      {!health?.metaConfigured ? (
-        <AppPagePanel title="Meta App kurulumu">
-          <ol className="list-decimal space-y-2 pl-5 text-sm">
-            <li>Meta Developer → App oluştur (Business)</li>
-            <li>
-              Env: <code>META_APP_ID</code>, <code>META_APP_SECRET</code>,{' '}
-              <code>META_REDIRECT_URI</code>
-            </li>
-            <li>
-              Redirect: <code>/v1/social/instagram/oauth/callback</code> (API host)
-            </li>
-            <li>Instagram Graph ürünü + content publish izinleri</li>
-          </ol>
+      {!health?.metaConfigured && !health?.ready ? (
+        <AppPagePanel title="Hızlı kurulum">
+          <p className="mb-3 text-sm text-[var(--muted)]">
+            Instagram bağlamak için Meta App ID / Secret gerekir. Sihirbaz adım adım yönlendirir —
+            demo ve paket kullanıcıları aynı bağlantıyı kullanır.
+          </p>
+          <Link to="/sosyal-medya/meta-kurulum" className={`${BTN_PRIMARY} gap-2 px-4 text-xs`}>
+            API ayarlarını aç
+          </Link>
         </AppPagePanel>
       ) : null}
       <div className="grid gap-3">
@@ -428,6 +444,64 @@ export function SocialAiCreatorPage() {
                   >
                     Onaya gönder
                   </button>
+                  {(feature === 'reel' || feature === 'full') && (
+                    <button
+                      type="button"
+                      className={`${BTN_SUCCESS} !px-3 !py-2 text-xs`}
+                      onClick={async () => {
+                        try {
+                          const media = await smcApi.reelMedia({
+                            prompt: topic,
+                            contentId:
+                              result.id?.includes('-') && result.id.length > 20
+                                ? result.id
+                                : undefined,
+                          })
+                          setResult((r) => ({
+                            ...r,
+                            payload: {
+                              ...(r.payload || {}),
+                              coverUrl: media.coverUrl,
+                              scenes: media.scenes,
+                              imageUrl: media.coverUrl,
+                              videoHint: media.videoHint || media.videoNote,
+                            },
+                          }))
+                          setError('')
+                        } catch (err) {
+                          setError(err.message || 'Görsel üretilemedi')
+                        }
+                      }}
+                    >
+                      <Image className="mr-1 inline h-3.5 w-3.5" />
+                      Reels görsel üret
+                    </button>
+                  )}
+                </div>
+              ) : null}
+              {payload.coverUrl ? (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs font-bold uppercase text-[var(--muted)]">Reel görseller</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(payload.scenes || [{ url: payload.coverUrl, label: 'Kapak' }]).map((s) => (
+                      <a
+                        key={s.url}
+                        href={s.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block w-20 overflow-hidden rounded-lg border"
+                      >
+                        <img
+                          src={s.url}
+                          alt={s.label || 'reel'}
+                          className="h-36 w-full object-cover"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                  {payload.videoHint ? (
+                    <p className="text-[11px] text-[var(--muted)]">{payload.videoHint}</p>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -1157,6 +1231,216 @@ export function SocialSettingsPage() {
           OpenAI ayarları
         </Link>
       </AppPagePanel>
+    </Shell>
+  )
+}
+
+export function SocialMetaSetupPage() {
+  const navigate = useNavigate()
+  const [step, setStep] = useState(1)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [error, setError] = useState('')
+  const [redirectUri, setRedirectUri] = useState(() => defaultCrmRedirectUri())
+  const existing = readLocalMetaApp()
+  const [appId, setAppId] = useState(existing?.appId || '')
+  const [appSecret, setAppSecret] = useState(existing?.appSecret || '')
+  const [health, setHealth] = useState(null)
+
+  useEffect(() => {
+    smcApi
+      .metaSetup()
+      .then((h) => {
+        setHealth(h)
+        if (h.redirectUriHint) setRedirectUri(h.redirectUriHint)
+        if (h.tenantAppId) setAppId(h.tenantAppId)
+        if (h.tenantRedirectUri) setRedirectUri(h.tenantRedirectUri)
+        if (h.ready) setStep(3)
+      })
+      .catch(() => {})
+  }, [])
+
+  function copyRedirect() {
+    navigator.clipboard?.writeText(redirectUri)
+    setMsg('Redirect URI kopyalandı')
+  }
+
+  async function saveAndContinue(e) {
+    e.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      saveLocalMetaApp({ appId, appSecret, redirectUri })
+      await smcApi.saveMetaSetup({ appId, appSecret, redirectUri })
+      setMsg('API kaydedildi')
+      setStep(3)
+    } catch (err) {
+      // local save already done
+      setMsg('Yerel kaydedildi — şimdi bağlanabilirsiniz')
+      setStep(3)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function startOAuth() {
+    setBusy(true)
+    setError('')
+    try {
+      const data = await smcApi.oauthStart()
+      window.location.href = data.url
+    } catch (err) {
+      setError(err.message || 'OAuth başlatılamadı')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Shell
+      title="Meta API kurulumu"
+      actions={
+        <Link to="/sosyal-medya/hesaplar" className="btn-ghost !px-3 !py-2 text-xs font-bold">
+          Hesaplar
+        </Link>
+      }
+    >
+      <div className="mb-4 flex flex-wrap gap-2">
+        {[1, 2, 3].map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setStep(s)}
+            className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase ${
+              step === s ? 'bg-[var(--ink)] text-[var(--app-bg)]' : 'border'
+            }`}
+          >
+            {s}. {s === 1 ? 'Meta App' : s === 2 ? 'API anahtarları' : 'Bağlan'}
+          </button>
+        ))}
+      </div>
+
+      {step === 1 && (
+        <AppPagePanel title="1 · Meta Developer uygulaması">
+          <ol className="mb-4 list-decimal space-y-2 pl-5 text-sm">
+            <li>
+              <a
+                className="font-semibold underline"
+                href="https://developers.facebook.com/apps/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                developers.facebook.com/apps
+              </a>{' '}
+              → Create App → Business / Other
+            </li>
+            <li>Ürün ekle: Instagram Graph API + Facebook Login</li>
+            <li>Valid OAuth Redirect URI olarak aşağıdaki adresi ekle (kopyala-yapıştır)</li>
+            <li>İzinler: Instagram content publish, pages_show_list</li>
+          </ol>
+          <div className="mb-3 rounded-xl border border-[var(--border)] bg-black/5 px-3 py-2 text-xs break-all">
+            {redirectUri || '…'}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={copyRedirect} className="btn-ghost !px-3 !py-2 text-xs">
+              URI kopyala
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className={`${BTN_PRIMARY} px-4 text-xs`}
+            >
+              Anahtarları gir →
+            </button>
+          </div>
+          {health?.platformMetaConfigured ? (
+            <p className="mt-3 text-xs text-emerald-700">
+              Platform Meta App hazır — doğrudan 3. adıma geçebilirsiniz.
+            </p>
+          ) : null}
+        </AppPagePanel>
+      )}
+
+      {step === 2 && (
+        <AppPagePanel title="2 · App ID ve Secret">
+          <form onSubmit={saveAndContinue} className="space-y-3">
+            <label className="block space-y-1 text-xs font-semibold text-[var(--muted)]">
+              App ID
+              <input
+                className="form-input"
+                value={appId}
+                onChange={(e) => setAppId(e.target.value)}
+                required
+              />
+            </label>
+            <label className="block space-y-1 text-xs font-semibold text-[var(--muted)]">
+              App Secret
+              <input
+                className="form-input"
+                type="password"
+                value={appSecret}
+                onChange={(e) => setAppSecret(e.target.value)}
+                required
+                autoComplete="off"
+              />
+            </label>
+            <label className="block space-y-1 text-xs font-semibold text-[var(--muted)]">
+              Redirect URI
+              <input
+                className="form-input"
+                value={redirectUri}
+                onChange={(e) => setRedirectUri(e.target.value)}
+                required
+              />
+            </label>
+            <p className="text-[11px] text-[var(--muted)]">
+              Secret yalnızca şifreli saklanır / OAuth sırasında kullanılır. Instagram şifresi
+              istenmez.
+            </p>
+            {error ? <p className="text-xs text-rose-600">{error}</p> : null}
+            <button type="submit" disabled={busy} className={`${BTN_SUCCESS} gap-2 px-4 text-xs`}>
+              {busy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <PlugZap className="h-4 w-4" />
+              )}
+              Kaydet ve devam
+            </button>
+          </form>
+        </AppPagePanel>
+      )}
+
+      {step === 3 && (
+        <AppPagePanel title="3 · Instagram Business bağla">
+          <p className="mb-4 text-sm text-[var(--muted)]">
+            Meta oturumunuz açılacak. Facebook Sayfanıza bağlı Instagram Business hesabını seçin.
+            Demo ve ücretli paket kullanıcıları aynı akışı kullanır.
+          </p>
+          {msg ? <p className="mb-3 text-xs text-emerald-700">{msg}</p> : null}
+          {error ? <p className="mb-3 text-xs text-rose-600">{error}</p> : null}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={startOAuth}
+              className={`${BTN_SUCCESS} gap-2 px-4 text-xs`}
+            >
+              {busy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Instagram className="h-4 w-4" />
+              )}
+              Instagram&apos;ı bağla
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="btn-ghost !px-3 !py-2 text-xs"
+            >
+              API düzenle
+            </button>
+          </div>
+        </AppPagePanel>
+      )}
     </Shell>
   )
 }

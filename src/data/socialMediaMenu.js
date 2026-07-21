@@ -4,6 +4,7 @@ export const SOCIAL_MEDIA_MODULE_CODE = 'ai_growth'
 export const socialMediaSubMenus = [
   { label: 'Dashboard', path: '/sosyal-medya', icon: 'layout-dashboard', end: true },
   { label: 'Instagram Hesapları', path: '/sosyal-medya/hesaplar', icon: 'instagram' },
+  { label: 'Meta API Kurulum', path: '/sosyal-medya/meta-kurulum', icon: 'plug' },
   { label: 'Content Studio', path: '/sosyal-medya/studio', icon: 'sparkles' },
   { label: 'AI Creator', path: '/sosyal-medya/ai-creator', icon: 'bot' },
   { label: 'Media Library', path: '/sosyal-medya/medya', icon: 'image' },

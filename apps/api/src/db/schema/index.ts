@@ -2710,3 +2710,20 @@ export const smcAuditLog = pgTable(
   },
   (t) => [index('smc_audit_company_idx').on(t.companyId, t.createdAt)],
 )
+
+export const smcMetaApps = pgTable(
+  'smc_meta_apps',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    appId: text('app_id').notNull(),
+    appSecretCiphertext: text('app_secret_ciphertext').notNull(),
+    redirectUri: text('redirect_uri').notNull(),
+    status: text('status').default('active').notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('smc_meta_apps_company_uidx').on(t.companyId)],
+)

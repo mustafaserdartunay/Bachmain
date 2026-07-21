@@ -14,6 +14,7 @@ import {
   smcPublishQueue,
   smcSchedules,
   smcTemplates,
+  smcMetaApps,
 } from '../../db/schema/index.js'
 import { decryptSecret, encryptSecret } from '../../shared/crypto.js'
 import { AppError } from '../../shared/errors.js'
@@ -25,9 +26,11 @@ import {
   exchangeCodeForToken,
   exchangeLongLived,
   metaConfigured,
+  platformMetaCredentials,
   publishCarousel,
   publishImagePost,
   publishReel,
+  type MetaCredentials,
 } from './metaGraph.js'
 
 function publicAccount(row: typeof smcInstagramAccounts.$inferSelect) {
@@ -53,10 +56,16 @@ function publicAccount(row: typeof smcInstagramAccounts.$inferSelect) {
 }
 
 export function socialHealth() {
+  const platform = platformMetaCredentials()
   return {
-    metaConfigured: metaConfigured(),
+    metaConfigured: metaConfigured(platform),
+    platformMetaConfigured: metaConfigured(platform),
     openaiConfigured: Boolean(process.env.OPENAI_API_KEY),
     graphVersion: process.env.META_GRAPH_VERSION || 'v21.0',
+    redirectUriHint:
+      platform.redirectUri ||
+      `${process.env.API_PUBLIC_URL || 'https://api.bachmain.com'}/v1/social/instagram/oauth/callback`,
+    setupPath: '/sosyal-medya/meta-kurulum',
   }
 }
 
@@ -90,6 +99,90 @@ async function notify(
   await db.insert(smcNotifications).values({ companyId, kind, title, body, meta })
 }
 
+export async function resolveMetaCredentials(companyId: string): Promise<MetaCredentials> {
+  const [row] = await db
+    .select()
+    .from(smcMetaApps)
+    .where(and(eq(smcMetaApps.companyId, companyId), isNull(smcMetaApps.deletedAt)))
+    .limit(1)
+  if (row) {
+    return {
+      appId: row.appId,
+      appSecret: decryptSecret(row.appSecretCiphertext),
+      redirectUri: row.redirectUri,
+    }
+  }
+  const platform = platformMetaCredentials()
+  if (!metaConfigured(platform)) {
+    throw new AppError(
+      'META_NOT_CONFIGURED',
+      'Meta App ayarları eksik — /sosyal-medya/meta-kurulum',
+      503,
+    )
+  }
+  return platform
+}
+
+export async function getMetaAppPublic(companyId: string) {
+  const platform = platformMetaCredentials()
+  const [row] = await db
+    .select()
+    .from(smcMetaApps)
+    .where(and(eq(smcMetaApps.companyId, companyId), isNull(smcMetaApps.deletedAt)))
+    .limit(1)
+  return {
+    ...socialHealth(),
+    tenantConfigured: Boolean(row),
+    tenantAppId: row?.appId || null,
+    tenantRedirectUri: row?.redirectUri || null,
+    ready: Boolean(row) || metaConfigured(platform),
+  }
+}
+
+export async function saveMetaApp(
+  companyId: string,
+  data: { appId: string; appSecret: string; redirectUri: string },
+  userId?: string,
+) {
+  const ciphertext = encryptSecret(data.appSecret)
+  const existing = await db
+    .select()
+    .from(smcMetaApps)
+    .where(and(eq(smcMetaApps.companyId, companyId), isNull(smcMetaApps.deletedAt)))
+    .limit(1)
+  let id: string
+  if (existing[0]) {
+    await db
+      .update(smcMetaApps)
+      .set({
+        appId: data.appId,
+        appSecretCiphertext: ciphertext,
+        redirectUri: data.redirectUri,
+        status: 'active',
+        updatedAt: new Date(),
+      })
+      .where(eq(smcMetaApps.id, existing[0].id))
+    id = existing[0].id
+  } else {
+    const [row] = await db
+      .insert(smcMetaApps)
+      .values({
+        companyId,
+        appId: data.appId,
+        appSecretCiphertext: ciphertext,
+        redirectUri: data.redirectUri,
+      })
+      .returning()
+    id = row.id
+  }
+  await audit(companyId, 'meta.app.save', {
+    entityType: 'meta_app',
+    entityId: id,
+    actorUserId: userId,
+  })
+  return getMetaAppPublic(companyId)
+}
+
 export async function listAccounts(companyId: string) {
   const rows = await db
     .select()
@@ -101,8 +194,9 @@ export async function listAccounts(companyId: string) {
 }
 
 export async function completeOAuth(opts: { companyId: string; userId: string; code: string }) {
-  const short = await exchangeCodeForToken(opts.code)
-  const longLived = await exchangeLongLived(short.access_token)
+  const creds = await resolveMetaCredentials(opts.companyId)
+  const short = await exchangeCodeForToken(opts.code, creds)
+  const longLived = await exchangeLongLived(short.access_token, creds)
   const discovered = await discoverInstagramBusiness(longLived.access_token)
   const expiresAt = longLived.expires_in
     ? new Date(Date.now() + longLived.expires_in * 1000)
@@ -194,7 +288,8 @@ export async function refreshAccountToken(companyId: string, accountId: string) 
     .limit(1)
   if (!row) throw new AppError('NOT_FOUND', 'Hesap bulunamadı', 404)
   const token = decryptSecret(row.tokenCiphertext)
-  const longLived = await exchangeLongLived(token)
+  const creds = await resolveMetaCredentials(companyId)
+  const longLived = await exchangeLongLived(token, creds)
   const expiresAt = longLived.expires_in
     ? new Date(Date.now() + longLived.expires_in * 1000)
     : row.tokenExpiresAt
@@ -739,4 +834,103 @@ export async function processQueueTick(limit = 10) {
     }
   }
   return { processed: results.length, results }
+}
+
+export async function generateReelMedia(opts: {
+  companyId: string
+  userId?: string
+  prompt: string
+  contentId?: string
+}) {
+  const key = process.env.OPENAI_API_KEY
+  if (!key) throw new AppError('AI_NOT_CONFIGURED', 'OPENAI_API_KEY gerekli', 503)
+
+  const imageRes = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'dall-e-3',
+      prompt: `Instagram Reels kapak görseli, dikey 9:16 kompozisyon, marka kalitesi: ${opts.prompt}`,
+      size: '1024x1792',
+      quality: 'standard',
+      n: 1,
+    }),
+  })
+  const imageData = (await imageRes.json()) as {
+    data?: Array<{ url?: string; b64_json?: string }>
+    error?: { message?: string }
+  }
+  if (!imageRes.ok) {
+    throw new AppError('IMAGE_GEN_FAILED', imageData.error?.message || 'Görsel üretilemedi', 502)
+  }
+  const coverUrl = imageData.data?.[0]?.url
+  if (!coverUrl) throw new AppError('IMAGE_GEN_FAILED', 'Görsel URL yok', 502)
+
+  // Scene stills (2 extra)
+  const scenes: Array<{ label: string; url: string }> = [{ label: 'Kapak', url: coverUrl }]
+  for (const label of ['Sahne 2', 'Sahne 3']) {
+    try {
+      const r = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt: `${label} — Instagram Reels sahnesi, dikey: ${opts.prompt}`,
+          size: '1024x1792',
+          n: 1,
+        }),
+      })
+      const d = (await r.json()) as { data?: Array<{ url?: string }> }
+      if (r.ok && d.data?.[0]?.url) scenes.push({ label, url: d.data[0].url })
+    } catch {
+      /* optional scenes */
+    }
+  }
+
+  const asset = await addMedia(opts.companyId, {
+    name: `Reel kapak · ${opts.prompt.slice(0, 40)}`,
+    url: coverUrl,
+    folder: '/reels',
+    mime: 'image/png',
+    tags: ['reel', 'ai', 'cover'],
+  })
+
+  if (opts.contentId) {
+    const [content] = await db
+      .select()
+      .from(smcContentItems)
+      .where(
+        and(eq(smcContentItems.id, opts.contentId), eq(smcContentItems.companyId, opts.companyId)),
+      )
+      .limit(1)
+    if (content) {
+      const payload = {
+        ...(content.payload as Record<string, unknown>),
+        coverUrl,
+        scenes,
+        imageUrl: coverUrl,
+      }
+      await updateContent(opts.companyId, opts.contentId, { payload })
+    }
+  }
+
+  await audit(opts.companyId, 'content.reel_media', {
+    entityType: 'media',
+    entityId: asset.id,
+    actorUserId: opts.userId,
+  })
+
+  return {
+    coverUrl,
+    scenes,
+    asset,
+    videoNote:
+      'Video: kapak + sahneler hazır. Graph Reels için public MP4 video_url ekleyin veya sonraki adımda video render kullanın.',
+  }
 }

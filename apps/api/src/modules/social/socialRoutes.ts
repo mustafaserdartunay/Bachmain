@@ -5,7 +5,7 @@ import { authenticate, requirePermission, requireTenant } from '../../shared/aut
 import { AppError } from '../../shared/errors.js'
 import { randomBytes } from 'node:crypto'
 import { SMC_RECURRENCE_OPTIONS } from './catalog.js'
-import { buildOAuthUrl, metaConfigured, signOAuthState, verifyOAuthState } from './metaGraph.js'
+import { buildOAuthUrl, signOAuthState, verifyOAuthState } from './metaGraph.js'
 import * as svc from './socialService.js'
 
 const view = 'social.view'
@@ -34,19 +34,19 @@ export async function socialRoutes(app: FastifyInstance) {
     { preHandler: [authenticate, requirePermission(connect)] },
     async (req) => {
       const companyId = requireTenant(req)
-      if (!metaConfigured()) {
-        throw new AppError(
-          'META_NOT_CONFIGURED',
-          'META_APP_ID / SECRET / REDIRECT_URI tanımlayın',
-          503,
-        )
-      }
+      const creds = await svc.resolveMetaCredentials(companyId)
       const state = signOAuthState({
         cid: companyId,
         uid: req.auth!.sub,
         nonce: randomBytes(8).toString('hex'),
+        appId: creds.appId,
       })
-      return { ok: true, url: buildOAuthUrl(state), state }
+      return {
+        ok: true,
+        url: buildOAuthUrl(state, creds),
+        state,
+        setupRequired: false,
+      }
     },
   )
 

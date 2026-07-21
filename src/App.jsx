@@ -151,6 +151,7 @@ import {
   SocialCommentsPage,
   SocialMessagesPage,
   SocialSettingsPage,
+  SocialMetaSetupPage,
 } from './pages/social/SocialMediaPages'
 import AiSettingsHubPage from './pages/settings/AiSettingsHubPage'
 import OpenAiSettingsPage from './pages/settings/OpenAiSettingsPage'
@@ -318,6 +319,7 @@ export default function App() {
 
                       <Route path="/sosyal-medya" element={<SocialMediaDashboardPage />} />
                       <Route path="/sosyal-medya/hesaplar" element={<SocialAccountsPage />} />
+                      <Route path="/sosyal-medya/meta-kurulum" element={<SocialMetaSetupPage />} />
                       <Route path="/sosyal-medya/studio" element={<SocialContentStudioPage />} />
                       <Route path="/sosyal-medya/ai-creator" element={<SocialAiCreatorPage />} />
                       <Route path="/sosyal-medya/medya" element={<SocialMediaLibraryPage />} />
