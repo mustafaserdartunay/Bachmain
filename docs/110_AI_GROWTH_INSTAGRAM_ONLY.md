@@ -1,15 +1,7 @@
-# AI Growth Center — Instagram only
+# AI Growth Center — Instagram only (superseded)
 
-**Date:** 2026-07-21  
-**Status:** Active surface narrowed to Instagram connect + Reel example.
+**Status:** Superseded 2026-07-21 by Social Media Center SC-0.
 
-## Live routes
+See [111 Gap](./111_SOCIAL_MEDIA_CENTER_GAP_REPORT.md) · [112 Architecture](./112_SOCIAL_MEDIA_CENTER_ARCHITECTURE_ROADMAP.md).
 
-- `/ai-buyume` — hub
-- `/ai-buyume/instagram` — demo account connect
-- `/ai-buyume/reel` — reel creation example (AI or offline demo package)
-
-## Hidden
-
-Other AG studios remain under `src/pages/aiGrowth/` but `/ai-buyume/*` redirects home.
-LocalStore: `bach_ai_growth_instagram_v1`, `bach_ai_growth_reels_v1`
+Legacy routes `/ai-buyume/*` redirect to `/sosyal-medya/*`.

@@ -2452,3 +2452,261 @@ export const platformPlugins = pgTable(
   },
   (t) => [uniqueIndex('platform_plugins_slug_uidx').on(t.slug)],
 )
+
+/** Social Media Center SC-0 — Instagram AI Content Studio */
+export const smcInstagramAccounts = pgTable(
+  'smc_instagram_accounts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    igUserId: text('ig_user_id').notNull(),
+    pageId: text('page_id'),
+    username: text('username').notNull(),
+    displayName: text('display_name'),
+    tokenCiphertext: text('token_ciphertext').notNull(),
+    tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }),
+    scopes: jsonb('scopes').$type<string[]>().default([]),
+    status: text('status').default('connected').notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('smc_ig_accounts_uidx').on(t.companyId, t.igUserId),
+    index('smc_ig_accounts_company_idx').on(t.companyId, t.status),
+  ],
+)
+
+export const smcBrandKits = pgTable(
+  'smc_brand_kits',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').default('Default').notNull(),
+    logoUrl: text('logo_url'),
+    colors: jsonb('colors').$type<unknown[]>().default([]),
+    fonts: jsonb('fonts').$type<unknown[]>().default([]),
+    watermarkUrl: text('watermark_url'),
+    voice: text('voice'),
+    rules: text('rules'),
+    isDefault: boolean('is_default').default(false).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('smc_brand_kits_company_idx').on(t.companyId)],
+)
+
+export const smcMediaAssets = pgTable(
+  'smc_media_assets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    folder: text('folder').default('/').notNull(),
+    name: text('name').notNull(),
+    mime: text('mime'),
+    url: text('url').notNull(),
+    storageKey: text('storage_key'),
+    tags: jsonb('tags').$type<string[]>().default([]),
+    productId: text('product_id'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('smc_media_company_idx').on(t.companyId, t.folder)],
+)
+
+export const smcContentItems = pgTable(
+  'smc_content_items',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    accountId: uuid('account_id'),
+    type: text('type').notNull(),
+    title: text('title'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    status: text('status').default('draft').notNull(),
+    brandKitId: uuid('brand_kit_id'),
+    productId: text('product_id'),
+    campaignId: uuid('campaign_id'),
+    createdBy: uuid('created_by'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    index('smc_content_company_idx').on(t.companyId, t.status),
+    index('smc_content_type_idx').on(t.companyId, t.type),
+  ],
+)
+
+export const smcContentVersions = pgTable(
+  'smc_content_versions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    contentId: uuid('content_id').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    source: text('source').default('ai').notNull(),
+    actorUserId: uuid('actor_user_id'),
+    ...timestamps,
+  },
+  (t) => [index('smc_content_versions_idx').on(t.contentId, t.createdAt)],
+)
+
+export const smcTemplates = pgTable(
+  'smc_templates',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id'),
+    slug: text('slug').notNull(),
+    title: text('title').notNull(),
+    category: text('category').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    isSystem: boolean('is_system').default(false).notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('smc_templates_slug_uidx').on(t.slug)],
+)
+
+export const smcCampaigns = pgTable(
+  'smc_campaigns',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    status: text('status').default('draft').notNull(),
+    startsAt: timestamp('starts_at', { withTimezone: true }),
+    endsAt: timestamp('ends_at', { withTimezone: true }),
+    contentIds: jsonb('content_ids').$type<string[]>().default([]),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('smc_campaigns_company_idx').on(t.companyId, t.status)],
+)
+
+export const smcSchedules = pgTable(
+  'smc_schedules',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    contentId: uuid('content_id').notNull(),
+    recurrence: text('recurrence').default('once').notNull(),
+    recurrenceConfig: jsonb('recurrence_config').$type<Record<string, unknown>>().default({}),
+    runAt: timestamp('run_at', { withTimezone: true }),
+    nextRunAt: timestamp('next_run_at', { withTimezone: true }),
+    timezone: text('timezone').default('Europe/Istanbul'),
+    status: text('status').default('active').notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('smc_schedules_next_idx').on(t.companyId, t.nextRunAt)],
+)
+
+export const smcPublishQueue = pgTable(
+  'smc_publish_queue',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    contentId: uuid('content_id').notNull(),
+    accountId: uuid('account_id'),
+    scheduledAt: timestamp('scheduled_at', { withTimezone: true }).notNull(),
+    status: text('status').default('pending').notNull(),
+    attempts: integer('attempts').default(0).notNull(),
+    lastError: text('last_error'),
+    externalMediaId: text('external_media_id'),
+    externalPublishId: text('external_publish_id'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    index('smc_queue_due_idx').on(t.status, t.scheduledAt),
+    index('smc_queue_company_idx').on(t.companyId, t.status),
+  ],
+)
+
+export const smcApprovals = pgTable(
+  'smc_approvals',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    contentId: uuid('content_id').notNull(),
+    decision: text('decision').default('pending').notNull(),
+    reviewerUserId: uuid('reviewer_user_id'),
+    note: text('note'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('smc_approvals_company_idx').on(t.companyId, t.decision)],
+)
+
+export const smcNotifications = pgTable(
+  'smc_notifications',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    kind: text('kind').notNull(),
+    title: text('title').notNull(),
+    body: text('body'),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('smc_notifications_company_idx').on(t.companyId, t.createdAt)],
+)
+
+export const smcAnalyticsSnapshots = pgTable(
+  'smc_analytics_snapshots',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    contentId: uuid('content_id'),
+    accountId: uuid('account_id'),
+    reach: integer('reach').default(0),
+    impressions: integer('impressions').default(0),
+    engagement: integer('engagement').default(0),
+    saves: integer('saves').default(0),
+    profileVisits: integer('profile_visits').default(0),
+    followerDelta: integer('follower_delta').default(0),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    capturedAt: timestamp('captured_at', { withTimezone: true }).defaultNow().notNull(),
+    ...timestamps,
+  },
+  (t) => [index('smc_analytics_company_idx').on(t.companyId, t.capturedAt)],
+)
+
+export const smcAuditLog = pgTable(
+  'smc_audit_log',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    action: text('action').notNull(),
+    entityType: text('entity_type'),
+    entityId: text('entity_id'),
+    actorUserId: uuid('actor_user_id'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('smc_audit_company_idx').on(t.companyId, t.createdAt)],
+)

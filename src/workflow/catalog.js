@@ -166,6 +166,15 @@ export const NODE_CATALOG = [
     category: 'trigger',
     label: 'Growth İçerik Yayınlandı',
   },
+  { id: 'trigger.social.content.created', category: 'trigger', label: 'Social İçerik Oluştu' },
+  { id: 'trigger.social.content.approved', category: 'trigger', label: 'Social İçerik Onaylandı' },
+  {
+    id: 'trigger.social.content.published',
+    category: 'trigger',
+    label: 'Social İçerik Yayınlandı',
+  },
+  { id: 'trigger.social.content.failed', category: 'trigger', label: 'Social Yayın Başarısız' },
+
   { id: 'condition.if', category: 'condition', label: 'IF' },
   { id: 'condition.else', category: 'condition', label: 'ELSE' },
   { id: 'condition.and', category: 'condition', label: 'AND' },

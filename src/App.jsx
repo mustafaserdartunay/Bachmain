@@ -134,9 +134,24 @@ import TaskTrackingPage from './pages/hr/TaskTrackingPage'
 import MapTrackingPage from './pages/hr/MapTrackingPage'
 import MobileCheckInPage from './pages/hr/MobileCheckInPage'
 import PdksSettingsPage from './pages/hr/PdksSettingsPage'
-import AiGrowthDashboardPage from './pages/aiGrowth/AiGrowthDashboardPage'
-import AiGrowthInstagramConnectPage from './pages/aiGrowth/AiGrowthInstagramConnectPage'
-import AiGrowthReelStudioPage from './pages/aiGrowth/AiGrowthReelStudioPage'
+import {
+  SocialMediaDashboardPage,
+  SocialAccountsPage,
+  SocialAiCreatorPage,
+  SocialContentStudioPage,
+  SocialMediaLibraryPage,
+  SocialCampaignsPage,
+  SocialSchedulerPage,
+  SocialCalendarPage,
+  SocialTemplatesPage,
+  SocialBrandKitPage,
+  SocialApprovalPage,
+  SocialQueuePage,
+  SocialAnalyticsPage,
+  SocialCommentsPage,
+  SocialMessagesPage,
+  SocialSettingsPage,
+} from './pages/social/SocialMediaPages'
 import AiSettingsHubPage from './pages/settings/AiSettingsHubPage'
 import OpenAiSettingsPage from './pages/settings/OpenAiSettingsPage'
 import SalesRepresentativesPage from './pages/fieldSales/SalesRepresentativesPage'
@@ -301,13 +316,39 @@ export default function App() {
                         element={<Navigate to="/ik/personeller" replace />}
                       />
 
-                      <Route path="/ai-buyume" element={<AiGrowthDashboardPage />} />
+                      <Route path="/sosyal-medya" element={<SocialMediaDashboardPage />} />
+                      <Route path="/sosyal-medya/hesaplar" element={<SocialAccountsPage />} />
+                      <Route path="/sosyal-medya/studio" element={<SocialContentStudioPage />} />
+                      <Route path="/sosyal-medya/ai-creator" element={<SocialAiCreatorPage />} />
+                      <Route path="/sosyal-medya/medya" element={<SocialMediaLibraryPage />} />
+                      <Route path="/sosyal-medya/kampanyalar" element={<SocialCampaignsPage />} />
+                      <Route path="/sosyal-medya/zamanlama" element={<SocialSchedulerPage />} />
+                      <Route path="/sosyal-medya/takvim" element={<SocialCalendarPage />} />
+                      <Route path="/sosyal-medya/sablonlar" element={<SocialTemplatesPage />} />
+                      <Route path="/sosyal-medya/marka" element={<SocialBrandKitPage />} />
+                      <Route path="/sosyal-medya/onay" element={<SocialApprovalPage />} />
+                      <Route path="/sosyal-medya/kuyruk" element={<SocialQueuePage />} />
+                      <Route path="/sosyal-medya/analitik" element={<SocialAnalyticsPage />} />
+                      <Route path="/sosyal-medya/yorumlar" element={<SocialCommentsPage />} />
+                      <Route path="/sosyal-medya/mesajlar" element={<SocialMessagesPage />} />
+                      <Route path="/sosyal-medya/ayarlar" element={<SocialSettingsPage />} />
+                      <Route
+                        path="/sosyal-medya/reels"
+                        element={<Navigate to="/sosyal-medya/studio" replace />}
+                      />
+                      <Route path="/ai-buyume" element={<Navigate to="/sosyal-medya" replace />} />
                       <Route
                         path="/ai-buyume/instagram"
-                        element={<AiGrowthInstagramConnectPage />}
+                        element={<Navigate to="/sosyal-medya/hesaplar" replace />}
                       />
-                      <Route path="/ai-buyume/reel" element={<AiGrowthReelStudioPage />} />
-                      <Route path="/ai-buyume/*" element={<Navigate to="/ai-buyume" replace />} />
+                      <Route
+                        path="/ai-buyume/reel"
+                        element={<Navigate to="/sosyal-medya/studio" replace />}
+                      />
+                      <Route
+                        path="/ai-buyume/*"
+                        element={<Navigate to="/sosyal-medya" replace />}
+                      />
                       <Route path="/giderler/giderler-raporu" element={<ExpensesReportPage />} />
                       <Route path="/giderler/odemeler-raporu" element={<PaymentsReportPage />} />
                       <Route path="/giderler/kdv-raporu" element={<VatReportPage />} />

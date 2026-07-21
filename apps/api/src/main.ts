@@ -22,6 +22,7 @@ import { knowledgeRoutes } from './modules/knowledge/knowledgeRoutes.js'
 import { twinRoutes } from './modules/twin/twinRoutes.js'
 import { commerceRoutes } from './modules/commerce/commerceRoutes.js'
 import { growthRoutes } from './modules/growth/growthRoutes.js'
+import { socialRoutes } from './modules/social/socialRoutes.js'
 import { mesRoutes } from './modules/mes/mesRoutes.js'
 import { financeRoutes } from './modules/finance/financeRoutes.js'
 import { cxcRoutes } from './modules/cxc/cxcRoutes.js'
@@ -118,6 +119,7 @@ async function main() {
   await app.register(twinRoutes)
   await app.register(commerceRoutes)
   await app.register(growthRoutes)
+  await app.register(socialRoutes)
   await app.register(mesRoutes)
   await app.register(financeRoutes)
   await app.register(cxcRoutes)

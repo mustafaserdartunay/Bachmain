@@ -1,0 +1,46 @@
+export const SMC_TEMPLATE_SEEDS = [
+  { slug: 'yeni-urun', title: 'Yeni Ürün', category: 'product' },
+  { slug: 'kampanya', title: 'Kampanya', category: 'campaign' },
+  { slug: 'bayram', title: 'Bayram', category: 'seasonal' },
+  { slug: 'kurumsal', title: 'Kurumsal', category: 'brand' },
+  { slug: 'uretim', title: 'Üretim', category: 'ops' },
+  { slug: 'fabrika', title: 'Fabrika', category: 'ops' },
+  { slug: 'depo', title: 'Depo', category: 'ops' },
+  { slug: 'lojistik', title: 'Lojistik', category: 'ops' },
+  { slug: 'basari-hikayesi', title: 'Başarı Hikayesi', category: 'story' },
+  { slug: 'musteri-yorumu', title: 'Müşteri Yorumu', category: 'social_proof' },
+  { slug: 'fuar', title: 'Fuar', category: 'event' },
+  { slug: 'etkinlik', title: 'Etkinlik', category: 'event' },
+] as const
+
+export const SMC_RECURRENCE_OPTIONS = [
+  'once',
+  'daily',
+  'weekdays',
+  'weekends',
+  'weekly',
+  'monthly',
+  'yearly',
+  'every_2_days',
+  'every_3_days',
+  'every_7_days',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+  'first_monday',
+  'last_friday',
+  'cron',
+  'custom',
+] as const
+
+export const META_OAUTH_SCOPES = [
+  'instagram_basic',
+  'instagram_content_publish',
+  'pages_show_list',
+  'pages_read_engagement',
+  'business_management',
+].join(',')

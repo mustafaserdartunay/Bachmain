@@ -87,7 +87,11 @@ import {
   FIELD_SALES_HOME_PATH,
 } from '../../data/fieldSalesMenu'
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
-import { aiGrowthSubMenus, isAiGrowthRoute, AI_GROWTH_HOME_PATH } from '../../data/aiGrowthMenu'
+import {
+  socialMediaSubMenus,
+  isSocialMediaRoute,
+  SOCIAL_MEDIA_HOME_PATH,
+} from '../../data/socialMediaMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { processSubMenus, isProcessRoute } from '../../data/processMenu'
 import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
@@ -194,9 +198,11 @@ const hrSubMenuIcons = {
   smartphone: Smartphone,
   settings: Settings,
 }
-const aiGrowthSubMenuIcons = {
+const socialMediaSubMenuIcons = {
   instagram: Instagram,
   plug: PlugZap,
+  clock: Clock,
+  'check-square': CheckSquare,
   'layout-dashboard': LayoutDashboard,
   sparkles: Sparkles,
   'share-2': Share2,
@@ -264,7 +270,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isFieldSalesRouteActive = isFieldSalesRoute(location.pathname)
   const isLogisticsRouteActive = isLogisticsRoute(location.pathname)
   const isHrRouteActive = isHrRoute(location.pathname)
-  const isAiGrowthRouteActive = isAiGrowthRoute(location.pathname)
+  const isSocialMediaRouteActive = isSocialMediaRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
   const isProjectsRouteActive = isProjectsRoute(location.pathname)
@@ -277,7 +283,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     if (isProjectsRouteActive) return 'projects'
     if (isFieldSalesRouteActive) return 'fieldSales'
     if (isCrmRouteActive) return 'crm'
-    if (isAiGrowthRouteActive) return 'aiGrowth'
+    if (isSocialMediaRouteActive) return 'socialMedia'
     if (isHrRouteActive) return 'hr'
     if (isLogisticsRouteActive) return 'logistics'
     if (isSettingsRoute) return 'settings'
@@ -297,7 +303,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const fieldSalesOpen = openMenuId === 'fieldSales'
   const logisticsOpen = openMenuId === 'logistics'
   const hrOpen = openMenuId === 'hr'
-  const aiGrowthOpen = openMenuId === 'aiGrowth'
+  const socialMediaOpen = openMenuId === 'socialMedia'
   const crmOpen = openMenuId === 'crm'
   const settingsOpen = openMenuId === 'settings'
 
@@ -317,7 +323,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     isProjectsRouteActive,
     isFieldSalesRouteActive,
     isCrmRouteActive,
-    isAiGrowthRouteActive,
+    isSocialMediaRouteActive,
     isHrRouteActive,
     isLogisticsRouteActive,
     isSettingsRoute,
@@ -859,12 +865,12 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
         <SidebarSection label="AI GROWTH" collapsed={collapsed} />
 
-        <div className={`sidebar-menu-group ${aiGrowthOpen ? 'is-open' : ''}`}>
+        <div className={`sidebar-menu-group ${socialMediaOpen ? 'is-open' : ''}`}>
           <button
             type="button"
-            onClick={() => toggleMenu('aiGrowth')}
+            onClick={() => toggleMenu('socialMedia')}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isAiGrowthRouteActive ? 'sidebar-menu-active font-medium' : ''
+              collapsed && isSocialMediaRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -872,8 +878,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </MenuIcon>
             {!collapsed && (
               <>
-                <span className={menuLabelClass}>AI Growth Center</span>
-                {aiGrowthOpen ? (
+                <span className={menuLabelClass}>Social Media Center</span>
+                {socialMediaOpen ? (
                   <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                 ) : (
                   <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -881,15 +887,15 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               </>
             )}
           </button>
-          {aiGrowthOpen && !collapsed && (
+          {socialMediaOpen && !collapsed && (
             <div className="mt-0.5 ml-3 max-h-[50vh] space-y-0.5 overflow-y-auto border-l border-dark-500/50 pl-3">
-              {aiGrowthSubMenus.map((sub) => {
-                const SubIcon = aiGrowthSubMenuIcons[sub.icon] || Sparkles
+              {socialMediaSubMenus.map((sub) => {
+                const SubIcon = socialMediaSubMenuIcons[sub.icon] || Sparkles
                 return (
                   <NavLink
                     key={sub.path}
                     to={sub.path}
-                    end={sub.path === AI_GROWTH_HOME_PATH}
+                    end={sub.path === SOCIAL_MEDIA_HOME_PATH}
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} flex items-center gap-2 ${

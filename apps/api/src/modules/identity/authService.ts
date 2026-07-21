@@ -220,7 +220,19 @@ async function issueSession(
     role,
     platformRole,
     // Coarse tenant grant until fine-grained RBAC matrix ships; empty perms now denied.
-    perms: kind === 'staff' ? ['*'] : ['*', 'crm.customers.view', 'crm.customers.create'],
+    perms:
+      kind === 'staff'
+        ? ['*']
+        : [
+            '*',
+            'crm.customers.view',
+            'crm.customers.create',
+            'social.view',
+            'social.connect',
+            'social.create',
+            'social.approve',
+            'social.publish',
+          ],
   })
   const refreshToken = await signRefreshToken(userId)
   await db.insert(refreshTokens).values({
