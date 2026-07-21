@@ -2,7 +2,7 @@ import { customerSubMenus } from './customerMenu'
 import { expensesSubMenus } from './expensesMenu'
 import { treasurySubMenus } from './treasuryMenu'
 import { stockSubMenus } from './stockMenu'
-import { processSubMenus } from './processMenu'
+import { visibleProcessSubMenus } from './processMenu'
 import { hrSubMenus } from './hrMenu'
 import { fieldSalesSubMenus } from './fieldSalesMenu'
 import { projectsSubMenus } from './projectsMenu'
@@ -28,7 +28,7 @@ export const TRAINING_SECTIONS = [
     title: 'ERP',
     items: [
       ...mapMenuItems(customerSubMenus),
-      ...mapMenuItems(processSubMenus),
+      ...mapMenuItems(visibleProcessSubMenus),
       ...mapMenuItems(expensesSubMenus),
       ...mapMenuItems(treasurySubMenus),
       ...mapMenuItems(stockSubMenus),
