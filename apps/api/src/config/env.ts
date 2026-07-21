@@ -19,6 +19,7 @@ const envSchema = z.object({
   AI_PROXY_SECRET: z.string().optional(),
   IYZICO_API_KEY: z.string().optional(),
   IYZICO_SECRET_KEY: z.string().optional(),
+  IYZICO_WEBHOOK_SECRET: z.string().optional(),
   IYZICO_BASE_URL: z.string().default('https://sandbox-api.iyzipay.com'),
   APP_URL: z.string().default('https://uygulama.bachmain.com'),
   ADMIN_URL: z.string().default('https://yonetim.bachmain.com'),
@@ -38,7 +39,18 @@ function loadEnv(): Env {
   }
   const data = parsed.data
   if (data.NODE_ENV === 'production' && data.STRIPE_SECRET_KEY && !data.STRIPE_WEBHOOK_SECRET) {
-    throw new Error('Invalid environment: STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set')
+    throw new Error(
+      'Invalid environment: STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set',
+    )
+  }
+  if (
+    data.NODE_ENV === 'production' &&
+    (data.IYZICO_API_KEY || data.IYZICO_SECRET_KEY) &&
+    !data.IYZICO_WEBHOOK_SECRET
+  ) {
+    throw new Error(
+      'Invalid environment: IYZICO_WEBHOOK_SECRET is required when iyzico keys are set in production',
+    )
   }
   return data
 }

@@ -69,7 +69,10 @@ export async function billingRoutes(app: FastifyInstance) {
         params.set('line_items[0][quantity]', '1')
       } else {
         params.set('line_items[0][price_data][currency]', 'try')
-        params.set('line_items[0][price_data][unit_amount]', String(Math.max(plan.monthlyPriceTry, 1) * 100))
+        params.set(
+          'line_items[0][price_data][unit_amount]',
+          String(Math.max(plan.monthlyPriceTry, 1) * 100),
+        )
         params.set('line_items[0][price_data][recurring][interval]', 'month')
         params.set('line_items[0][price_data][product_data][name]', `BACHMAIN ${plan.name}`)
         params.set('line_items[0][quantity]', '1')
@@ -112,65 +115,94 @@ export async function billingRoutes(app: FastifyInstance) {
     }
   })
 
-  app.post('/v1/billing/webhooks/stripe', {
-    config: { rawBody: true },
-  }, async (req, reply) => {
-    const rawBody = (req as { rawBody?: string }).rawBody
-      || (typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {}))
-    let event = req.body as {
-      id?: string
-      type?: string
-      data?: { object?: Record<string, unknown> }
-    }
-
-    if (env.STRIPE_WEBHOOK_SECRET) {
-      try {
-        const { verifyStripeWebhookSignature } = await import('../../shared/stripeWebhook.js')
-        event = verifyStripeWebhookSignature(
-          rawBody,
-          req.headers['stripe-signature'],
-          env.STRIPE_WEBHOOK_SECRET,
-        )
-      } catch (error) {
-        const status = (error as { statusCode?: number }).statusCode || 400
-        throw new AppError('STRIPE_SIGNATURE', (error as Error).message, status)
+  app.post(
+    '/v1/billing/webhooks/stripe',
+    {
+      config: { rawBody: true },
+    },
+    async (req, reply) => {
+      const rawBody =
+        (req as { rawBody?: string }).rawBody ||
+        (typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {}))
+      let event = req.body as {
+        id?: string
+        type?: string
+        data?: { object?: Record<string, unknown> }
       }
-    } else if (env.NODE_ENV === 'production') {
-      throw new AppError('STRIPE_WEBHOOK_SECRET', 'STRIPE_WEBHOOK_SECRET is required in production', 500)
-    }
 
-    if (!event?.id || !event.type) throw new AppError('INVALID_EVENT', 'Geçersiz Stripe event')
+      if (env.STRIPE_WEBHOOK_SECRET) {
+        try {
+          const { verifyStripeWebhookSignature } = await import('../../shared/stripeWebhook.js')
+          event = verifyStripeWebhookSignature(
+            rawBody,
+            req.headers['stripe-signature'],
+            env.STRIPE_WEBHOOK_SECRET,
+          )
+        } catch (error) {
+          const status = (error as { statusCode?: number }).statusCode || 400
+          throw new AppError('STRIPE_SIGNATURE', (error as Error).message, status)
+        }
+      } else if (env.NODE_ENV === 'production') {
+        throw new AppError(
+          'STRIPE_WEBHOOK_SECRET',
+          'STRIPE_WEBHOOK_SECRET is required in production',
+          500,
+        )
+      }
 
-    const [dup] = await db
-      .select()
-      .from(webhookEvents)
-      .where(and(eq(webhookEvents.provider, 'stripe'), eq(webhookEvents.eventId, event.id)))
-      .limit(1)
-    if (dup) return reply.send({ ok: true, duplicate: true })
+      if (!event?.id || !event.type) throw new AppError('INVALID_EVENT', 'Geçersiz Stripe event')
 
-    await db.insert(webhookEvents).values({
-      provider: 'stripe',
-      eventId: event.id,
-      eventType: event.type,
-      payload: event as Record<string, unknown>,
-    })
+      const [dup] = await db
+        .select()
+        .from(webhookEvents)
+        .where(and(eq(webhookEvents.provider, 'stripe'), eq(webhookEvents.eventId, event.id)))
+        .limit(1)
+      if (dup) return reply.send({ ok: true, duplicate: true })
 
-    if (event.type === 'checkout.session.completed') {
-      const obj = event.data?.object || {}
-      const companyId = String(obj.client_reference_id || (obj.metadata as { companyId?: string })?.companyId || '')
-      const planCode = String((obj.metadata as { plan?: string })?.plan || 'pro') as 'basic' | 'pro' | 'enterprise'
-      if (companyId) await activatePlan(companyId, planCode, 'stripe', obj)
-    }
+      await db.insert(webhookEvents).values({
+        provider: 'stripe',
+        eventId: event.id,
+        eventType: event.type,
+        payload: event as Record<string, unknown>,
+      })
 
-    await db
-      .update(webhookEvents)
-      .set({ processedAt: new Date() })
-      .where(and(eq(webhookEvents.provider, 'stripe'), eq(webhookEvents.eventId, event.id)))
+      if (event.type === 'checkout.session.completed') {
+        const obj = event.data?.object || {}
+        const companyId = String(
+          obj.client_reference_id || (obj.metadata as { companyId?: string })?.companyId || '',
+        )
+        const planCode = String((obj.metadata as { plan?: string })?.plan || 'pro') as
+          'basic' | 'pro' | 'enterprise'
+        if (companyId) await activatePlan(companyId, planCode, 'stripe', obj)
+      }
 
-    return { ok: true }
-  })
+      await db
+        .update(webhookEvents)
+        .set({ processedAt: new Date() })
+        .where(and(eq(webhookEvents.provider, 'stripe'), eq(webhookEvents.eventId, event.id)))
+
+      return { ok: true }
+    },
+  )
 
   app.post('/v1/billing/webhooks/iyzico', async (req, reply) => {
+    const provided = String(
+      req.headers['x-iyzico-signature'] ||
+        req.headers['x-callback-secret'] ||
+        req.headers['x-bach-iyzico-secret'] ||
+        '',
+    )
+    if (env.NODE_ENV === 'production') {
+      if (!env.IYZICO_WEBHOOK_SECRET) {
+        return reply.code(503).send({ ok: false, error: 'IYZICO_WEBHOOK_SECRET_REQUIRED' })
+      }
+      if (!provided || provided !== env.IYZICO_WEBHOOK_SECRET) {
+        return reply.code(401).send({ ok: false, error: 'INVALID_WEBHOOK_SIGNATURE' })
+      }
+    } else if (env.IYZICO_WEBHOOK_SECRET && provided !== env.IYZICO_WEBHOOK_SECRET) {
+      return reply.code(401).send({ ok: false, error: 'INVALID_WEBHOOK_SIGNATURE' })
+    }
+
     const event = req.body as Record<string, unknown>
     const eventId = String(event.paymentId || event.token || event.iyziEventId || Date.now())
     const [dup] = await db
@@ -203,13 +235,21 @@ export async function billingRoutes(app: FastifyInstance) {
 
   app.get('/v1/billing/payments', { preHandler: authenticate }, async (req) => {
     const companyId = requireTenant(req)
-    const rows = await db.select().from(payments).where(eq(payments.companyId, companyId)).limit(100)
+    const rows = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.companyId, companyId))
+      .limit(100)
     return { ok: true, rows }
   })
 
   app.get('/v1/billing/invoices', { preHandler: authenticate }, async (req) => {
     const companyId = requireTenant(req)
-    const rows = await db.select().from(invoices).where(eq(invoices.companyId, companyId)).limit(100)
+    const rows = await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.companyId, companyId))
+      .limit(100)
     return { ok: true, rows }
   })
 }
@@ -226,7 +266,11 @@ async function activatePlan(
   const now = new Date()
   const periodEnd = new Date(now.getTime() + 30 * 86400000)
 
-  const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.companyId, companyId)).limit(1)
+  const [sub] = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.companyId, companyId))
+    .limit(1)
   if (sub) {
     await db
       .update(subscriptions)
@@ -277,7 +321,10 @@ async function activatePlan(
     currency: 'TRY',
   })
 
-  const members = await db.select().from(companyMemberships).where(eq(companyMemberships.companyId, companyId))
+  const members = await db
+    .select()
+    .from(companyMemberships)
+    .where(eq(companyMemberships.companyId, companyId))
   for (const m of members) {
     await notifyUser({
       userId: m.userId,

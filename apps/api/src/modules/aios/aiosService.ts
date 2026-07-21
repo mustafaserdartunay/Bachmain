@@ -171,10 +171,11 @@ export async function runAgentChat(input: {
     .returning()
 
   try {
+    const safeMessages = input.messages.filter((m) => m.role !== 'system')
     const result = await gatewayChat({
       provider,
       model,
-      messages: [system, ...input.messages],
+      messages: [system, ...safeMessages],
     })
 
     await db.insert(aiosRunSteps).values({

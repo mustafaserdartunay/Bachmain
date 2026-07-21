@@ -10,7 +10,14 @@ import {
   users,
 } from '../../db/schema/index.js'
 import { AppError } from '../../shared/errors.js'
-import { assertPasswordPolicy, hashPassword, randomToken, sha256, slugify, verifyPassword } from '../../shared/crypto.js'
+import {
+  assertPasswordPolicy,
+  hashPassword,
+  randomToken,
+  sha256,
+  slugify,
+  verifyPassword,
+} from '../../shared/crypto.js'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../shared/jwt.js'
 import { env } from '../../config/env.js'
 import { logActivity } from '../audit/activityService.js'
@@ -21,7 +28,11 @@ async function uniqueSlug(base: string) {
   const slug = slugify(base)
   for (let i = 0; i < 20; i += 1) {
     const candidate = i === 0 ? slug : `${slug}-${i + 1}`
-    const [existing] = await db.select().from(companies).where(eq(companies.slug, candidate)).limit(1)
+    const [existing] = await db
+      .select()
+      .from(companies)
+      .where(eq(companies.slug, candidate))
+      .limit(1)
     if (!existing) return candidate
   }
   return `${slug}-${Date.now().toString(36)}`
@@ -143,7 +154,10 @@ export async function loginUser(input: {
     .where(and(eq(companyMemberships.userId, user.id), eq(companyMemberships.isDefault, true)))
     .limit(1)
 
-  await db.update(users).set({ lastLoginAt: new Date(), updatedAt: new Date() }).where(eq(users.id, user.id))
+  await db
+    .update(users)
+    .set({ lastLoginAt: new Date(), updatedAt: new Date() })
+    .where(eq(users.id, user.id))
 
   if (user.mfaEnabled) {
     const trusted = await isTrustedDevice(user.id, {
@@ -205,6 +219,8 @@ async function issueSession(
     kind,
     role,
     platformRole,
+    // Coarse tenant grant until fine-grained RBAC matrix ships; empty perms now denied.
+    perms: kind === 'staff' ? ['*'] : ['*', 'crm.customers.view', 'crm.customers.create'],
   })
   const refreshToken = await signRefreshToken(userId)
   await db.insert(refreshTokens).values({
@@ -217,7 +233,10 @@ async function issueSession(
   return { accessToken, refreshToken, expiresIn: env.JWT_ACCESS_TTL_SECONDS }
 }
 
-export async function issueSessionForUser(userId: string, meta: { ip?: string; userAgent?: string }) {
+export async function issueSessionForUser(
+  userId: string,
+  meta: { ip?: string; userAgent?: string },
+) {
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
   if (!user) throw new AppError('USER_NOT_FOUND', 'Kullanıcı bulunamadı', 404)
   const [membership] = await db
@@ -261,8 +280,17 @@ export async function refreshSession(refreshToken: string) {
     .from(companyMemberships)
     .where(and(eq(companyMemberships.userId, user.id), eq(companyMemberships.isDefault, true)))
     .limit(1)
-  await db.update(refreshTokens).set({ revokedAt: new Date() }).where(eq(refreshTokens.id, stored.id))
-  return issueSession(user.id, membership?.companyId, membership?.role || 'viewer', user.platformRole, {})
+  await db
+    .update(refreshTokens)
+    .set({ revokedAt: new Date() })
+    .where(eq(refreshTokens.id, stored.id))
+  return issueSession(
+    user.id,
+    membership?.companyId,
+    membership?.role || 'viewer',
+    user.platformRole,
+    {},
+  )
 }
 
 export async function requestPasswordReset(emailRaw: string) {
@@ -330,7 +358,11 @@ export async function getMe(userId: string) {
     .limit(1)
   let company = null
   if (membership) {
-    const [c] = await db.select().from(companies).where(eq(companies.id, membership.companyId)).limit(1)
+    const [c] = await db
+      .select()
+      .from(companies)
+      .where(eq(companies.id, membership.companyId))
+      .limit(1)
     company = c || null
   }
   return {
@@ -339,11 +371,7 @@ export async function getMe(userId: string) {
   }
 }
 
-function publicUser(
-  user: typeof users.$inferSelect,
-  companyId: string | null,
-  role: string,
-) {
+function publicUser(user: typeof users.$inferSelect, companyId: string | null, role: string) {
   return {
     id: user.id,
     email: user.email,

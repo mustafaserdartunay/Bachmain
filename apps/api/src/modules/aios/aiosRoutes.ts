@@ -242,7 +242,7 @@ export async function aiosRoutes(app: FastifyInstance) {
           messages: z
             .array(
               z.object({
-                role: z.enum(['system', 'user', 'assistant']),
+                role: z.enum(['user', 'assistant']),
                 content: z.string(),
               }),
             )

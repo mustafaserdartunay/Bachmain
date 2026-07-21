@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../../db/client.js'
 import { leads, users } from '../../db/schema/index.js'
 import { notifyUser } from '../notifications/notificationService.js'
+import { requireStaff } from '../../shared/authGuard.js'
 
 export async function leadRoutes(app: FastifyInstance) {
   app.post('/v1/leads/demo', async (req) => {
@@ -34,7 +35,11 @@ export async function leadRoutes(app: FastifyInstance) {
       })
       .returning()
 
-    const staff = await db.select().from(users).where(eq(users.platformRole, 'superadmin')).limit(20)
+    const staff = await db
+      .select()
+      .from(users)
+      .where(eq(users.platformRole, 'superadmin'))
+      .limit(20)
     for (const s of staff) {
       await notifyUser({
         userId: s.id,
@@ -52,7 +57,7 @@ export async function leadRoutes(app: FastifyInstance) {
     }
   })
 
-  app.get('/v1/admin/leads', async () => {
+  app.get('/v1/admin/leads', { preHandler: [requireStaff()] }, async () => {
     const rows = await db.select().from(leads).limit(200)
     return { ok: true, rows }
   })

@@ -37,9 +37,7 @@ function publicWhatsAppConfig(cfg = {}) {
     displayPhone: cfg.displayPhone || '',
     updatedAt: cfg.updatedAt || null,
     hasAccessToken: Boolean(token),
-    accessTokenMasked: token
-      ? `${token.slice(0, 4)}…${token.slice(-4)}`
-      : '',
+    accessTokenMasked: token ? `${token.slice(0, 4)}…${token.slice(-4)}` : '',
   }
 }
 
@@ -172,7 +170,9 @@ function parseMetaInbound(body) {
         let text = ''
         if (type === 'text') text = message.text?.body || ''
         else if (type === 'button') text = message.button?.text || ''
-        else if (type === 'interactive') text = message.interactive?.button_reply?.title || message.interactive?.list_reply?.title || ''
+        else if (type === 'interactive')
+          text =
+            message.interactive?.button_reply?.title || message.interactive?.list_reply?.title || ''
         else text = `[${type}]`
         items.push({
           phoneNumberId,
@@ -301,6 +301,36 @@ export async function handleWhatsAppApi(req, res, path, body = {}) {
         sendJson(req, res, 503, { error: 'DATABASE_REQUIRED' })
         return true
       }
+      const appSecret = process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET || ''
+      const sigHeader = String(req.headers['x-hub-signature-256'] || '')
+      if (process.env.NODE_ENV === 'production') {
+        if (!appSecret) {
+          sendJson(req, res, 503, {
+            error: 'WHATSAPP_APP_SECRET_REQUIRED',
+            message: 'Production WhatsApp webhook requires META/WHATSAPP app secret',
+          })
+          return true
+        }
+        if (!sigHeader.startsWith('sha256=')) {
+          sendJson(req, res, 401, { error: 'MISSING_SIGNATURE' })
+          return true
+        }
+        const crypto = await import('node:crypto')
+        const raw =
+          typeof req.rawBody === 'string'
+            ? req.rawBody
+            : Buffer.isBuffer(req.rawBody)
+              ? req.rawBody.toString('utf8')
+              : JSON.stringify(body || {})
+        const expected =
+          'sha256=' + crypto.createHmac('sha256', appSecret).update(raw, 'utf8').digest('hex')
+        const a = Buffer.from(sigHeader)
+        const b = Buffer.from(expected)
+        if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+          sendJson(req, res, 401, { error: 'INVALID_SIGNATURE' })
+          return true
+        }
+      }
       const items = parseMetaInbound(body)
       const index = await readWhatsAppIndex()
       for (const item of items) {
@@ -342,12 +372,16 @@ export async function handleWhatsAppApi(req, res, path, body = {}) {
       phoneNumberId: String(incoming.phoneNumberId || '').trim(),
       webhookVerifyToken: String(incoming.webhookVerifyToken || '').trim(),
       displayPhone: String(incoming.displayPhone || prev.displayPhone || '').trim(),
-      accessToken: incoming.accessToken != null && String(incoming.accessToken).trim()
-        ? String(incoming.accessToken).trim()
-        : prev.accessToken,
+      accessToken:
+        incoming.accessToken != null && String(incoming.accessToken).trim()
+          ? String(incoming.accessToken).trim()
+          : prev.accessToken,
     }
     if (!next.phoneNumberId) {
-      sendJson(req, res, 400, { error: 'PHONE_NUMBER_ID_REQUIRED', message: 'Phone Number ID gerekli' })
+      sendJson(req, res, 400, {
+        error: 'PHONE_NUMBER_ID_REQUIRED',
+        message: 'Phone Number ID gerekli',
+      })
       return true
     }
     if (!next.accessToken) {
@@ -355,7 +389,10 @@ export async function handleWhatsAppApi(req, res, path, body = {}) {
       return true
     }
     if (!next.webhookVerifyToken) {
-      sendJson(req, res, 400, { error: 'VERIFY_TOKEN_REQUIRED', message: 'Webhook Verify Token gerekli' })
+      sendJson(req, res, 400, {
+        error: 'VERIFY_TOKEN_REQUIRED',
+        message: 'Webhook Verify Token gerekli',
+      })
       return true
     }
     await setWhatsAppSecrets(tenantCode, next)
@@ -373,7 +410,10 @@ export async function handleWhatsAppApi(req, res, path, body = {}) {
     const phoneNumberId = String(body.phoneNumberId || cfg.phoneNumberId || '').trim()
     const accessToken = String(body.accessToken || cfg.accessToken || '').trim()
     if (!phoneNumberId || !accessToken) {
-      sendJson(req, res, 400, { error: 'MISSING_CREDENTIALS', message: 'Phone Number ID ve Access Token gerekli' })
+      sendJson(req, res, 400, {
+        error: 'MISSING_CREDENTIALS',
+        message: 'Phone Number ID ve Access Token gerekli',
+      })
       return true
     }
     try {

@@ -38,14 +38,16 @@ export function requireTenant(req: FastifyRequest) {
 }
 
 /** Least Privilege: require permission codes on JWT `perms` claim (or staff bypass).
- * Legacy tokens without `perms` remain allowed (backward compatible).
+ * Empty/missing perms = deny for tenant users (re-login issues fresh perms).
  */
 export function requirePermission(...codes: string[]) {
   return async (req: FastifyRequest) => {
     await authenticate(req, {} as FastifyReply)
     if (req.auth?.platformRole && req.auth.platformRole !== 'none') return
-    const perms = Array.isArray(req.auth?.perms) ? req.auth.perms : null
-    if (!perms || perms.length === 0) return
+    const perms = Array.isArray(req.auth?.perms) ? req.auth.perms : []
+    if (perms.length === 0) {
+      throw new AppError('FORBIDDEN', 'İzin listesi eksik — yeniden giriş yapın', 403)
+    }
     const ok = codes.every((code) => perms.includes(code) || perms.includes('*'))
     if (!ok) throw new AppError('FORBIDDEN', `İzin gerekli: ${codes.join(', ')}`, 403)
   }
