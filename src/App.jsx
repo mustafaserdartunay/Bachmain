@@ -135,41 +135,10 @@ import MapTrackingPage from './pages/hr/MapTrackingPage'
 import MobileCheckInPage from './pages/hr/MobileCheckInPage'
 import PdksSettingsPage from './pages/hr/PdksSettingsPage'
 import AiGrowthDashboardPage from './pages/aiGrowth/AiGrowthDashboardPage'
-import AiGrowthSettingsPage from './pages/aiGrowth/AiGrowthSettingsPage'
-import AiGrowthCalendarPage from './pages/aiGrowth/AiGrowthCalendarPage'
-import AiGrowthAgentsPage, { AiGrowthAssistantPage } from './pages/aiGrowth/AiGrowthAgentsPage'
-import AiGrowthAutomationPage from './pages/aiGrowth/AiGrowthAutomationPage'
-import AiGrowthAnalyticsPage from './pages/aiGrowth/AiGrowthAnalyticsPage'
-import {
-  AiGrowthAiStudioHubPage,
-  AiGrowthCampaignPage,
-  AiGrowthCrmMarketingPage,
-  AiGrowthFunnelPage,
-  AiGrowthLeadCenterPage,
-  AiGrowthReportsPage,
-  AiGrowthSmsPage,
-} from './pages/aiGrowth/AiGrowthEnterprisePages'
+import AiGrowthInstagramConnectPage from './pages/aiGrowth/AiGrowthInstagramConnectPage'
+import AiGrowthReelStudioPage from './pages/aiGrowth/AiGrowthReelStudioPage'
 import AiSettingsHubPage from './pages/settings/AiSettingsHubPage'
 import OpenAiSettingsPage from './pages/settings/OpenAiSettingsPage'
-import {
-  AiContentCenterPage,
-  AiSocialStudioPage,
-  AiBlogCenterPage,
-  AiSeoCenterPage,
-  AiAdsCenterPage,
-  AiVideoCenterPage,
-  AiEmailMarketingPage,
-  AiWhatsappCampaignsPage,
-  AiLandingPageStudioPage,
-  AiCompetitorAnalysisPage,
-  AiTrendAnalysisPage,
-  AiKeywordCenterPage,
-  AiDesignStudioPage,
-  AiVisualStudioPage,
-  AiBannerStudioPage,
-  AiProductPhotoPage,
-  AiVideoScriptPage,
-} from './pages/aiGrowth/AiGrowthStudioPages'
 import SalesRepresentativesPage from './pages/fieldSales/SalesRepresentativesPage'
 import SalesRepReportsPage from './pages/fieldSales/SalesRepReportsPage'
 import CourierTrackingPage from './pages/CourierTrackingPage'
@@ -333,39 +302,12 @@ export default function App() {
                       />
 
                       <Route path="/ai-buyume" element={<AiGrowthDashboardPage />} />
-                      <Route path="/ai-buyume/icerik" element={<AiContentCenterPage />} />
-                      <Route path="/ai-buyume/sosyal" element={<AiGrowthCalendarPage />} />
-                      <Route path="/ai-buyume/sosyal/studio" element={<AiSocialStudioPage />} />
-                      <Route path="/ai-buyume/blog" element={<AiBlogCenterPage />} />
-                      <Route path="/ai-buyume/seo" element={<AiSeoCenterPage />} />
-                      <Route path="/ai-buyume/reklam" element={<AiAdsCenterPage />} />
-                      <Route path="/ai-buyume/video" element={<AiVideoCenterPage />} />
-                      <Route path="/ai-buyume/email" element={<AiEmailMarketingPage />} />
-                      <Route path="/ai-buyume/whatsapp" element={<AiWhatsappCampaignsPage />} />
-                      <Route path="/ai-buyume/sms" element={<AiGrowthSmsPage />} />
-                      <Route path="/ai-buyume/kampanya" element={<AiGrowthCampaignPage />} />
-                      <Route path="/ai-buyume/landing" element={<AiLandingPageStudioPage />} />
-                      <Route path="/ai-buyume/funnel" element={<AiGrowthFunnelPage />} />
-                      <Route path="/ai-buyume/lead" element={<AiGrowthLeadCenterPage />} />
                       <Route
-                        path="/ai-buyume/crm-marketing"
-                        element={<AiGrowthCrmMarketingPage />}
+                        path="/ai-buyume/instagram"
+                        element={<AiGrowthInstagramConnectPage />}
                       />
-                      <Route path="/ai-buyume/rakip" element={<AiCompetitorAnalysisPage />} />
-                      <Route path="/ai-buyume/trend" element={<AiTrendAnalysisPage />} />
-                      <Route path="/ai-buyume/anahtar-kelime" element={<AiKeywordCenterPage />} />
-                      <Route path="/ai-buyume/tasarim" element={<AiDesignStudioPage />} />
-                      <Route path="/ai-buyume/gorsel" element={<AiVisualStudioPage />} />
-                      <Route path="/ai-buyume/banner" element={<AiBannerStudioPage />} />
-                      <Route path="/ai-buyume/urun-fotografi" element={<AiProductPhotoPage />} />
-                      <Route path="/ai-buyume/video-senaryosu" element={<AiVideoScriptPage />} />
-                      <Route path="/ai-buyume/asistan" element={<AiGrowthAssistantPage />} />
-                      <Route path="/ai-buyume/ajanlar" element={<AiGrowthAgentsPage />} />
-                      <Route path="/ai-buyume/ai-studio" element={<AiGrowthAiStudioHubPage />} />
-                      <Route path="/ai-buyume/otomasyon" element={<AiGrowthAutomationPage />} />
-                      <Route path="/ai-buyume/analitik" element={<AiGrowthAnalyticsPage />} />
-                      <Route path="/ai-buyume/raporlar" element={<AiGrowthReportsPage />} />
-                      <Route path="/ai-buyume/ayarlar" element={<AiGrowthSettingsPage />} />
+                      <Route path="/ai-buyume/reel" element={<AiGrowthReelStudioPage />} />
+                      <Route path="/ai-buyume/*" element={<Navigate to="/ai-buyume" replace />} />
                       <Route path="/giderler/giderler-raporu" element={<ExpensesReportPage />} />
                       <Route path="/giderler/odemeler-raporu" element={<PaymentsReportPage />} />
                       <Route path="/giderler/kdv-raporu" element={<VatReportPage />} />

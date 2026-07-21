@@ -54,6 +54,8 @@ import {
   Search,
   Megaphone,
   Clapperboard,
+  Instagram,
+  PlugZap,
   Mail,
   PanelsTopLeft,
   Binoculars,
@@ -193,6 +195,8 @@ const hrSubMenuIcons = {
   settings: Settings,
 }
 const aiGrowthSubMenuIcons = {
+  instagram: Instagram,
+  plug: PlugZap,
   'layout-dashboard': LayoutDashboard,
   sparkles: Sparkles,
   'share-2': Share2,
