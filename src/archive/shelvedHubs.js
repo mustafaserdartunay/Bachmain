@@ -66,6 +66,13 @@ export const SHELVED_HUBS = [
     page: 'src/pages/DigitalTwinCenterPage.jsx',
     note: 'Sidebar hidden only; route kept. Restore: processMenu hidden:false',
   },
+  {
+    id: 'customer-experience',
+    label: 'Müşteri Deneyimi',
+    routes: ['/musteri-deneyimi', '/cxc'],
+    page: 'src/pages/CustomerExperienceCloudPage.jsx',
+    note: 'Sidebar hidden only; route kept. Restore: customerMenu hidden:false',
+  },
 ]
 
 export const SHELVED_ROUTE_SET = new Set(SHELVED_HUBS.flatMap((h) => h.routes))

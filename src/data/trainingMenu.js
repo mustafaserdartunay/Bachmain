@@ -1,4 +1,4 @@
-import { customerSubMenus } from './customerMenu'
+import { visibleCustomerSubMenus } from './customerMenu'
 import { expensesSubMenus } from './expensesMenu'
 import { treasurySubMenus } from './treasuryMenu'
 import { stockSubMenus } from './stockMenu'
@@ -27,7 +27,7 @@ export const TRAINING_SECTIONS = [
     id: 'erp',
     title: 'ERP',
     items: [
-      ...mapMenuItems(customerSubMenus),
+      ...mapMenuItems(visibleCustomerSubMenus),
       ...mapMenuItems(visibleProcessSubMenus),
       ...mapMenuItems(expensesSubMenus),
       ...mapMenuItems(treasurySubMenus),

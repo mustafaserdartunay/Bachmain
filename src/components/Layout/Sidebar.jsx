@@ -77,7 +77,7 @@ import {
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
-import { customerSubMenus, isSalesRoute } from '../../data/customerMenu'
+import { visibleCustomerSubMenus, isSalesRoute } from '../../data/customerMenu'
 import { expensesSubMenus, isExpensesRoute } from '../../data/expensesMenu'
 import { treasurySubMenus, isTreasuryRoute, CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/stockMenu'
@@ -276,7 +276,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isProjectsRouteActive = isProjectsRoute(location.pathname)
   const isSettingsRoute = location.pathname.startsWith('/ayarlar') || isDocumentCenterRouteActive
   const resolveOpenMenuId = () => {
-    if (isSalesRouteActive || isProcessRouteActive) return 'customer'
+    if (isSalesRouteActive) return 'customer'
+    if (isProcessRouteActive) return 'process'
     if (isExpensesRouteActive) return 'expenses'
     if (isTreasuryRouteActive) return 'treasury'
     if (isStockRouteActive) return 'stock'
@@ -291,11 +292,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   }
 
   const [openMenuId, setOpenMenuId] = useState(resolveOpenMenuId)
-  const [processOpen, setProcessOpen] = useState(isProcessRouteActive)
   const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
 
   const customerOpen = openMenuId === 'customer'
+  const processOpen = openMenuId === 'process'
   const expensesOpen = openMenuId === 'expenses'
   const treasuryOpen = openMenuId === 'treasury'
   const stockOpen = openMenuId === 'stock'
@@ -328,10 +329,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     isLogisticsRouteActive,
     isSettingsRoute,
   ])
-
-  useEffect(() => {
-    if (isProcessRouteActive) setProcessOpen(true)
-  }, [isProcessRouteActive])
 
   useEffect(() => {
     if (isDocumentCenterRouteActive) setDocumentCenterOpen(true)
@@ -432,7 +429,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
         <SidebarSection label="ERP" collapsed={collapsed} />
 
-        {/* 2. Satışlar (+ Süreç Yönetimi) */}
+        {/* 2. Satışlar */}
         <div className={`sidebar-menu-group ${customerOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -458,7 +455,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
           {customerOpen && !collapsed && (
             <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
-              {customerSubMenus.map((sub) => {
+              {visibleCustomerSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? customerSubMenuIcons[sub.icon] : null
                 return (
                   <NavLink
@@ -481,41 +478,48 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setProcessOpen((open) => !open)}
-                  className={`${subMenuButtonBase} flex w-full items-center gap-2`}
-                >
-                  <SubMenuIcon>
-                    <ClipboardList className="h-3.5 w-3.5" />
-                  </SubMenuIcon>
-                  <span className="min-w-0 flex-1 text-left">Süreç Yönetimi</span>
-                  {processOpen ? (
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                  ) : (
-                    <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                  )}
-                </button>
-                {processOpen && (
-                  <div className="mt-0.5 ml-2 space-y-0.5 border-l border-dark-500/40 pl-2">
-                    {visibleProcessSubMenus.map((sub) => (
-                      <NavLink
-                        key={sub.path}
-                        to={sub.path}
-                        onClick={handleNavigate}
-                        className={({ isActive }) =>
-                          `${subMenuButtonBase} ${
-                            isActive ? 'sidebar-menu-active font-medium' : ''
-                          }`
-                        }
-                      >
-                        {sub.label}
-                      </NavLink>
-                    ))}
-                  </div>
+            </div>
+          )}
+        </div>
+
+        {/* 2b. Süreç Yönetimi (Satışlar altında, bağımsız grup) */}
+        <div className={`sidebar-menu-group ${processOpen ? 'is-open' : ''}`}>
+          <button
+            type="button"
+            onClick={() => toggleMenu('process')}
+            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              collapsed && isProcessRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <ClipboardList className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && (
+              <>
+                <span className={menuLabelClass}>Süreç Yönetimi</span>
+                {processOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
                 )}
-              </div>
+              </>
+            )}
+          </button>
+
+          {processOpen && !collapsed && (
+            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+              {visibleProcessSubMenus.map((sub) => (
+                <NavLink
+                  key={sub.path}
+                  to={sub.path}
+                  onClick={handleNavigate}
+                  className={({ isActive }) =>
+                    `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
+                  }
+                >
+                  {sub.label}
+                </NavLink>
+              ))}
             </div>
           )}
         </div>

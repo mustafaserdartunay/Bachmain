@@ -17,12 +17,13 @@ These modules were removed from sidebar and CRM routes. Page/API/localStore code
 
 ### Sidebar-only (routes still work)
 
-| Hub                 | Route            | Restore                            |
-| ------------------- | ---------------- | ---------------------------------- |
-| Workflow Engine     | `/otomasyon`     | `processMenu.js` → `hidden: false` |
-| AI Operating System | `/aios`          | `processMenu.js` → `hidden: false` |
-| Knowledge Center    | `/bilgi-merkezi` | `processMenu.js` → `hidden: false` |
-| Digital Twin        | `/dijital-ikiz`  | `processMenu.js` → `hidden: false` |
+| Hub                 | Route               | Restore                             |
+| ------------------- | ------------------- | ----------------------------------- |
+| Workflow Engine     | `/otomasyon`        | `processMenu.js` → `hidden: false`  |
+| AI Operating System | `/aios`             | `processMenu.js` → `hidden: false`  |
+| Knowledge Center    | `/bilgi-merkezi`    | `processMenu.js` → `hidden: false`  |
+| Digital Twin        | `/dijital-ikiz`     | `processMenu.js` → `hidden: false`  |
+| Müşteri Deneyimi    | `/musteri-deneyimi` | `customerMenu.js` → `hidden: false` |
 
 ## Related (still in tree, not wired in App routes while shelved)
 
