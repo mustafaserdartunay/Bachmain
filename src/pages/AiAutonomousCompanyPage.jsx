@@ -4,7 +4,6 @@ import {
   Activity,
   AlertTriangle,
   Bot,
-  Gauge,
   Network,
   ShieldAlert,
   Sparkles,
@@ -134,12 +133,6 @@ export default function AiAutonomousCompanyPage() {
             >
               <Activity className="h-4 w-4" /> Twin
             </Link>
-            <Link
-              to="/platform?tab=health"
-              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
-            >
-              <Gauge className="h-4 w-4" /> Platform
-            </Link>
           </div>
         }
       />
@@ -196,12 +189,6 @@ export default function AiAutonomousCompanyPage() {
               </div>
             ))}
           </div>
-          <Link
-            to="/platform?tab=health"
-            className="mt-3 inline-block text-[10px] font-black uppercase text-emerald-700"
-          >
-            Platform Health Monitor →
-          </Link>
         </section>
 
         <section className={`${APP_SURFACE_PANEL_CLASS} p-4`}>

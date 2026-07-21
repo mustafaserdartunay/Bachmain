@@ -218,7 +218,7 @@ export default function AnalyticsCenterPage() {
             <Kpi label="OEE" value={`%${overview.oee}`} to="/mes" />
             <Kpi label="Personel" value={overview.personnel} to="/ik" />
             <Kpi label="Müşteri" value={overview.customers} to="/musteri-deneyimi" />
-            <Kpi label="Bayi" value={overview.dealers} to="/bayi" />
+            <Kpi label="Bayi" value={overview.dealers} />
             <Kpi label="Aktif kullanıcı" value={overview.activeUsers} />
           </div>
           <div className="grid gap-3 lg:grid-cols-[1fr_320px]">

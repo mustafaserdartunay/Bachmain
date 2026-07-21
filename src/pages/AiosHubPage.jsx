@@ -453,9 +453,9 @@ export default function AiosHubPage() {
             desc="AI tetikleyici · karar · öneri."
           />
           <DeepLinkCard
-            to="/platform?tab=automation"
-            title="Platform Automation"
-            desc="Job / queue / scheduler."
+            to="/otomasyon"
+            title="Automation / Jobs"
+            desc="Job / queue / scheduler (Platform hub shelved)."
           />
         </div>
       )}
@@ -666,14 +666,8 @@ export default function AiosHubPage() {
         <section className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
           <h2 className="text-sm font-black uppercase">AI Marketplace</h2>
           <p className="mt-2 text-xs text-[var(--muted)]">
-            Hazır ajan paketleri · prompt paketleri · sektör paketleri — merkezi hub.
+            Merkezi Marketplace hub şimdilik gizli. Aşağıda örnek paket isimleri (UI stub).
           </p>
-          <Link
-            to="/marketplace?tab=agents"
-            className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-4 text-xs font-black uppercase text-emerald-800"
-          >
-            BachMain Marketplace →
-          </Link>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {['Sales Pack', 'MES Pack', 'Commerce Pack'].map((pack) => (
               <div key={pack} className="rounded-xl border p-3 text-sm font-bold text-[var(--ink)]">
@@ -688,11 +682,6 @@ export default function AiosHubPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <DeepLinkCard to="/ayarlar/ai" title="AI Settings" desc="Şirket AI ayarları." />
           <DeepLinkCard to="/ayarlar/ai/openai" title="OpenAI" desc="Sunucu anahtarı · model." />
-          <DeepLinkCard
-            to="/platform?tab=ai"
-            title="Platform AI Gateway"
-            desc="Çekirdek bağlantı."
-          />
           <DeepLinkCard to="/hesap/lisans" title="License / Limits" desc="AI kullanım limitleri." />
         </div>
       )}

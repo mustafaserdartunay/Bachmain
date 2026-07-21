@@ -6,7 +6,6 @@ import {
   Bot,
   Building2,
   FileText,
-  Landmark,
   LineChart,
   Receipt,
   Scale,
@@ -190,7 +189,6 @@ export default function FinanceCenterPage() {
               { to: '/ayarlar/master-data', t: 'Master Data', icon: Building2 },
               { to: '/bilgi-merkezi', t: 'Knowledge', icon: BookOpen },
               { to: '/mes', t: 'MES Maliyet', icon: Scale },
-              { to: '/ticaret', t: 'Commerce', icon: Landmark },
             ].map((x) => (
               <Link
                 key={x.to}

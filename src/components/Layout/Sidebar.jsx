@@ -10,7 +10,6 @@ import {
   ClipboardList,
   Inbox,
   Percent,
-  Store,
   MessageCircle,
   Receipt,
   BarChart3,
@@ -39,7 +38,6 @@ import {
   Warehouse,
   History,
   Tags,
-  Cable,
   Calculator,
   LogIn,
   Clock,
@@ -121,10 +119,6 @@ const baseMenuItems = [
   { icon: Network, label: 'AI Org', path: '/ai-organizasyon', moduleCode: 'ai_growth' },
   { icon: Activity, label: 'Otonom', path: '/ai-otonom', moduleCode: 'ai_growth' },
   { icon: Puzzle, label: 'App Builder', path: '/ai-uygulama', moduleCode: 'ai_growth' },
-  { icon: Boxes, label: 'Marketplace', path: '/marketplace', moduleCode: 'dashboard_basic' },
-  { icon: Cable, label: 'Entegrasyon', path: '/entegrasyon', moduleCode: 'dashboard_basic' },
-  { icon: Store, label: 'Commerce Cloud', path: '/ticaret', moduleCode: 'dashboard_basic' },
-  { icon: Settings, label: 'Platform', path: '/platform', moduleCode: 'dashboard_basic' },
 ]
 
 const customerSubMenuIcons = {
@@ -409,26 +403,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
       <nav
         className={`flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 ${collapsed ? 'px-0' : 'px-1'}`}
       >
-        {/* 1. AI Command Center (ana ekran) */}
+        {/* Ana: Güncel Durum */}
         <NavLink
           to="/"
           end
-          onClick={handleNavigate}
-          className={({ isActive }) =>
-            `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isActive ? 'sidebar-menu-active font-medium' : ''
-            }`
-          }
-        >
-          <MenuIcon collapsed={collapsed}>
-            <Sparkles className="w-4 h-4 shrink-0" />
-          </MenuIcon>
-          {!collapsed ? <span className={menuLabelClass}>AI Command</span> : null}
-        </NavLink>
-
-        {/* 1b. Güncel Durum (ModernDashboard) */}
-        <NavLink
-          to="/guncel-durum"
           onClick={handleNavigate}
           className={({ isActive }) =>
             `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${

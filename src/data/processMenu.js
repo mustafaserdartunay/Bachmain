@@ -9,7 +9,6 @@ export const processSubMenus = [
   { label: 'AI Operating System', path: '/aios' },
   { label: 'Knowledge Center', path: '/bilgi-merkezi' },
   { label: 'Digital Twin', path: '/dijital-ikiz' },
-  { label: 'Commerce Cloud', path: '/ticaret' },
 ]
 
 export function isProcessRoute(pathname) {
@@ -17,8 +16,6 @@ export function isProcessRoute(pathname) {
   if (pathname === '/aios' || pathname.startsWith('/aios/')) return true
   if (pathname === '/bilgi-merkezi' || pathname.startsWith('/bilgi-merkezi/')) return true
   if (pathname === '/dijital-ikiz' || pathname.startsWith('/dijital-ikiz/')) return true
-  if (pathname === '/ticaret' || pathname.startsWith('/ticaret/')) return true
-  if (pathname === '/commerce') return true
   return processSubMenus.some(
     (item) => pathname === item.path || pathname.startsWith(`${item.path}/`),
   )

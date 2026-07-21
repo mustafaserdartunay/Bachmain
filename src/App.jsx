@@ -35,14 +35,10 @@ import AiAutonomousCompanyPage from './pages/AiAutonomousCompanyPage'
 import AiAppBuilderPage from './pages/AiAppBuilderPage'
 import KnowledgeCenterPage from './pages/KnowledgeCenterPage'
 import DigitalTwinCenterPage from './pages/DigitalTwinCenterPage'
-import CommerceCenterPage from './pages/CommerceCenterPage'
 import ManufacturingCenterPage from './pages/mes/ManufacturingCenterPage'
 import MesOperatorTabletPage from './pages/mes/MesOperatorTabletPage'
 import FinanceCenterPage from './pages/FinanceCenterPage'
 import AnalyticsCenterPage from './pages/AnalyticsCenterPage'
-import PlatformCenterPage from './pages/PlatformCenterPage'
-import MarketplacePage from './pages/MarketplacePage'
-import IntegrationHubPage from './pages/IntegrationHubPage'
 import CustomerExperienceCloudPage from './pages/CustomerExperienceCloudPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
@@ -60,7 +56,6 @@ import IncomingEInvoicesPage from './pages/expenses/IncomingEInvoicesPage'
 import ExpensesReportPage from './pages/expenses/ExpensesReportPage'
 import PaymentsReportPage from './pages/expenses/PaymentsReportPage'
 import VatReportPage from './pages/expenses/VatReportPage'
-import AiCommandCenterPage from './pages/AiCommandCenterPage'
 import DashboardPage from './pages/DashboardPage'
 import PersonnelPage from './pages/PersonnelPage'
 import ProductionCreatePage from './pages/ProductionCreatePage'
@@ -264,10 +259,10 @@ export default function App() {
                 <RequireAuth>
                   <Layout>
                     <Routes>
-                      <Route path="/" element={<AiCommandCenterPage />} />
+                      <Route path="/" element={<DashboardPage />} />
+                      <Route path="/guncel-durum" element={<Navigate to="/" replace />} />
                       <Route path="/ai-komut" element={<Navigate to="/" replace />} />
                       <Route path="/command-center" element={<Navigate to="/" replace />} />
-                      <Route path="/guncel-durum" element={<DashboardPage />} />
                       <Route
                         path="/siparisler"
                         element={
@@ -291,15 +286,12 @@ export default function App() {
                       <Route path="/finans" element={<FinanceCenterPage />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
-                      <Route path="/platform" element={<PlatformCenterPage />} />
-                      <Route path="/cekirdek" element={<Navigate to="/platform" replace />} />
-                      <Route path="/marketplace" element={<MarketplacePage />} />
-                      <Route path="/magaza" element={<Navigate to="/marketplace" replace />} />
-                      <Route path="/entegrasyon" element={<IntegrationHubPage />} />
-                      <Route
-                        path="/integration-hub"
-                        element={<Navigate to="/entegrasyon" replace />}
-                      />
+                      <Route path="/platform" element={<Navigate to="/" replace />} />
+                      <Route path="/cekirdek" element={<Navigate to="/" replace />} />
+                      <Route path="/marketplace" element={<Navigate to="/" replace />} />
+                      <Route path="/magaza" element={<Navigate to="/" replace />} />
+                      <Route path="/entegrasyon" element={<Navigate to="/" replace />} />
+                      <Route path="/integration-hub" element={<Navigate to="/" replace />} />
                       <Route path="/musteri-deneyimi" element={<CustomerExperienceCloudPage />} />
                       <Route path="/cxc" element={<Navigate to="/musteri-deneyimi" replace />} />
                       <Route
@@ -630,9 +622,9 @@ export default function App() {
                       />
                       <Route path="/bilgi-merkezi" element={<KnowledgeCenterPage />} />
                       <Route path="/dijital-ikiz" element={<DigitalTwinCenterPage />} />
-                      <Route path="/ticaret" element={<CommerceCenterPage />} />
-                      <Route path="/commerce" element={<Navigate to="/ticaret" replace />} />
-                      <Route path="/bayi" element={<Navigate to="/ticaret?tab=dealer" replace />} />
+                      <Route path="/ticaret" element={<Navigate to="/" replace />} />
+                      <Route path="/commerce" element={<Navigate to="/" replace />} />
+                      <Route path="/bayi" element={<Navigate to="/" replace />} />
                       <Route path="/ayarlar/ai" element={<AiSettingsHubPage />} />
                       <Route path="/ayarlar/ai/openai" element={<OpenAiSettingsPage />} />
                       <Route path="/ayarlar/guncel-durum" element={<GuncelDurumSettingsPage />} />

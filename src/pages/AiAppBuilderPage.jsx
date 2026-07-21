@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Boxes, FileCode2, LayoutDashboard, Puzzle, Sparkles, Store, Workflow } from 'lucide-react'
+import { Boxes, FileCode2, LayoutDashboard, Puzzle, Sparkles, Workflow } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 import { appBuilderSubMenus } from '../data/aiAppBuilderMenu'
@@ -115,16 +115,10 @@ export default function AiAppBuilderPage() {
               <LayoutDashboard className="h-4 w-4" /> Dashboard
             </Link>
             <Link
-              to="/platform?tab=plugins"
+              to="/otomasyon"
               className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
             >
-              <Puzzle className="h-4 w-4" /> Plugins
-            </Link>
-            <Link
-              to="/marketplace"
-              className="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-xs font-black uppercase"
-            >
-              <Store className="h-4 w-4" /> Marketplace
+              <Puzzle className="h-4 w-4" /> Plugins → Workflow
             </Link>
           </div>
         }
@@ -220,7 +214,11 @@ export default function AiAppBuilderPage() {
               title="Document Designer"
               desc="PDF · etiket · yazdırma"
             />
-            <DeepLink to="/platform?tab=plugins" title="Plugin Center" desc="Yayın / SDK stub" />
+            <DeepLink
+              to="/otomasyon"
+              title="Plugin / Workflow"
+              desc="Yayın SoT — shelved Platform hub"
+            />
           </div>
         </>
       )}
@@ -374,9 +372,9 @@ export default function AiAppBuilderPage() {
             desc="Business rules · templates · yayın"
           />
           <DeepLink
-            to="/platform?tab=automation"
+            to="/otomasyon"
             title="Platform Automation"
-            desc="Queue · scheduler · jobs"
+            desc="Queue · scheduler · jobs (Platform hub shelved)"
           />
           <DeepLink to="/aios?tab=approvals" title="Human Approval" desc="Kritik adımlar" />
         </div>
@@ -387,12 +385,13 @@ export default function AiAppBuilderPage() {
           <h2 className="text-sm font-black uppercase">API / Integration Builder</h2>
           <p className="mt-2 text-xs text-[var(--muted)]">
             REST · Webhook · Import/Export · Auth · Rate limit · Docs — AB-1 otomatik üretir.
+            Merkezi Platform/Entegrasyon hub’ları şimdilik gizli.
           </p>
           <Link
-            to="/platform?tab=api"
+            to="/otomasyon"
             className="mt-3 inline-block text-xs font-black uppercase text-emerald-700"
           >
-            Platform API Gateway →
+            Workflow Hub →
           </Link>
         </section>
       )}
@@ -421,14 +420,8 @@ export default function AiAppBuilderPage() {
         <section className={`${APP_SURFACE_PANEL_CLASS} p-4`}>
           <h2 className="text-sm font-black uppercase">App Builder Packs</h2>
           <p className="mt-2 text-xs text-[var(--muted)]">
-            Tam ekosistem kataloğu BachMain Marketplace’te. Burada App Builder şablon paketleri.
+            Merkezi Marketplace hub şimdilik gizlendi. Burada App Builder şablon paketleri.
           </p>
-          <Link
-            to="/marketplace?tab=applications"
-            className="mt-2 inline-block text-xs font-black uppercase text-emerald-700"
-          >
-            Marketplace Applications →
-          </Link>
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {MARKETPLACE_PACKS.map((p) => (
               <div key={p.id} className="rounded-xl border p-3">

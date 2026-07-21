@@ -23,7 +23,8 @@
 **Marketplace:** [102 Gap](./102_MARKETPLACE_GAP_REPORT.md) · [103 Architecture/Roadmap](./103_MARKETPLACE_ARCHITECTURE_ROADMAP.md)  
 **Enterprise Integration Hub:** [104 Gap](./104_INTEGRATION_HUB_GAP_REPORT.md) · [105 Architecture/Roadmap](./105_INTEGRATION_HUB_ARCHITECTURE_ROADMAP.md)  
 **Global Commerce Cloud:** [106 Gap](./106_GLOBAL_COMMERCE_CLOUD_GAP_REPORT.md) · [107 Architecture/Roadmap](./107_GLOBAL_COMMERCE_CLOUD_ARCHITECTURE_ROADMAP.md) · foundation [76/77](./76_COMMERCE_PLATFORM_GAP_REPORT.md)  
-**Commercial Sales Gate:** [108 Audit](./108_COMMERCIAL_SALES_GATE_AUDIT.md)
+**Commercial Sales Gate:** [108 Audit](./108_COMMERCIAL_SALES_GATE_AUDIT.md)  
+**Shelved hubs (UI hidden):** [109](./109_SHELVED_HUBS.md)
 
 **Knowledge Platform:** [70 Gap](./70_KNOWLEDGE_PLATFORM_GAP_REPORT.md) · [71 Architecture/Roadmap](./71_KNOWLEDGE_PLATFORM_ARCHITECTURE_ROADMAP.md)
 
