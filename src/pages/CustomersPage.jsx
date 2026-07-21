@@ -4,15 +4,12 @@ import { DataTable } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import { Link, useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
-import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
-import DeletedRecordsPanel from '../components/Common/DeletedRecordsPanel'
+import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
 import SplitCreateButton from '../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
-import {
-  APP_FILTER_LABEL_CLASS,
-} from '../utils/dashboardDesign'
-import { getCustomerProfiles, restoreCustomer, restoreDeletedCustomer } from '../data/customerProfiles'
+import { APP_FILTER_LABEL_CLASS } from '../utils/dashboardDesign'
+import { getCustomerProfiles } from '../data/customerProfiles'
 import { appendActivity } from '../utils/customerActivity'
 import {
   formatTreasuryCurrency,
@@ -32,11 +29,7 @@ import {
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
 import { resolveListColumnLabel } from '../components/DocumentEditor/processPanelUtils'
-import {
-  enableB2bAccess,
-  getB2bAccess,
-  getPortalUrl,
-} from '../utils/b2bPortalStore'
+import { enableB2bAccess, getB2bAccess, getPortalUrl } from '../utils/b2bPortalStore'
 
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const balanceFilterOptions = [
@@ -63,7 +56,6 @@ export default function CustomersPage({
   totalLabel = 'Toplam Müşteri',
   columnLabel = 'Müşteri',
   emptyTitle = 'Müşteri bulunamadı.',
-  archiveModule = 'customers',
   listKind = 'customer',
   createPath = '/musteriler/yeni',
 }) {
@@ -125,13 +117,15 @@ export default function CustomersPage({
     return () => document.removeEventListener('click', closeActiveMenu)
   }, [activeMenu])
 
-  const scopedProfiles = useMemo(() => (
-    customerProfiles.filter((customer) => {
-      const settings = customerSettings[customer.id] || {}
-      const selected = getCustomerMetaSelection(customer, settings)
-      return matchesPartyListFilter(selected.type, listKind)
-    })
-  ), [customerProfiles, customerSettings, listKind])
+  const scopedProfiles = useMemo(
+    () =>
+      customerProfiles.filter((customer) => {
+        const settings = customerSettings[customer.id] || {}
+        const selected = getCustomerMetaSelection(customer, settings)
+        return matchesPartyListFilter(selected.type, listKind)
+      }),
+    [customerProfiles, customerSettings, listKind],
+  )
 
   const typeOptions = useMemo(() => {
     if (listKind === 'supplier') {
@@ -151,18 +145,28 @@ export default function CustomersPage({
       const title = display.companyTitle.toLocaleLowerCase('tr-TR')
       const matchesQuery = !query || brand.includes(query) || title.includes(query)
       const matchesType = filters.type === 'Tümü' || selected.type === filters.type
-      const matchesRepresentative = filters.representative === 'Tümü' || selected.representative === filters.representative
+      const matchesRepresentative =
+        filters.representative === 'Tümü' || selected.representative === filters.representative
       const matchesScoring = filters.scoring === 'Tümü' || selected.scoring === filters.scoring
-      const matchesBalance = filters.balance === 'Tümü'
-        || (filters.balance === 'Alacak' && balance > 0)
-        || (filters.balance === 'Borç' && balance < 0)
-        || (filters.balance === 'Sıfır' && balance === 0)
-      return matchesQuery && matchesType && matchesRepresentative && matchesScoring && matchesBalance
+      const matchesBalance =
+        filters.balance === 'Tümü' ||
+        (filters.balance === 'Alacak' && balance > 0) ||
+        (filters.balance === 'Borç' && balance < 0) ||
+        (filters.balance === 'Sıfır' && balance === 0)
+      return (
+        matchesQuery && matchesType && matchesRepresentative && matchesScoring && matchesBalance
+      )
     })
   }, [scopedProfiles, customerSettings, filters, movements, searchQuery])
 
-  const totalReceivable = scopedProfiles.reduce((sum, customer) => Math.max(currentBalance(customer, movements), 0) + sum, 0)
-  const totalPayable = scopedProfiles.reduce((sum, customer) => Math.abs(Math.min(currentBalance(customer, movements), 0)) + sum, 0)
+  const totalReceivable = scopedProfiles.reduce(
+    (sum, customer) => Math.max(currentBalance(customer, movements), 0) + sum,
+    0,
+  )
+  const totalPayable = scopedProfiles.reduce(
+    (sum, customer) => Math.abs(Math.min(currentBalance(customer, movements), 0)) + sum,
+    0,
+  )
 
   function grantB2bAccess(event, customerId) {
     event.stopPropagation()
@@ -190,36 +194,24 @@ export default function CustomersPage({
     setFilters((current) => ({ ...current, [field]: value }))
   }
 
-  function handleRestoreDeletedRecord(record) {
-    restoreDeletedCustomer(record)
-    appendActivity(record.id, 'Geri Alındı', `${getCustomerDisplay(record).brandShortName || record.company} silinenlerden geri alındı`)
+  function handleRestoreDeletedOrArchived(record, item) {
+    const label = getCustomerDisplay(record).brandShortName || record.company || 'Kayıt'
+    const from = item?.kind === 'archived' ? 'arşivden' : 'silinenlerden'
+    appendActivity(record.id, 'Geri Alındı', `${label} ${from} geri alındı`)
     setCustomerProfiles(getCustomerProfiles())
-  }
-
-  function handleRestoreArchiveEntry(entry) {
-    const snapshot = entry.snapshot
-    if (!snapshot?.id) return false
-    if (entry.action === 'archive') {
-      restoreCustomer(snapshot.id)
-    } else if (entry.action === 'delete') {
-      restoreDeletedCustomer(snapshot)
-    } else {
-      return false
-    }
-    appendActivity(snapshot.id, 'Geri Alındı', `${entry.entityLabel || 'Kayıt'} ${entry.action === 'archive' ? 'arşivden' : 'silinmeden'} geri alındı`)
-    setCustomerProfiles(getCustomerProfiles())
-    return true
   }
 
   return (
     <AppPageShell>
       <AppPageHeader
         title={pageTitle}
-        actions={(
+        actions={
           <SplitCreateButton
             label={createLabel}
             onPrimaryClick={() => navigate(createPath)}
-            menuAriaLabel={listKind === 'supplier' ? 'Tedarikçi seçenekleri' : 'Müşteri seçenekleri'}
+            menuAriaLabel={
+              listKind === 'supplier' ? 'Tedarikçi seçenekleri' : 'Müşteri seçenekleri'
+            }
             menuItems={
               listKind === 'supplier'
                 ? [
@@ -263,23 +255,45 @@ export default function CustomersPage({
                   ]
             }
           />
-        )}
+        }
       />
 
       <SummaryMetrics
         columns={4}
         items={[
           { title: totalLabel, value: scopedProfiles.length, icon: Users },
-          { title: 'Aktif Cari', value: filteredCustomers.length, icon: CheckCircle2, tone: 'emerald', valueTone: 'emerald' },
-          { title: 'Toplam Ödenecek', value: formatTreasuryCurrency(totalPayable), icon: WalletCards, tone: 'purple', valueTone: 'red' },
-          { title: 'Toplam Tahsil Edilecek', value: formatTreasuryCurrency(totalReceivable), icon: WalletCards, tone: 'orange', valueTone: 'emerald' },
+          {
+            title: 'Aktif Cari',
+            value: filteredCustomers.length,
+            icon: CheckCircle2,
+            tone: 'emerald',
+            valueTone: 'emerald',
+          },
+          {
+            title: 'Toplam Ödenecek',
+            value: formatTreasuryCurrency(totalPayable),
+            icon: WalletCards,
+            tone: 'purple',
+            valueTone: 'red',
+          },
+          {
+            title: 'Toplam Tahsil Edilecek',
+            value: formatTreasuryCurrency(totalReceivable),
+            icon: WalletCards,
+            tone: 'orange',
+            valueTone: 'emerald',
+          },
         ]}
       />
 
       <AppPagePanel
         title={listTitle}
         dotColor="blue"
-        action={<span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px]">{filteredCustomers.length} kayıt</span>}
+        action={
+          <span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px]">
+            {filteredCustomers.length} kayıt
+          </span>
+        }
       >
         <div className="mb-4 space-y-3">
           <SearchInput
@@ -364,8 +378,12 @@ export default function CustomersPage({
                 const display = getCustomerDisplay(customer)
                 return (
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 truncate font-semibold">{display.brandShortName}</span>
-                    <span className="truncate text-ds-caption text-ds-muted">{display.companyTitle}</span>
+                    <span className="shrink-0 truncate font-semibold">
+                      {display.brandShortName}
+                    </span>
+                    <span className="truncate text-ds-caption text-ds-muted">
+                      {display.companyTitle}
+                    </span>
                   </span>
                 )
               },
@@ -403,14 +421,19 @@ export default function CustomersPage({
                 return (
                   <span onClick={(event) => event.stopPropagation()}>
                     <EditableDropdownPill
-                      value={resolveListColumnLabel(meta.representative, optionLists.representative)}
+                      value={resolveListColumnLabel(
+                        meta.representative,
+                        optionLists.representative,
+                      )}
                       options={optionLists.representative}
                       onOptionsChange={(next) => updateOptionList('representative', next)}
                       buttonClassName={LIST_PILL_CLASS}
                       openKey={`${customer.id}-representative`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
-                      onChange={(value) => updateCustomerSetting(customer.id, 'representative', value)}
+                      onChange={(value) =>
+                        updateCustomerSetting(customer.id, 'representative', value)
+                      }
                     />
                   </span>
                 )
@@ -460,7 +483,12 @@ export default function CustomersPage({
                   id: 'portal',
                   label: 'B2B Panel',
                   icon: Link2,
-                  onClick: () => window.open(getPortalUrl(b2bMap[customer.id].accessToken), '_blank', 'noreferrer'),
+                  onClick: () =>
+                    window.open(
+                      getPortalUrl(b2bMap[customer.id].accessToken),
+                      '_blank',
+                      'noreferrer',
+                    ),
                 }
               : {
                   id: 'grant',
@@ -472,18 +500,15 @@ export default function CustomersPage({
         />
       </AppPagePanel>
 
-      <DeletedRecordsPanel
-        title="Silinenler"
-        collection="customers"
-        onRestore={handleRestoreDeletedRecord}
-        emptyMessage="Silinen müşteri/tedarikçi yok."
-      />
-
-      <ActivityArchivePanel
-        title="Arşiv ve İşlem Geçmişi"
-        modules={[archiveModule]}
-        onRestore={handleRestoreArchiveEntry}
-        emptyMessage="Henüz arşiv veya silme kaydı yok."
+      <CustomerDeletedArchivedPanel
+        title="Silinenler ve Arşivlenenler"
+        listKind={listKind}
+        onRestored={handleRestoreDeletedOrArchived}
+        emptyMessage={
+          listKind === 'supplier'
+            ? 'Silinen veya arşivlenen tedarikçi yok.'
+            : 'Silinen veya arşivlenen müşteri yok.'
+        }
       />
     </AppPageShell>
   )

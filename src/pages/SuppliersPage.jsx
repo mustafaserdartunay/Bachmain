@@ -9,7 +9,6 @@ export default function SuppliersPage() {
       totalLabel="Toplam Tedarikçi"
       columnLabel="Tedarikçi"
       emptyTitle="Tedarikçi bulunamadı."
-      archiveModule="suppliers"
       listKind="supplier"
       createPath="/musteriler/yeni?kind=supplier"
     />
