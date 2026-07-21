@@ -93,7 +93,7 @@ import {
   SOCIAL_MEDIA_HOME_PATH,
 } from '../../data/socialMediaMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
-import { processSubMenus, isProcessRoute } from '../../data/processMenu'
+import { visibleProcessSubMenus, isProcessRoute } from '../../data/processMenu'
 import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
 import { projectsSubMenus, isProjectsRoute, PROJECTS_HOME_PATH } from '../../data/projectsMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
@@ -499,7 +499,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 </button>
                 {processOpen && (
                   <div className="mt-0.5 ml-2 space-y-0.5 border-l border-dark-500/40 pl-2">
-                    {processSubMenus.map((sub) => (
+                    {visibleProcessSubMenus.map((sub) => (
                       <NavLink
                         key={sub.path}
                         to={sub.path}

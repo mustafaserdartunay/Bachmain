@@ -5,11 +5,15 @@ export const processSubMenus = [
   { label: 'Manufacturing Center', path: '/mes' },
   { label: 'Depo', path: '/depo' },
   { label: 'Teslim Edilenler', path: '/teslim-edilenler' },
-  { label: 'Workflow Engine', path: '/otomasyon' },
-  { label: 'AI Operating System', path: '/aios' },
-  { label: 'Knowledge Center', path: '/bilgi-merkezi' },
-  { label: 'Digital Twin', path: '/dijital-ikiz' },
+  // Shelved from sidebar (not deleted) — restore: set hidden:false
+  { label: 'Workflow Engine', path: '/otomasyon', hidden: true },
+  { label: 'AI Operating System', path: '/aios', hidden: true },
+  { label: 'Knowledge Center', path: '/bilgi-merkezi', hidden: true },
+  { label: 'Digital Twin', path: '/dijital-ikiz', hidden: true },
 ]
+
+/** Sidebar-visible process submenu items */
+export const visibleProcessSubMenus = processSubMenus.filter((item) => !item.hidden)
 
 export function isProcessRoute(pathname) {
   if (pathname === '/otomasyon' || pathname.startsWith('/otomasyon/')) return true

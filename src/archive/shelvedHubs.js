@@ -38,6 +38,34 @@ export const SHELVED_HUBS = [
     page: 'src/pages/PlatformCenterPage.jsx',
     storeKeys: ['bach_platform_pc0_v1'],
   },
+  {
+    id: 'workflow-engine',
+    label: 'Workflow Engine',
+    routes: ['/otomasyon'],
+    page: 'src/pages/WorkflowHubPage.jsx',
+    note: 'Sidebar hidden only; route kept. Restore: processMenu hidden:false',
+  },
+  {
+    id: 'aios',
+    label: 'AI Operating System',
+    routes: ['/aios'],
+    page: 'src/pages/AiosHubPage.jsx',
+    note: 'Sidebar hidden only; route kept. Restore: processMenu hidden:false',
+  },
+  {
+    id: 'knowledge-center',
+    label: 'Knowledge Center',
+    routes: ['/bilgi-merkezi'],
+    page: 'src/pages/KnowledgeCenterPage.jsx',
+    note: 'Sidebar hidden only; route kept. Restore: processMenu hidden:false',
+  },
+  {
+    id: 'digital-twin',
+    label: 'Digital Twin',
+    routes: ['/dijital-ikiz'],
+    page: 'src/pages/DigitalTwinCenterPage.jsx',
+    note: 'Sidebar hidden only; route kept. Restore: processMenu hidden:false',
+  },
 ]
 
 export const SHELVED_ROUTE_SET = new Set(SHELVED_HUBS.flatMap((h) => h.routes))
