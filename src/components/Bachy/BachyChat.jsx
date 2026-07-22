@@ -4,7 +4,7 @@ import { askBachy } from '../../bachy/speech'
 import { executeVoiceActions } from '../../utils/voiceActions'
 import { useNavigate } from 'react-router-dom'
 
-export default function BachyChat({ open, onClose, engineState, pathname }) {
+export default function BachyChat({ open, onClose, engineState, pathname, dock = 'sidebar' }) {
   const navigate = useNavigate()
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Merhaba, ben Bachy. Bugün hangi konuda yardımcı olayım?' },
@@ -61,7 +61,13 @@ export default function BachyChat({ open, onClose, engineState, pathname }) {
   }
 
   return (
-    <div className="pointer-events-auto fixed bottom-24 right-4 z-[118] flex h-[min(28rem,70vh)] w-[min(22rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-ds-border bg-ds-surface shadow-ds-xl sm:right-6">
+    <div
+      className={`pointer-events-auto fixed z-[90] flex h-[min(28rem,70vh)] w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-ds-border bg-ds-surface shadow-ds-xl ${
+        dock === 'sidebar'
+          ? 'bottom-4 left-[max(0.75rem,calc(var(--shell-gap)+0.5rem))] lg:left-[calc(var(--shell-gap)+var(--ds-sidebar-expanded,17.5rem)+0.5rem)]'
+          : 'bottom-24 right-4 sm:right-6'
+      }`}
+    >
       <div className="flex items-center justify-between border-b border-ds-border px-3 py-2">
         <div>
           <p className="text-ds-small font-bold text-ds-ink">Bachy AI Chat</p>

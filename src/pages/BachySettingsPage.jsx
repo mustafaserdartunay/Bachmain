@@ -110,13 +110,9 @@ export default function BachySettingsPage() {
             </label>
             <Select
               label="Konum"
-              value={settings.position}
-              onChange={(v) => patch({ position: v })}
-              options={[
-                { value: 'bottom-right', label: 'Sağ alt' },
-                { value: 'bottom-left', label: 'Sol alt' },
-                { value: 'bottom-center', label: 'Orta alt' },
-              ]}
+              value={settings.position === 'logo' ? 'logo' : 'logo'}
+              onChange={() => patch({ position: 'logo' })}
+              options={[{ value: 'logo', label: 'Sol üst — logo yanı (önerilen)' }]}
             />
           </AppPagePanel>
 

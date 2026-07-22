@@ -104,6 +104,7 @@ import {
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
+import BachyFloating from '../Bachy/BachyFloating'
 import TrialBanner from '../TrialBanner'
 import { useAuth } from '../../auth/AuthContext'
 import { filterMenuByEntitlements } from '../../utils/entitlements'
@@ -376,26 +377,29 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
       <div
         className={`flex w-full items-center gap-1.5 ${collapsed ? 'flex-col justify-center px-0 pt-2' : 'justify-between px-1 pt-1 pb-1'}`}
       >
-        <NavLink
-          to="/"
-          onClick={handleNavigate}
-          className={`flex min-w-0 hover:opacity-90 transition-opacity ${collapsed ? 'items-center justify-center' : 'flex-1 items-center justify-center'}`}
-          title={brandLabel}
-        >
-          {company?.logoDataUrl ? (
-            <img
-              src={company.logoDataUrl}
-              alt={brandLabel}
-              className={
-                collapsed
-                  ? 'h-8 w-8 object-contain'
-                  : 'h-9 max-h-9 w-auto max-w-[10rem] shrink-0 object-contain object-center'
-              }
-            />
-          ) : (
-            <BrandLogo collapsed={collapsed} />
-          )}
-        </NavLink>
+        <div className={`flex min-w-0 items-center gap-1.5 ${collapsed ? 'flex-col' : 'flex-1'}`}>
+          <NavLink
+            to="/"
+            onClick={handleNavigate}
+            className={`flex min-w-0 hover:opacity-90 transition-opacity ${collapsed ? 'items-center justify-center' : 'items-center'}`}
+            title={brandLabel}
+          >
+            {company?.logoDataUrl ? (
+              <img
+                src={company.logoDataUrl}
+                alt={brandLabel}
+                className={
+                  collapsed
+                    ? 'h-8 w-8 object-contain'
+                    : 'h-9 max-h-9 w-auto max-w-[7.5rem] shrink-0 object-contain object-center'
+                }
+              />
+            ) : (
+              <BrandLogo collapsed={collapsed} />
+            )}
+          </NavLink>
+          <BachyFloating slot="logo" collapsed={collapsed} />
+        </div>
         <button
           type="button"
           onClick={onToggle}

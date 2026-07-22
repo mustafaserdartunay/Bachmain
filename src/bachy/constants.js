@@ -46,7 +46,7 @@ export const PRIORITY = Object.freeze({
 export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   size: 1, // 0.6 – 1.4
-  position: 'bottom-right', // bottom-right | bottom-left | bottom-center
+  position: 'logo', // logo (sidebar) — never overlay content panels
   speechFrequency: 'normal', // silent | rare | normal | frequent
   motionIntensity: 'normal', // off | minimal | normal | lively
   mode: 'professional', // fun | professional | minimal

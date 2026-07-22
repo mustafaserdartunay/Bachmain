@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 import { createBehaviorEngine } from '../../bachy/behaviorEngine'
 import { startBachyEventBridge } from '../../bachy/eventBridge'
@@ -12,13 +13,8 @@ import BachyConfetti from './BachyConfetti'
 
 const BachyCanvas = lazy(() => import('./BachyCanvas'))
 
-function positionClass(position) {
-  if (position === 'bottom-left') return 'left-3 sm:left-5'
-  if (position === 'bottom-center') return 'left-1/2 -translate-x-1/2'
-  return 'right-3 sm:right-[calc(var(--shell-gap)+1rem)] lg:right-[calc(5.5rem+1rem)]'
-}
-
-export default function BachyFloating() {
+/** Living 3D Bachy — mounts beside sidebar logo only (never over content panels). */
+export default function BachyFloating({ slot = 'logo', collapsed = false }) {
   const { pathname } = useLocation()
   const engineRef = useRef(null)
   if (!engineRef.current) engineRef.current = createBehaviorEngine()
@@ -74,15 +70,19 @@ export default function BachyFloating() {
       const cx = rect.left + rect.width / 2
       const cy = rect.top + rect.height / 2
       setPointer({
-        x: (event.clientX - cx) / (rect.width || 1),
-        y: (event.clientY - cy) / (rect.height || 1),
+        x: (event.clientX - cx) / Math.max(rect.width, 1),
+        y: (event.clientY - cy) / Math.max(rect.height, 1),
       })
     }
     window.addEventListener('pointermove', onMove, { passive: true })
     return () => window.removeEventListener('pointermove', onMove)
   }, [settings.followPointer])
 
-  const sizePx = useMemo(() => Math.round(148 * (settings.size || 1)), [settings.size])
+  const sizePx = useMemo(() => {
+    const base = collapsed ? 44 : 56
+    return Math.round(base * (settings.size || 1))
+  }, [settings.size, collapsed])
+
   const intensity =
     settings.motionIntensity === 'lively'
       ? 1.35
@@ -98,104 +98,92 @@ export default function BachyFloating() {
   }, [])
 
   function onQuickAction(id) {
-    if (id === 'chat') setChatOpen(true)
-    else if (id === 'mail') {
+    if (id === 'chat' || id === 'mail' || id === 'whatsapp' || id === 'offer' || id === 'report') {
       setChatOpen(true)
-      setBubble('Mail metnini birlikte yazalım — ne göndermek istiyorsun?')
-    } else if (id === 'whatsapp') {
-      setChatOpen(true)
-      setBubble('WhatsApp mesajını birlikte hazırlayalım.')
-    } else if (id === 'offer') {
-      setChatOpen(true)
-      setBubble('Teklif için müşteri ve ürünleri söylemen yeterli.')
-    } else if (id === 'report') {
-      setChatOpen(true)
-      setBubble('Hangi raporu inceleyelim?')
     }
   }
 
-  if (!settings.enabled) return null
+  if (!settings.enabled || slot !== 'logo') return null
+
+  const character = (
+    <div className="relative flex shrink-0 flex-col items-center" style={{ width: sizePx }}>
+      {bubble ? (
+        <div className="pointer-events-auto absolute bottom-full left-1/2 z-10 mb-1 w-max max-w-[9.5rem] -translate-x-1/2">
+          <BachySpeechBubble text={bubble} onClose={() => setBubble('')} />
+        </div>
+      ) : null}
+      <div
+        ref={shellRef}
+        className="relative overflow-hidden rounded-xl"
+        style={{ width: sizePx, height: sizePx }}
+        onPointerEnter={() => {
+          setHover(true)
+          if (settings.smileOnHover) {
+            engineRef.current.setReaction({
+              priority: 10,
+              emotion: 'happy',
+              activity: 'wait_user',
+              celebrate: false,
+            })
+          }
+        }}
+        onPointerLeave={() => setHover(false)}
+        onDoubleClick={() => setChatOpen(true)}
+        onContextMenu={onContextMenu}
+        role="button"
+        tabIndex={0}
+        aria-label="Bachy AI asistanı"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') setChatOpen(true)
+        }}
+      >
+        <BachyConfetti active={confetti} />
+        <Suspense fallback={<div className="h-full w-full animate-pulse rounded-xl bg-white/40" />}>
+          {settings.motionEnabled && intensity > 0 ? (
+            <BachyCanvas
+              compact
+              emotion={state.emotion}
+              activity={state.activity}
+              hover={hover}
+              pointer={pointer}
+              followPointer={settings.followPointer}
+              intensity={intensity}
+              celebrating={state.emotion === 'celebrating' || confetti}
+            />
+          ) : (
+            <div className="flex h-full items-end justify-center text-[10px] font-bold text-ds-muted">
+              Bachy
+            </div>
+          )}
+        </Suspense>
+      </div>
+    </div>
+  )
 
   return (
     <>
-      <div
-        ref={shellRef}
-        className={`pointer-events-none fixed bottom-[calc(var(--ds-bottom-nav-h,4rem)+0.75rem)] z-[112] flex flex-col items-end lg:bottom-6 ${positionClass(settings.position)}`}
-        style={{ width: sizePx, height: sizePx + 8 }}
-      >
-        <div className="pointer-events-none flex w-full flex-col items-end">
-          <BachySpeechBubble text={bubble} onClose={() => setBubble('')} />
-        </div>
-        <div
-          className="pointer-events-auto relative overflow-visible"
-          style={{ width: sizePx, height: sizePx }}
-          onPointerEnter={() => {
-            setHover(true)
-            if (settings.smileOnHover) {
-              engineRef.current.setReaction({
-                priority: 10,
-                emotion: 'happy',
-                activity: 'wait_user',
-                celebrate: false,
-              })
-            }
-          }}
-          onPointerLeave={() => setHover(false)}
-          onDoubleClick={() => setChatOpen(true)}
-          onContextMenu={onContextMenu}
-          role="button"
-          tabIndex={0}
-          aria-label="Bachy AI asistanı"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') setChatOpen(true)
-          }}
-        >
-          <BachyConfetti active={confetti} />
-          <Suspense
-            fallback={
-              <img
-                src="/bachy/bachy-reference.png"
-                alt="Bachy"
-                className="h-full w-full object-contain drop-shadow-lg"
-                draggable={false}
+      {character}
+      {typeof document !== 'undefined'
+        ? createPortal(
+            <>
+              <BachyQuickMenu
+                open={menu.open}
+                x={menu.x}
+                y={menu.y}
+                onClose={() => setMenu((m) => ({ ...m, open: false }))}
+                onAction={onQuickAction}
               />
-            }
-          >
-            {settings.motionEnabled && intensity > 0 ? (
-              <BachyCanvas
-                emotion={state.emotion}
-                activity={state.activity}
-                hover={hover}
-                pointer={pointer}
-                followPointer={settings.followPointer}
-                intensity={intensity}
-                celebrating={state.emotion === 'celebrating' || confetti}
+              <BachyChat
+                open={chatOpen}
+                onClose={() => setChatOpen(false)}
+                engineState={state}
+                pathname={pathname}
+                dock="sidebar"
               />
-            ) : (
-              <img
-                src="/bachy/bachy-reference.png"
-                alt="Bachy"
-                className="h-full w-full object-contain drop-shadow-lg"
-                draggable={false}
-              />
-            )}
-          </Suspense>
-        </div>
-      </div>
-
-      <BachyQuickMenu
-        open={menu.open}
-        x={menu.x}
-        y={menu.y}
-        onClose={() => setMenu((m) => ({ ...m, open: false }))}
-        onAction={onQuickAction}
-      />
-      <BachyChat
-        open={chatOpen}
-        onClose={() => setChatOpen(false)}
-        engineState={state}
-        pathname={pathname}
-      />
+            </>,
+            document.body,
+          )
+        : null}
     </>
   )
 }

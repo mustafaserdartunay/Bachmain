@@ -5,7 +5,6 @@ import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
 import BottomNav from './BottomNav'
-import BachyProvider from '../Bachy/BachyProvider'
 
 const SIDEBAR_KEY = 'bach-sidebar'
 const LEGACY_SIDEBAR_KEY = 'erlenbox-sidebar'
@@ -124,7 +123,6 @@ export default function Layout({ children }) {
         </main>
       </div>
       <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
-      {!hideChrome ? <BachyProvider /> : null}
       {!hideChrome ? <BottomNav /> : null}
     </div>
   )
