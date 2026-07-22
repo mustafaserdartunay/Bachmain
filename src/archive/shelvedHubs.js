@@ -73,6 +73,13 @@ export const SHELVED_HUBS = [
     page: 'src/pages/CustomerExperienceCloudPage.jsx',
     note: 'Sidebar hidden only; route kept. Restore: customerMenu hidden:false',
   },
+  {
+    id: 'bachy',
+    label: 'Bachy AIOS companion',
+    routes: ['/aios/bachy'],
+    page: 'src/pages/BachySettingsPage.jsx',
+    note: 'UI removed 2026-07-22 — code kept under src/bachy + src/components/Bachy',
+  },
 ]
 
 export const SHELVED_ROUTE_SET = new Set(SHELVED_HUBS.flatMap((h) => h.routes))

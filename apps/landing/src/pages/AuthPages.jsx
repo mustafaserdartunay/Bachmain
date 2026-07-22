@@ -1,67 +1,71 @@
-import { Link } from "react-router-dom";
-import { Building2, CheckCircle, Lock, UserRound } from "lucide-react";
-import { useState } from "react";
-import Button from "../components/Button";
-import DemoForm from "../components/DemoForm";
-import ScrollReveal from "../components/ScrollReveal";
-import { platformPost, redirectToAppWithToken } from "../utils/platformApi";
+import { Link } from 'react-router-dom'
+import { Building2, CheckCircle, Lock, UserRound } from 'lucide-react'
+import { useState } from 'react'
+import Button from '../components/Button'
+import DemoForm from '../components/DemoForm'
+import ScrollReveal from '../components/ScrollReveal'
+import { platformPost, redirectToAppWithToken } from '../utils/platformApi'
+import BachyAuthLayout from '../components/bachy/BachyAuthLayout'
 
 const inputCls =
-  "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15";
+  'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15'
 
-function Field({ label, error, children, className = "" }) {
+function Field({ label, error, children, className = '' }) {
   return (
     <div className={className}>
-      <label className="block text-[12px] font-semibold uppercase tracking-wide text-slate-500">{label}</label>
+      <label className="block text-[12px] font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </label>
       {children}
       {error ? <p className="mt-1 text-xs text-rose-500">{error}</p> : null}
     </div>
-  );
+  )
 }
 
 function onlyDigits(value) {
-  return String(value || "").replace(/\D/g, "");
+  return String(value || '').replace(/\D/g, '')
 }
 
-function LoginForm() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({});
-  const [done, setDone] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+function LoginForm({ onMood, onCelebrate }) {
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [errors, setErrors] = useState({})
+  const [done, setDone] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const submit = async (e) => {
-    e.preventDefault();
-    const e2 = {};
-    if (!form.email?.trim()) e2.email = "E-posta gerekli";
-    if (!form.password?.trim()) e2.password = "Şifre gerekli";
-    setErrors(e2);
-    if (Object.keys(e2).length > 0) return;
+    e.preventDefault()
+    const e2 = {}
+    if (!form.email?.trim()) e2.email = 'E-posta gerekli'
+    if (!form.password?.trim()) e2.password = 'Şifre gerekli'
+    setErrors(e2)
+    if (Object.keys(e2).length > 0) return
 
-    setBusy(true);
-    setSubmitError("");
+    setBusy(true)
+    setSubmitError('')
     try {
-      const data = await platformPost("auth/login", {
+      const data = await platformPost('auth/login', {
         email: form.email.trim(),
         password: form.password,
-      });
-      setDone(true);
-      setTimeout(() => redirectToAppWithToken(data.token), 600);
+      })
+      setDone(true)
+      onCelebrate?.(true)
+      setTimeout(() => redirectToAppWithToken(data.token), 900)
     } catch (err) {
-      setSubmitError(err.message || "İşlem başarısız. Lütfen tekrar deneyin.");
+      setSubmitError(err.message || 'İşlem başarısız. Lütfen tekrar deneyin.')
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
-  };
+  }
 
   if (done) {
     return (
       <div className="saas-card p-8 text-center">
         <CheckCircle className="mx-auto h-12 w-12 text-blue-600" />
         <h3 className="mt-4 text-xl font-bold text-slate-900">Giriş başarılı!</h3>
-        <p className="mt-2 text-slate-500">Uygulamaya yönlendiriliyorsunuz…</p>
+        <p className="mt-2 text-slate-500">Bachy sizi içeri alıyor…</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -72,6 +76,8 @@ function LoginForm() {
           className={inputCls}
           autoComplete="email"
           value={form.email}
+          onFocus={() => onMood?.('focus')}
+          onBlur={() => onMood?.('curious')}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
       </Field>
@@ -81,69 +87,72 @@ function LoginForm() {
           className={inputCls}
           autoComplete="current-password"
           value={form.password}
+          onFocus={() => onMood?.('shy')}
+          onBlur={() => onMood?.('curious')}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
       </Field>
       {submitError ? <p className="text-sm text-rose-500">{submitError}</p> : null}
       <Button type="submit" disabled={busy} className="w-full justify-center">
-        {busy ? "Lütfen bekleyin…" : "Giriş Yap"}
+        {busy ? 'Lütfen bekleyin…' : 'Giriş Yap'}
       </Button>
       <p className="text-center text-sm text-slate-500">
-        Hesabınız yok mu?{" "}
+        Hesabınız yok mu?{' '}
         <Link to="/register" className="font-semibold text-blue-600 hover:underline">
           Üye Ol
         </Link>
       </p>
     </form>
-  );
+  )
 }
 
-function RegisterForm() {
+function RegisterForm({ onCelebrate }) {
   const [form, setForm] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    password2: "",
-    companyName: "",
-    taxNo: "",
-    taxOffice: "",
-    address: "",
-    city: "",
-    district: "",
-    phone: "",
-    gsm: "",
-    companySize: "",
-  });
-  const [errors, setErrors] = useState({});
-  const [done, setDone] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+    fullName: '',
+    email: '',
+    password: '',
+    password2: '',
+    companyName: '',
+    taxNo: '',
+    taxOffice: '',
+    address: '',
+    city: '',
+    district: '',
+    phone: '',
+    gsm: '',
+    companySize: '',
+  })
+  const [errors, setErrors] = useState({})
+  const [done, setDone] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
-  const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
   const validate = () => {
-    const e = {};
-    if (!form.fullName.trim()) e.fullName = "Yetkili ad soyad gerekli";
-    if (!form.companyName.trim()) e.companyName = "Firma ünvanı gerekli";
-    const tax = onlyDigits(form.taxNo);
-    if (tax.length < 10 || tax.length > 11) e.taxNo = "Vergi / T.C. kimlik no 10 veya 11 haneli olmalı";
-    if (!form.address.trim()) e.address = "Adres gerekli";
-    if (!form.city.trim()) e.city = "Şehir gerekli";
-    if (!form.gsm.trim()) e.gsm = "GSM gerekli";
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Geçerli e-posta girin";
-    if ((form.password || "").length < 6) e.password = "Şifre en az 6 karakter olmalı";
-    if (form.password !== form.password2) e.password2 = "Şifreler eşleşmiyor";
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
+    const e = {}
+    if (!form.fullName.trim()) e.fullName = 'Yetkili ad soyad gerekli'
+    if (!form.companyName.trim()) e.companyName = 'Firma ünvanı gerekli'
+    const tax = onlyDigits(form.taxNo)
+    if (tax.length < 10 || tax.length > 11)
+      e.taxNo = 'Vergi / T.C. kimlik no 10 veya 11 haneli olmalı'
+    if (!form.address.trim()) e.address = 'Adres gerekli'
+    if (!form.city.trim()) e.city = 'Şehir gerekli'
+    if (!form.gsm.trim()) e.gsm = 'GSM gerekli'
+    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = 'Geçerli e-posta girin'
+    if ((form.password || '').length < 6) e.password = 'Şifre en az 6 karakter olmalı'
+    if (form.password !== form.password2) e.password2 = 'Şifreler eşleşmiyor'
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
 
   const submit = async (ev) => {
-    ev.preventDefault();
-    if (!validate()) return;
-    setBusy(true);
-    setSubmitError("");
+    ev.preventDefault()
+    if (!validate()) return
+    setBusy(true)
+    setSubmitError('')
     try {
-      const data = await platformPost("auth/register", {
+      const data = await platformPost('auth/register', {
         fullName: form.fullName.trim(),
         companyName: form.companyName.trim(),
         email: form.email.trim().toLowerCase(),
@@ -156,26 +165,27 @@ function RegisterForm() {
         city: form.city.trim(),
         district: form.district.trim(),
         companySize: form.companySize,
-        plan: "Starter",
-        source: "bachmain_register_page",
-      });
-      setDone(true);
-      setTimeout(() => redirectToAppWithToken(data.token), 900);
+        plan: 'Starter',
+        source: 'bachmain_register_page',
+      })
+      onCelebrate?.(true)
+      setDone(true)
+      setTimeout(() => redirectToAppWithToken(data.token), 900)
     } catch (err) {
-      setSubmitError(err.message || "Üyelik oluşturulamadı. Lütfen tekrar deneyin.");
+      setSubmitError(err.message || 'Üyelik oluşturulamadı. Lütfen tekrar deneyin.')
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
-  };
+  }
 
   if (done) {
     return (
       <div className="saas-card p-10 text-center">
         <CheckCircle className="mx-auto h-14 w-14 text-blue-600" />
-        <h3 className="mt-4 text-xl font-bold text-slate-900">Üyeliğiniz oluşturuldu</h3>
-        <p className="mt-2 text-slate-500">Kaydınız yönetim paneline iletildi. Uygulamaya yönlendiriliyorsunuz…</p>
+        <h3 className="mt-4 text-xl font-bold text-slate-900">BachMain ailesine hoş geldin.</h3>
+        <p className="mt-2 text-slate-500">Kaydınız alındı — uygulamaya yönlendiriliyorsunuz…</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -189,13 +199,33 @@ function RegisterForm() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Yetkili Ad Soyad *" error={errors.fullName} className="sm:col-span-2">
-            <input className={inputCls} autoComplete="name" value={form.fullName} onChange={set("fullName")} placeholder="Ad Soyad" />
+            <input
+              className={inputCls}
+              autoComplete="name"
+              value={form.fullName}
+              onChange={set('fullName')}
+              placeholder="Ad Soyad"
+            />
           </Field>
           <Field label="E-posta *" error={errors.email}>
-            <input type="email" className={inputCls} autoComplete="email" value={form.email} onChange={set("email")} placeholder="firma@ornek.com" />
+            <input
+              type="email"
+              className={inputCls}
+              autoComplete="email"
+              value={form.email}
+              onChange={set('email')}
+              placeholder="firma@ornek.com"
+            />
           </Field>
           <Field label="GSM *" error={errors.gsm}>
-            <input type="tel" className={inputCls} autoComplete="tel" value={form.gsm} onChange={set("gsm")} placeholder="05xx xxx xx xx" />
+            <input
+              type="tel"
+              className={inputCls}
+              autoComplete="tel"
+              value={form.gsm}
+              onChange={set('gsm')}
+              placeholder="05xx xxx xx xx"
+            />
           </Field>
         </div>
       </section>
@@ -209,7 +239,12 @@ function RegisterForm() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Firma Ünvanı *" error={errors.companyName} className="sm:col-span-2">
-            <input className={inputCls} value={form.companyName} onChange={set("companyName")} placeholder="Örn. ABC Ticaret A.Ş." />
+            <input
+              className={inputCls}
+              value={form.companyName}
+              onChange={set('companyName')}
+              placeholder="Örn. ABC Ticaret A.Ş."
+            />
           </Field>
           <Field label="Vergi / T.C. Kimlik No *" error={errors.taxNo}>
             <input
@@ -217,18 +252,31 @@ function RegisterForm() {
               inputMode="numeric"
               maxLength={11}
               value={form.taxNo}
-              onChange={(e) => setForm((p) => ({ ...p, taxNo: onlyDigits(e.target.value).slice(0, 11) }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, taxNo: onlyDigits(e.target.value).slice(0, 11) }))
+              }
               placeholder="10 veya 11 hane"
             />
           </Field>
           <Field label="Vergi Dairesi" error={errors.taxOffice}>
-            <input className={inputCls} value={form.taxOffice} onChange={set("taxOffice")} placeholder="Örn. Kadıköy" />
+            <input
+              className={inputCls}
+              value={form.taxOffice}
+              onChange={set('taxOffice')}
+              placeholder="Örn. Kadıköy"
+            />
           </Field>
           <Field label="Telefon (Sabit)" error={errors.phone}>
-            <input type="tel" className={inputCls} value={form.phone} onChange={set("phone")} placeholder="0xxx xxx xx xx" />
+            <input
+              type="tel"
+              className={inputCls}
+              value={form.phone}
+              onChange={set('phone')}
+              placeholder="0xxx xxx xx xx"
+            />
           </Field>
           <Field label="Çalışan Sayısı">
-            <select className={inputCls} value={form.companySize} onChange={set("companySize")}>
+            <select className={inputCls} value={form.companySize} onChange={set('companySize')}>
               <option value="">Seçin</option>
               <option value="1-10">1-10</option>
               <option value="11-50">11-50</option>
@@ -237,13 +285,24 @@ function RegisterForm() {
             </select>
           </Field>
           <Field label="Adres *" error={errors.address} className="sm:col-span-2">
-            <textarea rows={3} className={inputCls} value={form.address} onChange={set("address")} placeholder="Mahalle, cadde, no…" />
+            <textarea
+              rows={3}
+              className={inputCls}
+              value={form.address}
+              onChange={set('address')}
+              placeholder="Mahalle, cadde, no…"
+            />
           </Field>
           <Field label="İlçe">
-            <input className={inputCls} value={form.district} onChange={set("district")} />
+            <input className={inputCls} value={form.district} onChange={set('district')} />
           </Field>
           <Field label="Şehir *" error={errors.city}>
-            <input className={inputCls} value={form.city} onChange={set("city")} placeholder="İstanbul" />
+            <input
+              className={inputCls}
+              value={form.city}
+              onChange={set('city')}
+              placeholder="İstanbul"
+            />
           </Field>
         </div>
       </section>
@@ -257,63 +316,81 @@ function RegisterForm() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Şifre *" error={errors.password}>
-            <input type="password" className={inputCls} autoComplete="new-password" value={form.password} onChange={set("password")} placeholder="En az 6 karakter" />
+            <input
+              type="password"
+              className={inputCls}
+              autoComplete="new-password"
+              value={form.password}
+              onChange={set('password')}
+              placeholder="En az 6 karakter"
+            />
           </Field>
           <Field label="Şifre Tekrar *" error={errors.password2}>
-            <input type="password" className={inputCls} autoComplete="new-password" value={form.password2} onChange={set("password2")} />
+            <input
+              type="password"
+              className={inputCls}
+              autoComplete="new-password"
+              value={form.password2}
+              onChange={set('password2')}
+            />
           </Field>
         </div>
         <p className="mt-3 text-[12px] leading-relaxed text-slate-400">
-          Verileriniz HTTPS ile iletilir; şifreniz hash’lenerek saklanır. Kayıt yonetim.bachmain.com müşteri / üye listelerine düşer.
+          Verileriniz HTTPS ile iletilir; şifreniz hash’lenerek saklanır. Kayıt yonetim.bachmain.com
+          müşteri / üye listelerine düşer.
         </p>
       </section>
 
-      {submitError ? <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{submitError}</p> : null}
+      {submitError ? (
+        <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{submitError}</p>
+      ) : null}
 
       <Button type="submit" disabled={busy} className="w-full justify-center">
-        {busy ? "Kaydediliyor…" : "Üyeliği Oluştur"}
+        {busy ? 'Kaydediliyor…' : 'Üyeliği Oluştur'}
       </Button>
       <p className="text-center text-sm text-slate-500">
-        Zaten üye misiniz?{" "}
+        Zaten üye misiniz?{' '}
         <Link to="/login" className="font-semibold text-blue-600 hover:underline">
           Giriş Yap
         </Link>
       </p>
     </form>
-  );
+  )
 }
 
 export function LoginPage() {
+  const [mood, setMood] = useState('curious')
+  const [celebrate, setCelebrate] = useState(false)
   return (
-    <div className="page-mesh min-h-[85vh] pt-28 pb-20">
-      <div className="mx-auto max-w-md px-4">
-        <h1 className="text-center text-3xl font-extrabold text-slate-900">Giriş Yap</h1>
-        <p className="mt-2 text-center text-slate-500">Hesabınıza giriş yapın</p>
-        <div className="mt-10">
-          <LoginForm />
-        </div>
-      </div>
-    </div>
-  );
+    <BachyAuthLayout
+      pose="login"
+      dark
+      title="Giriş Yap"
+      subtitle="Hesabınıza giriş yapın — Bachy sizi bekliyor"
+      mood={mood}
+      celebrate={celebrate}
+      message={celebrate ? 'Harika! İçeri buyurun 👍' : undefined}
+    >
+      <LoginForm onMood={setMood} onCelebrate={setCelebrate} />
+    </BachyAuthLayout>
+  )
 }
 
 export function RegisterPage() {
+  const [celebrate, setCelebrate] = useState(false)
   return (
-    <div className="page-mesh min-h-[85vh] pt-28 pb-20">
-      <div className="mx-auto max-w-3xl px-4">
-        <div className="text-center">
-          <span className="pill">7 gün ücretsiz</span>
-          <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Üye Ol</h1>
-          <p className="mt-2 text-slate-500">Firma ve yetkili bilgilerinizi girin — kayıt yönetime güvenli şekilde iletilir</p>
-        </div>
-        <div className="mt-10">
-          <ScrollReveal>
-            <RegisterForm />
-          </ScrollReveal>
-        </div>
-      </div>
-    </div>
-  );
+    <BachyAuthLayout
+      pose="register"
+      title="Üye Ol"
+      subtitle="Hesabını oluştur — 7 gün ücretsiz dene"
+      celebrate={celebrate}
+      message={celebrate ? 'BachMain ailesine hoş geldin.' : 'Hesabını oluştur'}
+    >
+      <ScrollReveal>
+        <RegisterForm onCelebrate={setCelebrate} />
+      </ScrollReveal>
+    </BachyAuthLayout>
+  )
 }
 
 export function DemoPage() {
@@ -321,7 +398,9 @@ export function DemoPage() {
     <div className="page-mesh">
       <section className="page-hero text-center">
         <h1 className="text-4xl font-extrabold text-slate-900">Demo Talep Edin</h1>
-        <p className="mt-3 text-slate-500">Size özel bir demo sunalım — talebiniz yönetim panelinde kaydedilir</p>
+        <p className="mt-3 text-slate-500">
+          Size özel bir demo sunalım — talebiniz yönetim panelinde kaydedilir
+        </p>
       </section>
       <section className="pb-20">
         <div className="mx-auto max-w-2xl px-4">
@@ -333,34 +412,34 @@ export function DemoPage() {
         </div>
       </section>
     </div>
-  );
+  )
 }
 
 export function ContactPage() {
-  const [done, setDone] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [done, setDone] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' })
   const submit = async (e) => {
-    e.preventDefault();
-    setBusy(true);
-    setSubmitError("");
+    e.preventDefault()
+    setBusy(true)
+    setSubmitError('')
     try {
-      await platformPost("leads/demo", {
+      await platformPost('leads/demo', {
         name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
         message: form.message.trim(),
         company: form.name.trim(),
-        source: "bachmain_contact",
-      });
-      setDone(true);
+        source: 'bachmain_contact',
+      })
+      setDone(true)
     } catch (err) {
-      setSubmitError(err.message || "Mesaj gönderilemedi.");
+      setSubmitError(err.message || 'Mesaj gönderilemedi.')
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
-  };
+  }
 
   return (
     <div className="page-mesh">
@@ -386,28 +465,49 @@ export function ContactPage() {
             <form onSubmit={submit} className="saas-card space-y-4 p-8">
               <div>
                 <label className="text-sm font-semibold text-slate-700">Ad Soyad</label>
-                <input required className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <input
+                  required
+                  className={inputCls}
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
               </div>
               <div>
                 <label className="text-sm font-semibold text-slate-700">E-posta</label>
-                <input type="email" required className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                <input
+                  type="email"
+                  required
+                  className={inputCls}
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
               </div>
               <div>
                 <label className="text-sm font-semibold text-slate-700">Telefon</label>
-                <input required className={inputCls} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                <input
+                  required
+                  className={inputCls}
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
               </div>
               <div>
                 <label className="text-sm font-semibold text-slate-700">Mesaj</label>
-                <textarea rows={4} className={inputCls} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+                <textarea
+                  rows={4}
+                  className={inputCls}
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                />
               </div>
               {submitError ? <p className="text-sm text-rose-500">{submitError}</p> : null}
               <Button type="submit" disabled={busy} className="w-full justify-center">
-                {busy ? "Gönderiliyor…" : "Gönder"}
+                {busy ? 'Gönderiliyor…' : 'Gönder'}
               </Button>
             </form>
           )}
         </div>
       </section>
     </div>
-  );
+  )
 }

@@ -377,7 +377,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
       <div
         className={`flex w-full items-center gap-1.5 ${collapsed ? 'flex-col justify-center px-0 pt-2' : 'justify-between px-1 pt-1 pb-1'}`}
       >
-        <div className={`flex min-w-0 items-center gap-1.5 ${collapsed ? 'flex-col' : 'flex-1'}`}>
+        <div className={`flex min-w-0 items-center gap-1 ${collapsed ? 'flex-col' : 'flex-1'}`}>
           <NavLink
             to="/"
             onClick={handleNavigate}
@@ -391,7 +391,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 className={
                   collapsed
                     ? 'h-8 w-8 object-contain'
-                    : 'h-9 max-h-9 w-auto max-w-[7.5rem] shrink-0 object-contain object-center'
+                    : 'h-9 max-h-9 w-auto max-w-[7rem] shrink-0 object-contain object-center'
                 }
               />
             ) : (

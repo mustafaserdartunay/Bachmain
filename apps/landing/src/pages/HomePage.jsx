@@ -1,24 +1,33 @@
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, Check, MapPin, Star } from "lucide-react";
-import ScrollReveal, { Counter } from "../components/ScrollReveal";
-import DemoForm from "../components/DemoForm";
-import LiveCrmDashboard from "../components/landing/LiveCrmDashboard";
-import ModulesShowcase from "../components/landing/ModulesShowcase";
-import ProcessFlowShowcase from "../components/landing/ProcessFlowShowcase";
+import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { ArrowRight, Check, MapPin, Star } from 'lucide-react'
+import ScrollReveal, { Counter } from '../components/ScrollReveal'
+import DemoForm from '../components/DemoForm'
+import LiveCrmDashboard from '../components/landing/LiveCrmDashboard'
+import ModulesShowcase from '../components/landing/ModulesShowcase'
+import ProcessFlowShowcase from '../components/landing/ProcessFlowShowcase'
 import {
-  b2bFeatures, fieldFeatures,
-  integrations, bandStats, testimonials, heroChecks,
-} from "../data/premiumLanding";
-import { faqItems } from "../data/navigation";
+  b2bFeatures,
+  fieldFeatures,
+  integrations,
+  bandStats,
+  testimonials,
+  heroChecks,
+} from '../data/premiumLanding'
+import { faqItems } from '../data/navigation'
+import BachyHero from '../components/bachy/BachyHero'
 
 export default function HomePage() {
   return (
     <div className="page-mesh">
       {/* HERO + FULL WIDTH DASHBOARD */}
       <section className="relative overflow-hidden pt-24 pb-8 lg:pt-28 lg:pb-10">
+        <BachyHero />
         <div className="float-orb left-[-10%] top-[6%] h-[420px] w-[420px] bg-blue-400/25" />
-        <div className="float-orb right-[-5%] top-[18%] h-[360px] w-[360px] bg-violet-400/20" style={{ animationDelay: "2s" }} />
+        <div
+          className="float-orb right-[-5%] top-[18%] h-[360px] w-[360px] bg-violet-400/20"
+          style={{ animationDelay: '2s' }}
+        />
 
         <div className="relative mx-auto max-w-4xl px-4 text-center lg:px-8">
           <span className="pill">Yeni Nesil CRM & ERP Platformu</span>
@@ -26,18 +35,22 @@ export default function HomePage() {
             Tüm Süreçler Tek Panel
           </h1>
           <p className="hero-lead mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-500 lg:text-lg">
-            Tekliften siparişe, üretimden depoya, nakliye takibinden teslime kadar tüm süreçler{" "}
+            Tekliften siparişe, üretimden depoya, nakliye takibinden teslime kadar tüm süreçler{' '}
             <img
               src="/assets/bachmain-logo.png"
               alt="BACHMAIN"
               className="hero-inline-logo"
               draggable={false}
-            />{" "}
+            />{' '}
             paneliyle sizlerle.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Link to="/demo" className="btn-primary">Üye ol, 7 gün ücretsiz kullan. <ArrowRight className="h-4 w-4" /></Link>
-            <Link to="/features" className="btn-secondary">Hemen Keşfet</Link>
+            <Link to="/demo" className="btn-primary">
+              Üye ol, 7 gün ücretsiz kullan. <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link to="/features" className="btn-secondary">
+              Hemen Keşfet
+            </Link>
           </div>
           <ul className="mt-7 flex flex-wrap justify-center gap-x-5 gap-y-2">
             {heroChecks.map((t) => (
@@ -62,9 +75,14 @@ export default function HomePage() {
           {bandStats.map((s, i) => (
             <ScrollReveal key={s.label} delay={i * 0.05} className="text-center">
               <div className="text-2xl font-extrabold tracking-tight lg:text-3xl">
-                {s.value.includes("+") || s.value.includes("%") || s.value.includes("/")
-                  ? s.value
-                  : <Counter end={parseInt(s.value, 10) || 0} suffix={s.value.replace(/[0-9.]/g, "")} />}
+                {s.value.includes('+') || s.value.includes('%') || s.value.includes('/') ? (
+                  s.value
+                ) : (
+                  <Counter
+                    end={parseInt(s.value, 10) || 0}
+                    suffix={s.value.replace(/[0-9.]/g, '')}
+                  />
+                )}
               </div>
               <div className="mt-1 text-xs font-medium text-white/70">{s.label}</div>
             </ScrollReveal>
@@ -81,7 +99,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 text-center lg:px-8">
           <ScrollReveal className="mb-10">
             <h2 className="section-title mx-auto">Tüm Verileriniz Tek Ekranda</h2>
-            <p className="section-desc mx-auto">Gerçek BACHMAIN paneli — finans, aktivite, KDV ve hızlı aksiyonlar.</p>
+            <p className="section-desc mx-auto">
+              Gerçek BACHMAIN paneli — finans, aktivite, KDV ve hızlı aksiyonlar.
+            </p>
           </ScrollReveal>
         </div>
         <div className="erp-full-bleed px-2 sm:px-4 lg:px-6 xl:px-8">
@@ -95,15 +115,22 @@ export default function HomePage() {
           <ScrollReveal direction="left">
             <span className="pill">B2B Portal</span>
             <h2 className="section-title mt-4">Müşteriniz de Aynı Panelden Yönetsin</h2>
-            <p className="section-desc">Laptop, tablet ve telefonda çalışan müşteri portalı — ERP ile aynı dil.</p>
+            <p className="section-desc">
+              Laptop, tablet ve telefonda çalışan müşteri portalı — ERP ile aynı dil.
+            </p>
             <div className="mt-6 flex flex-wrap gap-2">
               {b2bFeatures.map((f) => (
-                <span key={f} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm">
+                <span
+                  key={f}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm"
+                >
                   {f}
                 </span>
               ))}
             </div>
-            <Link to="/features/erp" className="btn-primary mt-8">B2B Özelliklerini İncele</Link>
+            <Link to="/features/erp" className="btn-primary mt-8">
+              B2B Özelliklerini İncele
+            </Link>
           </ScrollReveal>
           <ScrollReveal direction="right">
             <div className="relative">
@@ -128,12 +155,19 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-2 lg:px-8">
           <ScrollReveal direction="left">
             <div className="relative h-[420px] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-[#1a2744] shadow-xl">
-              <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
+              <div
+                className="absolute inset-0 opacity-40"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px)',
+                  backgroundSize: '40px 40px',
+                }}
+              />
               {[
-                { t: "18%", l: "42%", c: "bg-blue-500" },
-                { t: "36%", l: "24%", c: "bg-emerald-500" },
-                { t: "50%", l: "58%", c: "bg-orange-400" },
-                { t: "62%", l: "34%", c: "bg-violet-500" },
+                { t: '18%', l: '42%', c: 'bg-blue-500' },
+                { t: '36%', l: '24%', c: 'bg-emerald-500' },
+                { t: '50%', l: '58%', c: 'bg-orange-400' },
+                { t: '62%', l: '34%', c: 'bg-violet-500' },
               ].map((p, i) => (
                 <motion.div
                   key={i}
@@ -142,13 +176,19 @@ export default function HomePage() {
                   animate={{ y: [0, -8, 0] }}
                   transition={{ duration: 2.8, repeat: Infinity, delay: i * 0.35 }}
                 >
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-full ${p.c} text-white shadow-lg`}>
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-full ${p.c} text-white shadow-lg`}
+                  >
                     <MapPin className="h-4 w-4" />
                   </div>
                 </motion.div>
               ))}
               <div className="absolute bottom-4 left-4 right-4 flex justify-around rounded-2xl border border-white/10 bg-black/40 px-4 py-3 backdrop-blur">
-                {[["12", "Temsilci"], ["84", "Ziyaret"], ["₺1.2M", "Satış"]].map(([v, l]) => (
+                {[
+                  ['12', 'Temsilci'],
+                  ['84', 'Ziyaret'],
+                  ['₺1.2M', 'Satış'],
+                ].map(([v, l]) => (
                   <div key={l} className="text-center">
                     <div className="text-lg font-extrabold text-white">{v}</div>
                     <div className="text-[10px] text-white/50">{l}</div>
@@ -160,11 +200,15 @@ export default function HomePage() {
           <ScrollReveal direction="right">
             <span className="pill">Saha Satış</span>
             <h2 className="section-title mt-4">Sahayı Haritadan Yönetin</h2>
-            <p className="section-desc">Canlı konum, rota, ziyaret, sipariş ve tahsilat — mobil CRM.</p>
+            <p className="section-desc">
+              Canlı konum, rota, ziyaret, sipariş ve tahsilat — mobil CRM.
+            </p>
             <div className="mt-6 space-y-3">
               {fieldFeatures.map((f) => (
                 <div key={f.title} className="saas-card flex gap-3 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">📍</div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    📍
+                  </div>
                   <div>
                     <div className="font-bold text-slate-900">{f.title}</div>
                     <div className="text-sm text-slate-500">{f.desc}</div>
@@ -172,7 +216,9 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            <Link to="/modules/field-sales" className="btn-primary mt-6">Saha Satış Modülü</Link>
+            <Link to="/modules/field-sales" className="btn-primary mt-6">
+              Saha Satış Modülü
+            </Link>
           </ScrollReveal>
         </div>
       </section>
@@ -182,16 +228,33 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="grid gap-5 lg:grid-cols-3">
             {[
-              { title: "Nakliye & Lojistik", desc: "Tır, koli, palet, konteyner ve canlı sevkiyat durumları.", to: "/features/stock", emoji: "🚛" },
-              { title: "CRM Pipeline", desc: "Fırsatlar, kanban, görevler, toplantılar ve müşteri kartları.", to: "/features/crm", emoji: "🎯" },
-              { title: "Raporlama", desc: "Canlı KPI, satış, tahsilat, kasa ve banka grafikleri.", to: "/features/reports", emoji: "📊" },
+              {
+                title: 'Nakliye & Lojistik',
+                desc: 'Tır, koli, palet, konteyner ve canlı sevkiyat durumları.',
+                to: '/features/stock',
+                emoji: '🚛',
+              },
+              {
+                title: 'CRM Pipeline',
+                desc: 'Fırsatlar, kanban, görevler, toplantılar ve müşteri kartları.',
+                to: '/features/crm',
+                emoji: '🎯',
+              },
+              {
+                title: 'Raporlama',
+                desc: 'Canlı KPI, satış, tahsilat, kasa ve banka grafikleri.',
+                to: '/features/reports',
+                emoji: '📊',
+              },
             ].map((c, i) => (
               <ScrollReveal key={c.title} delay={i * 0.08}>
                 <Link to={c.to} className="saas-card block p-7">
                   <div className="text-3xl">{c.emoji}</div>
                   <h3 className="mt-4 text-xl font-extrabold text-slate-900">{c.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-500">{c.desc}</p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blue-600">İncele <ArrowRight className="h-4 w-4" /></span>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blue-600">
+                    İncele <ArrowRight className="h-4 w-4" />
+                  </span>
                 </Link>
               </ScrollReveal>
             ))}
@@ -202,10 +265,15 @@ export default function HomePage() {
       {/* INTEGRATIONS */}
       <section className="border-y border-slate-200/70 py-12">
         <div className="mx-auto max-w-7xl px-4 text-center lg:px-8">
-          <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Entegrasyonlar</p>
+          <p className="text-sm font-bold uppercase tracking-widest text-slate-400">
+            Entegrasyonlar
+          </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {integrations.map((name) => (
-              <span key={name} className="rounded-full border border-slate-200/80 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur-sm">
+              <span
+                key={name}
+                className="rounded-full border border-slate-200/80 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur-sm"
+              >
                 {name}
               </span>
             ))}
@@ -219,7 +287,9 @@ export default function HomePage() {
           <ScrollReveal className="mb-12 text-center">
             <span className="pill">Referanslar</span>
             <h2 className="section-title mx-auto mt-4">Kullanıcılarımız Ne Diyor?</h2>
-            <p className="section-desc mx-auto">Gerçek ekipler, ölçülebilir sonuçlar — BACHMAIN ile büyüyen firmalar.</p>
+            <p className="section-desc mx-auto">
+              Gerçek ekipler, ölçülebilir sonuçlar — BACHMAIN ile büyüyen firmalar.
+            </p>
           </ScrollReveal>
           <div className="grid gap-6 md:grid-cols-3">
             {testimonials.map((t, i) => (
@@ -231,7 +301,9 @@ export default function HomePage() {
                         <Star key={si} className="h-4 w-4 fill-current" />
                       ))}
                     </div>
-                    <span className="testimonial-quote-mark" aria-hidden>“</span>
+                    <span className="testimonial-quote-mark" aria-hidden>
+                      “
+                    </span>
                   </div>
                   <p className="mt-4 flex-1 text-[15px] leading-relaxed text-slate-600">
                     {t.quote}
@@ -264,7 +336,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl px-4 lg:px-8">
           <ScrollReveal className="mb-10 text-center">
             <h2 className="section-title">Sık Sorulan Sorular</h2>
-            <p className="section-desc mx-auto">BACHMAIN hakkında merak edilenler — deneme, güvenlik, modüller ve destek.</p>
+            <p className="section-desc mx-auto">
+              BACHMAIN hakkında merak edilenler — deneme, güvenlik, modüller ve destek.
+            </p>
           </ScrollReveal>
           <div className="space-y-3">
             {faqItems.map((item, i) => (
@@ -273,7 +347,9 @@ export default function HomePage() {
                   <summary className="cursor-pointer list-none px-5 py-4 font-semibold text-slate-800 marker:content-none">
                     {item.q}
                   </summary>
-                  <p className="border-t border-slate-100 px-5 py-4 text-sm leading-relaxed text-slate-500">{item.a}</p>
+                  <p className="border-t border-slate-100 px-5 py-4 text-sm leading-relaxed text-slate-500">
+                    {item.a}
+                  </p>
                 </details>
               </ScrollReveal>
             ))}
@@ -296,11 +372,22 @@ export default function HomePage() {
                 <span>ile İşinizi Geleceğe Taşıyın</span>
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-white/75">
-                7 gün ücretsiz deneyin. Kredi kartı gerekmez. Önce deneyimleyin, dilerseniz sonra paketinizi satın alırsınız.
+                7 gün ücretsiz deneyin. Kredi kartı gerekmez. Önce deneyimleyin, dilerseniz sonra
+                paketinizi satın alırsınız.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link to="/demo" className="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-bold text-blue-700 shadow-lg">Demo Talep Et</Link>
-                <Link to="/register" className="inline-flex items-center rounded-full border border-white/30 px-6 py-3 text-sm font-bold text-white">Ücretsiz Dene</Link>
+                <Link
+                  to="/demo"
+                  className="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-bold text-blue-700 shadow-lg"
+                >
+                  Demo Talep Et
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex items-center rounded-full border border-white/30 px-6 py-3 text-sm font-bold text-white"
+                >
+                  Ücretsiz Dene
+                </Link>
               </div>
               <div className="mx-auto mt-10 max-w-2xl text-left">
                 <DemoForm />
@@ -310,5 +397,5 @@ export default function HomePage() {
         </div>
       </section>
     </div>
-  );
+  )
 }
