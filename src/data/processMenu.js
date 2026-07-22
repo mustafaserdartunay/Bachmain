@@ -2,10 +2,10 @@ export const processSubMenus = [
   { label: 'Teklifler', path: '/teklifler' },
   { label: 'Siparişler', path: '/siparisler' },
   { label: 'Üretim Takibi', path: '/uretim' },
-  { label: 'Manufacturing Center', path: '/mes' },
+  // Shelved from sidebar (not deleted) — restore: set hidden:false
+  { label: 'Manufacturing Center', path: '/mes', hidden: true },
   { label: 'Depo', path: '/depo' },
   { label: 'Teslim Edilenler', path: '/teslim-edilenler' },
-  // Shelved from sidebar (not deleted) — restore: set hidden:false
   { label: 'Workflow Engine', path: '/otomasyon', hidden: true },
   { label: 'AI Operating System', path: '/aios', hidden: true },
   { label: 'Knowledge Center', path: '/bilgi-merkezi', hidden: true },
