@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import Bachy from './Bachy'
+import BachyFigure from './BachyFigure'
 
 /**
- * Compact header Bachy — opens a lightweight AI chat dock (OpenAI assistant entry).
- * Does not replace navigation or logo.
+ * Compact header Bachy (official render) — opens lightweight AI chat dock.
  */
 export default function BachyAI({ className = '' }) {
   const reduce = useReducedMotion()
@@ -33,7 +32,6 @@ export default function BachyAI({ className = '' }) {
     setMessages((m) => [...m, { role: 'user', text: q }])
     setBusy(true)
     try {
-      // Soft client reply — production OpenAI is wired in CRM AIOS; web stays lightweight.
       const reply =
         q.toLowerCase().includes('fiyat') || q.toLowerCase().includes('paket')
           ? 'Paketler sayfasında Starter, Professional ve Enterprise var. 7 gün ücretsiz deneyebilirsin.'
@@ -48,17 +46,14 @@ export default function BachyAI({ className = '' }) {
 
   return (
     <div className={`relative ${className}`} ref={panelRef}>
-      <div className="flex items-center">
-        <div className="h-11 w-11 shrink-0 sm:h-12 sm:w-12">
-          <Bachy
-            pose="idle"
-            compact
-            interactive
-            onClick={() => setOpen((v) => !v)}
-            className="h-full w-full"
-            aria-label="Bachy AI asistanı"
-          />
-        </div>
+      <div className="h-11 w-11 shrink-0 sm:h-12 sm:w-12">
+        <BachyFigure
+          pose="idle"
+          float={!reduce}
+          className="h-full w-full"
+          alt="Bachy AI asistanı"
+          onClick={() => setOpen((v) => !v)}
+        />
       </div>
 
       <AnimatePresence>

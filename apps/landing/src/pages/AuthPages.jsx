@@ -5,7 +5,7 @@ import Button from '../components/Button'
 import DemoForm from '../components/DemoForm'
 import ScrollReveal from '../components/ScrollReveal'
 import { platformPost, redirectToAppWithToken } from '../utils/platformApi'
-import BachyLogin from '../components/bachy/BachyLogin'
+import BachyAuthLayout from '../components/bachy/BachyAuthLayout'
 
 const inputCls =
   'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15'
@@ -364,7 +364,7 @@ export function LoginPage() {
   const [mood, setMood] = useState('curious')
   const [celebrate, setCelebrate] = useState(false)
   return (
-    <BachyLogin
+    <BachyAuthLayout
       pose="login"
       dark
       title="Giriş Yap"
@@ -374,14 +374,14 @@ export function LoginPage() {
       message={celebrate ? 'Harika! İçeri buyurun 👍' : undefined}
     >
       <LoginForm onMood={setMood} onCelebrate={setCelebrate} />
-    </BachyLogin>
+    </BachyAuthLayout>
   )
 }
 
 export function RegisterPage() {
   const [celebrate, setCelebrate] = useState(false)
   return (
-    <BachyLogin
+    <BachyAuthLayout
       pose="register"
       title="Üye Ol"
       subtitle="Hesabını oluştur — 7 gün ücretsiz dene"
@@ -391,7 +391,7 @@ export function RegisterPage() {
       <ScrollReveal>
         <RegisterForm onCelebrate={setCelebrate} />
       </ScrollReveal>
-    </BachyLogin>
+    </BachyAuthLayout>
   )
 }
 

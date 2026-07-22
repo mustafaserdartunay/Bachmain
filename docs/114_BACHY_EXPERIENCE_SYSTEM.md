@@ -1,31 +1,24 @@
-# Bachy Experience System v3.0 (Web)
+# Bachy Experience System v1.0
 
-Living 3D Bachy companion for bachmain.com. **Does not redesign existing UI.**
+Premium brand character for bachmain.com — official pose renders + Framer Motion.
 
 ## Rule
 
-Existing panels, cards, forms, and layouts stay intact. Bachy is an additive companion only.
+Does not redesign existing UI. Bachy is additive only.
 
-## Stack
+## Approach
 
-React Three Fiber + Three.js + Framer Motion. Procedural mesh (no static pose PNG in product UI).
+High-fidelity **rendered pose assets** (`public/bachy/*`) + subtle motion.
+Not Three.js / R3F in product UI.
 
 ## Components (`apps/landing/src/components/bachy/`)
 
-| File                  | Role                          |
-| --------------------- | ----------------------------- |
-| `Bachy.jsx`           | Canvas + character entry      |
-| `BachyLogin.jsx`      | Login/Register side companion |
-| `BachyPricing.jsx`    | Per-plan buddy                |
-| `BachyHero.jsx`       | Hero companion                |
-| `BachyAI.jsx`         | Header chat entry             |
-| `BachyAnimations.jsx` | Pose/mood helpers             |
-
-## Surfaces
-
-- `/login`, `/register` — beside form
-- `/pricing` — card companions
-- Home hero — left of content
-- Header — logo-adjacent AI dock
+| File                    | Role                            |
+| ----------------------- | ------------------------------- |
+| `BachyFigure.jsx`       | Pose image + float              |
+| `BachyAuthLayout.jsx`   | Login / Register companion      |
+| `BachyPricingBuddy.jsx` | Per-plan buddy                  |
+| `BachyHero.jsx`         | Hero companion                  |
+| `BachyAI.jsx`           | Header chat entry (idle render) |
 
 Never cover inputs, buttons, nav, or dialogs. Respect `prefers-reduced-motion`.
