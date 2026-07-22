@@ -1,69 +1,83 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import { ChevronDown, Menu, X } from "lucide-react";
-import Logo from "./Logo";
+import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
+import { ChevronDown, Menu, X } from 'lucide-react'
+import Logo from './Logo'
+import BachyAI from './bachy/BachyAI'
 
 const nav = [
-  { label: "Ana Sayfa", href: "/" },
+  { label: 'Ana Sayfa', href: '/' },
   {
-    label: "Ürün",
+    label: 'Ürün',
     items: [
-      { label: "Özellikler", href: "/features" },
-      { label: "CRM", href: "/features/crm" },
-      { label: "ERP", href: "/features/erp" },
-      { label: "E-Fatura", href: "/e-invoice" },
+      { label: 'Özellikler', href: '/features' },
+      { label: 'CRM', href: '/features/crm' },
+      { label: 'ERP', href: '/features/erp' },
+      { label: 'E-Fatura', href: '/e-invoice' },
     ],
   },
   {
-    label: "Modüller",
-    href: "/modules",
+    label: 'Modüller',
+    href: '/modules',
     items: [
-      { label: "Üretim", href: "/modules/production" },
-      { label: "Saha Satış", href: "/modules/field-sales" },
-      { label: "E-Ticaret", href: "/modules/ecommerce" },
-      { label: "Stok", href: "/features/stock" },
+      { label: 'Üretim', href: '/modules/production' },
+      { label: 'Saha Satış', href: '/modules/field-sales' },
+      { label: 'E-Ticaret', href: '/modules/ecommerce' },
+      { label: 'Stok', href: '/features/stock' },
     ],
   },
-  { label: "Sektörler", href: "/modules" },
-  { label: "Fiyatlandırma", href: "/pricing" },
-  { label: "Referanslar", href: "/#referanslar" },
-  { label: "Blog", href: "/blog" },
-  { label: "Eğitim", href: "/egitim" },
-  { label: "İletişim", href: "/contact" },
-];
+  { label: 'Sektörler', href: '/modules' },
+  { label: 'Fiyatlandırma', href: '/pricing' },
+  { label: 'Referanslar', href: '/#referanslar' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'Eğitim', href: '/egitim' },
+  { label: 'İletişim', href: '/contact' },
+]
 
 function Dropdown({ label, items, href }) {
-  const [open, setOpen] = useState(false);
-  const closeTimer = useRef(null);
+  const [open, setOpen] = useState(false)
+  const closeTimer = useRef(null)
 
-  useEffect(() => () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+    },
+    [],
+  )
 
   const openMenu = () => {
     if (closeTimer.current) {
-      clearTimeout(closeTimer.current);
-      closeTimer.current = null;
+      clearTimeout(closeTimer.current)
+      closeTimer.current = null
     }
-    setOpen(true);
-  };
+    setOpen(true)
+  }
 
   const closeMenu = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setOpen(false), 220);
-  };
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    closeTimer.current = setTimeout(() => setOpen(false), 220)
+  }
 
   return (
     <div className="relative" onMouseEnter={openMenu} onMouseLeave={closeMenu}>
       {href ? (
-        <Link to={href} className="flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600">
+        <Link
+          to={href}
+          className="flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600"
+        >
           {label}
-          <ChevronDown className={`h-3.5 w-3.5 opacity-50 transition ${open ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`h-3.5 w-3.5 opacity-50 transition ${open ? 'rotate-180' : ''}`}
+          />
         </Link>
       ) : (
-        <button type="button" className="flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600">
+        <button
+          type="button"
+          className="flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600"
+        >
           {label}
-          <ChevronDown className={`h-3.5 w-3.5 opacity-50 transition ${open ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`h-3.5 w-3.5 opacity-50 transition ${open ? 'rotate-180' : ''}`}
+          />
         </button>
       )}
       {open && items && (
@@ -82,42 +96,58 @@ function Dropdown({ label, items, href }) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 export default function Header() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 12);
-    window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
+    const fn = () => setScrolled(window.scrollY > 12)
+    window.addEventListener('scroll', fn, { passive: true })
+    return () => window.removeEventListener('scroll', fn)
+  }, [])
 
   return (
-    <header className={`site-nav ${scrolled ? "scrolled" : ""}`}>
+    <header className={`site-nav ${scrolled ? 'scrolled' : ''}`}>
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
-        <Logo />
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+          <Logo />
+          <BachyAI className="hidden sm:block" />
+        </div>
 
         <nav className="hidden items-center xl:flex">
           {nav.map((item) =>
             item.items ? (
               <Dropdown key={item.label} label={item.label} items={item.items} href={item.href} />
             ) : (
-              <Link key={item.label} to={item.href} className="px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600">
+              <Link
+                key={item.label}
+                to={item.href}
+                className="px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600"
+              >
                 {item.label}
               </Link>
-            )
+            ),
           )}
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <Link to="/login" className="btn-gold !px-4 !py-2.5 !text-[13px]">Giriş Yap</Link>
-          <Link to="/register" className="btn-primary !px-4 !py-2.5 !text-[13px]">Üye Ol</Link>
+          <Link to="/login" className="btn-gold !px-4 !py-2.5 !text-[13px]">
+            Giriş Yap
+          </Link>
+          <Link to="/register" className="btn-primary !px-4 !py-2.5 !text-[13px]">
+            Üye Ol
+          </Link>
         </div>
 
-        <button type="button" className="rounded-lg p-2 text-slate-700 xl:hidden" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menü">
+        <button
+          type="button"
+          className="rounded-lg p-2 text-slate-700 xl:hidden"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Menü"
+        >
           {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
@@ -128,24 +158,51 @@ export default function Header() {
             {nav.map((item) => (
               <div key={item.label}>
                 {item.href && !item.items ? (
-                  <Link to={item.href} className="block py-2 font-semibold text-slate-800" onClick={() => setMobileOpen(false)}>{item.label}</Link>
+                  <Link
+                    to={item.href}
+                    className="block py-2 font-semibold text-slate-800"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
                 ) : (
                   <>
-                    <div className="py-2 text-xs font-bold uppercase tracking-wider text-slate-400">{item.label}</div>
+                    <div className="py-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                      {item.label}
+                    </div>
                     {item.items?.map((sub) => (
-                      <Link key={sub.href} to={sub.href} className="block py-1.5 pl-3 text-sm text-slate-600" onClick={() => setMobileOpen(false)}>{sub.label}</Link>
+                      <Link
+                        key={sub.href}
+                        to={sub.href}
+                        className="block py-1.5 pl-3 text-sm text-slate-600"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        {sub.label}
+                      </Link>
                     ))}
                   </>
                 )}
               </div>
             ))}
             <div className="mt-3 flex gap-2">
-              <Link to="/login" className="btn-gold flex-1 !py-2.5" onClick={() => setMobileOpen(false)}>Giriş</Link>
-              <Link to="/register" className="btn-primary flex-1 !py-2.5" onClick={() => setMobileOpen(false)}>Üye Ol</Link>
+              <Link
+                to="/login"
+                className="btn-gold flex-1 !py-2.5"
+                onClick={() => setMobileOpen(false)}
+              >
+                Giriş
+              </Link>
+              <Link
+                to="/register"
+                className="btn-primary flex-1 !py-2.5"
+                onClick={() => setMobileOpen(false)}
+              >
+                Üye Ol
+              </Link>
             </div>
           </div>
         </div>
       )}
     </header>
-  );
+  )
 }

@@ -1,0 +1,6 @@
+export { default as Bachy } from './Bachy'
+export { default as BachyLogin } from './BachyLogin'
+export { default as BachyPricing } from './BachyPricing'
+export { default as BachyHero } from './BachyHero'
+export { default as BachyAI } from './BachyAI'
+export * from './BachyAnimations'

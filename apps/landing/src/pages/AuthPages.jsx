@@ -5,7 +5,7 @@ import Button from '../components/Button'
 import DemoForm from '../components/DemoForm'
 import ScrollReveal from '../components/ScrollReveal'
 import { platformPost, redirectToAppWithToken } from '../utils/platformApi'
-import BachyAuthLayout from '../components/bachy/BachyAuthLayout'
+import BachyLogin from '../components/bachy/BachyLogin'
 
 const inputCls =
   'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15'
@@ -168,8 +168,8 @@ function RegisterForm({ onCelebrate }) {
         plan: 'Starter',
         source: 'bachmain_register_page',
       })
-      onCelebrate?.(true)
       setDone(true)
+      onCelebrate?.(true)
       setTimeout(() => redirectToAppWithToken(data.token), 900)
     } catch (err) {
       setSubmitError(err.message || 'Üyelik oluşturulamadı. Lütfen tekrar deneyin.')
@@ -182,8 +182,10 @@ function RegisterForm({ onCelebrate }) {
     return (
       <div className="saas-card p-10 text-center">
         <CheckCircle className="mx-auto h-14 w-14 text-blue-600" />
-        <h3 className="mt-4 text-xl font-bold text-slate-900">BachMain ailesine hoş geldin.</h3>
-        <p className="mt-2 text-slate-500">Kaydınız alındı — uygulamaya yönlendiriliyorsunuz…</p>
+        <h3 className="mt-4 text-xl font-bold text-slate-900">Üyeliğiniz oluşturuldu</h3>
+        <p className="mt-2 text-slate-500">
+          Kaydınız yönetim paneline iletildi. Uygulamaya yönlendiriliyorsunuz…
+        </p>
       </div>
     )
   }
@@ -362,7 +364,7 @@ export function LoginPage() {
   const [mood, setMood] = useState('curious')
   const [celebrate, setCelebrate] = useState(false)
   return (
-    <BachyAuthLayout
+    <BachyLogin
       pose="login"
       dark
       title="Giriş Yap"
@@ -372,14 +374,14 @@ export function LoginPage() {
       message={celebrate ? 'Harika! İçeri buyurun 👍' : undefined}
     >
       <LoginForm onMood={setMood} onCelebrate={setCelebrate} />
-    </BachyAuthLayout>
+    </BachyLogin>
   )
 }
 
 export function RegisterPage() {
   const [celebrate, setCelebrate] = useState(false)
   return (
-    <BachyAuthLayout
+    <BachyLogin
       pose="register"
       title="Üye Ol"
       subtitle="Hesabını oluştur — 7 gün ücretsiz dene"
@@ -389,7 +391,7 @@ export function RegisterPage() {
       <ScrollReveal>
         <RegisterForm onCelebrate={setCelebrate} />
       </ScrollReveal>
-    </BachyAuthLayout>
+    </BachyLogin>
   )
 }
 
