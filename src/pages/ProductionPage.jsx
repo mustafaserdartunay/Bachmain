@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { CheckCircle2, ClipboardList, Factory, Layers3, Package, ShoppingCart } from 'lucide-react'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import SplitCreateButton from '../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import ProductionFilterBar from '../components/Production/ProductionFilterBar'
 import ProductionJobCard from '../components/Production/ProductionJobCard'
-import ProductionStatusTabs from '../components/Production/ProductionStatusTabs'
-import ProductionToolbar from '../components/Production/ProductionToolbar'
 import { ensureLineItems, getLineFulfillmentOptions } from '../utils/productionLineItems'
 import {
   getJobQuantityMetrics,
@@ -47,9 +45,7 @@ export default function ProductionPage() {
   const [jobs, setJobs] = useState(loadProductionJobs)
   const [workflowStages, setWorkflowStages] = useState(loadWorkflowStages)
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusTab, setStatusTab] = useState('Tümü')
   const [filters, setFilters] = useState({ process: 'Tümü', status: 'Tümü', quantity: 'Tümü' })
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [expandedJobIds, setExpandedJobIds] = useState(() => new Set())
@@ -142,7 +138,7 @@ export default function ProductionPage() {
     })
   }
 
-  const searchedJobs = useMemo(() => {
+  const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
       const activeStage = resolveProductionActiveStage(job, workflowStages)
       const q = searchQuery.toLowerCase()
@@ -158,30 +154,6 @@ export default function ProductionPage() {
       return matchesSearch && matchesProcess && matchesQuantity
     })
   }, [jobs, searchQuery, filters.process, filters.quantity, workflowStages])
-
-  const tabCounts = useMemo(() => {
-    const counts = {
-      Tümü: searchedJobs.length,
-      'Devam Eden': 0,
-      Tamamlanan: 0,
-      Beklemede: 0,
-      İptal: 0,
-    }
-    for (const job of searchedJobs) {
-      if (jobMatchesProductionStateFilter(job, 'Devam Eden', workflowStages))
-        counts['Devam Eden'] += 1
-      if (jobMatchesProductionStateFilter(job, 'Tamamlanan', workflowStages)) counts.Tamamlanan += 1
-      if (jobMatchesProductionStateFilter(job, 'Beklemede', workflowStages)) counts.Beklemede += 1
-      if (jobMatchesProductionStateFilter(job, 'İptal', workflowStages)) counts.İptal += 1
-    }
-    return counts
-  }, [searchedJobs, workflowStages])
-
-  const filteredJobs = useMemo(() => {
-    return searchedJobs.filter((job) =>
-      jobMatchesProductionStateFilter(job, statusTab, workflowStages),
-    )
-  }, [searchedJobs, statusTab, workflowStages])
 
   const summary = useMemo(() => {
     const active = filteredJobs.filter((job) =>
@@ -254,12 +226,6 @@ export default function ProductionPage() {
           backLabel="Güncel Durum"
           actions={
             <div className="flex flex-wrap items-center gap-2">
-              <Link
-                to="/mes"
-                className="inline-flex min-h-11 items-center rounded-xl border border-[var(--border)] px-3 text-xs font-black uppercase"
-              >
-                MES
-              </Link>
               <SplitCreateButton
                 label="Yeni Üretim Oluştur"
                 onPrimaryClick={() => navigate('/uretim/yeni')}
@@ -294,18 +260,6 @@ export default function ProductionPage() {
             </div>
           }
         />
-
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <ProductionStatusTabs value={statusTab} onChange={setStatusTab} counts={tabCounts} />
-          <ProductionToolbar
-            showFilters={showAdvancedFilters}
-            onFilter={() => setShowAdvancedFilters((current) => !current)}
-            onGroup={() => window.alert('Gruplama yakında eklenecek.')}
-            onColumns={() => window.alert('Kolon görünümü yakında eklenecek.')}
-            onExport={() => window.alert('Dışa aktarma yakında eklenecek.')}
-            onMore={() => window.print()}
-          />
-        </div>
 
         <SummaryMetrics
           columns={5}
@@ -348,29 +302,17 @@ export default function ProductionPage() {
           ]}
         />
 
-        {showAdvancedFilters ? (
-          <ProductionFilterBar
-            searchQuery={searchQuery}
-            onSearchChange={(event) => setSearchQuery(event.target.value)}
-            filters={filters}
-            onFilterChange={updateFilter}
-            processOptions={productionProcessFilterOptions}
-            statusOptions={[filterAllOption]}
-            quantityOptions={quantityFilterOptions}
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-          />
-        ) : (
-          <div className="rounded-[18px] border border-[var(--border)] bg-white/55 p-3 shadow-[0_8px_28px_rgba(15,23,42,0.04)] backdrop-blur-sm sm:p-4">
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Sipariş, müşteri veya ürün ara..."
-              className="form-input h-11 w-full text-[13px] font-semibold"
-            />
-          </div>
-        )}
+        <ProductionFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={(event) => setSearchQuery(event.target.value)}
+          filters={filters}
+          onFilterChange={updateFilter}
+          processOptions={productionProcessFilterOptions}
+          statusOptions={[filterAllOption]}
+          quantityOptions={quantityFilterOptions}
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+        />
 
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-3 px-1">
