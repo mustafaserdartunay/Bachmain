@@ -2,6 +2,7 @@ export const AIOS_BASE = '/aios'
 
 export const aiosSubMenus = [
   { id: 'home', label: 'AI Home' },
+  { id: 'bachy', label: 'Bachy', path: '/aios/bachy' },
   { id: 'organization', label: 'Enterprise Org' },
   { id: 'autonomous', label: 'Autonomous Co' },
   { id: 'app-builder', label: 'App Builder' },

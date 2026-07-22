@@ -1,0 +1,6 @@
+export * from './constants'
+export * from './settingsStore'
+export { createBehaviorEngine } from './behaviorEngine'
+export { startBachyEventBridge } from './eventBridge'
+export { buildBachyContext } from './context'
+export { askBachy, reactSpeech } from './speech'

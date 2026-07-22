@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Bot, Library, Mic, ShieldAlert, Sparkles, Workflow } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
@@ -49,6 +49,8 @@ function DeepLinkCard({ to, title, desc }) {
 }
 
 export default function AiosHubPage() {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab') || 'home'
   const [msg, setMsg] = useState('')
@@ -169,18 +171,24 @@ export default function AiosHubPage() {
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        {aiosSubMenus.map((t) => (
+        {aiosSubMenus.map((item) => (
           <button
-            key={t.id}
+            key={item.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => {
+              if (item.path) {
+                navigate(item.path)
+                return
+              }
+              setTab(item.id)
+            }}
             className={`min-h-10 rounded-xl border px-2.5 text-[11px] font-black uppercase ${
-              tab === t.id
+              tab === item.id || (item.path && location.pathname === item.path)
                 ? 'border-[var(--ink)]/20 bg-white/55 text-[var(--ink)]'
                 : 'border-dark-500/30 text-[var(--muted)]'
             }`}
           >
-            {t.label}
+            {item.label}
           </button>
         ))}
       </div>
@@ -200,6 +208,13 @@ export default function AiosHubPage() {
               Yaz · komut seç · dosya/ses/görsel yükleme niyeti (AIOS-1+). Canlı çağrı:
               /v1/aios/gateway/chat
             </p>
+            <div className="mt-3">
+              <DeepLinkCard
+                to="/aios/bachy"
+                title="Bachy AIOS"
+                desc="Yaşayan AI çalışma arkadaşı — karakter, davranış, OpenAI."
+              />
+            </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <select
                 value={agentId}

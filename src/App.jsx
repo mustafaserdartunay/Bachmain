@@ -30,6 +30,7 @@ import CustomerCreatePage from './pages/CustomerCreatePage'
 import MasterDataHubPage from './pages/MasterDataHubPage'
 import WorkflowHubPage from './pages/WorkflowHubPage'
 import AiosHubPage from './pages/AiosHubPage'
+import BachySettingsPage from './pages/BachySettingsPage'
 import AiEnterpriseOrgPage from './pages/AiEnterpriseOrgPage'
 import AiAutonomousCompanyPage from './pages/AiAutonomousCompanyPage'
 import AiAppBuilderPage from './pages/AiAppBuilderPage'
@@ -589,6 +590,7 @@ export default function App() {
                         }
                       />
                       <Route path="/aios" element={<AiosHubPage />} />
+                      <Route path="/aios/bachy" element={<BachySettingsPage />} />
                       <Route path="/ai-beyin" element={<Navigate to="/aios" replace />} />
                       <Route path="/ai-organizasyon" element={<AiEnterpriseOrgPage />} />
                       <Route
