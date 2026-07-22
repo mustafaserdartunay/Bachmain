@@ -13,3 +13,23 @@ export function productionStageId(label) {
 }
 
 export const defaultProductionStages = []
+
+/** Recommended ERP production flow — UI reference when configuring stages. */
+export const RECOMMENDED_PRODUCTION_FLOW = [
+  'Malzeme Hazırlık',
+  'Kesim',
+  'Büküm',
+  'Kaynak',
+  'Montaj',
+  'Kalite Kontrol',
+  'Paketleme',
+  'Sevkiyat',
+]
+
+export function buildRecommendedProductionStages() {
+  return RECOMMENDED_PRODUCTION_FLOW.map((label, index) => ({
+    id: productionStageId(label),
+    label,
+    color: index === RECOMMENDED_PRODUCTION_FLOW.length - 1 ? 'bg-emerald-500' : 'bg-blue-500',
+  }))
+}

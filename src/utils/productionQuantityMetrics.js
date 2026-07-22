@@ -1,5 +1,9 @@
 import { getProductionStageOptions } from './workflowStages'
-import { ensureLineItems, getLineStageProgress, getQuantityRowStageProgress } from './productionLineItems'
+import {
+  ensureLineItems,
+  getLineStageProgress,
+  getQuantityRowStageProgress,
+} from './productionLineItems'
 
 export function formatQty(value) {
   return Math.max(0, Number(value) || 0).toLocaleString('tr-TR')
@@ -87,37 +91,44 @@ export function getLineQuantityMetrics(line) {
     hasExcess: excess > 0,
     hasRemaining: remaining > 0 && !productionClosed,
     hasPartialDelivery: delivered > 0 && delivered < Math.max(produced, ordered),
-    productionPct: ordered ? Math.min(100, Math.round((produced / ordered) * 100)) : (produced > 0 ? 100 : 0),
+    productionPct: ordered
+      ? Math.min(100, Math.round((produced / ordered) * 100))
+      : produced > 0
+        ? 100
+        : 0,
     deliveryPct: ordered ? Math.min(100, Math.round((delivered / ordered) * 100)) : 0,
   }
 }
 
 export function getJobQuantityMetrics(lineItems = []) {
-  return lineItems.reduce((acc, line) => {
-    const m = getLineQuantityMetrics(line)
-    acc.ordered += m.ordered
-    acc.produced += m.produced
-    acc.delivered += m.delivered
-    acc.remaining += m.remaining
-    acc.excess += m.excess
-    acc.undelivered += m.undelivered
-    if (m.hasShortfall) acc.linesWithShortfall += 1
-    if (m.hasExcess) acc.linesWithExcess += 1
-    if (m.hasPartialDelivery) acc.linesWithPartialDelivery += 1
-    if (m.hasRemaining) acc.linesWithRemaining += 1
-    return acc
-  }, {
-    ordered: 0,
-    produced: 0,
-    delivered: 0,
-    remaining: 0,
-    excess: 0,
-    undelivered: 0,
-    linesWithShortfall: 0,
-    linesWithExcess: 0,
-    linesWithPartialDelivery: 0,
-    linesWithRemaining: 0,
-  })
+  return lineItems.reduce(
+    (acc, line) => {
+      const m = getLineQuantityMetrics(line)
+      acc.ordered += m.ordered
+      acc.produced += m.produced
+      acc.delivered += m.delivered
+      acc.remaining += m.remaining
+      acc.excess += m.excess
+      acc.undelivered += m.undelivered
+      if (m.hasShortfall) acc.linesWithShortfall += 1
+      if (m.hasExcess) acc.linesWithExcess += 1
+      if (m.hasPartialDelivery) acc.linesWithPartialDelivery += 1
+      if (m.hasRemaining) acc.linesWithRemaining += 1
+      return acc
+    },
+    {
+      ordered: 0,
+      produced: 0,
+      delivered: 0,
+      remaining: 0,
+      excess: 0,
+      undelivered: 0,
+      linesWithShortfall: 0,
+      linesWithExcess: 0,
+      linesWithPartialDelivery: 0,
+      linesWithRemaining: 0,
+    },
+  )
 }
 
 export function getLineStageIndex(line, productionStages) {
@@ -213,9 +224,10 @@ function getLineMaxStageIndex(line, productionStages) {
   const tracks = getLineStageTracks(line, productionStages)
   let maxIndex = -1
   tracks.forEach((track) => {
-    const idx = track.stageIndex >= 0
-      ? track.stageIndex
-      : productionStages.findIndex((item) => item.id === track.stageId)
+    const idx =
+      track.stageIndex >= 0
+        ? track.stageIndex
+        : productionStages.findIndex((item) => item.id === track.stageId)
     if (idx > maxIndex) maxIndex = idx
   })
   return maxIndex
@@ -303,9 +315,10 @@ export function getJobStageStatsByQuantity(lineItems, productionStages) {
       }
 
       tracks.forEach((track) => {
-        const trackStageIndex = track.stageIndex >= 0
-          ? track.stageIndex
-          : productionStages.findIndex((item) => item.id === track.stageId)
+        const trackStageIndex =
+          track.stageIndex >= 0
+            ? track.stageIndex
+            : productionStages.findIndex((item) => item.id === track.stageId)
         if (trackStageIndex >= stageIndex) {
           unitsReached += track.quantity
         }
@@ -332,8 +345,10 @@ export function jobMatchesQuantityFilter(job, filter, stages = []) {
   const metrics = getJobQuantityMetrics(lineItems)
 
   if (filter === 'Kısmi Teslimat') {
-    return lineItems.some((line) => getLineQuantityMetrics(line).hasPartialDelivery)
-      || job.status === 'Kısmi Teslimat'
+    return (
+      lineItems.some((line) => getLineQuantityMetrics(line).hasPartialDelivery) ||
+      job.status === 'Kısmi Teslimat'
+    )
   }
   if (filter === 'Kalan Adet Var') {
     return lineItems.some((line) => {
@@ -416,7 +431,11 @@ export function resolveProductionClosedStatus(line, productionStages) {
   const metrics = getLineQuantityMetrics(line)
   const lastStage = productionStages[productionStages.length - 1]
 
-  if (metrics.delivered >= metrics.produced && metrics.produced >= metrics.ordered && metrics.excess === 0) {
+  if (
+    metrics.delivered >= metrics.produced &&
+    metrics.produced >= metrics.ordered &&
+    metrics.excess === 0
+  ) {
     return {
       fulfillmentStatus: metrics.delivered >= metrics.ordered ? 'Tamamlandı' : 'Kısmi Teslimat',
       currentStageId: lastStage?.id || line.currentStageId,
@@ -491,15 +510,17 @@ const flowToneOrder = ['continuing', 'closed', 'completed']
 
 export function getJobProductionFlowSegments(lineItems = []) {
   if (!lineItems.length) {
-    return [{
-      tone: 'continuing',
-      label: flowToneMeta.continuing.label,
-      shortLabel: flowToneMeta.continuing.shortLabel,
-      colorClass: flowToneMeta.continuing.colorClass,
-      shellClass: flowToneMeta.continuing.shellClass,
-      count: 1,
-      percent: 100,
-    }]
+    return [
+      {
+        tone: 'continuing',
+        label: flowToneMeta.continuing.label,
+        shortLabel: flowToneMeta.continuing.shortLabel,
+        colorClass: flowToneMeta.continuing.colorClass,
+        shellClass: flowToneMeta.continuing.shellClass,
+        count: 1,
+        percent: 100,
+      },
+    ]
   }
 
   const counts = new Map()
@@ -527,8 +548,8 @@ export function resolveJobProductionFlowBadge(lineItems = [], jobStatus = '') {
     return { label: 'Üretim Devam Ediyor', tone: 'continuing' }
   }
 
-  const allCompleted = jobStatus === 'Tamamlandı'
-    || lineItems.every((line) => line.fulfillmentStatus === 'Tamamlandı')
+  const allCompleted =
+    jobStatus === 'Tamamlandı' || lineItems.every((line) => line.fulfillmentStatus === 'Tamamlandı')
   const anyClosed = lineItems.some((line) => line.productionClosed)
 
   if (allCompleted) {
@@ -542,19 +563,23 @@ export function resolveJobProductionFlowBadge(lineItems = [], jobStatus = '') {
 
 export const PRODUCTION_STATE_FILTER_OPTIONS = [
   { label: 'Tümü', color: 'bg-gray-500' },
+  { label: 'Devam Eden', color: 'bg-blue-500' },
+  { label: 'Tamamlanan', color: 'bg-emerald-500' },
+  { label: 'Beklemede', color: 'bg-gray-500' },
+  { label: 'İptal', color: 'bg-red-500' },
   { label: 'Üretime Devam Edenler', color: 'bg-blue-500' },
   { label: 'Üretim Tamamlandı', color: 'bg-emerald-500' },
   { label: 'Depoya Gönderilenler', color: 'bg-orange-500' },
-  { label: 'Beklemede', color: 'bg-gray-500' },
 ]
 
 function jobIsWaiting(job, lineItems = []) {
   if (job?.status === 'Bekliyor') return true
   if (!lineItems.length) return false
-  return lineItems.every((line) => (
-    line.fulfillmentStatus === 'Bekliyor'
-    && Math.max(0, Number(line.producedQuantity) || 0) === 0
-  ))
+  return lineItems.every(
+    (line) =>
+      line.fulfillmentStatus === 'Bekliyor' &&
+      Math.max(0, Number(line.producedQuantity) || 0) === 0,
+  )
 }
 
 function jobIsProductionComplete(job, lineItems = []) {
@@ -563,11 +588,13 @@ function jobIsProductionComplete(job, lineItems = []) {
   return lineItems.every((line) => line.fulfillmentStatus === 'Tamamlandı')
 }
 
+function jobIsCancelled(job) {
+  return /iptal/i.test(String(job?.status || ''))
+}
+
 function jobHasDepoSentRows(job, stages = []) {
   const lineItems = ensureLineItems(job, stages)
-  return lineItems.some((line) => (
-    (line.quantityRows || []).some((row) => Boolean(row.depoItemId))
-  ))
+  return lineItems.some((line) => (line.quantityRows || []).some((row) => Boolean(row.depoItemId)))
 }
 
 export function jobMatchesProductionStateFilter(job, filter, stages = []) {
@@ -575,6 +602,10 @@ export function jobMatchesProductionStateFilter(job, filter, stages = []) {
 
   const lineItems = ensureLineItems(job, stages)
   const flow = resolveJobProductionFlowBadge(lineItems, job.status || '')
+
+  if (filter === 'İptal') {
+    return jobIsCancelled(job)
+  }
 
   if (filter === 'Beklemede') {
     return jobIsWaiting(job, lineItems)
@@ -584,19 +615,22 @@ export function jobMatchesProductionStateFilter(job, filter, stages = []) {
     return jobHasDepoSentRows(job, stages)
   }
 
-  if (filter === 'Üretim Tamamlandı') {
+  if (filter === 'Tamamlanan' || filter === 'Üretim Tamamlandı') {
     return jobIsProductionComplete(job, lineItems) || flow.tone === 'completed'
   }
 
-  if (filter === 'Üretime Devam Edenler') {
+  if (filter === 'Devam Eden' || filter === 'Üretime Devam Edenler') {
+    if (jobIsCancelled(job)) return false
     if (jobIsWaiting(job, lineItems)) return false
     if (jobIsProductionComplete(job, lineItems)) return false
-    return flow.tone === 'continuing'
-      || flow.tone === 'closed'
-      || ['Devam Ediyor', 'Kısmi Teslimat', 'Kısmi Üretim Bitti'].includes(job.status || '')
-      || lineItems.some((line) => (
-        ['Devam Ediyor', 'Kısmi Teslimat', 'Kısmi Üretim Bitti'].includes(line.fulfillmentStatus)
-      ))
+    return (
+      flow.tone === 'continuing' ||
+      flow.tone === 'closed' ||
+      ['Devam Ediyor', 'Kısmi Teslimat', 'Kısmi Üretim Bitti'].includes(job.status || '') ||
+      lineItems.some((line) =>
+        ['Devam Ediyor', 'Kısmi Teslimat', 'Kısmi Üretim Bitti'].includes(line.fulfillmentStatus),
+      )
+    )
   }
 
   return true

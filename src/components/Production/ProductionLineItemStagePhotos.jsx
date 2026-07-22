@@ -38,17 +38,31 @@ export function PhotoLightbox({ photo, onClose }) {
         role="dialog"
         aria-modal="true"
       >
-        <img
-          src={photo.dataUrl}
-          alt={photo.caption || photo.stageLabel || 'Üretim fotoğrafı'}
-          className="max-h-[78vh] w-full object-contain"
-        />
+        {String(photo.caption || '').includes('Video') ||
+        String(photo.mimeType || '').startsWith('video/') ||
+        String(photo.dataUrl || '').startsWith('data:video') ? (
+          <video
+            src={photo.dataUrl}
+            controls
+            className="max-h-[78vh] w-full bg-black object-contain"
+          />
+        ) : (
+          <img
+            src={photo.dataUrl}
+            alt={photo.caption || photo.stageLabel || 'Üretim fotoğrafı'}
+            className="max-h-[78vh] w-full object-contain"
+          />
+        )}
         {(photo.stageLabel || photo.caption || photo.createdAt) && (
           <div className="border-t border-white/10 px-4 py-3 text-center">
             {photo.stageLabel && (
-              <p className="text-xs font-black uppercase tracking-wide text-blue-300">{photo.stageLabel}</p>
+              <p className="text-xs font-black uppercase tracking-wide text-blue-300">
+                {photo.stageLabel}
+              </p>
             )}
-            {photo.caption && <p className="mt-1 text-sm font-semibold text-white">{photo.caption}</p>}
+            {photo.caption && (
+              <p className="mt-1 text-sm font-semibold text-white">{photo.caption}</p>
+            )}
             {photo.createdAt && <p className="mt-1 text-[13px] text-gray-400">{photo.createdAt}</p>}
           </div>
         )}
@@ -100,16 +114,17 @@ export function ProductionStageColumnPhotos({
     onPhotosChange(normalizedAll.filter((item) => item.id !== photo.id))
   }
 
-  const tileSize = inline
-    ? (compact ? 'h-6 w-6' : 'h-8 w-8')
-    : compact ? 'h-7 w-7' : 'h-10 w-10'
+  const tileSize = inline ? (compact ? 'h-6 w-6' : 'h-8 w-8') : compact ? 'h-7 w-7' : 'h-10 w-10'
   const iconSize = inline
-    ? (compact ? 'h-2.5 w-2.5' : 'h-3.5 w-3.5')
-    : compact ? 'h-2.5 w-2.5' : 'h-3 w-3'
+    ? compact
+      ? 'h-2.5 w-2.5'
+      : 'h-3.5 w-3.5'
+    : compact
+      ? 'h-2.5 w-2.5'
+      : 'h-3 w-3'
 
   if (inline) {
-    const tileClass =
-      `flex ${compact ? 'h-6 w-6' : 'h-8 w-8'} shrink-0 items-center justify-center overflow-hidden rounded border p-0`
+    const tileClass = `flex ${compact ? 'h-6 w-6' : 'h-8 w-8'} shrink-0 items-center justify-center overflow-hidden rounded border p-0`
 
     return (
       <div
@@ -173,7 +188,9 @@ export function ProductionStageColumnPhotos({
               </span>
             ) : null}
             <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
-              <ZoomIn className={`${iconSize} text-white opacity-0 transition-opacity group-hover:opacity-100`} />
+              <ZoomIn
+                className={`${iconSize} text-white opacity-0 transition-opacity group-hover:opacity-100`}
+              />
             </span>
           </button>
           {!readOnly && (
@@ -193,9 +210,7 @@ export function ProductionStageColumnPhotos({
                 className={`inline-flex items-center gap-0.5 rounded-md transition-colors ${
                   compact ? 'p-0.5' : 'px-1.5 py-0.5 text-[11px] font-bold'
                 } ${
-                  isDark
-                    ? 'text-red-300 hover:bg-red-500/10'
-                    : 'text-red-600 hover:bg-red-500/10'
+                  isDark ? 'text-red-300 hover:bg-red-500/10' : 'text-red-600 hover:bg-red-500/10'
                 }`}
                 title="Fotoğrafı sil"
               >
@@ -213,9 +228,9 @@ export function ProductionStageColumnPhotos({
           <Camera className={iconSize} />
           <input type="file" accept="image/*" className="hidden" onChange={handleUpload} />
         </label>
-      ) : (
-        compact ? <div className={tileSize} aria-hidden /> : null
-      )}
+      ) : compact ? (
+        <div className={tileSize} aria-hidden />
+      ) : null}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { defaultQuoteStages } from '../data/quotesData'
-import { productionStageId } from '../data/productionStages'
+import { buildRecommendedProductionStages, productionStageId } from '../data/productionStages'
 
 const STORAGE_KEY = 'erlenbox-workflow-stages'
 
@@ -28,7 +28,19 @@ const DEFAULT_QUOTE_STAGE_LABELS = new Set(
     .map((stage) => stage.label),
 )
 
-const AUTO_INJECTED_PRODUCTION_LABELS = ['Kesim', 'Baskı', 'Montaj', 'Kalite Kontrol', 'Sevkiyat']
+const AUTO_INJECTED_PRODUCTION_LABELS = [
+  'Malzeme',
+  'Malzeme Hazırlık',
+  'Kesim',
+  'Büküm',
+  'Kaynak',
+  'Baskı',
+  'Montaj',
+  'Kalite',
+  'Kalite Kontrol',
+  'Paketleme',
+  'Sevkiyat',
+]
 const AUTO_INJECTED_PRODUCTION_IDS = new Set(
   AUTO_INJECTED_PRODUCTION_LABELS.map((label) => productionStageId(label)),
 )
@@ -75,27 +87,31 @@ function findProductionEntryIndex(stages) {
 }
 
 function defaultOrderReceivedStage() {
-  return defaultQuoteStages.find((stage) => stage.id === ORDER_RECEIVED_STAGE_ID) || {
-    id: ORDER_RECEIVED_STAGE_ID,
-    label: 'Sipariş Alındı',
-    color: 'bg-purple-500',
-    note: 'Teklif siparişe dönüştürüldü.',
-  }
+  return (
+    defaultQuoteStages.find((stage) => stage.id === ORDER_RECEIVED_STAGE_ID) || {
+      id: ORDER_RECEIVED_STAGE_ID,
+      label: 'Sipariş Alındı',
+      color: 'bg-purple-500',
+      note: 'Teklif siparişe dönüştürüldü.',
+    }
+  )
 }
 
 function defaultProductionEntryStage() {
-  return defaultQuoteStages.find((stage) => stage.id === PRODUCTION_ENTRY_STAGE_ID) || {
-    id: PRODUCTION_ENTRY_STAGE_ID,
-    label: 'Üretime Alındı',
-    color: 'bg-fuchsia-500',
-    note: 'Sipariş üretim sürecine aktarıldı.',
-  }
+  return (
+    defaultQuoteStages.find((stage) => stage.id === PRODUCTION_ENTRY_STAGE_ID) || {
+      id: PRODUCTION_ENTRY_STAGE_ID,
+      label: 'Üretime Alındı',
+      color: 'bg-fuchsia-500',
+      note: 'Sipariş üretim sürecine aktarıldı.',
+    }
+  )
 }
 
 function defaultQuoteStagesOnly() {
-  return defaultQuoteStages.filter((stage) => (
-    !isOrderReceivedStage(stage) && !isProductionEntryStage(stage)
-  ))
+  return defaultQuoteStages.filter(
+    (stage) => !isOrderReceivedStage(stage) && !isProductionEntryStage(stage),
+  )
 }
 
 function normalizeOrderReceivedStage(stage) {
@@ -163,10 +179,7 @@ function normalizeOrderSlice(stages) {
     normalized.push(next)
   }
   if (normalized.length === 0) {
-    return uniqueOrderStagesByLabel([
-      defaultOrderReceivedStage(),
-      defaultProductionEntryStage(),
-    ])
+    return uniqueOrderStagesByLabel([defaultOrderReceivedStage(), defaultProductionEntryStage()])
   }
   const hasOrderReceived = normalized.some((item) => item.id === ORDER_RECEIVED_STAGE_ID)
   const hasProductionEntry = normalized.some((item) => item.id === PRODUCTION_ENTRY_STAGE_ID)
@@ -184,20 +197,20 @@ function partitionWorkflowStages(stages) {
   const quoteSlice = orderSectionStart >= 0 ? unique.slice(0, orderSectionStart) : unique
   const quoteStages = filterValidWorkflowStages(quoteSlice)
 
-  const orderSlice = orderSectionStart >= 0 && orderSectionStart < unique.length
-    ? unique.slice(orderSectionStart, orderSectionEnd)
-    : []
-  const orderStages = orderSlice.length > 0
-    ? normalizeOrderSlice(orderSlice)
-    : normalizeOrderSlice([defaultOrderReceivedStage(), defaultProductionEntryStage()])
+  const orderSlice =
+    orderSectionStart >= 0 && orderSectionStart < unique.length
+      ? unique.slice(orderSectionStart, orderSectionEnd)
+      : []
+  const orderStages =
+    orderSlice.length > 0
+      ? normalizeOrderSlice(orderSlice)
+      : normalizeOrderSlice([defaultOrderReceivedStage(), defaultProductionEntryStage()])
 
   const productionStages = filterValidWorkflowStages(
     unique.slice(orderSectionEnd >= 0 ? orderSectionEnd : 0),
   )
 
-  const finalQuoteStages = quoteStages.length > 0
-    ? quoteStages
-    : defaultQuoteStagesOnly()
+  const finalQuoteStages = quoteStages.length > 0 ? quoteStages : defaultQuoteStagesOnly()
 
   return {
     quoteStages: finalQuoteStages,
@@ -335,18 +348,25 @@ export function mergeQuoteStagesIntoWorkflow(fullStages, quoteStages) {
 export function mergeOrderStagesIntoWorkflow(fullStages, orderStages) {
   const quotePart = getQuoteStageOptions(fullStages)
   let cleanOrderStages = uniqueOrderStagesByLabel(orderStages)
-  const hasProductionEntry = cleanOrderStages.some((stage) => (
-    stage.id === PRODUCTION_ENTRY_STAGE_ID || stage.label === 'Üretime Alındı'
-  ))
+  const hasProductionEntry = cleanOrderStages.some(
+    (stage) => stage.id === PRODUCTION_ENTRY_STAGE_ID || stage.label === 'Üretime Alındı',
+  )
   if (!hasProductionEntry) {
-    const entryStage = findWorkflowStage(fullStages, PRODUCTION_ENTRY_STAGE_ID)
-      || fullStages.find((stage) => stage.label === 'Üretime Alındı')
+    const entryStage =
+      findWorkflowStage(fullStages, PRODUCTION_ENTRY_STAGE_ID) ||
+      fullStages.find((stage) => stage.label === 'Üretime Alındı')
     if (entryStage) {
       cleanOrderStages = [...cleanOrderStages, entryStage]
     }
   }
-  const productionIndex = findStageIndex(fullStages, { id: PRODUCTION_ENTRY_STAGE_ID, label: 'Üretime Alındı' })
-  const productionTail = productionIndex >= 0 ? fullStages.slice(productionIndex + 1) : getProductionStageOptions(fullStages)
+  const productionIndex = findStageIndex(fullStages, {
+    id: PRODUCTION_ENTRY_STAGE_ID,
+    label: 'Üretime Alındı',
+  })
+  const productionTail =
+    productionIndex >= 0
+      ? fullStages.slice(productionIndex + 1)
+      : getProductionStageOptions(fullStages)
   return [...quotePart, ...cleanOrderStages, ...productionTail]
 }
 
@@ -355,9 +375,9 @@ export function appendProductionStage(productionStages, nextStage) {
 }
 
 export function appendOrderStage(orderStages, nextStage) {
-  const entryIndex = orderStages.findIndex((stage) => (
-    stage.id === PRODUCTION_ENTRY_STAGE_ID || stage.label === 'Üretime Alındı'
-  ))
+  const entryIndex = orderStages.findIndex(
+    (stage) => stage.id === PRODUCTION_ENTRY_STAGE_ID || stage.label === 'Üretime Alındı',
+  )
   if (entryIndex >= 0) {
     return [...orderStages.slice(0, entryIndex), nextStage, ...orderStages.slice(entryIndex)]
   }
@@ -367,7 +387,8 @@ export function appendOrderStage(orderStages, nextStage) {
 export function resolveQuoteProcessRecord(quote, stages = loadWorkflowStages()) {
   const quoteStages = getQuoteStageOptions(stages)
   const currentStageId = resolveQuotePanelCurrentStageId(quote, stages)
-  const activeStage = quoteStages.find((item) => item.id === currentStageId) || quoteStages[0] || null
+  const activeStage =
+    quoteStages.find((item) => item.id === currentStageId) || quoteStages[0] || null
 
   return {
     stages: quoteStages,
@@ -402,21 +423,32 @@ export function resolveOrderPanelCurrentStageId(record, stages = loadWorkflowSta
 }
 
 export function mergeProductionStagesIntoWorkflow(fullStages, productionStages) {
-  const productionIndex = findStageIndex(fullStages, { id: PRODUCTION_ENTRY_STAGE_ID, label: 'Üretime Alındı' })
+  const productionIndex = findStageIndex(fullStages, {
+    id: PRODUCTION_ENTRY_STAGE_ID,
+    label: 'Üretime Alındı',
+  })
   const cleanProductionStages = uniqueStagesById(productionStages || [])
   if (productionIndex >= 0) {
     return [...fullStages.slice(0, productionIndex + 1), ...cleanProductionStages]
   }
   const quotePart = getQuoteStageOptions(fullStages)
   const orderPart = getOrderStageOptions(fullStages)
-  const productionEntry = findWorkflowStage(fullStages, PRODUCTION_ENTRY_STAGE_ID)
-    || defaultProductionEntryStage()
-  return [...quotePart, ...orderPart.filter((stage) => stage.id !== PRODUCTION_ENTRY_STAGE_ID), productionEntry, ...cleanProductionStages]
+  const productionEntry =
+    findWorkflowStage(fullStages, PRODUCTION_ENTRY_STAGE_ID) || defaultProductionEntryStage()
+  return [
+    ...quotePart,
+    ...orderPart.filter((stage) => stage.id !== PRODUCTION_ENTRY_STAGE_ID),
+    productionEntry,
+    ...cleanProductionStages,
+  ]
 }
 
 export function resolveProductionPanelCurrentStageId(record, stages = loadWorkflowStages()) {
   const productionStages = getProductionStageOptions(stages)
-  if (record?.currentStageId && productionStages.some((stage) => stage.id === record.currentStageId)) {
+  if (
+    record?.currentStageId &&
+    productionStages.some((stage) => stage.id === record.currentStageId)
+  ) {
     return record.currentStageId
   }
   return productionStages[0]?.id || ''
@@ -432,8 +464,11 @@ export function withoutPlaceholderProductionStages(stages = []) {
 }
 
 export function getProductionStageOptions(stages = loadWorkflowStages()) {
-  if (!stages?.length) return []
-  return withoutPlaceholderProductionStages(partitionWorkflowStages(stages).productionStages)
+  if (!stages?.length) return buildRecommendedProductionStages()
+  const fromWorkflow = withoutPlaceholderProductionStages(
+    partitionWorkflowStages(stages).productionStages,
+  )
+  return fromWorkflow.length ? fromWorkflow : buildRecommendedProductionStages()
 }
 
 export function resolveProductionStagesList(stages = []) {
@@ -455,7 +490,9 @@ export function resolveProductionStageActiveIndex(line, stages = []) {
   let activeIndex = productionStages.findIndex((stage) => stage.id === line?.currentStageId)
 
   if (activeIndex < 0 && line?.currentStageId) {
-    const currentRaw = resolveRawProductionStagesList(stages).find((stage) => stage.id === line.currentStageId)
+    const currentRaw = resolveRawProductionStagesList(stages).find(
+      (stage) => stage.id === line.currentStageId,
+    )
     if (currentRaw && isPlaceholderProductionStage(currentRaw)) {
       activeIndex = 0
     }

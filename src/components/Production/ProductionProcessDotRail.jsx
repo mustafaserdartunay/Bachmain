@@ -1,10 +1,8 @@
 import { Check } from 'lucide-react'
 
-const BACH_YELLOW = '#FDB515'
-
 /**
- * Mockup process stepper:
- * Complete = Bachmain yellow check · Active = blue · Pending = empty gray
+ * Horizontal process timeline.
+ * Complete = green · Active = blue pulse · Pending = gray · Error = red
  */
 export default function ProductionProcessDotRail({
   steps = [],
@@ -38,18 +36,17 @@ export default function ProductionProcessDotRail({
         let node
         if (isCancelled) {
           node = (
-            <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-slate-800 text-[11px] font-black text-white">
+            <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-slate-700 text-[11px] font-black text-white">
               ×
             </span>
           )
         } else if (isError) {
-          node = <span className="h-[22px] w-[22px] rounded-full bg-red-500 ring-[3px] ring-red-500/20" />
+          node = (
+            <span className="h-[22px] w-[22px] rounded-full bg-red-500 shadow-[0_0_0_3px_rgba(239,68,68,0.2)]" />
+          )
         } else if (isComplete) {
           node = (
-            <span
-              className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-white shadow-[0_0_0_3px_rgba(253,181,21,0.22)]"
-              style={{ background: BACH_YELLOW }}
-            >
+            <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-emerald-500 text-white shadow-[0_0_0_3px_rgba(16,185,129,0.22)] transition-transform duration-300">
               <Check className="h-3 w-3" strokeWidth={3} />
             </span>
           )
@@ -57,19 +54,29 @@ export default function ProductionProcessDotRail({
           node = (
             <span className="relative flex h-[22px] w-[22px] items-center justify-center">
               <span className="absolute inset-0 animate-ping rounded-full bg-blue-400/30" />
-              <span className="relative h-[22px] w-[22px] rounded-full bg-[#3B82F6] shadow-[0_0_0_3px_rgba(59,130,246,0.2)]" />
+              <span className="relative h-[22px] w-[22px] rounded-full bg-[var(--accent,#3B82F6)] shadow-[0_0_0_3px_rgba(59,130,246,0.2)]" />
             </span>
           )
         } else {
-          node = <span className="h-[22px] w-[22px] rounded-full border-2 border-[#CBD5E1] bg-white" />
+          node = (
+            <span className="h-[22px] w-[22px] rounded-full border-2 border-[var(--border,#CBD5E1)] bg-white dark:bg-transparent" />
+          )
         }
 
         return (
-          <div key={step.id || `${step.label}-${index}`} className="flex min-w-0 items-center" role="listitem">
+          <div
+            key={step.id || `${step.label}-${index}`}
+            className="flex min-w-0 items-center"
+            role="listitem"
+          >
             {index > 0 ? (
               <span
-                className="mx-0.5 h-[2px] w-3 shrink-0 sm:w-4"
-                style={{ background: lineDone ? 'rgba(253,181,21,0.75)' : 'rgba(203,213,225,0.9)' }}
+                className="mx-0.5 h-[2px] w-3 shrink-0 transition-colors duration-500 sm:w-5"
+                style={{
+                  background: lineDone
+                    ? 'rgba(16,185,129,0.75)'
+                    : 'color-mix(in srgb, var(--border, #CBD5E1) 90%, transparent)',
+                }}
                 aria-hidden
               />
             ) : null}
@@ -78,13 +85,21 @@ export default function ProductionProcessDotRail({
               disabled={!clickable}
               title={step.label}
               onClick={() => onStageClick?.(step.id)}
-              className={`group flex shrink-0 flex-col items-center gap-1 ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
+              className={`group flex shrink-0 flex-col items-center gap-1 ${
+                clickable ? 'cursor-pointer' : 'cursor-default'
+              }`}
             >
-              {node}
+              <span className="transition-transform duration-200 group-hover:scale-110">
+                {node}
+              </span>
               {showLabels ? (
                 <span
-                  className={`max-w-[3.6rem] truncate text-[9px] font-bold leading-tight sm:max-w-[4.2rem] sm:text-[10px] ${
-                    isActive ? 'text-[#2563EB]' : isComplete ? 'text-[#B45309]' : 'text-[#94A3B8]'
+                  className={`max-w-[3.6rem] truncate text-[9px] font-bold leading-tight sm:max-w-[4.4rem] sm:text-[10px] ${
+                    isActive
+                      ? 'text-[var(--accent,#2563EB)]'
+                      : isComplete
+                        ? 'text-emerald-600'
+                        : 'text-[var(--muted,#94A3B8)]'
                   }`}
                 >
                   {step.label}
