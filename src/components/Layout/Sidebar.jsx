@@ -104,7 +104,6 @@ import {
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
-import BachyFloating from '../Bachy/BachyFloating'
 import TrialBanner from '../TrialBanner'
 import { useAuth } from '../../auth/AuthContext'
 import { filterMenuByEntitlements } from '../../utils/entitlements'
@@ -398,7 +397,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               <BrandLogo collapsed={collapsed} />
             )}
           </NavLink>
-          <BachyFloating slot="logo" collapsed={collapsed} />
         </div>
         <button
           type="button"
