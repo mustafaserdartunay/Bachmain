@@ -11,6 +11,7 @@ import {
   getJobQuantityMetrics,
   jobMatchesProductionStateFilter,
   jobMatchesQuantityFilter,
+  PRODUCTION_STATE_FILTER_OPTIONS,
 } from '../utils/productionQuantityMetrics'
 import {
   appendProductionJobActivity,
@@ -39,6 +40,25 @@ const quantityFilterOptions = [
   { label: 'Kalan Adet Var', color: 'bg-orange-500' },
   { label: 'Fazla Üretim', color: 'bg-sky-500' },
 ]
+const productionStatusFilterOptions = PRODUCTION_STATE_FILTER_OPTIONS.filter((option) =>
+  ['Tümü', 'Devam Eden', 'Tamamlanan', 'Beklemede', 'İptal', 'Depoya Gönderilenler'].includes(
+    option.label,
+  ),
+)
+
+function ProductionListPanel({ title, action, children }) {
+  return (
+    <section className="card">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-bold text-white">{title}</h2>
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  )
+}
 
 export default function ProductionPage() {
   const navigate = useNavigate()
@@ -150,10 +170,11 @@ export default function ProductionPage() {
         (job.title || '').toLowerCase().includes(q) ||
         lineItems.some((line) => (line.product || '').toLowerCase().includes(q))
       const matchesProcess = filters.process === 'Tümü' || activeStage?.label === filters.process
+      const matchesStatus = jobMatchesProductionStateFilter(job, filters.status, workflowStages)
       const matchesQuantity = jobMatchesQuantityFilter(job, filters.quantity, workflowStages)
-      return matchesSearch && matchesProcess && matchesQuantity
+      return matchesSearch && matchesProcess && matchesStatus && matchesQuantity
     })
-  }, [jobs, searchQuery, filters.process, filters.quantity, workflowStages])
+  }, [jobs, searchQuery, filters.process, filters.status, filters.quantity, workflowStages])
 
   const summary = useMemo(() => {
     const active = filteredJobs.filter((job) =>
@@ -302,28 +323,28 @@ export default function ProductionPage() {
           ]}
         />
 
-        <ProductionFilterBar
-          searchQuery={searchQuery}
-          onSearchChange={(event) => setSearchQuery(event.target.value)}
-          filters={filters}
-          onFilterChange={updateFilter}
-          processOptions={productionProcessFilterOptions}
-          statusOptions={[filterAllOption]}
-          quantityOptions={quantityFilterOptions}
-          activeMenu={activeMenu}
-          setActiveMenu={setActiveMenu}
-        />
-
-        <section className="space-y-3">
-          <div className="flex items-center justify-between gap-3 px-1">
-            <h2 className="text-[16px] font-bold text-[var(--ink)]">Üretim Listesi</h2>
-            <span className="rounded-xl bg-[rgba(121,166,210,0.12)] px-3 py-1.5 text-[12px] font-black text-[var(--bach-navy,#203375)]">
+        <ProductionListPanel
+          title="Üretim Listesi"
+          action={
+            <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">
               {filteredJobs.length} kayıt
               {selectedJobIds.size ? ` · ${selectedJobIds.size} seçili` : ''}
             </span>
-          </div>
+          }
+        >
+          <ProductionFilterBar
+            searchQuery={searchQuery}
+            onSearchChange={(event) => setSearchQuery(event.target.value)}
+            filters={filters}
+            onFilterChange={updateFilter}
+            processOptions={productionProcessFilterOptions}
+            statusOptions={productionStatusFilterOptions}
+            quantityOptions={quantityFilterOptions}
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+          />
 
-          <div className="hidden rounded-[18px] border border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#F8FAFC)] px-4 py-2.5 text-[11px] font-black uppercase tracking-wide text-[var(--muted,#94A3B8)] lg:grid lg:grid-cols-[minmax(200px,1.15fr)_150px_minmax(240px,1.5fr)_150px_130px_88px] lg:gap-3">
+          <div className="hidden rounded-[18px] border border-dark-500/40 bg-dark-900/40 px-4 py-2.5 text-[11px] font-black uppercase tracking-wide text-gray-500 lg:grid lg:grid-cols-[minmax(200px,1.15fr)_150px_minmax(240px,1.5fr)_150px_130px_88px] lg:gap-3">
             <span>Ürün / Sipariş</span>
             <span>Adet / Teslimat</span>
             <span>Süreç İlerlemesi</span>
@@ -332,7 +353,7 @@ export default function ProductionPage() {
             <span className="text-right">İşlemler</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="mt-3 space-y-3">
             {filteredJobs.map((job) => (
               <ProductionJobCard
                 key={job.id}
@@ -367,16 +388,16 @@ export default function ProductionPage() {
           </div>
 
           {filteredJobs.length === 0 ? (
-            <div className="rounded-[18px] border border-dashed border-[var(--border)] bg-white/50 p-10 text-center">
-              <Factory className="mx-auto mb-3 h-8 w-8 text-[var(--muted)]" />
-              <p className="text-sm font-bold text-[var(--ink)]">Üretim kaydı bulunamadı.</p>
-              <p className="mt-1 text-[13px] text-[var(--muted)]">
+            <div className="mt-3 rounded-[18px] border border-dashed border-dark-500/60 bg-dark-800/40 p-10 text-center">
+              <Factory className="mx-auto mb-3 h-8 w-8 text-gray-500" />
+              <p className="text-sm font-bold text-white">Üretim kaydı bulunamadı.</p>
+              <p className="mt-1 text-[13px] text-gray-500">
                 Siparişler sayfasında &quot;Üretime Alındı&quot; seçildiğinde kayıtlar buraya
                 kopyalanır.
               </p>
             </div>
           ) : null}
-        </section>
+        </ProductionListPanel>
       </div>
     </AppPageShell>
   )
