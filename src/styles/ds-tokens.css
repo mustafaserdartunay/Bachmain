@@ -40,7 +40,9 @@
   --ds-font-body: 0.9375rem; /* 15 */
   --ds-font-small: 0.8125rem; /* 13 */
   --ds-font-caption: 0.75rem; /* 12 */
-  --ds-font-family: Inter, system-ui, 'SF Pro Display', Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ds-font-family:
+    Inter, system-ui, 'SF Pro Display', Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
 
   /* Spacing (4px grid) */
   --ds-space-1: 0.25rem;
@@ -85,7 +87,7 @@
   /* Shell */
   --ds-sidebar-expanded: 17.5rem; /* 280px */
   --ds-sidebar-collapsed: 5.5rem; /* 88px */
-  --ds-header-h: 4.5rem; /* 72px */
+  --ds-header-h: 4.75rem; /* 76px — nakit aksiyon paneli ile aynı */
   --ds-bottom-nav-h: 4rem;
 
   /* Motion */
@@ -117,9 +119,10 @@
   --text-strong: var(--ds-ink);
   --text-muted: var(--ds-muted);
   --text-soft: var(--ds-muted-soft);
-  --glass-bg: rgba(255, 255, 255, 0.78);
-  --glass-bg-strong: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(226, 232, 240, 0.95);
+  /* Shell glass — Team Hub / sidebar / header / cards aynı ton */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: var(--glass-bg);
+  --glass-border: rgba(255, 255, 255, 0.75);
   --accent: var(--ds-secondary);
   --accent-hover: var(--ds-secondary-hover);
   --shell-rail-expanded: var(--ds-sidebar-expanded);
@@ -133,8 +136,8 @@
   --search-placeholder: var(--ds-muted);
   --search-border: rgba(226, 232, 240, 0.95);
   --search-ring: rgba(121, 166, 210, 0.22);
-  --header-bg: rgba(255, 255, 255, 0.92);
-  --sidebar-bg: #ffffff;
+  --header-bg: var(--glass-bg);
+  --sidebar-bg: transparent;
   --sidebar-item: #ffffff;
   --sidebar-item-text: var(--ds-ink-body);
   --sidebar-item-icon: var(--ds-muted);
@@ -161,9 +164,9 @@ html.night {
   --ds-primary: #79a6d2;
   --ds-primary-hover: #9bbce0;
   --ds-secondary: #a8c5e3;
-  --glass-bg: rgba(41, 37, 36, 0.78);
-  --glass-bg-strong: rgba(53, 48, 44, 0.92);
-  --glass-border: rgba(168, 162, 158, 0.18);
+  --glass-bg: rgba(12, 20, 38, 0.72);
+  --glass-bg-strong: var(--glass-bg);
+  --glass-border: rgba(148, 163, 184, 0.16);
   --ink: var(--ds-ink);
   --muted: var(--ds-muted);
   --app-bg: var(--ds-bg);
@@ -183,8 +186,8 @@ html.night {
   --search-text: #fafaf9;
   --search-placeholder: #a8a29e;
   --search-border: rgba(168, 162, 158, 0.28);
-  --header-bg: rgba(41, 37, 36, 0.92);
-  --sidebar-bg: #292524;
+  --header-bg: var(--glass-bg);
+  --sidebar-bg: transparent;
   --sidebar-item: rgba(255, 255, 255, 0.04);
   --sidebar-item-text: #e7e5e4;
   --sidebar-item-icon: #a8a29e;

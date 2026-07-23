@@ -8,7 +8,9 @@ const SAVE_LABEL_RE =
   /\b(kaydet|save|listeyi kaydet|projeyi kaydet|gideri kaydet|irsaliyeyi kaydet|transferi kaydet|depoyu kaydet|profili kaydet)\b/i
 
 function isAuthPath() {
-  return /^\/(giris|kayit|sifremi-unuttum|sifre-sifirla|eposta-dogrula)(\/|$)/.test(window.location.pathname)
+  return /^\/(giris|kayit|sifremi-unuttum|sifre-sifirla|eposta-dogrula)(\/|$)/.test(
+    window.location.pathname,
+  )
 }
 
 function isSearchField(el) {
@@ -76,7 +78,9 @@ export function installFormSubmitGuard() {
     if (isAuthPath()) return
     if (!isSaveControl(event.target)) return
     if (allowByPointer || allowByShortcut) {
-      queueMicrotask(resetFlags)
+      // setTimeout(0): submit activation runs in the same turn as click;
+      // queueMicrotask would clear the flag before the form submit event.
+      setTimeout(resetFlags, 0)
       return
     }
     event.preventDefault()
@@ -87,7 +91,7 @@ export function installFormSubmitGuard() {
     if (isAuthPath()) return
 
     if (allowByPointer || allowByShortcut) {
-      queueMicrotask(resetFlags)
+      setTimeout(resetFlags, 0)
       return
     }
 
@@ -121,7 +125,7 @@ export function installFormSubmitGuard() {
       if (!(control instanceof HTMLElement) || control.disabled) return
       allowByShortcut = true
       control.click()
-      queueMicrotask(resetFlags)
+      setTimeout(resetFlags, 0)
       return
     }
 

@@ -27,7 +27,8 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { archiveCustomer, deleteCustomer, findCustomerProfile } from '../data/customerProfiles'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
+import { APP_PAGE_BACK_PLAIN_CLASS } from '../components/Layout/AppPageLayout'
 import {
   createCustomerCollection,
   createCustomerPayment,
@@ -424,20 +425,29 @@ export default function CustomerDetailPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <Link
-          to="/musteriler"
-          className="absolute left-5 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Müşteriler
-        </Link>
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-            Müşteri Detayı
-          </h1>
-        </div>
-      </section>
+    <AppPageShell>
+      <AppPageHeader
+        title="Müşteri Detayı"
+        subtitle={customerDisplay.brandShortName}
+        backTo="/musteriler"
+        backLabel="Müşteriler"
+        actions={
+          <div className="flex items-center gap-1">
+            <Link
+              to={`/musteri-deneyimi?tab=360&customerId=${encodeURIComponent(customer.id)}`}
+              className="inline-flex h-control min-h-control items-center rounded-xl bg-transparent px-3 text-xs font-extrabold tracking-wide text-[#3b82f6] transition-colors hover:text-[#60a5fa]"
+            >
+              CXC 360
+            </Link>
+            <Link
+              to={`/musteriler/yeni?edit=${customer.id}`}
+              className="inline-flex h-control min-h-control items-center rounded-xl bg-transparent px-3 text-xs font-extrabold tracking-wide text-[#3b82f6] transition-colors hover:text-[#60a5fa]"
+            >
+              Düzenle
+            </Link>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-[minmax(0,1fr)_310px] items-start gap-4">
         <section className="card overflow-visible p-0">
@@ -459,22 +469,10 @@ export default function CustomerDetailPage() {
               className="relative flex items-center"
               onClick={(event) => event.stopPropagation()}
             >
-              <Link
-                to={`/musteri-deneyimi?tab=360&customerId=${encodeURIComponent(customer.id)}`}
-                className="mr-2 flex h-10 items-center rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-[10px] font-black uppercase tracking-wide text-blue-200 transition-colors hover:bg-dark-700 hover:text-white"
-              >
-                CXC 360
-              </Link>
-              <Link
-                to={`/musteriler/yeni?edit=${customer.id}`}
-                className="flex h-10 items-center rounded-l-xl border border-dark-500/50 bg-dark-700/70 px-4 text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
-              >
-                Düzenle
-              </Link>
               <button
                 type="button"
                 onClick={() => setActiveMenu(activeMenu === 'edit-actions' ? null : 'edit-actions')}
-                className="flex h-10 w-12 items-center justify-center rounded-r-xl border border-l-0 border-dark-500/50 bg-dark-700/70 text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+                className="flex h-10 w-12 items-center justify-center rounded-xl border border-dark-500/50 bg-dark-700/70 text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
                 aria-label="Düzenle işlemleri"
               >
                 <ChevronRight
@@ -978,7 +976,7 @@ export default function CustomerDetailPage() {
       <EngagementPanels customer={customer} />
 
       <ActivityHistoryPanel activity={activity} />
-    </div>
+    </AppPageShell>
   )
 }
 

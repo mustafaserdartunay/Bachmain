@@ -15,7 +15,7 @@ export default function AiGrowthAnalyticsPage() {
 
   return (
     <AppPageShell>
-      <AppPageHeader title="Analitik" backTo="/ai-buyume" />
+      <AppPageHeader title="Analitik" backTo="/ai-buyume" backLabel="AI Büyüme" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="glass-inset rounded-[22px] p-5">
           <p className="text-xs text-[var(--muted)]">Toplam üretim</p>
@@ -37,15 +37,21 @@ export default function AiGrowthAnalyticsPage() {
       <AppPagePanel title="İçerik tipine göre">
         <div className="grid gap-2 sm:grid-cols-2">
           {Object.entries(byType).map(([type, count]) => (
-            <div key={type} className="flex items-center justify-between rounded-xl border border-dark-500/40 px-3 py-2 text-sm">
+            <div
+              key={type}
+              className="flex items-center justify-between rounded-xl border border-dark-500/40 px-3 py-2 text-sm"
+            >
               <span>{type}</span>
               <strong>{count}</strong>
             </div>
           ))}
-          {Object.keys(byType).length === 0 ? <p className="text-sm text-[var(--muted)]">Henüz analitik veri yok.</p> : null}
+          {Object.keys(byType).length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">Henüz analitik veri yok.</p>
+          ) : null}
         </div>
         <p className="mt-4 text-xs text-[var(--muted)]">
-          AI önerisi: LinkedIn ve Instagram için hafta içi sabah paylaşımları; Cuma blog + newsletter otomasyonu.
+          AI önerisi: LinkedIn ve Instagram için hafta içi sabah paylaşımları; Cuma blog +
+          newsletter otomasyonu.
         </p>
       </AppPagePanel>
     </AppPageShell>

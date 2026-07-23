@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  ArrowLeft,
   BadgeCheck,
   Building2,
   ChevronDown,
@@ -60,18 +59,20 @@ import {
   saveOptionList,
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
-import { BTN_BACK, BTN_CANCEL as BTN_CANCEL_BASE, BTN_SUCCESS } from '../utils/buttonStyles'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
 import { checkCustomerDuplicates } from '../utils/mdmDuplicateCheck'
-import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 
 const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 
 const CREATE_PILL_CLASS = 'glass-pill !h-8 !min-h-8 !w-full !justify-between !text-[12px]'
-const BTN_CANCEL = `${BTN_CANCEL_BASE} gap-2.5 px-3`
-const BTN_SAVE = `${BTN_SUCCESS} gap-2.5 px-3`
-const BTN_SAVE_MENU = `${BTN_SUCCESS} w-14 px-0`
+const ACTION_BTN_BASE =
+  'inline-flex h-control min-h-control items-center justify-center gap-2.5 rounded-xl bg-transparent px-3 text-xs font-extrabold tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+const BTN_CANCEL_PLAIN = `${ACTION_BTN_BASE} text-[#f43f5e] hover:text-[#e11d48]`
+const BTN_SAVE_PLAIN = `${ACTION_BTN_BASE} text-[#10b981] hover:text-[#34d399]`
+const BTN_SAVE_MENU_PLAIN = `${ACTION_BTN_BASE} w-10 gap-0 px-0 text-[#10b981] hover:text-[#34d399]`
+const BTN_SAVE_MENU_ITEM = `${ACTION_BTN_BASE} w-full justify-start text-[#10b981] hover:bg-white/45 hover:text-[#059669]`
 
 function emptyMeta(defaultType = '') {
   return { type: defaultType, representative: '', scoring: '', category: '' }
@@ -134,21 +135,21 @@ export default function CustomerCreatePage() {
       : 'Yeni Müşteri'
   const incomingDraft = !editingCustomer ? location.state?.customerDraft : null
   const [actionMenuOpen, setActionMenuOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const savingLock = useRef(false)
   const [openingEnabled, setOpeningEnabled] = useState(false)
   const [addressRows, setAddressRows] = useState([{ id: 0 }])
   const [contactRows, setContactRows] = useState(() =>
     initialContactRows(editingCustomer, incomingDraft),
   )
   const [deleteDialog, setDeleteDialog] = useState(null)
-  const [successVisible, setSuccessVisible] = useState(false)
   const [meta, setMeta] = useState(() =>
     incomingDraft?.category
-      ? { ...emptyMeta(), category: incomingDraft.category }
-      : readMetaFor(editingCustomer?.id, ''),
+      ? { ...emptyMeta(defaultPartyType), category: incomingDraft.category }
+      : readMetaFor(editingCustomer?.id, defaultPartyType),
   )
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
-  const successTimer = useRef(null)
   const {
     anchorRef: actionMenuAnchorRef,
     menuRef: actionMenuRef,
@@ -165,10 +166,11 @@ export default function CustomerCreatePage() {
     setOpeningEnabled(false)
     setActionMenuOpen(false)
     setDeleteDialog(null)
+    setIsSaving(false)
     setMeta(
       incomingDraft?.category
-        ? { ...emptyMeta(), category: incomingDraft.category }
-        : readMetaFor(editingCustomer?.id, ''),
+        ? { ...emptyMeta(defaultPartyType), category: incomingDraft.category }
+        : readMetaFor(editingCustomer?.id, defaultPartyType),
     )
   }, [defaultPartyType, editingCustomer?.id, formRouteKey, incomingDraft])
 
@@ -229,12 +231,6 @@ export default function CustomerCreatePage() {
     }
     localStorage.setItem(CUSTOMER_META_KEY, JSON.stringify(next))
     notifyCustomerMetaUpdated({ customerId, field: 'type' })
-  }
-
-  function showSavedMessage() {
-    if (successTimer.current) clearTimeout(successTimer.current)
-    setSuccessVisible(true)
-    successTimer.current = setTimeout(() => setSuccessVisible(false), 2000)
   }
 
   function saveDraft(payload) {
@@ -343,73 +339,74 @@ export default function CustomerCreatePage() {
     )
   }
 
-  async function collectAndSave(event) {
-    event?.preventDefault()
+  function handleCancel() {
+    if (isSaving) return
+    navigate(-1)
+  }
+
+  async function persistFromForm(form, { continueEditing = false } = {}) {
+    if (!(form instanceof HTMLFormElement) || savingLock.current) return false
     if (!String(meta.type || '').trim()) {
       window.alert('Kaydetmeden önce Tipi alanını seçin.')
-      return
+      return false
     }
-    const formData = new FormData(event.currentTarget)
-    const payload = Object.fromEntries(formData.entries())
-    payload.hasOpeningBalance = formData.has('hasOpeningBalance')
-    if (!(await assertNoStrongDuplicates(payload))) return
-    saveDraft(payload)
-    const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
-    persistMeta(savedProfile.id)
-    syncOpeningBalance(payload)
-    publishDomainEvent(
-      editingCustomer?.id ? 'trigger.customer.updated' : 'trigger.customer.created',
-      {
-        customerId: savedProfile.id,
-        name: savedProfile.name || payload.name || payload.firmaAdi,
-      },
-      { source: 'CustomerCreatePage' },
-    )
-    event.currentTarget.reset()
-    setAddressRows([{ id: 0 }])
-    setContactRows(initialContactRows(null, null))
-    setOpeningEnabled(false)
-    setMeta(emptyMeta())
-    showSavedMessage()
-    flushWorkspaceNow()
-    setTimeout(() => navigate(-1), 900)
+
+    savingLock.current = true
+    setIsSaving(true)
+    setActionMenuOpen(false)
+    try {
+      const formData = new FormData(form)
+      const payload = Object.fromEntries(formData.entries())
+      payload.hasOpeningBalance = formData.has('hasOpeningBalance')
+      if (!(await assertNoStrongDuplicates(payload))) return false
+
+      saveDraft(payload)
+      const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
+      persistMeta(savedProfile.id)
+      syncOpeningBalance(payload)
+      publishDomainEvent(
+        editingCustomer?.id ? 'trigger.customer.updated' : 'trigger.customer.created',
+        {
+          customerId: savedProfile.id,
+          name: savedProfile.name || payload.name || payload.firmaAdi,
+        },
+        { source: 'CustomerCreatePage' },
+      )
+      form.reset()
+      setAddressRows([{ id: 0 }])
+      setContactRows(initialContactRows(null, null))
+      setOpeningEnabled(false)
+      setMeta(emptyMeta(defaultPartyType))
+      flushWorkspaceNow()
+
+      if (!continueEditing) {
+        setTimeout(() => navigate(-1), 900)
+      }
+      return true
+    } catch (error) {
+      console.error(error)
+      window.alert('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.')
+      return false
+    } finally {
+      savingLock.current = false
+      setIsSaving(false)
+    }
+  }
+
+  async function handleSave() {
+    const form = document.getElementById('customer-edit-form')
+    await persistFromForm(form, { continueEditing: false })
+  }
+
+  async function collectAndSave(event) {
+    event?.preventDefault()
+    await persistFromForm(event.currentTarget, { continueEditing: false })
   }
 
   async function saveAndContinue() {
     const form = document.getElementById('customer-edit-form')
     if (!form) return
-    if (!String(meta.type || '').trim()) {
-      window.alert('Kaydetmeden önce Tipi alanını seçin.')
-      setActionMenuOpen(false)
-      return
-    }
-    const formData = new FormData(form)
-    const payload = Object.fromEntries(formData.entries())
-    payload.hasOpeningBalance = formData.has('hasOpeningBalance')
-    if (!(await assertNoStrongDuplicates(payload))) {
-      setActionMenuOpen(false)
-      return
-    }
-    saveDraft(payload)
-    const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
-    persistMeta(savedProfile.id)
-    syncOpeningBalance(payload)
-    publishDomainEvent(
-      editingCustomer?.id ? 'trigger.customer.updated' : 'trigger.customer.created',
-      {
-        customerId: savedProfile.id,
-        name: savedProfile.name || payload.name || payload.firmaAdi,
-      },
-      { source: 'CustomerCreatePage' },
-    )
-    form.reset()
-    setAddressRows([{ id: 0 }])
-    setContactRows(initialContactRows(null, null))
-    setOpeningEnabled(false)
-    setMeta(emptyMeta())
-    setActionMenuOpen(false)
-    showSavedMessage()
-    flushWorkspaceNow()
+    await persistFromForm(form, { continueEditing: true })
   }
 
   function confirmTwoStepDelete(label, onConfirm, key) {
@@ -427,71 +424,68 @@ export default function CustomerCreatePage() {
 
   return (
     <form id="customer-edit-form" onSubmit={collectAndSave} className="space-y-5">
-      {successVisible && (
-        <div className="fixed right-6 top-20 z-[80] rounded-2xl border border-emerald-500/30 bg-emerald-500/15 px-5 py-3 text-sm font-black text-emerald-300 shadow-2xl shadow-emerald-950/20">
-          Düzenlemeler kaydedildi
-        </div>
-      )}
-
-      <div className="space-y-5">
-        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 text-center`}>
-          <button
-            type="button"
-            onClick={() => navigate(backPath)}
-            className={`${BTN_BACK} absolute left-5 top-1/2 -translate-y-1/2 hover:!-translate-y-[calc(50%+0.125rem)]`}
-          >
-            <ArrowLeft className="h-4 w-4" /> {isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'}
-          </button>
-          <div className="mx-auto max-w-2xl">
-            <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-              {pageHeading}
-            </h1>
-          </div>
-          <div
-            ref={actionMenuAnchorRef}
-            className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2.5 bg-transparent"
-          >
-            <button type="button" onClick={() => navigate(backPath)} className={BTN_CANCEL}>
-              <X className="h-4 w-4" /> Vazgeç
-            </button>
-            <div className="btn-split">
-              <button type="submit" className={BTN_SAVE}>
-                <Save className="h-4 w-4" /> Kaydet
-              </button>
-              <span className="btn-split-divider" aria-hidden />
+      <AppPageShell>
+        <AppPageHeader
+          title={pageHeading}
+          backTo={backPath}
+          backLabel={isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'}
+          actions={
+            <div ref={actionMenuAnchorRef} className="flex items-center gap-1 bg-transparent">
               <button
                 type="button"
-                onClick={() => setActionMenuOpen((open) => !open)}
-                className={BTN_SAVE_MENU}
-                aria-label="Kaydet işlemleri"
-                aria-expanded={actionMenuOpen}
+                onClick={handleCancel}
+                disabled={isSaving}
+                className={BTN_CANCEL_PLAIN}
               >
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
-                />
+                <X className="h-4 w-4" /> Vazgeç
               </button>
-            </div>
-            {actionMenuOpen &&
-              actionMenuStyle &&
-              createPortal(
-                <div
-                  ref={actionMenuRef}
-                  style={actionMenuStyle}
-                  className={`${DROPDOWN_MENU_PORTAL_CLASS} w-56`}
-                  onClick={(event) => event.stopPropagation()}
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className={BTN_SAVE_PLAIN}
                 >
-                  <button
-                    type="button"
-                    onClick={saveAndContinue}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-extrabold tracking-wide text-[var(--ink)] transition-colors hover:bg-white/45"
+                  <Save className="h-4 w-4" />
+                  {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActionMenuOpen((open) => !open)}
+                  disabled={isSaving}
+                  className={BTN_SAVE_MENU_PLAIN}
+                  aria-label="Kaydet işlemleri"
+                  aria-expanded={actionMenuOpen}
+                >
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              </div>
+              {actionMenuOpen &&
+                actionMenuStyle &&
+                createPortal(
+                  <div
+                    ref={actionMenuRef}
+                    style={actionMenuStyle}
+                    className={`${DROPDOWN_MENU_PORTAL_CLASS} w-56`}
+                    onClick={(event) => event.stopPropagation()}
                   >
-                    <Save className="h-4 w-4 text-emerald-300" /> Kaydet ve devam et
-                  </button>
-                </div>,
-                document.body,
-              )}
-          </div>
-        </section>
+                    <button
+                      type="button"
+                      onClick={saveAndContinue}
+                      disabled={isSaving}
+                      className={BTN_SAVE_MENU_ITEM}
+                    >
+                      <Save className="h-4 w-4" />
+                      {isSaving ? 'Kaydediliyor...' : 'Kaydet ve devam et'}
+                    </button>
+                  </div>,
+                  document.body,
+                )}
+            </div>
+          }
+        />
 
         <div className="space-y-5">
           <FormSectionPanel
@@ -711,26 +705,35 @@ export default function CustomerCreatePage() {
             </div>
           </FormSectionPanel>
         </div>
-      </div>
 
-      <section
-        className={`${APP_SURFACE_PANEL_CLASS} flex h-[4.625rem] items-center justify-between px-5`}
-      >
-        <div className="flex min-w-0 items-center gap-3 text-xs font-semibold text-gray-500">
-          <UserRound className="h-4 w-4 shrink-0" />
-          <span className="truncate">
-            Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.
-          </span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
-          <button type="button" onClick={() => navigate(-1)} className={BTN_CANCEL}>
-            <X className="h-4 w-4" /> Vazgeç
-          </button>
-          <button type="submit" className={BTN_SAVE}>
-            <Save className="h-4 w-4" /> Kaydet
-          </button>
-        </div>
-      </section>
+        <section className="app-page-header relative flex h-[4.625rem] items-center justify-between px-5">
+          <div className="flex min-w-0 items-center gap-3 text-xs font-semibold text-gray-500">
+            <UserRound className="h-4 w-4 shrink-0" />
+            <span className="truncate">
+              Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.
+            </span>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 bg-transparent">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isSaving}
+              className={BTN_CANCEL_PLAIN}
+            >
+              <X className="h-4 w-4" /> Vazgeç
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              className={BTN_SAVE_PLAIN}
+            >
+              <Save className="h-4 w-4" />
+              {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+          </div>
+        </section>
+      </AppPageShell>
     </form>
   )
 }

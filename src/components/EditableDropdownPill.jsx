@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, ChevronRight, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { DeleteConfirmPopover } from './Common/ListDeleteConfirmPanel'
-import { dropdownMenuShellClass, DROPDOWN_MENU_ITEM_CLASS, DROPDOWN_MENU_ITEM_MUTED_CLASS } from './Common/DropdownMenu'
+import {
+  dropdownMenuShellClass,
+  DROPDOWN_MENU_ITEM_CLASS,
+  DROPDOWN_MENU_ITEM_MUTED_CLASS,
+} from './Common/DropdownMenu'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { OPTION_COLOR_PALETTE } from '../utils/customerMeta'
 
@@ -17,7 +21,9 @@ function OptionLeading({ option, empty = false, isLightMenu = false }) {
     const Icon = option.icon
     const shellClass = isLightMenu ? 'bg-[var(--surface-muted)]' : 'bg-white/40'
     return (
-      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${shellClass} ${option.iconTone || 'text-[var(--muted)]'}`}>
+      <span
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${shellClass} ${option.iconTone || 'text-[var(--muted)]'}`}
+      >
         <Icon className="h-3.5 w-3.5" />
       </span>
     )
@@ -38,6 +44,7 @@ export default function EditableDropdownPill({
   editable = true,
   disabled = false,
   buttonClassName = DEFAULT_BUTTON_CLASS,
+  labelClassName = '',
   menuVariant = 'dark',
   menuMatchWidth = true,
   menuInline = false,
@@ -73,9 +80,13 @@ export default function EditableDropdownPill({
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase('tr-TR')
   const visibleOptions = options
     .map((option, index) => ({ option, index }))
-    .filter(({ option }) => (
-      !normalizedSearch || String(option.label || '').toLocaleLowerCase('tr-TR').includes(normalizedSearch)
-    ))
+    .filter(
+      ({ option }) =>
+        !normalizedSearch ||
+        String(option.label || '')
+          .toLocaleLowerCase('tr-TR')
+          .includes(normalizedSearch),
+    )
 
   function startEdit(index) {
     setAdding(false)
@@ -87,7 +98,9 @@ export default function EditableDropdownPill({
     const name = draftName.trim()
     if (name && editingIndex != null) {
       const previous = options[editingIndex]
-      const next = options.map((option, index) => (index === editingIndex ? { ...option, label: name } : option))
+      const next = options.map((option, index) =>
+        index === editingIndex ? { ...option, label: name } : option,
+      )
       onOptionsChange(next)
       if (previous.label === value) onChange(name)
     }
@@ -117,23 +130,34 @@ export default function EditableDropdownPill({
   const isLightMenu = menuVariant === 'light'
   const usePortal = !menuInline
   const portalPlacement = menuPlacement === 'above' ? 'above' : 'below'
-  const { anchorRef, menuRef, style: portalStyle } = useAnchoredPortal(isOpen && usePortal && isInteractive, {
+  const {
+    anchorRef,
+    menuRef,
+    style: portalStyle,
+  } = useAnchoredPortal(isOpen && usePortal && isInteractive, {
     placement: portalPlacement,
     matchWidth: menuMatchWidth,
   })
 
-  const selectedTextClass = isLightMenu
-    ? (hasSelection ? 'text-[var(--text-strong)]' : 'text-[var(--text-muted)]')
-    : (hasSelection ? 'text-[var(--ink)]' : 'text-[var(--muted)]')
+  const selectedTextClass =
+    labelClassName ||
+    (isLightMenu
+      ? hasSelection
+        ? 'text-[var(--text-strong)]'
+        : 'text-[var(--text-muted)]'
+      : hasSelection
+        ? 'text-[var(--ink)]'
+        : 'text-[var(--muted)]')
   const lightMenuShell =
     'z-30 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1.5 shadow-[var(--shadow)]'
-  const menuPositionClass = menuPlacement === 'above'
-    ? 'bottom-[calc(100%+4px)]'
-    : menuInline
-      ? ''
-      : menuVariant === 'light'
-        ? 'top-[calc(100%+4px)]'
-        : 'top-11'
+  const menuPositionClass =
+    menuPlacement === 'above'
+      ? 'bottom-[calc(100%+4px)]'
+      : menuInline
+        ? ''
+        : menuVariant === 'light'
+          ? 'top-[calc(100%+4px)]'
+          : 'top-11'
   const menuShellClass = menuInline
     ? isLightMenu
       ? `relative mt-1 w-full ${lightMenuShell}`
@@ -198,7 +222,10 @@ export default function EditableDropdownPill({
                 className="w-full"
               />
             ) : editingIndex === index ? (
-              <div key={`edit-${index}`} className="flex items-center gap-1.5 rounded-xl bg-white/35 px-2 py-1.5">
+              <div
+                key={`edit-${index}`}
+                className="flex items-center gap-1.5 rounded-xl bg-white/35 px-2 py-1.5"
+              >
                 <OptionLeading option={option} isLightMenu={isLightMenu} />
                 <input
                   autoFocus
@@ -213,7 +240,12 @@ export default function EditableDropdownPill({
                   }}
                   className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/42 px-2 py-1 text-xs font-bold text-[var(--ink)] focus:outline-none focus:border-white/75 focus:bg-white/52"
                 />
-                <button type="button" onClick={commitEdit} className="rounded-lg p-1 text-emerald-300 transition-colors hover:bg-emerald-500/15" title="Kaydet">
+                <button
+                  type="button"
+                  onClick={commitEdit}
+                  className="rounded-lg p-1 text-emerald-300 transition-colors hover:bg-emerald-500/15"
+                  title="Kaydet"
+                >
                   <Check className="h-3.5 w-3.5" />
                 </button>
                 <button
@@ -229,24 +261,42 @@ export default function EditableDropdownPill({
                 </button>
               </div>
             ) : (
-              <div key={option.label} className={`group flex items-center gap-1 rounded-xl transition-colors ${isLightMenu ? 'hover:bg-[var(--surface-muted)]' : 'hover:bg-white/45'}`}>
+              <div
+                key={option.label}
+                className={`group flex items-center gap-1 rounded-xl transition-colors ${isLightMenu ? 'hover:bg-[var(--surface-muted)]' : 'hover:bg-white/45'}`}
+              >
                 <button
                   type="button"
                   onClick={() => {
                     onChange(option.label)
                     setActiveMenu(null)
                   }}
-                  className={isLightMenu ? optionButtonClass : `${optionButtonClass} hover:bg-white/45`}
+                  className={
+                    isLightMenu ? optionButtonClass : `${optionButtonClass} hover:bg-white/45`
+                  }
                 >
                   <OptionLeading option={option} isLightMenu={isLightMenu} />
                   <span className="truncate">{option.label}</span>
                 </button>
                 {canEdit && (
                   <span className="flex shrink-0 items-center gap-0.5 pr-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button type="button" onClick={() => startEdit(index)} className="rounded-lg p-1 text-[var(--muted)] transition-colors hover:bg-white/45 hover:text-blue-600" title="Düzenle">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(index)}
+                      className="rounded-lg p-1 text-[var(--muted)] transition-colors hover:bg-white/45 hover:text-blue-600"
+                      title="Düzenle"
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button type="button" onClick={() => { setEditingIndex(null); setConfirmIndex(index) }} className="rounded-lg p-1 text-[var(--muted)] transition-colors hover:bg-red-500/15 hover:text-red-500" title="Sil">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingIndex(null)
+                        setConfirmIndex(index)
+                      }}
+                      className="rounded-lg p-1 text-[var(--muted)] transition-colors hover:bg-red-500/15 hover:text-red-500"
+                      title="Sil"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </span>
@@ -255,9 +305,7 @@ export default function EditableDropdownPill({
             ),
           )}
           {visibleOptions.length === 0 && (
-            <p className="px-3 py-2 text-xs font-bold text-[var(--muted)]">
-              Sonuç bulunamadı.
-            </p>
+            <p className="px-3 py-2 text-xs font-bold text-[var(--muted)]">Sonuç bulunamadı.</p>
           )}
         </div>
 
@@ -280,7 +328,12 @@ export default function EditableDropdownPill({
                   }}
                   className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/42 px-2 py-1 text-xs font-bold text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:border-white/75 focus:bg-white/52"
                 />
-                <button type="button" onClick={commitAdd} className="rounded-lg p-1 text-emerald-300 transition-colors hover:bg-emerald-500/15" title="Ekle">
+                <button
+                  type="button"
+                  onClick={commitAdd}
+                  className="rounded-lg p-1 text-emerald-300 transition-colors hover:bg-emerald-500/15"
+                  title="Ekle"
+                >
                   <Check className="h-3.5 w-3.5" />
                 </button>
                 <button
@@ -314,7 +367,11 @@ export default function EditableDropdownPill({
   }
 
   return (
-    <div ref={anchorRef} className="relative min-w-0 w-full" onClick={(event) => event.stopPropagation()}>
+    <div
+      ref={anchorRef}
+      className="relative min-w-0 w-full"
+      onClick={(event) => event.stopPropagation()}
+    >
       <button
         type="button"
         disabled={disabled}
@@ -326,21 +383,25 @@ export default function EditableDropdownPill({
       >
         <span className="flex min-w-0 items-center gap-2">
           <OptionLeading option={selected} empty={!hasSelection} isLightMenu={isLightMenu} />
-          <span className={`truncate ${selectedTextClass}`}>
-            {selected?.label || placeholder}
-          </span>
+          <span className={`truncate ${selectedTextClass}`}>{selected?.label || placeholder}</span>
         </span>
         {!disabled && (
-          <ChevronRight className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''} text-[var(--muted)]`} />
+          <ChevronRight
+            className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''} text-[var(--muted)]`}
+          />
         )}
       </button>
       {isOpen && isInteractive && !usePortal && renderMenu()}
-      {isOpen && isInteractive && usePortal && portalStyle && createPortal(
-        <div style={portalStyle} onClick={(event) => event.stopPropagation()}>
-          {renderMenu()}
-        </div>,
-        document.body,
-      )}
+      {isOpen &&
+        isInteractive &&
+        usePortal &&
+        portalStyle &&
+        createPortal(
+          <div style={portalStyle} onClick={(event) => event.stopPropagation()}>
+            {renderMenu()}
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }

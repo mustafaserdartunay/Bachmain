@@ -31,7 +31,7 @@ import {
 function Shell({ title, children, actions }) {
   return (
     <AppPageShell>
-      <AppPageHeader title={title} backTo="/ai-buyume" actions={actions} />
+      <AppPageHeader title={title} backTo="/ai-buyume" backLabel="AI Büyüme" actions={actions} />
       {children}
     </AppPageShell>
   )

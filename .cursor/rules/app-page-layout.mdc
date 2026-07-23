@@ -1,0 +1,27 @@
+# App Page Header
+
+Sayfa üst paneli her zaman `AppPageHeader` ile kurulur. Özel header kartı / `glass-team-hub` başlık barı üretme.
+
+## Kaynak
+
+- `src/components/Layout/AppPageLayout.jsx` → `AppPageHeader`, `AppPageShell`
+- Başlık sınıfı: `APP_PAGE_TITLE_CLASS` (mavi, uppercase, ortalı)
+- Geri: `APP_PAGE_BACK_PLAIN_CLASS` (zeminsiz gri)
+
+## Düzen
+
+- Sol: geri (`backTo` + `backLabel` veya `onBack`) — sayfanın kendi üst rotasına göre
+- Orta: `title` (zorunlu), isteğe bağlı `subtitle`
+- Sağ: `actions` — sayfa verisine özel CTA (SplitCreateButton, Kaydet, linkler…)
+
+## Varsayılanlar
+
+- `backTo="/"` · `backLabel="Güncel Durum"` (kök listeler)
+- Alt sayfalar: örn. `backTo="/musteriler"` · `backLabel="Müşteriler"`
+- Modül içi: örn. `backTo="/ai-buyume"` · `backLabel="AI Büyüme"`
+
+## Yapma
+
+- Sayfada elle `h1` + absolute back butonu ile paralel header tasarlama
+- Dolgulu/gradient geri butonu veya solda hizalı büyük başlık
+- Başka font/renk ile alternatif sayfa başlığı

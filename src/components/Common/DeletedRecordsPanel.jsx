@@ -5,7 +5,12 @@ import {
   getDeletedRecords,
   restoreDeletedRecord,
 } from '../../utils/deletedRecordsStore'
-import { APP_ICON_WRAP_CLASS, APP_LABEL_CLASS, APP_METRIC_ROW_CLASS, APP_SUBLABEL_CLASS } from '../../utils/dashboardDesign'
+import {
+  APP_ICON_WRAP_CLASS,
+  APP_LABEL_CLASS,
+  APP_METRIC_ROW_CLASS,
+  APP_SUBLABEL_CLASS,
+} from '../../utils/dashboardDesign'
 
 function formatWhen(value) {
   if (!value) return '—'
@@ -46,7 +51,7 @@ export default function DeletedRecordsPanel({
   }
 
   return (
-    <section className="card overflow-hidden p-0">
+    <section className="card app-shell-surface overflow-hidden p-0">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
@@ -57,9 +62,13 @@ export default function DeletedRecordsPanel({
             <Trash2 className="h-3.5 w-3.5" />
           </span>
           <span className={APP_LABEL_CLASS}>{title}</span>
-          <span className="badge badge-red shrink-0 !px-2 !py-0.5 !text-[12px]">{entries.length}</span>
+          <span className="badge badge-red shrink-0 !px-2 !py-0.5 !text-[12px]">
+            {entries.length}
+          </span>
         </span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {open && (
@@ -71,7 +80,10 @@ export default function DeletedRecordsPanel({
           ) : (
             <div className="space-y-1">
               {entries.map((entry) => (
-                <div key={entry.record?.id || entry.deletedAt} className={`${APP_METRIC_ROW_CLASS} items-center`}>
+                <div
+                  key={entry.record?.id || entry.deletedAt}
+                  className={`${APP_METRIC_ROW_CLASS} items-center`}
+                >
                   <span className={`${APP_ICON_WRAP_CLASS} text-rose-500`}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </span>
@@ -79,9 +91,7 @@ export default function DeletedRecordsPanel({
                     <p className={`${APP_LABEL_CLASS} text-[var(--ink)]`}>
                       {entry.entityLabel || entry.record?.id}
                     </p>
-                    <p className={APP_SUBLABEL_CLASS}>
-                      Silindi · {formatWhen(entry.deletedAt)}
-                    </p>
+                    <p className={APP_SUBLABEL_CLASS}>Silindi · {formatWhen(entry.deletedAt)}</p>
                   </div>
                   <button
                     type="button"

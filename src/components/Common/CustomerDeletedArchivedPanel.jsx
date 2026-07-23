@@ -112,7 +112,7 @@ export default function CustomerDeletedArchivedPanel({
   }
 
   return (
-    <section className="card overflow-hidden p-0">
+    <section className="card app-shell-surface overflow-hidden p-0">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}

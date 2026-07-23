@@ -1,15 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Handshake, Link2, Search, UserPlus, Users, WalletCards } from 'lucide-react'
+import {
+  CheckCircle2,
+  Handshake,
+  Link2,
+  Pencil,
+  Search,
+  Trash2,
+  UserPlus,
+  Users,
+  WalletCards,
+} from 'lucide-react'
 import { DataTable } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
 import SplitCreateButton from '../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import { APP_FILTER_LABEL_CLASS } from '../utils/dashboardDesign'
-import { getCustomerProfiles } from '../data/customerProfiles'
+import { deleteCustomer, getCustomerProfiles } from '../data/customerProfiles'
 import { appendActivity } from '../utils/customerActivity'
 import {
   formatTreasuryCurrency,
@@ -39,10 +49,14 @@ const balanceFilterOptions = [
   { label: 'Sıfır', color: 'bg-orange-500' },
 ]
 
+const LIST_TEXT = 'text-xs font-extrabold tracking-wide text-gray-300'
+const LIST_PILL = `${LIST_PILL_CLASS} !text-xs !font-extrabold !tracking-wide !text-gray-300`
+const LIST_PILL_LABEL = 'text-xs font-extrabold tracking-wide text-gray-300'
+
 function balanceClass(balance) {
-  if (balance > 0) return 'text-emerald-600'
-  if (balance < 0) return 'text-red-600'
-  return 'text-orange-600'
+  if (balance > 0) return 'text-[#10b981]'
+  if (balance < 0) return 'text-[#e11d48]'
+  return 'text-gray-300'
 }
 
 function currentBalance(customer, movements) {
@@ -72,6 +86,7 @@ export default function CustomersPage({
   const [customerSettings, setCustomerSettings] = useState(readCustomerMeta)
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
+  const [selectedIds, setSelectedIds] = useState([])
   const [b2bMap, setB2bMap] = useState(() => {
     const map = {}
     getCustomerProfiles().forEach((customer) => {
@@ -169,10 +184,38 @@ export default function CustomersPage({
   )
 
   function grantB2bAccess(event, customerId) {
-    event.stopPropagation()
+    event?.stopPropagation?.()
     const access = enableB2bAccess(customerId)
     setB2bMap((current) => ({ ...current, [customerId]: access }))
     appendActivity(customerId, 'B2B', 'Müşteri paneli erişimi verildi')
+  }
+
+  function handleDeleteCustomer(customer) {
+    const label = getCustomerDisplay(customer).brandShortName || customer.company || 'Kayıt'
+    if (!window.confirm(`“${label}” silinsin mi? Kayıt silinenlere taşınır.`)) return
+    deleteCustomer(customer.id)
+    appendActivity(customer.id, 'Silindi', `${label} silindi`)
+    setSelectedIds((ids) => ids.filter((id) => id !== customer.id))
+    setCustomerProfiles(getCustomerProfiles())
+  }
+
+  function handleBulkDelete() {
+    if (!selectedIds.length) return
+    if (
+      !window.confirm(`${selectedIds.length} kayıt silinsin mi? Seçilenler silinenlere taşınır.`)
+    ) {
+      return
+    }
+    selectedIds.forEach((id) => {
+      const customer = customerProfiles.find((item) => item.id === id)
+      const label = customer
+        ? getCustomerDisplay(customer).brandShortName || customer.company || id
+        : id
+      deleteCustomer(id)
+      appendActivity(id, 'Silindi', `${label} toplu silindi`)
+    })
+    setSelectedIds([])
+    setCustomerProfiles(getCustomerProfiles())
   }
 
   function updateCustomerSetting(customerId, field, value) {
@@ -205,6 +248,9 @@ export default function CustomersPage({
     <AppPageShell>
       <AppPageHeader
         title={pageTitle}
+        titleClassName="text-[#f59e0b]"
+        backTo="/"
+        backLabel="Güncel Durum"
         actions={
           <SplitCreateButton
             label={createLabel}
@@ -261,27 +307,33 @@ export default function CustomersPage({
       <SummaryMetrics
         columns={4}
         items={[
-          { title: totalLabel, value: scopedProfiles.length, icon: Users },
+          {
+            title: totalLabel,
+            value: scopedProfiles.length,
+            icon: Users,
+            tone: 'text-[#8b5cf6]',
+            valueTone: 'text-[#8b5cf6]',
+          },
           {
             title: 'Aktif Cari',
             value: filteredCustomers.length,
             icon: CheckCircle2,
-            tone: 'emerald',
-            valueTone: 'emerald',
+            tone: 'text-[#2563eb]',
+            valueTone: 'text-[#2563eb]',
           },
           {
             title: 'Toplam Ödenecek',
             value: formatTreasuryCurrency(totalPayable),
             icon: WalletCards,
-            tone: 'purple',
-            valueTone: 'red',
+            tone: 'text-[#e11d48]',
+            valueTone: 'text-[#e11d48]',
           },
           {
             title: 'Toplam Tahsil Edilecek',
             value: formatTreasuryCurrency(totalReceivable),
             icon: WalletCards,
-            tone: 'orange',
-            valueTone: 'emerald',
+            tone: 'text-[#10b981]',
+            valueTone: 'text-[#10b981]',
           },
         ]}
       />
@@ -290,9 +342,19 @@ export default function CustomersPage({
         title={listTitle}
         dotColor="blue"
         action={
-          <span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px]">
-            {filteredCustomers.length} kayıt
-          </span>
+          <div className="flex items-center gap-2">
+            {selectedIds.length > 0 ? (
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-transparent px-2.5 text-xs font-extrabold tracking-wide text-[#f43f5e] transition-colors hover:text-[#e11d48]"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Toplu Sil ({selectedIds.length})
+              </button>
+            ) : null}
+            <span className={`${LIST_TEXT} shrink-0`}>{filteredCustomers.length} kayıt</span>
+          </div>
         }
       >
         <div className="mb-4 space-y-3">
@@ -309,7 +371,8 @@ export default function CustomersPage({
                 options={[filterAllOption, ...typeOptions]}
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName={LIST_PILL_CLASS}
+                buttonClassName={LIST_PILL}
+                labelClassName={LIST_PILL_LABEL}
                 openKey="filter-type"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -323,7 +386,8 @@ export default function CustomersPage({
                 options={[filterAllOption, ...optionLists.representative]}
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName={LIST_PILL_CLASS}
+                buttonClassName={LIST_PILL}
+                labelClassName={LIST_PILL_LABEL}
                 openKey="filter-representative"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -337,7 +401,8 @@ export default function CustomersPage({
                 options={[filterAllOption, ...optionLists.scoring]}
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName={LIST_PILL_CLASS}
+                buttonClassName={LIST_PILL}
+                labelClassName={LIST_PILL_LABEL}
                 openKey="filter-scoring"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -351,7 +416,8 @@ export default function CustomersPage({
                 options={balanceFilterOptions}
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName={LIST_PILL_CLASS}
+                buttonClassName={LIST_PILL}
+                labelClassName={LIST_PILL_LABEL}
                 openKey="filter-balance"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -367,6 +433,9 @@ export default function CustomersPage({
           emptyDescription="Arama veya segment filtresini değiştirin."
           data={filteredCustomers}
           getRowId={(customer) => customer.id}
+          selectable
+          selectedIds={selectedIds}
+          onSelectedIdsChange={setSelectedIds}
           onRowClick={(customer) => navigate(`/musteriler/${customer.id}`)}
           columns={[
             {
@@ -374,14 +443,15 @@ export default function CustomersPage({
               header: columnLabel,
               sortable: true,
               accessorKey: 'name',
+              sortValue: (customer) => getCustomerDisplay(customer).brandShortName,
               cell: (customer) => {
                 const display = getCustomerDisplay(customer)
                 return (
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 truncate font-semibold">
+                    <span className={`shrink-0 truncate ${LIST_TEXT}`}>
                       {display.brandShortName}
                     </span>
-                    <span className="truncate text-ds-caption text-ds-muted">
+                    <span className="truncate text-xs font-extrabold tracking-wide text-gray-400/80">
                       {display.companyTitle}
                     </span>
                   </span>
@@ -401,7 +471,8 @@ export default function CustomersPage({
                       value={resolveListColumnLabel(meta.type, optionLists.type)}
                       options={typeOptions}
                       onOptionsChange={(next) => updateOptionList('type', next)}
-                      buttonClassName={LIST_PILL_CLASS}
+                      buttonClassName={LIST_PILL}
+                      labelClassName={LIST_PILL_LABEL}
                       openKey={`${customer.id}-type`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
@@ -427,7 +498,8 @@ export default function CustomersPage({
                       )}
                       options={optionLists.representative}
                       onOptionsChange={(next) => updateOptionList('representative', next)}
-                      buttonClassName={LIST_PILL_CLASS}
+                      buttonClassName={LIST_PILL}
+                      labelClassName={LIST_PILL_LABEL}
                       openKey={`${customer.id}-representative`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
@@ -452,7 +524,8 @@ export default function CustomersPage({
                       value={resolveListColumnLabel(meta.scoring, optionLists.scoring)}
                       options={optionLists.scoring}
                       onOptionsChange={(next) => updateOptionList('scoring', next)}
-                      buttonClassName={LIST_PILL_CLASS}
+                      buttonClassName={LIST_PILL}
+                      labelClassName={LIST_PILL_LABEL}
                       openKey={`${customer.id}-scoring`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
@@ -467,10 +540,13 @@ export default function CustomersPage({
               header: 'Güncel Bakiye',
               sortable: true,
               className: 'text-right',
+              sortValue: (customer) => currentBalance(customer, movements),
               cell: (customer) => {
                 const balance = currentBalance(customer, movements)
                 return (
-                  <span className={`font-semibold tabular-nums ${balanceClass(balance)}`}>
+                  <span
+                    className={`text-xs font-extrabold tracking-wide tabular-nums ${balanceClass(balance)}`}
+                  >
                     {formatTreasuryCurrency(balance)}
                   </span>
                 )
@@ -478,10 +554,21 @@ export default function CustomersPage({
             },
           ]}
           getRowActions={(customer) => [
+            {
+              id: 'edit',
+              label: 'Düzenle',
+              icon: Pencil,
+              onClick: () =>
+                navigate(
+                  listKind === 'supplier'
+                    ? `/musteriler/yeni?edit=${customer.id}&kind=supplier`
+                    : `/musteriler/yeni?edit=${customer.id}`,
+                ),
+            },
             b2bMap[customer.id]?.enabled
               ? {
                   id: 'portal',
-                  label: 'B2B Panel',
+                  label: 'B2B Bağlantı',
                   icon: Link2,
                   onClick: () =>
                     window.open(
@@ -492,10 +579,17 @@ export default function CustomersPage({
                 }
               : {
                   id: 'grant',
-                  label: 'B2B İzin Ver',
+                  label: 'B2B Bağlantı',
                   icon: Link2,
-                  onClick: () => grantB2bAccess({ stopPropagation() {} }, customer.id),
+                  onClick: () => grantB2bAccess(null, customer.id),
                 },
+            {
+              id: 'delete',
+              label: 'Sil',
+              icon: Trash2,
+              tone: 'danger',
+              onClick: () => handleDeleteCustomer(customer),
+            },
           ]}
         />
       </AppPagePanel>

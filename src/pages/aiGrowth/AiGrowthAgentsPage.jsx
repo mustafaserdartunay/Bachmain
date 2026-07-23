@@ -49,7 +49,7 @@ Brief: ${brief}
 
   return (
     <AppPageShell>
-      <AppPageHeader title="AI Ajanları" backTo="/ai-buyume" />
+      <AppPageHeader title="AI Ajanları" backTo="/ai-buyume" backLabel="AI Büyüme" />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {AGENTS.map((agent) => (
           <div key={agent.id} className="glass-inset rounded-2xl p-4">
@@ -64,9 +64,22 @@ Brief: ${brief}
 
       <AppPagePanel title="Koordineli çalışma">
         <div className="space-y-3">
-          <textarea className="form-input min-h-24" value={brief} onChange={(e) => setBrief(e.target.value)} />
-          <button type="button" disabled={loading} onClick={runCouncil} className={`${BTN_SUCCESS} gap-2 px-4 text-xs`}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Network className="h-4 w-4" />}
+          <textarea
+            className="form-input min-h-24"
+            value={brief}
+            onChange={(e) => setBrief(e.target.value)}
+          />
+          <button
+            type="button"
+            disabled={loading}
+            onClick={runCouncil}
+            className={`${BTN_SUCCESS} gap-2 px-4 text-xs`}
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Network className="h-4 w-4" />
+            )}
             Ajan konseyini çalıştır
           </button>
           {error ? <p className="text-xs text-rose-300">{error}</p> : null}
@@ -105,20 +118,42 @@ export function AiGrowthAssistantPage() {
 
   return (
     <AppPageShell>
-      <AppPageHeader title="AI Asistan" backTo="/ai-buyume" />
+      <AppPageHeader title="AI Asistan" backTo="/ai-buyume" backLabel="AI Büyüme" />
       <AppPagePanel title="Sohbet">
         <div className="mb-3 max-h-[26rem] space-y-2 overflow-auto">
           {history.map((row, idx) => (
-            <div key={`${row.role}-${idx}`} className={`rounded-xl px-3 py-2 text-sm ${row.role === 'user' ? 'bg-blue-500/15' : 'bg-dark-800/50'}`}>
-              <p className="mb-1 text-[10px] uppercase tracking-wide text-[var(--muted)]">{row.role === 'user' ? 'Siz' : 'Asistan'}</p>
+            <div
+              key={`${row.role}-${idx}`}
+              className={`rounded-xl px-3 py-2 text-sm ${row.role === 'user' ? 'bg-blue-500/15' : 'bg-dark-800/50'}`}
+            >
+              <p className="mb-1 text-[10px] uppercase tracking-wide text-[var(--muted)]">
+                {row.role === 'user' ? 'Siz' : 'Asistan'}
+              </p>
               <pre className="whitespace-pre-wrap font-sans">{row.content}</pre>
             </div>
           ))}
         </div>
         <div className="flex gap-2">
-          <input className="form-input" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Büyüme asistanına sorun…" onKeyDown={(e) => { if (e.key === 'Enter') send() }} />
-          <button type="button" disabled={loading} onClick={send} className={`${BTN_SUCCESS} gap-2 px-4 text-xs`}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          <input
+            className="form-input"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Büyüme asistanına sorun…"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') send()
+            }}
+          />
+          <button
+            type="button"
+            disabled={loading}
+            onClick={send}
+            className={`${BTN_SUCCESS} gap-2 px-4 text-xs`}
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
             Gönder
           </button>
         </div>

@@ -15,8 +15,8 @@ import {
   readCompanySettings,
   saveCompanySettings,
 } from '../utils/companySettings'
-import { BTN_SUCCESS } from '../utils/buttonStyles'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
+import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 
 function Field({ label, children }) {
   return (
@@ -26,6 +26,9 @@ function Field({ label, children }) {
     </label>
   )
 }
+
+const LINK_PLAIN =
+  'inline-flex h-control min-h-control items-center gap-2 rounded-xl bg-transparent px-3 text-xs font-extrabold tracking-wide text-[#3b82f6] transition-colors hover:text-[#60a5fa]'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState(readCompanySettings)
@@ -64,59 +67,35 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="w-full space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-          Yönetici Ayarları
-        </h1>
-        <p className="mt-2 text-xs font-semibold text-gray-500">
-          Firma bilgileri ekstre PDF ve sistem genelinde kullanılır.
-        </p>
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
-          <Link
-            to="/ayarlar/master-data"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-blue-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <ShieldCheck className="h-4 w-4" />
-            Master Data (MDM)
-          </Link>
-          <Link
-            to="/otomasyon"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-emerald-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <GitBranch className="h-4 w-4" />
-            Workflow Engine
-          </Link>
-          <Link
-            to="/aios"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-violet-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <Sparkles className="h-4 w-4" />
-            AIOS
-          </Link>
-          <Link
-            to="/bilgi-merkezi"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-sky-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <Library className="h-4 w-4" />
-            Knowledge
-          </Link>
-          <Link
-            to="/dijital-ikiz"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-cyan-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <Factory className="h-4 w-4" />
-            Digital Twin
-          </Link>
-          <Link
-            to="/ayarlar/kurumsal-yapi"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <Building2 className="h-4 w-4" />
-            Kurumsal Yapı
-          </Link>
-        </div>
-      </section>
+    <AppPageShell>
+      <AppPageHeader
+        title="Yönetici Ayarları"
+        subtitle="Firma bilgileri ekstre PDF ve sistem genelinde kullanılır."
+        backTo="/"
+        backLabel="Güncel Durum"
+        actions={
+          <div className="flex flex-wrap items-center justify-end gap-1">
+            <Link to="/ayarlar/master-data" className={LINK_PLAIN}>
+              <ShieldCheck className="h-4 w-4" /> MDM
+            </Link>
+            <Link to="/otomasyon" className={LINK_PLAIN}>
+              <GitBranch className="h-4 w-4" /> Workflow
+            </Link>
+            <Link to="/aios" className={LINK_PLAIN}>
+              <Sparkles className="h-4 w-4" /> AIOS
+            </Link>
+            <Link to="/bilgi-merkezi" className={LINK_PLAIN}>
+              <Library className="h-4 w-4" /> Knowledge
+            </Link>
+            <Link to="/dijital-ikiz" className={LINK_PLAIN}>
+              <Factory className="h-4 w-4" /> Twin
+            </Link>
+            <Link to="/ayarlar/kurumsal-yapi" className={LINK_PLAIN}>
+              <Building2 className="h-4 w-4" /> Kurumsal
+            </Link>
+          </div>
+        }
+      />
 
       <form onSubmit={handleSave} className="space-y-4">
         <section className="card space-y-4">
@@ -211,27 +190,25 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        <section className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              to="/yonetici-kontrol"
-              className="inline-flex items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-3 text-xs font-black uppercase tracking-wide text-purple-300 transition-colors hover:bg-purple-500/20"
-            >
-              <ShieldCheck className="h-4 w-4" />
-              Yönetici Kontrol Paneli
-            </Link>
-          </div>
-          <div className="flex items-center gap-2">
+        <section className="app-page-header relative flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <Link
+            to="/yonetici-kontrol"
+            className="inline-flex items-center gap-2 rounded-xl bg-transparent px-3 text-xs font-extrabold tracking-wide text-[#8b5cf6] transition-colors hover:text-[#a78bfa]"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Yönetici Kontrol Paneli
+          </Link>
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={resetDefaults}
-              className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-3 text-xs font-black text-gray-300 hover:text-white"
+              className="inline-flex h-control items-center rounded-xl bg-transparent px-3 text-xs font-extrabold text-gray-400 hover:text-white"
             >
               Varsayılana Dön
             </button>
             <button
               type="submit"
-              className={`${BTN_SUCCESS} gap-2 px-4 py-3 text-xs uppercase tracking-wide`}
+              className="inline-flex h-control items-center gap-2 rounded-xl bg-transparent px-3 text-xs font-extrabold text-[#10b981] hover:text-[#34d399]"
             >
               <Save className="h-4 w-4" />
               {saved ? 'Kaydedildi' : 'Kaydet'}
@@ -239,6 +216,6 @@ export default function SettingsPage() {
           </div>
         </section>
       </form>
-    </div>
+    </AppPageShell>
   )
 }

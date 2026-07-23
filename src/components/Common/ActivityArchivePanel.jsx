@@ -8,7 +8,12 @@ import {
   getActivityModuleLabel,
   markActivityEntryRestored,
 } from '../../utils/activityArchiveStore'
-import { APP_ICON_WRAP_CLASS, APP_LABEL_CLASS, APP_METRIC_ROW_CLASS, APP_SUBLABEL_CLASS } from '../../utils/dashboardDesign'
+import {
+  APP_ICON_WRAP_CLASS,
+  APP_LABEL_CLASS,
+  APP_METRIC_ROW_CLASS,
+  APP_SUBLABEL_CLASS,
+} from '../../utils/dashboardDesign'
 
 export default function ActivityArchivePanel({
   title = 'Arşiv ve İşlem Geçmişi',
@@ -42,7 +47,7 @@ export default function ActivityArchivePanel({
   }
 
   return (
-    <section className="card overflow-hidden p-0">
+    <section className="card app-shell-surface overflow-hidden p-0">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
@@ -53,9 +58,13 @@ export default function ActivityArchivePanel({
             <Archive className="h-3.5 w-3.5" />
           </span>
           <span className={APP_LABEL_CLASS}>{title}</span>
-          <span className="badge badge-orange shrink-0 !px-2 !py-0.5 !text-[12px]">{entries.length}</span>
+          <span className="badge badge-orange shrink-0 !px-2 !py-0.5 !text-[12px]">
+            {entries.length}
+          </span>
         </span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {open && (
@@ -67,7 +76,8 @@ export default function ActivityArchivePanel({
           ) : (
             <div className="space-y-1">
               {entries.map((entry) => {
-                const canRestore = Boolean(entry.snapshot) && !entry.restoredAt && typeof onRestore === 'function'
+                const canRestore =
+                  Boolean(entry.snapshot) && !entry.restoredAt && typeof onRestore === 'function'
                 return (
                   <div key={entry.id} className={`${APP_METRIC_ROW_CLASS} items-start`}>
                     <span className={`${APP_ICON_WRAP_CLASS} text-amber-600`}>
@@ -78,7 +88,9 @@ export default function ActivityArchivePanel({
                         {entry.entityLabel || getActivityActionLabel(entry.action)}
                       </p>
                       <p className={APP_SUBLABEL_CLASS}>
-                        {getActivityModuleLabel(entry.module)} · {getActivityActionLabel(entry.action)} · {formatActivityArchiveDate(entry.at)}
+                        {getActivityModuleLabel(entry.module)} ·{' '}
+                        {getActivityActionLabel(entry.action)} ·{' '}
+                        {formatActivityArchiveDate(entry.at)}
                       </p>
                       {entry.restoredAt ? (
                         <p className={`${APP_SUBLABEL_CLASS} text-emerald-600`}>Geri alındı</p>

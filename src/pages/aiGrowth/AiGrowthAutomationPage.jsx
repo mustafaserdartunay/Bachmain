@@ -36,7 +36,7 @@ export default function AiGrowthAutomationPage() {
 
   return (
     <AppPageShell>
-      <AppPageHeader title="Otomasyon" backTo="/ai-buyume" />
+      <AppPageHeader title="Otomasyon" backTo="/ai-buyume" backLabel="AI Büyüme" />
       <div className="grid gap-5 lg:grid-cols-2">
         <AppPagePanel title="Kural ekle">
           <form onSubmit={addRule} className="space-y-3">

@@ -10,15 +10,20 @@ import {
 } from 'lucide-react'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { getCustomerProfiles } from '../../data/customerProfiles'
-import { getCustomerMetaSelection, matchesPartyListFilter, readCustomerMeta } from '../../utils/customerMeta'
+import {
+  getCustomerMetaSelection,
+  matchesPartyListFilter,
+  readCustomerMeta,
+} from '../../utils/customerMeta'
 import { getTreasuryAccounts } from '../../utils/treasuryStore'
 
 function getDefaultCashAccountPath(action) {
   const accounts = getTreasuryAccounts()
-  const preferred = accounts.find((account) => account.type === 'Nakit Kasa')
-    || accounts.find((account) => account.type === 'Banka Hesabı')
-    || accounts.find((account) => account.type !== 'Çek Kasası')
-    || accounts[0]
+  const preferred =
+    accounts.find((account) => account.type === 'Nakit Kasa') ||
+    accounts.find((account) => account.type === 'Banka Hesabı') ||
+    accounts.find((account) => account.type !== 'Çek Kasası') ||
+    accounts[0]
   const accountId = preferred?.id || 'cash-main'
   return `${CASH_BASE_PATH}/${accountId}?hareket=${action}`
 }
@@ -96,14 +101,16 @@ function QuickActionCard({ action }) {
       <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-[#ffffff] ring-1 ring-white/25">
         <Icon className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
       </span>
-      <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">{action.title}</span>
+      <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
+        {action.title}
+      </span>
     </Link>
   )
 }
 
 export default function HeaderCashActionsPanel() {
   return (
-    <section className="app-header-banner flex min-h-[4.75rem] shrink-0 items-center px-4 py-3 sm:px-6">
+    <section className="app-header-banner flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center px-4 py-3 sm:px-6">
       <div className="flex w-full gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-7 lg:gap-2 lg:overflow-visible">
         {actions.map((action) => (
           <QuickActionCard key={action.id} action={action} />

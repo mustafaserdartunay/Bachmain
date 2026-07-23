@@ -4,25 +4,40 @@ import { MoreMenu } from './MoreMenu'
 import { EmptyState } from './States'
 import { Tooltip } from './Tooltip'
 
-function sortRows(rows, sort) {
+function readSortValue(row, sortKey, column) {
+  if (typeof column?.sortValue === 'function') return column.sortValue(row)
+  if (column?.accessorKey) return row[column.accessorKey]
+  return row[sortKey]
+}
+
+function sortRows(rows, sort, columns = []) {
   if (!sort?.key) return rows
+  const column = columns.find((col) => (col.accessorKey || col.id) === sort.key)
   const dir = sort.dir === 'desc' ? -1 : 1
   return [...rows].sort((a, b) => {
-    const av = a[sort.key]
-    const bv = b[sort.key]
+    const av = readSortValue(a, sort.key, column)
+    const bv = readSortValue(b, sort.key, column)
     if (av == null && bv == null) return 0
     if (av == null) return 1
     if (bv == null) return -1
     if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir
-    return String(av).localeCompare(String(bv), 'tr') * dir
+    return (
+      String(av).localeCompare(String(bv), 'tr', {
+        sensitivity: 'base',
+        numeric: true,
+      }) * dir
+    )
   })
 }
 
 /**
  * Adaptive DataTable — desktop grid, mobile cards, MoreMenu actions.
  *
- * columns: [{ id, header, accessorKey?, cell?, sortable?, hideOnMobile?, className? }]
+ * columns: [{ id, header, accessorKey?, sortValue?, cell?, sortable?, hideOnMobile?, className? }]
  * getRowActions?: (row) => MoreMenu items
+ * selectable?: boolean — checkbox column for bulk actions
+ * selectedIds?: string[]
+ * onSelectedIdsChange?: (ids: string[]) => void
  */
 export function DataTable({
   columns = [],
@@ -33,21 +48,50 @@ export function DataTable({
   emptyDescription,
   className = '',
   onRowClick,
+  selectable = false,
+  selectedIds = [],
+  onSelectedIdsChange,
 }) {
   const [sort, setSort] = useState({ key: null, dir: 'asc' })
-  const rows = useMemo(() => sortRows(data, sort), [data, sort])
+  const rows = useMemo(() => sortRows(data, sort, columns), [columns, data, sort])
+  const selectedSet = useMemo(() => new Set(selectedIds.map(String)), [selectedIds])
+  const allIds = useMemo(
+    () => rows.map((row, index) => String(getRowId(row, index))),
+    [rows, getRowId],
+  )
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedSet.has(id))
+  const someSelected = allIds.some((id) => selectedSet.has(id))
 
   function toggleSort(key) {
     setSort((current) => {
       if (current.key !== key) return { key, dir: 'asc' }
-      if (current.dir === 'asc') return { key, dir: 'desc' }
-      return { key: null, dir: 'asc' }
+      return { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
     })
+  }
+
+  function setSelected(nextSet) {
+    onSelectedIdsChange?.([...nextSet])
+  }
+
+  function toggleOne(id, event) {
+    event?.stopPropagation()
+    const next = new Set(selectedSet)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelected(next)
+  }
+
+  function toggleAll(event) {
+    event?.stopPropagation()
+    if (allSelected) setSelected(new Set())
+    else setSelected(new Set(allIds))
   }
 
   if (!rows.length) {
     return <EmptyState title={emptyTitle} description={emptyDescription} className={className} />
   }
+
+  const checkboxClass = 'h-4 w-4 rounded border-ds-border accent-[#3b82f6] cursor-pointer'
 
   return (
     <div className={className}>
@@ -56,20 +100,38 @@ export function DataTable({
         <table className="w-full min-w-[640px] border-collapse text-left">
           <thead className="bg-[var(--ds-surface-muted)]">
             <tr>
+              {selectable ? (
+                <th className="h-[var(--ds-row-h,2.75rem)] w-10 px-3">
+                  <input
+                    type="checkbox"
+                    className={checkboxClass}
+                    checked={allSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someSelected && !allSelected
+                    }}
+                    onChange={toggleAll}
+                    aria-label="Tümünü seç"
+                  />
+                </th>
+              ) : null}
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className={`h-[var(--ds-row-h,2.75rem)] px-3 text-ds-caption font-semibold uppercase tracking-wide text-ds-muted ${col.className || ''}`}
+                  className={`h-[var(--ds-row-h,2.75rem)] px-3 text-xs font-extrabold uppercase tracking-wide text-gray-300 ${col.className || ''}`}
                 >
                   {col.sortable ? (
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1 hover:text-ds-ink"
+                      className="inline-flex items-center gap-1 text-gray-300 hover:text-white"
                       onClick={() => toggleSort(col.accessorKey || col.id)}
                     >
                       <span className="truncate">{col.header}</span>
                       {sort.key === (col.accessorKey || col.id) ? (
-                        sort.dir === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
+                        sort.dir === 'asc' ? (
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        )
                       ) : (
                         <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
                       )}
@@ -84,20 +146,48 @@ export function DataTable({
           </thead>
           <tbody>
             {rows.map((row, index) => {
-              const id = getRowId(row, index)
+              const id = String(getRowId(row, index))
               const actions = getRowActions?.(row) || []
+              const isSelected = selectedSet.has(id)
               return (
                 <tr
                   key={id}
-                  className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${onRowClick ? 'cursor-pointer' : ''}`}
-                  onClick={() => onRowClick?.(row)}
+                  className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${onRowClick ? 'cursor-pointer' : ''} ${isSelected ? 'bg-[color-mix(in_srgb,#3b82f6_8%,transparent)]' : ''}`}
+                  onClick={(event) => {
+                    if (event.metaKey || event.ctrlKey) {
+                      toggleOne(id, event)
+                      return
+                    }
+                    onRowClick?.(row)
+                  }}
                 >
+                  {selectable ? (
+                    <td className="px-3" onClick={(event) => event.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className={checkboxClass}
+                        checked={isSelected}
+                        onChange={(event) => toggleOne(id, event)}
+                        aria-label="Satırı seç"
+                      />
+                    </td>
+                  ) : null}
                   {columns.map((col) => {
                     const raw = col.accessorKey ? row[col.accessorKey] : undefined
                     const content = col.cell ? col.cell(row) : raw
-                    const text = content == null ? '' : String(typeof content === 'string' || typeof content === 'number' ? content : '')
+                    const text =
+                      content == null
+                        ? ''
+                        : String(
+                            typeof content === 'string' || typeof content === 'number'
+                              ? content
+                              : '',
+                          )
                     return (
-                      <td key={col.id} className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-ds-body text-ds-ink ${col.className || ''}`}>
+                      <td
+                        key={col.id}
+                        className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-xs font-extrabold tracking-wide text-gray-300 ${col.className || ''}`}
+                      >
                         {typeof content === 'string' || typeof content === 'number' ? (
                           <Tooltip content={text.length > 28 ? text : undefined}>
                             <span className="block truncate">{content}</span>
@@ -123,29 +213,50 @@ export function DataTable({
       {/* Mobile card view */}
       <div className="space-y-3 md:hidden">
         {rows.map((row, index) => {
-          const id = getRowId(row, index)
+          const id = String(getRowId(row, index))
           const actions = getRowActions?.(row) || []
           const visibleCols = columns.filter((col) => !col.hideOnMobile)
+          const isSelected = selectedSet.has(id)
           return (
             <article
               key={id}
-              className={`rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs ${onRowClick ? 'cursor-pointer' : ''}`}
-              onClick={() => onRowClick?.(row)}
+              className={`rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs ${onRowClick ? 'cursor-pointer' : ''} ${isSelected ? 'ring-2 ring-[#3b82f6]/40' : ''}`}
+              onClick={(event) => {
+                if (event.metaKey || event.ctrlKey) {
+                  toggleOne(id, event)
+                  return
+                }
+                onRowClick?.(row)
+              }}
             >
               <div className="mb-2 flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1 space-y-2">
-                  {visibleCols.map((col) => {
-                    const raw = col.accessorKey ? row[col.accessorKey] : undefined
-                    const content = col.cell ? col.cell(row) : raw
-                    return (
-                      <div key={col.id} className="min-w-0">
-                        <p className="text-ds-caption font-semibold uppercase tracking-wide text-ds-muted">{col.header}</p>
-                        <div className="truncate text-ds-body font-medium text-ds-ink">
-                          {content ?? '—'}
+                <div className="flex min-w-0 flex-1 items-start gap-2">
+                  {selectable ? (
+                    <input
+                      type="checkbox"
+                      className={`${checkboxClass} mt-1`}
+                      checked={isSelected}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(event) => toggleOne(id, event)}
+                      aria-label="Satırı seç"
+                    />
+                  ) : null}
+                  <div className="min-w-0 flex-1 space-y-2">
+                    {visibleCols.map((col) => {
+                      const raw = col.accessorKey ? row[col.accessorKey] : undefined
+                      const content = col.cell ? col.cell(row) : raw
+                      return (
+                        <div key={col.id} className="min-w-0">
+                          <p className="text-xs font-extrabold uppercase tracking-wide text-gray-300">
+                            {col.header}
+                          </p>
+                          <div className="truncate text-xs font-extrabold tracking-wide text-gray-300">
+                            {content ?? '—'}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
                 </div>
                 {actions.length ? (
                   <div onClick={(event) => event.stopPropagation()}>
