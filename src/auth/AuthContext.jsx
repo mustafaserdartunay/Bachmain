@@ -20,6 +20,29 @@ import {
 
 const AuthContext = createContext(null)
 
+const LOCAL_DEV_TOKEN = 'bachmain-local-dev'
+const LOCAL_DEV_USER = {
+  id: 'local-dev',
+  email: 'dev@bachmain.local',
+  fullName: 'Yerel Geliştirici',
+  companyName: 'BachMain',
+  phone: '',
+  tenantCode: 'LOCAL',
+  customerId: 'local-dev',
+  plan: 'pro',
+  status: 'active',
+  subscriptionStatus: 'active',
+  licenseExpiry: '2099-12-31',
+  onboardingCompleted: true,
+  trialEnded: false,
+}
+
+function isLocalDevHost() {
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname
+  return host === 'localhost' || host === '127.0.0.1'
+}
+
 function syncLocalProfile(user) {
   if (!user) return
   saveUserProfile({
@@ -56,9 +79,11 @@ async function activateWorkspace(user) {
 
 export function AuthProvider({ children }) {
   const stored = getStoredSession()
-  const [user, setUser] = useState(stored.user)
-  const [loading, setLoading] = useState(Boolean(stored.token))
-  const [bootstrapped, setBootstrapped] = useState(!stored.token)
+  const localBoot = typeof window !== 'undefined' && isLocalDevHost()
+  const initialUser = localBoot ? LOCAL_DEV_USER : stored.user
+  const [user, setUser] = useState(initialUser)
+  const [loading, setLoading] = useState(localBoot ? false : Boolean(stored.token))
+  const [bootstrapped, setBootstrapped] = useState(localBoot ? true : !stored.token)
 
   useEffect(() => {
     let cancelled = false
@@ -72,7 +97,20 @@ export function AuthProvider({ children }) {
         window.history.replaceState({}, '', nextUrl || '/')
       }
 
-      const { token, user: cached } = getStoredSession()
+      let { token, user: cached } = getStoredSession()
+
+      // Localhost: never block on login — open the CRM UI with a local session.
+      if (isLocalDevHost()) {
+        persistSession({ token: LOCAL_DEV_TOKEN, user: LOCAL_DEV_USER })
+        if (!cancelled) {
+          setUser(LOCAL_DEV_USER)
+          await activateWorkspace(LOCAL_DEV_USER)
+          setLoading(false)
+          setBootstrapped(true)
+        }
+        return
+      }
+
       if (!token) {
         if (!cancelled) {
           setUser(null)
@@ -83,10 +121,17 @@ export function AuthProvider({ children }) {
       }
       if (!cancelled) setLoading(true)
       try {
-        const next = await fetchCurrentUser()
-        if (!cancelled) {
-          setUser(next)
-          await activateWorkspace(next)
+        if (token === LOCAL_DEV_TOKEN) {
+          if (!cancelled) {
+            setUser(cached || LOCAL_DEV_USER)
+            await activateWorkspace(cached || LOCAL_DEV_USER)
+          }
+        } else {
+          const next = await fetchCurrentUser()
+          if (!cancelled) {
+            setUser(next)
+            await activateWorkspace(next)
+          }
         }
       } catch {
         if (cached && !cancelled) {
@@ -119,6 +164,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!user) return undefined
+    const { token } = getStoredSession()
+    if (token === LOCAL_DEV_TOKEN) return undefined
     const tick = async () => {
       try {
         const next = await fetchCurrentUser()
