@@ -387,7 +387,7 @@ export default function EditableDropdownPill({
         </span>
         {!disabled && (
           <ChevronRight
-            className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''} text-[var(--muted)]`}
+            className={`ml-auto h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''} text-[var(--muted)]`}
           />
         )}
       </button>

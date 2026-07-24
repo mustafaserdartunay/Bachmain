@@ -50,7 +50,7 @@ const balanceFilterOptions = [
 ]
 
 const LIST_TEXT = 'text-xs font-extrabold tracking-wide text-gray-300'
-const LIST_PILL = `${LIST_PILL_CLASS} !text-xs !font-extrabold !tracking-wide !text-gray-300`
+const LIST_PILL = `${LIST_PILL_CLASS} !justify-start !px-2.5 !text-xs !font-extrabold !tracking-wide !text-gray-300`
 const LIST_PILL_LABEL = 'text-xs font-extrabold tracking-wide text-gray-300'
 
 function balanceClass(balance) {
@@ -367,9 +367,9 @@ export default function CustomersPage({
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Marka veya ünvan ara..."
           />
-          <div className="glass-inset app-filter-bar grid grid-cols-4 gap-3 p-3">
-            <div>
-              <p className={APP_FILTER_LABEL_CLASS}>Tipi</p>
+          <div className="glass-inset app-filter-bar grid grid-cols-4 gap-3 py-3 pl-2.5 pr-3">
+            <div className="min-w-0">
+              <p className={`${APP_FILTER_LABEL_CLASS} pl-0`}>Tipi</p>
               <EditableDropdownPill
                 value={filters.type}
                 options={[filterAllOption, ...typeOptions]}
@@ -383,8 +383,8 @@ export default function CustomersPage({
                 onChange={(value) => updateFilter('type', value)}
               />
             </div>
-            <div>
-              <p className={APP_FILTER_LABEL_CLASS}>Temsilci</p>
+            <div className="min-w-0">
+              <p className={`${APP_FILTER_LABEL_CLASS} pl-0`}>Temsilci</p>
               <EditableDropdownPill
                 value={filters.representative}
                 options={[filterAllOption, ...optionLists.representative]}
@@ -398,8 +398,8 @@ export default function CustomersPage({
                 onChange={(value) => updateFilter('representative', value)}
               />
             </div>
-            <div>
-              <p className={APP_FILTER_LABEL_CLASS}>Puantaj</p>
+            <div className="min-w-0">
+              <p className={`${APP_FILTER_LABEL_CLASS} pl-0`}>Puantaj</p>
               <EditableDropdownPill
                 value={filters.scoring}
                 options={[filterAllOption, ...optionLists.scoring]}
@@ -413,8 +413,8 @@ export default function CustomersPage({
                 onChange={(value) => updateFilter('scoring', value)}
               />
             </div>
-            <div>
-              <p className={APP_FILTER_LABEL_CLASS}>Bakiye</p>
+            <div className="min-w-0">
+              <p className={`${APP_FILTER_LABEL_CLASS} pl-0`}>Bakiye</p>
               <EditableDropdownPill
                 value={filters.balance}
                 options={balanceFilterOptions}

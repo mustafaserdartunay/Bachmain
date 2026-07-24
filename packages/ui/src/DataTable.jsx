@@ -92,6 +92,7 @@ export function DataTable({
   }
 
   const checkboxClass = 'h-4 w-4 rounded border-ds-border accent-[#3b82f6] cursor-pointer'
+  const selectCellClass = 'h-[var(--ds-row-h,2.75rem)] w-10 px-2'
 
   return (
     <div className={className}>
@@ -101,17 +102,19 @@ export function DataTable({
           <thead className="bg-[var(--ds-surface-muted)]">
             <tr>
               {selectable ? (
-                <th className="h-[var(--ds-row-h,2.75rem)] w-10 px-3">
-                  <input
-                    type="checkbox"
-                    className={checkboxClass}
-                    checked={allSelected}
-                    ref={(el) => {
-                      if (el) el.indeterminate = someSelected && !allSelected
-                    }}
-                    onChange={toggleAll}
-                    aria-label="Tümünü seç"
-                  />
+                <th className={selectCellClass}>
+                  <div className="flex h-full items-center justify-center">
+                    <input
+                      type="checkbox"
+                      className={checkboxClass}
+                      checked={allSelected}
+                      ref={(el) => {
+                        if (el) el.indeterminate = someSelected && !allSelected
+                      }}
+                      onChange={toggleAll}
+                      aria-label="Tümünü seç"
+                    />
+                  </div>
                 </th>
               ) : null}
               {columns.map((col) => (
@@ -162,14 +165,16 @@ export function DataTable({
                   }}
                 >
                   {selectable ? (
-                    <td className="px-3" onClick={(event) => event.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        className={checkboxClass}
-                        checked={isSelected}
-                        onChange={(event) => toggleOne(id, event)}
-                        aria-label="Satırı seç"
-                      />
+                    <td className={selectCellClass} onClick={(event) => event.stopPropagation()}>
+                      <div className="flex h-full items-center justify-center">
+                        <input
+                          type="checkbox"
+                          className={checkboxClass}
+                          checked={isSelected}
+                          onChange={(event) => toggleOne(id, event)}
+                          aria-label="Satırı seç"
+                        />
+                      </div>
                     </td>
                   ) : null}
                   {columns.map((col) => {
