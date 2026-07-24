@@ -1,4 +1,4 @@
-import { APP_LABEL_CLASS, APP_VALUE_CLASS } from '../../utils/dashboardDesign'
+import { APP_VALUE_CLASS } from '../../utils/dashboardDesign'
 
 const TONE_CLASSES = {
   white: 'text-[var(--ink)]',
@@ -22,24 +22,39 @@ export function SummaryMetricCard({
   icon: Icon,
   tone = 'blue',
   valueTone = 'white',
+  valueAlign = 'center',
   subtitle,
 }) {
   const valueToneClass = resolveToneClass(valueTone, resolveToneClass(tone, TONE_CLASSES.white))
+  const valueAlignClass =
+    valueAlign === 'right'
+      ? 'w-full text-right'
+      : valueAlign === 'left'
+        ? 'w-full text-left'
+        : 'w-full text-center'
 
   return (
-    <div className="app-page-metric flex h-[4.75rem] min-h-[4.75rem] flex-col justify-between rounded-[18px] px-4 py-3">
-      <div className="flex items-center justify-between gap-2">
-        <span className={APP_LABEL_CLASS}>{title}</span>
+    <div className="app-page-metric flex h-[4.75rem] min-h-[4.75rem] flex-col justify-center gap-1 rounded-[18px] px-4 py-3">
+      <div className="flex w-full items-center justify-center gap-1.5">
         {Icon ? (
           <span className="shrink-0 text-gray-300">
-            <Icon className="h-4 w-4" />
+            <Icon className="h-3.5 w-3.5" />
           </span>
         ) : null}
+        <span className="text-xs font-extrabold tracking-wide text-gray-300">{title}</span>
       </div>
-      <p className={`${APP_VALUE_CLASS} text-xl font-extrabold tracking-wide ${valueToneClass}`}>
+      <p
+        className={`${APP_VALUE_CLASS} text-xl font-extrabold tracking-wide ${valueAlignClass} ${valueToneClass}`}
+      >
         {value}
       </p>
-      {subtitle ? <p className={`mt-0.5 ${APP_LABEL_CLASS}`}>{subtitle}</p> : null}
+      {subtitle ? (
+        <p
+          className={`mt-0.5 w-full text-right text-xs font-extrabold tracking-wide text-gray-300`}
+        >
+          {subtitle}
+        </p>
+      ) : null}
     </div>
   )
 }

@@ -313,6 +313,7 @@ export default function CustomersPage({
             icon: Users,
             tone: 'text-[#8b5cf6]',
             valueTone: 'text-[#8b5cf6]',
+            valueAlign: 'center',
           },
           {
             title: 'Aktif Cari',
@@ -320,6 +321,7 @@ export default function CustomersPage({
             icon: CheckCircle2,
             tone: 'text-[#2563eb]',
             valueTone: 'text-[#2563eb]',
+            valueAlign: 'center',
           },
           {
             title: 'Toplam Ödenecek',
@@ -327,6 +329,7 @@ export default function CustomersPage({
             icon: WalletCards,
             tone: 'text-[#e11d48]',
             valueTone: 'text-[#e11d48]',
+            valueAlign: 'center',
           },
           {
             title: 'Toplam Tahsil Edilecek',
@@ -334,6 +337,7 @@ export default function CustomersPage({
             icon: WalletCards,
             tone: 'text-[#10b981]',
             valueTone: 'text-[#10b981]',
+            valueAlign: 'center',
           },
         ]}
       />
