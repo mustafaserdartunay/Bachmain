@@ -1,6 +1,6 @@
 import { Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
-import FeatureItem from '../pricing/FeatureItem'
+import FeatureGroupList from '../pricing/FeatureGroupList'
 import PricingBadge from '../pricing/PricingBadge'
 import { referencePricingPlans } from '../pricing/pricingTokens'
 
@@ -93,11 +93,7 @@ function PlanSelectCard({
           </span>
         </div>
 
-        <ul className="mt-7 flex flex-1 flex-col gap-3.5">
-          {plan.features.map((f) => (
-            <FeatureItem key={f} label={f} tone={isDark ? 'gold' : 'blue'} />
-          ))}
-        </ul>
+        <FeatureGroupList groups={plan.featureGroups} tone={isDark ? 'gold' : 'blue'} />
 
         <button
           type="button"

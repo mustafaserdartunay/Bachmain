@@ -1,6 +1,5 @@
 /**
- * Design tokens — BachMain Pricing (reference-locked)
- * Source: ChatGPT_Image pricing mockup + UI brief
+ * Design tokens — BachMain Pricing
  */
 export const pricingTokens = {
   colors: {
@@ -37,7 +36,59 @@ export const pricingTokens = {
   },
 } as const
 
-/** Copy + prices locked to reference mockup */
+/** Shared feature lists — Pro includes Starter; Enterprise includes Starter + Pro */
+export const starterFeatures = [
+  'Teklif Yönetimi',
+  'Sipariş Yönetimi',
+  'Müşteriler (Cari Kartlar)',
+  'Satış Faturaları',
+  'Tahsilat Takibi',
+  'Temel Stok & Ürün/Hizmet',
+  'Kasa & Banka (Temel)',
+  'Görevler & Randevular',
+  'Not Defteri',
+  'Temel Raporlar (Satış / Tahsilat / Gider)',
+  'E-posta Desteği',
+] as const
+
+export const proExtraFeatures = [
+  'Üretim Takibi',
+  'Depo Yönetimi & Transfer',
+  'Gelen / Giden İrsaliyeler',
+  'Fiyat Listeleri',
+  'Maliyet Hesaplama',
+  'Tedarikçiler & Giderler',
+  'Gelen E-Faturalar',
+  'Çek & Senet Takibi',
+  'Nakit Akışı Raporları',
+  'Mesaj Merkezi (WhatsApp / E-posta)',
+  'Saha Satış & Temsilci Takibi',
+  'Gelişmiş Raporlar',
+  'Öncelikli Destek',
+] as const
+
+export const enterpriseExtraFeatures = [
+  'MES / İleri Üretim (İş Emri, BOM, Kalite)',
+  'Finans Merkezi & Muhasebe',
+  'E-Fatura / E-Defter',
+  'Analytics, KPI & Dashboard',
+  'Lojistik & Sevkiyat Planlama',
+  'Digital Twin / Canlı İzleme',
+  'Müşteri Deneyimi (CXC)',
+  'API & Özel Entegrasyonlar',
+  'Belge Merkezi & Şablonlar',
+  'Çoklu Şirket / Şube',
+  'Sınırsız Kullanıcı',
+  'AI Modülleri (Insights / Growth)',
+  'Özel Geliştirme',
+  '7/24 VIP Destek & Temsilci',
+] as const
+
+export type FeatureGroup = {
+  title: string
+  items: readonly string[]
+}
+
 export const referencePricingPlans = [
   {
     id: 'starter',
@@ -45,13 +96,12 @@ export const referencePricingPlans = [
     description: 'Küçük işletmeler için başlangıç paketi.',
     price: 499,
     period: '/aylık',
-    features: [
-      'Teklif & Sipariş Yönetimi',
-      'Cari & Fatura Yönetimi',
-      'Stok Takibi',
-      'Temel Raporlar',
-      'E-posta Desteği',
-    ],
+    featureGroups: [
+      {
+        title: 'Starter özellikleri',
+        items: starterFeatures,
+      },
+    ] as const satisfies readonly FeatureGroup[],
     cta: 'Başla',
     to: '/register?plan=starter',
     theme: 'light' as const,
@@ -65,14 +115,16 @@ export const referencePricingPlans = [
     price: 1499,
     period: '/aylık',
     badge: 'EN POPÜLER',
-    features: [
-      'Starter tüm özellikleri',
-      'Üretim Yönetimi',
-      'Depo & Lojistik',
-      'Gelişmiş Raporlar',
-      'WhatsApp Entegrasyonu',
-      'Öncelikli Destek',
-    ],
+    featureGroups: [
+      {
+        title: 'Starter özellikleri (dahil)',
+        items: starterFeatures,
+      },
+      {
+        title: 'Pro ile eklenenler',
+        items: proExtraFeatures,
+      },
+    ] as const satisfies readonly FeatureGroup[],
     cta: 'Hemen Başla',
     to: '/register?plan=pro',
     theme: 'featured' as const,
@@ -85,14 +137,20 @@ export const referencePricingPlans = [
     description: 'Büyük ölçekli işletmeler için sınırsız çözüm.',
     price: 4999,
     period: '/aylık',
-    features: [
-      'Pro tüm özellikleri',
-      'Sınırsız Kullanıcı',
-      'Özel Raporlamalar',
-      'API & Entegrasyon',
-      'Özel Geliştirme',
-      '7/24 VIP Destek',
-    ],
+    featureGroups: [
+      {
+        title: 'Starter özellikleri (dahil)',
+        items: starterFeatures,
+      },
+      {
+        title: 'Pro özellikleri (dahil)',
+        items: proExtraFeatures,
+      },
+      {
+        title: 'Enterprise ile eklenenler',
+        items: enterpriseExtraFeatures,
+      },
+    ] as const satisfies readonly FeatureGroup[],
     cta: 'Hemen Başla',
     to: '/register?plan=enterprise',
     theme: 'dark' as const,
