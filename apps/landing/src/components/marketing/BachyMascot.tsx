@@ -16,8 +16,11 @@ export default function BachyMascot({ className = '' }: BachyMascotProps) {
       <motion.img
         src="/bachy/bachy-register.png"
         alt=""
+        width={1466}
+        height={2200}
         draggable={false}
-        className="bachy-mascot-img mx-auto h-auto w-[220px] max-w-none drop-shadow-[0_18px_40px_rgba(37,99,235,0.16)] sm:w-[260px] lg:w-[320px] xl:w-[360px]"
+        decoding="async"
+        className="bachy-mascot-img mx-auto h-auto w-[240px] max-w-none object-contain drop-shadow-[0_20px_44px_rgba(37,99,235,0.18)] sm:w-[280px] lg:w-[340px] xl:w-[380px]"
         animate={
           reduce
             ? undefined
