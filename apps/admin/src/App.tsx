@@ -22,6 +22,7 @@ import {
   BillingTrialsPage,
 } from '@/pages/billing/BillingPages'
 import { MailCenterPage } from '@/pages/mail/MailCenterPage'
+import { AiControlCenterPage } from '@/pages/AiControlCenterPage'
 import { ModuleListPage } from '@/components/module/ModuleListPage'
 import { ModuleDetailPage } from '@/components/module/ModuleDetailPage'
 import { ModuleFormPage } from '@/components/module/ModuleFormPage'
