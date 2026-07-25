@@ -5,7 +5,6 @@ import ScrollReveal from '../components/ScrollReveal'
 import { landingPricing } from '../data/landing'
 import { faqItems } from '../data/navigation'
 import { useState } from 'react'
-import BachyPricingBuddy from '../components/bachy/BachyPricingBuddy'
 
 function formatTry(amount) {
   return `₺${Number(amount).toLocaleString('tr-TR')}`
@@ -78,7 +77,6 @@ export function PricingPage() {
             return (
               <ScrollReveal key={p.id} delay={i * 0.08}>
                 <article className={`pricing-card ${p.featured ? 'is-featured' : ''}`}>
-                  <BachyPricingBuddy planId={p.id} />
                   {p.badge ? <div className="pricing-badge">{p.badge}</div> : null}
                   <header className="pricing-card-head">
                     <h2 className="pricing-plan-name">{p.plan}</h2>
