@@ -2122,3 +2122,63 @@ body {
     transform: translateY(-8px) scale(1.04);
   }
 }
+
+/* Bachy Register companion — additive only (does not restyle auth form) */
+.bachy-register {
+  --bachy-blue: #2563eb;
+  --bachy-glow: rgba(37, 99, 235, 0.45);
+}
+.bachy-shoe-glow .bachy-shoe-stroke {
+  stroke-dasharray: 48 160;
+  stroke-dashoffset: 160;
+  animation: bachy-shoe-flow 4s ease-in-out infinite;
+  will-change: stroke-dashoffset, opacity;
+}
+.bachy-shoe-glow.is-fast .bachy-shoe-stroke {
+  animation-duration: 1.35s;
+}
+.bachy-shoe-glow .bachy-shoe-pool {
+  animation: bachy-shoe-pool 4s ease-in-out infinite;
+}
+.bachy-shoe-glow.is-fast .bachy-shoe-pool {
+  animation-duration: 1.35s;
+}
+@keyframes bachy-shoe-flow {
+  0% {
+    stroke-dashoffset: 160;
+    opacity: 0.15;
+  }
+  18% {
+    opacity: 0.95;
+  }
+  55% {
+    stroke-dashoffset: 0;
+    opacity: 0.55;
+  }
+  100% {
+    stroke-dashoffset: -40;
+    opacity: 0.1;
+  }
+}
+@keyframes bachy-shoe-pool {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scaleX(0.9);
+  }
+  40% {
+    opacity: 0.32;
+    transform: scaleX(1.05);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bachy-shoe-glow .bachy-shoe-stroke,
+  .bachy-shoe-glow .bachy-shoe-pool {
+    animation: none;
+    opacity: 0.35;
+  }
+}
+html.night .bachy-register-img,
+:is(.dark) .bachy-register-img {
+  filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.28));
+}
