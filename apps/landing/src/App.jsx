@@ -1,27 +1,42 @@
-import { Routes, Route, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import HomePage from "./pages/HomePage";
+import { Routes, Route, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import Header from './components/Header'
+import Footer from './components/Footer'
+import HomePage from './pages/HomePage'
 import {
-  FeaturesPage, CrmPage, ErpPage, StockPage, FinancePage, ReportsPage,
-  ModulesPage, ProductionPage, EcommercePage, FieldSalesPage, EInvoicePage,
-} from "./pages/FeaturePages";
-import { PricingPage, FaqPage, HelpPage, EducationPage } from "./pages/SupportPages";
-import { BlogPage, BlogDetailPage } from "./pages/BlogPages";
-import { LoginPage, RegisterPage, DemoPage, ContactPage } from "./pages/AuthPages";
+  FeaturesPage,
+  CrmPage,
+  ErpPage,
+  StockPage,
+  FinancePage,
+  ReportsPage,
+  ModulesPage,
+  ProductionPage,
+  EcommercePage,
+  FieldSalesPage,
+  EInvoicePage,
+} from './pages/FeaturePages'
+import { PricingPage, FaqPage, HelpPage, EducationPage } from './pages/SupportPages'
+import { BlogPage, BlogDetailPage } from './pages/BlogPages'
+import { LoginPage, DemoPage, ContactPage } from './pages/AuthPages'
+import RegisterPage from './pages/RegisterPage'
 
 function ScrollToTop() {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
-  return null;
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
 }
 
 export default function App() {
+  const { pathname } = useLocation()
+  const bareAuth = pathname === '/register'
+
   return (
     <>
       <ScrollToTop />
-      <Header />
+      {!bareAuth ? <Header /> : null}
       <main className="pt-0">
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -49,7 +64,7 @@ export default function App() {
           <Route path="/egitimler" element={<EducationPage />} />
         </Routes>
       </main>
-      <Footer />
+      {!bareAuth ? <Footer /> : null}
     </>
-  );
+  )
 }
