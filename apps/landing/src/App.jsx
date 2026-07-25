@@ -16,7 +16,8 @@ import {
   FieldSalesPage,
   EInvoicePage,
 } from './pages/FeaturePages'
-import { PricingPage, FaqPage, HelpPage, EducationPage } from './pages/SupportPages'
+import { FaqPage, HelpPage, EducationPage } from './pages/SupportPages'
+import PricingPage from './pages/PricingPage'
 import { BlogPage, BlogDetailPage } from './pages/BlogPages'
 import { LoginPage, DemoPage, ContactPage } from './pages/AuthPages'
 import RegisterPage from './pages/RegisterPage'
