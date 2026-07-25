@@ -2,20 +2,12 @@
 
 Premium brand character for bachmain.com — official pose renders + Framer Motion.
 
+## Status
+
+Landing web currently ships **without** Bachy companions (removed from hero, header, pricing, login, and register).
+
 ## Rule
 
-Does not redesign existing UI. Bachy is additive only.
+Does not redesign existing UI. Bachy is additive only when re-enabled.
 
-## Approach
-
-High-fidelity **rendered pose assets** (`public/bachy/*`) + subtle motion.
-Not Three.js / R3F in product UI.
-
-## Components
-
-| File                                                      | Role                               |
-| --------------------------------------------------------- | ---------------------------------- |
-| `apps/landing/src/components/marketing/BachyRegister.tsx` | Register-only companion (additive) |
-
-Rule: never rebuild the register form — Bachy sits beside / above the existing panel.
 Never cover inputs, buttons, nav, or dialogs. Respect `prefers-reduced-motion`.
