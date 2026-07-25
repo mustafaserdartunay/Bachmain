@@ -1,6 +1,11 @@
 import { motion } from 'framer-motion'
 
-export default function RegisterHero() {
+type RegisterHeroProps = {
+  step: 'plan' | 'form'
+  planName?: string
+}
+
+export default function RegisterHero({ step, planName }: RegisterHeroProps) {
   return (
     <header className="mx-auto max-w-[960px] px-4 text-center">
       <motion.p
@@ -9,7 +14,9 @@ export default function RegisterHero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
       >
-        Hesabını oluştur, 7 gün ücretsiz dene
+        {step === 'plan'
+          ? 'Önce paketinizi seçin, ardından hesabınızı oluşturun'
+          : `${planName || 'Seçilen paket'} ile 7 gün ücretsiz dene`}
       </motion.p>
 
       <motion.h1
@@ -20,7 +27,7 @@ export default function RegisterHero() {
       >
         BachMain{' '}
         <span className="relative inline-block text-[#2563EB]">
-          Üye Ol
+          {step === 'plan' ? 'Paketler' : 'Üye Ol'}
           <span
             className="absolute right-[2%] -bottom-1 left-[10%] h-[6px] rounded-full bg-[#FFB000] sm:h-[8px] lg:-bottom-2 lg:h-[10px]"
             aria-hidden
@@ -34,8 +41,16 @@ export default function RegisterHero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1, ease: 'easeOut' }}
       >
-        Her ölçekteki <span className="font-semibold text-[#475569]">işletme</span> için en doğru
-        çözüm.
+        {step === 'plan' ? (
+          <>
+            Her ölçekteki <span className="font-semibold text-[#475569]">işletme</span> için en
+            doğru çözüm.
+          </>
+        ) : (
+          <>
+            Seçtiğiniz paket: <span className="font-semibold text-[#2563EB]">{planName}</span>
+          </>
+        )}
       </motion.p>
     </header>
   )
