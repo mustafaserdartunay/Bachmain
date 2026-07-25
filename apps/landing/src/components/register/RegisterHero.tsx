@@ -5,6 +5,9 @@ type RegisterHeroProps = {
   planName?: string
 }
 
+const titleCls =
+  'text-4xl font-extrabold tracking-[-0.045em] text-blue-700 sm:text-5xl lg:text-[3.2rem] lg:leading-[1.1]'
+
 export default function RegisterHero({ step, planName }: RegisterHeroProps) {
   const eyebrow =
     step === 'plan'
@@ -14,6 +17,9 @@ export default function RegisterHero({ step, planName }: RegisterHeroProps) {
         : step === 'payment'
           ? `${planName || 'Paket'} — ödeme adımı`
           : 'Ödeme onayınız bekleniyor'
+
+  const title =
+    step === 'plan' ? 'Paketler' : step === 'payment' || step === 'pending' ? 'Ödeme' : 'Üye Ol'
 
   return (
     <header className="mx-auto max-w-[960px] px-4 text-center">
@@ -27,7 +33,7 @@ export default function RegisterHero({ step, planName }: RegisterHeroProps) {
       </motion.p>
 
       <motion.div
-        className="mt-6 flex flex-col items-center justify-center gap-4 sm:gap-5"
+        className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.05, ease: 'easeOut' }}
@@ -39,13 +45,7 @@ export default function RegisterHero({ step, planName }: RegisterHeroProps) {
           decoding="async"
           draggable={false}
         />
-        <h1 className="text-[2.75rem] leading-[1.05] font-light tracking-tight text-[#0F172A] sm:text-[3.5rem] lg:text-[72px]">
-          {step === 'plan'
-            ? 'Paketler'
-            : step === 'payment' || step === 'pending'
-              ? 'Ödeme'
-              : 'Üye Ol'}
-        </h1>
+        <h1 className={titleCls}>{title}</h1>
       </motion.div>
 
       <motion.p

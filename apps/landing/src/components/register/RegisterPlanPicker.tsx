@@ -1,6 +1,5 @@
 import { Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
-import FeatureGroupList from '../pricing/FeatureGroupList'
 import PricingBadge from '../pricing/PricingBadge'
 import { referencePricingPlans } from '../pricing/pricingTokens'
 
@@ -92,8 +91,6 @@ function PlanSelectCard({
             {plan.period}
           </span>
         </div>
-
-        <FeatureGroupList groups={plan.featureGroups} tone={isDark ? 'gold' : 'blue'} />
 
         <button
           type="button"

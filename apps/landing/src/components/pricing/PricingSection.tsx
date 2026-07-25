@@ -5,7 +5,7 @@ import EnterpriseCard from './EnterpriseCard'
 
 export default function PricingSection() {
   return (
-    <section className="relative overflow-x-clip bg-[#F8FAFC] pt-[120px] pb-[120px] font-[Sora,ui-sans-serif,system-ui,sans-serif]">
+    <section className="relative overflow-x-clip bg-[#F8FAFC] pt-[120px] pb-[120px]">
       {/* Soft floor plane — reference lower third */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-[#E2E8F0]/55 via-[#F1F5F9]/35 to-transparent"

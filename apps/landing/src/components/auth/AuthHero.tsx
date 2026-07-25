@@ -6,6 +6,9 @@ type AuthHeroProps = {
   subtitle?: string
 }
 
+const titleCls =
+  'text-4xl font-extrabold tracking-[-0.045em] text-blue-700 sm:text-5xl lg:text-[3.2rem] lg:leading-[1.1]'
+
 /** Shared hero for login / forgot / reset — matches register language. */
 export default function AuthHero({ title, eyebrow, subtitle }: AuthHeroProps) {
   return (
@@ -20,7 +23,7 @@ export default function AuthHero({ title, eyebrow, subtitle }: AuthHeroProps) {
       </motion.p>
 
       <motion.div
-        className="mt-6 flex flex-col items-center justify-center gap-4 sm:gap-5"
+        className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.05, ease: 'easeOut' }}
@@ -32,9 +35,7 @@ export default function AuthHero({ title, eyebrow, subtitle }: AuthHeroProps) {
           decoding="async"
           draggable={false}
         />
-        <h1 className="text-[2.75rem] leading-[1.05] font-light tracking-tight text-[#0F172A] sm:text-[3.5rem] lg:text-[72px]">
-          {title}
-        </h1>
+        <h1 className={titleCls}>{title}</h1>
       </motion.div>
 
       {subtitle ? (

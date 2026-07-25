@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import FeatureGroupList from './FeatureGroupList'
 import PricingMascot from './PricingMascot'
 import { referencePricingPlans } from './pricingTokens'
 
@@ -27,7 +26,6 @@ export default function StarterCard() {
           </span>
           <span className="pb-1 text-[14px] font-medium text-[#64748B]">{plan.period}</span>
         </div>
-        <FeatureGroupList groups={plan.featureGroups} tone="blue" />
         <Link
           to={plan.to}
           className="mt-8 inline-flex h-[58px] items-center justify-center rounded-[18px] border-2 border-[#2563EB] bg-white text-[16px] font-bold text-[#2563EB] transition duration-300 ease-out hover:scale-[1.02] hover:bg-[#EFF6FF]"
