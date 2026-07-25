@@ -1,15 +1,14 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Checkbox from '../components/ui/Checkbox'
-import BachyMascot from '../components/marketing/BachyMascot'
 import { platformPost, redirectToAppWithToken } from '../utils/platformApi'
 
 /**
- * Pixel-faithful Register page from BachMain design reference.
- * Vite + React + Tailwind (landing app — not Next.js).
+ * Register page — exact reference scene image + interactive form over the card.
+ * Scene asset is the design source of truth (no regenerated mascot cutouts).
  */
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -68,21 +67,192 @@ export default function RegisterPage() {
     }
   }
 
+  const renderForm = (idPrefix: string): ReactNode =>
+    done ? (
+      <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
+        <p className="text-lg font-bold text-[#0F172A]">Üyeliğiniz oluşturuldu</p>
+        <p className="mt-2 text-sm text-[#64748B]">Uygulamaya yönlendiriliyorsunuz…</p>
+      </div>
+    ) : (
+      <form onSubmit={submit} className="flex flex-1 flex-col" noValidate>
+        <header className="mb-5 shrink-0 sm:mb-6">
+          <h1 className="text-[22px] leading-tight font-extrabold tracking-tight text-[#0F172A] sm:text-[26px] lg:text-[28px]">
+            Hesap oluşturun <span aria-hidden>✨</span>
+          </h1>
+          <p className="mt-1.5 text-[13px] leading-relaxed font-medium tracking-tight text-[#64748B] sm:text-[14px]">
+            BachMain ile tüm süreçler tek platformda.
+          </p>
+        </header>
+
+        <div className="flex flex-1 flex-col justify-between gap-3">
+          <div className="space-y-3">
+            <Input
+              name={`${idPrefix}-fullName`}
+              autoComplete="name"
+              placeholder="Ad Soyad"
+              value={form.fullName}
+              onChange={set('fullName')}
+              error={errors.fullName}
+              leftIcon={<User className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
+              aria-label="Ad Soyad"
+            />
+            <Input
+              name={`${idPrefix}-email`}
+              type="email"
+              autoComplete="email"
+              placeholder="E-posta"
+              value={form.email}
+              onChange={set('email')}
+              error={errors.email}
+              leftIcon={<Mail className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
+              aria-label="E-posta"
+            />
+            <Input
+              name={`${idPrefix}-password`}
+              type={showPw ? 'text' : 'password'}
+              autoComplete="new-password"
+              placeholder="Şifre"
+              value={form.password}
+              onChange={set('password')}
+              error={errors.password}
+              leftIcon={<Lock className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
+              aria-label="Şifre"
+              rightSlot={
+                <button
+                  type="button"
+                  className="rounded-lg p-1.5 text-[#94A3B8] transition hover:text-[#64748B]"
+                  onClick={() => setShowPw((v) => !v)}
+                  aria-label={showPw ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                >
+                  {showPw ? (
+                    <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  ) : (
+                    <Eye className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  )}
+                </button>
+              }
+            />
+            <Input
+              name={`${idPrefix}-password2`}
+              type={showPw2 ? 'text' : 'password'}
+              autoComplete="new-password"
+              placeholder="Şifreyi tekrar girin"
+              value={form.password2}
+              onChange={set('password2')}
+              error={errors.password2}
+              leftIcon={<Lock className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
+              aria-label="Şifreyi tekrar girin"
+              rightSlot={
+                <button
+                  type="button"
+                  className="rounded-lg p-1.5 text-[#94A3B8] transition hover:text-[#64748B]"
+                  onClick={() => setShowPw2((v) => !v)}
+                  aria-label={showPw2 ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                >
+                  {showPw2 ? (
+                    <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  ) : (
+                    <Eye className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  )}
+                </button>
+              }
+            />
+
+            <Checkbox
+              id={`${idPrefix}-terms`}
+              checked={form.terms}
+              onChange={set('terms')}
+              error={errors.terms}
+              label={
+                <>
+                  <Link to="/help" className="font-semibold text-[#2563EB] hover:underline">
+                    Kullanım şartları
+                  </Link>{' '}
+                  ve{' '}
+                  <Link to="/help" className="font-semibold text-[#2563EB] hover:underline">
+                    gizlilik politikasını
+                  </Link>{' '}
+                  kabul ediyorum.
+                </>
+              }
+            />
+
+            {submitError ? (
+              <p className="rounded-2xl bg-[#FEF2F2] px-4 py-3 text-sm font-medium text-[#EF4444]">
+                {submitError}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="mt-2 space-y-3">
+            <Button type="submit" fullWidth disabled={busy}>
+              {busy ? 'Kaydediliyor…' : 'Üye Ol'}
+            </Button>
+            <p className="text-center text-[13px] font-medium tracking-tight text-[#64748B]">
+              Zaten hesabınız var mı?{' '}
+              <Link to="/login" className="font-bold text-[#2563EB] hover:underline">
+                Giriş yap
+              </Link>
+            </p>
+          </div>
+        </div>
+      </form>
+    )
+
   return (
     <div className="register-ds relative min-h-screen overflow-x-clip bg-[#F8FAFC] font-[Sora,Inter,ui-sans-serif,system-ui,sans-serif]">
-      {/* Soft radial background — reference */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(1200px 700px at 30% 20%, rgba(37,99,235,0.07), transparent 55%), radial-gradient(900px 500px at 80% 80%, rgba(37,99,235,0.04), transparent 50%), #F8FAFC',
+            'radial-gradient(1200px 700px at 35% 25%, rgba(37,99,235,0.06), transparent 55%), #F8FAFC',
         }}
         aria-hidden
       />
 
-      {/* Logo — top left as reference */}
-      <div className="relative z-20 px-5 pt-6 sm:px-8 lg:px-10">
-        <Link to="/" className="inline-flex items-center" aria-label="BACHMAIN ana sayfa">
+      {/* Desktop: exact reference scene — Bachy untouched from the image */}
+      <div className="relative z-10 mx-auto hidden min-h-screen w-full max-w-[1120px] items-center px-4 py-6 lg:flex xl:px-6">
+        <div className="relative w-full">
+          <img
+            src="/bachy/register-scene@2x.png"
+            alt="BachMain üye ol"
+            width={2048}
+            height={1536}
+            className="pointer-events-none h-auto w-full select-none"
+            draggable={false}
+          />
+
+          <Link
+            to="/"
+            className="absolute top-[2.2%] left-[2.8%] z-30 block h-[7%] w-[20%]"
+            aria-label="BACHMAIN ana sayfa"
+          />
+
+          {/*
+            Form covers painted card but leaves left strip open so Bachy’s
+            hand on the card corner stays visible from the scene image.
+          */}
+          <div
+            className="absolute z-20 box-border flex flex-col overflow-hidden rounded-[28px] border border-[#E5E7EB]/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)]"
+            style={{
+              left: '37.2%',
+              top: '6.4%',
+              width: '50.2%',
+              height: '80.2%',
+            }}
+          >
+            <div className="flex h-full flex-col px-[8%] py-[5.5%]">{renderForm('desk')}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile / tablet */}
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-10 pt-5 lg:hidden">
+        <Link
+          to="/"
+          className="mb-3 inline-flex w-fit items-center"
+          aria-label="BACHMAIN ana sayfa"
+        >
           <img
             src="/assets/bachmain-logo.png"
             alt="BACHMAIN"
@@ -90,155 +260,19 @@ export default function RegisterPage() {
             draggable={false}
           />
         </Link>
-      </div>
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4.5rem)] w-full max-w-[1100px] flex-col items-center justify-center px-4 pb-12 pt-4 sm:px-6 lg:flex-row lg:items-end lg:justify-center lg:gap-0 lg:px-8 lg:pb-16 lg:pt-8">
-        {/* Mascot — left (desktop), above (mobile) */}
-        <div className="relative z-[5] mb-[-28px] flex w-full justify-center lg:mb-0 lg:w-auto lg:shrink-0 lg:translate-x-6 lg:self-end xl:translate-x-8">
-          <div className="h-[168px] overflow-hidden sm:h-[200px] lg:h-auto lg:overflow-visible">
-            <BachyMascot className="origin-bottom scale-[0.92] sm:scale-100 lg:-mb-2 lg:origin-bottom-right" />
-          </div>
+        <div className="relative mx-auto mb-[-24px] h-[210px] w-full max-w-[340px] overflow-hidden sm:h-[250px]">
+          <img
+            src="/bachy/register-scene@2x.png"
+            alt=""
+            className="pointer-events-none absolute top-0 left-1/2 h-[145%] w-auto max-w-none -translate-x-[36%] object-cover object-left select-none"
+            draggable={false}
+            aria-hidden
+          />
         </div>
 
-        {/* Panel — right */}
-        <div className="relative z-10 w-full max-w-[420px] lg:max-w-[440px]">
-          <div
-            className={[
-              'rounded-[28px] border border-[#E5E7EB] bg-white',
-              'p-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:p-9',
-              'transition-transform duration-200 ease-in-out',
-            ].join(' ')}
-          >
-            <header className="mb-7">
-              <h1 className="text-[26px] leading-tight font-extrabold tracking-tight text-[#0F172A] sm:text-[28px]">
-                Hesap oluşturun <span aria-hidden>✨</span>
-              </h1>
-              <p className="mt-2 text-[14px] leading-relaxed font-medium tracking-tight text-[#64748B]">
-                BachMain ile tüm süreçler tek platformda.
-              </p>
-            </header>
-
-            {done ? (
-              <div className="py-8 text-center">
-                <p className="text-lg font-bold text-[#0F172A]">Üyeliğiniz oluşturuldu</p>
-                <p className="mt-2 text-sm text-[#64748B]">Uygulamaya yönlendiriliyorsunuz…</p>
-              </div>
-            ) : (
-              <form onSubmit={submit} className="space-y-3.5" noValidate>
-                <Input
-                  name="fullName"
-                  autoComplete="name"
-                  placeholder="Ad Soyad"
-                  value={form.fullName}
-                  onChange={set('fullName')}
-                  error={errors.fullName}
-                  leftIcon={<User className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
-                  aria-label="Ad Soyad"
-                />
-                <Input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="E-posta"
-                  value={form.email}
-                  onChange={set('email')}
-                  error={errors.email}
-                  leftIcon={<Mail className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
-                  aria-label="E-posta"
-                />
-                <Input
-                  name="password"
-                  type={showPw ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  placeholder="Şifre"
-                  value={form.password}
-                  onChange={set('password')}
-                  error={errors.password}
-                  leftIcon={<Lock className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
-                  aria-label="Şifre"
-                  rightSlot={
-                    <button
-                      type="button"
-                      className="rounded-lg p-1.5 text-[#94A3B8] transition hover:text-[#64748B]"
-                      onClick={() => setShowPw((v) => !v)}
-                      aria-label={showPw ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                    >
-                      {showPw ? (
-                        <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                      ) : (
-                        <Eye className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                      )}
-                    </button>
-                  }
-                />
-                <Input
-                  name="password2"
-                  type={showPw2 ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  placeholder="Şifreyi tekrar girin"
-                  value={form.password2}
-                  onChange={set('password2')}
-                  error={errors.password2}
-                  leftIcon={<Lock className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
-                  aria-label="Şifreyi tekrar girin"
-                  rightSlot={
-                    <button
-                      type="button"
-                      className="rounded-lg p-1.5 text-[#94A3B8] transition hover:text-[#64748B]"
-                      onClick={() => setShowPw2((v) => !v)}
-                      aria-label={showPw2 ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                    >
-                      {showPw2 ? (
-                        <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                      ) : (
-                        <Eye className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                      )}
-                    </button>
-                  }
-                />
-
-                <div className="pt-1">
-                  <Checkbox
-                    id="register-terms"
-                    checked={form.terms}
-                    onChange={set('terms')}
-                    error={errors.terms}
-                    label={
-                      <>
-                        <Link to="/help" className="font-semibold text-[#2563EB] hover:underline">
-                          Kullanım şartları
-                        </Link>{' '}
-                        ve{' '}
-                        <Link to="/help" className="font-semibold text-[#2563EB] hover:underline">
-                          gizlilik politikasını
-                        </Link>{' '}
-                        kabul ediyorum.
-                      </>
-                    }
-                  />
-                </div>
-
-                {submitError ? (
-                  <p className="rounded-2xl bg-[#FEF2F2] px-4 py-3 text-sm font-medium text-[#EF4444]">
-                    {submitError}
-                  </p>
-                ) : null}
-
-                <div className="pt-1">
-                  <Button type="submit" fullWidth disabled={busy}>
-                    {busy ? 'Kaydediliyor…' : 'Üye Ol'}
-                  </Button>
-                </div>
-
-                <p className="pt-2 text-center text-[13px] font-medium tracking-tight text-[#64748B]">
-                  Zaten hesabınız var mı?{' '}
-                  <Link to="/login" className="font-bold text-[#2563EB] hover:underline">
-                    Giriş yap
-                  </Link>
-                </p>
-              </form>
-            )}
-          </div>
+        <div className="relative z-10 rounded-[28px] border border-[#E5E7EB] bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:p-8">
+          {renderForm('mob')}
         </div>
       </div>
     </div>
