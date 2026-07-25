@@ -7,7 +7,7 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 }
 
 /**
- * Design-system input — reference: 56px / 16px radius / icon left
+ * Design-system input — pricing tokens: 58px / 18px / icon left
  */
 export default function Input({
   leftIcon,
@@ -28,10 +28,10 @@ export default function Input({
         <input
           id={id}
           className={[
-            'h-14 w-full rounded-2xl border border-[#E5E7EB] bg-white',
-            'text-[15px] font-medium tracking-tight text-[#0F172A] tabular-nums',
+            'h-[58px] w-full rounded-[18px] border border-[#E2E8F0] bg-white',
+            'text-[16px] font-medium tracking-tight text-[#0F172A] tabular-nums',
             'placeholder:font-normal placeholder:text-[#94A3B8]',
-            'transition-all duration-200 ease-in-out',
+            'transition-all duration-200 ease-out',
             'focus:border-[#2563EB] focus:outline-none focus:ring-[3px] focus:ring-[#2563EB]/15',
             leftIcon ? 'pl-[52px]' : 'pl-5',
             rightSlot ? 'pr-12' : 'pr-5',
