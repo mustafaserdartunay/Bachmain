@@ -22,10 +22,13 @@ type RegisterPanelProps = {
   busy: boolean
   done: boolean
   submitError: string
+  planName: string
+  planPrice: number
   onChange: (key: keyof RegisterFormState) => (e: ChangeEvent<HTMLInputElement>) => void
   onTogglePw: () => void
   onTogglePw2: () => void
   onSubmit: (ev: FormEvent) => void
+  onChangePlan: () => void
 }
 
 export default function RegisterPanel({
@@ -36,10 +39,13 @@ export default function RegisterPanel({
   busy,
   done,
   submitError,
+  planName,
+  planPrice,
   onChange,
   onTogglePw,
   onTogglePw2,
   onSubmit,
+  onChangePlan,
 }: RegisterPanelProps) {
   return (
     <motion.div
@@ -72,6 +78,27 @@ export default function RegisterPanel({
               <p className="mt-2 text-[14px] leading-relaxed font-medium text-[#64748B]">
                 BachMain ile tüm süreçler tek platformda.
               </p>
+              <div className="mt-4 flex items-center justify-between gap-3 rounded-[18px] border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
+                <div>
+                  <p className="text-[12px] font-medium tracking-wide text-[#64748B] uppercase">
+                    Seçilen paket
+                  </p>
+                  <p className="text-[16px] font-bold text-[#0F172A]">
+                    {planName}{' '}
+                    <span className="font-semibold text-[#2563EB]">
+                      ₺{planPrice.toLocaleString('tr-TR')}
+                      <span className="text-[13px] font-medium text-[#64748B]">/aylık</span>
+                    </span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onChangePlan}
+                  className="shrink-0 text-[13px] font-bold text-[#2563EB] hover:underline"
+                >
+                  Değiştir
+                </button>
+              </div>
             </header>
 
             <Input
