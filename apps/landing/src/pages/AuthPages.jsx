@@ -5,7 +5,6 @@ import Button from '../components/Button'
 import DemoForm from '../components/DemoForm'
 import ScrollReveal from '../components/ScrollReveal'
 import { platformPost, redirectToAppWithToken } from '../utils/platformApi'
-import BachyRegister from '../components/marketing/BachyRegister'
 
 const inputCls =
   'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15'
@@ -26,10 +25,10 @@ function onlyDigits(value) {
   return String(value || '').replace(/\D/g, '')
 }
 
-function AuthShell({ title, subtitle, dark = false, children, wide = false, companion = null }) {
+function AuthShell({ title, subtitle, dark = false, children, wide = false }) {
   return (
     <div
-      className={`relative min-h-[85vh] pt-24 pb-16 ${dark ? 'bg-slate-950' : 'page-mesh'} ${companion ? 'overflow-x-clip overflow-y-visible' : 'overflow-hidden'}`}
+      className={`relative min-h-[85vh] overflow-hidden pt-24 pb-16 ${dark ? 'bg-slate-950' : 'page-mesh'}`}
     >
       <div className={`relative mx-auto px-4 lg:px-8 ${wide ? 'max-w-3xl' : 'max-w-md'}`}>
         {title ? (
@@ -44,10 +43,7 @@ function AuthShell({ title, subtitle, dark = false, children, wide = false, comp
             {subtitle}
           </p>
         ) : null}
-        <div className={`mt-8 ${companion ? 'relative' : ''}`}>
-          {companion}
-          <div className={companion ? 'relative z-20' : undefined}>{children}</div>
-        </div>
+        <div className="mt-8">{children}</div>
       </div>
     </div>
   )
@@ -391,14 +387,7 @@ export function LoginPage() {
 
 export function RegisterPage() {
   return (
-    <AuthShell
-      title="Üye Ol"
-      subtitle="Hesabını oluştur — 7 gün ücretsiz dene"
-      wide
-      companion={
-        <BachyRegister className="relative z-[15] mb-1 lg:absolute lg:bottom-4 lg:left-0 lg:z-[15] lg:mb-0 lg:-translate-x-[70%] xl:-translate-x-[78%]" />
-      }
-    >
+    <AuthShell title="Üye Ol" subtitle="Hesabını oluştur — 7 gün ücretsiz dene" wide>
       <ScrollReveal>
         <RegisterForm />
       </ScrollReveal>
