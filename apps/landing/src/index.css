@@ -2122,38 +2122,3 @@ body {
     transform: translateY(-8px) scale(1.04);
   }
 }
-
-/* Bachy Experience System */
-.bachy-auth-dark {
-  background:
-    radial-gradient(1200px 600px at 20% 10%, rgba(37, 99, 235, 0.35), transparent 55%),
-    linear-gradient(180deg, #0b1224 0%, #111827 55%, #0f172a 100%);
-}
-.bachy-glow img {
-  filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.35));
-}
-.bachy-pricing-buddy {
-  filter: drop-shadow(0 12px 24px rgba(15, 40, 90, 0.18));
-}
-@keyframes bachy-confetti-fall {
-  0% {
-    transform: translateY(-10px) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(160px) rotate(220deg);
-    opacity: 0;
-  }
-}
-.bachy-confetti {
-  animation: bachy-confetti-fall 1.2s ease-out forwards;
-}
-.pricing-card {
-  position: relative;
-  overflow: visible;
-}
-@media (max-width: 1023px) {
-  .bachy-pricing-buddy {
-    display: none;
-  }
-}

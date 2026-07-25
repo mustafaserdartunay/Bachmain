@@ -5,7 +5,6 @@ import Button from '../components/Button'
 import DemoForm from '../components/DemoForm'
 import ScrollReveal from '../components/ScrollReveal'
 import { platformPost, redirectToAppWithToken } from '../utils/platformApi'
-import BachyAuthLayout from '../components/bachy/BachyAuthLayout'
 
 const inputCls =
   'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15'
@@ -26,7 +25,31 @@ function onlyDigits(value) {
   return String(value || '').replace(/\D/g, '')
 }
 
-function LoginForm({ onMood, onCelebrate }) {
+function AuthShell({ title, subtitle, dark = false, children, wide = false }) {
+  return (
+    <div
+      className={`relative min-h-[85vh] overflow-hidden pt-24 pb-16 ${dark ? 'bg-slate-950' : 'page-mesh'}`}
+    >
+      <div className={`relative mx-auto px-4 lg:px-8 ${wide ? 'max-w-3xl' : 'max-w-md'}`}>
+        {title ? (
+          <h1
+            className={`text-center text-3xl font-extrabold tracking-tight ${dark ? 'text-white' : 'text-slate-900'}`}
+          >
+            {title}
+          </h1>
+        ) : null}
+        {subtitle ? (
+          <p className={`mt-2 text-center ${dark ? 'text-slate-300' : 'text-slate-500'}`}>
+            {subtitle}
+          </p>
+        ) : null}
+        <div className="mt-8">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+function LoginForm() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({})
   const [done, setDone] = useState(false)
@@ -49,7 +72,6 @@ function LoginForm({ onMood, onCelebrate }) {
         password: form.password,
       })
       setDone(true)
-      onCelebrate?.(true)
       setTimeout(() => redirectToAppWithToken(data.token), 900)
     } catch (err) {
       setSubmitError(err.message || 'İşlem başarısız. Lütfen tekrar deneyin.')
@@ -63,7 +85,7 @@ function LoginForm({ onMood, onCelebrate }) {
       <div className="saas-card p-8 text-center">
         <CheckCircle className="mx-auto h-12 w-12 text-blue-600" />
         <h3 className="mt-4 text-xl font-bold text-slate-900">Giriş başarılı!</h3>
-        <p className="mt-2 text-slate-500">Bachy sizi içeri alıyor…</p>
+        <p className="mt-2 text-slate-500">Uygulamaya yönlendiriliyorsunuz…</p>
       </div>
     )
   }
@@ -76,8 +98,6 @@ function LoginForm({ onMood, onCelebrate }) {
           className={inputCls}
           autoComplete="email"
           value={form.email}
-          onFocus={() => onMood?.('focus')}
-          onBlur={() => onMood?.('curious')}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
       </Field>
@@ -87,8 +107,6 @@ function LoginForm({ onMood, onCelebrate }) {
           className={inputCls}
           autoComplete="current-password"
           value={form.password}
-          onFocus={() => onMood?.('shy')}
-          onBlur={() => onMood?.('curious')}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
       </Field>
@@ -106,7 +124,7 @@ function LoginForm({ onMood, onCelebrate }) {
   )
 }
 
-function RegisterForm({ onCelebrate }) {
+function RegisterForm() {
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -169,7 +187,6 @@ function RegisterForm({ onCelebrate }) {
         source: 'bachmain_register_page',
       })
       setDone(true)
-      onCelebrate?.(true)
       setTimeout(() => redirectToAppWithToken(data.token), 900)
     } catch (err) {
       setSubmitError(err.message || 'Üyelik oluşturulamadı. Lütfen tekrar deneyin.')
@@ -361,37 +378,20 @@ function RegisterForm({ onCelebrate }) {
 }
 
 export function LoginPage() {
-  const [mood, setMood] = useState('curious')
-  const [celebrate, setCelebrate] = useState(false)
   return (
-    <BachyAuthLayout
-      pose="login"
-      dark
-      title="Giriş Yap"
-      subtitle="Hesabınıza giriş yapın — Bachy sizi bekliyor"
-      mood={mood}
-      celebrate={celebrate}
-      message={celebrate ? 'Harika! İçeri buyurun 👍' : undefined}
-    >
-      <LoginForm onMood={setMood} onCelebrate={setCelebrate} />
-    </BachyAuthLayout>
+    <AuthShell dark title="Giriş Yap" subtitle="Hesabınıza giriş yapın">
+      <LoginForm />
+    </AuthShell>
   )
 }
 
 export function RegisterPage() {
-  const [celebrate, setCelebrate] = useState(false)
   return (
-    <BachyAuthLayout
-      pose="register"
-      title="Üye Ol"
-      subtitle="Hesabını oluştur — 7 gün ücretsiz dene"
-      celebrate={celebrate}
-      message={celebrate ? 'BachMain ailesine hoş geldin.' : 'Hesabını oluştur'}
-    >
+    <AuthShell title="Üye Ol" subtitle="Hesabını oluştur — 7 gün ücretsiz dene" wide>
       <ScrollReveal>
-        <RegisterForm onCelebrate={setCelebrate} />
+        <RegisterForm />
       </ScrollReveal>
-    </BachyAuthLayout>
+    </AuthShell>
   )
 }
 

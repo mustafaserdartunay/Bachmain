@@ -15,14 +15,11 @@ import {
   heroChecks,
 } from '../data/premiumLanding'
 import { faqItems } from '../data/navigation'
-import BachyHero from '../components/bachy/BachyHero'
-
 export default function HomePage() {
   return (
     <div className="page-mesh">
       {/* HERO + FULL WIDTH DASHBOARD */}
       <section className="relative overflow-hidden pt-24 pb-8 lg:pt-28 lg:pb-10">
-        <BachyHero />
         <div className="float-orb left-[-10%] top-[6%] h-[420px] w-[420px] bg-blue-400/25" />
         <div
           className="float-orb right-[-5%] top-[18%] h-[360px] w-[360px] bg-violet-400/20"

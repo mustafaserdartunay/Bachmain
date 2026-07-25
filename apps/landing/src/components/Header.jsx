@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, Menu, X } from 'lucide-react'
 import Logo from './Logo'
-import BachyAI from './bachy/BachyAI'
 
 const nav = [
   { label: 'Ana Sayfa', href: '/' },
@@ -114,7 +113,6 @@ export default function Header() {
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
         <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <Logo />
-          <BachyAI className="hidden sm:block" />
         </div>
 
         <nav className="hidden items-center xl:flex">
