@@ -30,13 +30,10 @@ function ScrollToTop() {
 }
 
 export default function App() {
-  const { pathname } = useLocation()
-  const bareAuth = pathname === '/register'
-
   return (
     <>
       <ScrollToTop />
-      {!bareAuth ? <Header /> : null}
+      <Header />
       <main className="pt-0">
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -64,7 +61,7 @@ export default function App() {
           <Route path="/egitimler" element={<EducationPage />} />
         </Routes>
       </main>
-      {!bareAuth ? <Footer /> : null}
+      <Footer />
     </>
   )
 }
