@@ -57,6 +57,8 @@ import {
   Instagram,
   PlugZap,
   Mail,
+  Link2,
+  Cable,
   PanelsTopLeft,
   Binoculars,
   KeyRound,
@@ -74,6 +76,12 @@ import {
   GitBranch,
   UserPlus,
   FileBarChart,
+  FileText,
+  ShoppingCart,
+  Factory,
+  NotebookPen,
+  LayoutList,
+  Building2,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -92,6 +100,10 @@ import {
   isSocialMediaRoute,
   SOCIAL_MEDIA_HOME_PATH,
 } from '../../data/socialMediaMenu'
+import {
+  integrationCenterSubMenus,
+  isIntegrationCenterRoute,
+} from '../../data/integrationCenterMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { visibleProcessSubMenus, isProcessRoute } from '../../data/processMenu'
 import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
@@ -171,6 +183,34 @@ const projectsSubMenuIcons = {
   check: CheckCircle2,
   cancel: Ban,
 }
+const processSubMenuIcons = {
+  'file-text': FileText,
+  'shopping-cart': ShoppingCart,
+  factory: Factory,
+  boxes: Boxes,
+  warehouse: Warehouse,
+  'package-check': PackageCheck,
+  workflow: Workflow,
+  bot: Bot,
+  'book-open': BookOpen,
+  network: Network,
+}
+const crmSubMenuIcons = {
+  'layout-list': LayoutList,
+  'notebook-pen': NotebookPen,
+  'check-square': CheckSquare,
+  calendar: CalendarDays,
+}
+const settingsSubMenuIcons = {
+  'user-cog': UserCog,
+  bot: Bot,
+  sparkles: Sparkles,
+  'building-2': Building2,
+  gauge: Gauge,
+  percent: Percent,
+  tags: Tags,
+  'git-branch': GitBranch,
+}
 const fieldSalesSubMenuIcons = {
   'map-pinned': MapPinned,
   'user-search': UserSearch,
@@ -232,6 +272,12 @@ const socialMediaSubMenuIcons = {
   'bar-chart-3': BarChart3,
   'file-bar-chart': FileBarChart,
   settings: Settings,
+  'link-2': Link2,
+}
+const integrationCenterSubMenuIcons = {
+  plug: PlugZap,
+  'message-circle': MessageCircle,
+  'scroll-text': ScrollText,
 }
 const menuButtonBase =
   'sidebar-menu-button sidebar-item w-full flex items-center gap-2.5 transition-colors'
@@ -271,6 +317,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isLogisticsRouteActive = isLogisticsRoute(location.pathname)
   const isHrRouteActive = isHrRoute(location.pathname)
   const isSocialMediaRouteActive = isSocialMediaRoute(location.pathname)
+  const isIntegrationCenterRouteActive = isIntegrationCenterRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
   const isProjectsRouteActive = isProjectsRoute(location.pathname)
@@ -285,6 +332,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     if (isFieldSalesRouteActive) return 'fieldSales'
     if (isCrmRouteActive) return 'crm'
     if (isSocialMediaRouteActive) return 'socialMedia'
+    if (isIntegrationCenterRouteActive) return 'integrations'
     if (isHrRouteActive) return 'hr'
     if (isLogisticsRouteActive) return 'logistics'
     if (isSettingsRoute) return 'settings'
@@ -305,6 +353,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const logisticsOpen = openMenuId === 'logistics'
   const hrOpen = openMenuId === 'hr'
   const socialMediaOpen = openMenuId === 'socialMedia'
+  const integrationsOpen = openMenuId === 'integrations'
   const crmOpen = openMenuId === 'crm'
   const settingsOpen = openMenuId === 'settings'
 
@@ -456,7 +505,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {customerOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <div className="sidebar-submenu">
               {visibleCustomerSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? customerSubMenuIcons[sub.icon] : null
                 return (
@@ -509,19 +558,29 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {processOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
-              {visibleProcessSubMenus.map((sub) => (
-                <NavLink
-                  key={sub.path}
-                  to={sub.path}
-                  onClick={handleNavigate}
-                  className={({ isActive }) =>
-                    `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
-                  }
-                >
-                  {sub.label}
-                </NavLink>
-              ))}
+            <div className="sidebar-submenu">
+              {visibleProcessSubMenus.map((sub) => {
+                const SubIcon = sub.icon ? processSubMenuIcons[sub.icon] : null
+                return (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex items-center gap-2 ${
+                        isActive ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
+                    {sub.label}
+                  </NavLink>
+                )
+              })}
             </div>
           )}
         </div>
@@ -551,7 +610,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {expensesOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <div className="sidebar-submenu">
               {expensesSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? expensesSubMenuIcons[sub.icon] : null
                 return (
@@ -603,7 +662,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {treasuryOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <div className="sidebar-submenu">
               {treasurySubMenus.map((sub) => {
                 const SubIcon = sub.icon ? treasurySubMenuIcons[sub.icon] : null
                 return (
@@ -656,7 +715,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {stockOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <div className="sidebar-submenu">
               {stockSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? stockSubMenuIcons[sub.icon] : null
                 return (
@@ -714,7 +773,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </button>
 
             {projectsOpen && !collapsed && (
-              <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+              <div className="sidebar-submenu">
                 {projectsSubMenus.map((sub) => {
                   const SubIcon = sub.icon ? projectsSubMenuIcons[sub.icon] : null
                   return (
@@ -770,20 +829,30 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {crmOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
-              {crmSubMenus.map((sub) => (
-                <NavLink
-                  key={sub.path}
-                  to={sub.path}
-                  end={Boolean(sub.end)}
-                  onClick={handleNavigate}
-                  className={({ isActive }) =>
-                    `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
-                  }
-                >
-                  {sub.label}
-                </NavLink>
-              ))}
+            <div className="sidebar-submenu">
+              {crmSubMenus.map((sub) => {
+                const SubIcon = sub.icon ? crmSubMenuIcons[sub.icon] : null
+                return (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    end={Boolean(sub.end)}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex items-center gap-2 ${
+                        isActive ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
+                    {sub.label}
+                  </NavLink>
+                )
+              })}
             </div>
           )}
         </div>
@@ -841,7 +910,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {fieldSalesOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <div className="sidebar-submenu">
               {fieldSalesSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? fieldSalesSubMenuIcons[sub.icon] : null
                 return (
@@ -894,7 +963,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             )}
           </button>
           {socialMediaOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 max-h-[50vh] space-y-0.5 overflow-y-auto border-l border-dark-500/50 pl-3">
+            <div className="sidebar-submenu sidebar-submenu--scroll">
               {socialMediaSubMenus.map((sub) => {
                 const SubIcon = socialMediaSubMenuIcons[sub.icon] || Sparkles
                 return (
@@ -947,7 +1016,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {hrOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <div className="sidebar-submenu">
               {hrSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? hrSubMenuIcons[sub.icon] : null
                 return (
@@ -1001,7 +1070,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             )}
           </button>
           {logisticsOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <div className="sidebar-submenu">
               {logisticsSubMenus.map((sub) => {
                 const SubIcon = logisticsSubMenuIcons[sub.icon] || ClipboardList
                 return (
@@ -1050,6 +1119,57 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </NavLink>
         ))}
 
+        {/* Entegrasyon Merkezi */}
+        <div className={`sidebar-menu-group ${integrationsOpen ? 'is-open' : ''}`}>
+          <button
+            type="button"
+            onClick={() => toggleMenu('integrations')}
+            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              collapsed && isIntegrationCenterRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <Cable className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && (
+              <>
+                <span className={menuLabelClass}>Entegrasyon Merkezi</span>
+                {integrationsOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
+              </>
+            )}
+          </button>
+
+          {integrationsOpen && !collapsed && (
+            <div className="sidebar-submenu">
+              {integrationCenterSubMenus.map((sub) => {
+                const SubIcon = integrationCenterSubMenuIcons[sub.icon] || Cable
+                return (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    end={Boolean(sub.end)}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex items-center gap-2 ${
+                        isActive ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    <SubMenuIcon>
+                      <SubIcon className="h-3.5 w-3.5" />
+                    </SubMenuIcon>
+                    {sub.label}
+                  </NavLink>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Ayarlar */}
         <div className={`sidebar-menu-group ${settingsOpen ? 'is-open' : ''}`}>
           <button
@@ -1075,7 +1195,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {settingsOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <div className="sidebar-submenu">
               {filterMenuByEntitlements(settingsSubMenus, user?.entitlements)
                 .filter((sub) => {
                   if (sub.moduleCode === 'multi_company') {
@@ -1083,19 +1203,29 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   }
                   return true
                 })
-                .map((sub) => (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    end={sub.path === '/ayarlar'}
-                    onClick={handleNavigate}
-                    className={({ isActive }) =>
-                      `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
-                    }
-                  >
-                    {sub.label}
-                  </NavLink>
-                ))}
+                .map((sub) => {
+                  const SubIcon = sub.icon ? settingsSubMenuIcons[sub.icon] : null
+                  return (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      end={sub.path === '/ayarlar'}
+                      onClick={handleNavigate}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} flex items-center gap-2 ${
+                          isActive ? 'sidebar-menu-active font-medium' : ''
+                        }`
+                      }
+                    >
+                      {SubIcon ? (
+                        <SubMenuIcon>
+                          <SubIcon className="h-3.5 w-3.5" />
+                        </SubMenuIcon>
+                      ) : null}
+                      {sub.label}
+                    </NavLink>
+                  )
+                })}
 
               <div>
                 <div className="flex items-center gap-0.5">
@@ -1129,7 +1259,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </button>
                 </div>
                 {documentCenterOpen && (
-                  <div className="mt-0.5 ml-2 space-y-0.5 border-l border-dark-500/40 pl-2">
+                  <div className="sidebar-submenu sidebar-submenu--nested">
                     {documentCenterChildMenus.map((child) => (
                       <NavLink
                         key={child.path}

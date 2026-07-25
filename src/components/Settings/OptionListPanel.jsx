@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react'
+import { X } from 'lucide-react'
+import InlineDeleteConfirm from '../Common/InlineDeleteConfirm'
 import ProcessPanelModule from '../DocumentEditor/ProcessPanelModule'
-import { isReservedPlaceholderLabel, mapProcessOptions, matchProcessOption, optionsToProcessRecord, processRecordToOptions } from '../DocumentEditor/processPanelUtils'
+import {
+  isReservedPlaceholderLabel,
+  mapProcessOptions,
+  matchProcessOption,
+  optionsToProcessRecord,
+  processRecordToOptions,
+} from '../DocumentEditor/processPanelUtils'
 import { stageColors } from '../DocumentEditor/stageColors'
 
 function normalizeLabel(label) {
@@ -29,20 +37,19 @@ export default function OptionListPanel({
   activeLabel = 'Aktif Seçenek',
   countSuffix = 'seçenek tanımlı',
   emptyMessage = 'Henüz seçenek eklenmedi.',
+  onRemove,
+  compact = false,
+  dragHandleProps = null,
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [stageInput, setStageInput] = useState('')
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [pendingRemovePanel, setPendingRemovePanel] = useState(false)
   const [previewId, setPreviewId] = useState(null)
 
-  const activeKey = previewId && options.some((option) => option.id === previewId)
-    ? previewId
-    : ''
+  const activeKey = previewId && options.some((option) => option.id === previewId) ? previewId : ''
 
-  const record = useMemo(
-    () => optionsToProcessRecord(options, activeKey),
-    [options, activeKey],
-  )
+  const record = useMemo(() => optionsToProcessRecord(options, activeKey), [options, activeKey])
 
   function toggleEditor() {
     setIsOpen((current) => !current)
@@ -51,7 +58,12 @@ export default function OptionListPanel({
 
   function addStage(chosenColor, inputLabel) {
     const label = (inputLabel || stageInput).trim()
-    if (!label || isReservedPlaceholderLabel(label) || options.some((option) => normalizeLabel(option.label) === normalizeLabel(label))) return
+    if (
+      !label ||
+      isReservedPlaceholderLabel(label) ||
+      options.some((option) => normalizeLabel(option.label) === normalizeLabel(label))
+    )
+      return
     const nextId = createOptionId()
     const next = [
       ...options,
@@ -85,7 +97,13 @@ export default function OptionListPanel({
   function updateStageLabel(stage, label) {
     const clean = label.trim()
     if (!clean || isReservedPlaceholderLabel(clean)) return
-    if (options.some((option) => !matchProcessOption(option, stage) && normalizeLabel(option.label) === normalizeLabel(clean))) {
+    if (
+      options.some(
+        (option) =>
+          !matchProcessOption(option, stage) &&
+          normalizeLabel(option.label) === normalizeLabel(clean),
+      )
+    ) {
       return
     }
     onChange(mapProcessOptions(options, stage, (option) => ({ ...option, label: clean })))
@@ -120,12 +138,47 @@ export default function OptionListPanel({
   }
 
   return (
-    <section className="space-y-3">
-      <div>
-        <h3 className="text-sm font-black text-white">{title}</h3>
-        {description ? <p className="mt-1 text-xs font-semibold text-gray-500">{description}</p> : null}
+    <section className={compact ? 'space-y-1.5' : 'space-y-3'}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className={`font-black text-white ${compact ? 'text-xs tracking-wide' : 'text-sm'}`}>
+            {title}
+          </h3>
+          {description || compact ? (
+            <p
+              className={`font-semibold text-gray-500 ${compact ? 'mt-0.5 text-[11px]' : 'mt-1 text-xs'}`}
+            >
+              {[description, compact ? `${(options || []).length} ${countSuffix}` : null]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          ) : null}
+        </div>
+        {typeof onRemove === 'function' ? (
+          pendingRemovePanel ? (
+            <InlineDeleteConfirm
+              onConfirm={() => {
+                setPendingRemovePanel(false)
+                onRemove()
+              }}
+              onCancel={() => setPendingRemovePanel(false)}
+              className="ml-0"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPendingRemovePanel(true)}
+              className="rounded-md bg-transparent p-1 text-gray-500 transition-colors hover:text-red-300"
+              aria-label={`${title} sürecini kaldır`}
+              title="Süreç başlığını kaldır"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )
+        ) : null}
       </div>
       <ProcessPanelModule
+        compact={compact}
         activeLabel={activeLabel}
         countSuffix={countSuffix}
         emptyMessage={emptyMessage}
@@ -144,6 +197,8 @@ export default function OptionListPanel({
         pendingStageDeleteId={pendingDeleteId}
         setPendingStageDeleteId={setPendingDeleteId}
         onRemoveStage={removeStage}
+        summaryLine={compact ? <span /> : undefined}
+        dragHandleProps={dragHandleProps}
       />
     </section>
   )

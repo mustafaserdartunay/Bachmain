@@ -44,7 +44,7 @@ export function SummaryMetricCard({
         <span className="text-xs font-extrabold tracking-wide text-gray-300">{title}</span>
       </div>
       <p
-        className={`${APP_VALUE_CLASS} text-xl font-extrabold tracking-wide ${valueAlignClass} ${valueToneClass}`}
+        className={`${APP_VALUE_CLASS} tracking-wide tabular-nums ${valueAlignClass} ${valueToneClass}`}
       >
         {value}
       </p>

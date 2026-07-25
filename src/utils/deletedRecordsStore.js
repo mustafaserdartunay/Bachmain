@@ -36,7 +36,9 @@ export function softDeleteRecord(collection, record, meta = {}) {
 
 export function getDeletedRecords(collection) {
   const bucket = readAll()[collection] || {}
-  return Object.values(bucket).sort((a, b) => String(b.deletedAt).localeCompare(String(a.deletedAt)))
+  return Object.values(bucket).sort((a, b) =>
+    String(b.deletedAt).localeCompare(String(a.deletedAt)),
+  )
 }
 
 export function getDeletedRecord(collection, id) {
@@ -52,6 +54,18 @@ export function restoreDeletedRecord(collection, id) {
   all[collection] = bucket
   writeAll(all)
   return entry.record
+}
+
+/** Soft-delete kutusundan kalıcı sil — geri yüklenemez. */
+export function purgeDeletedRecord(collection, id) {
+  if (!collection || !id) return false
+  const all = readAll()
+  const bucket = { ...(all[collection] || {}) }
+  if (!bucket[id]) return false
+  delete bucket[id]
+  all[collection] = bucket
+  writeAll(all)
+  return true
 }
 
 export function isRecordDeleted(collection, id) {

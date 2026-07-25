@@ -64,6 +64,14 @@ export const navItems: NavItem[] = [
     roles: ['super_admin'],
   },
   {
+    id: 'integration-control',
+    label: 'Entegrasyon Kontrol',
+    path: '/entegrasyon-kontrol',
+    icon: Plug,
+    group: 'Platform',
+    roles: ['super_admin'],
+  },
+  {
     id: 'audit-logs',
     label: 'Audit Logs',
     path: '/audit-logs',

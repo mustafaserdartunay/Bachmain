@@ -7,7 +7,8 @@ import { PlatformOpsPage } from '@/pages/PlatformOpsPage'
 import { UserManagementPage } from '@/pages/UserManagementPage'
 import { AuditLogPage } from '@/pages/AuditLogPage'
 import { SecurityCenterPage } from '@/pages/SecurityCenterPage'
-import { AiControlCenterPage } from '@/pages/AiControlCenterPage'
+import { IntegrationControlPage } from '@/pages/IntegrationControlPage'
+import { IntegrationCustomerDetailPage } from '@/pages/IntegrationCustomerDetailPage'
 import {
   BillingCampaignsPage,
   BillingCouponsPage,
@@ -47,6 +48,8 @@ export function AppRoutes() {
         <Route path="platform-ops" element={<PlatformOpsPage />} />
         <Route path="user-management" element={<UserManagementPage />} />
         <Route path="audit-logs" element={<AuditLogPage />} />
+        <Route path="entegrasyon-kontrol" element={<IntegrationControlPage />} />
+        <Route path="entegrasyon-kontrol/:tenantId" element={<IntegrationCustomerDetailPage />} />
         <Route path="guvenlik" element={<SecurityCenterPage />} />
         <Route path="ai-yonetimi" element={<AiControlCenterPage />} />
         <Route path="ai-control" element={<Navigate to="/ai-yonetimi" replace />} />

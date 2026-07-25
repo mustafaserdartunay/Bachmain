@@ -154,6 +154,9 @@ import {
   SocialSettingsPage,
   SocialMetaSetupPage,
 } from './pages/social/SocialMediaPages'
+import SocialConnectionsPage from './pages/social/SocialConnectionsPage'
+import IntegrationCenterPage from './pages/IntegrationCenterPage'
+import IntegrationLogsPage from './pages/IntegrationLogsPage'
 import AiSettingsHubPage from './pages/settings/AiSettingsHubPage'
 import OpenAiSettingsPage from './pages/settings/OpenAiSettingsPage'
 import SalesRepresentativesPage from './pages/fieldSales/SalesRepresentativesPage'
@@ -276,8 +279,12 @@ export default function App() {
                       <Route path="/cekirdek" element={<Navigate to="/" replace />} />
                       <Route path="/marketplace" element={<Navigate to="/" replace />} />
                       <Route path="/magaza" element={<Navigate to="/" replace />} />
-                      <Route path="/entegrasyon" element={<Navigate to="/" replace />} />
-                      <Route path="/integration-hub" element={<Navigate to="/" replace />} />
+                      <Route path="/entegrasyon" element={<IntegrationCenterPage />} />
+                      <Route path="/entegrasyon/loglar" element={<IntegrationLogsPage />} />
+                      <Route
+                        path="/integration-hub"
+                        element={<Navigate to="/entegrasyon" replace />}
+                      />
                       <Route path="/musteri-deneyimi" element={<CustomerExperienceCloudPage />} />
                       <Route path="/cxc" element={<Navigate to="/musteri-deneyimi" replace />} />
                       <Route
@@ -319,6 +326,7 @@ export default function App() {
                       />
 
                       <Route path="/sosyal-medya" element={<SocialMediaDashboardPage />} />
+                      <Route path="/sosyal-medya/baglantilar" element={<SocialConnectionsPage />} />
                       <Route path="/sosyal-medya/hesaplar" element={<SocialAccountsPage />} />
                       <Route path="/sosyal-medya/meta-kurulum" element={<SocialMetaSetupPage />} />
                       <Route path="/sosyal-medya/studio" element={<SocialContentStudioPage />} />

@@ -1,7 +1,13 @@
 import { customers } from './mockData'
 import { getBrandShortName, getCustomerDisplay } from '../utils/customerDisplay'
 import { resolvePrimaryContact } from '../utils/customerContacts'
-import { softDeleteRecord, getDeletedRecords, restoreDeletedRecord, getDeletedRecord } from '../utils/deletedRecordsStore'
+import {
+  softDeleteRecord,
+  getDeletedRecords,
+  restoreDeletedRecord,
+  getDeletedRecord,
+  purgeDeletedRecord,
+} from '../utils/deletedRecordsStore'
 import { filterByOrgScope, getActiveOrgScope, withOrgScope } from '../utils/orgScope'
 
 const CREATED_CUSTOMERS_KEY = 'erlenbox-created-customers'
@@ -41,11 +47,16 @@ function writeArchivedMap(map) {
 
 /** Legacy id-list + new soft-delete map (deletedRecordsStore). */
 function readDeletedIdSet() {
-  const fromStore = new Set(getDeletedRecords(DELETED_COLLECTION).map((entry) => entry.record?.id).filter(Boolean))
+  const fromStore = new Set(
+    getDeletedRecords(DELETED_COLLECTION)
+      .map((entry) => entry.record?.id)
+      .filter(Boolean),
+  )
   try {
     const parsed = JSON.parse(localStorage.getItem(DELETED_CUSTOMERS_KEY) || '[]')
     if (Array.isArray(parsed)) parsed.forEach((id) => fromStore.add(id))
-    else if (parsed && typeof parsed === 'object') Object.keys(parsed).forEach((id) => fromStore.add(id))
+    else if (parsed && typeof parsed === 'object')
+      Object.keys(parsed).forEach((id) => fromStore.add(id))
   } catch {
     // ignore
   }
@@ -56,14 +67,18 @@ export function getAllCustomerProfiles() {
   const created = readCreatedCustomers()
   const createdById = new Map(created.map((customer) => [customer.id, customer]))
   const mergedBase = customerProfiles.map((customer) => createdById.get(customer.id) || customer)
-  const extras = created.filter((customer) => !customerProfiles.some((baseCustomer) => baseCustomer.id === customer.id))
+  const extras = created.filter(
+    (customer) => !customerProfiles.some((baseCustomer) => baseCustomer.id === customer.id),
+  )
   return [...mergedBase, ...extras]
 }
 
 export function getCustomerProfiles() {
   const archived = readArchivedMap()
   const deleted = readDeletedIdSet()
-  const active = getAllCustomerProfiles().filter((customer) => !archived[customer.id] && !deleted.has(customer.id))
+  const active = getAllCustomerProfiles().filter(
+    (customer) => !archived[customer.id] && !deleted.has(customer.id),
+  )
   return filterByOrgScope(active, getActiveOrgScope(), { loose: true })
 }
 
@@ -73,7 +88,9 @@ export function isCustomerArchived(customerId) {
 
 export function getArchivedCustomers() {
   const archived = readArchivedMap()
-  return Object.values(archived).sort((a, b) => String(b.archivedAt).localeCompare(String(a.archivedAt)))
+  return Object.values(archived).sort((a, b) =>
+    String(b.archivedAt).localeCompare(String(a.archivedAt)),
+  )
 }
 
 export function getDeletedCustomers() {
@@ -103,7 +120,10 @@ export function restoreDeletedCustomer(customer) {
   try {
     const legacy = JSON.parse(localStorage.getItem(DELETED_CUSTOMERS_KEY) || '[]')
     if (Array.isArray(legacy)) {
-      localStorage.setItem(DELETED_CUSTOMERS_KEY, JSON.stringify(legacy.filter((id) => id !== customer.id)))
+      localStorage.setItem(
+        DELETED_CUSTOMERS_KEY,
+        JSON.stringify(legacy.filter((id) => id !== customer.id)),
+      )
     } else if (legacy && typeof legacy === 'object') {
       delete legacy[customer.id]
       localStorage.setItem(DELETED_CUSTOMERS_KEY, JSON.stringify(legacy))
@@ -117,11 +137,41 @@ export function restoreDeletedCustomer(customer) {
   return saveCustomerProfile(payload)
 }
 
+/** Silinenler / arşiv listesinden kalıcı kaldır (geri yüklenemez). */
+export function purgeCustomerRecycleEntry(customerId, kind = 'deleted') {
+  if (!customerId) return false
+  if (kind === 'archived') {
+    const map = readArchivedMap()
+    if (!map[customerId]) return false
+    delete map[customerId]
+    writeArchivedMap(map)
+  } else {
+    purgeDeletedRecord(DELETED_COLLECTION, customerId)
+    try {
+      const legacy = JSON.parse(localStorage.getItem(DELETED_CUSTOMERS_KEY) || '[]')
+      if (Array.isArray(legacy)) {
+        localStorage.setItem(
+          DELETED_CUSTOMERS_KEY,
+          JSON.stringify(legacy.filter((id) => id !== customerId)),
+        )
+      } else if (legacy && typeof legacy === 'object') {
+        delete legacy[customerId]
+        localStorage.setItem(DELETED_CUSTOMERS_KEY, JSON.stringify(legacy))
+      }
+    } catch {
+      // ignore
+    }
+  }
+  window.dispatchEvent(new CustomEvent('bach:customers-updated'))
+  return true
+}
+
 export function deleteCustomer(customerId) {
   const archivedEntry = readArchivedMap()[customerId]
-  const customer = getAllCustomerProfiles().find((item) => item.id === customerId)
-    || archivedEntry?.customer
-    || getDeletedRecord(DELETED_COLLECTION, customerId)?.record
+  const customer =
+    getAllCustomerProfiles().find((item) => item.id === customerId) ||
+    archivedEntry?.customer ||
+    getDeletedRecord(DELETED_COLLECTION, customerId)?.record
   if (!customer) return
 
   const created = readCreatedCustomers().filter((item) => item.id !== customerId)
@@ -152,7 +202,7 @@ export function deleteCustomer(customerId) {
 export function saveCustomerProfile(profile) {
   const created = readCreatedCustomers()
   const existing = getAllCustomerProfiles().find((item) => item.id === profile.id) || {}
-  const contacts = Array.isArray(profile.contacts) ? profile.contacts : (existing.contacts || [])
+  const contacts = Array.isArray(profile.contacts) ? profile.contacts : existing.contacts || []
   const primary = resolvePrimaryContact(contacts, profile)
   const scoped = withOrgScope({ ...existing, ...profile }, getActiveOrgScope())
   const nextProfile = {
@@ -160,7 +210,8 @@ export function saveCustomerProfile(profile) {
     ...scoped,
     id: profile.id || `MST-${Date.now()}`,
     company: profile.company || profile.shortBrandName || existing.company || 'Yeni Müşteri',
-    shortBrandName: profile.shortBrandName || getBrandShortName(profile.company || existing.company),
+    shortBrandName:
+      profile.shortBrandName || getBrandShortName(profile.company || existing.company),
     companyTitle: profile.companyTitle || profile.company || existing.companyTitle || '',
     contact: primary.contactName || profile.contact || existing.contact || '',
     email: primary.email || profile.email || existing.email || '',
@@ -196,14 +247,18 @@ export function findCustomerProfileByReference(customerRef) {
   const name = String(customerRef || '').trim()
   if (!name) return null
   const normalized = name.toLowerCase()
-  return getCustomerProfiles().find((customer) => {
-    const display = getCustomerDisplay(customer)
-    return customer.company?.toLowerCase() === normalized
-      || customer.companyTitle?.toLowerCase() === normalized
-      || customer.shortBrandName?.toLowerCase() === normalized
-      || display.brandShortName.toLowerCase() === normalized
-      || display.companyTitle.toLowerCase() === normalized
-  }) || null
+  return (
+    getCustomerProfiles().find((customer) => {
+      const display = getCustomerDisplay(customer)
+      return (
+        customer.company?.toLowerCase() === normalized ||
+        customer.companyTitle?.toLowerCase() === normalized ||
+        customer.shortBrandName?.toLowerCase() === normalized ||
+        display.brandShortName.toLowerCase() === normalized ||
+        display.companyTitle.toLowerCase() === normalized
+      )
+    }) || null
+  )
 }
 
 export function getListCustomerDisplay(customerRef) {
@@ -212,7 +267,9 @@ export function getListCustomerDisplay(customerRef) {
 }
 
 export function findCustomerProfile(customerId) {
-  return getCustomerProfiles().find((customer) => customer.id === customerId) || getCustomerProfiles()[0]
+  return (
+    getCustomerProfiles().find((customer) => customer.id === customerId) || getCustomerProfiles()[0]
+  )
 }
 
 export function updateCustomerOpeningBalance(customerId, { balance, date, description }) {

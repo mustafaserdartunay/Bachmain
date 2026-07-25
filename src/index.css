@@ -331,6 +331,12 @@ body,
 
 body {
   @apply font-sans antialiased;
+  font-family: var(--ds-font-family);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
   background:
     radial-gradient(
       circle at top left,
@@ -473,7 +479,7 @@ html.space #root {
 
 input:not(.search-pill):not(.header-search-input):not(.form-input):not(.form-input-readonly):not(
     .app-search-field
-  ),
+  ):not(.inline-edit-input),
 select:not(.form-input),
 textarea:not(.form-input) {
   background-color: var(--input-bg) !important;
@@ -483,9 +489,16 @@ textarea:not(.form-input) {
 
 input:not(.search-pill):not(.header-search-input):not(.form-input):not(.form-input-readonly):not(
     .app-search-field
-  )::placeholder,
+  ):not(.inline-edit-input)::placeholder,
 textarea:not(.form-input)::placeholder {
   color: var(--text-soft) !important;
+}
+
+.inline-edit-input,
+.inline-edit-input:hover,
+.inline-edit-input:focus {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .glass {
@@ -642,6 +655,16 @@ html:not(.night) #customer-edit-form .form-input:focus {
     0 10px 36px -14px rgba(30, 35, 60, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
   color: var(--ink);
+}
+
+.card.card-no-frame {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html.night .card.card-no-frame {
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .app-page-header {
@@ -1038,14 +1061,12 @@ html:not(.night) #customer-edit-form .form-input:focus {
 .app-page-metric {
   min-height: 4.75rem;
   height: 4.75rem;
-  border-radius: 26px;
+  border-radius: var(--ds-radius-card);
   background: var(--glass-bg);
   backdrop-filter: blur(26px) saturate(180%);
   -webkit-backdrop-filter: blur(26px) saturate(180%);
   border: 1px solid var(--glass-border);
-  box-shadow:
-    0 10px 36px -14px rgba(30, 35, 60, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.58);
+  box-shadow: var(--ds-shadow-layer-2);
   color: var(--ink);
 }
 
@@ -1071,7 +1092,34 @@ html:not(.night) #customer-edit-form .form-input:focus {
 }
 
 .app-filter-bar {
-  border-radius: 20px;
+  border-radius: 999px;
+  min-height: 2.5rem; /* search-pill h-10 */
+}
+
+.app-filter-bar .app-search-field {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--muted) !important;
+}
+
+.app-filter-bar .app-search-field::placeholder {
+  color: var(--text-soft, var(--muted)) !important;
+  opacity: 0.85;
+}
+
+.app-filter-bar .app-search-field:hover,
+.app-filter-bar .app-search-field:focus {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.app-filter-bar .glass-pill {
+  min-height: 2rem;
+  height: 2rem;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .app-list-row {
@@ -1644,47 +1692,68 @@ html.night .ios-cell-value .form-input::placeholder {
   color: rgba(235, 235, 245, 0.3) !important;
 }
 
-.app-dropdown-portal {
+/* Dropdown = AppPageHeader ile birebir aynı cam yüzey */
+.app-dropdown-portal,
+.glass-dropdown {
   z-index: 10000;
-  background: rgba(255, 255, 255, 0.38) !important;
-  border: 1px solid rgba(255, 255, 255, 0.62) !important;
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border-radius: 16px !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48) !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(26px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(180%) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 26px !important;
+  box-shadow:
+    0 10px 36px -14px rgba(30, 35, 60, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
   color: var(--ink);
+}
+
+.app-dropdown-portal > button,
+.app-dropdown-portal [role='menuitem'] {
+  background: transparent !important;
+}
+
+.app-dropdown-portal > button:hover,
+.app-dropdown-portal [role='menuitem']:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent) !important;
 }
 
 .app-dropdown-portal [class*='bg-dark-'],
 .app-dropdown-portal [class*='bg-dark-700'],
 .app-dropdown-portal [class*='bg-dark-800'],
 .app-dropdown-portal [class*='bg-dark-900'] {
-  background: rgba(255, 255, 255, 0.35) !important;
+  background: transparent !important;
   color: var(--ink) !important;
 }
 
-.app-dropdown-portal [class*='border-dark'] {
-  border-color: rgba(255, 255, 255, 0.55) !important;
+.app-dropdown-portal .inline-edit-row,
+.app-dropdown-portal .inline-edit-input,
+.app-dropdown-portal .inline-edit-input:hover,
+.app-dropdown-portal .inline-edit-input:focus {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-.app-dropdown-portal [class*='text-gray-'],
+.app-dropdown-portal [class*='border-dark'] {
+  border-color: var(--glass-border) !important;
+}
+
 .app-dropdown-portal [class*='text-white'] {
   color: var(--ink) !important;
 }
 
-.app-dropdown-portal [class*='hover:bg-dark']:hover,
-.app-dropdown-portal [class*='hover:bg-blue-500']:hover {
-  background: rgba(255, 255, 255, 0.52) !important;
+/* Metric etiketleri ile aynı gray-300 → tema remap (app-responsive ile birebir) */
+html:not(.night) .app-dropdown-portal [class*='text-gray-300'] {
+  color: var(--muted) !important;
 }
 
-.glass-dropdown {
-  z-index: 10000;
-  background: rgba(255, 255, 255, 0.38) !important;
-  border: 1px solid rgba(255, 255, 255, 0.62) !important;
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border-radius: 16px !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48) !important;
+html.night .app-dropdown-portal [class*='text-gray-300'] {
+  color: var(--ink) !important;
+}
+
+.app-dropdown-portal [class*='hover:bg-dark']:hover,
+.app-dropdown-portal [class*='hover:bg-blue-500']:hover,
+.app-dropdown-portal [class*='hover:bg-white']:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent) !important;
 }
 
 /* Eski form bölüm panelleri → güncel durum glass sütun stili */
@@ -1931,6 +2000,98 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
+/* Submenu tree: continuous rail (bridged across item borders) + L on last */
+.glass-sidebar .sidebar-submenu {
+  --sidebar-tree: color-mix(in srgb, var(--bach-sky, #79a6d2) 55%, rgba(148, 163, 184, 0.35));
+  --sidebar-tree-w: 1px;
+  --sidebar-tree-gap: 0.85rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0.1rem 0 0.1rem 1.35rem;
+  padding: 0 0 0 var(--sidebar-tree-gap);
+}
+
+.glass-sidebar .sidebar-submenu > a,
+.glass-sidebar .sidebar-submenu > button,
+.glass-sidebar .sidebar-submenu > div {
+  position: relative;
+  margin: 0;
+}
+
+/*
+  Vertical segments live on each row.
+  Transparent 1px borders on menu buttons otherwise leave a 2px gap —
+  non-last rows extend 2px below so the rail stays unbroken.
+  Last row stops at mid-height (L), never continues downward.
+*/
+.glass-sidebar .sidebar-submenu > a:not(:last-child)::after,
+.glass-sidebar .sidebar-submenu > button:not(:last-child)::after,
+.glass-sidebar .sidebar-submenu > div:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--sidebar-tree-gap));
+  top: 0;
+  bottom: -2px;
+  width: var(--sidebar-tree-w);
+  background: var(--sidebar-tree);
+  pointer-events: none;
+}
+
+.glass-sidebar .sidebar-submenu > a:last-child::after,
+.glass-sidebar .sidebar-submenu > button:last-child::after,
+.glass-sidebar .sidebar-submenu > div:last-child::after {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--sidebar-tree-gap));
+  top: 0;
+  height: 50%;
+  width: var(--sidebar-tree-w);
+  background: var(--sidebar-tree);
+  pointer-events: none;
+}
+
+/* Horizontal branch — overlaps vertical rail for a solid joint */
+.glass-sidebar .sidebar-submenu > a::before,
+.glass-sidebar .sidebar-submenu > button::before,
+.glass-sidebar .sidebar-submenu > div::before {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--sidebar-tree-gap));
+  top: 50%;
+  z-index: 1;
+  width: calc(var(--sidebar-tree-gap) + var(--sidebar-tree-w));
+  height: var(--sidebar-tree-w);
+  background: var(--sidebar-tree);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.glass-sidebar .sidebar-submenu--scroll {
+  max-height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.15rem;
+}
+
+.glass-sidebar .sidebar-submenu--nested {
+  --sidebar-tree-gap: 0.7rem;
+  margin-left: 0.85rem;
+}
+
+.glass-sidebar .sidebar-submenu .sidebar-menu-button {
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+  padding-left: 0.55rem;
+  padding-right: 0.65rem;
+  font-size: 12.5px;
+}
+
+html.night .glass-sidebar .sidebar-submenu {
+  --sidebar-tree: color-mix(in srgb, var(--bach-sky, #79a6d2) 40%, rgba(148, 163, 184, 0.28));
+}
+
 .glass-sidebar .sidebar-menu-button,
 .glass-sidebar .sidebar-item {
   display: flex;
@@ -2121,6 +2282,8 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
 .app-page-metric,
 .app-surface-panel,
 .app-shell-surface,
+.app-dropdown-portal,
+.glass-dropdown,
 .card {
   background: var(--glass-bg) !important;
   backdrop-filter: blur(26px) saturate(180%) !important;
@@ -3634,9 +3797,9 @@ html.special .badge-purple {
 }
 
 .brand-logo-wordmark {
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--ds-font-family);
   font-size: 21px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.06em;
 }
 
@@ -3720,7 +3883,9 @@ html.night .app-header-popover,
 html.night .app-surface-panel,
 html.night .glass-sidebar.app-sidebar,
 html.night .glass-team-hub,
-html.night .glass-team-hub.app-sidebar {
+html.night .glass-team-hub.app-sidebar,
+html.night .app-dropdown-portal,
+html.night .glass-dropdown {
   background: var(--glass-bg) !important;
   border-color: var(--glass-border) !important;
   box-shadow:
@@ -3729,12 +3894,20 @@ html.night .glass-team-hub.app-sidebar {
 }
 
 html.night .glass-inset,
-html.night .app-metric-row,
-html.night .app-dropdown-portal,
-html.night .glass-dropdown {
+html.night .app-metric-row {
   background: rgba(12, 20, 38, 0.58) !important;
   border-color: rgba(148, 163, 184, 0.14) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  color: var(--ink) !important;
+}
+
+html.night .app-dropdown-portal,
+html.night .glass-dropdown {
+  background: var(--glass-bg) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow:
+    0 14px 40px -16px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
   color: var(--ink) !important;
 }
 
@@ -3912,7 +4085,7 @@ html.night .app-form-row textarea.form-input:focus {
 html.night
   input:not(.search-pill):not(.header-search-input):not(.form-input):not(.form-input-readonly):not(
     .app-search-field
-  ),
+  ):not(.inline-edit-input),
 html.night select:not(.form-input),
 html.night textarea:not(.form-input) {
   background-color: var(--input-bg) !important;
@@ -3923,7 +4096,7 @@ html.night textarea:not(.form-input) {
 html.night
   input:not(.search-pill):not(.header-search-input):not(.form-input):not(.form-input-readonly):not(
     .app-search-field
-  )::placeholder,
+  ):not(.inline-edit-input)::placeholder,
 html.night textarea:not(.form-input)::placeholder {
   color: var(--text-soft) !important;
 }
@@ -3960,14 +4133,20 @@ html.night .app-form-row textarea.form-input {
   box-shadow: none !important;
 }
 
-html.night .app-dropdown-portal [class*='text-gray-'],
 html.night .app-dropdown-portal [class*='text-white'] {
   color: var(--ink) !important;
 }
 
+html.night .app-dropdown-portal [class*='text-gray-300'] {
+  color: var(--ink) !important;
+}
+
+html.night .app-dropdown-portal > button:hover,
+html.night .app-dropdown-portal [role='menuitem']:hover,
 html.night .app-dropdown-portal [class*='hover:bg-dark']:hover,
-html.night .app-dropdown-portal [class*='hover:bg-blue-500']:hover {
-  background: rgba(255, 255, 255, 0.06) !important;
+html.night .app-dropdown-portal [class*='hover:bg-blue-500']:hover,
+html.night .app-dropdown-portal [class*='hover:bg-white']:hover {
+  background: color-mix(in srgb, #fff 8%, transparent) !important;
 }
 
 html.night .btn-ghost:hover {
@@ -3989,7 +4168,7 @@ html.night *::-webkit-scrollbar-thumb {
   max-width: none;
   margin: 0;
   padding: 1.25rem 1rem 2.5rem;
-  font-family: 'Plus Jakarta Sans', Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--ds-font-family);
   background:
     radial-gradient(ellipse 75% 55% at 8% 0%, rgba(37, 99, 235, 0.12), transparent 58%),
     radial-gradient(ellipse 55% 45% at 92% 8%, rgba(15, 23, 42, 0.06), transparent 52%),
@@ -4569,7 +4748,7 @@ html.night .crm-pricing-cta.is-ghost {
     radial-gradient(ellipse 70% 50% at 8% 0%, rgba(37, 99, 235, 0.12), transparent 55%),
     var(--color-surface, #f4f7fb);
   color: var(--ink, #0f172a);
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--ds-font-family);
 }
 
 .bach-doc-designer-topbar {

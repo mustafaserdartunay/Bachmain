@@ -35,6 +35,8 @@ function sortRows(rows, sort, columns = []) {
  *
  * columns: [{ id, header, accessorKey?, sortValue?, cell?, sortable?, hideOnMobile?, className? }]
  * getRowActions?: (row) => MoreMenu items
+ * renderRowActions?: (row) => ReactNode — custom action buttons (replaces MoreMenu when set)
+ * renderRowActionOverlay?: (row) => ReactNode — absolute overlay next to row actions (e.g. delete confirm)
  * selectable?: boolean — checkbox column for bulk actions
  * selectedIds?: string[]
  * onSelectedIdsChange?: (ids: string[]) => void
@@ -44,6 +46,8 @@ export function DataTable({
   data = [],
   getRowId = (row, index) => row.id ?? index,
   getRowActions,
+  renderRowActions,
+  renderRowActionOverlay,
   emptyTitle = 'Kayıt bulunamadı',
   emptyDescription,
   className = '',
@@ -91,15 +95,16 @@ export function DataTable({
     return <EmptyState title={emptyTitle} description={emptyDescription} className={className} />
   }
 
+  const showActions = Boolean(getRowActions || renderRowActions)
   const checkboxClass = 'h-4 w-4 rounded border-ds-border accent-[#3b82f6] cursor-pointer'
   const selectCellClass = 'h-[var(--ds-row-h,2.75rem)] w-10 px-2'
 
   return (
     <div className={className}>
       {/* Desktop / tablet */}
-      <div className="hidden overflow-x-auto rounded-ds-lg border border-ds-border md:block">
+      <div className="hidden overflow-x-auto rounded-ds-card border border-ds-border md:block">
         <table className="w-full min-w-[640px] border-collapse text-left">
-          <thead className="bg-[var(--ds-surface-muted)]">
+          <thead className="sticky top-0 z-[1] bg-[var(--ds-surface-muted)]">
             <tr>
               {selectable ? (
                 <th className={selectCellClass}>
@@ -125,32 +130,40 @@ export function DataTable({
                   {col.sortable ? (
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1 text-gray-300 hover:text-white"
+                      className="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wide text-gray-300 hover:text-white"
                       onClick={() => toggleSort(col.accessorKey || col.id)}
                     >
-                      <span className="truncate">{col.header}</span>
+                      <span className="truncate uppercase">{col.header}</span>
                       {sort.key === (col.accessorKey || col.id) ? (
                         sort.dir === 'asc' ? (
-                          <ArrowUp className="h-3.5 w-3.5" />
+                          <ArrowUp className="h-4 w-4 shrink-0" />
                         ) : (
-                          <ArrowDown className="h-3.5 w-3.5" />
+                          <ArrowDown className="h-4 w-4 shrink-0" />
                         )
                       ) : (
-                        <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+                        <ArrowUpDown className="h-4 w-4 shrink-0 opacity-40" />
                       )}
                     </button>
                   ) : (
-                    <span className="truncate">{col.header}</span>
+                    <span className="truncate uppercase">{col.header}</span>
                   )}
                 </th>
               ))}
-              {getRowActions ? <th className="w-12 px-2" aria-label="İşlemler" /> : null}
+              {showActions ? (
+                <th
+                  className={`${renderRowActions ? 'w-[1%] whitespace-nowrap' : 'w-12'} px-2 text-center text-xs font-extrabold tracking-wide text-gray-300`}
+                  aria-label="İşlemler"
+                >
+                  ⋯
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {rows.map((row, index) => {
               const id = String(getRowId(row, index))
               const actions = getRowActions?.(row) || []
+              const customActions = renderRowActions?.(row)
               const isSelected = selectedSet.has(id)
               return (
                 <tr
@@ -191,7 +204,7 @@ export function DataTable({
                     return (
                       <td
                         key={col.id}
-                        className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-xs font-extrabold tracking-wide text-gray-300 ${col.className || ''}`}
+                        className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-xs font-extrabold tracking-wide text-gray-300 tabular-nums ${col.className || ''}`}
                       >
                         {typeof content === 'string' || typeof content === 'number' ? (
                           <Tooltip content={text.length > 28 ? text : undefined}>
@@ -203,9 +216,19 @@ export function DataTable({
                       </td>
                     )
                   })}
-                  {getRowActions ? (
-                    <td className="px-2" onClick={(event) => event.stopPropagation()}>
-                      {actions.length ? <MoreMenu items={actions} /> : null}
+                  {showActions ? (
+                    <td
+                      className="relative whitespace-nowrap px-2"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <div className="relative inline-flex items-center gap-1">
+                        {customActions != null ? (
+                          customActions
+                        ) : actions.length ? (
+                          <MoreMenu items={actions} />
+                        ) : null}
+                        {renderRowActionOverlay?.(row)}
+                      </div>
                     </td>
                   ) : null}
                 </tr>
@@ -220,6 +243,7 @@ export function DataTable({
         {rows.map((row, index) => {
           const id = String(getRowId(row, index))
           const actions = getRowActions?.(row) || []
+          const customActions = renderRowActions?.(row)
           const visibleCols = columns.filter((col) => !col.hideOnMobile)
           const isSelected = selectedSet.has(id)
           return (
@@ -263,9 +287,17 @@ export function DataTable({
                     })}
                   </div>
                 </div>
-                {actions.length ? (
-                  <div onClick={(event) => event.stopPropagation()}>
-                    <MoreMenu items={actions} />
+                {showActions || renderRowActionOverlay ? (
+                  <div
+                    className="relative flex items-center gap-1"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {customActions != null ? (
+                      customActions
+                    ) : actions.length ? (
+                      <MoreMenu items={actions} />
+                    ) : null}
+                    {renderRowActionOverlay?.(row)}
                   </div>
                 ) : null}
               </div>

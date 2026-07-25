@@ -28,12 +28,14 @@ function voiceApiPlugin() {
       server.middlewares.use(async (req, res, next) => {
         if (req.url === '/api/voice/health' || req.url === '/api/omni/health') {
           res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({
-            ok: true,
-            hasApiKey: Boolean(getOpenAiApiKey()),
-            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-            transcribe: 'whisper-1',
-          }))
+          res.end(
+            JSON.stringify({
+              ok: true,
+              hasApiKey: Boolean(getOpenAiApiKey()),
+              model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+              transcribe: 'whisper-1',
+            }),
+          )
           return
         }
 
@@ -97,6 +99,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@bachmain/ui': path.resolve(__dirname, 'packages/ui/src/index.js'),
+      '@bachmain/design-system': path.resolve(__dirname, 'design-system/index.js'),
     },
   },
   optimizeDeps: {

@@ -18,12 +18,17 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
 
   return (
     <div className="fixed inset-0 z-drawer" role="dialog" aria-modal="true">
-      <button type="button" className="absolute inset-0 bg-black/40" aria-label="Kapat" onClick={onClose} />
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/40"
+        aria-label="Kapat"
+        onClick={onClose}
+      />
       <aside
-        className={`absolute top-0 ${sideClass} flex h-full w-[min(100vw,24rem)] flex-col border-ds-border bg-ds-surface shadow-ds-xl transition-transform duration-drawer ${side === 'left' ? 'border-r' : 'border-l'} ${className}`}
+        className={`absolute top-0 ${sideClass} flex h-full w-[min(100vw,24rem)] flex-col rounded-ds-drawer border-ds-border bg-ds-surface shadow-ds-layer-3 transition-transform duration-drawer ${side === 'left' ? 'border-r' : 'border-l'} ${className}`}
       >
         <div className="flex items-center justify-between gap-3 border-b border-ds-border px-4 py-4">
-          <h2 className="ds-h3 truncate">{title}</h2>
+          <h2 className="ds-h5 truncate">{title}</h2>
           <Button variant="ghost" size="iconOnly" onClick={onClose} aria-label="Kapat">
             <X className="h-5 w-5" />
           </Button>

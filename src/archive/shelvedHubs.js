@@ -17,13 +17,8 @@ export const SHELVED_HUBS = [
     page: 'src/pages/MarketplacePage.jsx',
     storeKeys: ['bach_marketplace_mp0_v1'],
   },
-  {
-    id: 'integration-hub',
-    label: 'Entegrasyon',
-    routes: ['/entegrasyon', '/integration-hub'],
-    page: 'src/pages/IntegrationHubPage.jsx',
-    storeKeys: ['bach_integration_hub_ih0_v1'],
-  },
+  // integration-hub restored as SaaS Entegrasyon Merkezi (2026-07-24)
+  // routes: /entegrasyon, /entegrasyon/loglar — see IntegrationCenterPage
   {
     id: 'commerce-cloud',
     label: 'Commerce Cloud',

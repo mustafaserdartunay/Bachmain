@@ -1,0 +1,69 @@
+---
+description: BachMain Design System (BDS) v1.0 — zorunlu UI/UX kuralları
+alwaysApply: true
+---
+
+# BACHMAIN Design System (BDS) v1.0
+
+Tüm yeni ve değişen UI bu Design System’e uymak zorundadır. Rastgele font, spacing, radius, renk veya gölge kullanma.
+
+## Kaynak
+
+- Tokenlar: `design-system/` (`colors`, `typography`, `spacing`, `radius`, `shadow`, `animation`, `icons`, `tokens`, `theme`)
+- Import: `import { tokens, spacing, radius } from '@bachmain/design-system'`
+- CSS köprü: `src/styles/ds-tokens.css` (`--ds-*` değişkenleri)
+- Ortak UI: `@bachmain/ui` (`Button`, `Input`, `Card`, `Modal`, `Drawer`, `Dropdown`, `DataTable`, …)
+
+## Tipografi
+
+- **Ana font: Manrope** (`--ds-font-family` / `font-sans`).
+- Scale: Display XL → Small (`--ds-font-*` / `.ds-h1` … `.ds-section-title`) — boyutları değiştirme.
+- Sayılar: `tabular-nums` / `.ds-tabular` / `font-variant-numeric: tabular-nums`.
+- Rastgele web font (Verdana, Montserrat, Sora, Poppins, Inter) ekleme; sistem fontu Manrope.
+
+## Spacing
+
+- Sadece 4px grid: 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 80, 96, 128 (`--ds-space-*` / `p-ds-4` vb.).
+- Rastgele `mt-[13px]` / `gap-[7px]` yasak.
+
+## Radius
+
+- Input / Button: 12px (`rounded-ds-input` / `rounded-ds-button`)
+- Card: 18px (`rounded-ds-card`)
+- Dialog: 22px (`rounded-ds-dialog`)
+- Drawer: 24px (`rounded-ds-drawer`)
+- Dropdown: 14px (`rounded-ds-dropdown`)
+- Avatar: full (`rounded-full`)
+
+## Shadow
+
+- Apple soft layers: `--ds-shadow-layer-1/2/3` veya `shadow-ds-sm/md/lg`.
+
+## Renk
+
+- Primary: BachMain blue (`--ds-primary`)
+- Secondary: Orange (`--ds-secondary`)
+- Semantic: success / danger / warning / info / sky / neutral — CSS variables.
+- Logo: `bachmain-logo.mdc` — metin/gradient logo üretme; PNG kullan.
+
+## Componentler
+
+- Buton variantları: `primary` | `secondary` | `ghost` | `outline` | `danger` | `success` | `warning` | `info` | `ai` | `bachy`
+- Input ailesi aynı yüzey dilini paylaşır.
+- Yeni ekranlarda mümkün olduğunca `@bachmain/ui` kullan; özel glass shell mevcut pattern’i bozmadan token’a bağla.
+- İkonlar: yalnızca **Lucide**; boyutlar 16 / 18 / 20 / 24 / 28 / 32.
+
+## Motion
+
+- Süreler: 150ms / 200ms / 300ms (`duration-hover` / `dropdown` / `page`).
+
+## Dark mode
+
+- `html.night` gerçek dark surface’ler kullanır; renk invert etme.
+
+## Yapma
+
+- Mevcut modülleri gereksiz yere bozma.
+- BDS dışı font / spacing / radius ekleme.
+- Hardcoded brand font stack’leri geri getirme (Manrope `--ds-font-family` üzerinden).
+- Sora / Poppins / Inter veya diğer deneme fontlarını sistem geneline uygulama (Manrope hariç).

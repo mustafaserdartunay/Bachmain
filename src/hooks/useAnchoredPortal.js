@@ -2,15 +2,23 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 export const DROPDOWN_Z_INDEX = 10000
 
+/**
+ * @param {boolean} isOpen
+ * @param {{
+ *   placement?: 'below' | 'above',
+ *   matchWidth?: boolean | 'min',
+ *   align?: 'left' | 'right' | 'center',
+ *   width?: number,
+ *   offset?: number,
+ * }} [options]
+ * matchWidth:
+ *   true  — menu width equals trigger
+ *   'min' — menu min-width equals trigger; grows for longer content
+ *   false — content-sized (fallback min 210px)
+ */
 export function useAnchoredPortal(
   isOpen,
-  {
-    placement = 'below',
-    matchWidth = true,
-    align = 'left',
-    width,
-    offset = 4,
-  } = {},
+  { placement = 'below', matchWidth = true, align = 'left', width, offset = 4 } = {},
 ) {
   const anchorRef = useRef(null)
   const menuRef = useRef(null)
@@ -25,10 +33,10 @@ export function useAnchoredPortal(
     const menuEl = menuRef.current
     const measuredWidth = menuEl?.offsetWidth ?? 0
     const measuredHeight = menuEl?.offsetHeight ?? 0
-    const menuWidth = width ?? (matchWidth ? rect.width : measuredWidth)
-    const menuHeight = measuredHeight
+    const growToContent = matchWidth === 'min'
+    const exactMatch = matchWidth === true
+    const needsMeasure = (!exactMatch && !width) || growToContent
 
-    const needsMeasure = !matchWidth && !width
     if (needsMeasure && (!menuEl || measuredWidth === 0)) {
       setStyle({
         position: 'fixed',
@@ -37,29 +45,38 @@ export function useAnchoredPortal(
         visibility: 'hidden',
         pointerEvents: 'none',
         zIndex: DROPDOWN_Z_INDEX,
+        ...(growToContent ? { minWidth: `${rect.width}px` } : null),
       })
       setIsPositioned(false)
       return
     }
 
-    let top = placement === 'above'
-      ? rect.top - menuHeight - offset
-      : rect.bottom + offset
+    const menuWidth =
+      width ??
+      (growToContent
+        ? Math.max(rect.width, measuredWidth)
+        : exactMatch
+          ? rect.width
+          : measuredWidth)
+    const menuHeight = measuredHeight
+
+    let top = placement === 'above' ? rect.top - menuHeight - offset : rect.bottom + offset
 
     if (
-      placement === 'below'
-      && menuHeight > 0
-      && top + menuHeight > window.innerHeight - 8
-      && rect.top - menuHeight - offset > 8
+      placement === 'below' &&
+      menuHeight > 0 &&
+      top + menuHeight > window.innerHeight - 8 &&
+      rect.top - menuHeight - offset > 8
     ) {
       top = rect.top - menuHeight - offset
     }
 
-    let left = align === 'right'
-      ? rect.right - menuWidth
-      : align === 'center'
-        ? rect.left + rect.width / 2 - menuWidth / 2
-        : rect.left
+    let left =
+      align === 'right'
+        ? rect.right - menuWidth
+        : align === 'center'
+          ? rect.left + rect.width / 2 - menuWidth / 2
+          : rect.left
 
     if (left + menuWidth > window.innerWidth - 8) {
       left = Math.max(8, window.innerWidth - menuWidth - 8)
@@ -70,8 +87,14 @@ export function useAnchoredPortal(
       position: 'fixed',
       top: `${top}px`,
       left: `${left}px`,
-      width: matchWidth ? `${rect.width}px` : width ? `${width}px` : undefined,
-      minWidth: !matchWidth && !width ? '210px' : undefined,
+      width: exactMatch
+        ? `${rect.width}px`
+        : width
+          ? `${width}px`
+          : growToContent
+            ? `${menuWidth}px`
+            : undefined,
+      minWidth: growToContent ? `${rect.width}px` : !exactMatch && !width ? '210px' : undefined,
       visibility: 'visible',
       pointerEvents: 'auto',
       zIndex: DROPDOWN_Z_INDEX,

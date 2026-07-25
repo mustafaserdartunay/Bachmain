@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check, Copy, Pencil, X } from 'lucide-react'
 import ProcessPanelModule from '../DocumentEditor/ProcessPanelModule'
 import InlineDeleteConfirm from '../Common/InlineDeleteConfirm'
+import CollapsibleProcessSection from './CollapsibleProcessSection'
+import AddProcessHeadingForm from './AddProcessHeadingForm'
 import { isReservedPlaceholderLabel } from '../DocumentEditor/processPanelUtils'
 import { stageColors } from '../DocumentEditor/stageColors'
 import {
@@ -18,22 +20,27 @@ function createId(prefix) {
 }
 
 function normalizeLabel(label) {
-  return String(label || '').trim().toLocaleLowerCase('tr-TR')
+  return String(label || '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
 }
 
 function buildCopyLabel(label, templates) {
   const base = `${String(label || 'Not Süreci').trim()} Kopya`
-  const used = new Set(Object.values(templates || {}).map((template) => normalizeLabel(template.label)))
+  const used = new Set(
+    Object.values(templates || {}).map((template) => normalizeLabel(template.label)),
+  )
   if (!used.has(normalizeLabel(base))) return base
   let index = 2
   while (used.has(normalizeLabel(`${base} ${index}`))) index += 1
   return `${base} ${index}`
 }
 
-export default function NoteProcessTemplatesSettingsPanel() {
+export default function NoteProcessTemplatesSettingsPanel({ dragHandleProps = null }) {
   const [templates, setTemplates] = useState(() => loadRawNoteProcessTemplates())
-  const [activeTemplateId, setActiveTemplateId] = useState(() => Object.keys(loadRawNoteProcessTemplates())[0] || '')
-  const [templateInput, setTemplateInput] = useState('')
+  const [activeTemplateId, setActiveTemplateId] = useState(
+    () => Object.keys(loadRawNoteProcessTemplates())[0] || '',
+  )
   const [pendingTemplateDeleteId, setPendingTemplateDeleteId] = useState(null)
   const [stageInput, setStageInput] = useState('')
   const [pendingStageDeleteId, setPendingStageDeleteId] = useState(null)
@@ -63,7 +70,8 @@ export default function NoteProcessTemplatesSettingsPanel() {
 
   const segmentRecord = useMemo(() => {
     const stages = getActiveStages()
-    const currentStageId = previewStageId && stages.some((stage) => stage.id === previewStageId) ? previewStageId : ''
+    const currentStageId =
+      previewStageId && stages.some((stage) => stage.id === previewStageId) ? previewStageId : ''
     return { stages, currentStageId }
   }, [templates, activeTemplateId, previewStageId])
 
@@ -90,14 +98,21 @@ export default function NoteProcessTemplatesSettingsPanel() {
   }
 
   function updateStageColor(stage, color) {
-    persistStages(getActiveStages().map((item) => (item.id === stage.id ? { ...item, color } : item)))
+    persistStages(
+      getActiveStages().map((item) => (item.id === stage.id ? { ...item, color } : item)),
+    )
   }
 
   function updateStageLabel(stage, label) {
     const clean = String(label || '').trim()
     if (!clean || isReservedPlaceholderLabel(clean)) return
     const stages = getActiveStages()
-    if (stages.some((item) => item.id !== stage.id && normalizeLabel(item.label) === normalizeLabel(clean))) return
+    if (
+      stages.some(
+        (item) => item.id !== stage.id && normalizeLabel(item.label) === normalizeLabel(clean),
+      )
+    )
+      return
     persistStages(stages.map((item) => (item.id === stage.id ? { ...item, label: clean } : item)))
   }
 
@@ -145,7 +160,12 @@ export default function NoteProcessTemplatesSettingsPanel() {
       cancelEditTemplate()
       return
     }
-    if (Object.values(current).some((template) => template.id !== templateId && normalizeLabel(template.label) === normalizeLabel(clean))) {
+    if (
+      Object.values(current).some(
+        (template) =>
+          template.id !== templateId && normalizeLabel(template.label) === normalizeLabel(clean),
+      )
+    ) {
       cancelEditTemplate()
       return
     }
@@ -167,7 +187,10 @@ export default function NoteProcessTemplatesSettingsPanel() {
         ...current[template.id],
         id: nextId,
         label: buildCopyLabel(current[template.id].label, current),
-        stages: (current[template.id].stages || []).map((stage) => ({ ...stage, id: createId('note-status-copy') })),
+        stages: (current[template.id].stages || []).map((stage) => ({
+          ...stage,
+          id: createId('note-status-copy'),
+        })),
       },
     })
     setTemplates(next)
@@ -186,40 +209,40 @@ export default function NoteProcessTemplatesSettingsPanel() {
     if (!next[activeTemplateId]) setActiveTemplateId(Object.keys(next)[0] || '')
   }
 
-  function createTemplate(event) {
-    event.preventDefault()
-    const label = templateInput.trim()
+  function createTemplate(labelOverride) {
+    const label = String(labelOverride || '').trim()
     if (!label) return
     const next = addNoteProcessTemplate(label)
     setTemplates(next)
     const created = Object.values(next).find((template) => template.label === label)
     if (created) setActiveTemplateId(created.id)
-    setTemplateInput('')
     setIsOpen(false)
   }
 
   const templateCount = Object.keys(templates).length
 
   return (
-    <section className="card space-y-4">
-      <div>
-        <h2 className="text-base font-black text-white">Not Defteri Süreçleri</h2>
-        <p className="mt-1 text-xs font-semibold text-gray-500">
-          Not defteri kayıtlarında kullanılacak süreç türleri ve durum menüsü buradan yönetilir.
-        </p>
-        <p className="mt-1 text-[13px] font-bold text-gray-600">
-          {templateCount} süreç türü · {getActiveStages().length} aktif durum
-        </p>
-      </div>
-
+    <CollapsibleProcessSection
+      title="Not Defteri Süreçleri"
+      summary={`${templateCount} süreç türü · ${getActiveStages().length} aktif durum`}
+      dragHandleProps={dragHandleProps}
+    >
       <div className="flex flex-wrap gap-2">
         {Object.values(templates).map((template) => {
           const isActive = activeTemplateId === template.id
           if (pendingTemplateDeleteId === template.id) {
             return (
-              <div key={template.id} className="inline-flex items-center gap-2 rounded-xl border border-red-500/35 bg-red-500/10 px-2 py-1.5">
-                <span className="text-[13px] font-black uppercase tracking-wide text-red-200">{template.label}</span>
-                <InlineDeleteConfirm onConfirm={() => removeTemplate(template.id)} onCancel={() => setPendingTemplateDeleteId(null)} />
+              <div
+                key={template.id}
+                className="inline-flex items-center gap-2 rounded-xl border border-red-500/35 bg-red-500/10 px-2 py-1.5"
+              >
+                <span className="text-[13px] font-black uppercase tracking-wide text-red-200">
+                  {template.label}
+                </span>
+                <InlineDeleteConfirm
+                  onConfirm={() => removeTemplate(template.id)}
+                  onCancel={() => setPendingTemplateDeleteId(null)}
+                />
               </div>
             )
           }
@@ -228,7 +251,9 @@ export default function NoteProcessTemplatesSettingsPanel() {
             <div
               key={template.id}
               className={`inline-flex items-center overflow-hidden rounded-xl border transition-colors ${
-                isActive ? 'border-violet-500/50 bg-violet-500/15' : 'border-dark-500/50 bg-dark-700/50'
+                isActive
+                  ? 'border-violet-500/50 bg-violet-500/15'
+                  : 'border-dark-500/50 bg-dark-700/50'
               }`}
             >
               {editingTemplateId === template.id ? (
@@ -245,13 +270,22 @@ export default function NoteProcessTemplatesSettingsPanel() {
                     onKeyDown={(event) => {
                       if (event.key === 'Escape') cancelEditTemplate()
                     }}
-                    className="h-7 w-32 rounded-lg border border-violet-500/40 bg-dark-900/70 px-2 text-[13px] font-black uppercase text-white outline-none"
+                    className="inline-edit-input h-7 w-32 rounded-lg border border-violet-500/40 bg-transparent px-2 text-[13px] font-black uppercase text-white outline-none"
                     autoFocus
                   />
-                  <button type="submit" className="rounded-md p-1 text-emerald-300 hover:bg-emerald-500/15" title="Kaydet">
+                  <button
+                    type="submit"
+                    className="rounded-md p-1 text-emerald-300 hover:bg-emerald-500/15"
+                    title="Kaydet"
+                  >
                     <Check className="h-3 w-3" />
                   </button>
-                  <button type="button" onClick={cancelEditTemplate} className="rounded-md p-1 text-gray-500 hover:bg-dark-600 hover:text-gray-300" title="Vazgeç">
+                  <button
+                    type="button"
+                    onClick={cancelEditTemplate}
+                    className="rounded-md p-1 text-gray-500 hover:bg-dark-600 hover:text-gray-300"
+                    title="Vazgeç"
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </form>
@@ -271,18 +305,35 @@ export default function NoteProcessTemplatesSettingsPanel() {
                   }`}
                 >
                   {template.label}
-                  <span className="ml-1 text-[12px] font-bold text-gray-500">({template.stages.length})</span>
+                  <span className="ml-1 text-[12px] font-bold text-gray-500">
+                    ({template.stages.length})
+                  </span>
                 </button>
               )}
               {editingTemplateId !== template.id && (
                 <>
-                  <button type="button" onClick={() => copyTemplate(template)} className="rounded-md p-1 text-gray-500 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300" title="Süreç türünü kopyala">
+                  <button
+                    type="button"
+                    onClick={() => copyTemplate(template)}
+                    className="rounded-md p-1 text-gray-500 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300"
+                    title="Süreç türünü kopyala"
+                  >
                     <Copy className="h-3 w-3" />
                   </button>
-                  <button type="button" onClick={() => startEditTemplate(template)} className="rounded-md p-1 text-gray-500 transition-colors hover:bg-blue-500/15 hover:text-blue-300" title="Süreç türünü düzenle">
+                  <button
+                    type="button"
+                    onClick={() => startEditTemplate(template)}
+                    className="rounded-md p-1 text-gray-500 transition-colors hover:bg-blue-500/15 hover:text-blue-300"
+                    title="Süreç türünü düzenle"
+                  >
                     <Pencil className="h-3 w-3" />
                   </button>
-                  <button type="button" onClick={() => setPendingTemplateDeleteId(template.id)} className="mr-1.5 rounded-md p-0.5 text-gray-500 transition-colors hover:bg-red-500/20 hover:text-red-300" title="Süreç türünü sil">
+                  <button
+                    type="button"
+                    onClick={() => setPendingTemplateDeleteId(template.id)}
+                    className="mr-1.5 rounded-md p-0.5 text-gray-500 transition-colors hover:bg-red-500/20 hover:text-red-300"
+                    title="Süreç türünü sil"
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </>
@@ -292,23 +343,20 @@ export default function NoteProcessTemplatesSettingsPanel() {
         })}
       </div>
 
-      <form className="flex flex-wrap items-center gap-2" onSubmit={createTemplate}>
-        <input
-          value={templateInput}
-          onChange={(event) => setTemplateInput(event.target.value)}
-          placeholder="Yeni not defteri süreç türü..."
-          className="form-input min-w-[220px] flex-1"
-        />
-        <button type="submit" className="btn-primary px-4 py-2 text-xs font-black uppercase">
-          Tür Ekle
-        </button>
-      </form>
+      <AddProcessHeadingForm
+        placeholder="Yeni not defteri süreç türü..."
+        submitLabel="Tür Ekle"
+        onAdd={createTemplate}
+      />
 
       <ProcessPanelModule
         key={activeTemplateId || 'empty-note-process'}
+        compact
         activeLabel="Aktif Durum"
         countSuffix="durum tanımlı"
-        emptyMessage={activeTemplateId ? 'Henüz durum eklenmedi.' : 'Önce not defteri süreç türü ekleyin.'}
+        emptyMessage={
+          activeTemplateId ? 'Henüz durum eklenmedi.' : 'Önce not defteri süreç türü ekleyin.'
+        }
         addPlaceholder="Yeni durum adı..."
         record={segmentRecord}
         isOpen={isOpen}
@@ -328,6 +376,6 @@ export default function NoteProcessTemplatesSettingsPanel() {
         setPendingStageDeleteId={setPendingStageDeleteId}
         onRemoveStage={removeStage}
       />
-    </section>
+    </CollapsibleProcessSection>
   )
 }

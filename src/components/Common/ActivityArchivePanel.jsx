@@ -11,9 +11,11 @@ import {
 import {
   APP_ICON_WRAP_CLASS,
   APP_LABEL_CLASS,
-  APP_METRIC_ROW_CLASS,
   APP_SUBLABEL_CLASS,
 } from '../../utils/dashboardDesign'
+
+const ROW_CLASS =
+  'flex w-full min-h-[2.5625rem] items-start justify-between gap-2 bg-transparent px-2 py-1.5 text-left'
 
 export default function ActivityArchivePanel({
   title = 'Arşiv ve İşlem Geçmişi',
@@ -47,11 +49,11 @@ export default function ActivityArchivePanel({
   }
 
   return (
-    <section className="card app-shell-surface overflow-hidden p-0">
+    <section className="app-page-header !min-h-0 overflow-hidden p-0">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-white/35"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
       >
         <span className="flex min-w-0 items-center gap-2">
           <span className={`${APP_ICON_WRAP_CLASS} text-amber-600`}>
@@ -79,7 +81,7 @@ export default function ActivityArchivePanel({
                 const canRestore =
                   Boolean(entry.snapshot) && !entry.restoredAt && typeof onRestore === 'function'
                 return (
-                  <div key={entry.id} className={`${APP_METRIC_ROW_CLASS} items-start`}>
+                  <div key={entry.id} className={ROW_CLASS}>
                     <span className={`${APP_ICON_WRAP_CLASS} text-amber-600`}>
                       <Clock3 className="h-3.5 w-3.5" />
                     </span>

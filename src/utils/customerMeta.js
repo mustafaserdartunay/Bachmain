@@ -90,23 +90,16 @@ export const accountOptions = [
   { label: 'Senet Kasası', color: 'bg-amber-500' },
 ]
 
-export const cashAccountOptions = [
-  { label: 'Merkez Kasa', color: 'bg-emerald-500' },
-]
+export const cashAccountOptions = [{ label: 'Merkez Kasa', color: 'bg-emerald-500' }]
 
-export const bankAccountOptions = [
-  { label: 'Ticari Banka Hesabı', color: 'bg-blue-500' },
-]
+export const bankAccountOptions = [{ label: 'Ticari Banka Hesabı', color: 'bg-blue-500' }]
 
-export const chequeAccountOptions = [
-  { label: 'Merkez Çek Kasası', color: 'bg-purple-500' },
-]
+export const chequeAccountOptions = [{ label: 'Merkez Çek Kasası', color: 'bg-purple-500' }]
 
-export const promissoryAccountOptions = [
-  { label: 'Merkez Senet Kasası', color: 'bg-amber-500' },
-]
+export const promissoryAccountOptions = [{ label: 'Merkez Senet Kasası', color: 'bg-amber-500' }]
 
 export const OPTION_LISTS_KEY = 'erlenbox-customer-option-lists'
+export const OPTION_LISTS_UPDATED_EVENT = 'bach:option-lists-updated'
 
 export const OPTION_COLOR_PALETTE = [
   'bg-blue-500',
@@ -176,7 +169,7 @@ export function readOptionLists() {
     const raw = localStorage.getItem(OPTION_LISTS_KEY)
     if (!raw) return normalizeOptionLists({ ...defaultOptionLists })
     const saved = JSON.parse(raw)
-    return normalizeOptionLists({
+    const known = normalizeOptionLists({
       type: pickList(saved.type, 'type'),
       representative: pickList(saved.representative, 'representative'),
       scoring: pickList(saved.scoring, 'scoring'),
@@ -191,6 +184,15 @@ export function readOptionLists() {
       bankAccount: pickList(saved.bankAccount, 'bankAccount'),
       chequeAccount: pickList(saved.chequeAccount, 'chequeAccount'),
     })
+    const custom = Object.fromEntries(
+      Object.entries(saved || {})
+        .filter(([field]) => String(field).startsWith('custom-'))
+        .map(([field, options]) => [
+          field,
+          normalizeOptionList(Array.isArray(options) ? options : []),
+        ]),
+    )
+    return { ...known, ...custom }
   } catch {
     return normalizeOptionLists({ ...defaultOptionLists })
   }
@@ -200,12 +202,24 @@ export function saveOptionList(field, options) {
   const current = readOptionLists()
   const next = { ...current, [field]: normalizeOptionList(options) }
   localStorage.setItem(OPTION_LISTS_KEY, JSON.stringify(next))
-  window.dispatchEvent(new CustomEvent('bach:option-lists-updated', { detail: { field } }))
+  window.dispatchEvent(new CustomEvent(OPTION_LISTS_UPDATED_EVENT, { detail: { field } }))
+  return next
+}
+
+export function removeOptionListField(field) {
+  const current = readOptionLists()
+  if (!(field in current)) return current
+  const next = { ...current }
+  delete next[field]
+  localStorage.setItem(OPTION_LISTS_KEY, JSON.stringify(next))
+  window.dispatchEvent(
+    new CustomEvent(OPTION_LISTS_UPDATED_EVENT, { detail: { field, removed: true } }),
+  )
   return next
 }
 
 export function getOptionLabels(field) {
-  return readOptionLists()[field].map((option) => option.label)
+  return (readOptionLists()[field] || []).map((option) => option.label)
 }
 
 export function readCustomerMeta() {
@@ -218,7 +232,11 @@ export function readCustomerMeta() {
 }
 
 export function getDefaultCustomerType(customer) {
-  return String(customer?.segment || '').toLocaleLowerCase('tr-TR').includes('bayi') ? 'Bayi' : 'Müşteri'
+  return String(customer?.segment || '')
+    .toLocaleLowerCase('tr-TR')
+    .includes('bayi')
+    ? 'Bayi'
+    : 'Müşteri'
 }
 
 export function getDefaultCustomerScoring(customer) {
@@ -231,18 +249,25 @@ export function getDefaultCustomerScoring(customer) {
 }
 
 export function getCustomerMetaSelection(customer, savedMeta = {}) {
-  return {
+  const known = {
     type: savedMeta.type || getDefaultCustomerType(customer),
     representative: savedMeta.representative || customer?.owner || 'Satış Ekibi',
     scoring: savedMeta.scoring || getDefaultCustomerScoring(customer),
     category: savedMeta.category || '',
   }
+  const custom = Object.fromEntries(
+    Object.entries(savedMeta || {})
+      .filter(([key]) => String(key).startsWith('custom-'))
+      .map(([key, value]) => [key, value || '']),
+  )
+  return { ...known, ...custom }
 }
 
 export function resolveCustomerRepresentative(customerOrRef) {
-  const customer = typeof customerOrRef === 'object' && customerOrRef
-    ? customerOrRef
-    : findCustomerProfileByReference(customerOrRef)
+  const customer =
+    typeof customerOrRef === 'object' && customerOrRef
+      ? customerOrRef
+      : findCustomerProfileByReference(customerOrRef)
   if (!customer) return ''
   return getCustomerMetaSelection(customer, readCustomerMeta()[customer.id] || {}).representative
 }

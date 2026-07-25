@@ -16,8 +16,8 @@ export const APP_PAGE_BACK_PLAIN_CLASS =
   'inline-flex h-control min-h-control items-center justify-center gap-2.5 rounded-xl bg-transparent px-3 text-xs font-extrabold tracking-wide text-gray-300 transition-colors hover:text-white'
 
 /** Ortalanmış sayfa başlığı (renk ayrı — theme remap `text-blue-300` sınıf adını ezer) */
-export const APP_PAGE_TITLE_BASE_CLASS = 'truncate text-2xl font-black uppercase tracking-wide'
-export const APP_PAGE_TITLE_CLASS = `${APP_PAGE_TITLE_BASE_CLASS} text-blue-300`
+export const APP_PAGE_TITLE_BASE_CLASS = 'truncate text-[20px] font-black uppercase tracking-wide'
+export const APP_PAGE_TITLE_CLASS = `${APP_PAGE_TITLE_BASE_CLASS} text-gray-300`
 
 /** Alt açıklama (opsiyonel) */
 export const APP_PAGE_SUBTITLE_CLASS =
@@ -133,7 +133,7 @@ export function AppPageHeader({
         </div>
       ) : null}
       <div className="mx-auto max-w-2xl px-28 sm:px-40">
-        <h1 className={`${APP_PAGE_TITLE_BASE_CLASS} ${titleClassName || 'text-blue-300'}`.trim()}>
+        <h1 className={`${APP_PAGE_TITLE_BASE_CLASS} ${titleClassName || 'text-gray-300'}`.trim()}>
           {title}
         </h1>
         {subtitle ? <p className={APP_PAGE_SUBTITLE_CLASS}>{subtitle}</p> : null}

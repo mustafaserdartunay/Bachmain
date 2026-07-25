@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 
+const MENU_SHELL = 'app-dropdown-portal min-w-[210px] rounded-ds-dropdown p-2 shadow-ds-layer-2'
+const MENU_ITEM =
+  'flex w-full items-center gap-2 rounded-xl bg-transparent px-3 py-2 text-left text-xs font-extrabold tracking-wide text-gray-300 transition-colors hover:text-white'
+const MENU_ITEM_DANGER =
+  'flex w-full items-center gap-2 rounded-xl bg-transparent px-3 py-2 text-left text-xs font-extrabold tracking-wide text-[#e11d48] transition-colors'
+
 export function Dropdown({
   trigger,
   children,
@@ -53,13 +59,15 @@ export function Dropdown({
                 top: pos.top,
                 left: align === 'end' ? undefined : pos.left,
                 right: align === 'end' ? window.innerWidth - pos.left : undefined,
-                minWidth: Math.max(pos.width, 180),
-                zIndex: 1000,
+                minWidth: Math.max(pos.width, 210),
+                zIndex: 10000,
               }}
-              className={`rounded-ds-lg border border-ds-border bg-ds-surface p-1.5 shadow-ds-lg ${menuClassName}`}
+              className={`${MENU_SHELL} ${menuClassName}`.trim()}
               role="menu"
             >
-              {typeof children === 'function' ? children({ close: () => setOpen(false) }) : children}
+              {typeof children === 'function'
+                ? children({ close: () => setOpen(false) })
+                : children}
             </div>,
             document.body,
           )
@@ -69,18 +77,25 @@ export function Dropdown({
 }
 
 export function DropdownItem({ icon: Icon, label, onClick, tone = 'default', close }) {
-  const toneClass = tone === 'danger' ? 'text-ds-danger' : 'text-ds-ink'
   return (
     <button
       type="button"
       role="menuitem"
-      className={`flex w-full items-center gap-2 rounded-ds-md px-3 py-2 text-left text-ds-small font-semibold transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${toneClass}`}
+      className={tone === 'danger' ? MENU_ITEM_DANGER : MENU_ITEM}
       onClick={() => {
         onClick?.()
         close?.()
       }}
     >
-      {Icon ? <Icon className="h-4 w-4 shrink-0" /> : null}
+      {Icon ? (
+        <span
+          className={`flex h-6 w-6 shrink-0 items-center justify-center ${
+            tone === 'danger' ? 'text-[#e11d48]' : 'text-gray-300'
+          }`}
+        >
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+      ) : null}
       <span className="truncate">{label}</span>
     </button>
   )

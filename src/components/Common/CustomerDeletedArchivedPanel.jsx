@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Archive, ChevronDown, RotateCcw, Trash2 } from 'lucide-react'
+import { ChevronDown, RotateCcw, Trash2 } from 'lucide-react'
 import { DELETED_RECORDS_EVENT, getDeletedRecords } from '../../utils/deletedRecordsStore'
 import {
   getArchivedCustomers,
+  purgeCustomerRecycleEntry,
   restoreCustomer,
   restoreDeletedCustomer,
 } from '../../data/customerProfiles'
@@ -12,12 +13,14 @@ import {
   matchesPartyListFilter,
   readCustomerMeta,
 } from '../../utils/customerMeta'
-import {
-  APP_ICON_WRAP_CLASS,
-  APP_LABEL_CLASS,
-  APP_METRIC_ROW_CLASS,
-  APP_SUBLABEL_CLASS,
-} from '../../utils/dashboardDesign'
+import { APP_LABEL_CLASS, APP_SUBLABEL_CLASS } from '../../utils/dashboardDesign'
+import { AppPanelDot } from '../Layout/AppPageLayout'
+import { DeleteConfirmPopover, DELETE_TRASH_BUTTON_CLASS } from './ListDeleteConfirmPanel'
+
+const ROW_CLASS =
+  'relative flex w-full min-h-[2.5625rem] items-center justify-between gap-2 bg-transparent px-2 py-1.5 text-left'
+const RESTORE_BTN_CLASS =
+  'inline-flex h-8 min-h-8 items-center justify-center gap-1.5 rounded-xl border border-current bg-transparent px-3 text-xs font-extrabold uppercase text-gray-300 transition-colors hover:bg-[var(--ds-surface-muted)] hover:text-gray-200'
 
 function formatWhen(value) {
   if (!value) return '—'
@@ -36,8 +39,7 @@ function formatWhen(value) {
 }
 
 /**
- * Müşteriler / Tedarikçiler — silinen + arşivlenen kayıtlar (geri yükleme).
- * Yalnızca müşteri profili silme/arşiv akışından beslenir.
+ * Müşteriler / Tedarikçiler — silinen + arşivlenen kayıtlar (geri yükleme / kalıcı silme).
  */
 export default function CustomerDeletedArchivedPanel({
   title = 'Silinenler ve Arşivlenenler',
@@ -47,6 +49,7 @@ export default function CustomerDeletedArchivedPanel({
 }) {
   const [open, setOpen] = useState(false)
   const [version, setVersion] = useState(0)
+  const [pendingPurgeId, setPendingPurgeId] = useState(null)
 
   useEffect(() => {
     function refresh() {
@@ -108,20 +111,26 @@ export default function CustomerDeletedArchivedPanel({
       restoreDeletedCustomer(item.record)
     }
     onRestored?.(item.record, item)
+    setPendingPurgeId(null)
+    setVersion((current) => current + 1)
+  }
+
+  function handlePurge(item) {
+    if (!item?.record?.id) return
+    purgeCustomerRecycleEntry(item.record.id, item.kind)
+    setPendingPurgeId(null)
     setVersion((current) => current + 1)
   }
 
   return (
-    <section className="card app-shell-surface overflow-hidden p-0">
+    <section className="app-page-header !min-h-0 overflow-hidden p-0">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-white/35"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
       >
         <span className="flex min-w-0 items-center gap-2">
-          <span className={`${APP_ICON_WRAP_CLASS} text-rose-500`}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </span>
+          <AppPanelDot color="rose" />
           <span className={APP_LABEL_CLASS}>{title}</span>
           <span className="badge badge-red shrink-0 !px-2 !py-0.5 !text-[12px]">
             {entries.length}
@@ -135,37 +144,54 @@ export default function CustomerDeletedArchivedPanel({
       {open ? (
         <div className="border-t border-white/50 px-4 py-3">
           {entries.length === 0 ? (
-            <div className="glass-inset px-4 py-8 text-center text-[12px] font-semibold text-[var(--muted)]">
+            <div className="px-4 py-8 text-center text-xs font-extrabold text-[var(--muted)]">
               {emptyMessage}
             </div>
           ) : (
             <div className="space-y-1">
               {entries.map((item) => {
                 const isArchived = item.kind === 'archived'
+                const confirming = pendingPurgeId === item.id
                 return (
-                  <div key={item.id} className={`${APP_METRIC_ROW_CLASS} items-center`}>
-                    <span
-                      className={`${APP_ICON_WRAP_CLASS} ${isArchived ? 'text-amber-600' : 'text-rose-500'}`}
-                    >
-                      {isArchived ? (
-                        <Archive className="h-3.5 w-3.5" />
-                      ) : (
-                        <Trash2 className="h-3.5 w-3.5" />
-                      )}
-                    </span>
+                  <div key={item.id} className={ROW_CLASS}>
+                    <AppPanelDot color={isArchived ? 'amber' : 'rose'} />
                     <div className="min-w-0 flex-1">
                       <p className={`${APP_LABEL_CLASS} text-[var(--ink)]`}>{item.label}</p>
                       <p className={APP_SUBLABEL_CLASS}>
                         {isArchived ? 'Arşivlendi' : 'Silindi'} · {formatWhen(item.at)}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRestore(item)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-[11px] font-black uppercase text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" /> Geri Yükle
-                    </button>
+                    <div className="relative flex h-8 shrink-0 items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleRestore(item)}
+                        className={RESTORE_BTN_CLASS}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" /> Geri Yükle
+                      </button>
+                      <button
+                        type="button"
+                        className={`${DELETE_TRASH_BUTTON_CLASS} inline-flex h-8 w-8 min-h-8 items-center justify-center !p-0`}
+                        aria-label="Kalıcı sil"
+                        title="Kalıcı sil"
+                        onClick={() =>
+                          setPendingPurgeId((current) => (current === item.id ? null : item.id))
+                        }
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                      {confirming ? (
+                        <DeleteConfirmPopover
+                          title={`"${item.label}" kalıcı silinsin mi?`}
+                          description="Bu işlem geri alınamaz."
+                          confirmLabel="Evet"
+                          cancelLabel="Hayır"
+                          onConfirm={() => handlePurge(item)}
+                          onCancel={() => setPendingPurgeId(null)}
+                          className="absolute right-0 top-11 z-50 min-w-[18rem]"
+                        />
+                      ) : null}
+                    </div>
                   </div>
                 )
               })}
