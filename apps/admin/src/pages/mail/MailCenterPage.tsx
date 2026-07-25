@@ -37,7 +37,7 @@ function statusVariant(status?: string) {
 }
 
 export function MailCenterPage() {
-  const [tab, setTab] = useState<'logs' | 'queue' | 'failed' | 'settings'>('logs')
+  const [tab, setTab] = useState<'logs' | 'auth' | 'queue' | 'failed' | 'settings'>('logs')
   const [status, setStatus] = useState<MailStatus | null>(null)
   const [rows, setRows] = useState<MailRow[]>([])
   const [templates, setTemplates] = useState<string[]>([])
@@ -62,6 +62,9 @@ export function MailCenterPage() {
         setRows(data.rows || [])
       } else if (tab === 'failed') {
         const data = await api.get<{ rows: MailRow[] }>('/mail/failed')
+        setRows(data.rows || [])
+      } else if (tab === 'auth') {
+        const data = await api.get<{ rows: MailRow[] }>('/mail/logs?template=auth&limit=200')
         setRows(data.rows || [])
       } else if (tab === 'logs') {
         const data = await api.get<{ rows: MailRow[] }>('/mail/logs')
@@ -119,7 +122,7 @@ export function MailCenterPage() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="E-posta Merkezi"
-        subtitle="Resend üzerinden production mail geçmişi, kuyruk, başarısız gönderimler ve test."
+        subtitle="Giriş bildirimi, şifre sıfırlama ve tüm production maillerinin iletim dökümanı (sent / failed)."
       />
 
       {status ? (
@@ -127,7 +130,9 @@ export function MailCenterPage() {
           <Card className="p-4 text-sm">
             <div className="text-text-muted">Sağlayıcı</div>
             <div className="mt-1 font-bold capitalize">{status.provider || '—'}</div>
-            <div className="mt-1 text-xs text-text-subtle">{status.configured ? 'API key tanımlı' : 'RESEND_API_KEY eksik'}</div>
+            <div className="mt-1 text-xs text-text-subtle">
+              {status.configured ? 'API key tanımlı' : 'RESEND_API_KEY eksik'}
+            </div>
           </Card>
           <Card className="p-4 text-sm">
             <div className="text-text-muted">Kuyruk</div>
@@ -135,11 +140,15 @@ export function MailCenterPage() {
           </Card>
           <Card className="p-4 text-sm">
             <div className="text-text-muted">Son 24s gönderilen</div>
-            <div className="mt-1 text-xl font-bold tabular-nums text-emerald-600">{status.sentLast24h ?? 0}</div>
+            <div className="mt-1 text-xl font-bold tabular-nums text-emerald-600">
+              {status.sentLast24h ?? 0}
+            </div>
           </Card>
           <Card className="p-4 text-sm">
             <div className="text-text-muted">Son 24s başarısız</div>
-            <div className="mt-1 text-xl font-bold tabular-nums text-rose-600">{status.failedLast24h ?? 0}</div>
+            <div className="mt-1 text-xl font-bold tabular-nums text-rose-600">
+              {status.failedLast24h ?? 0}
+            </div>
           </Card>
         </div>
       ) : null}
@@ -148,6 +157,7 @@ export function MailCenterPage() {
         {(
           [
             ['logs', 'Mail Geçmişi'],
+            ['auth', 'Güvenlik Mailleri'],
             ['queue', 'Mail Kuyruğu'],
             ['failed', 'Başarısız'],
             ['settings', 'Ayarlar / Test'],
@@ -181,11 +191,15 @@ export function MailCenterPage() {
           <div>
             <h3 className="font-bold text-text">Mail Ayarları</h3>
             <p className="mt-1 text-sm text-text-muted">
-              From: <span className="font-mono text-xs">{status?.from || 'BACHMAIN &lt;noreply@bachmain.com&gt;'}</span>
+              From:{' '}
+              <span className="font-mono text-xs">
+                {status?.from || 'BACHMAIN &lt;noreply@bachmain.com&gt;'}
+              </span>
             </p>
             <p className="mt-2 text-sm text-text-muted">
-              DNS: Resend dashboard → Domains → <strong>bachmain.com</strong> için SPF / DKIM / DMARC kayıtlarını ekleyin.
-              Detaylar: <code className="text-xs">docs/MAIL-INFRASTRUCTURE.md</code>
+              DNS: Resend dashboard → Domains → <strong>bachmain.com</strong> için SPF / DKIM /
+              DMARC kayıtlarını ekleyin. Detaylar:{' '}
+              <code className="text-xs">docs/MAIL-INFRASTRUCTURE.md</code>
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
@@ -241,7 +255,11 @@ export function MailCenterPage() {
                 <tr key={row.id} className="border-t border-border">
                   <td className="px-3 py-2">
                     <Badge variant={statusVariant(row.status)}>{row.status}</Badge>
-                    {row.error ? <div className="mt-1 max-w-[14rem] truncate text-[11px] text-rose-600">{row.error}</div> : null}
+                    {row.error ? (
+                      <div className="mt-1 max-w-[14rem] truncate text-[11px] text-rose-600">
+                        {row.error}
+                      </div>
+                    ) : null}
                   </td>
                   <td className="px-3 py-2">{row.to}</td>
                   <td className="px-3 py-2">{row.subject}</td>

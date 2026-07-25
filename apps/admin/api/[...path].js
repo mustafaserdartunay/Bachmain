@@ -46,7 +46,8 @@ export default async function handler(req, res) {
   try {
     const path = getPath(req)
     const method = req.method
-    const body = method === 'POST' || method === 'PUT' || method === 'PATCH' ? await readBody(req) : {}
+    const body =
+      method === 'POST' || method === 'PUT' || method === 'PATCH' ? await readBody(req) : {}
 
     if (await handleAuthApi(req, res, path, body)) return
     if (await handleLeadsApi(req, res, path, body)) return
@@ -79,9 +80,14 @@ export default async function handler(req, res) {
       const paymentRequests = store.paymentRequests || []
       const expiringLicenses = customers
         .filter((c) => ['active', 'trial'].includes(c.status))
-        .filter((c) => c.licenseExpiry && new Date(c.licenseExpiry) < new Date(Date.now() + 90 * 86400000))
+        .filter(
+          (c) =>
+            c.licenseExpiry && new Date(c.licenseExpiry) < new Date(Date.now() + 90 * 86400000),
+        )
         .slice(0, 5)
-      const openTickets = tickets.filter((t) => !['resolved', 'closed'].includes(t.status)).slice(0, 8)
+      const openTickets = tickets
+        .filter((t) => !['resolved', 'closed'].includes(t.status))
+        .slice(0, 8)
       const webSignups = customers.filter((c) => c.source === 'self_signup').length
       return sendJson(req, res, 200, {
         ...(store.dashboard || {}),
@@ -118,7 +124,10 @@ export default async function handler(req, res) {
           { label: 'Web Üyelik', value: String(webSignups), change: '', trend: 'up' },
           {
             label: 'Demo Talep',
-            value: String(customers.filter((c) => c.source === 'demo_request' || c.source === 'demo_converted').length),
+            value: String(
+              customers.filter((c) => c.source === 'demo_request' || c.source === 'demo_converted')
+                .length,
+            ),
             change: '',
             trend: 'up',
           },
@@ -242,7 +251,9 @@ export default async function handler(req, res) {
       if (!customer) return sendJson(req, res, 404, { error: 'Müşteri bulunamadı' })
       const account = (store.accounts || []).find((a) => a.customerId === customer.id)
       const tickets = (store.supportTickets || []).filter((t) => t.customerId === customer.id)
-      const paymentRequests = (store.paymentRequests || []).filter((p) => p.customerId === customer.id)
+      const paymentRequests = (store.paymentRequests || []).filter(
+        (p) => p.customerId === customer.id,
+      )
       return sendJson(req, res, 200, {
         ...customer,
         account,
@@ -278,6 +289,25 @@ export default async function handler(req, res) {
         timeline: store.customerExtras?.timeline || [],
         supportTickets: tickets,
         paymentRequests,
+        passwordChangedAt: account?.passwordChangedAt || null,
+        mailLogs: (
+          (store.mail?.logs || []).filter(
+            (m) =>
+              m.customerId === customer.id ||
+              m.accountId === account?.id ||
+              (m.to &&
+                account?.email &&
+                String(m.to).toLowerCase() === String(account.email).toLowerCase()),
+          ) || []
+        ).slice(0, 50),
+        authEvents: (
+          (store.authEvents || []).filter(
+            (e) =>
+              e.customerId === customer.id ||
+              e.accountId === account?.id ||
+              e.email === customer.email,
+          ) || []
+        ).slice(0, 50),
       })
     }
 

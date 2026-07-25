@@ -515,6 +515,20 @@ export async function loginAccount(store, body) {
     meta: { quiet: true },
   })
 
+  if (!Array.isArray(store.authEvents)) store.authEvents = []
+  store.authEvents.unshift({
+    id: newId('aev'),
+    type: 'login',
+    accountId: account.id,
+    customerId: account.customerId,
+    email: account.email,
+    at: account.lastLoginAt,
+    ip: body.ip || '—',
+    userAgent: body.userAgent || '—',
+    result: 'ok',
+  })
+  store.authEvents = store.authEvents.slice(0, 2000)
+
   const token = signToken({
     sub: account.id,
     email: account.email,
@@ -532,12 +546,21 @@ export async function loginAccount(store, body) {
 
 export async function requestPasswordReset(store, emailRaw) {
   ensureCollections(store)
+  if (!Array.isArray(store.authEvents)) store.authEvents = []
   const email = normalizeEmail(emailRaw)
-  const account = store.accounts.find(
-    (a) => a.email === email && a.canLogin !== false && a.role !== 'demo_lead',
-  )
+  const account = store.accounts.find((a) => a.email === email && a.role !== 'demo_lead')
   // Always succeed to avoid account enumeration
-  if (!account) return { ok: true }
+  if (!account) {
+    store.authEvents.unshift({
+      id: newId('aev'),
+      type: 'password_reset_request',
+      email,
+      at: new Date().toISOString(),
+      result: 'no_account',
+    })
+    store.authEvents = store.authEvents.slice(0, 2000)
+    return { ok: true }
+  }
 
   const token = crypto.randomBytes(32).toString('hex')
   store.emailTokens = store.emailTokens.filter(
@@ -555,7 +578,7 @@ export async function requestPasswordReset(store, emailRaw) {
   store.emailTokens = store.emailTokens.slice(0, 2000)
 
   const cfg = mailConfig()
-  const resetUrl = `${cfg.appUrl}/sifre-sifirla?token=${encodeURIComponent(token)}`
+  const resetUrl = `${cfg.webUrl}/sifre-sifirla?token=${encodeURIComponent(token)}`
   await sendTemplateMail(store, {
     to: account.email,
     template: 'password_reset',
@@ -564,6 +587,16 @@ export async function requestPasswordReset(store, emailRaw) {
     accountId: account.id,
     data: { name: account.fullName, resetUrl },
   })
+  store.authEvents.unshift({
+    id: newId('aev'),
+    type: 'password_reset_request',
+    accountId: account.id,
+    customerId: account.customerId,
+    email: account.email,
+    at: new Date().toISOString(),
+    result: 'mail_queued',
+  })
+  store.authEvents = store.authEvents.slice(0, 2000)
   return { ok: true }
 }
 
@@ -575,8 +608,14 @@ export async function resetPasswordWithToken(store, { token, password }) {
     err.code = 'INVALID_TOKEN'
     throw err
   }
-  if (String(password || '').length < 6) {
-    const err = new Error('Şifre en az 6 karakter olmalı')
+  if (String(password || '').length < 8) {
+    const err = new Error('Şifre en az 8 karakter olmalı')
+    err.code = 'WEAK_PASSWORD'
+    throw err
+  }
+  const pwCheck = validateSignupPassword(password)
+  if (!pwCheck.ok) {
+    const err = new Error(pwCheck.message)
     err.code = 'WEAK_PASSWORD'
     throw err
   }
@@ -596,8 +635,19 @@ export async function resetPasswordWithToken(store, { token, password }) {
     type: 'password_changed',
     customerId: account.customerId,
     accountId: account.id,
-    data: { name: account.fullName },
+    data: { name: account.fullName, appUrl: mailConfig().webUrl + '/login' },
   })
+  if (!Array.isArray(store.authEvents)) store.authEvents = []
+  store.authEvents.unshift({
+    id: newId('aev'),
+    type: 'password_changed',
+    accountId: account.id,
+    customerId: account.customerId,
+    email: account.email,
+    at: account.passwordChangedAt,
+    result: 'ok',
+  })
+  store.authEvents = store.authEvents.slice(0, 2000)
   return { ok: true }
 }
 

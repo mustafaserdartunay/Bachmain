@@ -2,8 +2,16 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  ArrowLeft, Pencil, Building2, Mail, Phone, MapPin, CreditCard,
-  Wallet, Sparkles, History,
+  ArrowLeft,
+  Pencil,
+  Building2,
+  Mail,
+  Phone,
+  MapPin,
+  CreditCard,
+  Wallet,
+  Sparkles,
+  History,
 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/MetricCard'
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -29,6 +37,7 @@ const tabs = [
   { value: 'support', label: 'Destek' },
   { value: 'ai', label: 'AI Kullanımı' },
   { value: 'logins', label: 'Giriş Geçmişi' },
+  { value: 'security', label: 'Güvenlik & Mail' },
   { value: 'timeline', label: 'Aktivite' },
 ]
 
@@ -48,7 +57,13 @@ export function CustomerDetailPage() {
 
   if (status === 'loading') return <DetailSkeleton />
   if (status === 'error' || !customer) {
-    return <ErrorState onRetry={reload} title="Müşteri bulunamadı" description="İstenen müşteri kaydı bulunamadı." />
+    return (
+      <ErrorState
+        onRetry={reload}
+        title="Müşteri bulunamadı"
+        description="İstenen müşteri kaydı bulunamadı."
+      />
+    )
   }
 
   const users = customer.userList
@@ -73,7 +88,11 @@ export function CustomerDetailPage() {
             <Button variant="secondary" size="sm" onClick={() => navigate('/musteriler')}>
               <ArrowLeft className="h-4 w-4" /> Geri
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => navigate(`/musteriler/${id}/duzenle`)}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate(`/musteriler/${id}/duzenle`)}
+            >
               <Pencil className="h-4 w-4" /> Düzenle
             </Button>
           </>
@@ -84,8 +103,17 @@ export function CustomerDetailPage() {
         <Card padding="md" hover={false}>
           <p className="text-xs text-text-muted">Plan</p>
           <p className="mt-1 text-lg font-bold text-text">{customer.plan}</p>
-          <Badge variant={(statusBadgeMap[customer.status] ?? 'default') as BadgeVariant} className="mt-2">
-            {customer.status === 'active' ? 'Aktif' : customer.status === 'trial' ? 'Deneme' : customer.status === 'suspended' ? 'Askıda' : 'İptal'}
+          <Badge
+            variant={(statusBadgeMap[customer.status] ?? 'default') as BadgeVariant}
+            className="mt-2"
+          >
+            {customer.status === 'active'
+              ? 'Aktif'
+              : customer.status === 'trial'
+                ? 'Deneme'
+                : customer.status === 'suspended'
+                  ? 'Askıda'
+                  : 'İptal'}
           </Badge>
         </Card>
         <Card padding="md" hover={false}>
@@ -102,13 +130,21 @@ export function CustomerDetailPage() {
         </Card>
       </div>
 
-      <TabNav items={tabs.map((t) => ({
-        ...t,
-        count: t.value === 'users' ? users.length
-          : t.value === 'invoices' ? invoices.length
-          : t.value === 'support' ? tickets.length
-          : undefined,
-      }))} value={activeTab} onChange={setActiveTab} />
+      <TabNav
+        items={tabs.map((t) => ({
+          ...t,
+          count:
+            t.value === 'users'
+              ? users.length
+              : t.value === 'invoices'
+                ? invoices.length
+                : t.value === 'support'
+                  ? tickets.length
+                  : undefined,
+        }))}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
       {activeTab === 'overview' && (
         <div className="grid gap-6 lg:grid-cols-3">
@@ -155,13 +191,18 @@ export function CustomerDetailPage() {
                 <Wallet className="h-4 w-4" /> Cari Bakiye
               </CardTitle>
             </CardHeader>
-            <p className={`text-3xl font-bold tabular-nums ${customer.balance < 0 ? 'text-rose-600' : customer.balance > 0 ? 'text-emerald-600' : 'text-text'}`}>
+            <p
+              className={`text-3xl font-bold tabular-nums ${customer.balance < 0 ? 'text-rose-600' : customer.balance > 0 ? 'text-emerald-600' : 'text-text'}`}
+            >
               {formatCurrency(Math.abs(customer.balance))}
             </p>
             <p className="mt-1 text-sm text-text-muted">
               {customer.balance < 0 ? 'Borçlu' : customer.balance > 0 ? 'Alacaklı' : 'Dengede'}
             </p>
-            <Link to="/cari-hesaplar" className="mt-4 inline-block text-sm font-medium text-bach-blue hover:underline">
+            <Link
+              to="/cari-hesaplar"
+              className="mt-4 inline-block text-sm font-medium text-bach-blue hover:underline"
+            >
               Cari hesaba git →
             </Link>
           </Card>
@@ -174,8 +215,16 @@ export function CustomerDetailPage() {
             { key: 'name', label: 'Ad Soyad' },
             { key: 'email', label: 'E-posta' },
             { key: 'role', label: 'Rol' },
-            { key: 'lastLogin', label: 'Son Giriş', render: (r) => formatDateTime(String(r.lastLogin)) },
-            { key: 'status', label: 'Durum', render: (r) => <Badge variant="success">{String(r.status)}</Badge> },
+            {
+              key: 'lastLogin',
+              label: 'Son Giriş',
+              render: (r) => formatDateTime(String(r.lastLogin)),
+            },
+            {
+              key: 'status',
+              label: 'Durum',
+              render: (r) => <Badge variant="success">{String(r.status)}</Badge>,
+            },
           ]}
           rows={users}
         />
@@ -187,15 +236,21 @@ export function CustomerDetailPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-border p-4">
               <p className="text-xs text-text-muted">Toplam Borç</p>
-              <p className="text-xl font-bold text-rose-600">{formatCurrency(customer.balance < 0 ? Math.abs(customer.balance) : 0)}</p>
+              <p className="text-xl font-bold text-rose-600">
+                {formatCurrency(customer.balance < 0 ? Math.abs(customer.balance) : 0)}
+              </p>
             </div>
             <div className="rounded-xl border border-border p-4">
               <p className="text-xs text-text-muted">Toplam Alacak</p>
-              <p className="text-xl font-bold text-emerald-600">{formatCurrency(customer.balance > 0 ? customer.balance : 0)}</p>
+              <p className="text-xl font-bold text-emerald-600">
+                {formatCurrency(customer.balance > 0 ? customer.balance : 0)}
+              </p>
             </div>
             <div className="rounded-xl border border-border p-4">
               <p className="text-xs text-text-muted">Net Bakiye</p>
-              <p className="text-xl font-bold text-text">{formatCurrency(Math.abs(customer.balance))}</p>
+              <p className="text-xl font-bold text-text">
+                {formatCurrency(Math.abs(customer.balance))}
+              </p>
             </div>
           </div>
         </Card>
@@ -207,7 +262,11 @@ export function CustomerDetailPage() {
             { key: 'number', label: 'Fatura No' },
             { key: 'date', label: 'Tarih', render: (r) => formatDate(String(r.date)) },
             { key: 'amount', label: 'Tutar', render: (r) => formatCurrency(Number(r.amount)) },
-            { key: 'status', label: 'Durum', render: (r) => <Badge variant="success">{String(r.status)}</Badge> },
+            {
+              key: 'status',
+              label: 'Durum',
+              render: (r) => <Badge variant="success">{String(r.status)}</Badge>,
+            },
           ]}
           rows={invoices}
         />
@@ -219,39 +278,66 @@ export function CustomerDetailPage() {
             { key: 'date', label: 'Tarih', render: (r) => formatDate(String(r.date)) },
             { key: 'amount', label: 'Tutar', render: (r) => formatCurrency(Number(r.amount)) },
             { key: 'method', label: 'Yöntem' },
-            { key: 'status', label: 'Durum', render: (r) => <Badge variant="success">{String(r.status)}</Badge> },
+            {
+              key: 'status',
+              label: 'Durum',
+              render: (r) => <Badge variant="success">{String(r.status)}</Badge>,
+            },
           ]}
           rows={payments}
         />
       )}
 
-      {activeTab === 'support' && (
-        tickets.length === 0 ? (
-          <Card padding="lg"><p className="text-sm text-text-muted">Destek kaydı bulunmuyor.</p></Card>
+      {activeTab === 'support' &&
+        (tickets.length === 0 ? (
+          <Card padding="lg">
+            <p className="text-sm text-text-muted">Destek kaydı bulunmuyor.</p>
+          </Card>
         ) : (
           <DataTable
             columns={[
               { key: 'subject', label: 'Konu' },
-              { key: 'priority', label: 'Öncelik', render: (r) => <Badge variant={(statusBadgeMap[String(r.priority)] ?? 'default') as BadgeVariant}>{String(r.priority)}</Badge> },
-              { key: 'status', label: 'Durum', render: (r) => <Badge variant={(statusBadgeMap[String(r.status)] ?? 'default') as BadgeVariant}>{String(r.status)}</Badge> },
+              {
+                key: 'priority',
+                label: 'Öncelik',
+                render: (r) => (
+                  <Badge
+                    variant={(statusBadgeMap[String(r.priority)] ?? 'default') as BadgeVariant}
+                  >
+                    {String(r.priority)}
+                  </Badge>
+                ),
+              },
+              {
+                key: 'status',
+                label: 'Durum',
+                render: (r) => (
+                  <Badge variant={(statusBadgeMap[String(r.status)] ?? 'default') as BadgeVariant}>
+                    {String(r.status)}
+                  </Badge>
+                ),
+              },
               { key: 'assignee', label: 'Atanan' },
             ]}
             rows={tickets}
             onRowClick={(row) => navigate(`/destek/${row.id}`)}
           />
-        )
-      )}
+        ))}
 
       {activeTab === 'ai' && (
         <div className="grid gap-4 sm:grid-cols-3">
           <Card padding="lg">
             <Sparkles className="mb-2 h-5 w-5 text-bach-gold" />
             <p className="text-xs text-text-muted">Toplam Sorgu</p>
-            <p className="text-2xl font-bold text-text">{aiUsage.totalQueries.toLocaleString('tr-TR')}</p>
+            <p className="text-2xl font-bold text-text">
+              {aiUsage.totalQueries.toLocaleString('tr-TR')}
+            </p>
           </Card>
           <Card padding="lg">
             <p className="text-xs text-text-muted">Token Kullanımı</p>
-            <p className="text-2xl font-bold text-text">{(aiUsage.tokensUsed / 1000).toFixed(0)}K</p>
+            <p className="text-2xl font-bold text-text">
+              {(aiUsage.tokensUsed / 1000).toFixed(0)}K
+            </p>
           </Card>
           <Card padding="lg">
             <p className="text-xs text-text-muted">Tahmini Maliyet</p>
@@ -261,7 +347,9 @@ export function CustomerDetailPage() {
             <CardTitle className="mb-3 text-base">En Çok Kullanılan Özellikler</CardTitle>
             <div className="flex flex-wrap gap-2">
               {aiUsage.topFeatures.map((f) => (
-                <Badge key={f} variant="gold">{f}</Badge>
+                <Badge key={f} variant="gold">
+                  {f}
+                </Badge>
               ))}
             </div>
           </Card>
@@ -278,6 +366,91 @@ export function CustomerDetailPage() {
           ]}
           rows={logins}
         />
+      )}
+
+      {activeTab === 'security' && (
+        <div className="space-y-6">
+          <Card padding="lg">
+            <CardHeader>
+              <CardTitle className="text-base">Şifre & güvenlik</CardTitle>
+            </CardHeader>
+            <p className="text-sm text-text-muted">
+              Son şifre değişikliği:{' '}
+              <span className="font-semibold text-text">
+                {customer.passwordChangedAt
+                  ? formatDateTime(customer.passwordChangedAt)
+                  : 'Kayıt yok'}
+              </span>
+            </p>
+            <p className="mt-2 text-xs text-text-muted">
+              Şifre sıfırlama ve değişim olayları aşağıda; e-posta iletim durumu Mail Geçmişi
+              tablosunda (sent / failed).
+            </p>
+          </Card>
+
+          <Card padding="lg">
+            <CardHeader>
+              <CardTitle className="text-base">Auth olayları</CardTitle>
+            </CardHeader>
+            <DataTable
+              columns={[
+                { key: 'type', label: 'Olay' },
+                { key: 'result', label: 'Sonuç' },
+                { key: 'ip', label: 'IP', render: (r) => String(r.ip || '—') },
+                { key: 'at', label: 'Zaman', render: (r) => formatDateTime(String(r.at || '')) },
+              ]}
+              rows={customer.authEvents || []}
+            />
+          </Card>
+
+          <Card padding="lg">
+            <CardHeader>
+              <CardTitle className="text-base">E-posta dökümanları</CardTitle>
+            </CardHeader>
+            <DataTable
+              columns={[
+                {
+                  key: 'status',
+                  label: 'İletim',
+                  render: (r) => (
+                    <Badge
+                      variant={
+                        r.status === 'sent' || r.status === 'resent'
+                          ? 'success'
+                          : r.status === 'failed'
+                            ? 'danger'
+                            : 'warning'
+                      }
+                    >
+                      {String(r.status || '—')}
+                    </Badge>
+                  ),
+                },
+                { key: 'template', label: 'Şablon' },
+                { key: 'subject', label: 'Konu' },
+                {
+                  key: 'sentAt',
+                  label: 'Zaman',
+                  render: (r) => formatDateTime(String(r.sentAt || r.createdAt || '')),
+                },
+                {
+                  key: 'error',
+                  label: 'Hata',
+                  render: (r) => (
+                    <span className="text-xs text-rose-600">{r.error ? String(r.error) : '—'}</span>
+                  ),
+                },
+              ]}
+              rows={customer.mailLogs || []}
+            />
+            <p className="mt-3 text-xs text-text-muted">
+              Tüm sistem mailleri için:{' '}
+              <Link to="/eposta" className="font-semibold text-bach-blue">
+                E-posta Merkezi
+              </Link>
+            </p>
+          </Card>
+        </div>
       )}
 
       {activeTab === 'timeline' && (

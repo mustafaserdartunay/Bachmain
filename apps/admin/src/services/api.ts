@@ -18,7 +18,13 @@ export interface DashboardData {
   recentActivities: TimelineEvent[]
   expiringLicenses: Customer[]
   openTickets: SupportTicket[]
-  pendingPayments: { id: string; customer: string; amount: number; dueDate: string; status: string }[]
+  pendingPayments: {
+    id: string
+    customer: string
+    amount: number
+    dueDate: string
+    status: string
+  }[]
   systemHealth: { name: string; status: string; uptime: string; latency: string }[]
 }
 
@@ -28,13 +34,39 @@ export interface ModuleListResponse {
 }
 
 export interface CustomerFull extends Customer {
-  userList: { id: string; name: string; email: string; role: string; lastLogin: string; status: string }[]
+  userList: {
+    id: string
+    name: string
+    email: string
+    role: string
+    lastLogin: string
+    status: string
+  }[]
   invoices: { id: string; number: string; date: string; amount: number; status: string }[]
   payments: { id: string; date: string; amount: number; method: string; status: string }[]
   aiUsage: { totalQueries: number; tokensUsed: number; costEstimate: number; topFeatures: string[] }
   loginHistory: { id: string; user: string; ip: string; device: string; date: string }[]
   timeline: TimelineEvent[]
   supportTickets: SupportTicket[]
+  passwordChangedAt?: string | null
+  mailLogs?: {
+    id: string
+    to?: string
+    subject?: string
+    template?: string
+    status?: string
+    error?: string | null
+    createdAt?: string
+    sentAt?: string | null
+  }[]
+  authEvents?: {
+    id: string
+    type?: string
+    email?: string
+    at?: string
+    result?: string
+    ip?: string
+  }[]
 }
 
 export const dashboardApi = {
@@ -59,8 +91,10 @@ export const supportApi = {
 
 export const modulesApi = {
   list: (moduleId: string) => api.get<ModuleListResponse>(`/modules/${moduleId}`),
-  get: (moduleId: string, itemId: string) => api.get<Record<string, unknown>>(`/modules/${moduleId}/${itemId}`),
-  create: (moduleId: string, data: Record<string, unknown>) => api.post(`/modules/${moduleId}`, data),
+  get: (moduleId: string, itemId: string) =>
+    api.get<Record<string, unknown>>(`/modules/${moduleId}/${itemId}`),
+  create: (moduleId: string, data: Record<string, unknown>) =>
+    api.post(`/modules/${moduleId}`, data),
   update: (moduleId: string, itemId: string, data: Record<string, unknown>) =>
     api.put(`/modules/${moduleId}/${itemId}`, data),
   delete: (moduleId: string, itemId: string) => api.delete(`/modules/${moduleId}/${itemId}`),

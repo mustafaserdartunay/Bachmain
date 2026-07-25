@@ -66,19 +66,31 @@ export async function handleAuthApi(req, res, path, body = {}) {
   }
 
   if (method === 'POST' && path === 'auth/register') {
-    const ip = req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown'
+    const ip =
+      req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown'
     const rate = await hitRateLimit(`register:${ip}`, { limit: 10, windowMs: 60 * 60 * 1000 })
     if (!rate.allowed) {
-      sendJson(req, res, 429, { error: 'RATE_LIMITED', message: 'Çok fazla kayıt denemesi. Lütfen sonra tekrar deneyin.' })
+      sendJson(req, res, 429, {
+        error: 'RATE_LIMITED',
+        message: 'Çok fazla kayıt denemesi. Lütfen sonra tekrar deneyin.',
+      })
       return true
     }
     try {
       const result = await withStore((store) => registerAccount(store, body))
-      sendJson(req, res, 201, {
-        ok: true,
-        user: result.user,
-        token: result.token,
-      }, { cookie: buildSessionCookie(result.token) })
+      sendJson(
+        req,
+        res,
+        201,
+        {
+          ok: true,
+          user: result.user,
+          token: result.token,
+        },
+        { cookie: buildSessionCookie(result.token) },
+      )
       return true
     } catch (error) {
       const status = error.code === 'EMAIL_TAKEN' ? 409 : 400
@@ -88,10 +100,16 @@ export async function handleAuthApi(req, res, path, body = {}) {
   }
 
   if (method === 'POST' && path === 'auth/login') {
-    const ip = req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown'
+    const ip =
+      req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown'
     const rate = await hitRateLimit(`login:${ip}`, { limit: 30, windowMs: 15 * 60 * 1000 })
     if (!rate.allowed) {
-      sendJson(req, res, 429, { error: 'RATE_LIMITED', message: 'Çok fazla giriş denemesi. Lütfen sonra tekrar deneyin.' })
+      sendJson(req, res, 429, {
+        error: 'RATE_LIMITED',
+        message: 'Çok fazla giriş denemesi. Lütfen sonra tekrar deneyin.',
+      })
       return true
     }
     try {
@@ -99,13 +117,20 @@ export async function handleAuthApi(req, res, path, body = {}) {
         loginAccount(store, {
           ...body,
           userAgent: req.headers?.['user-agent'] || '',
+          ip,
         }),
       )
-      sendJson(req, res, 200, {
-        ok: true,
-        user: result.user,
-        token: result.token,
-      }, { cookie: buildSessionCookie(result.token) })
+      sendJson(
+        req,
+        res,
+        200,
+        {
+          ok: true,
+          user: result.user,
+          token: result.token,
+        },
+        { cookie: buildSessionCookie(result.token) },
+      )
       return true
     } catch (error) {
       sendJson(req, res, 401, { error: error.code || 'LOGIN_FAILED', message: error.message })
@@ -114,7 +139,10 @@ export async function handleAuthApi(req, res, path, body = {}) {
   }
 
   if (method === 'POST' && path === 'staff/login') {
-    const ip = req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown'
+    const ip =
+      req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown'
     const rate = await hitRateLimit(`staff-login:${ip}`, { limit: 20, windowMs: 15 * 60 * 1000 })
     if (!rate.allowed) {
       sendJson(req, res, 429, { error: 'RATE_LIMITED', message: 'Çok fazla giriş denemesi.' })
@@ -122,9 +150,15 @@ export async function handleAuthApi(req, res, path, body = {}) {
     }
     try {
       const result = await loginStaff(body)
-      sendJson(req, res, 200, { ok: true, user: result.user, token: result.token }, {
-        cookie: buildStaffCookie(result.token),
-      })
+      sendJson(
+        req,
+        res,
+        200,
+        { ok: true, user: result.user, token: result.token },
+        {
+          cookie: buildStaffCookie(result.token),
+        },
+      )
       return true
     } catch (error) {
       sendJson(req, res, 401, { error: error.code || 'LOGIN_FAILED', message: error.message })
@@ -175,7 +209,10 @@ export async function handleAuthApi(req, res, path, body = {}) {
       return true
     } catch (error) {
       const status = error.code === 'UNAUTHORIZED' ? 401 : error.code === 'NOT_FOUND' ? 404 : 400
-      sendJson(req, res, status, { error: error.code || 'ONBOARDING_FAILED', message: error.message })
+      sendJson(req, res, status, {
+        error: error.code || 'ONBOARDING_FAILED',
+        message: error.message,
+      })
       return true
     }
   }
@@ -186,15 +223,24 @@ export async function handleAuthApi(req, res, path, body = {}) {
   }
 
   if (method === 'POST' && path === 'auth/forgot-password') {
-    const ip = req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown'
+    const ip =
+      req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown'
     const rate = await hitRateLimit(`forgot:${ip}`, { limit: 8, windowMs: 60 * 60 * 1000 })
     if (!rate.allowed) {
-      sendJson(req, res, 429, { error: 'RATE_LIMITED', message: 'Çok fazla deneme. Lütfen sonra tekrar deneyin.' })
+      sendJson(req, res, 429, {
+        error: 'RATE_LIMITED',
+        message: 'Çok fazla deneme. Lütfen sonra tekrar deneyin.',
+      })
       return true
     }
     try {
       await withStore((store) => requestPasswordReset(store, body.email))
-      sendJson(req, res, 200, { ok: true, message: 'Eşleşen hesap varsa sıfırlama bağlantısı e-posta ile gönderildi.' })
+      sendJson(req, res, 200, {
+        ok: true,
+        message: 'Eşleşen hesap varsa sıfırlama bağlantısı e-posta ile gönderildi.',
+      })
       return true
     } catch (error) {
       sendJson(req, res, 400, { error: error.code || 'FORGOT_FAILED', message: error.message })
@@ -204,7 +250,9 @@ export async function handleAuthApi(req, res, path, body = {}) {
 
   if (method === 'POST' && path === 'auth/reset-password') {
     try {
-      await withStore((store) => resetPasswordWithToken(store, { token: body.token, password: body.password }))
+      await withStore((store) =>
+        resetPasswordWithToken(store, { token: body.token, password: body.password }),
+      )
       sendJson(req, res, 200, { ok: true, message: 'Şifreniz güncellendi. Giriş yapabilirsiniz.' })
       return true
     } catch (error) {
