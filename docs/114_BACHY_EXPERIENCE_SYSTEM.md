@@ -11,14 +11,11 @@ Does not redesign existing UI. Bachy is additive only.
 High-fidelity **rendered pose assets** (`public/bachy/*`) + subtle motion.
 Not Three.js / R3F in product UI.
 
-## Components (`apps/landing/src/components/bachy/`)
+## Components
 
-| File                    | Role                            |
-| ----------------------- | ------------------------------- |
-| `BachyFigure.jsx`       | Pose image + float              |
-| `BachyAuthLayout.jsx`   | Login / Register companion      |
-| `BachyPricingBuddy.jsx` | Per-plan buddy                  |
-| `BachyHero.jsx`         | Hero companion                  |
-| `BachyAI.jsx`           | Header chat entry (idle render) |
+| File                                                      | Role                               |
+| --------------------------------------------------------- | ---------------------------------- |
+| `apps/landing/src/components/marketing/BachyRegister.tsx` | Register-only companion (additive) |
 
+Rule: never rebuild the register form — Bachy sits beside / above the existing panel.
 Never cover inputs, buttons, nav, or dialogs. Respect `prefers-reduced-motion`.
