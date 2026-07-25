@@ -18,7 +18,11 @@ import {
 function assertStaff(req, res) {
   const session = getStaffSession(req)
   if (!session && process.env.STAFF_AUTH_REQUIRED !== '0') {
-    sendJson(req, res, 401, { ok: false, error: 'UNAUTHORIZED', message: 'Personel oturumu gerekli' })
+    sendJson(req, res, 401, {
+      ok: false,
+      error: 'UNAUTHORIZED',
+      message: 'Personel oturumu gerekli',
+    })
     return false
   }
   return true
@@ -42,8 +46,12 @@ export async function handleMailApi(req, res, path, body = {}) {
     const store = await loadStore()
     const url = new URL(req.url, 'http://localhost')
     const status = url.searchParams.get('status') || undefined
+    const template = url.searchParams.get('template') || undefined
     const limit = Number(url.searchParams.get('limit') || 100)
-    return sendJson(req, res, 200, { ok: true, rows: listMailLogs(store, { status, limit }) })
+    return sendJson(req, res, 200, {
+      ok: true,
+      rows: listMailLogs(store, { status, template, limit }),
+    })
   }
 
   if (method === 'GET' && path === 'mail/queue') {
@@ -53,11 +61,16 @@ export async function handleMailApi(req, res, path, body = {}) {
 
   if (method === 'GET' && path === 'mail/failed') {
     const store = await loadStore()
-    return sendJson(req, res, 200, { ok: true, rows: listMailLogs(store, { status: 'failed', limit: 200 }) })
+    return sendJson(req, res, 200, {
+      ok: true,
+      rows: listMailLogs(store, { status: 'failed', limit: 200 }),
+    })
   }
 
   if (method === 'POST' && path === 'mail/process-queue') {
-    const result = await withStore((store) => processMailQueue(store, { limit: Number(body.limit) || 25 }))
+    const result = await withStore((store) =>
+      processMailQueue(store, { limit: Number(body.limit) || 25 }),
+    )
     return sendJson(req, res, 200, { ok: true, ...result })
   }
 
@@ -98,7 +111,11 @@ export async function handleMailApi(req, res, path, body = {}) {
   if (method === 'POST' && path === 'mail/test') {
     const to = String(body.to || body.email || '').trim()
     if (!to.includes('@')) {
-      return sendJson(req, res, 400, { ok: false, error: 'INVALID_TO', message: 'Geçerli e-posta girin' })
+      return sendJson(req, res, 400, {
+        ok: false,
+        error: 'INVALID_TO',
+        message: 'Geçerli e-posta girin',
+      })
     }
     const row = await withStore((store) =>
       sendTemplateMail(store, {
@@ -116,7 +133,11 @@ export async function handleMailApi(req, res, path, body = {}) {
   if (method === 'POST' && path === 'mail/send') {
     const to = String(body.to || '').trim()
     if (!to.includes('@') || !body.template) {
-      return sendJson(req, res, 400, { ok: false, error: 'INVALID_PAYLOAD', message: 'to ve template zorunlu' })
+      return sendJson(req, res, 400, {
+        ok: false,
+        error: 'INVALID_PAYLOAD',
+        message: 'to ve template zorunlu',
+      })
     }
     const row = await withStore((store) =>
       sendTemplateMail(store, {

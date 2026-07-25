@@ -30,9 +30,21 @@ export function getMailStatus(store) {
     from: cfg.from,
     replyTo: cfg.replyTo || null,
     templates: listMailTemplates(),
-    queuePending: mail.queue.filter((row) => ['queued', 'pending', 'failed'].includes(row.status) && (row.attempts || 0) < (mail.settings.maxAttempts || 5)).length,
-    sentLast24h: mail.logs.filter((row) => row.status === 'sent' && Date.now() - new Date(row.sentAt || row.createdAt).getTime() < 86400000).length,
-    failedLast24h: mail.logs.filter((row) => row.status === 'failed' && Date.now() - new Date(row.updatedAt || row.createdAt).getTime() < 86400000).length,
+    queuePending: mail.queue.filter(
+      (row) =>
+        ['queued', 'pending', 'failed'].includes(row.status) &&
+        (row.attempts || 0) < (mail.settings.maxAttempts || 5),
+    ).length,
+    sentLast24h: mail.logs.filter(
+      (row) =>
+        row.status === 'sent' &&
+        Date.now() - new Date(row.sentAt || row.createdAt).getTime() < 86400000,
+    ).length,
+    failedLast24h: mail.logs.filter(
+      (row) =>
+        row.status === 'failed' &&
+        Date.now() - new Date(row.updatedAt || row.createdAt).getTime() < 86400000,
+    ).length,
   }
 }
 
@@ -89,13 +101,16 @@ export async function enqueueMail(store, input = {}) {
   const cfg = mailConfig()
   const template = input.template || 'announcement'
   const data = input.data || {}
-  const rendered = input.html || input.subject
-    ? { subject: input.subject, html: input.html, text: input.text || '' }
-    : renderMailTemplate(template, data)
+  const rendered =
+    input.html || input.subject
+      ? { subject: input.subject, html: input.html, text: input.text || '' }
+      : renderMailTemplate(template, data)
 
   const row = {
     id: input.id || newId('mail'),
-    to: String(input.to || '').trim().toLowerCase(),
+    to: String(input.to || '')
+      .trim()
+      .toLowerCase(),
     subject: rendered.subject,
     html: rendered.html,
     text: rendered.text || '',
@@ -142,7 +157,8 @@ export async function enqueueMail(store, input = {}) {
 export async function sendQueuedMail(store, mailId) {
   const mail = ensureMailStore(store)
   const cfg = mailConfig()
-  const row = mail.queue.find((item) => item.id === mailId) || mail.logs.find((item) => item.id === mailId)
+  const row =
+    mail.queue.find((item) => item.id === mailId) || mail.logs.find((item) => item.id === mailId)
   if (!row) {
     const err = new Error('Mail kaydı bulunamadı')
     err.code = 'NOT_FOUND'
@@ -201,7 +217,9 @@ export async function processMailQueue(store, { limit = 20 } = {}) {
   const mail = ensureMailStore(store)
   const max = mail.settings.maxAttempts || 5
   const pending = mail.queue
-    .filter((row) => ['queued', 'pending', 'failed'].includes(row.status) && (row.attempts || 0) < max)
+    .filter(
+      (row) => ['queued', 'pending', 'failed'].includes(row.status) && (row.attempts || 0) < max,
+    )
     .slice(0, limit)
   const results = []
   for (const row of pending) {
@@ -212,7 +230,8 @@ export async function processMailQueue(store, { limit = 20 } = {}) {
 
 export async function resendMail(store, mailId) {
   const mail = ensureMailStore(store)
-  const original = mail.logs.find((item) => item.id === mailId) || mail.queue.find((item) => item.id === mailId)
+  const original =
+    mail.logs.find((item) => item.id === mailId) || mail.queue.find((item) => item.id === mailId)
   if (!original) {
     const err = new Error('Mail kaydı bulunamadı')
     err.code = 'NOT_FOUND'
@@ -235,10 +254,30 @@ export async function resendMail(store, mailId) {
   return sendQueuedMail(store, clone.id)
 }
 
-export function listMailLogs(store, { status, limit = 100 } = {}) {
+export function listMailLogs(store, { status, template, limit = 100 } = {}) {
   const mail = ensureMailStore(store)
   let rows = [...mail.logs]
   if (status) rows = rows.filter((row) => row.status === status)
+  if (template) {
+    const t = String(template).toLowerCase()
+    if (t === 'auth') {
+      rows = rows.filter((row) =>
+        [
+          'new_login',
+          'password_reset',
+          'password_changed',
+          'email_verification',
+          'welcome',
+        ].includes(String(row.template || row.type || '')),
+      )
+    } else {
+      rows = rows.filter(
+        (row) =>
+          String(row.template || '').toLowerCase() === t ||
+          String(row.type || '').toLowerCase() === t,
+      )
+    }
+  }
   return rows.slice(0, limit).map((row) => ({
     id: row.id,
     to: row.to,
@@ -275,14 +314,19 @@ export function listMailQueue(store, { limit = 100 } = {}) {
 export function updateMailSettings(store, patch = {}) {
   const mail = ensureMailStore(store)
   if (typeof patch.enabled === 'boolean') mail.settings.enabled = patch.enabled
-  if (typeof patch.defaultFrom === 'string') mail.settings.defaultFrom = patch.defaultFrom.trim() || null
-  if (typeof patch.maxAttempts === 'number') mail.settings.maxAttempts = Math.max(1, Math.min(10, patch.maxAttempts))
+  if (typeof patch.defaultFrom === 'string')
+    mail.settings.defaultFrom = patch.defaultFrom.trim() || null
+  if (typeof patch.maxAttempts === 'number')
+    mail.settings.maxAttempts = Math.max(1, Math.min(10, patch.maxAttempts))
   mail.settings.updatedAt = new Date().toISOString()
   return mail.settings
 }
 
 /** Fire-and-forget helper that still persists via withStore when caller wraps it. */
-export async function sendTemplateMail(store, { to, template, data, type, customerId, accountId, immediate = true, meta }) {
+export async function sendTemplateMail(
+  store,
+  { to, template, data, type, customerId, accountId, immediate = true, meta },
+) {
   return enqueueMail(store, { to, template, data, type, customerId, accountId, immediate, meta })
 }
 
