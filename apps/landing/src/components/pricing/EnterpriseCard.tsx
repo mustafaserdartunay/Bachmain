@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
-import FeatureGroupList from './FeatureGroupList'
 import PricingMascot from './PricingMascot'
 import { referencePricingPlans } from './pricingTokens'
 
@@ -31,7 +30,6 @@ export default function EnterpriseCard() {
           </span>
           <span className="pb-1 text-[14px] font-medium text-[#94A3B8]">{plan.period}</span>
         </div>
-        <FeatureGroupList groups={plan.featureGroups} tone="gold" />
         <Link
           to={plan.to}
           className="mt-8 inline-flex h-[58px] items-center justify-center rounded-[18px] bg-gradient-to-r from-[#FFB000] to-[#FDBA74] text-[16px] font-bold text-[#0F172A] transition duration-300 ease-out hover:scale-[1.02]"
