@@ -21,8 +21,27 @@ import {
 } from './subscriptionService.mjs'
 import { normalizePlanCode } from './billingCatalog.mjs'
 import { claimStripeEventId, verifyStripeWebhookSignature } from './stripeWebhook.mjs'
+import { sendTemplateMail } from './mail/mailService.mjs'
 
-async function createStripeCheckoutSession({ plan, period, amountTry, customerId, email, paymentId, successUrl, cancelUrl }) {
+function billingBankInfo() {
+  return {
+    iban: process.env.BILLING_IBAN || 'TR00 0000 0000 0000 0000 0000 00',
+    bankName: process.env.BILLING_BANK_NAME || 'Banka adınız (BILLING_BANK_NAME)',
+    accountHolder: process.env.BILLING_ACCOUNT_HOLDER || 'BACHMAIN Yazılım',
+    branch: process.env.BILLING_BRANCH || '',
+  }
+}
+
+async function createStripeCheckoutSession({
+  plan,
+  period,
+  amountTry,
+  customerId,
+  email,
+  paymentId,
+  successUrl,
+  cancelUrl,
+}) {
   const secret = process.env.STRIPE_SECRET_KEY
   if (!secret) return null
   const params = new URLSearchParams()
@@ -38,7 +57,10 @@ async function createStripeCheckoutSession({ plan, period, amountTry, customerId
   const amount = Math.max(Number(amountTry) || 1, 1) * 100
   params.set('line_items[0][price_data][currency]', 'try')
   params.set('line_items[0][price_data][unit_amount]', String(amount))
-  params.set('line_items[0][price_data][recurring][interval]', period === 'month' ? 'month' : 'year')
+  params.set(
+    'line_items[0][price_data][recurring][interval]',
+    period === 'month' ? 'month' : 'year',
+  )
   params.set('line_items[0][price_data][product_data][name]', `BACHMAIN ${plan.name}`)
   params.set('line_items[0][quantity]', '1')
 
@@ -95,7 +117,12 @@ export async function handleBillingApi(req, res, path, body = {}) {
   try {
     if (method === 'GET' && path === 'billing/catalog') {
       const store = await loadStore()
-      return sendJson(req, res, 200, { ok: true, ...getCatalog(store) })
+      return sendJson(req, res, 200, {
+        ok: true,
+        ...getCatalog(store),
+        bank: billingBankInfo(),
+        iyzicoReady: Boolean(process.env.IYZICO_API_KEY && process.env.IYZICO_SECRET_KEY),
+      })
     }
 
     if (method === 'GET' && path === 'billing/my-subscription') {
@@ -120,6 +147,35 @@ export async function handleBillingApi(req, res, path, body = {}) {
       )
 
       const methodPay = String(body.method || 'card').toLowerCase()
+      const bank = billingBankInfo()
+      const iyzicoReady = Boolean(process.env.IYZICO_API_KEY && process.env.IYZICO_SECRET_KEY)
+
+      if ((methodPay === 'card' || methodPay === 'iyzico') && iyzicoReady) {
+        // iyzico Checkout Form / Pay with iyzico — session wire-up when keys present
+        await withStore((s) => {
+          const pay = s.billing.payments.find((p) => p.id === result.payment.id)
+          if (pay) {
+            pay.provider = 'iyzico'
+            pay.method = 'card'
+            pay.status = 'processing'
+          }
+          return s
+        })
+        return sendJson(req, res, 200, {
+          ok: true,
+          provider: 'iyzico',
+          paymentId: result.payment.id,
+          status: 'processing',
+          amountTry: result.amountTry,
+          expectedAmountTry: result.amountTry,
+          message:
+            'Kart ödemesi iyzico üzerinden başlatılacak. Yönlendirme tamamlanınca ödeme sonucu işlenir.',
+          checkoutUrl: null,
+          iyzicoReady: true,
+          bank,
+        })
+      }
+
       if ((methodPay === 'card' || methodPay === 'stripe') && process.env.STRIPE_SECRET_KEY) {
         try {
           const stripe = await createStripeCheckoutSession({
@@ -149,22 +205,35 @@ export async function handleBillingApi(req, res, path, body = {}) {
             paymentId: result.payment.id,
           })
         } catch (error) {
-          return sendJson(req, res, 502, { error: error.code || 'STRIPE_ERROR', message: error.message })
+          return sendJson(req, res, 502, {
+            error: error.code || 'STRIPE_ERROR',
+            message: error.message,
+          })
         }
       }
 
       return sendJson(req, res, 200, {
         ok: true,
-        provider: methodPay === 'card' ? 'manual_card' : methodPay,
+        provider:
+          methodPay === 'card' || methodPay === 'iyzico'
+            ? 'iyzico_pending'
+            : methodPay === 'havale' || methodPay === 'eft'
+              ? methodPay
+              : methodPay,
         paymentId: result.payment.id,
         status: result.payment.status,
         amountTry: result.amountTry,
-        iban: result.payment.ibanHint,
+        expectedAmountTry: result.amountTry,
+        iban: bank.iban,
+        bank,
+        iyzicoReady,
         message:
-          methodPay === 'card'
-            ? 'Kart ödeme talebi alındı. Sağlayıcı yoksa satış onayından sonra lisans aktif olur.'
-            : 'Havale/EFT talebi alındı. Ödeme onaylandıktan sonra lisansınız aktif edilecek.',
-        nextUrl: 'https://uygulama.bachmain.com/profil/paketim',
+          methodPay === 'card' || methodPay === 'iyzico'
+            ? iyzicoReady
+              ? 'Kart ödemesi iyzico ile işlenecek.'
+              : 'Kredi kartı (iyzico) yakında aktif. Şimdilik havale/EFT ile ödeme talebiniz alındı; onay sonrası giriş açılır.'
+            : 'Havale/EFT talebi alındı. Ödeme hesabımıza geçtikten sonra yönetim onaylar; size e-posta gider ve giriş açılır.',
+        nextUrl: 'https://uygulama.bachmain.com/giris',
       })
     }
 
@@ -187,7 +256,11 @@ export async function handleBillingApi(req, res, path, body = {}) {
           companyName: session.user.companyName,
         }),
       )
-      return sendJson(req, res, 200, { ok: true, paymentId: result.payment.id, amountTry: result.amountTry })
+      return sendJson(req, res, 200, {
+        ok: true,
+        paymentId: result.payment.id,
+        amountTry: result.amountTry,
+      })
     }
 
     if (method === 'POST' && (path === 'billing/webhook' || path === 'billing/webhooks/stripe')) {
@@ -204,7 +277,10 @@ export async function handleBillingApi(req, res, path, body = {}) {
           return sendJson(req, res, error.statusCode || 400, { ok: false, error: error.message })
         }
       } else if (String(process.env.NODE_ENV || '').toLowerCase() === 'production') {
-        return sendJson(req, res, 500, { ok: false, error: 'STRIPE_WEBHOOK_SECRET is required in production' })
+        return sendJson(req, res, 500, {
+          ok: false,
+          error: 'STRIPE_WEBHOOK_SECRET is required in production',
+        })
       }
 
       if (bodyEvent?.id && !claimStripeEventId(bodyEvent.id)) {
@@ -213,16 +289,15 @@ export async function handleBillingApi(req, res, path, body = {}) {
 
       const stripeType = bodyEvent.type
       const stripeObj = bodyEvent.data?.object
-      const paymentId =
-        bodyEvent.paymentId ||
-        stripeObj?.metadata?.paymentId ||
-        null
+      const paymentId = bodyEvent.paymentId || stripeObj?.metadata?.paymentId || null
       const customerId =
         bodyEvent.customerId ||
         stripeObj?.metadata?.customerId ||
         stripeObj?.client_reference_id ||
         null
-      const planCode = normalizePlanCode(bodyEvent.plan || stripeObj?.metadata?.plan || 'professional')
+      const planCode = normalizePlanCode(
+        bodyEvent.plan || stripeObj?.metadata?.plan || 'professional',
+      )
       const period = bodyEvent.period || stripeObj?.metadata?.period || 'month'
 
       const eventId = newId('payev')
@@ -239,7 +314,9 @@ export async function handleBillingApi(req, res, path, body = {}) {
 
       let snap = null
       if (paymentId) {
-        snap = await withStore((s) => activateFromPayment(s, paymentId, { provider: 'stripe', raw: bodyEvent }))
+        snap = await withStore((s) =>
+          activateFromPayment(s, paymentId, { provider: 'stripe', raw: bodyEvent }),
+        )
       } else if (customerId && stripeType === 'checkout.session.completed') {
         snap = await withStore((s) => {
           const checkout = createCheckout(s, {
@@ -265,7 +342,11 @@ export async function handleBillingApi(req, res, path, body = {}) {
 
     if (method === 'GET' && path === 'billing/admin/plans') {
       const store = await loadStore()
-      return sendJson(req, res, 200, { ok: true, plans: listBillingAdmin(store).plans, modules: listBillingAdmin(store).modules })
+      return sendJson(req, res, 200, {
+        ok: true,
+        plans: listBillingAdmin(store).plans,
+        modules: listBillingAdmin(store).modules,
+      })
     }
 
     if (method === 'POST' && path === 'billing/admin/plans') {
@@ -307,7 +388,11 @@ export async function handleBillingApi(req, res, path, body = {}) {
       seedBillingIfEmpty(store)
       const customer = (store.customers || []).find((c) => c.id === customerId)
       if (!customer) {
-        return sendJson(req, res, 404, { ok: false, error: 'NOT_FOUND', message: 'Müşteri bulunamadı' })
+        return sendJson(req, res, 404, {
+          ok: false,
+          error: 'NOT_FOUND',
+          message: 'Müşteri bulunamadı',
+        })
       }
       const snap = getSubscriptionSnapshot(store, customerId)
       const plan = snap?.plan
@@ -319,7 +404,9 @@ export async function handleBillingApi(req, res, path, body = {}) {
         storageGb: plan?.storageGb ?? 2,
       }
       let usage = { companies: 0, branches: 0, warehouses: 0 }
-      const tenantCode = customer.tenantCode || (store.accounts || []).find((a) => a.customerId === customerId)?.tenantCode
+      const tenantCode =
+        customer.tenantCode ||
+        (store.accounts || []).find((a) => a.customerId === customerId)?.tenantCode
       if (tenantCode && hasDatabase()) {
         try {
           const workspace = await getTenantCollection(tenantCode, 'workspace')
@@ -369,9 +456,15 @@ export async function handleBillingApi(req, res, path, body = {}) {
         const sub = s.billing.subscriptions.find((x) => x.id === id)
         if (!sub) throw Object.assign(new Error('Abonelik yok'), { code: 'NOT_FOUND', status: 404 })
         if (body.planCode) {
-          return activatePlanDirect(s, sub.customerId, body.planCode, body.period || sub.period || 'month', {
-            action: 'staff_plan_change',
-          })
+          return activatePlanDirect(
+            s,
+            sub.customerId,
+            body.planCode,
+            body.period || sub.period || 'month',
+            {
+              action: 'staff_plan_change',
+            },
+          )
         }
         if (body.status) {
           sub.status = body.status
@@ -397,7 +490,48 @@ export async function handleBillingApi(req, res, path, body = {}) {
 
     if (method === 'POST' && path.match(/^billing\/admin\/payments\/[^/]+\/approve$/)) {
       const id = path.split('/')[3]
-      const snap = await withStore((s) => activateFromPayment(s, id, { provider: 'staff_approve' }))
+      let notify = null
+      const snap = await withStore((s) => {
+        const result = activateFromPayment(s, id, { provider: 'staff_approve' })
+        const pay = s.billing?.payments?.find((p) => p.id === id)
+        const account = (s.accounts || []).find((a) => a.customerId === pay?.customerId)
+        if (account && pay) {
+          notify = {
+            to: account.email,
+            name: account.fullName,
+            planName: pay.planCode,
+            amount: `₺${Number(pay.amountTry || 0).toLocaleString('tr-TR')}`,
+            method: pay.method,
+            reference: pay.id,
+            customerId: pay.customerId,
+            accountId: account.id,
+          }
+        }
+        return result
+      })
+      if (notify) {
+        try {
+          await withStore((s) =>
+            sendTemplateMail(s, {
+              to: notify.to,
+              template: 'payment_approved',
+              type: 'payment_approved',
+              customerId: notify.customerId,
+              accountId: notify.accountId,
+              data: {
+                name: notify.name,
+                planName: notify.planName,
+                amount: notify.amount,
+                method: notify.method,
+                reference: notify.reference,
+                loginUrl: 'https://uygulama.bachmain.com/giris',
+              },
+            }),
+          )
+        } catch {
+          /* mail best-effort */
+        }
+      }
       return sendJson(req, res, 200, { ok: true, ...snap })
     }
 
@@ -488,8 +622,12 @@ export async function handleBillingApi(req, res, path, body = {}) {
       return sendJson(req, res, 200, { ok: true, rows: listBillingAdmin(store).history })
     }
   } catch (error) {
-    const status = error.status || (error.code === 'UNAUTHORIZED' ? 401 : error.code === 'NOT_FOUND' ? 404 : 400)
-    return sendJson(req, res, status, { error: error.code || 'BILLING_ERROR', message: error.message })
+    const status =
+      error.status || (error.code === 'UNAUTHORIZED' ? 401 : error.code === 'NOT_FOUND' ? 404 : 400)
+    return sendJson(req, res, status, {
+      error: error.code || 'BILLING_ERROR',
+      message: error.message,
+    })
   }
 
   return false

@@ -163,6 +163,14 @@ export const MAIL_TEMPLATES = {
       cta: { href: `${MAIL_BRAND.appUrl()}/profil/paketim`, label: 'Ödeme detayı' },
     })
   },
+  payment_approved(data) {
+    return layout({
+      title: 'Ödemeniz onaylandı',
+      preview: 'Giriş yapabilirsiniz.',
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('Ödemeniz kontrol edilip onaylandı. Artık BachMain hesabınıza giriş yapabilirsiniz.')}${strongLine('Paket', data.planName || '—')}${strongLine('Tutar', data.amount || '—')}${strongLine('Yöntem', data.method || '—')}${strongLine('Referans', data.reference || '—')}`,
+      cta: { href: data.loginUrl || 'https://uygulama.bachmain.com/giris', label: 'Giriş yap' },
+    })
+  },
   payment_failed(data) {
     return layout({
       title: 'Ödeme başarısız',
@@ -216,7 +224,10 @@ export const MAIL_TEMPLATES = {
       title: 'Faturanız oluşturuldu',
       preview: data.invoiceNumber || 'Yeni fatura',
       bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('Yeni faturanız hazır.')}${strongLine('Fatura No', data.invoiceNumber || '—')}${strongLine('Tutar', data.amount || '—')}${strongLine('Tarih', data.issuedAt || '—')}`,
-      cta: { href: data.invoiceUrl || `${MAIL_BRAND.appUrl()}/profil/paketim`, label: 'Faturayı gör' },
+      cta: {
+        href: data.invoiceUrl || `${MAIL_BRAND.appUrl()}/profil/paketim`,
+        label: 'Faturayı gör',
+      },
     })
   },
   trial_ending(data) {
