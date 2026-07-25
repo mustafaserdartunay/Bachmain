@@ -45,6 +45,27 @@ export function verifyPassword(password, stored) {
   }
 }
 
+/** TR signup: min 8, upper, lower, digit, special */
+export function validateSignupPassword(password) {
+  const pw = String(password || '')
+  if (pw.length < 8) {
+    return { ok: false, message: 'Şifre en az 8 karakter olmalı' }
+  }
+  if (!/[a-z]/.test(pw)) {
+    return { ok: false, message: 'Şifrede en az bir küçük harf olmalı' }
+  }
+  if (!/[A-Z]/.test(pw)) {
+    return { ok: false, message: 'Şifrede en az bir büyük harf olmalı' }
+  }
+  if (!/[0-9]/.test(pw)) {
+    return { ok: false, message: 'Şifrede en az bir rakam olmalı' }
+  }
+  if (!/[^A-Za-z0-9]/.test(pw)) {
+    return { ok: false, message: 'Şifrede en az bir özel karakter olmalı (!@#$%…)' }
+  }
+  return { ok: true }
+}
+
 export function signToken(payload) {
   const header = b64urlJson({ alg: 'HS256', typ: 'JWT' })
   const body = b64urlJson({
@@ -148,7 +169,7 @@ function publicUser(account, customer, entitlements = null) {
       ? entitlements.remainingDays
       : status === 'trial' || status === 'trialing'
         ? remainingTrialDays(licenseExpiry)
-        : entitlements?.remainingDays ?? remainingTrialDays(licenseExpiry)
+        : (entitlements?.remainingDays ?? remainingTrialDays(licenseExpiry))
 
   return {
     id: account.id,
@@ -228,8 +249,13 @@ export async function registerAccount(store, body) {
     err.code = 'INVALID_EMAIL'
     throw err
   }
-  if (password.length < 6) {
-    const err = new Error('Şifre en az 6 karakter olmalı')
+  const requirePayment =
+    body.requirePayment === true ||
+    body.source === 'bachmain_register_page' ||
+    body.source === 'bachmain_register_checkout'
+  const passwordCheck = validateSignupPassword(password)
+  if (!passwordCheck.ok) {
+    const err = new Error(passwordCheck.message)
     err.code = 'WEAK_PASSWORD'
     throw err
   }
@@ -238,18 +264,37 @@ export async function registerAccount(store, body) {
     err.code = 'MISSING_FIELDS'
     throw err
   }
-  if (taxNo && (taxNo.length < 10 || taxNo.length > 11)) {
+  if (!taxNo || taxNo.length < 10 || taxNo.length > 11) {
     const err = new Error('Vergi / T.C. kimlik no 10 veya 11 haneli olmalı')
     err.code = 'INVALID_TAX_NO'
     throw err
   }
-  if (store.accounts.some((a) => a.email === email && a.canLogin !== false && a.role !== 'demo_lead')) {
+  if (!taxOffice) {
+    const err = new Error('Vergi dairesi zorunlu')
+    err.code = 'MISSING_FIELDS'
+    throw err
+  }
+  if (!address || !city || !district) {
+    const err = new Error('Adres, il ve ilçe zorunlu')
+    err.code = 'MISSING_FIELDS'
+    throw err
+  }
+  if (!(gsm || phone)) {
+    const err = new Error('Telefon zorunlu')
+    err.code = 'MISSING_FIELDS'
+    throw err
+  }
+  if (
+    store.accounts.some((a) => a.email === email && a.canLogin !== false && a.role !== 'demo_lead')
+  ) {
     const err = new Error('Bu e-posta ile zaten üyelik var')
     err.code = 'EMAIL_TAKEN'
     throw err
   }
 
-  const existingLead = store.accounts.find((a) => a.email === email && (a.role === 'demo_lead' || a.canLogin === false))
+  const existingLead = store.accounts.find(
+    (a) => a.email === email && (a.role === 'demo_lead' || a.canLogin === false),
+  )
   const now = new Date()
   const licenseExpiry = new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10)
   const customerId = existingLead?.customerId || newId('c')
@@ -273,14 +318,22 @@ export async function registerAccount(store, body) {
     companySize,
     passwordHash: hashPassword(password),
     role: 'owner',
-    canLogin: true,
+    canLogin: !requirePayment,
     customerId,
     tenantCode,
-    plan: body.plan === 'Pro' || body.plan === 'Enterprise' || body.plan === 'Starter' ? body.plan : 'Starter',
+    plan:
+      body.plan === 'Pro' || body.plan === 'Enterprise' || body.plan === 'Starter'
+        ? body.plan
+        : 'Starter',
     onboardingCompleted: false,
     createdAt: existingLead?.createdAt || now.toISOString(),
-    lastLoginAt: now.toISOString(),
-    source: existingLead ? 'demo_converted' : sourceTag === 'bachmain_signup_modal' ? 'self_signup' : (sourceTag || 'self_signup'),
+    lastLoginAt: requirePayment ? null : now.toISOString(),
+    source: existingLead
+      ? 'demo_converted'
+      : sourceTag === 'bachmain_signup_modal'
+        ? 'self_signup'
+        : sourceTag || 'self_signup',
+    paymentPending: requirePayment,
   }
 
   let customer = store.customers.find((c) => c.id === customerId)
@@ -299,15 +352,16 @@ export async function registerAccount(store, body) {
       city: city || '',
       district,
       companySize,
-      status: 'trial',
+      status: requirePayment ? 'pending_payment' : 'trial',
       plan: account.plan,
       mrr: 0,
       users: 1,
       createdAt: now.toISOString().slice(0, 10),
-      licenseExpiry,
+      licenseExpiry: requirePayment ? null : licenseExpiry,
       balance: 0,
       source: existingLead ? 'demo_converted' : 'self_signup',
       tenantCode,
+      subscriptionStatus: requirePayment ? 'pending_payment' : 'trialing',
     }
     store.customers.unshift(customer)
   } else {
@@ -323,9 +377,10 @@ export async function registerAccount(store, body) {
     if (city) customer.city = city
     if (district) customer.district = district
     if (companySize) customer.companySize = companySize
-    customer.status = 'trial'
+    customer.status = requirePayment ? 'pending_payment' : 'trial'
     customer.plan = account.plan
-    customer.licenseExpiry = licenseExpiry
+    customer.licenseExpiry = requirePayment ? null : licenseExpiry
+    customer.subscriptionStatus = requirePayment ? 'pending_payment' : 'trialing'
     customer.source = existingLead ? 'demo_converted' : customer.source || 'self_signup'
     customer.tenantCode = tenantCode
   }
@@ -347,7 +402,7 @@ export async function registerAccount(store, body) {
     city: customer.city || '—',
     plan: customer.plan,
     mrr: '₺0',
-    status: 'Deneme',
+    status: requirePayment ? 'Ödeme Bekliyor' : 'Deneme',
     source: 'Web Üyelik',
     licenseExpiry: customer.licenseExpiry,
   }
@@ -406,13 +461,20 @@ export async function loginAccount(store, body) {
   const email = normalizeEmail(body.email)
   const password = String(body.password || '')
   const account = store.accounts.find((a) => a.email === email)
-  if (!account || account.canLogin === false || account.role === 'demo_lead') {
+  if (!account || account.role === 'demo_lead') {
     const err = new Error(
       account?.role === 'demo_lead'
         ? 'Bu e-posta yalnızca demo talebi olarak kayıtlı. Lütfen üye olun veya uygulama üzerinden kayıt olun.'
         : 'E-posta veya şifre hatalı',
     )
     err.code = account?.role === 'demo_lead' ? 'DEMO_LEAD_ONLY' : 'INVALID_CREDENTIALS'
+    throw err
+  }
+  if (account.canLogin === false || account.paymentPending) {
+    const err = new Error(
+      'Ödemeniz henüz onaylanmadı. Havale/EFT yaptıysanız onay sonrası e-posta ile bilgilendirileceksiniz.',
+    )
+    err.code = 'PAYMENT_PENDING'
     throw err
   }
   if (!verifyPassword(password, account.passwordHash)) {
@@ -471,12 +533,16 @@ export async function loginAccount(store, body) {
 export async function requestPasswordReset(store, emailRaw) {
   ensureCollections(store)
   const email = normalizeEmail(emailRaw)
-  const account = store.accounts.find((a) => a.email === email && a.canLogin !== false && a.role !== 'demo_lead')
+  const account = store.accounts.find(
+    (a) => a.email === email && a.canLogin !== false && a.role !== 'demo_lead',
+  )
   // Always succeed to avoid account enumeration
   if (!account) return { ok: true }
 
   const token = crypto.randomBytes(32).toString('hex')
-  store.emailTokens = store.emailTokens.filter((t) => !(t.accountId === account.id && t.purpose === 'reset'))
+  store.emailTokens = store.emailTokens.filter(
+    (t) => !(t.accountId === account.id && t.purpose === 'reset'),
+  )
   store.emailTokens.unshift({
     id: newId('etok'),
     purpose: 'reset',

@@ -59,21 +59,64 @@ export const MODULE_CATALOG = [
 ]
 
 export const STARTER_MODULES = [
-  'crm', 'quotes', 'orders', 'accounts', 'tasks', 'calendar', 'notes',
-  'appointments', 'dashboard_basic', 'reports_basic',
+  'crm',
+  'quotes',
+  'orders',
+  'accounts',
+  'tasks',
+  'calendar',
+  'notes',
+  'appointments',
+  'dashboard_basic',
+  'reports_basic',
 ]
 
 export const PROFESSIONAL_EXTRA = [
-  'production', 'warehouse', 'barcode', 'stock', 'purchasing', 'sales', 'pos',
-  'finance', 'einvoice', 'earchive', 'field_sales', 'dealer', 'b2b',
-  'whatsapp', 'sms', 'api', 'dashboard_advanced', 'reporting', 'priority_support',
-  'courier', 'ewaybill', 'esign',
+  'production',
+  'warehouse',
+  'barcode',
+  'stock',
+  'purchasing',
+  'sales',
+  'pos',
+  'finance',
+  'einvoice',
+  'earchive',
+  'field_sales',
+  'dealer',
+  'b2b',
+  'whatsapp',
+  'sms',
+  'api',
+  'dashboard_advanced',
+  'reporting',
+  'priority_support',
+  'courier',
+  'ewaybill',
+  'esign',
 ]
 
 export const ENTERPRISE_EXTRA = [
-  'hr', 'mrp', 'quality', 'approvals', 'workflows', 'multi_company', 'multi_branch',
-  'multi_warehouse', 'multi_currency', 'truck', 'pallet', 'parcel', 'packaging',
-  'container', 'api_advanced', 'webhook', 'bi', 'ai', 'sla', 'dedicated_am',
+  'hr',
+  'mrp',
+  'quality',
+  'approvals',
+  'workflows',
+  'multi_company',
+  'multi_branch',
+  'multi_warehouse',
+  'multi_currency',
+  'truck',
+  'pallet',
+  'parcel',
+  'packaging',
+  'container',
+  'api_advanced',
+  'webhook',
+  'bi',
+  'ai',
+  'sla',
+  'dedicated_am',
 ]
 
 export function modulesForPlan(code) {
@@ -110,7 +153,15 @@ export const DEFAULT_PLANS = [
     code: 'starter',
     name: 'Starter',
     description: 'Küçük işletmeler ve yeni başlayan firmalar için temel CRM.',
-    prices: { month: 990, year: 9900, year2: 18000, year3: 25000, year5: 39000, year10: 69000, lifetime: 99000 },
+    prices: {
+      month: 499,
+      year: 4990,
+      year2: 9000,
+      year3: 12900,
+      year5: 19900,
+      year10: 34900,
+      lifetime: 49900,
+    },
     maxUsers: 3,
     storageGb: 2,
     maxCompanies: 1,
@@ -122,9 +173,17 @@ export const DEFAULT_PLANS = [
   },
   {
     code: 'professional',
-    name: 'Professional',
+    name: 'Pro',
     description: 'Büyüyen KOBİ’ler için ERP ve operasyon paketleri.',
-    prices: { month: 2490, year: 24900, year2: 45000, year3: 65000, year5: 99000, year10: 179000, lifetime: 249000 },
+    prices: {
+      month: 1499,
+      year: 14990,
+      year2: 27000,
+      year3: 39000,
+      year5: 59000,
+      year10: 99000,
+      lifetime: 149900,
+    },
     maxUsers: 25,
     storageGb: 100,
     maxCompanies: 1,
@@ -138,7 +197,15 @@ export const DEFAULT_PLANS = [
     code: 'enterprise',
     name: 'Enterprise',
     description: 'Kurumsal firmalar için limitsiz ve gelişmiş özellikler.',
-    prices: { month: 4990, year: 49900, year2: 90000, year3: 129000, year5: 199000, year10: 349000, lifetime: 0 },
+    prices: {
+      month: 4999,
+      year: 49990,
+      year2: 90000,
+      year3: 129000,
+      year5: 199000,
+      year10: 349000,
+      lifetime: 0,
+    },
     maxUsers: 0,
     storageGb: 0,
     maxCompanies: 0,
@@ -161,7 +228,9 @@ export const PERIOD_MONTHS = {
 }
 
 export function normalizePlanCode(raw) {
-  const s = String(raw || '').trim().toLowerCase()
+  const s = String(raw || '')
+    .trim()
+    .toLowerCase()
   if (/enter|kurum/.test(s)) return 'enterprise'
   if (/pro|profesyonel|professional|business/.test(s)) return 'professional'
   if (/free|trial|deneme/.test(s)) return 'starter'

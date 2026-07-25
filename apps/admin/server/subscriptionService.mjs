@@ -127,7 +127,9 @@ function applyCoupon(amount, coupon) {
 export function getPlanByCode(store, code) {
   const b = seedBillingIfEmpty(store)
   const normalized = normalizePlanCode(code)
-  return b.plans.find((p) => p.code === normalized || p.name === displayPlanName(normalized)) || null
+  return (
+    b.plans.find((p) => p.code === normalized || p.name === displayPlanName(normalized)) || null
+  )
 }
 
 export function getCatalog(store) {
@@ -156,7 +158,9 @@ export function getCatalog(store) {
 function rebuildLicense(store, customerId, sub, extraModules = []) {
   const b = ensureBilling(store)
   const plan = b.plans.find((p) => p.id === sub.planId) || getPlanByCode(store, sub.planCode)
-  const modules = [...new Set([...(plan?.modules || []), ...extraModules, ...(sub.addonModules || [])])]
+  const modules = [
+    ...new Set([...(plan?.modules || []), ...extraModules, ...(sub.addonModules || [])]),
+  ]
   let license = b.licenses.find((l) => l.customerId === customerId)
   if (!license) {
     license = { id: newId('lic'), customerId, createdAt: new Date().toISOString() }
@@ -383,7 +387,9 @@ export function getSubscriptionSnapshot(store, customerId) {
 
   const plan = b.plans.find((p) => p.id === sub.planId) || getPlanByCode(store, sub.planCode)
   const license = b.licenses.find((l) => l.customerId === customerId)
-  const addons = b.subscriptionAddons.filter((a) => a.subscriptionId === sub.id && a.status === 'active')
+  const addons = b.subscriptionAddons.filter(
+    (a) => a.subscriptionId === sub.id && a.status === 'active',
+  )
   const endIso = sub.status === 'grace' ? sub.graceUntil : sub.periodEnd
   const cd = countdown(endIso)
   const payments = b.payments.filter((p) => p.customerId === customerId).slice(0, 50)
@@ -428,7 +434,9 @@ export function entitlementPayloadForCustomer(store, customerId) {
     }
   }
   const endIso =
-    snap.subscription.status === 'grace' ? snap.subscription.graceUntil : snap.subscription.periodEnd
+    snap.subscription.status === 'grace'
+      ? snap.subscription.graceUntil
+      : snap.subscription.periodEnd
   return {
     plan: snap.plan?.name || displayPlanName(snap.subscription.planCode),
     planCode: snap.plan?.code || snap.subscription.planCode,
@@ -476,14 +484,19 @@ export async function createCheckout(store, input) {
   let amount = priceForPlan(plan, period)
   let coupon = null
   if (input.couponCode) {
-    coupon = b.coupons.find((c) => String(c.code).toUpperCase() === String(input.couponCode).toUpperCase())
+    coupon = b.coupons.find(
+      (c) => String(c.code).toUpperCase() === String(input.couponCode).toUpperCase(),
+    )
     const applied = applyCoupon(amount, coupon)
     amount = applied.amount
   }
 
   const paymentId = newId('pay')
-  const isCard = method === 'card' || method === 'stripe'
-  const status = isCard && process.env.STRIPE_SECRET_KEY ? 'processing' : isCard ? 'pending_payment' : 'pending_payment'
+  const isCard = method === 'card' || method === 'stripe' || method === 'iyzico'
+  const status =
+    isCard && (process.env.STRIPE_SECRET_KEY || process.env.IYZICO_API_KEY)
+      ? 'processing'
+      : 'pending_payment'
 
   const payment = {
     id: paymentId,
@@ -501,8 +514,11 @@ export async function createCheckout(store, input) {
     billingName: input.billingName || '',
     taxNo: input.taxNo || '',
     ibanHint: process.env.BILLING_IBAN || 'TR00 0000 0000 0000 0000 0000 00',
+    bankName: process.env.BILLING_BANK_NAME || '',
+    accountHolder: process.env.BILLING_ACCOUNT_HOLDER || '',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    source: input.source || 'billing_checkout',
   }
   b.payments.unshift(payment)
 
@@ -558,7 +574,7 @@ export async function createCheckout(store, input) {
     amountTry: amount,
     period,
     createdAt: payment.createdAt,
-    source: 'billing_checkout',
+    source: input.source || 'billing_checkout',
   })
 
   if (coupon) {
@@ -580,7 +596,8 @@ export function activateFromPayment(store, paymentId, { provider = 'manual', raw
     return getSubscriptionSnapshot(store, payment.customerId)
   }
 
-  const plan = b.plans.find((p) => p.id === payment.planId) || getPlanByCode(store, payment.planCode)
+  const plan =
+    b.plans.find((p) => p.id === payment.planId) || getPlanByCode(store, payment.planCode)
   const period = payment.period || 'month'
   const start = new Date()
   const end = periodEndFrom(start, period)
@@ -651,6 +668,22 @@ export function activateFromPayment(store, paymentId, { provider = 'manual', raw
   })
 
   rebuildLicense(store, payment.customerId, sub)
+
+  // Unlock web signup accounts blocked until payment
+  for (const account of store.accounts || []) {
+    if (account.customerId === payment.customerId && account.role !== 'demo_lead') {
+      account.canLogin = true
+      account.paymentPending = false
+    }
+  }
+  const customer = store.customers.find((c) => c.id === payment.customerId)
+  if (customer) {
+    customer.status = 'active'
+    customer.subscriptionStatus = 'active'
+  }
+  const moduleRow = store.modules?.customers?.find((c) => c.id === payment.customerId)
+  if (moduleRow) moduleRow.status = 'Aktif'
+
   return getSubscriptionSnapshot(store, payment.customerId)
 }
 
