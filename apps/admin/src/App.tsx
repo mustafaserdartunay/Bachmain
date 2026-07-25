@@ -7,7 +7,6 @@ import { PlatformOpsPage } from '@/pages/PlatformOpsPage'
 import { UserManagementPage } from '@/pages/UserManagementPage'
 import { AuditLogPage } from '@/pages/AuditLogPage'
 import { SecurityCenterPage } from '@/pages/SecurityCenterPage'
-import { AiControlCenterPage } from '@/pages/AiControlCenterPage'
 import {
   BillingCampaignsPage,
   BillingCouponsPage,
