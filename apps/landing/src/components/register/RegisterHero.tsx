@@ -7,15 +7,9 @@ type RegisterHeroProps = {
   planName?: string
 }
 
-/** Demo / giriş ile aynı: büyük uppercase başlık; form adımında ek metin yok. */
+/** Titles for plan / payment / pending. Form step uses RegisterPanel title. */
 export default function RegisterHero({ step, planName }: RegisterHeroProps) {
-  if (step === 'form') {
-    return (
-      <header className="mx-auto max-w-[640px] px-0 text-center">
-        <h1 className="sr-only">Üye Ol</h1>
-      </header>
-    )
-  }
+  if (step === 'form') return null
 
   const title =
     step === 'plan' ? 'Paketler' : step === 'payment' || step === 'pending' ? 'Ödeme' : 'Üye Ol'

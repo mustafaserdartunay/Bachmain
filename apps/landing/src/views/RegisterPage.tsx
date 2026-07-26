@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import AuthAmbient from '../components/auth/AuthAmbient'
 import RegisterHero from '../components/register/RegisterHero'
 import RegisterPanel, { type RegisterFormState } from '../components/register/RegisterPanel'
 import RegisterPlanPicker, {
@@ -271,17 +272,16 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="register-ds bg-[#F8FAFC]">
-      <section className="relative overflow-x-clip pt-[120px] pb-[120px]">
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-[#E2E8F0]/55 via-[#F1F5F9]/35 to-transparent"
-          aria-hidden
-        />
+    <div className="auth-ds relative flex min-h-[100dvh] flex-1 flex-col overflow-hidden bg-[#F8FAFC]">
+      <AuthAmbient />
 
-        <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10 xl:px-12">
-          <RegisterHero step={step} planName={checkoutLabel || selectedPlan?.name} />
+      <section className="relative z-10 flex min-h-[100dvh] flex-1 items-center justify-center px-4 py-20 sm:px-6 lg:px-10">
+        <div className="w-full max-w-[1600px]">
+          {step !== 'form' ? (
+            <RegisterHero step={step} planName={checkoutLabel || selectedPlan?.name} />
+          ) : null}
 
-          <div className={step === 'form' ? 'mt-0' : 'mt-14 lg:mt-16'}>
+          <div className={step === 'form' || step === 'plan' ? 'mt-0' : 'mt-10 lg:mt-12'}>
             {step === 'plan' ? <RegisterPlanPicker onSelect={selectPlan} /> : null}
 
             {step === 'form' && selectedPlan ? (
