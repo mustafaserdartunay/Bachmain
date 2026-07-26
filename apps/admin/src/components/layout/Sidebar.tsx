@@ -5,6 +5,7 @@ import * as ScrollArea from '@radix-ui/react-scroll-area'
 import { filterNavItemsForRole } from '@/data/navigation'
 import { getStaffRole } from '@/pages/StaffLoginPage'
 import { cn } from '@/lib/utils'
+import bachmainLogo from '@/assets/bachmain-logo.png'
 
 export function Sidebar() {
   const items = useMemo(() => filterNavItemsForRole(getStaffRole()), [])
@@ -13,7 +14,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-border bg-surface-elevated">
       <div className="flex h-14 items-center border-b border-border px-4">
-        <img src="/assets/bachmain-logo.png" alt="BACHMAIN Control Center" className="brand-logo-img" draggable={false} />
+        <img src={bachmainLogo} alt="BACHMAIN" className="brand-logo-img" draggable={false} />
       </div>
 
       <ScrollArea.Root className="flex-1 overflow-hidden">
