@@ -57,7 +57,7 @@ export default function PricingSection() {
           <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8">
             {/* Sol — Enterprise Full Paket */}
             <article className="relative flex h-full min-h-0 lg:col-span-7">
-              <div className="relative flex h-full w-full flex-col overflow-visible rounded-[32px] border-[3px] border-[#2563EB] bg-white p-7 shadow-[0_24px_60px_rgba(37,99,235,0.12)] sm:p-9">
+              <div className="relative flex h-full w-full flex-col overflow-visible rounded-[32px] border-[3px] border-[#2563EB] bg-white p-7 shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:p-9">
                 <KontorRibbon amount={plan.kontorGift} />
                 {plan.badge ? <PricingBadge>{plan.badge}</PricingBadge> : null}
 

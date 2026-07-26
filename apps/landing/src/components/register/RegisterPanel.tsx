@@ -72,14 +72,7 @@ export default function RegisterPanel({
         zorunludur.
       </p>
 
-      <motion.div
-        className="pointer-events-none absolute top-[7.5rem] -inset-x-px bottom-0 rounded-[34px] bg-gradient-to-br from-[#60A5FA]/50 via-[#2563EB]/25 to-[#38BDF8]/40 opacity-70 blur-[1px]"
-        aria-hidden
-        animate={{ opacity: [0.45, 0.75, 0.45] }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-      />
-
-      <div className="relative mt-10 rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_24px_64px_rgba(37,99,235,0.14)] backdrop-blur-sm sm:mt-12 sm:p-10">
+      <div className="relative mt-10 rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:mt-12 sm:p-10">
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
             <div className="min-w-0">
