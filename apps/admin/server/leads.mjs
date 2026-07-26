@@ -316,13 +316,8 @@ export function createDemoLead(store, body = {}) {
   })
   store.notifications = store.notifications.slice(0, 200)
 
-  // Persist demo legal consents (server-validated)
+  // Demo no longer requires contracts; purchase flow records consents instead.
   const consentItems = Array.isArray(body.consents) ? body.consents : []
-  if (!consentItems.length && body.source === 'bachmain_demo') {
-    const err = new Error('Demo sözleşmeleri kabul edilmeden devam edilemez')
-    err.code = 'CONSENT_REQUIRED'
-    throw err
-  }
   if (consentItems.length) {
     ensureLegalStore(store)
     assertPackConsents(store, 'demo', consentItems)

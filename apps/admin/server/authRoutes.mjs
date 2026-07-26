@@ -13,25 +13,10 @@ import { loadStore, withStore } from './store.mjs'
 import { hitRateLimit } from './db.mjs'
 import { loginStaff, getStaffSession, buildStaffCookie } from './staffAuth.mjs'
 
-async function withLegalUser(store, user, account) {
-  if (!user || !account) return user
-  try {
-    const { getOutstandingForAccount, LAWYER_NOTICE } = await import('./legal.mjs')
-    const outstanding = getOutstandingForAccount(store, account)
-    user.legal = {
-      mustAccept: outstanding.length > 0,
-      outstanding: outstanding.map(({ type, slug, title, version, path: p }) => ({
-        type,
-        slug,
-        title,
-        version,
-        path: p,
-      })),
-      lawyerNotice: LAWYER_NOTICE,
-    }
-  } catch {
-    user.legal = { mustAccept: false, outstanding: [], lawyerNotice: '' }
-  }
+async function withLegalUser(_store, user, _account) {
+  if (!user) return user
+  // App login no longer gates on outstanding contracts — only purchase flow collects them.
+  user.legal = { mustAccept: false, outstanding: [], lawyerNotice: '' }
   return user
 }
 

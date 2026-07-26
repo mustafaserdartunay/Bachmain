@@ -85,7 +85,9 @@ function UsageBanner() {
         <div
           key={label}
           className={`rounded-xl border px-3 py-2 text-xs font-bold ${
-            row.ok ? 'border-dark-500/40 bg-dark-700/40 text-gray-300' : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
+            row.ok
+              ? 'border-dark-500/40 bg-dark-700/40 text-gray-300'
+              : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
           }`}
         >
           {label}: {row.used}
@@ -143,22 +145,43 @@ function CompaniesPage() {
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
       <section className="card space-y-2 p-3">
-        {(structure.companies || []).filter((c) => c.active !== false).map((c) => (
-          <div key={c.id} className="flex items-center gap-2 rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2.5">
-            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setDraft({ ...c })}>
-              <p className="truncate text-sm font-bold text-white">{c.name}</p>
-              <p className="truncate text-[11px] text-gray-400">{c.city || c.taxNo || c.currency}</p>
-            </button>
-            <button type="button" onClick={() => remove(c.id)} className="rounded-lg p-1.5 text-rose-300 hover:bg-rose-500/10">
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
+        {(structure.companies || [])
+          .filter((c) => c.active !== false)
+          .map((c) => (
+            <div
+              key={c.id}
+              className="flex items-center gap-2 rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2.5"
+            >
+              <button
+                type="button"
+                className="min-w-0 flex-1 text-left"
+                onClick={() => setDraft({ ...c })}
+              >
+                <p className="truncate text-sm font-bold text-white">{c.name}</p>
+                <p className="truncate text-[11px] text-gray-400">
+                  {c.city || c.taxNo || c.currency}
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => remove(c.id)}
+                className="rounded-lg p-1.5 text-rose-300 hover:bg-rose-500/10"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
       </section>
       <section className="card space-y-3 p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-black uppercase text-gray-300">{draft.name ? 'Şirket Düzenle' : 'Yeni Şirket'}</h3>
-          <button type="button" className={`${BTN_SUCCESS} gap-1 px-3 py-2 text-xs`} onClick={() => setDraft(emptyCompany({ name: 'Yeni Şirket' }))}>
+          <h3 className="text-sm font-black uppercase text-gray-300">
+            {draft.name ? 'Şirket Düzenle' : 'Yeni Şirket'}
+          </h3>
+          <button
+            type="button"
+            className={`${BTN_SUCCESS} gap-1 px-3 py-2 text-xs`}
+            onClick={() => setDraft(emptyCompany({ name: 'Yeni Şirket' }))}
+          >
             <Plus className="h-3.5 w-3.5" /> Yeni
           </button>
         </div>
@@ -193,7 +216,11 @@ function CompaniesPage() {
         </div>
         <label className="block space-y-1">
           <span className="text-[10px] font-black uppercase text-gray-500">Adres</span>
-          <textarea className="form-input min-h-20" value={draft.address || ''} onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))} />
+          <textarea
+            className="form-input min-h-20"
+            value={draft.address || ''}
+            onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))}
+          />
         </label>
         <div className="grid gap-2 sm:grid-cols-3">
           {[
@@ -203,12 +230,18 @@ function CompaniesPage() {
           ].map(([key, label]) => (
             <label key={key} className="block space-y-1">
               <span className="text-[10px] font-black uppercase text-gray-500">{label}</span>
-              <input className="form-input" value={draft[key] || ''} onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))} />
+              <input
+                className="form-input"
+                value={draft[key] || ''}
+                onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+              />
             </label>
           ))}
         </div>
         <div className="flex justify-end">
-          <button type="button" onClick={save} className={`${BTN_SUCCESS} px-4 py-2.5 text-sm`}>Kaydet</button>
+          <button type="button" onClick={save} className={`${BTN_SUCCESS} px-4 py-2.5 text-sm`}>
+            Kaydet
+          </button>
         </div>
       </section>
     </div>
@@ -236,7 +269,9 @@ function BranchesPage() {
       const exists = s.branches.some((b) => b.id === next.id)
       return {
         ...s,
-        branches: exists ? s.branches.map((b) => (b.id === next.id ? next : b)) : [next, ...s.branches],
+        branches: exists
+          ? s.branches.map((b) => (b.id === next.id ? next : b))
+          : [next, ...s.branches],
       }
     })
     appendOrgLog('branch_saved', { id: next.id, name: next.name })
@@ -257,14 +292,21 @@ function BranchesPage() {
           }}
         >
           {companies.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
       </label>
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="card space-y-2 p-3">
           {list.map((b) => (
-            <button key={b.id} type="button" className="flex w-full items-center justify-between rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2.5 text-left" onClick={() => setDraft({ ...b })}>
+            <button
+              key={b.id}
+              type="button"
+              className="flex w-full items-center justify-between rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2.5 text-left"
+              onClick={() => setDraft({ ...b })}
+            >
               <span>
                 <span className="block text-sm font-bold text-white">{b.name}</span>
                 <span className="text-[11px] text-gray-400">{b.code}</span>
@@ -283,19 +325,33 @@ function BranchesPage() {
             ].map(([key, label]) => (
               <label key={key} className="block space-y-1">
                 <span className="text-[10px] font-black uppercase text-gray-500">{label}</span>
-                <input className="form-input" value={draft[key] || ''} onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))} />
+                <input
+                  className="form-input"
+                  value={draft[key] || ''}
+                  onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+                />
               </label>
             ))}
           </div>
           <label className="block space-y-1">
             <span className="text-[10px] font-black uppercase text-gray-500">Adres</span>
-            <textarea className="form-input min-h-16" value={draft.address || ''} onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))} />
+            <textarea
+              className="form-input min-h-16"
+              value={draft.address || ''}
+              onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))}
+            />
           </label>
           <div className="flex justify-end gap-2">
-            <button type="button" className={`${BTN_SUCCESS} gap-1 px-3 py-2 text-xs`} onClick={() => setDraft(emptyBranch({ companyId }))}>
+            <button
+              type="button"
+              className={`${BTN_SUCCESS} gap-1 px-3 py-2 text-xs`}
+              onClick={() => setDraft(emptyBranch({ companyId }))}
+            >
               <Plus className="h-3.5 w-3.5" /> Yeni
             </button>
-            <button type="button" onClick={save} className={`${BTN_SUCCESS} px-4 py-2 text-sm`}>Kaydet</button>
+            <button type="button" onClick={save} className={`${BTN_SUCCESS} px-4 py-2 text-sm`}>
+              Kaydet
+            </button>
           </div>
         </section>
       </div>
@@ -321,12 +377,19 @@ function WarehousesPage() {
       window.alert(`Depo limiti doldu (${limit.used}/${limit.max})`)
       return
     }
-    const next = emptyWarehouse({ ...draft, companyId, branchId, updatedAt: new Date().toISOString() })
+    const next = emptyWarehouse({
+      ...draft,
+      companyId,
+      branchId,
+      updatedAt: new Date().toISOString(),
+    })
     saveOrgStructure((s) => {
       const exists = s.warehouses.some((w) => w.id === next.id)
       return {
         ...s,
-        warehouses: exists ? s.warehouses.map((w) => (w.id === next.id ? next : w)) : [next, ...s.warehouses],
+        warehouses: exists
+          ? s.warehouses.map((w) => (w.id === next.id ? next : w))
+          : [next, ...s.warehouses],
       }
     })
     appendOrgLog('warehouse_saved', { id: next.id, name: next.name })
@@ -339,23 +402,46 @@ function WarehousesPage() {
       <div className="grid gap-2 sm:grid-cols-2 max-w-xl">
         <label className="block space-y-1">
           <span className="text-[10px] font-black uppercase text-gray-500">Şirket</span>
-          <select className="form-input" value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
-            {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          <select
+            className="form-input"
+            value={companyId}
+            onChange={(e) => setCompanyId(e.target.value)}
+          >
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
         </label>
         <label className="block space-y-1">
           <span className="text-[10px] font-black uppercase text-gray-500">Şube</span>
-          <select className="form-input" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+          <select
+            className="form-input"
+            value={branchId}
+            onChange={(e) => setBranchId(e.target.value)}
+          >
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
           </select>
         </label>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="card space-y-2 p-3">
           {list.map((w) => (
-            <button key={w.id} type="button" className="w-full rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2.5 text-left" onClick={() => setDraft({ ...w })}>
+            <button
+              key={w.id}
+              type="button"
+              className="w-full rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2.5 text-left"
+              onClick={() => setDraft({ ...w })}
+            >
               <span className="block text-sm font-bold text-white">{w.name}</span>
-              <span className="text-[11px] text-gray-400">{w.type} · {w.code}</span>
+              <span className="text-[11px] text-gray-400">
+                {w.type} · {w.code}
+              </span>
             </button>
           ))}
         </section>
@@ -363,24 +449,46 @@ function WarehousesPage() {
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="block space-y-1">
               <span className="text-[10px] font-black uppercase text-gray-500">Depo Adı</span>
-              <input className="form-input" value={draft.name || ''} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} />
+              <input
+                className="form-input"
+                value={draft.name || ''}
+                onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+              />
             </label>
             <label className="block space-y-1">
               <span className="text-[10px] font-black uppercase text-gray-500">Kod</span>
-              <input className="form-input" value={draft.code || ''} onChange={(e) => setDraft((d) => ({ ...d, code: e.target.value }))} />
+              <input
+                className="form-input"
+                value={draft.code || ''}
+                onChange={(e) => setDraft((d) => ({ ...d, code: e.target.value }))}
+              />
             </label>
             <label className="block space-y-1 sm:col-span-2">
               <span className="text-[10px] font-black uppercase text-gray-500">Tip</span>
-              <select className="form-input" value={draft.type || 'Merkez'} onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value }))}>
-                {WAREHOUSE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              <select
+                className="form-input"
+                value={draft.type || 'Merkez'}
+                onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value }))}
+              >
+                {WAREHOUSE_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" className={`${BTN_SUCCESS} gap-1 px-3 py-2 text-xs`} onClick={() => setDraft(emptyWarehouse({ companyId, branchId }))}>
+            <button
+              type="button"
+              className={`${BTN_SUCCESS} gap-1 px-3 py-2 text-xs`}
+              onClick={() => setDraft(emptyWarehouse({ companyId, branchId }))}
+            >
               <Plus className="h-3.5 w-3.5" /> Yeni
             </button>
-            <button type="button" onClick={save} className={`${BTN_SUCCESS} px-4 py-2 text-sm`}>Kaydet</button>
+            <button type="button" onClick={save} className={`${BTN_SUCCESS} px-4 py-2 text-sm`}>
+              Kaydet
+            </button>
           </div>
         </section>
       </div>
@@ -404,20 +512,36 @@ function DepartmentsPage() {
     <div className="space-y-3">
       <label className="block max-w-xs space-y-1">
         <span className="text-[10px] font-black uppercase text-gray-500">Şirket</span>
-        <select className="form-input" value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
-          {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        <select
+          className="form-input"
+          value={companyId}
+          onChange={(e) => setCompanyId(e.target.value)}
+        >
+          {companies.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
         </select>
       </label>
       <div className="flex flex-wrap gap-2">
         {DEPARTMENT_PRESETS.map((name) => (
-          <button key={name} type="button" onClick={() => addPreset(name)} className="rounded-xl border border-dark-500/40 bg-dark-700/50 px-3 py-2 text-xs font-bold text-gray-200">
+          <button
+            key={name}
+            type="button"
+            onClick={() => addPreset(name)}
+            className="rounded-xl border border-dark-500/40 bg-dark-700/50 px-3 py-2 text-xs font-bold text-gray-200"
+          >
             + {name}
           </button>
         ))}
       </div>
       <div className="card grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((d) => (
-          <div key={d.id} className="rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2 text-sm font-bold text-white">
+          <div
+            key={d.id}
+            className="rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2 text-sm font-bold text-white"
+          >
             {d.name}
           </div>
         ))}
@@ -451,13 +575,22 @@ function UserPermissionsPage() {
   return (
     <div className="card space-y-4 p-4">
       <p className="text-sm text-gray-400">
-        Kullanıcıları şirket bazında yetkilendirin. Aynı e-posta birden fazla şirkette farklı rolle yer alabilir.
+        Kullanıcıları şirket bazında yetkilendirin. Aynı e-posta birden fazla şirkette farklı rolle
+        yer alabilir.
       </p>
       <div className="grid gap-2 sm:grid-cols-3">
         <label className="block space-y-1">
           <span className="text-[10px] font-black uppercase text-gray-500">Şirket</span>
-          <select className="form-input" value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
-            {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          <select
+            className="form-input"
+            value={companyId}
+            onChange={(e) => setCompanyId(e.target.value)}
+          >
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
         </label>
         <label className="block space-y-1">
@@ -473,10 +606,15 @@ function UserPermissionsPage() {
           </select>
         </label>
       </div>
-      <button type="button" onClick={assign} className={`${BTN_SUCCESS} px-4 py-2 text-sm`}>Yetkiyi Kaydet</button>
+      <button type="button" onClick={assign} className={`${BTN_SUCCESS} px-4 py-2 text-sm`}>
+        Yetkiyi Kaydet
+      </button>
       <ul className="space-y-2 text-sm">
         {rows.map((r) => (
-          <li key={r.id} className="rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2 text-gray-200">
+          <li
+            key={r.id}
+            className="rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2 text-gray-200"
+          >
             {r.email} · {r.role}
           </li>
         ))}
@@ -515,12 +653,28 @@ function CompanySettingsPage() {
         />
         E-Fatura aktif
       </label>
+      <label className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+        <input
+          type="checkbox"
+          checked={company.eInvoice?.connected !== false}
+          onChange={(e) => patchSettings('eInvoice', { connected: e.target.checked })}
+        />
+        GİB bağlantısı kuruldu (demo)
+      </label>
       <label className="block max-w-md space-y-1">
         <span className="text-[10px] font-black uppercase text-gray-500">GİB Alias</span>
         <input
           className="form-input"
           value={company.eInvoice?.gibAlias || ''}
           onChange={(e) => patchSettings('eInvoice', { gibAlias: e.target.value })}
+        />
+      </label>
+      <label className="block max-w-md space-y-1">
+        <span className="text-[10px] font-black uppercase text-gray-500">Sağlayıcı</span>
+        <input
+          className="form-input"
+          value={company.eInvoice?.provider || 'GİB'}
+          onChange={(e) => patchSettings('eInvoice', { provider: e.target.value })}
         />
       </label>
       <label className="flex items-center gap-2 text-sm font-semibold text-gray-200">
@@ -540,7 +694,8 @@ function CompanySettingsPage() {
         />
       </label>
       <p className="text-xs text-gray-500">
-        Belge Merkezi logosu / kaşe / yazıcı ayarları bu şirkete bağlı aktif firma bağlamında kullanılır.
+        Belge Merkezi logosu / kaşe / yazıcı ayarları bu şirkete bağlı aktif firma bağlamında
+        kullanılır.
       </p>
     </div>
   )

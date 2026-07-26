@@ -54,6 +54,7 @@ import IncomeExpenseReportPage from './pages/IncomeExpenseReportPage'
 import ExpenseListPage from './pages/expenses/ExpenseListPage'
 import LoanPaymentsPage from './pages/expenses/LoanPaymentsPage'
 import IncomingEInvoicesPage from './pages/expenses/IncomingEInvoicesPage'
+import IncomingEInvoiceDetailPage from './pages/expenses/IncomingEInvoiceDetailPage'
 import ExpensesReportPage from './pages/expenses/ExpensesReportPage'
 import PaymentsReportPage from './pages/expenses/PaymentsReportPage'
 import VatReportPage from './pages/expenses/VatReportPage'
@@ -296,6 +297,10 @@ export default function App() {
                       />
                       <Route path="/giderler/liste" element={<ExpenseListPage />} />
                       <Route path="/giderler/kredi-odemeleri" element={<LoanPaymentsPage />} />
+                      <Route
+                        path="/giderler/gelen-e-faturalar/:invoiceId"
+                        element={<IncomingEInvoiceDetailPage />}
+                      />
                       <Route
                         path="/giderler/gelen-e-faturalar"
                         element={<IncomingEInvoicesPage />}

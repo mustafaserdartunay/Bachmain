@@ -76,8 +76,13 @@ export function emptyCompany(partial = {}) {
     stampUrl: '',
     signatureUrl: '',
     defaultPrinter: '',
-    eInvoice: { enabled: false, gibAlias: '' },
-    eArchive: { enabled: false },
+    eInvoice: {
+      enabled: true,
+      gibAlias: 'urn:mail:defaultpk@efatura.gov.tr',
+      connected: true,
+      provider: 'GİB',
+    },
+    eArchive: { enabled: true },
     accounting: { fiscalYearStart: '01-01' },
     active: true,
     createdAt: new Date().toISOString(),
@@ -210,6 +215,13 @@ export function ensureDefaultCompanyFromSettings(settings = {}) {
     email: settings.email || '',
     address: settings.address || '',
     city: settings.city || '',
+    eInvoice: {
+      enabled: true,
+      connected: true,
+      gibAlias: 'urn:mail:defaultpk@efatura.gov.tr',
+      provider: 'GİB',
+    },
+    eArchive: { enabled: true },
   })
   const branch = emptyBranch({
     companyId: company.id,
@@ -229,7 +241,12 @@ export function ensureDefaultCompanyFromSettings(settings = {}) {
     branches: [branch],
     warehouses: [warehouse],
     departments: DEPARTMENT_PRESETS.map((name) =>
-      emptyDepartment({ companyId: company.id, branchId: branch.id, name, code: name.slice(0, 3).toUpperCase() }),
+      emptyDepartment({
+        companyId: company.id,
+        branchId: branch.id,
+        name,
+        code: name.slice(0, 3).toUpperCase(),
+      }),
     ),
   })
 }
@@ -274,10 +291,13 @@ export function writeOrgContext(patch) {
 export function resolveActiveOrg(structure = readOrgStructure(), context = readOrgContext()) {
   const companies = structure.companies.filter((c) => c.active !== false)
   let company = companies.find((c) => c.id === context.companyId) || companies[0] || null
-  const branches = structure.branches.filter((b) => b.companyId === company?.id && b.active !== false)
+  const branches = structure.branches.filter(
+    (b) => b.companyId === company?.id && b.active !== false,
+  )
   let branch = branches.find((b) => b.id === context.branchId) || branches[0] || null
   const warehouses = structure.warehouses.filter(
-    (w) => w.companyId === company?.id && (!branch || w.branchId === branch.id) && w.active !== false,
+    (w) =>
+      w.companyId === company?.id && (!branch || w.branchId === branch.id) && w.active !== false,
   )
   let warehouse =
     warehouses.find((w) => w.id === context.warehouseId) ||

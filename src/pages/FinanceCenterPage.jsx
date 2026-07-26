@@ -423,16 +423,19 @@ export default function FinanceCenterPage() {
       )}
 
       {tab === 'einvoice' && (
-        <section className={`${APP_SURFACE_PANEL_CLASS} p-5`}>
-          <FileText className="mb-2 h-5 w-5" />
+        <section className={`${APP_SURFACE_PANEL_CLASS} space-y-3 p-5`}>
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-emerald-300" />
+            <p className="text-sm font-black text-emerald-300">GİB bağlantısı aktif (demo)</p>
+          </div>
           <p className="text-sm">
             Gelen e-fatura:{' '}
             <Link to="/giderler/gelen-e-faturalar" className="font-bold underline">
               Gelen E-Faturalar
             </Link>
           </p>
-          <p className="mt-2 text-xs text-[var(--muted)]">
-            GIB/UBL adapter FS-2. Çıkış faturası = satış faturaları.
+          <p className="text-xs text-[var(--muted)]">
+            Alias: urn:mail:defaultpk@efatura.gov.tr · Gelen kutusu senkronize. Gerçek adapter FS-2.
           </p>
         </section>
       )}

@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { computeRemainingDays, isTrialActive } from '../components/TrialBanner'
-import LegalConsentGate from '../components/Legal/LegalConsentGate'
 import {
   isLocalDevHost,
   MARKETING_LOGIN_URL,
@@ -79,7 +78,7 @@ function MarketingLoginRedirect({ from }) {
 }
 
 export default function RequireAuth({ children }) {
-  const { isAuthenticated, bootstrapped, loading, user, refreshUser } = useAuth()
+  const { isAuthenticated, bootstrapped, loading, user } = useAuth()
   const location = useLocation()
   const path = location.pathname
 
@@ -121,18 +120,6 @@ export default function RequireAuth({ children }) {
     return <Navigate to="/kurulum" replace state={{ reason: 'onboarding' }} />
   }
 
-  return (
-    <LegalConsentGate
-      user={user}
-      onAccepted={async () => {
-        try {
-          await refreshUser?.()
-        } catch {
-          /* ignore */
-        }
-      }}
-    >
-      {children}
-    </LegalConsentGate>
-  )
+  // Sözleşmeler yalnızca paket satın alma akışında istenir; uygulama girişinde kapı yok.
+  return children
 }

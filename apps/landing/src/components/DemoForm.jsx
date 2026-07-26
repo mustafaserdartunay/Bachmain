@@ -17,9 +17,7 @@ import {
 import { motion } from 'framer-motion'
 import Button from './ui/Button'
 import Input from './ui/Input'
-import Checkbox from './ui/Checkbox'
 import PasswordStrength, { passwordIssues } from './register/PasswordStrength'
-import ConsentReader from './legal/ConsentReader'
 import { yonetimPost, redirectToAppWithToken } from '../utils/platformApi'
 import { trackCta } from '../analytics/track'
 
@@ -38,7 +36,6 @@ const emptyForm = {
   email: '',
   password: '',
   password2: '',
-  terms: false,
 }
 
 function readPrefill() {
@@ -71,8 +68,6 @@ export default function DemoForm({ variant = 'panel' } = {}) {
   const [showPw2, setShowPw2] = useState(false)
   const [sessionToken, setSessionToken] = useState('')
   const [licenseExpiry, setLicenseExpiry] = useState('')
-  const [step, setStep] = useState('form') // form | contracts | done
-  const [pendingConsents, setPendingConsents] = useState(null)
 
   useEffect(() => {
     const pre = readPrefill()
@@ -82,8 +77,7 @@ export default function DemoForm({ variant = 'panel' } = {}) {
   }, [])
 
   const setField = (key) => (e) => {
-    const value = key === 'terms' ? e.target.checked : e.target.value
-    setForm((prev) => ({ ...prev, [key]: value }))
+    setForm((prev) => ({ ...prev, [key]: e.target.value }))
   }
 
   const validatePanel = () => {
@@ -101,7 +95,6 @@ export default function DemoForm({ variant = 'panel' } = {}) {
     const pwIssue = passwordIssues(form.password)
     if (pwIssue) e.password = pwIssue
     if (form.password !== form.password2) e.password2 = 'Şifreler eşleşmiyor'
-    if (!form.terms) e.terms = 'Şartları kabul etmelisiniz'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -119,12 +112,10 @@ export default function DemoForm({ variant = 'panel' } = {}) {
   const submitPanel = async (ev) => {
     ev.preventDefault()
     if (!validatePanel()) return
-    setSubmitError('')
-    setStep('contracts')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    await createDemoAccount()
   }
 
-  const createDemoAccount = async (consents) => {
+  const createDemoAccount = async () => {
     setBusy(true)
     setSubmitError('')
     try {
@@ -140,8 +131,6 @@ export default function DemoForm({ variant = 'panel' } = {}) {
         email: form.email.trim(),
         password: form.password,
         source: 'bachmain_demo',
-        consents,
-        acceptDemoTerms: true,
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
         language: typeof navigator !== 'undefined' ? navigator.language : 'tr',
       })
@@ -149,10 +138,8 @@ export default function DemoForm({ variant = 'panel' } = {}) {
       setSessionToken(data.token || '')
       setLicenseExpiry(data.licenseExpiry || data.user?.licenseExpiry || '')
       setDone(true)
-      setStep('done')
     } catch (err) {
       setSubmitError(err.message || 'Demonuz oluşturulamadı. Lütfen tekrar deneyin.')
-      setStep('form')
     } finally {
       setBusy(false)
     }
@@ -262,19 +249,6 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               Aynı e-posta ile ikinci demo açılamaz. Süre bitince yönetim uzatabilir.
             </p>
           </div>
-        ) : step === 'contracts' ? (
-          <ConsentReader
-            pack="demo"
-            email={form.email.trim().toLowerCase()}
-            title="Demo Sözleşmeleri"
-            confirmLabel="Demo Oluştur"
-            persist={false}
-            onBack={() => setStep('form')}
-            onComplete={async (consents) => {
-              setPendingConsents(consents)
-              await createDemoAccount(consents)
-            }}
-          />
         ) : (
           <form onSubmit={submitPanel} className="space-y-4" noValidate>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -446,49 +420,6 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               }
             />
 
-            <Checkbox
-              id="demo-terms"
-              checked={form.terms}
-              onChange={setField('terms')}
-              error={errors.terms}
-              label={
-                <>
-                  <Link
-                    to="/demo-kullanim-kosullari"
-                    className="font-semibold text-[#2563EB] hover:underline"
-                    target="_blank"
-                  >
-                    Demo Kullanım Şartları
-                  </Link>
-                  ,{' '}
-                  <Link
-                    to="/kvkk-aydinlatma-metni"
-                    className="font-semibold text-[#2563EB] hover:underline"
-                    target="_blank"
-                  >
-                    KVKK
-                  </Link>
-                  ,{' '}
-                  <Link
-                    to="/gizlilik-politikasi"
-                    className="font-semibold text-[#2563EB] hover:underline"
-                    target="_blank"
-                  >
-                    Gizlilik
-                  </Link>{' '}
-                  ve{' '}
-                  <Link
-                    to="/cerez-politikasi"
-                    className="font-semibold text-[#2563EB] hover:underline"
-                    target="_blank"
-                  >
-                    Çerez Politikası
-                  </Link>
-                  ’nı kabul ediyorum.
-                </>
-              }
-            />
-
             {submitError ? (
               <p className="rounded-[18px] bg-[#FEF2F2] px-4 py-3 text-sm font-medium text-[#EF4444]">
                 {submitError}
@@ -496,7 +427,7 @@ export default function DemoForm({ variant = 'panel' } = {}) {
             ) : null}
 
             <Button type="submit" fullWidth disabled={busy}>
-              {busy ? 'Oluşturuluyor…' : 'Sözleşmelere geç'}
+              {busy ? 'Oluşturuluyor…' : 'Demo Oluştur'}
             </Button>
 
             <p className="pt-1 text-center text-[14px] font-medium text-[#64748B]">
