@@ -47,15 +47,27 @@ export default function LoginPanel() {
 
   return (
     <motion.div
-      className="relative mx-auto w-full max-w-[480px]"
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.12, ease: 'easeOut' }}
+      className="relative mx-auto w-full max-w-[440px]"
+      initial={{ opacity: 0, y: 28, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="relative rounded-[32px] border-[3px] border-[#2563EB] bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:p-10">
-        <span className="absolute -top-3.5 left-1/2 z-20 -translate-x-1/2 rounded-full bg-[#2563EB] px-4 py-1.5 text-[11px] font-bold tracking-[0.06em] text-white uppercase shadow-[0_8px_20px_rgba(37,99,235,0.35)]">
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-[34px] bg-gradient-to-br from-[#60A5FA]/50 via-[#2563EB]/25 to-[#38BDF8]/40 opacity-70 blur-[1px]"
+        aria-hidden
+        animate={{ opacity: [0.45, 0.75, 0.45] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      <div className="relative rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_24px_64px_rgba(37,99,235,0.14)] backdrop-blur-sm sm:p-10">
+        <motion.span
+          className="absolute -top-3.5 left-1/2 z-20 -translate-x-1/2 rounded-full bg-[#2563EB] px-4 py-1.5 text-[11px] font-bold tracking-[0.06em] text-white uppercase shadow-[0_8px_20px_rgba(37,99,235,0.35)]"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.35 }}
+        >
           Hesabına gir
-        </span>
+        </motion.span>
 
         {done ? (
           <div className="py-12 text-center">
@@ -67,16 +79,7 @@ export default function LoginPanel() {
             </p>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-4" noValidate>
-            <header className="mb-2 pt-1">
-              <h2 className="text-[28px] font-extrabold tracking-tight text-[#2563EB]">
-                Giriş Yap
-              </h2>
-              <p className="mt-2 text-[14px] font-medium text-[#64748B]">
-                BachMain hesabınızla devam edin.
-              </p>
-            </header>
-
+          <form onSubmit={onSubmit} className="space-y-4 pt-4" noValidate>
             <Input
               name="email"
               type="email"
@@ -114,7 +117,7 @@ export default function LoginPanel() {
               }
             />
 
-            <div className="flex justify-end">
+            <div className="flex justify-center">
               <Link
                 to="/sifremi-unuttum"
                 className="text-[13px] font-bold text-[#2563EB] hover:underline"
