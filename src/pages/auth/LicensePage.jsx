@@ -1,7 +1,11 @@
-import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { getStoredSession } from '../../utils/platformAuth'
+import {
+  MARKETING_LOGIN_URL,
+  isLocalDevHost,
+  redirectToMarketingLogin,
+} from '../../utils/marketingLogin'
 
 const API = import.meta.env.VITE_PLATFORM_API_URL || 'https://yonetim.bachmain.com/api'
 
@@ -59,8 +63,8 @@ export default function LicensePage() {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">BACHMAIN</p>
         <h1 className="mt-2 text-2xl font-bold text-slate-900">Lisans / Deneme süresi</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Hesabınızın erişimi sınırlandı. Plan: <strong>{plan}</strong> · Durum: <strong>{status}</strong> ·
-          Bitiş: <strong>{expiry}</strong>
+          Hesabınızın erişimi sınırlandı. Plan: <strong>{plan}</strong> · Durum:{' '}
+          <strong>{status}</strong> · Bitiş: <strong>{expiry}</strong>
         </p>
 
         <div className="mt-6 space-y-2">
@@ -85,21 +89,33 @@ export default function LicensePage() {
         {message ? <p className="mt-4 text-sm text-slate-700">{message}</p> : null}
 
         <div className="mt-6 space-y-2 text-sm text-slate-600">
-          <a className="block font-medium text-blue-700 underline" href="mailto:destek@bachmain.com">
+          <a
+            className="block font-medium text-blue-700 underline"
+            href="mailto:destek@bachmain.com"
+          >
             destek@bachmain.com
           </a>
-          <a className="block font-medium text-blue-700 underline" href="https://bachmain.com/fiyatlandirma.html">
+          <a
+            className="block font-medium text-blue-700 underline"
+            href="https://bachmain.com/fiyatlandirma.html"
+          >
             Fiyatlandırma
           </a>
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            to="/giris"
-            onClick={() => logout?.()}
+          <a
+            href={isLocalDevHost() ? '/giris' : MARKETING_LOGIN_URL}
+            onClick={(e) => {
+              logout?.()
+              if (!isLocalDevHost()) {
+                e.preventDefault()
+                redirectToMarketingLogin()
+              }
+            }}
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800"
           >
             Çıkış yap
-          </Link>
+          </a>
         </div>
       </div>
     </div>

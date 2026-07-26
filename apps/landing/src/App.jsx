@@ -58,6 +58,7 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/giris" element={<LoginPage />} />
+          <Route path="/girisyap" element={<LoginPage />} />
           <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />

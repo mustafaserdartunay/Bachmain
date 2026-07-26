@@ -179,7 +179,7 @@ export default function DemoForm({ variant = 'panel' } = {}) {
 
   const enterApp = () => {
     if (sessionToken) redirectToAppWithToken(sessionToken)
-    else window.location.href = 'https://uygulama.bachmain.com/giris'
+    else window.location.href = 'https://bachmain.com/giris'
   }
 
   if (variant === 'band') {

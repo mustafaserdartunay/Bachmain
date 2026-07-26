@@ -3,8 +3,8 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/giris",
-      "destination": "https://uygulama.bachmain.com/giris",
+      "source": "/girisyap",
+      "destination": "/giris",
       "permanent": false
     },
     {

@@ -1,7 +1,13 @@
+import { useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { computeRemainingDays, isTrialActive } from '../components/TrialBanner'
 import LegalConsentGate from '../components/Legal/LegalConsentGate'
+import {
+  isLocalDevHost,
+  MARKETING_LOGIN_URL,
+  redirectToMarketingLogin,
+} from '../utils/marketingLogin'
 
 const BILLING_PATHS = new Set([
   '/hesap/lisans',
@@ -57,6 +63,21 @@ function isPaidLicenseExpired(user) {
   return user.licenseExpiry < today
 }
 
+function MarketingLoginRedirect({ from }) {
+  useEffect(() => {
+    redirectToMarketingLogin(from)
+  }, [from])
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50 px-4 text-center text-sm text-slate-600">
+      <p>Giriş sayfasına yönlendiriliyorsunuz…</p>
+      <a className="font-semibold text-[#1d4ed8] hover:underline" href={MARKETING_LOGIN_URL}>
+        Giriş Yap
+      </a>
+    </div>
+  )
+}
+
 export default function RequireAuth({ children }) {
   const { isAuthenticated, bootstrapped, loading, user, refreshUser } = useAuth()
   const location = useLocation()
@@ -71,6 +92,9 @@ export default function RequireAuth({ children }) {
   }
 
   if (!isAuthenticated) {
+    if (!isLocalDevHost()) {
+      return <MarketingLoginRedirect from={location.pathname} />
+    }
     return <Navigate to="/giris" replace state={{ from: location.pathname }} />
   }
 

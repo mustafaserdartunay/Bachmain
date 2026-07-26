@@ -12,7 +12,7 @@ function readEnv(key) {
 const DEFAULT_YONETIM_API = 'https://yonetim.bachmain.com/api'
 const DEFAULT_V1_API = readEnv('NEXT_PUBLIC_API_URL') || readEnv('VITE_API_URL') || ''
 const APP_URL = 'https://uygulama.bachmain.com'
-const LOGIN_URL = 'https://uygulama.bachmain.com/giris'
+const LOGIN_URL = 'https://bachmain.com/giris'
 
 /** Prefer centralized apps/api (/v1). Fall back to legacy yonetim API. */
 export function getPlatformApiBase() {
@@ -81,8 +81,16 @@ export function yonetimPost(path, body, opts = {}) {
   return platformPost(path, body, { ...opts, base: getYonetimApiBase() })
 }
 
+function safeAppPath(next) {
+  if (!next || typeof next !== 'string') return '/'
+  if (!next.startsWith('/') || next.startsWith('//')) return '/'
+  return next
+}
+
 export function redirectToAppWithToken(token) {
-  const url = new URL(APP_URL)
+  const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
+  const path = safeAppPath(params.get('next'))
+  const url = new URL(path, APP_URL)
   if (token) url.searchParams.set('authToken', token)
   window.location.href = url.toString()
 }

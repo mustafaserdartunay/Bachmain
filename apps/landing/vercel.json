@@ -58,6 +58,11 @@
       "permanent": true
     },
     {
+      "source": "/girisyap",
+      "destination": "/giris",
+      "permanent": false
+    },
+    {
       "source": "/register",
       "destination": "/uye-ol",
       "permanent": true

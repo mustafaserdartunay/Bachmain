@@ -7,6 +7,11 @@ import {
   resetPasswordWithToken,
   verifyEmailWithToken,
 } from '../../utils/platformAuth'
+import {
+  isLocalDevHost,
+  MARKETING_LOGIN_URL,
+  redirectToMarketingLogin,
+} from '../../utils/marketingLogin'
 
 function AuthShell({ title, subtitle, children, footer }) {
   return (
@@ -37,9 +42,27 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const localDev = isLocalDevHost()
+
+  useEffect(() => {
+    if (localDev) return
+    if (bootstrapped && isAuthenticated) return
+    redirectToMarketingLogin(location.state?.from)
+  }, [localDev, bootstrapped, isAuthenticated, location.state?.from])
 
   if (bootstrapped && isAuthenticated) {
     return <Navigate to={location.state?.from || '/'} replace />
+  }
+
+  if (!localDev) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50 px-4 text-center text-sm text-slate-600">
+        <p>Giriş sayfasına yönlendiriliyorsunuz…</p>
+        <a className="font-semibold text-[#1d4ed8] hover:underline" href={MARKETING_LOGIN_URL}>
+          Giriş Yap
+        </a>
+      </div>
+    )
   }
 
   async function onSubmit(event) {
@@ -58,32 +81,51 @@ export function LoginPage() {
 
   return (
     <AuthShell
-      title="Uygulamaya giriş"
-      subtitle="BACHMAIN hesabınızla devam edin"
-      footer={(
+      title="Uygulamaya giriş (yerel)"
+      subtitle="Production’da giriş bachmain.com/giris üzerinden yapılır"
+      footer={
         <>
           Hesabınız yok mu?{' '}
           <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/kayit">
             Üye olun
           </Link>
         </>
-      )}
+      }
     >
       <form className="space-y-4" onSubmit={onSubmit}>
         <label className="block text-sm font-medium text-slate-700">
           E-posta
-          <input className={fieldClass} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            className={fieldClass}
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           Şifre
-          <input className={fieldClass} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input
+            className={fieldClass}
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </label>
         <div className="text-right">
-          <Link className="text-sm font-semibold text-[#1d4ed8] hover:underline" to="/sifremi-unuttum">
+          <Link
+            className="text-sm font-semibold text-[#1d4ed8] hover:underline"
+            to="/sifremi-unuttum"
+          >
             Şifremi unuttum
           </Link>
         </div>
-        {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+        {error ? (
+          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+        ) : null}
         <button
           type="submit"
           disabled={busy}
@@ -138,37 +180,70 @@ export function RegisterPage() {
     <AuthShell
       title="7 gün ücretsiz üye olun"
       subtitle={`Seçilen plan: ${form.plan || 'Starter'} · Kayıt sonrası yönetim panelinde görünür`}
-      footer={(
+      footer={
         <>
           Zaten üye misiniz?{' '}
           <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
             Giriş yapın
           </Link>
         </>
-      )}
+      }
     >
       <form className="space-y-3.5" onSubmit={onSubmit}>
         <label className="block text-sm font-medium text-slate-700">
           Ad Soyad
-          <input className={fieldClass} required value={form.fullName} onChange={update('fullName')} />
+          <input
+            className={fieldClass}
+            required
+            value={form.fullName}
+            onChange={update('fullName')}
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           Firma adı
-          <input className={fieldClass} required value={form.companyName} onChange={update('companyName')} />
+          <input
+            className={fieldClass}
+            required
+            value={form.companyName}
+            onChange={update('companyName')}
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           E-posta
-          <input className={fieldClass} type="email" autoComplete="email" required value={form.email} onChange={update('email')} />
+          <input
+            className={fieldClass}
+            type="email"
+            autoComplete="email"
+            required
+            value={form.email}
+            onChange={update('email')}
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           Telefon
-          <input className={fieldClass} type="tel" value={form.phone} onChange={update('phone')} placeholder="05xx xxx xx xx" />
+          <input
+            className={fieldClass}
+            type="tel"
+            value={form.phone}
+            onChange={update('phone')}
+            placeholder="05xx xxx xx xx"
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           Şifre
-          <input className={fieldClass} type="password" autoComplete="new-password" minLength={6} required value={form.password} onChange={update('password')} />
+          <input
+            className={fieldClass}
+            type="password"
+            autoComplete="new-password"
+            minLength={6}
+            required
+            value={form.password}
+            onChange={update('password')}
+          />
         </label>
-        {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+        {error ? (
+          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+        ) : null}
         <button
           type="submit"
           disabled={busy}
@@ -205,11 +280,11 @@ export function ForgotPasswordPage() {
     <AuthShell
       title="Şifremi unuttum"
       subtitle="E-posta adresinize sıfırlama bağlantısı göndeririz"
-      footer={(
+      footer={
         <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
           Girişe dön
         </Link>
-      )}
+      }
     >
       {done ? (
         <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
@@ -219,9 +294,17 @@ export function ForgotPasswordPage() {
         <form className="space-y-4" onSubmit={onSubmit}>
           <label className="block text-sm font-medium text-slate-700">
             E-posta
-            <input className={fieldClass} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input
+              className={fieldClass}
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </label>
-          {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+          {error ? (
+            <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+          ) : null}
           <button
             type="submit"
             disabled={busy}
@@ -271,7 +354,9 @@ export function ResetPasswordPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+        {error ? (
+          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+        ) : null}
         <button
           type="submit"
           disabled={busy || !token}
@@ -314,14 +399,16 @@ export function VerifyEmailPage() {
     <AuthShell
       title="E-posta doğrulama"
       subtitle="Hesap e-posta adresiniz doğrulanıyor"
-      footer={(
+      footer={
         <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
           Girişe git
         </Link>
-      )}
+      }
     >
       {done ? (
-        <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">E-posta adresiniz doğrulandı.</p>
+        <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
+          E-posta adresiniz doğrulandı.
+        </p>
       ) : error ? (
         <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
       ) : (
