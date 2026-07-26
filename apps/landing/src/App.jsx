@@ -57,8 +57,11 @@ export default function App() {
           <Route path="/blog/:slug" element={<BlogDetailPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/giris" element={<LoginPage />} />
           <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/demo" element={<DemoPage />} />
           <Route path="/help" element={<HelpPage />} />

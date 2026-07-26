@@ -20,6 +20,8 @@ export default function robots(): MetadataRoute.Robots {
           '/register',
           '/sifremi-unuttum',
           '/sifre-sifirla',
+          '/forgot-password',
+          '/reset-password',
           '/api/',
           '/features/crm',
           '/features/erp',

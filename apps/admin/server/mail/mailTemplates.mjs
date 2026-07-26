@@ -87,17 +87,18 @@ export const MAIL_TEMPLATES = {
   password_reset(data) {
     return layout({
       title: 'Şifre sıfırlama',
-      preview: 'Şifrenizi yenilemek için güvenli bağlantı.',
-      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('Şifre sıfırlama talebi aldık. Siz değilseniz bu e-postayı yok sayın.')}`,
-      cta: { href: data.resetUrl, label: 'Şifreyi sıfırla' },
+      preview: 'Şifrenizi yenilemek için güvenli bağlantı (30 dakika geçerli).',
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('Şifre sıfırlama talebi aldık. Bağlantı 30 dakika geçerlidir ve tek kullanımlıktır. Siz değilseniz bu e-postayı yok sayın.')}`,
+      cta: { href: data.resetUrl, label: 'Şifremi Sıfırla' },
     })
   },
   password_changed(data) {
+    const support = data.supportEmail || MAIL_BRAND.supportEmail()
     return layout({
-      title: 'Şifreniz değiştirildi',
+      title: 'Şifreniz başarıyla değiştirildi',
       preview: 'Hesap şifreniz güncellendi.',
-      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('BACHMAIN hesap şifreniz başarıyla değiştirildi. Bu işlemi siz yapmadıysanız hemen destek ile iletişime geçin.')}`,
-      cta: { href: data.appUrl || MAIL_BRAND.appUrl(), label: 'Hesaba giriş' },
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('BACHMAIN hesap şifreniz başarıyla değiştirildi. Tüm aktif oturumlarınız güvenlik için sonlandırıldı; yeniden giriş yapmanız gerekir.')}${p(`Bu işlemi siz yapmadıysanız hemen destek ile iletişime geçin: ${support}`)}`,
+      cta: { href: data.appUrl || `${MAIL_BRAND.webUrl()}/giris`, label: 'Giriş Yap' },
     })
   },
   new_login(data) {

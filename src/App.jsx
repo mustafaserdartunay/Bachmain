@@ -223,7 +223,9 @@ export default function App() {
             <Route path="/giris" element={<LoginPage />} />
             <Route path="/kayit" element={<RegisterPage />} />
             <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/eposta-dogrula" element={<VerifyEmailPage />} />
             <Route path="/hesap/lisans" element={<LicensePage />} />
             <Route

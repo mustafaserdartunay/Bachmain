@@ -30,6 +30,7 @@ import {
   RefreshCw,
   Receipt,
   Mail,
+  KeyRound,
 } from 'lucide-react'
 
 /** Staff roles that may see a nav item. Empty / omitted = all authenticated staff. */
@@ -188,6 +189,14 @@ export const navItems: NavItem[] = [
     path: '/eposta',
     icon: Mail,
     group: 'Destek',
+    roles: ['super_admin', 'admin', 'support'],
+  },
+  {
+    id: 'password-reset-history',
+    label: 'Şifre Sıfırlama',
+    path: '/sifre-sifirlama-gecmisi',
+    icon: KeyRound,
+    group: 'Sistem',
     roles: ['super_admin', 'admin', 'support'],
   },
 

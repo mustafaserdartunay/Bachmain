@@ -60,30 +60,49 @@ export function LoginPage() {
     <AuthShell
       title="Uygulamaya giriş"
       subtitle="BACHMAIN hesabınızla devam edin"
-      footer={(
+      footer={
         <>
           Hesabınız yok mu?{' '}
           <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/kayit">
             Üye olun
           </Link>
         </>
-      )}
+      }
     >
       <form className="space-y-4" onSubmit={onSubmit}>
         <label className="block text-sm font-medium text-slate-700">
           E-posta
-          <input className={fieldClass} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            className={fieldClass}
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           Şifre
-          <input className={fieldClass} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input
+            className={fieldClass}
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </label>
         <div className="text-right">
-          <Link className="text-sm font-semibold text-[#1d4ed8] hover:underline" to="/sifremi-unuttum">
+          <Link
+            className="text-sm font-semibold text-[#1d4ed8] hover:underline"
+            to="/sifremi-unuttum"
+          >
             Şifremi unuttum
           </Link>
         </div>
-        {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+        {error ? (
+          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+        ) : null}
         <button
           type="submit"
           disabled={busy}
@@ -138,37 +157,70 @@ export function RegisterPage() {
     <AuthShell
       title="7 gün ücretsiz üye olun"
       subtitle={`Seçilen plan: ${form.plan || 'Starter'} · Kayıt sonrası yönetim panelinde görünür`}
-      footer={(
+      footer={
         <>
           Zaten üye misiniz?{' '}
           <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
             Giriş yapın
           </Link>
         </>
-      )}
+      }
     >
       <form className="space-y-3.5" onSubmit={onSubmit}>
         <label className="block text-sm font-medium text-slate-700">
           Ad Soyad
-          <input className={fieldClass} required value={form.fullName} onChange={update('fullName')} />
+          <input
+            className={fieldClass}
+            required
+            value={form.fullName}
+            onChange={update('fullName')}
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           Firma adı
-          <input className={fieldClass} required value={form.companyName} onChange={update('companyName')} />
+          <input
+            className={fieldClass}
+            required
+            value={form.companyName}
+            onChange={update('companyName')}
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           E-posta
-          <input className={fieldClass} type="email" autoComplete="email" required value={form.email} onChange={update('email')} />
+          <input
+            className={fieldClass}
+            type="email"
+            autoComplete="email"
+            required
+            value={form.email}
+            onChange={update('email')}
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           Telefon
-          <input className={fieldClass} type="tel" value={form.phone} onChange={update('phone')} placeholder="05xx xxx xx xx" />
+          <input
+            className={fieldClass}
+            type="tel"
+            value={form.phone}
+            onChange={update('phone')}
+            placeholder="05xx xxx xx xx"
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           Şifre
-          <input className={fieldClass} type="password" autoComplete="new-password" minLength={6} required value={form.password} onChange={update('password')} />
+          <input
+            className={fieldClass}
+            type="password"
+            autoComplete="new-password"
+            minLength={6}
+            required
+            value={form.password}
+            onChange={update('password')}
+          />
         </label>
-        {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+        {error ? (
+          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+        ) : null}
         <button
           type="submit"
           disabled={busy}
@@ -189,6 +241,14 @@ export function ForgotPasswordPage() {
 
   async function onSubmit(event) {
     event.preventDefault()
+    if (!email.trim()) {
+      setError('E-posta adresi gerekli')
+      return
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError('Geçerli e-posta girin')
+      return
+    }
     setBusy(true)
     setError('')
     try {
@@ -204,30 +264,42 @@ export function ForgotPasswordPage() {
   return (
     <AuthShell
       title="Şifremi unuttum"
-      subtitle="E-posta adresinize sıfırlama bağlantısı göndeririz"
-      footer={(
+      subtitle="E-posta adresinize 30 dakika geçerli sıfırlama bağlantısı göndeririz"
+      footer={
         <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
-          Girişe dön
+          Geri dön
         </Link>
-      )}
+      }
     >
       {done ? (
-        <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
+        <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800" role="status">
           Eşleşen bir hesap varsa sıfırlama bağlantısı e-posta kutunuza gönderildi.
         </p>
       ) : (
-        <form className="space-y-4" onSubmit={onSubmit}>
+        <form className="space-y-4" onSubmit={onSubmit} noValidate>
           <label className="block text-sm font-medium text-slate-700">
-            E-posta
-            <input className={fieldClass} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            E-posta adresi
+            <input
+              className={fieldClass}
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              aria-label="E-posta adresi"
+            />
           </label>
-          {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+          {error ? (
+            <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">
+              {error}
+            </p>
+          ) : null}
           <button
             type="submit"
             disabled={busy}
             className="w-full rounded-xl bg-[#0b1f3a] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {busy ? 'Gönderiliyor…' : 'Bağlantı gönder'}
+            {busy ? 'Gönderiliyor…' : 'Gönder'}
           </button>
         </form>
       )}
@@ -235,21 +307,52 @@ export function ForgotPasswordPage() {
   )
 }
 
+function validateAppPassword(password) {
+  const pw = String(password || '')
+  if (pw.length < 8) return 'Şifre en az 8 karakter olmalı'
+  if (!/[a-z]/.test(pw)) return 'Şifrede en az bir küçük harf olmalı'
+  if (!/[A-Z]/.test(pw)) return 'Şifrede en az bir büyük harf olmalı'
+  if (!/[0-9]/.test(pw)) return 'Şifrede en az bir rakam olmalı'
+  if (!/[^A-Za-z0-9]/.test(pw)) return 'Şifrede en az bir özel karakter olmalı'
+  return ''
+}
+
 export function ResetPasswordPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const token = params.get('token') || ''
   const [password, setPassword] = useState('')
+  const [password2, setPassword2] = useState('')
   const [error, setError] = useState('')
+  const [done, setDone] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!done) return
+    const t = window.setTimeout(() => navigate('/giris', { replace: true }), 2200)
+    return () => window.clearTimeout(t)
+  }, [done, navigate])
 
   async function onSubmit(event) {
     event.preventDefault()
+    if (!token) {
+      setError('Geçersiz veya eksik sıfırlama bağlantısı')
+      return
+    }
+    const pwErr = validateAppPassword(password)
+    if (pwErr) {
+      setError(pwErr)
+      return
+    }
+    if (password !== password2) {
+      setError('Şifreler eşleşmiyor')
+      return
+    }
     setBusy(true)
     setError('')
     try {
       await resetPasswordWithToken({ token, password })
-      navigate('/giris', { replace: true })
+      setDone(true)
     } catch (err) {
       setError(err.message || 'Şifre güncellenemedi')
     } finally {
@@ -258,28 +361,64 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AuthShell title="Yeni şifre belirle" subtitle="Güvenli bir şifre seçin (en az 6 karakter)">
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <label className="block text-sm font-medium text-slate-700">
-          Yeni şifre
-          <input
-            className={fieldClass}
-            type="password"
-            minLength={6}
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-        {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
-        <button
-          type="submit"
-          disabled={busy || !token}
-          className="w-full rounded-xl bg-[#0b1f3a] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-        >
-          {busy ? 'Kaydediliyor…' : 'Şifreyi güncelle'}
-        </button>
-      </form>
+    <AuthShell
+      title="Yeni şifre belirle"
+      subtitle="En az 8 karakter, büyük/küçük harf, rakam ve özel karakter"
+      footer={
+        <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
+          Geri dön
+        </Link>
+      }
+    >
+      {done ? (
+        <div className="space-y-2 text-center" role="status">
+          <p className="text-base font-semibold text-emerald-800">Başarılı</p>
+          <p className="text-sm text-emerald-700">
+            Şifreniz güncellendi. Giriş ekranına yönlendiriliyorsunuz.
+          </p>
+        </div>
+      ) : (
+        <form className="space-y-4" onSubmit={onSubmit} noValidate>
+          <label className="block text-sm font-medium text-slate-700">
+            Yeni şifre
+            <input
+              className={fieldClass}
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              aria-label="Yeni şifre"
+            />
+          </label>
+          <label className="block text-sm font-medium text-slate-700">
+            Yeni şifre tekrar
+            <input
+              className={fieldClass}
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+              value={password2}
+              onChange={(e) => setPassword2(e.target.value)}
+              aria-label="Yeni şifre tekrar"
+            />
+          </label>
+          {error ? (
+            <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            disabled={busy || !token}
+            className="w-full rounded-xl bg-[#0b1f3a] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {busy ? 'Kaydediliyor…' : 'Şifreyi güncelle'}
+          </button>
+        </form>
+      )}
     </AuthShell>
   )
 }
@@ -314,14 +453,16 @@ export function VerifyEmailPage() {
     <AuthShell
       title="E-posta doğrulama"
       subtitle="Hesap e-posta adresiniz doğrulanıyor"
-      footer={(
+      footer={
         <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
           Girişe git
         </Link>
-      )}
+      }
     >
       {done ? (
-        <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">E-posta adresiniz doğrulandı.</p>
+        <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
+          E-posta adresiniz doğrulandı.
+        </p>
       ) : error ? (
         <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
       ) : (

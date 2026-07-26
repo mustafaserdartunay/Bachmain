@@ -23,6 +23,7 @@ import {
   BillingTrialsPage,
 } from '@/pages/billing/BillingPages'
 import { MailCenterPage } from '@/pages/mail/MailCenterPage'
+import { PasswordResetHistoryPage } from '@/pages/PasswordResetHistoryPage'
 import { AiControlCenterPage } from '@/pages/AiControlCenterPage'
 import { ModuleListPage } from '@/components/module/ModuleListPage'
 import { ModuleDetailPage } from '@/components/module/ModuleDetailPage'
@@ -68,6 +69,7 @@ export function AppRoutes() {
         <Route path="abonelik/loglar" element={<BillingHistoryPage />} />
 
         <Route path="eposta" element={<MailCenterPage />} />
+        <Route path="sifre-sifirlama-gecmisi" element={<PasswordResetHistoryPage />} />
 
         <Route path="musteriler" element={<ModuleListPage moduleId="customers" />} />
         <Route

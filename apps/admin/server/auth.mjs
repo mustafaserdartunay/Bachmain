@@ -66,6 +66,16 @@ export function validateSignupPassword(password) {
   return { ok: true }
 }
 
+/** Cryptographic hash of one-time tokens (never store raw reset tokens). */
+export function hashOpaqueToken(raw) {
+  return crypto
+    .createHash('sha256')
+    .update(String(raw || ''), 'utf8')
+    .digest('hex')
+}
+
+const RESET_TOKEN_TTL_MS = 30 * 60 * 1000
+
 export function signToken(payload) {
   const header = b64urlJson({ alg: 'HS256', typ: 'JWT' })
   const body = b64urlJson({
@@ -447,6 +457,7 @@ export async function registerAccount(store, body) {
     customerId,
     tenantCode,
     role: account.role,
+    sv: Number(account.sessionVersion || 0),
   })
 
   return {
@@ -535,6 +546,7 @@ export async function loginAccount(store, body) {
     customerId: account.customerId,
     tenantCode: account.tenantCode,
     role: account.role,
+    sv: Number(account.sessionVersion || 0),
   })
 
   return {
@@ -544,41 +556,74 @@ export async function loginAccount(store, body) {
   }
 }
 
-export async function requestPasswordReset(store, emailRaw) {
-  ensureCollections(store)
+function pushAuthEvent(store, event) {
   if (!Array.isArray(store.authEvents)) store.authEvents = []
-  const email = normalizeEmail(emailRaw)
+  store.authEvents.unshift({ id: newId('aev'), ...event })
+  store.authEvents = store.authEvents.slice(0, 5000)
+}
+
+function findResetTokenRow(store, rawToken) {
+  const tokenHash = hashOpaqueToken(rawToken)
+  return (
+    store.emailTokens.find(
+      (t) => t.purpose === 'reset' && (t.tokenHash === tokenHash || t.token === rawToken),
+    ) || null
+  )
+}
+
+/**
+ * Request password reset. Always returns ok (no account enumeration).
+ * @param {{ email: string, ip?: string, userAgent?: string }} input
+ */
+export async function requestPasswordReset(store, emailRaw, meta = {}) {
+  ensureCollections(store)
+  const email = normalizeEmail(typeof emailRaw === 'string' ? emailRaw : emailRaw?.email)
+  const ip = meta.ip || (typeof emailRaw === 'object' ? emailRaw.ip : null) || '—'
+  const userAgent =
+    meta.userAgent || (typeof emailRaw === 'object' ? emailRaw.userAgent : null) || '—'
   const account = store.accounts.find((a) => a.email === email && a.role !== 'demo_lead')
-  // Always succeed to avoid account enumeration
+
   if (!account) {
-    store.authEvents.unshift({
-      id: newId('aev'),
+    pushAuthEvent(store, {
       type: 'password_reset_request',
       email,
       at: new Date().toISOString(),
+      ip,
+      userAgent,
       result: 'no_account',
+      success: false,
     })
-    store.authEvents = store.authEvents.slice(0, 2000)
     return { ok: true }
   }
 
-  const token = crypto.randomBytes(32).toString('hex')
-  store.emailTokens = store.emailTokens.filter(
-    (t) => !(t.accountId === account.id && t.purpose === 'reset'),
-  )
+  const rawToken = crypto.randomBytes(32).toString('hex')
+  const tokenHash = hashOpaqueToken(rawToken)
+  const now = Date.now()
+
+  // Invalidate prior unused reset tokens for this account
+  store.emailTokens = store.emailTokens.map((t) => {
+    if (t.accountId === account.id && t.purpose === 'reset' && !t.usedAt) {
+      return { ...t, usedAt: new Date().toISOString(), revokedAt: new Date().toISOString() }
+    }
+    return t
+  })
+
   store.emailTokens.unshift({
     id: newId('etok'),
     purpose: 'reset',
-    token,
+    tokenHash,
     accountId: account.id,
     email: account.email,
-    expiresAt: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
-    createdAt: new Date().toISOString(),
+    customerId: account.customerId || null,
+    createdAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + RESET_TOKEN_TTL_MS).toISOString(),
+    usedAt: null,
   })
-  store.emailTokens = store.emailTokens.slice(0, 2000)
+  store.emailTokens = store.emailTokens.slice(0, 5000)
 
   const cfg = mailConfig()
-  const resetUrl = `${cfg.webUrl}/sifre-sifirla?token=${encodeURIComponent(token)}`
+  // Canonical EN path per product requirement; TR alias also works via redirect
+  const resetUrl = `${cfg.webUrl}/reset-password?token=${encodeURIComponent(rawToken)}`
   await sendTemplateMail(store, {
     to: account.email,
     template: 'password_reset',
@@ -586,69 +631,137 @@ export async function requestPasswordReset(store, emailRaw) {
     customerId: account.customerId,
     accountId: account.id,
     data: { name: account.fullName, resetUrl },
+    immediate: true,
   })
-  store.authEvents.unshift({
-    id: newId('aev'),
+
+  pushAuthEvent(store, {
     type: 'password_reset_request',
     accountId: account.id,
     customerId: account.customerId,
     email: account.email,
     at: new Date().toISOString(),
+    ip,
+    userAgent,
     result: 'mail_queued',
+    success: true,
   })
-  store.authEvents = store.authEvents.slice(0, 2000)
   return { ok: true }
 }
 
-export async function resetPasswordWithToken(store, { token, password }) {
+/**
+ * Consume reset token and set a new password. Invalidates all sessions.
+ */
+export async function resetPasswordWithToken(store, { token, password, ip, userAgent }) {
   ensureCollections(store)
-  const row = store.emailTokens.find((t) => t.purpose === 'reset' && t.token === token)
-  if (!row || new Date(row.expiresAt).getTime() < Date.now()) {
+  const raw = String(token || '')
+  const row = findResetTokenRow(store, raw)
+
+  if (!row) {
+    pushAuthEvent(store, {
+      type: 'password_reset_failed',
+      at: new Date().toISOString(),
+      ip: ip || '—',
+      userAgent: userAgent || '—',
+      result: 'invalid_token',
+      success: false,
+    })
     const err = new Error('Geçersiz veya süresi dolmuş bağlantı')
     err.code = 'INVALID_TOKEN'
     throw err
   }
-  if (String(password || '').length < 8) {
-    const err = new Error('Şifre en az 8 karakter olmalı')
-    err.code = 'WEAK_PASSWORD'
+  if (row.usedAt) {
+    pushAuthEvent(store, {
+      type: 'password_reset_failed',
+      accountId: row.accountId,
+      email: row.email,
+      at: new Date().toISOString(),
+      ip: ip || '—',
+      userAgent: userAgent || '—',
+      result: 'token_reused',
+      success: false,
+    })
+    const err = new Error('Bu sıfırlama bağlantısı daha önce kullanılmış')
+    err.code = 'TOKEN_USED'
     throw err
   }
+  if (new Date(row.expiresAt).getTime() < Date.now()) {
+    pushAuthEvent(store, {
+      type: 'password_reset_failed',
+      accountId: row.accountId,
+      email: row.email,
+      at: new Date().toISOString(),
+      ip: ip || '—',
+      userAgent: userAgent || '—',
+      result: 'token_expired',
+      success: false,
+    })
+    const err = new Error('Sıfırlama bağlantısının süresi dolmuş. Lütfen yeni talep oluşturun.')
+    err.code = 'TOKEN_EXPIRED'
+    throw err
+  }
+
   const pwCheck = validateSignupPassword(password)
   if (!pwCheck.ok) {
     const err = new Error(pwCheck.message)
     err.code = 'WEAK_PASSWORD'
     throw err
   }
+
   const account = store.accounts.find((a) => a.id === row.accountId)
   if (!account) {
     const err = new Error('Hesap bulunamadı')
     err.code = 'NOT_FOUND'
     throw err
   }
+
   account.passwordHash = hashPassword(password)
   account.passwordChangedAt = new Date().toISOString()
-  store.emailTokens = store.emailTokens.filter((t) => t.id !== row.id)
+  account.sessionVersion = Number(account.sessionVersion || 0) + 1
 
+  row.usedAt = account.passwordChangedAt
+  // Strip any legacy plaintext field if present
+  if (row.token) delete row.token
+
+  const supportEmail = mailConfig().replyTo || 'destek@bachmain.com'
   await sendTemplateMail(store, {
     to: account.email,
     template: 'password_changed',
     type: 'password_changed',
     customerId: account.customerId,
     accountId: account.id,
-    data: { name: account.fullName, appUrl: mailConfig().webUrl + '/login' },
+    data: {
+      name: account.fullName,
+      appUrl: `${mailConfig().webUrl}/giris`,
+      supportEmail,
+    },
+    immediate: true,
   })
-  if (!Array.isArray(store.authEvents)) store.authEvents = []
-  store.authEvents.unshift({
-    id: newId('aev'),
+
+  pushAuthEvent(store, {
     type: 'password_changed',
     accountId: account.id,
     customerId: account.customerId,
     email: account.email,
     at: account.passwordChangedAt,
+    ip: ip || '—',
+    userAgent: userAgent || '—',
     result: 'ok',
+    success: true,
   })
-  store.authEvents = store.authEvents.slice(0, 2000)
   return { ok: true }
+}
+
+/** Staff: password-reset / change audit trail with optional filters. */
+export function listPasswordResetEvents(store, { customerId, email, limit = 200 } = {}) {
+  ensureCollections(store)
+  const types = new Set(['password_reset_request', 'password_changed', 'password_reset_failed'])
+  let rows = (store.authEvents || []).filter((e) => types.has(e.type))
+  if (customerId) rows = rows.filter((e) => e.customerId === customerId)
+  if (email) {
+    const needle = normalizeEmail(email)
+    rows = rows.filter((e) => normalizeEmail(e.email) === needle)
+  }
+  return rows.slice(0, Math.min(1000, Number(limit) || 200))
 }
 
 export async function verifyEmailWithToken(store, token) {
@@ -690,6 +803,10 @@ export function getAccountFromToken(store, token) {
   if (!payload?.sub) return null
   const account = store.accounts.find((a) => a.id === payload.sub)
   if (!account) return null
+  // Invalidate sessions after password reset (sessionVersion bump)
+  const tokenSv = Number(payload.sv || 0)
+  const accountSv = Number(account.sessionVersion || 0)
+  if (tokenSv !== accountSv) return null
   const customer = store.customers.find((c) => c.id === account.customerId) || null
   return { account, customer, user: enrichUser(store, account, customer), payload }
 }

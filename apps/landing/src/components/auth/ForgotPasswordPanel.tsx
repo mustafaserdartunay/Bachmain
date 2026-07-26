@@ -17,7 +17,11 @@ export default function ForgotPasswordPanel() {
 
   const onSubmit = async (ev: FormEvent) => {
     ev.preventDefault()
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
+    if (!email.trim()) {
+      setError('E-posta adresi gerekli')
+      return
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
       setError('Geçerli e-posta girin')
       return
     }
@@ -25,7 +29,10 @@ export default function ForgotPasswordPanel() {
     setBusy(true)
     setSubmitError('')
     try {
-      await yonetimPost('auth/forgot-password', { email: email.trim().toLowerCase() })
+      await yonetimPost('auth/forgot-password', {
+        email: email.trim().toLowerCase(),
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+      })
       setDone(true)
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'İşlem başarısız')
@@ -47,13 +54,13 @@ export default function ForgotPasswordPanel() {
         </span>
 
         {done ? (
-          <div className="space-y-4 py-8 text-center">
+          <div className="space-y-4 py-8 text-center" role="status" aria-live="polite">
             <h2 className="text-[22px] font-extrabold text-[#0F172A]">E-posta gönderildi</h2>
             <p className="text-[14px] font-medium text-[#64748B]">
               Eşleşen bir hesap varsa sıfırlama bağlantısı e-posta adresinize iletildi. Gelen kutusu
-              ve spam klasörünü kontrol edin.
+              ve spam klasörünü kontrol edin. Bağlantı 30 dakika geçerlidir.
             </p>
-            <Link to="/login">
+            <Link to="/giris">
               <Button type="button" fullWidth>
                 Girişe dön
               </Button>
@@ -74,27 +81,31 @@ export default function ForgotPasswordPanel() {
               name="email"
               type="email"
               autoComplete="email"
-              placeholder="E-posta"
+              placeholder="E-posta adresi"
               value={email}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               error={error}
               leftIcon={<Mail className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
-              aria-label="E-posta"
+              aria-label="E-posta adresi"
+              required
             />
 
             {submitError ? (
-              <p className="rounded-[18px] bg-[#FEF2F2] px-4 py-3 text-sm font-medium text-[#EF4444]">
+              <p
+                className="rounded-[18px] bg-[#FEF2F2] px-4 py-3 text-sm font-medium text-[#EF4444]"
+                role="alert"
+              >
                 {submitError}
               </p>
             ) : null}
 
-            <Button type="submit" fullWidth disabled={busy}>
-              {busy ? 'Gönderiliyor…' : 'Sıfırlama bağlantısı gönder'}
+            <Button type="submit" fullWidth disabled={busy} aria-busy={busy}>
+              {busy ? 'Gönderiliyor…' : 'Gönder'}
             </Button>
 
             <p className="text-center text-[14px] font-medium text-[#64748B]">
-              <Link to="/login" className="font-bold text-[#2563EB] hover:underline">
-                Girişe dön
+              <Link to="/giris" className="font-bold text-[#2563EB] hover:underline">
+                Geri dön
               </Link>
             </p>
           </form>

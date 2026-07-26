@@ -8,7 +8,7 @@ const SAVE_LABEL_RE =
   /\b(kaydet|save|listeyi kaydet|projeyi kaydet|gideri kaydet|irsaliyeyi kaydet|transferi kaydet|depoyu kaydet|profili kaydet)\b/i
 
 function isAuthPath() {
-  return /^\/(giris|kayit|sifremi-unuttum|sifre-sifirla|eposta-dogrula)(\/|$)/.test(
+  return /^\/(giris|kayit|sifremi-unuttum|sifre-sifirla|forgot-password|reset-password|eposta-dogrula)(\/|$)/.test(
     window.location.pathname,
   )
 }

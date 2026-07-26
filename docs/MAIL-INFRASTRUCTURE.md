@@ -8,16 +8,16 @@
 
 Set on **bachmain-admin** (and any service that sends mail):
 
-| Variable | Example | Required |
-|----------|---------|----------|
-| `RESEND_API_KEY` | `re_xxxx` | Yes (send) |
-| `EMAIL_FROM` | `BACHMAIN <noreply@bachmain.com>` | Yes |
-| `EMAIL_REPLY_TO` | `destek@bachmain.com` | Optional |
-| `SUPPORT_EMAIL` | `destek@bachmain.com` | Optional |
-| `APP_URL` | `https://uygulama.bachmain.com` | Yes (links) |
-| `ADMIN_URL` | `https://yonetim.bachmain.com` | Optional |
-| `WEB_URL` | `https://bachmain.com` | Optional |
-| `MAIL_LOGIN_NOTIFY` | `1` / `0` | Optional (default on) |
+| Variable            | Example                           | Required              |
+| ------------------- | --------------------------------- | --------------------- |
+| `RESEND_API_KEY`    | `re_xxxx`                         | Yes (send)            |
+| `EMAIL_FROM`        | `BACHMAIN <noreply@bachmain.com>` | Yes                   |
+| `EMAIL_REPLY_TO`    | `destek@bachmain.com`             | Optional              |
+| `SUPPORT_EMAIL`     | `destek@bachmain.com`             | Optional              |
+| `APP_URL`           | `https://uygulama.bachmain.com`   | Yes (links)           |
+| `ADMIN_URL`         | `https://yonetim.bachmain.com`    | Optional              |
+| `WEB_URL`           | `https://bachmain.com`            | Optional              |
+| `MAIL_LOGIN_NOTIFY` | `1` / `0`                         | Optional (default on) |
 
 Also add `RESEND_API_KEY` + `EMAIL_FROM` to `apps/api` when that stack is production.
 
@@ -26,12 +26,12 @@ Also add `RESEND_API_KEY` + `EMAIL_FROM` to `apps/api` when that stack is produc
 Create a domain in Resend → Domains → `bachmain.com` (or `mail.bachmain.com`).  
 Add **exactly** the records Resend shows. Typical pattern:
 
-| Type | Name / Host | Value (example — use Resend dashboard values) |
-|------|-------------|-----------------------------------------------|
-| TXT | `@` or `resend._domainkey` | DKIM public key from Resend |
-| TXT | `@` | `v=spf1 include:_spf.resend.com ~all` |
-| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:dmarc@bachmain.com` |
-| MX | optional / receiving only | Not required for outbound transactional |
+| Type | Name / Host                | Value (example — use Resend dashboard values)     |
+| ---- | -------------------------- | ------------------------------------------------- |
+| TXT  | `@` or `resend._domainkey` | DKIM public key from Resend                       |
+| TXT  | `@`                        | `v=spf1 include:_spf.resend.com ~all`             |
+| TXT  | `_dmarc`                   | `v=DMARC1; p=none; rua=mailto:dmarc@bachmain.com` |
+| MX   | optional / receiving only  | Not required for outbound transactional           |
 
 After verify status is **Verified** in Resend, production sends use `noreply@bachmain.com`.
 
@@ -49,11 +49,14 @@ Until verified, Resend only allows sending to the account owner email (test mode
 
 ## Auth CRM flows
 
-- Register → welcome + verify email  
-- Login → new login notice  
-- `/sifremi-unuttum` → reset mail  
-- `/sifre-sifirla?token=` → set password + changed notice  
-- `/eposta-dogrula?token=` → verify  
+- Register → welcome + verify email
+- Login → new login notice
+- `/sifremi-unuttum` · `/forgot-password` → reset mail (`password_reset`)
+- Canonical reset link: `https://bachmain.com/reset-password?token=…` (30 dk, tek kullanım, SHA-256 hash)
+- TR alias: `/sifre-sifirla?token=`
+- Success → `password_changed` notice + tüm oturumlar `sessionVersion` ile düşer
+- Admin geçmiş: `yonetim.bachmain.com/sifre-sifirlama-gecmisi` · `GET /api/auth/password-reset-events`
+- Rate limit: forgot 5/5dk (IP + e-posta) · reset 10/15dk (IP)
 
 ## Queue & logs
 
@@ -63,7 +66,7 @@ Process: `POST /api/mail/process-queue`
 
 ## Smoke test
 
-1. Set `RESEND_API_KEY` on Vercel admin project  
-2. Verify DNS in Resend  
-3. Staff → E-posta Merkezi → API Testi → your inbox  
+1. Set `RESEND_API_KEY` on Vercel admin project
+2. Verify DNS in Resend
+3. Staff → E-posta Merkezi → API Testi → your inbox
 4. Expect status `sent` and Resend dashboard delivery

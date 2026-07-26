@@ -91,6 +91,11 @@
       "source": "/egitimler",
       "destination": "/egitim",
       "permanent": true
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/sifremi-unuttum",
+      "permanent": false
     }
   ],
   "headers": [

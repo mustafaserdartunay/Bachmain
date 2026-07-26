@@ -6,6 +6,8 @@ Disallow: /login
 Disallow: /register
 Disallow: /sifremi-unuttum
 Disallow: /sifre-sifirla
+Disallow: /forgot-password
+Disallow: /reset-password
 Disallow: /api/
 Disallow: /features/crm
 Disallow: /features/erp

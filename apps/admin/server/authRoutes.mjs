@@ -8,6 +8,7 @@ import {
   requestPasswordReset,
   resetPasswordWithToken,
   verifyEmailWithToken,
+  listPasswordResetEvents,
 } from './auth.mjs'
 import { loadStore, withStore } from './store.mjs'
 import { hitRateLimit } from './db.mjs'
@@ -250,16 +251,23 @@ export async function handleAuthApi(req, res, path, body = {}) {
       req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() ||
       req.socket?.remoteAddress ||
       'unknown'
-    const rate = await hitRateLimit(`forgot:${ip}`, { limit: 8, windowMs: 60 * 60 * 1000 })
-    if (!rate.allowed) {
+    const userAgent = String(req.headers?.['user-agent'] || body.userAgent || '—')
+    const emailKey = String(body.email || '')
+      .trim()
+      .toLowerCase()
+    const ipRate = await hitRateLimit(`forgot:ip:${ip}`, { limit: 5, windowMs: 5 * 60 * 1000 })
+    const emailRate = emailKey
+      ? await hitRateLimit(`forgot:email:${emailKey}`, { limit: 5, windowMs: 5 * 60 * 1000 })
+      : { allowed: true }
+    if (!ipRate.allowed || !emailRate.allowed) {
       sendJson(req, res, 429, {
         error: 'RATE_LIMITED',
-        message: 'Çok fazla deneme. Lütfen sonra tekrar deneyin.',
+        message: 'Çok fazla deneme. Lütfen 5 dakika sonra tekrar deneyin.',
       })
       return true
     }
     try {
-      await withStore((store) => requestPasswordReset(store, body.email))
+      await withStore((store) => requestPasswordReset(store, body.email, { ip, userAgent }))
       sendJson(req, res, 200, {
         ok: true,
         message: 'Eşleşen hesap varsa sıfırlama bağlantısı e-posta ile gönderildi.',
@@ -272,11 +280,32 @@ export async function handleAuthApi(req, res, path, body = {}) {
   }
 
   if (method === 'POST' && path === 'auth/reset-password') {
+    const ip =
+      req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown'
+    const userAgent = String(req.headers?.['user-agent'] || body.userAgent || '—')
+    const resetRate = await hitRateLimit(`reset:ip:${ip}`, { limit: 10, windowMs: 15 * 60 * 1000 })
+    if (!resetRate.allowed) {
+      sendJson(req, res, 429, {
+        error: 'RATE_LIMITED',
+        message: 'Çok fazla deneme. Lütfen sonra tekrar deneyin.',
+      })
+      return true
+    }
     try {
       await withStore((store) =>
-        resetPasswordWithToken(store, { token: body.token, password: body.password }),
+        resetPasswordWithToken(store, {
+          token: body.token,
+          password: body.password,
+          ip,
+          userAgent,
+        }),
       )
-      sendJson(req, res, 200, { ok: true, message: 'Şifreniz güncellendi. Giriş yapabilirsiniz.' })
+      sendJson(req, res, 200, {
+        ok: true,
+        message: 'Şifreniz güncellendi. Giriş ekranına yönlendiriliyorsunuz.',
+      })
       return true
     } catch (error) {
       sendJson(req, res, 400, { error: error.code || 'RESET_FAILED', message: error.message })
@@ -291,6 +320,27 @@ export async function handleAuthApi(req, res, path, body = {}) {
       return true
     } catch (error) {
       sendJson(req, res, 400, { error: error.code || 'VERIFY_FAILED', message: error.message })
+      return true
+    }
+  }
+
+  if (method === 'GET' && path === 'auth/password-reset-events') {
+    const session = getStaffSession(req)
+    if (!session && process.env.STAFF_AUTH_REQUIRED !== '0') {
+      sendJson(req, res, 401, { error: 'UNAUTHORIZED', message: 'Staff oturumu gerekli' })
+      return true
+    }
+    try {
+      const url = new URL(req.url || '', 'http://localhost')
+      const customerId = url.searchParams.get('customerId') || ''
+      const email = url.searchParams.get('email') || ''
+      const limit = url.searchParams.get('limit') || '200'
+      const store = await loadStore()
+      const rows = listPasswordResetEvents(store, { customerId, email, limit })
+      sendJson(req, res, 200, { ok: true, rows })
+      return true
+    } catch (error) {
+      sendJson(req, res, 500, { error: 'LIST_FAILED', message: error.message })
       return true
     }
   }
