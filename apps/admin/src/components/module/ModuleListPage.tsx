@@ -25,10 +25,7 @@ export function ModuleListPage({ moduleId }: ModuleListPageProps) {
   const navigate = useNavigate()
   const config = getModuleById(moduleId)
 
-  const fetcher = useMemo(
-    () => () => fetchModulePage(moduleId),
-    [moduleId],
-  )
+  const fetcher = useMemo(() => () => fetchModulePage(moduleId), [moduleId])
 
   const { status, data, reload } = usePageState({ fetcher, delay: 0 })
 
@@ -38,7 +35,8 @@ export function ModuleListPage({ moduleId }: ModuleListPageProps) {
   const list = useListState({
     data: rows as (Record<string, unknown> & { id: string })[],
     searchKeys,
-    defaultSortKey: config?.columns.find((c) => c.sortable)?.key as keyof Record<string, unknown> | undefined,
+    defaultSortKey: config?.columns.find((c) => c.sortable)?.key as
+      keyof Record<string, unknown> | undefined,
   })
 
   if (!config) {
@@ -58,16 +56,21 @@ export function ModuleListPage({ moduleId }: ModuleListPageProps) {
     return <ErrorState onRetry={reload} />
   }
 
-  const columns: TableColumn<Record<string, unknown> & { id: string }>[] = config.columns.map((col) => ({
-    ...col,
-    render: col.key === 'status' || col.key === 'priority' || col.key === 'severity'
-      ? (row) => {
-          const val = String(row[col.key] ?? '')
-          const variant = statusBadgeMap[val.toLowerCase()] ?? 'default'
-          return <Badge variant={variant as BadgeVariant}>{val}</Badge>
-        }
-      : undefined,
-  }))
+  const columns: TableColumn<Record<string, unknown> & { id: string }>[] = config.columns.map(
+    (col) => ({
+      ...col,
+      render:
+        col.key === 'status' || col.key === 'priority' || col.key === 'severity'
+          ? (row) => {
+              const val = String(row[col.key] ?? '')
+              const kind = String(row.statusKind ?? row.statusBadge ?? '')
+              const variant =
+                (kind && statusBadgeMap[kind]) || statusBadgeMap[val.toLowerCase()] || 'default'
+              return <Badge variant={variant as BadgeVariant}>{val}</Badge>
+            }
+          : undefined,
+    }),
+  )
 
   const detailPath = (id: string) => {
     if (moduleId === 'customers') return `/musteriler/${id}`
@@ -117,18 +120,25 @@ export function ModuleListPage({ moduleId }: ModuleListPageProps) {
           <Input
             placeholder="Ara..."
             value={list.search}
-            onChange={(e) => { list.setSearch(e.target.value); list.setPage(1) }}
+            onChange={(e) => {
+              list.setSearch(e.target.value)
+              list.setPage(1)
+            }}
             className="pl-9"
           />
         </div>
         {list.selected.size > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-text-muted">{list.selected.size} seçili</span>
-            <Button variant="danger" size="sm" onClick={async () => {
-              await modulesApi.bulkDelete(moduleId, [...list.selected])
-              list.clearSelection()
-              reload()
-            }}>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={async () => {
+                await modulesApi.bulkDelete(moduleId, [...list.selected])
+                list.clearSelection()
+                reload()
+              }}
+            >
               <Trash2 className="h-4 w-4" /> Sil
             </Button>
           </div>

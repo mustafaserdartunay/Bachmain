@@ -715,6 +715,84 @@ export function activatePlanDirect(store, customerId, planCode, period = 'month'
   return getSubscriptionSnapshot(store, customerId)
 }
 
+/**
+ * Staff: extend trial or paid package from admin membership panel.
+ * Extends from current expiry if still in the future; otherwise from now.
+ */
+export function extendMembership(store, customerId, { days = 7, mode = 'trial', note = '' } = {}) {
+  const b = seedBillingIfEmpty(store)
+  const customer = (store.customers || []).find((c) => c.id === customerId)
+  if (!customer) {
+    throw Object.assign(new Error('Müşteri bulunamadı'), { code: 'NOT_FOUND', status: 404 })
+  }
+
+  const addDays = Math.max(1, Math.min(365, Number(days) || 7))
+  const now = new Date()
+  let base = now
+  const existingExpiry = customer.licenseExpiry
+    ? new Date(`${String(customer.licenseExpiry).slice(0, 10)}T23:59:59.999Z`)
+    : null
+  if (existingExpiry && !Number.isNaN(existingExpiry.getTime()) && existingExpiry > now) {
+    base = existingExpiry
+  }
+
+  const end = new Date(base.getTime())
+  end.setUTCDate(end.getUTCDate() + addDays)
+  const endIso = end.toISOString()
+  const endDate = endIso.slice(0, 10)
+  const asTrial = mode !== 'active' && mode !== 'package'
+
+  let sub = b.subscriptions.find((s) => s.customerId === customerId && !s.deletedAt)
+  if (!sub) {
+    const plan = getPlanByCode(store, customer.planCode || 'starter')
+    sub = {
+      id: newId('sub'),
+      customerId,
+      planId: plan?.id || null,
+      planCode: plan?.code || customer.planCode || 'starter',
+      createdAt: now.toISOString(),
+    }
+    b.subscriptions.unshift(sub)
+  }
+
+  sub.status = asTrial ? 'trialing' : 'active'
+  sub.periodStart = now.toISOString()
+  sub.periodEnd = endIso
+  sub.graceUntil = null
+  sub.updatedAt = now.toISOString()
+
+  customer.licenseExpiry = endDate
+  customer.status = asTrial ? 'trial' : 'active'
+  customer.subscriptionStatus = sub.status
+  customer.updatedAt = now.toISOString()
+
+  const account = (store.accounts || []).find((a) => a.customerId === customerId)
+  if (account) {
+    account.canLogin = true
+    if (account.role === 'demo_lead') account.role = 'owner'
+    account.updatedAt = now.toISOString()
+  }
+
+  pushHistory(b, {
+    customerId,
+    subscriptionId: sub.id,
+    action: asTrial ? 'trial_extended' : 'package_extended',
+    meta: { days: addDays, licenseExpiry: endDate, note: note || null, by: 'staff' },
+  })
+
+  rebuildLicense(store, customerId, sub)
+
+  return {
+    customerId,
+    licenseExpiry: endDate,
+    status: customer.status,
+    subscriptionStatus: sub.status,
+    daysAdded: addDays,
+    subscription: sub,
+    snapshot: getSubscriptionSnapshot(store, customerId),
+  }
+}
+
 export function staffMutatePlan(store, planId, patch) {
   const b = seedBillingIfEmpty(store)
   const plan = b.plans.find((p) => p.id === planId)

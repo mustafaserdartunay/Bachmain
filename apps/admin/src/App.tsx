@@ -25,6 +25,8 @@ import {
 import { MailCenterPage } from '@/pages/mail/MailCenterPage'
 import { PasswordResetHistoryPage } from '@/pages/PasswordResetHistoryPage'
 import { AiControlCenterPage } from '@/pages/AiControlCenterPage'
+import { MembershipsPage } from '@/pages/MembershipsPage'
+import { MembershipDetailPage } from '@/pages/MembershipDetailPage'
 import { ModuleListPage } from '@/components/module/ModuleListPage'
 import { ModuleDetailPage } from '@/components/module/ModuleDetailPage'
 import { ModuleFormPage } from '@/components/module/ModuleFormPage'
@@ -82,6 +84,17 @@ export function AppRoutes() {
           element={<ModuleFormPage moduleId="customers" mode="edit" />}
         />
 
+        <Route path="uyeler" element={<MembershipsPage />} />
+        <Route
+          path="uyeler/yeni"
+          element={<ModuleFormPage moduleId="memberships" mode="create" />}
+        />
+        <Route path="uyeler/:id" element={<MembershipDetailPage />} />
+        <Route
+          path="uyeler/:id/duzenle"
+          element={<ModuleFormPage moduleId="memberships" mode="edit" />}
+        />
+
         <Route path="destek" element={<ModuleListPage moduleId="support" />} />
         <Route path="destek/yeni" element={<ModuleFormPage moduleId="support" mode="create" />} />
         <Route path="destek/:id" element={<SupportDetailPage />} />
@@ -91,7 +104,10 @@ export function AppRoutes() {
         />
 
         {moduleIds
-          .filter((id) => id !== 'customers' && id !== 'support' && id !== 'security')
+          .filter(
+            (id) =>
+              id !== 'customers' && id !== 'support' && id !== 'security' && id !== 'memberships',
+          )
           .map((id) => {
             const config = moduleConfigs[id]
             const segment = config.path.replace(/^\//, '')

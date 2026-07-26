@@ -16,8 +16,14 @@ import {
   buildAccountRows,
   buildPaymentRequestRows,
   buildMembershipMetrics,
+  buildMembershipDetail,
   customerToRow,
 } from '../server/membershipViews.mjs'
+import {
+  extendMembership,
+  activatePlanDirect,
+  seedBillingIfEmpty,
+} from '../server/subscriptionService.mjs'
 
 function getPath(req) {
   const url = new URL(req.url, 'http://localhost')
@@ -199,9 +205,9 @@ export default async function handler(req, res) {
           })
         }
         if (moduleId === 'memberships' || moduleId === 'accounts-users') {
-          const row = buildAccountRows(store).find((r) => r.id === itemId)
-          if (!row) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
-          return sendJson(req, res, 200, row)
+          const detail = buildMembershipDetail(store, itemId)
+          if (!detail) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+          return sendJson(req, res, 200, detail)
         }
         if (moduleId === 'payment-requests') {
           const row = buildPaymentRequestRows(store).find((r) => r.id === itemId)
@@ -321,6 +327,122 @@ export default async function handler(req, res) {
     if (method === 'GET' && path === 'accounts') {
       const store = await loadStore()
       return sendJson(req, res, 200, buildAccountRows(store))
+    }
+
+    const membershipExtendMatch = path.match(/^memberships\/([^/]+)\/extend$/)
+    if (method === 'POST' && membershipExtendMatch) {
+      const accountId = membershipExtendMatch[1]
+      try {
+        const result = await withStore((store) => {
+          const account = (store.accounts || []).find((a) => a.id === accountId)
+          if (!account?.customerId) {
+            throw Object.assign(new Error('Üye hesabı bulunamadı'), {
+              code: 'NOT_FOUND',
+              status: 404,
+            })
+          }
+          seedBillingIfEmpty(store)
+          const extended = extendMembership(store, account.customerId, {
+            days: body.days ?? 7,
+            mode: body.mode || 'trial',
+            note: body.note || '',
+          })
+          return { ...extended, detail: buildMembershipDetail(store, accountId) }
+        })
+        return sendJson(req, res, 200, { ok: true, ...result })
+      } catch (err) {
+        return sendJson(req, res, err.status || 400, {
+          ok: false,
+          error: err.code || 'EXTEND_FAILED',
+          message: err.message,
+        })
+      }
+    }
+
+    const membershipActionMatch = path.match(/^memberships\/([^/]+)\/action$/)
+    if (method === 'POST' && membershipActionMatch) {
+      const accountId = membershipActionMatch[1]
+      const action = String(body.action || '')
+      try {
+        const result = await withStore((store) => {
+          const account = (store.accounts || []).find((a) => a.id === accountId)
+          if (!account) {
+            throw Object.assign(new Error('Üye hesabı bulunamadı'), {
+              code: 'NOT_FOUND',
+              status: 404,
+            })
+          }
+          const customer = (store.customers || []).find((c) => c.id === account.customerId)
+          seedBillingIfEmpty(store)
+
+          if (action === 'suspend') {
+            account.canLogin = false
+            if (customer) {
+              customer.status = 'suspended'
+              customer.subscriptionStatus = 'suspended'
+            }
+          } else if (action === 'activate') {
+            account.canLogin = true
+            if (account.role === 'demo_lead') account.role = 'owner'
+            if (customer) {
+              const stillValid =
+                customer.licenseExpiry &&
+                new Date(`${customer.licenseExpiry}T23:59:59.999`) >= new Date()
+              customer.status = stillValid
+                ? customer.subscriptionStatus === 'trialing' || customer.status === 'trial'
+                  ? 'trial'
+                  : 'active'
+                : 'trial'
+              customer.subscriptionStatus = customer.status === 'trial' ? 'trialing' : 'active'
+            }
+          } else if (action === 'set_plan') {
+            if (!customer) {
+              throw Object.assign(new Error('Müşteri kaydı yok'), {
+                code: 'NO_CUSTOMER',
+                status: 400,
+              })
+            }
+            activatePlanDirect(
+              store,
+              customer.id,
+              body.planCode || 'starter',
+              body.period || 'month',
+              {
+                action: 'staff_membership_plan',
+                status: body.asTrial ? 'trialing' : 'active',
+              },
+            )
+          } else if (action === 'convert_demo') {
+            account.canLogin = true
+            account.role = 'owner'
+            account.source = 'demo_converted'
+            if (customer) {
+              customer.source = 'demo_converted'
+              if (!customer.licenseExpiry) {
+                extendMembership(store, customer.id, { days: body.days ?? 7, mode: 'trial' })
+              } else {
+                customer.status = 'trial'
+                customer.subscriptionStatus = 'trialing'
+              }
+            }
+          } else {
+            throw Object.assign(new Error('Geçersiz işlem'), {
+              code: 'INVALID_ACTION',
+              status: 400,
+            })
+          }
+
+          account.updatedAt = new Date().toISOString()
+          return buildMembershipDetail(store, accountId)
+        })
+        return sendJson(req, res, 200, { ok: true, detail: result })
+      } catch (err) {
+        return sendJson(req, res, err.status || 400, {
+          ok: false,
+          error: err.code || 'ACTION_FAILED',
+          message: err.message,
+        })
+      }
     }
 
     if (method === 'GET' && path === 'payment-requests') {

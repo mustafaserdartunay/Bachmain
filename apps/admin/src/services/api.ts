@@ -102,6 +102,69 @@ export const modulesApi = {
     api.post(`/modules/${moduleId}/bulk-delete`, { ids }),
 }
 
+export interface MembershipRow {
+  id: string
+  email: string
+  fullName: string
+  company: string
+  phone?: string
+  gsm?: string
+  taxNo?: string
+  taxOffice?: string
+  address?: string
+  city?: string
+  district?: string
+  plan?: string
+  planCode?: string | null
+  status: string
+  statusRaw?: string
+  statusKind?: string
+  statusBadge?: string
+  remainingDays?: number | null
+  source?: string
+  sourceRaw?: string
+  customerId?: string
+  tenantCode?: string
+  licenseExpiry?: string
+  lastLoginAt?: string
+  createdAt?: string
+  role?: string
+  companySize?: string
+  message?: string
+  canLogin?: boolean
+  subscriptionStatus?: string | null
+}
+
+export interface MembershipDetail extends MembershipRow {
+  account?: Record<string, unknown>
+  customer?: Record<string, unknown> | null
+  paymentRequests?: Record<string, unknown>[]
+  supportTickets?: Record<string, unknown>[]
+  billingHistory?: Record<string, unknown>[]
+  mailLogs?: Record<string, unknown>[]
+  authEvents?: Record<string, unknown>[]
+}
+
+export const membershipsApi = {
+  list: () => api.get<ModuleListResponse>('/modules/memberships'),
+  get: (id: string) => api.get<MembershipDetail>(`/modules/memberships/${id}`),
+  extend: (id: string, body: { days?: number; mode?: 'trial' | 'active'; note?: string }) =>
+    api.post<{ ok: boolean; licenseExpiry?: string; detail?: MembershipDetail }>(
+      `/memberships/${id}/extend`,
+      body,
+    ),
+  action: (
+    id: string,
+    body: {
+      action: 'suspend' | 'activate' | 'set_plan' | 'convert_demo'
+      planCode?: string
+      period?: string
+      asTrial?: boolean
+      days?: number
+    },
+  ) => api.post<{ ok: boolean; detail?: MembershipDetail }>(`/memberships/${id}/action`, body),
+}
+
 export async function fetchModulePage(moduleId: string) {
   const config = getModuleById(moduleId)
   if (!config) throw new Error('Modül bulunamadı')
