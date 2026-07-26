@@ -1,3 +1,5 @@
+'use client'
+
 import type { ChangeEvent, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Building2, Eye, EyeOff, Hash, Lock, Mail, MapPin, Phone, User } from 'lucide-react'
@@ -6,6 +8,7 @@ import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Checkbox from '../ui/Checkbox'
 import PasswordStrength from './PasswordStrength'
+import { formatMoneyTry } from '../pricing/pricingTokens'
 
 export type RegisterFormState = {
   fullName: string
@@ -38,6 +41,7 @@ type RegisterPanelProps = {
   onChangePlan: () => void
 }
 
+/** Demo / giriş paneli ile aynı görsel dil. */
 export default function RegisterPanel({
   form,
   errors,
@@ -56,51 +60,54 @@ export default function RegisterPanel({
   return (
     <motion.div
       className="relative mx-auto w-full max-w-[640px]"
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.12, ease: 'easeOut' }}
+      initial={{ opacity: 0, y: 28, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="relative rounded-[32px] border-[3px] border-[#2563EB] bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:p-10">
-        <span className="absolute -top-3.5 left-1/2 z-20 -translate-x-1/2 rounded-full bg-[#2563EB] px-4 py-1.5 text-[11px] font-bold tracking-[0.06em] text-white uppercase shadow-[0_8px_20px_rgba(37,99,235,0.35)]">
-          Hesap bilgileri
-        </span>
+      <h2 className="text-center text-4xl font-extrabold tracking-[-0.04em] text-[#2563EB] uppercase sm:text-5xl">
+        Üye Ol
+      </h2>
+      <p className="mx-auto mt-4 max-w-xl text-center text-[14px] leading-relaxed font-medium text-[#64748B]">
+        Bilgileriniz fatura ve lisans için kullanılır. Sonraki adımda ödeme yaparsınız. Tüm alanlar
+        zorunludur.
+      </p>
 
+      <motion.div
+        className="pointer-events-none absolute top-[7.5rem] -inset-x-px bottom-0 rounded-[34px] bg-gradient-to-br from-[#60A5FA]/50 via-[#2563EB]/25 to-[#38BDF8]/40 opacity-70 blur-[1px]"
+        aria-hidden
+        animate={{ opacity: [0.45, 0.75, 0.45] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      <div className="relative mt-10 rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_24px_64px_rgba(37,99,235,0.14)] backdrop-blur-sm sm:mt-12 sm:p-10">
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
-          <header className="mb-2 pt-1">
-            <h2 className="text-[28px] font-extrabold tracking-tight text-[#2563EB]">
-              Üyelik formu
-            </h2>
-            <p className="mt-2 text-[14px] leading-relaxed font-medium text-[#64748B]">
-              Bilgileriniz fatura ve lisans için kullanılır. Sonraki adımda ödeme yaparsınız.
-            </p>
-            <div className="mt-4 flex items-center justify-between gap-3 rounded-[18px] border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
-              <div>
-                <p className="text-[12px] font-medium tracking-wide text-[#64748B] uppercase">
-                  Seçilen paket
-                </p>
-                <p className="text-[16px] font-bold text-[#0F172A]">
-                  {planName}{' '}
-                  <span className="font-semibold text-[#2563EB]">
-                    ₺{planPrice.toLocaleString('tr-TR')}
-                    <span className="text-[13px] font-medium text-[#64748B]">/aylık</span>
-                  </span>
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={onChangePlan}
-                className="shrink-0 text-[13px] font-bold text-[#2563EB] hover:underline"
-              >
-                Değiştir
-              </button>
+          <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-[12px] font-medium tracking-wide text-[#64748B] uppercase">
+                Seçilen paket
+              </p>
+              <p className="truncate text-[16px] font-bold text-[#0F172A]">
+                {planName}{' '}
+                <span className="font-semibold text-[#2563EB] tabular-nums">
+                  {formatMoneyTry(planPrice)}
+                </span>
+              </p>
             </div>
-          </header>
+            <button
+              type="button"
+              onClick={onChangePlan}
+              className="shrink-0 text-[13px] font-bold text-[#2563EB] hover:underline"
+            >
+              Değiştir
+            </button>
+          </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
               name="fullName"
+              required
               autoComplete="name"
-              placeholder="Ad Soyad"
+              placeholder="Ad Soyad *"
               value={form.fullName}
               onChange={onChange('fullName')}
               error={errors.fullName}
@@ -109,8 +116,9 @@ export default function RegisterPanel({
             />
             <Input
               name="companyName"
+              required
               autoComplete="organization"
-              placeholder="Firma ünvanı"
+              placeholder="Firma ünvanı *"
               value={form.companyName}
               onChange={onChange('companyName')}
               error={errors.companyName}
@@ -122,8 +130,9 @@ export default function RegisterPanel({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
               name="taxNo"
+              required
               inputMode="numeric"
-              placeholder="TC veya Vergi No"
+              placeholder="TC veya Vergi No *"
               value={form.taxNo}
               onChange={onChange('taxNo')}
               error={errors.taxNo}
@@ -132,7 +141,8 @@ export default function RegisterPanel({
             />
             <Input
               name="taxOffice"
-              placeholder="Vergi dairesi"
+              required
+              placeholder="Vergi dairesi *"
               value={form.taxOffice}
               onChange={onChange('taxOffice')}
               error={errors.taxOffice}
@@ -143,8 +153,9 @@ export default function RegisterPanel({
 
           <Input
             name="address"
+            required
             autoComplete="street-address"
-            placeholder="Adres"
+            placeholder="Adres *"
             value={form.address}
             onChange={onChange('address')}
             error={errors.address}
@@ -155,8 +166,9 @@ export default function RegisterPanel({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
               name="city"
+              required
               autoComplete="address-level1"
-              placeholder="İl"
+              placeholder="İl *"
               value={form.city}
               onChange={onChange('city')}
               error={errors.city}
@@ -164,8 +176,9 @@ export default function RegisterPanel({
             />
             <Input
               name="district"
+              required
               autoComplete="address-level2"
-              placeholder="İlçe"
+              placeholder="İlçe *"
               value={form.district}
               onChange={onChange('district')}
               error={errors.district}
@@ -176,9 +189,10 @@ export default function RegisterPanel({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
               name="phone"
+              required
               type="tel"
               autoComplete="tel"
-              placeholder="Telefon"
+              placeholder="Telefon *"
               value={form.phone}
               onChange={onChange('phone')}
               error={errors.phone}
@@ -187,9 +201,10 @@ export default function RegisterPanel({
             />
             <Input
               name="email"
+              required
               type="email"
               autoComplete="email"
-              placeholder="E-posta"
+              placeholder="E-posta *"
               value={form.email}
               onChange={onChange('email')}
               error={errors.email}
@@ -200,9 +215,10 @@ export default function RegisterPanel({
 
           <Input
             name="password"
+            required
             type={showPw ? 'text' : 'password'}
             autoComplete="new-password"
-            placeholder="Şifre"
+            placeholder="Şifre *"
             value={form.password}
             onChange={onChange('password')}
             error={errors.password}
@@ -220,9 +236,10 @@ export default function RegisterPanel({
           <PasswordStrength password={form.password} />
           <Input
             name="password2"
+            required
             type={showPw2 ? 'text' : 'password'}
             autoComplete="new-password"
-            placeholder="Şifreyi tekrar girin"
+            placeholder="Şifreyi tekrar girin *"
             value={form.password2}
             onChange={onChange('password2')}
             error={errors.password2}
@@ -263,16 +280,14 @@ export default function RegisterPanel({
             </p>
           ) : null}
 
-          <div className="pt-1">
-            <Button type="submit" fullWidth disabled={busy}>
-              {busy ? 'Kaydediliyor…' : 'Ödemeye geç'}
-            </Button>
-          </div>
+          <Button type="submit" fullWidth disabled={busy}>
+            {busy ? 'Kaydediliyor…' : 'Ödemeye geç'}
+          </Button>
 
           <p className="pt-1 text-center text-[14px] font-medium text-[#64748B]">
             Zaten hesabınız var mı?{' '}
             <Link to="/login" className="font-bold text-[#2563EB] hover:underline">
-              Giriş yap
+              Giriş Yap
             </Link>
           </p>
         </form>
