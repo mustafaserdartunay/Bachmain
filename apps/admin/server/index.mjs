@@ -152,10 +152,20 @@ async function handle(req, res, url) {
     }
 
     if (method === 'GET' && pathname === '/api/health') {
+      const mailConfigured = Boolean(String(process.env.RESEND_API_KEY || '').trim())
       return sendJson(req, res, 200, {
         status: 'ok',
-        service: 'bachmain-control-center-api',
+        service: 'bachmain-platform-api',
         timestamp: new Date().toISOString(),
+        storage: process.env.DATABASE_URL ? 'postgres' : 'memory',
+        database: Boolean(process.env.DATABASE_URL),
+        staffAuth: true,
+        mail: {
+          provider: 'resend',
+          configured: mailConfigured,
+          from: process.env.EMAIL_FROM || 'BACHMAIN <noreply@bachmain.com>',
+          webUrl: process.env.WEB_URL || 'https://www.bachmain.com',
+        },
       })
     }
 

@@ -28,6 +28,12 @@ export function validateAdminEnv(env = process.env) {
     if (present('STRIPE_SECRET_KEY') && !present('STRIPE_WEBHOOK_SECRET')) {
       issues.push('STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set')
     }
+    if (!present('RESEND_API_KEY')) {
+      // Soft warning — do not crash boot; password reset queues as skipped_no_provider
+      console.warn(
+        '[assertEnv] RESEND_API_KEY missing — transactional mail (password reset) will not send until configured',
+      )
+    }
   }
 
   return { ok: issues.length === 0, issues, production: prod }
