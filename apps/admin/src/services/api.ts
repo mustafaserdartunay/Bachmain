@@ -147,20 +147,17 @@ export interface MembershipDetail extends MembershipRow {
 
 export const membershipsApi = {
   list: () => api.get<ModuleListResponse>('/modules/memberships'),
-  get: async (id: string) => {
+  /** Uses single-segment /api/member?id=… — multi-segment /api/a/b/c is NOT_FOUND on Vercel. */
+  get: (id: string) => {
     const key = decodeURIComponent(String(id || '').trim())
-    try {
-      return await api.get<MembershipDetail>(`/modules/memberships/${encodeURIComponent(key)}`)
-    } catch {
-      // Backup endpoint if modules/:id routing fails on the edge
-      return api.get<MembershipDetail>(`/memberships/${encodeURIComponent(key)}`)
-    }
+    return api.get<MembershipDetail>(`/member?id=${encodeURIComponent(key)}`)
   },
   extend: (id: string, body: { days?: number; mode?: 'trial' | 'active'; note?: string }) =>
-    api.post<{ ok: boolean; licenseExpiry?: string; detail?: MembershipDetail }>(
-      `/memberships/${encodeURIComponent(id)}/extend`,
-      body,
-    ),
+    api.post<{ ok: boolean; licenseExpiry?: string; detail?: MembershipDetail }>('/member', {
+      op: 'extend',
+      id,
+      ...body,
+    }),
   action: (
     id: string,
     body: {
@@ -171,10 +168,11 @@ export const membershipsApi = {
       days?: number
     },
   ) =>
-    api.post<{ ok: boolean; detail?: MembershipDetail }>(
-      `/memberships/${encodeURIComponent(id)}/action`,
-      body,
-    ),
+    api.post<{ ok: boolean; detail?: MembershipDetail }>('/member', {
+      op: 'action',
+      id,
+      ...body,
+    }),
 }
 
 export async function fetchModulePage(moduleId: string) {

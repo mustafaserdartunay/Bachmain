@@ -52,6 +52,127 @@ function getPath(req) {
   )
 }
 
+function getQuery(req) {
+  const out = {}
+  if (req.query && typeof req.query === 'object') {
+    for (const [k, v] of Object.entries(req.query)) {
+      if (k === 'path') continue
+      if (Array.isArray(v)) out[k] = v[0]
+      else if (v != null) out[k] = String(v)
+    }
+  }
+  try {
+    const url = new URL(String(req.url || ''), 'http://localhost')
+    for (const [k, v] of url.searchParams.entries()) out[k] = v
+  } catch {
+    /* ignore */
+  }
+  return out
+}
+
+async function handleMembershipMutate(req, res, body) {
+  const accountId = String(body.id || body.accountId || '').trim()
+  if (!accountId) {
+    return sendJson(req, res, 400, {
+      ok: false,
+      error: 'MISSING_ID',
+      message: 'Üye id zorunlu',
+    })
+  }
+  const op = String(body.op || body.actionType || 'extend')
+
+  if (op === 'extend') {
+    try {
+      const result = await withStore((store) => {
+        seedBillingIfEmpty(store)
+        const extended = extendMembershipByAccount(store, accountId, {
+          days: body.days ?? 7,
+          mode: body.mode || 'trial',
+          note: body.note || '',
+        })
+        return { ...extended, detail: buildMembershipDetail(store, accountId) }
+      })
+      return sendJson(req, res, 200, { ok: true, ...result })
+    } catch (err) {
+      return sendJson(req, res, err.status || 400, {
+        ok: false,
+        error: err.code || 'EXTEND_FAILED',
+        message: err.message,
+      })
+    }
+  }
+
+  const action = String(body.action || op)
+  try {
+    const result = await withStore((store) => {
+      const account = (store.accounts || []).find((a) => a.id === accountId)
+      if (!account) {
+        throw Object.assign(new Error('Üye hesabı bulunamadı'), {
+          code: 'NOT_FOUND',
+          status: 404,
+        })
+      }
+      const customer = (store.customers || []).find((c) => c.id === account.customerId)
+      seedBillingIfEmpty(store)
+
+      if (action === 'suspend') {
+        account.canLogin = false
+        if (customer) {
+          customer.status = 'suspended'
+          customer.subscriptionStatus = 'suspended'
+        }
+      } else if (action === 'activate') {
+        account.canLogin = true
+        if (account.role === 'demo_lead') account.role = 'owner'
+        if (customer) {
+          const stillValid =
+            customer.licenseExpiry &&
+            new Date(`${customer.licenseExpiry}T23:59:59.999`) >= new Date()
+          customer.status = stillValid
+            ? customer.subscriptionStatus === 'trialing' || customer.status === 'trial'
+              ? 'trial'
+              : 'active'
+            : 'trial'
+          customer.subscriptionStatus = customer.status === 'trial' ? 'trialing' : 'active'
+        }
+      } else if (action === 'set_plan') {
+        if (!customer) {
+          throw Object.assign(new Error('Müşteri kaydı yok'), { code: 'NO_CUSTOMER', status: 400 })
+        }
+        activatePlanDirect(store, customer.id, body.planCode || 'starter', body.period || 'month', {
+          action: 'staff_membership_plan',
+          status: body.asTrial ? 'trialing' : 'active',
+        })
+      } else if (action === 'convert_demo') {
+        account.canLogin = true
+        account.role = 'owner'
+        account.source = 'demo_converted'
+        if (customer) {
+          customer.source = 'demo_converted'
+          if (!customer.licenseExpiry) {
+            extendMembership(store, customer.id, { days: body.days ?? 7, mode: 'trial' })
+          } else {
+            customer.status = 'trial'
+            customer.subscriptionStatus = 'trialing'
+          }
+        }
+      } else {
+        throw Object.assign(new Error('Geçersiz işlem'), { code: 'INVALID_ACTION', status: 400 })
+      }
+
+      account.updatedAt = new Date().toISOString()
+      return buildMembershipDetail(store, accountId)
+    })
+    return sendJson(req, res, 200, { ok: true, detail: result })
+  } catch (err) {
+    return sendJson(req, res, err.status || 400, {
+      ok: false,
+      error: err.code || 'ACTION_FAILED',
+      message: err.message,
+    })
+  }
+}
+
 async function readBody(req) {
   const chunks = []
   for await (const chunk of req) chunks.push(chunk)
@@ -169,6 +290,32 @@ export default async function handler(req, res) {
       })
     }
 
+    const query = getQuery(req)
+
+    // Single-segment member API (works on Vercel; multi-segment /api/a/b/c returns NOT_FOUND)
+    if (path === 'member' || path === 'modules/memberships' || path === 'memberships') {
+      if (method === 'GET') {
+        const qid = String(query.id || query.itemId || '').trim()
+        if (qid) {
+          const store = await loadStore()
+          const detail = buildMembershipDetail(store, decodeURIComponent(qid))
+          if (!detail) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+          return sendJson(req, res, 200, detail)
+        }
+        if (path === 'member') {
+          const store = await loadStore()
+          return sendJson(req, res, 200, {
+            rows: buildAccountRows(store),
+            metrics: buildMembershipMetrics(store).slice(0, 4),
+          })
+        }
+        // fall through to modules list for modules/memberships without id
+      }
+      if (method === 'POST') {
+        return handleMembershipMutate(req, res, body)
+      }
+    }
+
     if (method === 'GET' && path.startsWith('modules/')) {
       const parts = path.split('/').filter(Boolean)
       const moduleId = parts[1]
@@ -234,15 +381,6 @@ export default async function handler(req, res) {
         if (!row) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
         return sendJson(req, res, 200, row)
       }
-    }
-
-    // Dedicated membership detail (backup path if modules/:id routing fails)
-    const membershipGetMatch = path.match(/^memberships\/([^/]+)$/)
-    if (method === 'GET' && membershipGetMatch) {
-      const store = await loadStore()
-      const detail = buildMembershipDetail(store, decodeURIComponent(membershipGetMatch[1]))
-      if (!detail) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
-      return sendJson(req, res, 200, detail)
     }
 
     if (method === 'GET' && path === 'tickets') {
