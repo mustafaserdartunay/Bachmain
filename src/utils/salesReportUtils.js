@@ -4,8 +4,9 @@ const VAT_MULTIPLIER = 1.2
 
 const INVOICE_KIND_COLORS = {
   'E-FATURA': '#3b82f6',
+  'E-ARŞİV': '#8b5cf6',
   'A-FATURA': '#ef4444',
-  'KATEGORİSİZ': '#6b7280',
+  KATEGORİSİZ: '#6b7280',
   'GİB-FATURA': '#a855f7',
 }
 
@@ -82,6 +83,7 @@ function mapToPieSlices(groups, colorMap, limit = 5) {
 export function aggregateInvoiceCategories(invoices, includeVat = true) {
   const groups = {
     'E-FATURA': 0,
+    'E-ARŞİV': 0,
     'A-FATURA': 0,
     KATEGORİSİZ: 0,
     'GİB-FATURA': 0,
@@ -90,6 +92,7 @@ export function aggregateInvoiceCategories(invoices, includeVat = true) {
   invoices.forEach((invoice) => {
     const amount = amountWithVat(invoice.totalAmount, includeVat)
     if (invoice.invoiceKind === 'e-fatura') groups['E-FATURA'] += amount
+    else if (invoice.invoiceKind === 'e-arsiv') groups['E-ARŞİV'] += amount
     else if (invoice.invoiceKind === 'a-fatura') groups['A-FATURA'] += amount
     else groups.KATEGORİSİZ += amount
   })

@@ -49,6 +49,9 @@ import CustomerFinderPage from './pages/CustomerFinderPage'
 import CustomersPage from './pages/CustomersPage'
 import SuppliersPage from './pages/SuppliersPage'
 import SalesInvoicesPage from './pages/SalesInvoicesPage'
+import SalesInvoiceCreatePage from './pages/SalesInvoiceCreatePage'
+import SalesInvoiceDetailPage from './pages/SalesInvoiceDetailPage'
+import EInvoiceSettingsPage from './pages/EInvoiceSettingsPage'
 import SalesReportPage from './pages/SalesReportPage'
 import CollectionsReportPage from './pages/CollectionsReportPage'
 import IncomeExpenseReportPage from './pages/IncomeExpenseReportPage'
@@ -295,6 +298,14 @@ export default function App() {
                       <Route
                         path="/efatura"
                         element={<Navigate to="/giderler/gelen-e-faturalar" replace />}
+                      />
+                      <Route
+                        path="/musteriler/faturalar/yeni"
+                        element={<SalesInvoiceCreatePage />}
+                      />
+                      <Route
+                        path="/musteriler/faturalar/:invoiceId"
+                        element={<SalesInvoiceDetailPage />}
                       />
                       <Route path="/musteriler/faturalar" element={<SalesInvoicesPage />} />
                       <Route path="/musteriler/satis-raporu" element={<SalesReportPage />} />
@@ -628,6 +639,7 @@ export default function App() {
                         element={<Navigate to="/mesajlar?ayarlar=1" replace />}
                       />
                       <Route path="/ayarlar/vergi-kdv" element={<TaxVatSettingsPage />} />
+                      <Route path="/ayarlar/e-fatura" element={<EInvoiceSettingsPage />} />
                       <Route path="/ayarlar/kasa-banka" element={<CashBankSettingsPage />} />
                       <Route path="/ayarlar/etiketler" element={<LabelsSettingsPage />} />
                       <Route path="/ayarlar/etiket-listesi" element={<TagLabelsSettingsPage />} />

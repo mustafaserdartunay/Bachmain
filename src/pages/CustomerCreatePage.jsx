@@ -17,6 +17,7 @@ import {
   Phone,
   Pin,
   Plus,
+  Receipt,
   Save,
   Tags,
   Twitter,
@@ -280,6 +281,7 @@ export default function CustomerCreatePage() {
       googlePlaceId: incomingDraft?.placeId || editingCustomer?.googlePlaceId || '',
       taxOffice: payload.taxOffice || editingCustomer?.taxOffice || '',
       taxNumber: payload.taxNumber || editingCustomer?.taxNumber || '',
+      eInvoiceType: payload.eInvoiceType || editingCustomer?.eInvoiceType || 'e-fatura',
       balance: payload.hasOpeningBalance
         ? Number(payload.openingBalanceAmount || 0)
         : Number(editingCustomer?.balance || 0),
@@ -580,6 +582,16 @@ export default function CustomerCreatePage() {
                 name="taxNumber"
                 defaultValue={editingCustomer?.taxNumber || ''}
               />
+              <FormFieldCompact icon={Receipt} label="E-Belge Türü:">
+                <select
+                  name="eInvoiceType"
+                  defaultValue={editingCustomer?.eInvoiceType || 'e-fatura'}
+                  className="form-input"
+                >
+                  <option value="e-fatura">e-Fatura</option>
+                  <option value="e-arsiv">e-Arşiv</option>
+                </select>
+              </FormFieldCompact>
             </div>
           </FormSectionPanel>
 

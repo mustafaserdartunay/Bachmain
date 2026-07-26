@@ -431,8 +431,21 @@ export default function FinanceCenterPage() {
               Gelen E-Faturalar
             </Link>
           </p>
+          <p className="mt-2 text-sm">
+            Çıkış faturası kes:{' '}
+            <Link to="/musteriler/faturalar/yeni" className="font-bold underline">
+              Yeni Fatura Oluştur
+            </Link>
+          </p>
+          <p className="mt-2 text-sm">
+            GİB / e-posta ayarları:{' '}
+            <Link to="/ayarlar/e-fatura" className="font-bold underline">
+              E-Fatura Ayarları
+            </Link>
+          </p>
           <p className="mt-2 text-xs text-[var(--muted)]">
-            GIB/UBL adapter FS-2. Çıkış faturası = satış faturaları.
+            e-Fatura ve e-Arşiv kesimi · GİB durumu (gönderiliyor / beklemede / gönderildi) ·
+            müşteri e-posta (yolda / ulaştı / açıldı).
           </p>
         </section>
       )}

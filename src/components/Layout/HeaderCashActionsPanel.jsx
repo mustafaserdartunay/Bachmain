@@ -60,7 +60,7 @@ const actions = [
   },
   {
     id: 'sales-invoice',
-    to: () => '/musteriler/faturalar?yeni=1',
+    to: () => '/musteriler/faturalar/yeni',
     title: 'Yeni Fatura',
     icon: ReceiptText,
     gradient: 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]',

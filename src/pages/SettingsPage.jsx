@@ -90,6 +90,9 @@ export default function SettingsPage() {
             <Link to="/dijital-ikiz" className={LINK_PLAIN}>
               <Factory className="h-4 w-4" /> Twin
             </Link>
+            <Link to="/ayarlar/e-fatura" className={LINK_PLAIN}>
+              <ShieldCheck className="h-4 w-4" /> E-Fatura
+            </Link>
             <Link to="/ayarlar/kurumsal-yapi" className={LINK_PLAIN}>
               <Building2 className="h-4 w-4" /> Kurumsal
             </Link>

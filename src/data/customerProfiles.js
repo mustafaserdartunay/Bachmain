@@ -228,6 +228,12 @@ export function saveCustomerProfile(profile) {
     googlePlaceId: profile.googlePlaceId ?? existing.googlePlaceId ?? '',
     taxOffice: profile.taxOffice ?? existing.taxOffice ?? '',
     taxNumber: profile.taxNumber ?? existing.taxNumber ?? '',
+    eInvoiceType:
+      profile.eInvoiceType === 'e-arsiv'
+        ? 'e-arsiv'
+        : existing.eInvoiceType === 'e-arsiv' && !profile.eInvoiceType
+          ? 'e-arsiv'
+          : 'e-fatura',
     warehouse: profile.warehouse ?? existing.warehouse ?? '',
     segment: profile.segment || existing.segment || 'Aktif',
     stage: profile.stage || existing.stage || 'Takip',

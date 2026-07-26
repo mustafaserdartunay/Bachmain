@@ -63,9 +63,9 @@ function defaultDateRange() {
 }
 
 function kindBadgeClass(kind) {
-  return kind === 'a-fatura'
-    ? 'border-red-500/30 bg-red-500/10 text-red-300'
-    : 'border-blue-500/30 bg-blue-500/10 text-blue-300'
+  if (kind === 'a-fatura') return 'border-red-500/30 bg-red-500/10 text-red-300'
+  if (kind === 'e-arsiv') return 'border-violet-500/30 bg-violet-500/10 text-violet-300'
+  return 'border-blue-500/30 bg-blue-500/10 text-blue-300'
 }
 
 function CategoryPieCard({ title, data }) {
@@ -101,13 +101,22 @@ function CategoryPieCard({ title, data }) {
         <div className="w-full min-w-0 flex-1 space-y-2">
           {data.length === 0 ? (
             <p className="text-xs text-gray-500">Bu dönemde kayıt yok.</p>
-          ) : data.map((item) => (
-            <div key={item.name} className="flex items-center gap-2">
-              <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="min-w-0 flex-1 truncate text-[13px] text-gray-400">{item.name}</span>
-              <span className="shrink-0 text-[13px] font-bold text-gray-200">{formatTL(item.value)}</span>
-            </div>
-          ))}
+          ) : (
+            data.map((item) => (
+              <div key={item.name} className="flex items-center gap-2">
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="min-w-0 flex-1 truncate text-[13px] text-gray-400">
+                  {item.name}
+                </span>
+                <span className="shrink-0 text-[13px] font-bold text-gray-200">
+                  {formatTL(item.value)}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -162,8 +171,14 @@ export default function SalesReportPage() {
     () => aggregateSalesTimeline(filtered, granularity, includeVat),
     [filtered, granularity, includeVat],
   )
-  const customerRows = useMemo(() => aggregateByCustomer(filtered, includeVat), [filtered, includeVat])
-  const productRows = useMemo(() => aggregateByProduct(filtered, includeVat), [filtered, includeVat])
+  const customerRows = useMemo(
+    () => aggregateByCustomer(filtered, includeVat),
+    [filtered, includeVat],
+  )
+  const productRows = useMemo(
+    () => aggregateByProduct(filtered, includeVat),
+    [filtered, includeVat],
+  )
 
   const grandTotal = filtered.reduce(
     (sum, item) => sum + (includeVat ? item.totalAmount * 1.2 : item.totalAmount),
@@ -178,8 +193,20 @@ export default function SalesReportPage() {
       <SummaryMetrics
         columns={4}
         items={[
-          { title: 'Dönem Satışı', value: formatTL(grandTotal), icon: BarChart3, tone: 'blue', valueTone: 'blue' },
-          { title: 'Fatura Sayısı', value: filtered.length, icon: FileText, tone: 'emerald', valueTone: 'emerald' },
+          {
+            title: 'Dönem Satışı',
+            value: formatTL(grandTotal),
+            icon: BarChart3,
+            tone: 'blue',
+            valueTone: 'blue',
+          },
+          {
+            title: 'Fatura Sayısı',
+            value: filtered.length,
+            icon: FileText,
+            tone: 'emerald',
+            valueTone: 'emerald',
+          },
           {
             title: 'E-Fatura Payı',
             value: formatTL(invoiceCategories.find((item) => item.name === 'E-FATURA')?.value || 0),
@@ -199,7 +226,7 @@ export default function SalesReportPage() {
 
       <AppPagePanel
         title="Satış Faturaları"
-        action={(
+        action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="min-w-[220px]">
               <DateRangePicker
@@ -237,7 +264,7 @@ export default function SalesReportPage() {
               )}
             </div>
           </div>
-        )}
+        }
       >
         <div className="grid gap-4 xl:grid-cols-3">
           <CategoryPieCard title="Fatura Kategorileri" data={invoiceCategories} />
@@ -265,9 +292,18 @@ export default function SalesReportPage() {
         </div>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={timeline.length ? timeline : [{ label: '—', value: 0 }]} barSize={36} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <BarChart
+              data={timeline.length ? timeline : [{ label: '—', value: 0 }]}
+              barSize={36}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-              <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+              />
               <YAxis
                 tick={{ fill: '#94a3b8', fontSize: 11 }}
                 axisLine={false}
@@ -315,47 +351,62 @@ export default function SalesReportPage() {
             <div className="mt-2 space-y-2">
               {filtered.length === 0 ? (
                 <p className="py-8 text-center text-sm text-gray-500">Bu dönemde fatura yok.</p>
-              ) : filtered.map((invoice) => {
-                const displayAmount = includeVat ? invoice.totalAmount * 1.2 : invoice.totalAmount
-                return (
-                  <div
-                    key={invoice.id}
-                    className="grid items-center gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/55 px-3 py-3"
-                    style={{ gridTemplateColumns: LIST_GRID }}
-                  >
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/80 text-gray-400">
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate text-sm font-black text-white">{invoice.title}</p>
-                          <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black ${kindBadgeClass(invoice.invoiceKind)}`}>
-                            {INVOICE_KIND_LABELS[invoice.invoiceKind]}
-                          </span>
+              ) : (
+                filtered.map((invoice) => {
+                  const displayAmount = includeVat ? invoice.totalAmount * 1.2 : invoice.totalAmount
+                  return (
+                    <div
+                      key={invoice.id}
+                      className="grid items-center gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/55 px-3 py-3"
+                      style={{ gridTemplateColumns: LIST_GRID }}
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/80 text-gray-400">
+                          <FileText className="h-5 w-5" />
                         </div>
-                        {invoice.customerId ? (
-                          <Link to={`/musteriler/${invoice.customerId}`} className="mt-1 block truncate text-xs text-gray-500 hover:text-blue-300">
-                            {invoice.customerName}
-                          </Link>
-                        ) : (
-                          <p className="mt-1 truncate text-xs text-gray-500">{invoice.customerName}</p>
-                        )}
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-black text-white">
+                              {invoice.title}
+                            </p>
+                            <span
+                              className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black ${kindBadgeClass(invoice.invoiceKind)}`}
+                            >
+                              {INVOICE_KIND_LABELS[invoice.invoiceKind]}
+                            </span>
+                          </div>
+                          {invoice.customerId ? (
+                            <Link
+                              to={`/musteriler/${invoice.customerId}`}
+                              className="mt-1 block truncate text-xs text-gray-500 hover:text-blue-300"
+                            >
+                              {invoice.customerName}
+                            </Link>
+                          ) : (
+                            <p className="mt-1 truncate text-xs text-gray-500">
+                              {invoice.customerName}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-200">
+                          {formatInvoiceDate(invoice.issueDate)}
+                        </p>
+                        <p className="mt-1 text-[12px] text-gray-500">
+                          Satış Faturaları{invoice.invoiceNo ? ` / ${invoice.invoiceNo}` : ''}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-black text-red-300">{formatTL(displayAmount)}</p>
+                        <p className="mt-1 text-[12px] text-gray-500">
+                          Genel Toplam {formatTL(displayAmount)}
+                        </p>
                       </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-200">{formatInvoiceDate(invoice.issueDate)}</p>
-                      <p className="mt-1 text-[12px] text-gray-500">
-                        Satış Faturaları{invoice.invoiceNo ? ` / ${invoice.invoiceNo}` : ''}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black text-red-300">{formatTL(displayAmount)}</p>
-                      <p className="mt-1 text-[12px] text-gray-500">Genel Toplam {formatTL(displayAmount)}</p>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
           </>
         )}
@@ -364,12 +415,17 @@ export default function SalesReportPage() {
           <div className="space-y-2">
             {customerRows.length === 0 ? (
               <p className="py-8 text-center text-sm text-gray-500">Müşteri satış verisi yok.</p>
-            ) : customerRows.map((row) => (
-              <div key={row.name} className="flex items-center justify-between rounded-2xl border border-dark-500/40 bg-dark-800/55 px-4 py-3">
-                <p className="text-sm font-bold text-white">{row.name}</p>
-                <p className="text-sm font-black text-emerald-300">{formatTL(row.total)}</p>
-              </div>
-            ))}
+            ) : (
+              customerRows.map((row) => (
+                <div
+                  key={row.name}
+                  className="flex items-center justify-between rounded-2xl border border-dark-500/40 bg-dark-800/55 px-4 py-3"
+                >
+                  <p className="text-sm font-bold text-white">{row.name}</p>
+                  <p className="text-sm font-black text-emerald-300">{formatTL(row.total)}</p>
+                </div>
+              ))
+            )}
           </div>
         )}
 
@@ -377,12 +433,17 @@ export default function SalesReportPage() {
           <div className="space-y-2">
             {productRows.length === 0 ? (
               <p className="py-8 text-center text-sm text-gray-500">Ürün satış verisi yok.</p>
-            ) : productRows.map((row) => (
-              <div key={row.name} className="flex items-center justify-between rounded-2xl border border-dark-500/40 bg-dark-800/55 px-4 py-3">
-                <p className="text-sm font-bold text-white">{row.name}</p>
-                <p className="text-sm font-black text-emerald-300">{formatTL(row.total)}</p>
-              </div>
-            ))}
+            ) : (
+              productRows.map((row) => (
+                <div
+                  key={row.name}
+                  className="flex items-center justify-between rounded-2xl border border-dark-500/40 bg-dark-800/55 px-4 py-3"
+                >
+                  <p className="text-sm font-bold text-white">{row.name}</p>
+                  <p className="text-sm font-black text-emerald-300">{formatTL(row.total)}</p>
+                </div>
+              ))
+            )}
           </div>
         )}
       </AppPagePanel>
