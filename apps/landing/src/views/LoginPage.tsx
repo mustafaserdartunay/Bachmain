@@ -14,10 +14,12 @@ export default function LoginPage() {
         <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10 xl:px-12">
           <AuthHero
             title="Giriş Yap"
-            eyebrow="Hesabınıza güvenli giriş yapın"
-            subtitle="Giriş sonrası güvenlik bildirimi e-posta adresinize gönderilir."
+            showBachy={false}
+            showLogo={false}
+            showTrust={false}
+            uppercaseTitle
           />
-          <div className="mt-14 lg:mt-16">
+          <div className="mt-6 sm:mt-8">
             <LoginPanel />
           </div>
         </div>
