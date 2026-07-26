@@ -1,4 +1,57 @@
-User-agent: *
+User-Agent: *
+Allow: /
+Disallow: /giris
+Disallow: /uye-ol
+Disallow: /login
+Disallow: /register
+Disallow: /sifremi-unuttum
+Disallow: /sifre-sifirla
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /api/
+Disallow: /features/crm
+Disallow: /features/erp
+Disallow: /features/stock
+Disallow: /features/finance
+Disallow: /features/reports
+Disallow: /modules/production
+Disallow: /modules/field-sales
+Disallow: /modules/ecommerce
+Disallow: /e-invoice
+Disallow: /pricing
+Disallow: /login
+Disallow: /register
+Disallow: /contact
+
+User-Agent: GPTBot
 Allow: /
 
+User-Agent: ChatGPT-User
+Allow: /
+
+User-Agent: Google-Extended
+Allow: /
+
+User-Agent: Googlebot
+Allow: /
+
+User-Agent: Bingbot
+Allow: /
+
+User-Agent: PerplexityBot
+Allow: /
+
+User-Agent: ClaudeBot
+Allow: /
+
+User-Agent: anthropic-ai
+Allow: /
+
+User-Agent: Applebot-Extended
+Allow: /
+
+User-Agent: CCBot
+Allow: /
+
+Host: https://bachmain.com
 Sitemap: https://bachmain.com/sitemap.xml
