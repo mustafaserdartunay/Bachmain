@@ -1,26 +1,59 @@
 'use client'
 
+import { motion, useReducedMotion } from 'framer-motion'
+import DemoForm from '../components/DemoForm'
 import { CheckCircle } from 'lucide-react'
 import { useState } from 'react'
 import Button from '../components/Button'
-import DemoForm from '../components/DemoForm'
-import ScrollReveal from '../components/ScrollReveal'
 import { platformPost } from '../utils/platformApi'
 
 const inputCls =
   'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15'
 
+function AuthAmbient() {
+  const reduce = useReducedMotion()
+
+  return (
+    <div className="pointer-events-none absolute inset-0" aria-hidden>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(37,99,235,0.14),transparent_55%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_78%,rgba(56,189,248,0.12),transparent_42%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_88%_22%,rgba(59,130,246,0.10),transparent_40%)]" />
+      <div
+        className="absolute inset-0 opacity-[0.35]"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(148,163,184,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.12) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 72%)',
+        }}
+      />
+      <motion.div
+        className="absolute -left-24 top-[18%] h-72 w-72 rounded-full bg-[#60A5FA]/25 blur-3xl"
+        animate={reduce ? undefined : { x: [0, 36, 0], y: [0, 28, 0], scale: [1, 1.08, 1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute -right-20 bottom-[12%] h-80 w-80 rounded-full bg-[#3B82F6]/20 blur-3xl"
+        animate={reduce ? undefined : { x: [0, -28, 0], y: [0, -24, 0], scale: [1, 1.12, 1] }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute left-1/2 top-[42%] h-48 w-48 -translate-x-1/2 rounded-full bg-[#38BDF8]/15 blur-3xl"
+        animate={reduce ? undefined : { opacity: [0.35, 0.7, 0.35], scale: [0.92, 1.08, 0.92] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </div>
+  )
+}
+
 export function DemoPage() {
   return (
-    <div className="page-mesh">
-      <h1 className="sr-only">Demo Talep Edin</h1>
-      <section className="pb-20 pt-[7.5rem]">
-        <div className="mx-auto max-w-2xl px-4">
-          <ScrollReveal>
-            <div className="cta-band p-2">
-              <DemoForm />
-            </div>
-          </ScrollReveal>
+    <div className="auth-ds relative flex min-h-[100dvh] flex-1 flex-col overflow-hidden bg-[#F8FAFC]">
+      <h1 className="sr-only">Demo Oluştur</h1>
+      <AuthAmbient />
+      <section className="relative z-10 flex min-h-[100dvh] flex-1 items-center justify-center px-4 py-20 sm:px-6 lg:px-10">
+        <div className="w-full max-w-[1600px]">
+          <DemoForm variant="panel" />
         </div>
       </section>
     </div>

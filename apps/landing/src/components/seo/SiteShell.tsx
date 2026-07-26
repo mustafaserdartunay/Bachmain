@@ -14,6 +14,7 @@ const Footer = dynamic(() => import('../Footer'), {
 const AUTH_PATHS = new Set([
   '/giris',
   '/login',
+  '/demo',
   '/forgot-password',
   '/sifremi-unuttum',
   '/reset-password',
