@@ -1,0 +1,172 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/features/crm",
+      "destination": "/crm",
+      "permanent": true
+    },
+    {
+      "source": "/features/erp",
+      "destination": "/erp",
+      "permanent": true
+    },
+    {
+      "source": "/features/stock",
+      "destination": "/stok",
+      "permanent": true
+    },
+    {
+      "source": "/features/finance",
+      "destination": "/finans",
+      "permanent": true
+    },
+    {
+      "source": "/features/reports",
+      "destination": "/raporlar",
+      "permanent": true
+    },
+    {
+      "source": "/modules/production",
+      "destination": "/uretim",
+      "permanent": true
+    },
+    {
+      "source": "/modules/field-sales",
+      "destination": "/saha-satis",
+      "permanent": true
+    },
+    {
+      "source": "/modules/ecommerce",
+      "destination": "/siparis",
+      "permanent": true
+    },
+    {
+      "source": "/e-invoice",
+      "destination": "/e-fatura",
+      "permanent": true
+    },
+    {
+      "source": "/pricing",
+      "destination": "/fiyatlar",
+      "permanent": true
+    },
+    {
+      "source": "/login",
+      "destination": "/giris",
+      "permanent": true
+    },
+    {
+      "source": "/register",
+      "destination": "/uye-ol",
+      "permanent": true
+    },
+    {
+      "source": "/contact",
+      "destination": "/iletisim",
+      "permanent": true
+    },
+    {
+      "source": "/fiyatlandirma",
+      "destination": "/fiyatlar",
+      "permanent": true
+    },
+    {
+      "source": "/yardim-merkezi",
+      "destination": "/help",
+      "permanent": true
+    },
+    {
+      "source": "/urunler",
+      "destination": "/features",
+      "permanent": true
+    },
+    {
+      "source": "/kayit",
+      "destination": "/uye-ol",
+      "permanent": true
+    },
+    {
+      "source": "/egitimler",
+      "destination": "/egitim",
+      "permanent": true
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/sifremi-unuttum",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/bachy/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/favicon.svg",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "X-DNS-Prefetch-Control",
+          "value": "on"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+        }
+      ]
+    }
+  ]
+}
