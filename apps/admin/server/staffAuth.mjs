@@ -131,6 +131,12 @@ export function isPublicApiPath(path, method) {
   if (path.startsWith('tenant/')) return true
   if (path.startsWith('leads/')) return true
   if (path === 'demo-requests') return true
+  // Public legal reads + consent/cookie writes (admin under legal/admin/* still gated)
+  if (path === 'legal' || path === 'legal/documents' || path.startsWith('legal/documents/'))
+    return true
+  if (path === 'legal/pack' || path === 'legal/required' || path === 'legal/consents/me')
+    return true
+  if (path === 'legal/consents' || path === 'legal/cookies') return true
   return false
 }
 

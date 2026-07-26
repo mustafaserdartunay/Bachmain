@@ -14,6 +14,7 @@ import PaymentPanel, {
   type PaymentResult,
 } from '../components/register/PaymentPanel'
 import PaymentPending from '../components/register/PaymentPending'
+import ConsentReader from '../components/legal/ConsentReader'
 import { passwordIssues } from '../components/register/PasswordStrength'
 import {
   referencePricingPlans,
@@ -52,7 +53,7 @@ function mapPlanCode(_planId: PlanId): string {
   return 'enterprise'
 }
 
-type Step = 'plan' | 'form' | 'payment' | 'pending'
+type Step = 'plan' | 'form' | 'contracts' | 'payment' | 'pending'
 
 /**
  * Register flow: paket → form → ödeme → onay bekler (yonetim SoT).
@@ -85,7 +86,9 @@ export default function RegisterPage() {
     email: '',
     password: '',
     password2: '',
-    terms: false,
+    acceptKvkk: false,
+    acceptTerms: false,
+    acceptPrivacy: false,
   })
   const [showPw, setShowPw] = useState(false)
   const [showPw2, setShowPw2] = useState(false)
@@ -163,7 +166,8 @@ export default function RegisterPage() {
   }
 
   const onChange = (key: keyof RegisterFormState) => (e: ChangeEvent<HTMLInputElement>) => {
-    const value = key === 'terms' ? e.target.checked : e.target.value
+    const boolKeys = new Set(['acceptKvkk', 'acceptTerms', 'acceptPrivacy'])
+    const value = boolKeys.has(key) ? e.target.checked : e.target.value
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
@@ -183,7 +187,9 @@ export default function RegisterPage() {
     const pwIssue = passwordIssues(form.password)
     if (pwIssue) e.password = pwIssue
     if (form.password !== form.password2) e.password2 = 'Şifreler eşleşmiyor'
-    if (!form.terms) e.terms = 'Devam etmek için şartları kabul edin'
+    if (!form.acceptKvkk) e.acceptKvkk = 'KVKK metnini kabul edin'
+    if (!form.acceptTerms) e.acceptTerms = 'Kullanım koşullarını kabul edin'
+    if (!form.acceptPrivacy) e.acceptPrivacy = 'Gizlilik politikasını kabul edin'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -208,10 +214,13 @@ export default function RegisterPage() {
         plan: mapPlanForApi(selectedPlan.id),
         requirePayment: true,
         source: 'bachmain_register_page',
+        acceptKvkk: true,
+        acceptTerms: true,
+        acceptPrivacy: true,
       })
       if (!data.token) throw new Error('Kayıt tamamlandı ancak oturum alınamadı')
       setSessionToken(data.token)
-      setStep('payment')
+      setStep('contracts')
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
       const message =
@@ -302,6 +311,24 @@ export default function RegisterPage() {
               />
             ) : null}
 
+            {step === 'contracts' && selectedPlan ? (
+              <ConsentReader
+                pack="purchase"
+                token={sessionToken}
+                email={form.email.trim().toLowerCase()}
+                title="Sözleşmeler"
+                confirmLabel="Ödemeye Geç"
+                onBack={() => {
+                  setStep('form')
+                  setSubmitError('')
+                }}
+                onComplete={async () => {
+                  setStep('payment')
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              />
+            ) : null}
+
             {step === 'payment' && selectedPlan ? (
               <PaymentPanel
                 planName={checkoutLabel}
@@ -311,7 +338,7 @@ export default function RegisterPage() {
                 amountWarning={amountWarning}
                 onPay={onPay}
                 onBack={() => {
-                  setStep('form')
+                  setStep('contracts')
                   setSubmitError('')
                 }}
               />

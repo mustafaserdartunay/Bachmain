@@ -1,3 +1,5 @@
+'use client'
+
 import { motion, useReducedMotion } from 'framer-motion'
 
 type BachyMascotProps = {
@@ -14,12 +16,13 @@ export default function BachyMascot({ className = '' }: BachyMascotProps) {
   return (
     <div aria-hidden="true" className={`pointer-events-none relative select-none ${className}`}>
       <motion.img
-        src="/bachy/bachy-register.png"
+        src="/bachy/bachy-register.webp"
         alt=""
-        width={1466}
-        height={2200}
+        width={362}
+        height={658}
         draggable={false}
         decoding="async"
+        loading="lazy"
         className="bachy-mascot-img mx-auto h-auto w-[240px] max-w-none object-contain drop-shadow-[0_20px_44px_rgba(37,99,235,0.18)] sm:w-[280px] lg:w-[340px] xl:w-[380px]"
         animate={
           reduce
@@ -35,7 +38,6 @@ export default function BachyMascot({ className = '' }: BachyMascotProps) {
           ease: 'easeInOut',
         }}
       />
-      {/* Soft shoe glow pool (reference) */}
       <div
         className="pointer-events-none absolute bottom-[2%] left-1/2 h-4 w-[55%] -translate-x-1/2 rounded-full bg-[#2563EB]/20 blur-md"
         aria-hidden

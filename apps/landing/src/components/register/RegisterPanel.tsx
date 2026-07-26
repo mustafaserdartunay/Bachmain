@@ -22,7 +22,9 @@ export type RegisterFormState = {
   email: string
   password: string
   password2: string
-  terms: boolean
+  acceptKvkk: boolean
+  acceptTerms: boolean
+  acceptPrivacy: boolean
 }
 
 type RegisterPanelProps = {
@@ -249,20 +251,56 @@ export default function RegisterPanel({
           />
 
           <Checkbox
-            id="register-terms"
-            checked={form.terms}
-            onChange={onChange('terms')}
-            error={errors.terms}
+            id="register-kvkk"
+            checked={form.acceptKvkk}
+            onChange={onChange('acceptKvkk')}
+            error={errors.acceptKvkk}
             label={
               <>
-                <Link to="/help" className="font-semibold text-[#2563EB] hover:underline">
-                  Kullanım şartları
-                </Link>{' '}
-                ve{' '}
-                <Link to="/help" className="font-semibold text-[#2563EB] hover:underline">
-                  gizlilik politikasını
-                </Link>{' '}
-                kabul ediyorum.
+                <Link
+                  to="/kvkk-aydinlatma-metni"
+                  className="font-semibold text-[#2563EB] hover:underline"
+                  target="_blank"
+                >
+                  KVKK Aydınlatma Metni
+                </Link>
+                ’ni okudum ve kabul ediyorum.
+              </>
+            }
+          />
+          <Checkbox
+            id="register-terms"
+            checked={form.acceptTerms}
+            onChange={onChange('acceptTerms')}
+            error={errors.acceptTerms}
+            label={
+              <>
+                <Link
+                  to="/kullanim-kosullari"
+                  className="font-semibold text-[#2563EB] hover:underline"
+                  target="_blank"
+                >
+                  Kullanım Koşulları
+                </Link>
+                ’nı okudum ve kabul ediyorum.
+              </>
+            }
+          />
+          <Checkbox
+            id="register-privacy"
+            checked={form.acceptPrivacy}
+            onChange={onChange('acceptPrivacy')}
+            error={errors.acceptPrivacy}
+            label={
+              <>
+                <Link
+                  to="/gizlilik-politikasi"
+                  className="font-semibold text-[#2563EB] hover:underline"
+                  target="_blank"
+                >
+                  Gizlilik Politikası
+                </Link>
+                ’nı okudum ve kabul ediyorum.
               </>
             }
           />
@@ -274,7 +312,7 @@ export default function RegisterPanel({
           ) : null}
 
           <Button type="submit" fullWidth disabled={busy}>
-            {busy ? 'Kaydediliyor…' : 'Ödemeye geç'}
+            {busy ? 'Kaydediliyor…' : 'Sözleşmelere geç'}
           </Button>
 
           <p className="pt-1 text-center text-[14px] font-medium text-[#64748B]">

@@ -79,6 +79,13 @@ export const navItems: NavItem[] = [
     group: 'Müşteri',
   },
   { id: 'memberships', label: 'Üye Hesapları', path: '/uyeler', icon: UserCheck, group: 'Müşteri' },
+  {
+    id: 'legal',
+    label: 'Hukuki İçerikler',
+    path: '/hukuki',
+    icon: ScrollText,
+    group: 'Müşteri',
+  },
   { id: 'dealers', label: 'Bayi Yönetimi', path: '/bayiler', icon: Store, group: 'Müşteri' },
   { id: 'accounts', label: 'Cari Hesaplar', path: '/cari-hesaplar', icon: Wallet, group: 'Finans' },
   {

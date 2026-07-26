@@ -19,6 +19,7 @@ import Button from './ui/Button'
 import Input from './ui/Input'
 import Checkbox from './ui/Checkbox'
 import PasswordStrength, { passwordIssues } from './register/PasswordStrength'
+import ConsentReader from './legal/ConsentReader'
 import { yonetimPost, redirectToAppWithToken } from '../utils/platformApi'
 import { trackCta } from '../analytics/track'
 
@@ -70,6 +71,8 @@ export default function DemoForm({ variant = 'panel' } = {}) {
   const [showPw2, setShowPw2] = useState(false)
   const [sessionToken, setSessionToken] = useState('')
   const [licenseExpiry, setLicenseExpiry] = useState('')
+  const [step, setStep] = useState('form') // form | contracts | done
+  const [pendingConsents, setPendingConsents] = useState(null)
 
   useEffect(() => {
     const pre = readPrefill()
@@ -116,6 +119,12 @@ export default function DemoForm({ variant = 'panel' } = {}) {
   const submitPanel = async (ev) => {
     ev.preventDefault()
     if (!validatePanel()) return
+    setSubmitError('')
+    setStep('contracts')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const createDemoAccount = async (consents) => {
     setBusy(true)
     setSubmitError('')
     try {
@@ -131,13 +140,19 @@ export default function DemoForm({ variant = 'panel' } = {}) {
         email: form.email.trim(),
         password: form.password,
         source: 'bachmain_demo',
+        consents,
+        acceptDemoTerms: true,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        language: typeof navigator !== 'undefined' ? navigator.language : 'tr',
       })
       trackCta('demo_submit', { source: 'demo_panel' })
       setSessionToken(data.token || '')
       setLicenseExpiry(data.licenseExpiry || data.user?.licenseExpiry || '')
       setDone(true)
+      setStep('done')
     } catch (err) {
       setSubmitError(err.message || 'Demonuz oluşturulamadı. Lütfen tekrar deneyin.')
+      setStep('form')
     } finally {
       setBusy(false)
     }
@@ -247,6 +262,19 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               Aynı e-posta ile ikinci demo açılamaz. Süre bitince yönetim uzatabilir.
             </p>
           </div>
+        ) : step === 'contracts' ? (
+          <ConsentReader
+            pack="demo"
+            email={form.email.trim().toLowerCase()}
+            title="Demo Sözleşmeleri"
+            confirmLabel="Demo Oluştur"
+            persist={false}
+            onBack={() => setStep('form')}
+            onComplete={async (consents) => {
+              setPendingConsents(consents)
+              await createDemoAccount(consents)
+            }}
+          />
         ) : (
           <form onSubmit={submitPanel} className="space-y-4" noValidate>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -425,14 +453,38 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               error={errors.terms}
               label={
                 <>
-                  <Link to="/help" className="font-semibold text-[#2563EB] hover:underline">
-                    Kullanım şartları
+                  <Link
+                    to="/demo-kullanim-kosullari"
+                    className="font-semibold text-[#2563EB] hover:underline"
+                    target="_blank"
+                  >
+                    Demo Kullanım Şartları
+                  </Link>
+                  ,{' '}
+                  <Link
+                    to="/kvkk-aydinlatma-metni"
+                    className="font-semibold text-[#2563EB] hover:underline"
+                    target="_blank"
+                  >
+                    KVKK
+                  </Link>
+                  ,{' '}
+                  <Link
+                    to="/gizlilik-politikasi"
+                    className="font-semibold text-[#2563EB] hover:underline"
+                    target="_blank"
+                  >
+                    Gizlilik
                   </Link>{' '}
                   ve{' '}
-                  <Link to="/help" className="font-semibold text-[#2563EB] hover:underline">
-                    gizlilik politikasını
-                  </Link>{' '}
-                  kabul ediyorum.
+                  <Link
+                    to="/cerez-politikasi"
+                    className="font-semibold text-[#2563EB] hover:underline"
+                    target="_blank"
+                  >
+                    Çerez Politikası
+                  </Link>
+                  ’nı kabul ediyorum.
                 </>
               }
             />
@@ -444,7 +496,7 @@ export default function DemoForm({ variant = 'panel' } = {}) {
             ) : null}
 
             <Button type="submit" fullWidth disabled={busy}>
-              {busy ? 'Oluşturuluyor…' : 'Demo Oluştur'}
+              {busy ? 'Oluşturuluyor…' : 'Sözleşmelere geç'}
             </Button>
 
             <p className="pt-1 text-center text-[14px] font-medium text-[#64748B]">

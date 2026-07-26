@@ -13,6 +13,28 @@ import { loadStore, withStore } from './store.mjs'
 import { hitRateLimit } from './db.mjs'
 import { loginStaff, getStaffSession, buildStaffCookie } from './staffAuth.mjs'
 
+async function withLegalUser(store, user, account) {
+  if (!user || !account) return user
+  try {
+    const { getOutstandingForAccount, LAWYER_NOTICE } = await import('./legal.mjs')
+    const outstanding = getOutstandingForAccount(store, account)
+    user.legal = {
+      mustAccept: outstanding.length > 0,
+      outstanding: outstanding.map(({ type, slug, title, version, path: p }) => ({
+        type,
+        slug,
+        title,
+        version,
+        path: p,
+      })),
+      lawyerNotice: LAWYER_NOTICE,
+    }
+  } catch {
+    user.legal = { mustAccept: false, outstanding: [], lawyerNotice: '' }
+  }
+  return user
+}
+
 function allowedOrigins() {
   const fromEnv = String(process.env.CORS_ORIGIN || '')
     .split(',')
@@ -80,6 +102,13 @@ export async function handleAuthApi(req, res, path, body = {}) {
     }
     try {
       const result = await withStore((store) => registerAccount(store, body))
+      const account = result.user
+        ? { id: result.user.id, role: result.user.role, customerId: result.user.customerId }
+        : null
+      // Prefer full account from store for outstanding check
+      const store = await loadStore()
+      const fullAccount = store.accounts?.find((a) => a.id === result.user?.id)
+      await withLegalUser(store, result.user, fullAccount || account)
       sendJson(
         req,
         res,
@@ -113,13 +142,18 @@ export async function handleAuthApi(req, res, path, body = {}) {
       return true
     }
     try {
-      const result = await withStore((store) =>
-        loginAccount(store, {
+      let accountRef = null
+      const result = await withStore((store) => {
+        const out = loginAccount(store, {
           ...body,
           userAgent: req.headers?.['user-agent'] || '',
           ip,
-        }),
-      )
+        })
+        return out
+      })
+      const store = await loadStore()
+      accountRef = store.accounts?.find((a) => a.id === result.user?.id)
+      await withLegalUser(store, result.user, accountRef)
       sendJson(
         req,
         res,
@@ -128,6 +162,7 @@ export async function handleAuthApi(req, res, path, body = {}) {
           ok: true,
           user: result.user,
           token: result.token,
+          legal: result.user?.legal || null,
         },
         { cookie: buildSessionCookie(result.token) },
       )
@@ -189,7 +224,8 @@ export async function handleAuthApi(req, res, path, body = {}) {
       sendJson(req, res, 401, { error: 'UNAUTHORIZED', message: 'Oturum bulunamadı' })
       return true
     }
-    sendJson(req, res, 200, { ok: true, user: session.user })
+    await withLegalUser(store, session.user, session.account)
+    sendJson(req, res, 200, { ok: true, user: session.user, legal: session.user?.legal || null })
     return true
   }
 

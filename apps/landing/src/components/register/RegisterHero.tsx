@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 
 type RegisterHeroProps = {
-  step: 'plan' | 'form' | 'payment' | 'pending'
+  step: 'plan' | 'form' | 'contracts' | 'payment' | 'pending'
   planName?: string
 }
 
@@ -12,7 +12,13 @@ export default function RegisterHero({ step, planName }: RegisterHeroProps) {
   if (step === 'form') return null
 
   const title =
-    step === 'plan' ? 'Paketler' : step === 'payment' || step === 'pending' ? 'Ödeme' : 'Üye Ol'
+    step === 'plan'
+      ? 'Paketler'
+      : step === 'contracts'
+        ? 'Sözleşmeler'
+        : step === 'payment' || step === 'pending'
+          ? 'Ödeme'
+          : 'Üye Ol'
 
   const subtitle =
     step === 'plan' ? (
@@ -20,6 +26,8 @@ export default function RegisterHero({ step, planName }: RegisterHeroProps) {
         Her ölçekteki <span className="font-semibold text-[#475569]">işletme</span> için en doğru
         çözüm.
       </>
+    ) : step === 'contracts' ? (
+      <>Ödemeye geçmeden önce zorunlu sözleşmeleri okuyup kabul edin.</>
     ) : step === 'pending' ? (
       <>Yönetim ödemenizi onayladığında e-posta ile bilgilendirilirsiniz.</>
     ) : step === 'payment' ? (

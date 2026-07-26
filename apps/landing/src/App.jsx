@@ -2,7 +2,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import Header from './components/Header'
 import Footer from './components/Footer'
-import HomePage from './pages/HomePage'
+import HomePage from './views/HomePage'
 import {
   FeaturesPage,
   CrmPage,
@@ -15,15 +15,15 @@ import {
   EcommercePage,
   FieldSalesPage,
   EInvoicePage,
-} from './pages/FeaturePages'
-import { FaqPage, HelpPage, EducationPage } from './pages/SupportPages'
-import PricingPage from './pages/PricingPage'
-import { BlogPage, BlogDetailPage } from './pages/BlogPages'
-import { DemoPage, ContactPage } from './pages/AuthPages'
-import RegisterPage from './pages/RegisterPage'
-import LoginPage from './pages/LoginPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
+} from './views/FeaturePages'
+import { FaqPage, HelpPage, EducationPage } from './views/SupportPages'
+import PricingPage from './views/PricingPage'
+import { BlogPage, BlogDetailPage } from './views/BlogPages'
+import { DemoPage, ContactPage } from './views/AuthPages'
+import RegisterPage from './views/RegisterPage'
+import LoginPage from './views/LoginPage'
+import ForgotPasswordPage from './views/ForgotPasswordPage'
+import ResetPasswordPage from './views/ResetPasswordPage'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -57,8 +57,11 @@ export default function App() {
           <Route path="/blog/:slug" element={<BlogDetailPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/giris" element={<LoginPage />} />
           <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/demo" element={<DemoPage />} />
           <Route path="/help" element={<HelpPage />} />

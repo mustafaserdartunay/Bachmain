@@ -11,6 +11,11 @@ const Footer = dynamic(() => import('../Footer'), {
   loading: () => null,
 })
 
+const CookieBanner = dynamic(() => import('../legal/CookieBanner'), {
+  ssr: false,
+  loading: () => null,
+})
+
 const AUTH_PATHS = new Set([
   '/giris',
   '/login',
@@ -55,6 +60,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
       </main>
       {isAuth ? null : <Footer />}
       {isAuth ? null : <StickyCta />}
+      <CookieBanner />
     </>
   )
 }

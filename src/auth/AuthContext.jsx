@@ -35,6 +35,7 @@ const LOCAL_DEV_USER = {
   licenseExpiry: '2099-12-31',
   onboardingCompleted: true,
   trialEnded: false,
+  legal: { mustAccept: false, outstanding: [] },
 }
 
 function isLocalDevHost() {

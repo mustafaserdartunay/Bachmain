@@ -6,6 +6,7 @@ import { withStore, newId } from './store.mjs'
 import { sendJson } from './authRoutes.mjs'
 import { hitRateLimit } from './db.mjs'
 import { hashPassword, signToken, validateSignupPassword, buildSessionCookie } from './auth.mjs'
+import { ensureLegalStore, assertPackConsents, recordConsentBatch } from './legal.mjs'
 
 function normalizeEmail(email) {
   return String(email || '')
@@ -315,6 +316,38 @@ export function createDemoLead(store, body = {}) {
   })
   store.notifications = store.notifications.slice(0, 200)
 
+  // Persist demo legal consents (server-validated)
+  const consentItems = Array.isArray(body.consents) ? body.consents : []
+  if (!consentItems.length && body.source === 'bachmain_demo') {
+    const err = new Error('Demo sözleşmeleri kabul edilmeden devam edilemez')
+    err.code = 'CONSENT_REQUIRED'
+    throw err
+  }
+  if (consentItems.length) {
+    ensureLegalStore(store)
+    assertPackConsents(store, 'demo', consentItems)
+    const ua = String(body.userAgent || '')
+    recordConsentBatch(store, {
+      accountId: account.id,
+      customerId: customer.id,
+      email,
+      items: consentItems.map((i) => ({
+        type: i.type,
+        version: i.version,
+        accepted: Boolean(i.accepted),
+      })),
+      context: 'demo',
+      meta: {
+        ip: body.ip || '—',
+        userAgent: ua,
+        browser: body.browser || '—',
+        os: body.os || '—',
+        device: body.device || '—',
+        language: body.language || 'tr',
+      },
+    })
+  }
+
   const session = sessionPayload(account, customer)
   return { request: demoRequest, customer, account, ...session }
 }
@@ -336,7 +369,14 @@ export async function handleLeadsApi(req, res, path, body = {}) {
       return true
     }
     try {
-      const result = await withStore((store) => createDemoLead(store, body))
+      const result = await withStore((store) =>
+        createDemoLead(store, {
+          ...body,
+          ip,
+          userAgent: req.headers?.['user-agent'] || body.userAgent || '',
+          language: body.language || req.headers?.['accept-language']?.split?.(',')[0] || 'tr',
+        }),
+      )
       sendJson(
         req,
         res,

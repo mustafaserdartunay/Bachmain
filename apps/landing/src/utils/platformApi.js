@@ -1,14 +1,24 @@
+function readEnv(key) {
+  try {
+    if (typeof process !== 'undefined' && process.env?.[key]) {
+      return process.env[key]
+    }
+  } catch {
+    /* ignore */
+  }
+  return ''
+}
+
 const DEFAULT_YONETIM_API = 'https://yonetim.bachmain.com/api'
-const DEFAULT_V1_API = import.meta.env.VITE_API_URL || ''
+const DEFAULT_V1_API = readEnv('NEXT_PUBLIC_API_URL') || readEnv('VITE_API_URL') || ''
 const APP_URL = 'https://uygulama.bachmain.com'
 const LOGIN_URL = 'https://uygulama.bachmain.com/giris'
 
 /** Prefer centralized apps/api (/v1). Fall back to legacy yonetim API. */
 export function getPlatformApiBase() {
   if (DEFAULT_V1_API) return String(DEFAULT_V1_API).replace(/\/$/, '')
-  if (import.meta.env.VITE_PLATFORM_API_URL) {
-    return String(import.meta.env.VITE_PLATFORM_API_URL).replace(/\/$/, '')
-  }
+  const platform = readEnv('NEXT_PUBLIC_PLATFORM_API_URL') || readEnv('VITE_PLATFORM_API_URL')
+  if (platform) return String(platform).replace(/\/$/, '')
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1') {
@@ -20,15 +30,8 @@ export function getPlatformApiBase() {
 
 /** SaaS üyelik + faturalama SoT: yonetim (havale onay / müşteri paket) */
 export function getYonetimApiBase() {
-  if (import.meta.env.VITE_YONETIM_API_URL) {
-    return String(import.meta.env.VITE_YONETIM_API_URL).replace(/\/$/, '')
-  }
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname
-    if (host === 'localhost' || host === '127.0.0.1') {
-      return import.meta.env.VITE_YONETIM_API_URL || DEFAULT_YONETIM_API
-    }
-  }
+  const yonetim = readEnv('NEXT_PUBLIC_YONETIM_API_URL') || readEnv('VITE_YONETIM_API_URL')
+  if (yonetim) return String(yonetim).replace(/\/$/, '')
   return DEFAULT_YONETIM_API
 }
 

@@ -67,9 +67,13 @@ const PRODUCT_LINKS = [
 ]
 
 const SECURITY_LINKS = [
-  { label: 'Gizlilik Politikası', href: '/gizlilik' },
-  { label: 'Kullanım Şartları', href: '/iletisim' },
-  { label: 'KVKK Aydınlatma Metni', href: '/kvkk' },
+  { label: 'Kullanım Koşulları', href: '/kullanim-kosullari' },
+  { label: 'Hizmet Sözleşmesi', href: '/hizmet-sozlesmesi' },
+  { label: 'Gizlilik Politikası', href: '/gizlilik-politikasi' },
+  { label: 'KVKK Aydınlatma Metni', href: '/kvkk-aydinlatma-metni' },
+  { label: 'Çerez Politikası', href: '/cerez-politikasi' },
+  { label: 'İptal / İade', href: '/iptal-iade-politikasi' },
+  { label: 'Veri Güvenliği', href: '/veri-guvenligi' },
 ]
 
 export default function Footer() {

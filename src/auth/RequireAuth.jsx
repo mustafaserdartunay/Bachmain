@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { computeRemainingDays, isTrialActive } from '../components/TrialBanner'
+import LegalConsentGate from '../components/Legal/LegalConsentGate'
 
 const BILLING_PATHS = new Set([
   '/hesap/lisans',
@@ -15,11 +16,16 @@ const BILLING_PATHS = new Set([
 function isTrialExpired(user) {
   if (!user) return false
   if (user.subscriptionStatus === 'grace') return false
-  if (user.subscriptionStatus === 'expired' && (user.status === 'trial' || isTrialActive(user))) return true
+  if (user.subscriptionStatus === 'expired' && (user.status === 'trial' || isTrialActive(user)))
+    return true
   if (user.status === 'expired' && isTrialActive({ status: 'trial', ...user })) {
     // paid expired handled separately
   }
-  if (user.status === 'expired' && (user.subscriptionStatus === 'trialing' || !user.subscriptionStatus)) return true
+  if (
+    user.status === 'expired' &&
+    (user.subscriptionStatus === 'trialing' || !user.subscriptionStatus)
+  )
+    return true
   if (user.trialEnded === true) return true
   const days = computeRemainingDays(user)
   if (isTrialActive(user) && typeof days === 'number' && days < 0) return true
@@ -52,7 +58,7 @@ function isPaidLicenseExpired(user) {
 }
 
 export default function RequireAuth({ children }) {
-  const { isAuthenticated, bootstrapped, loading, user } = useAuth()
+  const { isAuthenticated, bootstrapped, loading, user, refreshUser } = useAuth()
   const location = useLocation()
   const path = location.pathname
 
@@ -79,7 +85,11 @@ export default function RequireAuth({ children }) {
     return <Navigate to="/hesap/lisans" replace state={{ reason: 'subscription_expired' }} />
   }
 
-  if ((isSuspendedLicense(user) || isPaidLicenseExpired(user)) && path !== '/hesap/lisans' && !BILLING_PATHS.has(path)) {
+  if (
+    (isSuspendedLicense(user) || isPaidLicenseExpired(user)) &&
+    path !== '/hesap/lisans' &&
+    !BILLING_PATHS.has(path)
+  ) {
     return <Navigate to="/hesap/lisans" replace state={{ reason: 'license_expired' }} />
   }
 
@@ -87,6 +97,18 @@ export default function RequireAuth({ children }) {
     return <Navigate to="/kurulum" replace state={{ reason: 'onboarding' }} />
   }
 
-  // Expired read-only: still allow viewing if already on allowed path; otherwise redirected above.
-  return children
+  return (
+    <LegalConsentGate
+      user={user}
+      onAccepted={async () => {
+        try {
+          await refreshUser?.()
+        } catch {
+          /* ignore */
+        }
+      }}
+    >
+      {children}
+    </LegalConsentGate>
+  )
 }

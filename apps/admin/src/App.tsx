@@ -24,6 +24,7 @@ import { MailCenterPage } from '@/pages/mail/MailCenterPage'
 import { AiControlCenterPage } from '@/pages/AiControlCenterPage'
 import { MembershipsPage } from '@/pages/MembershipsPage'
 import { MembershipDetailPage } from '@/pages/MembershipDetailPage'
+import { LegalContentPage } from '@/pages/LegalContentPage'
 import { ModuleListPage } from '@/components/module/ModuleListPage'
 import { ModuleDetailPage } from '@/components/module/ModuleDetailPage'
 import { ModuleFormPage } from '@/components/module/ModuleFormPage'
@@ -88,6 +89,8 @@ export function AppRoutes() {
           path="uyeler/:id/duzenle"
           element={<ModuleFormPage moduleId="memberships" mode="edit" />}
         />
+
+        <Route path="hukuki" element={<LegalContentPage />} />
 
         <Route path="destek" element={<ModuleListPage moduleId="support" />} />
         <Route path="destek/yeni" element={<ModuleFormPage moduleId="support" mode="create" />} />

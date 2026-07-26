@@ -1,7 +1,10 @@
+'use client'
+
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import type { PaymentResult } from './PaymentPanel'
 import Button from '../ui/Button'
+import { formatMoneyTry } from '../pricing/pricingTokens'
 
 type PaymentPendingProps = {
   planName: string
@@ -43,7 +46,7 @@ export default function PaymentPending({ planName, result, method }: PaymentPend
         ) : null}
 
         <div className="mt-5 space-y-3 rounded-[18px] border border-[#E2E8F0] bg-[#F8FAFC] p-5 text-[14px]">
-          <Row label="Tutar" value={`₺${amount.toLocaleString('tr-TR')}`} />
+          <Row label="Tutar" value={formatMoneyTry(amount)} />
           <Row label="Referans" value={result.paymentId || '—'} />
           {method === 'havale' ? (
             <>

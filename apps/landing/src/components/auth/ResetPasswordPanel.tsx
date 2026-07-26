@@ -1,5 +1,7 @@
-import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+'use client'
+
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Button from '../ui/Button'
@@ -9,6 +11,7 @@ import { yonetimPost } from '../../utils/platformApi'
 
 export default function ResetPasswordPanel() {
   const [params] = useSearchParams()
+  const navigate = useNavigate()
   const token = useMemo(() => params.get('token') || '', [params])
   const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
@@ -19,20 +22,31 @@ export default function ResetPasswordPanel() {
   const [done, setDone] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
+  useEffect(() => {
+    if (!done) return
+    const t = window.setTimeout(() => navigate('/giris', { replace: true }), 2200)
+    return () => window.clearTimeout(t)
+  }, [done, navigate])
+
   const onSubmit = async (ev: FormEvent) => {
     ev.preventDefault()
     const e: Record<string, string> = {}
-    if (!token) e.token = 'Geçersiz bağlantı'
+    if (!token) e.token = 'Geçersiz veya eksik sıfırlama bağlantısı'
     const pwIssue = passwordIssues(password)
     if (pwIssue) e.password = pwIssue
-    if (password !== password2) e.password2 = 'Şifreler eşleşmiyor'
+    if (!password2.trim()) e.password2 = 'Şifre tekrarını girin'
+    else if (password !== password2) e.password2 = 'Şifreler eşleşmiyor'
     setErrors(e)
     if (Object.keys(e).length) return
 
     setBusy(true)
     setSubmitError('')
     try {
-      await yonetimPost('auth/reset-password', { token, password })
+      await yonetimPost('auth/reset-password', {
+        token,
+        password,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+      })
       setDone(true)
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Şifre güncellenemedi')
@@ -54,12 +68,12 @@ export default function ResetPasswordPanel() {
         </span>
 
         {done ? (
-          <div className="space-y-4 py-8 text-center">
-            <h2 className="text-[22px] font-extrabold text-[#0F172A]">Şifre güncellendi</h2>
+          <div className="space-y-4 py-8 text-center" role="status" aria-live="polite">
+            <h2 className="text-[22px] font-extrabold text-[#0F172A]">Başarılı</h2>
             <p className="text-[14px] font-medium text-[#64748B]">
-              Artık yeni şifrenizle giriş yapabilirsiniz. Onay e-postası da gönderildi.
+              Şifreniz güncellendi. Giriş ekranına yönlendiriliyorsunuz.
             </p>
-            <Link to="/login">
+            <Link to="/giris">
               <Button type="button" fullWidth>
                 Giriş Yap
               </Button>
@@ -72,11 +86,12 @@ export default function ResetPasswordPanel() {
                 Şifre Sıfırla
               </h2>
               <p className="mt-2 text-[14px] font-medium text-[#64748B]">
-                Güçlü bir şifre belirleyin (en az 8 karakter, büyük/küçük harf, rakam, özel
-                karakter).
+                En az 8 karakter, büyük/küçük harf, rakam ve özel karakter kullanın.
               </p>
               {errors.token ? (
-                <p className="mt-2 text-sm font-medium text-[#EF4444]">{errors.token}</p>
+                <p className="mt-2 text-sm font-medium text-[#EF4444]" role="alert">
+                  {errors.token}
+                </p>
               ) : null}
             </header>
 
@@ -90,12 +105,13 @@ export default function ResetPasswordPanel() {
               error={errors.password}
               leftIcon={<Lock className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
               aria-label="Yeni şifre"
+              required
               rightSlot={
                 <button
                   type="button"
                   className="rounded-[10px] p-1.5 text-[#94A3B8]"
                   onClick={() => setShowPw((v) => !v)}
-                  aria-label={showPw ? 'Gizle' : 'Göster'}
+                  aria-label={showPw ? 'Şifreyi gizle' : 'Şifreyi göster'}
                 >
                   {showPw ? (
                     <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
@@ -110,18 +126,19 @@ export default function ResetPasswordPanel() {
               name="password2"
               type={showPw2 ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="Şifreyi tekrar girin"
+              placeholder="Yeni şifre tekrar"
               value={password2}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword2(e.target.value)}
               error={errors.password2}
               leftIcon={<Lock className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />}
-              aria-label="Şifreyi tekrar"
+              aria-label="Yeni şifre tekrar"
+              required
               rightSlot={
                 <button
                   type="button"
                   className="rounded-[10px] p-1.5 text-[#94A3B8]"
                   onClick={() => setShowPw2((v) => !v)}
-                  aria-label={showPw2 ? 'Gizle' : 'Göster'}
+                  aria-label={showPw2 ? 'Şifreyi gizle' : 'Şifreyi göster'}
                 >
                   {showPw2 ? (
                     <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
@@ -133,14 +150,23 @@ export default function ResetPasswordPanel() {
             />
 
             {submitError ? (
-              <p className="rounded-[18px] bg-[#FEF2F2] px-4 py-3 text-sm font-medium text-[#EF4444]">
+              <p
+                className="rounded-[18px] bg-[#FEF2F2] px-4 py-3 text-sm font-medium text-[#EF4444]"
+                role="alert"
+              >
                 {submitError}
               </p>
             ) : null}
 
-            <Button type="submit" fullWidth disabled={busy || !token}>
+            <Button type="submit" fullWidth disabled={busy || !token} aria-busy={busy}>
               {busy ? 'Kaydediliyor…' : 'Şifreyi güncelle'}
             </Button>
+
+            <p className="text-center text-[14px] font-medium text-[#64748B]">
+              <Link to="/giris" className="font-bold text-[#2563EB] hover:underline">
+                Geri dön
+              </Link>
+            </p>
           </form>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PricingMascot from './PricingMascot'
-import { referencePricingPlans } from './pricingTokens'
+import { referencePricingPlans, formatMoneyTry } from './pricingTokens'
 
 const plan = referencePricingPlans[0]
 
@@ -22,7 +22,7 @@ export default function StarterCard() {
         </p>
         <div className="mt-6 flex items-end gap-1.5">
           <span className="text-[36px] leading-none font-extrabold tracking-tight text-[#2563EB] tabular-nums">
-            ₺{plan.price.toLocaleString('tr-TR')}
+            {formatMoneyTry(plan.price)}
           </span>
           <span className="pb-1 text-[14px] font-medium text-[#64748B]">{plan.period}</span>
         </div>
