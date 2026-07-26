@@ -102,23 +102,31 @@ export function AppRoutes() {
             (id) =>
               id !== 'customers' && id !== 'support' && id !== 'security' && id !== 'memberships',
           )
-          .map((id) => {
+          .flatMap((id) => {
             const config = moduleConfigs[id]
             const segment = config.path.replace(/^\//, '')
-            return (
-              <Route key={id}>
-                <Route path={segment} element={<ModuleListPage moduleId={id} />} />
-                <Route
-                  path={`${segment}/yeni`}
-                  element={<ModuleFormPage moduleId={id} mode="create" />}
-                />
-                <Route path={`${segment}/:itemId`} element={<ModuleDetailPage moduleId={id} />} />
-                <Route
-                  path={`${segment}/:itemId/duzenle`}
-                  element={<ModuleFormPage moduleId={id} mode="edit" />}
-                />
-              </Route>
-            )
+            return [
+              <Route
+                key={`${id}-list`}
+                path={segment}
+                element={<ModuleListPage moduleId={id} />}
+              />,
+              <Route
+                key={`${id}-new`}
+                path={`${segment}/yeni`}
+                element={<ModuleFormPage moduleId={id} mode="create" />}
+              />,
+              <Route
+                key={`${id}-detail`}
+                path={`${segment}/:itemId`}
+                element={<ModuleDetailPage moduleId={id} />}
+              />,
+              <Route
+                key={`${id}-edit`}
+                path={`${segment}/:itemId/duzenle`}
+                element={<ModuleFormPage moduleId={id} mode="edit" />}
+              />,
+            ]
           })}
 
         <Route path="*" element={<Navigate to="/" replace />} />

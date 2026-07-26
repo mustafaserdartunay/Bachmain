@@ -147,10 +147,18 @@ export interface MembershipDetail extends MembershipRow {
 
 export const membershipsApi = {
   list: () => api.get<ModuleListResponse>('/modules/memberships'),
-  get: (id: string) => api.get<MembershipDetail>(`/modules/memberships/${id}`),
+  get: async (id: string) => {
+    const key = decodeURIComponent(String(id || '').trim())
+    try {
+      return await api.get<MembershipDetail>(`/modules/memberships/${encodeURIComponent(key)}`)
+    } catch {
+      // Backup endpoint if modules/:id routing fails on the edge
+      return api.get<MembershipDetail>(`/memberships/${encodeURIComponent(key)}`)
+    }
+  },
   extend: (id: string, body: { days?: number; mode?: 'trial' | 'active'; note?: string }) =>
     api.post<{ ok: boolean; licenseExpiry?: string; detail?: MembershipDetail }>(
-      `/memberships/${id}/extend`,
+      `/memberships/${encodeURIComponent(id)}/extend`,
       body,
     ),
   action: (
@@ -162,7 +170,11 @@ export const membershipsApi = {
       asTrial?: boolean
       days?: number
     },
-  ) => api.post<{ ok: boolean; detail?: MembershipDetail }>(`/memberships/${id}/action`, body),
+  ) =>
+    api.post<{ ok: boolean; detail?: MembershipDetail }>(
+      `/memberships/${encodeURIComponent(id)}/action`,
+      body,
+    ),
 }
 
 export async function fetchModulePage(moduleId: string) {

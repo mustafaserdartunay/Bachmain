@@ -374,7 +374,7 @@ async function handle(req, res, url) {
       const moduleId = moduleItemMatch[1]
       const itemId = moduleItemMatch[2]
       if (moduleId === 'memberships' || moduleId === 'accounts-users') {
-        const detail = buildMembershipDetail(store, itemId)
+        const detail = buildMembershipDetail(store, decodeURIComponent(itemId))
         if (!detail) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
         return sendJson(req, res, 200, detail)
       }
@@ -394,6 +394,14 @@ async function handle(req, res, url) {
       const row = rows.find((r) => r.id === itemId)
       if (!row) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
       return sendJson(req, res, 200, row)
+    }
+
+    const membershipGetMatch = pathname.match(/^\/api\/memberships\/([^/]+)$/)
+    if (method === 'GET' && membershipGetMatch) {
+      const store = await loadStore()
+      const detail = buildMembershipDetail(store, decodeURIComponent(membershipGetMatch[1]))
+      if (!detail) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+      return sendJson(req, res, 200, detail)
     }
 
     const membershipExtendMatch = pathname.match(/^\/api\/memberships\/([^/]+)\/extend$/)

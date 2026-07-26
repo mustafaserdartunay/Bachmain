@@ -37,7 +37,8 @@ const tabs = [
 ]
 
 export function MembershipDetailPage() {
-  const { id } = useParams()
+  const params = useParams()
+  const id = decodeURIComponent(String(params.id || '').trim())
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [extendDays, setExtendDays] = useState(7)
@@ -46,9 +47,18 @@ export function MembershipDetailPage() {
   const [busy, setBusy] = useState<string | null>(null)
   const [flash, setFlash] = useState<{ ok: boolean; message: string } | null>(null)
   const [planCode, setPlanCode] = useState('starter')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const fetcher = useMemo(
-    () => async (): Promise<MembershipDetail> => membershipsApi.get(id!),
+    () => async (): Promise<MembershipDetail> => {
+      if (!id) throw new Error('Üye ID eksik')
+      try {
+        return await membershipsApi.get(id)
+      } catch (err) {
+        setErrorMessage(err instanceof Error ? err.message : 'Üye detayı yüklenemedi')
+        throw err
+      }
+    },
     [id],
   )
   const { status, data: member, reload } = usePageState({ fetcher, delay: 0 })
@@ -85,13 +95,25 @@ export function MembershipDetailPage() {
     void run(label, () => membershipsApi.extend(member.id, { days, mode, note: label }))
   }
 
+  if (!id) {
+    return (
+      <ErrorState
+        title="Geçersiz üye linki"
+        description="Üye kimliği bulunamadı. Listeye dönüp tekrar deneyin."
+        onRetry={() => navigate('/uyeler')}
+      />
+    )
+  }
+
   if (status === 'loading') return <DetailSkeleton />
   if (status === 'error' || !member) {
     return (
       <ErrorState
         onRetry={reload}
-        title="Üye bulunamadı"
-        description="İstenen üye hesabı bulunamadı."
+        title="Üye detayı açılamadı"
+        description={
+          errorMessage || 'İstenen üye hesabı yüklenemedi. Tekrar deneyin veya listeye dönün.'
+        }
       />
     )
   }

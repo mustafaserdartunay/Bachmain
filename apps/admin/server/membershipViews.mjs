@@ -237,36 +237,67 @@ export function buildAccountRows(store) {
 }
 
 export function buildMembershipDetail(store, accountId) {
-  const account = (store.accounts || []).find((a) => a.id === accountId)
+  const key = String(accountId || '').trim()
+  if (!key) return null
+  const accounts = store.accounts || []
+  let account =
+    accounts.find((a) => a.id === key) ||
+    accounts.find((a) => a.customerId === key) ||
+    accounts.find((a) => String(a.email || '').toLowerCase() === key.toLowerCase()) ||
+    null
   if (!account) return null
+
   const customer = (store.customers || []).find((c) => c.id === account.customerId) || null
-  const row = buildAccountRows(store).find((r) => r.id === accountId)
-  const paymentRequests = (store.paymentRequests || []).filter(
-    (p) => p.customerId === account.customerId || p.email === account.email,
-  )
-  const tickets = (store.supportTickets || []).filter((t) => t.customerId === account.customerId)
+  const row =
+    buildAccountRows(store).find((r) => r.id === account.id) ||
+    customerToRow(customer || { id: account.customerId, status: 'trial' }, account)
+
+  const paymentRequests = (store.paymentRequests || [])
+    .filter(
+      (p) =>
+        (account.customerId && p.customerId === account.customerId) ||
+        (account.email &&
+          p.email &&
+          String(p.email).toLowerCase() === String(account.email).toLowerCase()),
+    )
+    .map((p, i) => ({ id: p.id || `pay_${i}`, ...p }))
+
+  const tickets = (store.supportTickets || [])
+    .filter((t) => account.customerId && t.customerId === account.customerId)
+    .map((t, i) => ({ id: t.id || `tkt_${i}`, ...t }))
+
   const history = (store.billing?.history || [])
-    .filter((h) => h.customerId === account.customerId)
+    .filter((h) => account.customerId && h.customerId === account.customerId)
     .slice(0, 40)
+    .map((h, i) => ({ id: h.id || `hist_${i}`, ...h }))
+
   const mailLogs = (
     (store.mail?.logs || []).filter(
       (m) =>
-        m.customerId === account.customerId ||
+        (account.customerId && m.customerId === account.customerId) ||
         m.accountId === account.id ||
-        (m.to && String(m.to).toLowerCase() === String(account.email || '').toLowerCase()),
+        (m.to &&
+          account.email &&
+          String(m.to).toLowerCase() === String(account.email).toLowerCase()),
     ) || []
-  ).slice(0, 30)
+  )
+    .slice(0, 30)
+    .map((m, i) => ({ id: m.id || `mail_${i}`, ...m }))
+
   const authEvents = (
     (store.authEvents || []).filter(
       (e) =>
-        e.customerId === account.customerId ||
+        (account.customerId && e.customerId === account.customerId) ||
         e.accountId === account.id ||
-        e.email === account.email,
+        (account.email && e.email === account.email),
     ) || []
-  ).slice(0, 30)
+  )
+    .slice(0, 30)
+    .map((e, i) => ({ id: e.id || `auth_${i}`, ...e }))
 
   return {
     ...row,
+    id: account.id,
     account: {
       id: account.id,
       email: account.email,

@@ -42,7 +42,7 @@ if [ "$NEED_WEB" = "1" ] && [ -d apps/landing ]; then
     --exclude vercel.json \
     --exclude .vercel \
     --exclude CALISMA.md \
-    apps/landing/dist/ apps/web/
+    apps/landing/out/ apps/web/
   if [ -f apps/web/index.html ]; then
     cp apps/web/index.html apps/web/egitim.html 2>/dev/null || true
     cp apps/web/index.html apps/web/egitimler.html 2>/dev/null || true

@@ -27,8 +27,29 @@ import {
 } from '../server/subscriptionService.mjs'
 
 function getPath(req) {
-  const url = new URL(req.url, 'http://localhost')
-  return url.pathname.replace(/^\/api\/?/, '') || ''
+  // Vercel catch-all: /api/[...path] may expose segments via query.path
+  const q = req.query?.path
+  if (q != null && q !== '') {
+    const joined = Array.isArray(q) ? q.filter(Boolean).join('/') : String(q)
+    if (joined.trim()) {
+      return joined.replace(/^\/+/, '').replace(/\/+$/, '')
+    }
+  }
+
+  const raw = String(req.url || '')
+  let pathname = raw
+  try {
+    pathname = new URL(raw, 'http://localhost').pathname
+  } catch {
+    pathname = raw.split('?')[0] || raw
+  }
+
+  return (
+    pathname
+      .replace(/^\/api\/?/, '')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '') || ''
+  )
 }
 
 async function readBody(req) {
@@ -149,9 +170,9 @@ export default async function handler(req, res) {
     }
 
     if (method === 'GET' && path.startsWith('modules/')) {
-      const parts = path.split('/')
+      const parts = path.split('/').filter(Boolean)
       const moduleId = parts[1]
-      const itemId = parts[2]
+      const itemId = parts.slice(2).join('/') || undefined
       const store = await loadStore()
       if (!store.modules) store.modules = {}
 
@@ -186,7 +207,7 @@ export default async function handler(req, res) {
         return sendJson(req, res, 200, { rows, metrics })
       }
 
-      if (parts.length === 3) {
+      if (parts.length >= 3 && itemId) {
         if (moduleId === 'customers') {
           const customer = (store.customers || []).find((c) => c.id === itemId)
           if (!customer) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
@@ -199,7 +220,7 @@ export default async function handler(req, res) {
           })
         }
         if (moduleId === 'memberships' || moduleId === 'accounts-users') {
-          const detail = buildMembershipDetail(store, itemId)
+          const detail = buildMembershipDetail(store, decodeURIComponent(itemId))
           if (!detail) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
           return sendJson(req, res, 200, detail)
         }
@@ -213,6 +234,15 @@ export default async function handler(req, res) {
         if (!row) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
         return sendJson(req, res, 200, row)
       }
+    }
+
+    // Dedicated membership detail (backup path if modules/:id routing fails)
+    const membershipGetMatch = path.match(/^memberships\/([^/]+)$/)
+    if (method === 'GET' && membershipGetMatch) {
+      const store = await loadStore()
+      const detail = buildMembershipDetail(store, decodeURIComponent(membershipGetMatch[1]))
+      if (!detail) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+      return sendJson(req, res, 200, detail)
     }
 
     if (method === 'GET' && path === 'tickets') {
