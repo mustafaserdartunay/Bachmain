@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'

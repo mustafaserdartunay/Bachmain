@@ -3,6 +3,7 @@
  * New members start empty — no demo/sample rows.
  */
 import { scheduleTenantPush, pullTenantCollection, pushTenantCollection } from './tenantSync'
+import { isCrmDualWriteEnabled } from './crmApiDualWrite'
 
 export const WORKSPACE_OWNER_KEY = 'bach-workspace-owner'
 export const WORKSPACE_HYDRATED_EVENT = 'bach:workspace-hydrated'
@@ -193,6 +194,7 @@ export async function hydrateTenantWorkspace() {
 }
 
 export async function flushWorkspaceNow() {
+  if (!isCrmDualWriteEnabled()) return
   try {
     await pushTenantCollection('workspace', snapshotWorkspace())
   } catch (err) {
@@ -202,6 +204,7 @@ export async function flushWorkspaceNow() {
 }
 
 export function scheduleWorkspacePush(delayMs = 1200) {
+  if (!isCrmDualWriteEnabled()) return
   scheduleTenantPush('workspace', snapshotWorkspace(), delayMs)
 }
 

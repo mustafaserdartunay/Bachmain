@@ -1,3 +1,5 @@
+'use client'
+
 import type { ChangeEvent, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Building2, Eye, EyeOff, Hash, Lock, Mail, MapPin, Phone, User } from 'lucide-react'
@@ -6,6 +8,7 @@ import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Checkbox from '../ui/Checkbox'
 import PasswordStrength from './PasswordStrength'
+import { formatMoneyTry } from '../pricing/pricingTokens'
 
 export type RegisterFormState = {
   fullName: string
@@ -80,10 +83,7 @@ export default function RegisterPanel({
                 </p>
                 <p className="text-[16px] font-bold text-[#0F172A]">
                   {planName}{' '}
-                  <span className="font-semibold text-[#2563EB]">
-                    ₺{planPrice.toLocaleString('tr-TR')}
-                    <span className="text-[13px] font-medium text-[#64748B]">/aylık</span>
-                  </span>
+                  <span className="font-semibold text-[#2563EB]">{formatMoneyTry(planPrice)}</span>
                 </p>
               </div>
               <button

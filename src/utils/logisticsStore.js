@@ -4,7 +4,7 @@ import {
   TRAILER_TEMPLATES,
   volumeM3,
 } from './logisticsCatalogs'
-import { scheduleTenantPush } from './tenantSync'
+import { dualWriteCollection } from './crmApiDualWrite'
 
 const KEYS = {
   vehicles: 'bach-logistics-vehicles',
@@ -39,9 +39,13 @@ function read(key, fallback = []) {
 function write(key, rows) {
   localStorage.setItem(key, JSON.stringify(rows))
   try {
-    scheduleTenantPush(key, rows)
+    // Single tenant blob — not per localStorage key (API allow-list uses `logistics`)
+    const snapshot = Object.fromEntries(
+      Object.entries(KEYS).map(([name, storageKey]) => [name, read(storageKey, [])]),
+    )
+    dualWriteCollection('logistics', snapshot)
   } catch {
-    // tenant sync optional
+    // tenant sync optional — enable with VITE_CRM_DUAL_WRITE=1
   }
   window.dispatchEvent(new CustomEvent(EVENT, { detail: { key } }))
   return rows
@@ -189,7 +193,8 @@ export function upsertTrailer(row) {
   const next = {
     ...row,
     id: row.id || uid('trl'),
-    maxVolumeM3: row.maxVolumeM3 || volumeM3(row.innerLengthMm, row.innerWidthMm, row.innerHeightMm),
+    maxVolumeM3:
+      row.maxVolumeM3 || volumeM3(row.innerLengthMm, row.innerWidthMm, row.innerHeightMm),
     updatedAt: new Date().toISOString(),
   }
   const idx = rows.findIndex((r) => r.id === next.id)

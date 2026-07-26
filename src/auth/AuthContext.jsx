@@ -8,6 +8,7 @@ import {
   persistSession,
   registerAccount,
   completeOnboarding as completeOnboardingRequest,
+  ensureCsrfToken,
 } from '../utils/platformAuth'
 import { saveUserProfile } from '../utils/userProfile'
 import { updateCompanySettings, readCompanySettings } from '../utils/companySettings'
@@ -75,6 +76,11 @@ async function activateWorkspace(user) {
   if (!user) return
   await bindUserWorkspace(user)
   syncLocalProfile(user)
+  try {
+    await ensureCsrfToken()
+  } catch {
+    /* CSRF endpoint may be unavailable in local-only mode */
+  }
 }
 
 export function AuthProvider({ children }) {

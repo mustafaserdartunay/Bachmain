@@ -101,7 +101,7 @@ const editActionGroups = [
 ]
 function balanceTone(balance) {
   if (balance < 0) return 'text-red-300'
-  if (balance > 0) return 'text-emerald-300'
+  if (balance > 0) return 'text-[#059669]'
   return 'text-orange-300'
 }
 
@@ -251,7 +251,8 @@ export default function CustomerDetailPage() {
           movement.customerName === customer.company &&
           (movement.type === 'Müşteri Tahsilatı' ||
             movement.type === 'Müşteri Ödemesi' ||
-            movement.type === 'Satış Faturası'),
+            movement.type === 'Satış Faturası' ||
+            movement.type === 'Alış Faturası'),
       ),
     [customer.company, movements],
   )
@@ -260,28 +261,36 @@ export default function CustomerDetailPage() {
   const movementStatementRows = [...customerMovements].reverse().map((movement) => {
     const amount = Number(movement.amount) || 0
     const isInvoice = movement.type === 'Satış Faturası'
+    const isPurchase = movement.type === 'Alış Faturası'
     const isPayment = movement.type === 'Müşteri Ödemesi'
     const isCollection = movement.type === 'Müşteri Tahsilatı'
 
     if (isInvoice) runningBalance += amount
-    else if (isCollection || isPayment) runningBalance -= amount
+    else if (isPurchase || isCollection || isPayment) runningBalance -= amount
 
-    const baseType = isInvoice ? 'Satış Faturası' : isPayment ? 'Ödeme' : 'Tahsilat'
+    const baseType = isInvoice
+      ? 'Satış Faturası'
+      : isPurchase
+        ? 'Alış Faturası'
+        : isPayment
+          ? 'Ödeme'
+          : 'Tahsilat'
     return {
       id: movement.id,
       date: movement.date,
-      type: isInvoice
-        ? 'Satış Faturası'
-        : movement.method === 'Çek'
-          ? `Çek ${baseType}`
-          : `${movement.method} ${baseType}`,
+      type:
+        isInvoice || isPurchase
+          ? baseType
+          : movement.method === 'Çek'
+            ? `Çek ${baseType}`
+            : `${movement.method} ${baseType}`,
       accountName: movement.accountName || '—',
       description: movement.docNo
         ? `${movement.description || ''}${movement.description ? ' · ' : ''}Fatura No: ${movement.docNo}`
         : movement.chequeNo
           ? `${movement.description} · Çek No: ${movement.chequeNo}`
           : movement.description,
-      isPayment,
+      isPayment: isPayment || isPurchase,
       isInvoice,
       amount,
       balance: runningBalance,

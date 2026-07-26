@@ -1,9 +1,10 @@
+'use client'
+
 import { useState } from 'react'
 import { Building2, CreditCard, Landmark } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Button from '../ui/Button'
-
-export type PaymentMethod = 'card' | 'havale'
+import { formatMoneyTry } from '../pricing/pricingTokens'
 
 export type PaymentResult = {
   paymentId?: string
@@ -20,6 +21,8 @@ export type PaymentResult = {
   provider?: string
   iyzicoReady?: boolean
 }
+
+export type PaymentMethod = 'card' | 'havale'
 
 type PaymentPanelProps = {
   planName: string
@@ -60,10 +63,7 @@ export default function PaymentPanel({
           </h2>
           <p className="mt-2 text-[14px] font-medium text-[#64748B]">
             {planName} paketi —{' '}
-            <span className="font-bold text-[#0F172A]">
-              ₺{planPrice.toLocaleString('tr-TR')}
-              <span className="text-[13px] font-medium text-[#64748B]">/aylık</span>
-            </span>
+            <span className="font-bold text-[#0F172A]">{formatMoneyTry(planPrice)}</span>
           </p>
           <p className="mt-2 text-[13px] leading-relaxed text-[#64748B]">
             Kart ödemeleri iyzico altyapısına hazırdır. Havale/EFT’de tutarın eksiksiz yatırılması

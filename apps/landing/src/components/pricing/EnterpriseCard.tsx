@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 import { Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
 import PricingMascot from './PricingMascot'
-import { referencePricingPlans } from './pricingTokens'
+import { referencePricingPlans, formatMoneyTry } from './pricingTokens'
 
-const plan = referencePricingPlans[2]
+const plan = referencePricingPlans[0]
 
 export default function EnterpriseCard() {
   return (
@@ -26,7 +26,7 @@ export default function EnterpriseCard() {
         </p>
         <div className="mt-6 flex items-end gap-1.5">
           <span className="text-[36px] leading-none font-extrabold tracking-tight text-[#FFB000] tabular-nums">
-            ₺{plan.price.toLocaleString('tr-TR')}
+            {formatMoneyTry(plan.price)}
           </span>
           <span className="pb-1 text-[14px] font-medium text-[#94A3B8]">{plan.period}</span>
         </div>

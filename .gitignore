@@ -37,4 +37,17 @@ apps/admin/server/data/db.json
 # Backups / restore points (kept out of the project to avoid index bloat)
 restore-backups/
 *.backup
+docs/dr-evidence/*.json
+!docs/dr-evidence/.gitkeep
 .vercel
+
+.env.vercel.local
+apps/**/.env.vercel.local
+.env*
+!.env.example
+!.env.*.example
+!.env.production.example
+.tmp-vercel/
+apps/**/.tmp-vercel/
+apps/landing/.next/
+apps/landing/out/

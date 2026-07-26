@@ -9,6 +9,7 @@ import {
   purgeDeletedRecord,
 } from '../utils/deletedRecordsStore'
 import { filterByOrgScope, getActiveOrgScope, withOrgScope } from '../utils/orgScope'
+import { dualWriteCollection } from '../utils/crmApiDualWrite'
 
 const CREATED_CUSTOMERS_KEY = 'erlenbox-created-customers'
 
@@ -30,6 +31,7 @@ function readCreatedCustomers() {
 
 function writeCreatedCustomers(profiles) {
   localStorage.setItem(CREATED_CUSTOMERS_KEY, JSON.stringify(profiles))
+  dualWriteCollection('customers', profiles)
 }
 
 function readArchivedMap() {

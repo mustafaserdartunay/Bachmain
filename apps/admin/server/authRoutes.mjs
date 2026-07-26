@@ -12,6 +12,7 @@ import {
 import { loadStore, withStore } from './store.mjs'
 import { hitRateLimit } from './db.mjs'
 import { loginStaff, getStaffSession, buildStaffCookie } from './staffAuth.mjs'
+import { assertCsrf, buildCsrfCookie, issueCsrfToken } from './csrf.mjs'
 
 function allowedOrigins() {
   const fromEnv = String(process.env.CORS_ORIGIN || '')
@@ -40,15 +41,25 @@ export function applyCors(req, res) {
   res.setHeader('Vary', 'Origin')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-CSRF-Token, X-XSRF-Token',
+  )
 }
 
 export function sendJson(req, res, status, data, { cookie } = {}) {
   applyCors(req, res)
   res.statusCode = status
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
-  if (cookie) res.setHeader('Set-Cookie', cookie)
+  if (cookie) {
+    res.setHeader('Set-Cookie', Array.isArray(cookie) ? cookie : [cookie])
+  }
   res.end(JSON.stringify(data))
+}
+
+function withCsrfCookie(sessionCookie) {
+  const csrf = buildCsrfCookie(issueCsrfToken())
+  return sessionCookie ? [sessionCookie, csrf] : [csrf]
 }
 
 /**
@@ -62,6 +73,18 @@ export async function handleAuthApi(req, res, path, body = {}) {
     applyCors(req, res)
     res.statusCode = 204
     res.end()
+    return true
+  }
+
+  if (method === 'GET' && path === 'auth/csrf') {
+    const token = issueCsrfToken()
+    sendJson(req, res, 200, { ok: true, csrfToken: token }, { cookie: buildCsrfCookie(token) })
+    return true
+  }
+
+  const csrf = assertCsrf(req, path)
+  if (!csrf.ok) {
+    sendJson(req, res, csrf.status, csrf.body)
     return true
   }
 
@@ -89,7 +112,7 @@ export async function handleAuthApi(req, res, path, body = {}) {
           user: result.user,
           token: result.token,
         },
-        { cookie: buildSessionCookie(result.token) },
+        { cookie: withCsrfCookie(buildSessionCookie(result.token)) },
       )
       return true
     } catch (error) {
@@ -129,7 +152,7 @@ export async function handleAuthApi(req, res, path, body = {}) {
           user: result.user,
           token: result.token,
         },
-        { cookie: buildSessionCookie(result.token) },
+        { cookie: withCsrfCookie(buildSessionCookie(result.token)) },
       )
       return true
     } catch (error) {
@@ -156,7 +179,7 @@ export async function handleAuthApi(req, res, path, body = {}) {
         200,
         { ok: true, user: result.user, token: result.token },
         {
-          cookie: buildStaffCookie(result.token),
+          cookie: withCsrfCookie(buildStaffCookie(result.token)),
         },
       )
       return true

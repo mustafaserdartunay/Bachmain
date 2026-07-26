@@ -4,6 +4,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadStore, withStore, newId } from './store.mjs'
 import { handleAuthApi, applyCors, sendJson as sendAuthJson } from './authRoutes.mjs'
+import { assertCsrf } from './csrf.mjs'
+import { handleTenantApi } from './tenantApi.mjs'
 import { handleLeadsApi } from './leads.mjs'
 import { handleWhatsAppApi } from './whatsappApi.mjs'
 import { handleBillingApi } from './billingRoutes.mjs'
@@ -124,7 +126,14 @@ async function handle(req, res, url) {
           body = {}
         }
       }
+      if (method !== 'GET' && method !== 'OPTIONS' && pathname.startsWith('/api/')) {
+        const csrf = assertCsrf(req, apiPath)
+        if (!csrf.ok) {
+          return sendJson(req, res, csrf.status, csrf.body)
+        }
+      }
       if (await handleAuthApi(req, res, apiPath, body)) return
+      if (await handleTenantApi(req, res, apiPath, body)) return
       if (await handleLeadsApi(req, res, apiPath, body)) return
       if (await handleBillingApi(req, res, apiPath, body)) return
       if (await handlePaymentsApi(req, res, apiPath, body)) return

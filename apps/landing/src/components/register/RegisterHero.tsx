@@ -1,3 +1,5 @@
+'use client'
+
 import { motion } from 'framer-motion'
 
 type RegisterHeroProps = {
@@ -6,7 +8,7 @@ type RegisterHeroProps = {
 }
 
 const titleCls =
-  'text-4xl font-extrabold tracking-[-0.045em] text-blue-700 sm:text-5xl lg:text-[3.2rem] lg:leading-[1.1]'
+  'mt-6 text-4xl font-extrabold uppercase tracking-[-0.04em] text-blue-700 sm:text-5xl lg:text-[3.2rem] lg:leading-[1.1]'
 
 export default function RegisterHero({ step, planName }: RegisterHeroProps) {
   const eyebrow =
@@ -32,21 +34,14 @@ export default function RegisterHero({ step, planName }: RegisterHeroProps) {
         {eyebrow}
       </motion.p>
 
-      <motion.div
-        className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
+      <motion.h1
+        className={titleCls}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.05, ease: 'easeOut' }}
       >
-        <img
-          src="/assets/bachmain-logo.png"
-          alt="BACHMAIN"
-          className="h-[1.65rem] w-auto select-none sm:h-8"
-          decoding="async"
-          draggable={false}
-        />
-        <h1 className={titleCls}>{title}</h1>
-      </motion.div>
+        {title}
+      </motion.h1>
 
       <motion.p
         className="mx-auto mt-6 max-w-2xl text-[16px] leading-relaxed font-medium text-[#64748B] sm:text-[18px] lg:text-[24px] lg:leading-snug lg:font-semibold"

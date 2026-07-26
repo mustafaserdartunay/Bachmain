@@ -1,0 +1,26 @@
+---
+description: BACHMAIN resmi marka logosu — her zaman bu dosyayı kullan
+alwaysApply: true
+---
+
+# BACHMAIN Logo
+
+Kullanıcının resmi marka logosu budur. Metin tabanlı / CSS gradient logo üretme.
+
+## Kaynak dosya
+
+- `src/assets/bachmain-logo.png` — birebir logo (şeffaf zemin, lacivert "BACHMAIN" + açık mavi nokta)
+- Yedek/alias: `src/assets/bach-logo.png` (aynı görsel)
+
+## Kullanım
+
+- Bileşen: `src/components/Layout/BrandLogo.jsx` — sidebar ve marka alanlarında bunu kullan
+- Import: `import bachmainLogo from '../../assets/bachmain-logo.png'`
+- Görsel: `BACHMAIN.` wordmark; nokta açık mavi, harfler koyu lacivert
+- Firma ayarlarında özel `logoDataUrl` yoksa varsayılan olarak bu logo gösterilir
+
+## Yapma
+
+- "BACH" + "MAIN" metin span’leri veya gradient text logo oluşturma
+- Logoyu yeniden çizme / SVG ile taklit etme (kullanıcı birebir resmi istedi)
+- Farklı renk veya font ile alternatif marka yazısı üretme

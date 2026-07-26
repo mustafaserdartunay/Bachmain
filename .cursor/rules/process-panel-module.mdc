@@ -1,0 +1,74 @@
+---
+description: Süreç paneli modülü — teklif süreci/durumu gibi liste+düzenleme panelleri için standart bileşen
+globs: src/components/DocumentEditor/**/*
+alwaysApply: false
+---
+
+# Process Panel Module (Süreç Paneli Modülü)
+
+Kullanıcı "process panel module" veya "süreç paneli modülü" dediğinde bu standardı uygula.
+
+## Bileşenler
+
+| Dosya | Rol |
+|-------|-----|
+| `ProcessPanelModule.jsx` | Katlanabilir panel kabuğu (aktif öğe, sayaç, Düzenle/Gizle) |
+| `WorkflowStageEditor.jsx` | Liste editörü: sürükle-sırala, renk, inline ad düzenleme, sil, ekle |
+| `processPanelUtils.js` | `{label, color}[]` ↔ `{id, label, color}[]` dönüşümü |
+| `StageColorSwatches.jsx` + `stageColors.js` | Renk seçici |
+
+## Kullanım
+
+```jsx
+import ProcessPanelModule from '../components/DocumentEditor/ProcessPanelModule'
+import { optionsToProcessRecord, processRecordToOptions } from '../components/DocumentEditor/processPanelUtils'
+import { stageColors } from '../components/DocumentEditor/stageColors'
+
+const record = useMemo(
+  () => optionsToProcessRecord(options, activeLabel),
+  [options, activeLabel],
+)
+
+<ProcessPanelModule
+  activeLabel="Aktif Durum"           // veya "Aktif Süreç"
+  countSuffix="durum tanımlı"         // veya "süreç tanımlı"
+  emptyMessage="Henüz durum eklenmedi."
+  addPlaceholder="Yeni durum adı..."
+  record={record}
+  isOpen={isOpen}
+  onToggle={toggle}
+  stageInput={input}
+  setStageInput={setInput}
+  onAddStage={add}
+  onSelectStage={select}
+  onUpdateStageColor={updateColor}
+  onUpdateStageLabel={updateLabel}
+  onReorderStages={(stages) => saveOptions(processRecordToOptions(stages))}
+  pendingStageDeleteId={pendingDeleteId}
+  setPendingStageDeleteId={setPendingDeleteId}
+  onRemoveStage={remove}
+/>
+```
+
+## Tasarım kuralları
+
+- Dış kabuk: `rounded-2xl border border-dark-500/40 bg-dark-800/70`
+- Başlık satırı: `text-[10px] font-black uppercase tracking-wider text-gray-500`
+- Aktif öğe: renkli nokta + kalın etiket
+- Açık panel: `max-h-[min(28rem,70vh)] overflow-y-auto border-t border-dark-500/35 p-3`
+- Sayfa başlığı panelin **dışında**: `h2` + `mb-1.5 text-xs font-black uppercase tracking-wider text-gray-500`
+
+## Mevcut kullanımlar
+
+- **Teklif Süreci**: `WorkflowStagePanel` → `ProcessPanelModule` sarmalayıcı
+- **Teklif Durumu**: `QuoteStatusEditor` doğrudan `ProcessPanelModule` kullanır
+- **Ayarlar > Etiketler**: `OptionListPanel` ve `WorkflowStagesSettingsPanel` → `ProcessPanelModule`
+
+## Yeni panel eklerken
+
+1. Veriyi `{label, color}[]` olarak tut (Ayarlar > Etiketler ile senkron)
+2. `optionsToProcessRecord` ile record üret
+3. CRUD handler'ları `processRecordToOptions` ile geri yaz
+4. Aktif seçim değişince ilgili entity alanını güncelle (ör. `quote.status`)
+5. Dropdown/pill yerine **ProcessPanelModule** kullan — dropdown kullanma
+6. **Boş liste kalıcıdır** — tüm öğeler silindiyse varsayılanları geri yükleme; yalnızca kullanıcı "Ekle" ile yeni kayıt ekler

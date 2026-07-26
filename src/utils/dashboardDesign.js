@@ -56,9 +56,9 @@ export const APP_ACTIVATION_TONES = {
     amount: 'text-[#e11d48]',
   },
   today: {
-    ping: 'bg-[#7cf2c6]',
-    dot: 'bg-[#10b981]',
-    amount: 'text-[#10b981]',
+    ping: 'bg-[#6ee7b7]',
+    dot: 'bg-[#059669]',
+    amount: 'text-[#059669]',
   },
   soon: {
     ping: 'bg-[#ffd27f]',

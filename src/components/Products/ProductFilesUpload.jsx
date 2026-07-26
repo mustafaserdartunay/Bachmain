@@ -1,5 +1,6 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Download, FileText, Upload, X, FileImage, FileCode } from 'lucide-react'
+import { validateUploadFile, DEFAULT_MAX_BYTES } from '../../utils/secureFileUpload'
 
 const fileTypes = [
   { key: 'dxf', label: 'DXF', accept: '.dxf', icon: FileCode, color: 'text-blue-400' },
@@ -10,6 +11,7 @@ const fileTypes = [
 ]
 
 const RESTORE_WINDOW_MS = 365 * 24 * 60 * 60 * 1000
+const ALLOWED = ['dxf', 'pdf', 'ai', 'png', 'jpg', 'jpeg']
 
 function formatSize(bytes) {
   if (!bytes) return ''
@@ -39,8 +41,12 @@ function downloadFile(file) {
 
 function confirmFileDelete(file) {
   const fileName = file?.name || 'Bu dosya'
-  return window.confirm(`"${fileName}" dosyasını silmek istediğinize emin misiniz?`)
-    && window.confirm(`Son kontrol: "${fileName}" dosyası listeden kaldırılacak ve 1 yıl içinde geri getirilebilecek. Silme işlemini onaylıyor musunuz?`)
+  return (
+    window.confirm(`"${fileName}" dosyasını silmek istediğinize emin misiniz?`) &&
+    window.confirm(
+      `Son kontrol: "${fileName}" dosyası listeden kaldırılacak ve 1 yıl içinde geri getirilebilecek. Silme işlemini onaylıyor musunuz?`,
+    )
+  )
 }
 
 export default function ProductFilesUpload({
@@ -50,8 +56,11 @@ export default function ProductFilesUpload({
   onFileLocationNoteChange = () => {},
 }) {
   const refs = useRef({})
+  const [uploadError, setUploadError] = useState('')
   const activeFiles = files.filter((file) => !file.deletedAt)
-  const recentlyDeletedFiles = files.filter((file) => file.deletedAt && Date.now() - file.deletedAt <= RESTORE_WINDOW_MS)
+  const recentlyDeletedFiles = files.filter(
+    (file) => file.deletedAt && Date.now() - file.deletedAt <= RESTORE_WINDOW_MS,
+  )
 
   function getFilesByType(type) {
     return activeFiles.filter((f) => f.type === type)
@@ -60,16 +69,25 @@ export default function ProductFilesUpload({
   async function handleUpload(type, e) {
     const uploaded = Array.from(e.target.files || [])
     if (!uploaded.length) return
+    setUploadError('')
 
-    const newFiles = await Promise.all(uploaded.map(async (file) => ({
-      id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      name: file.name,
-      type,
-      size: file.size,
-      url: await fileToDataUrl(file),
-    })))
+    const accepted = []
+    for (const file of uploaded) {
+      const check = validateUploadFile(file, { allowedTypes: ALLOWED, maxBytes: DEFAULT_MAX_BYTES })
+      if (!check.ok) {
+        setUploadError(check.error)
+        continue
+      }
+      accepted.push({
+        id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: check.safeName,
+        type,
+        size: file.size,
+        url: await fileToDataUrl(file),
+      })
+    }
 
-    onChange([...files, ...newFiles])
+    if (accepted.length) onChange([...files, ...accepted])
     e.target.value = ''
   }
 
@@ -79,11 +97,13 @@ export default function ProductFilesUpload({
   }
 
   function restoreFile(file) {
-    onChange(files.map((item) => {
-      if (item.id !== file.id) return item
-      const { deletedAt, ...restored } = item
-      return restored
-    }))
+    onChange(
+      files.map((item) => {
+        if (item.id !== file.id) return item
+        const { deletedAt, ...restored } = item
+        return restored
+      }),
+    )
   }
 
   return (
@@ -92,8 +112,13 @@ export default function ProductFilesUpload({
         <Upload className="w-4 h-4 text-accent-blue" /> Ürün Dosyaları
       </h3>
       <p className="text-xs text-gray-500 mb-4">
-        Teknik çizim, baskı dosyası ve görselleri yükleyin (DXF, PDF, AI, PNG, JPG)
+        Teknik çizim, baskı dosyası ve görselleri yükleyin (DXF, PDF, AI, PNG, JPG · max 8 MB)
       </p>
+      {uploadError ? (
+        <p className="mb-3 text-xs text-red-600" role="alert">
+          {uploadError}
+        </p>
+      ) : null}
 
       <div className="mb-4">
         <label className="form-label">Dosya Yeri Açıklaması</label>
@@ -111,7 +136,9 @@ export default function ProductFilesUpload({
           return (
             <div key={key} className="space-y-2">
               <input
-                ref={(el) => { refs.current[key] = el }}
+                ref={(el) => {
+                  refs.current[key] = el
+                }}
                 type="file"
                 accept={accept}
                 multiple
@@ -123,8 +150,12 @@ export default function ProductFilesUpload({
                 onClick={() => refs.current[key]?.click()}
                 className="w-full aspect-[4/3] rounded-xl border-2 border-dashed border-dark-500/50 hover:border-accent-blue/40 bg-dark-700/40 hover:bg-dark-700/70 transition-colors flex flex-col items-center justify-center gap-1.5 group"
               >
-                <Icon className={`w-6 h-6 ${color} opacity-60 group-hover:opacity-100 transition-opacity`} />
-                <span className="text-xs font-medium text-gray-400 group-hover:text-gray-300">{label}</span>
+                <Icon
+                  className={`w-6 h-6 ${color} opacity-60 group-hover:opacity-100 transition-opacity`}
+                />
+                <span className="text-xs font-medium text-gray-400 group-hover:text-gray-300">
+                  {label}
+                </span>
                 <span className="text-[12px] text-gray-600">Yükle</span>
               </button>
 
@@ -137,7 +168,9 @@ export default function ProductFilesUpload({
                     >
                       <Icon className={`w-3 h-3 shrink-0 ${color}`} />
                       <div className="min-w-0 flex-1">
-                        <p className="text-[12px] text-gray-300 truncate" title={file.name}>{file.name}</p>
+                        <p className="text-[12px] text-gray-300 truncate" title={file.name}>
+                          {file.name}
+                        </p>
                         <p className="text-[11px] text-gray-600">{formatSize(file.size)}</p>
                       </div>
                       <button
@@ -157,7 +190,11 @@ export default function ProductFilesUpload({
                       </button>
                       {['png', 'jpg'].includes(file.type) && file.url && (
                         <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 hidden w-56 rounded-xl border border-dark-500/70 bg-dark-900 p-2 shadow-2xl group-hover/file:block">
-                          <img src={file.url} alt={file.name} className="max-h-56 w-full rounded-lg object-contain" />
+                          <img
+                            src={file.url}
+                            alt={file.name}
+                            className="max-h-56 w-full rounded-lg object-contain"
+                          />
                           <p className="mt-1 truncate text-[12px] text-gray-500">{file.name}</p>
                         </div>
                       )}
@@ -178,10 +215,15 @@ export default function ProductFilesUpload({
           </div>
           <div className="space-y-1">
             {recentlyDeletedFiles.map((file) => (
-              <div key={file.id} className="flex items-center gap-2 rounded-lg bg-dark-800/60 px-2 py-1.5">
+              <div
+                key={file.id}
+                className="flex items-center gap-2 rounded-lg bg-dark-800/60 px-2 py-1.5"
+              >
                 <FileText className="h-3 w-3 shrink-0 text-orange-300" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12px] text-gray-300" title={file.name}>{file.name}</p>
+                  <p className="truncate text-[12px] text-gray-300" title={file.name}>
+                    {file.name}
+                  </p>
                   <p className="text-[11px] text-gray-600">{formatSize(file.size)}</p>
                 </div>
                 <button

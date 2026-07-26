@@ -31,6 +31,11 @@ const envSchema = z.object({
   API_PUBLIC_URL: z.string().default('http://127.0.0.1:8080'),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('BACHMAIN <noreply@bachmain.com>'),
+  R2_ENDPOINT: z.string().optional(),
+  R2_ACCESS_KEY: z.string().optional(),
+  R2_SECRET_KEY: z.string().optional(),
+  R2_BUCKET: z.string().optional(),
+  R2_PUBLIC_BASE_URL: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>

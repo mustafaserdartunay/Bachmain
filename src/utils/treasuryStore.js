@@ -48,7 +48,7 @@ function readJson(key, fallback) {
     const saved = localStorage.getItem(key)
     if (!saved) return fallback
     const parsed = JSON.parse(saved)
-    return Array.isArray(fallback) ? Array.isArray(parsed) ? parsed : fallback : parsed
+    return Array.isArray(fallback) ? (Array.isArray(parsed) ? parsed : fallback) : parsed
   } catch {
     return fallback
   }
@@ -60,7 +60,9 @@ function writeJson(key, value) {
 }
 
 export function getTreasuryAccounts() {
-  return filterByOrgScope(readJson(ACCOUNTS_KEY, defaultTreasuryAccounts), getActiveOrgScope(), { loose: true })
+  return filterByOrgScope(readJson(ACCOUNTS_KEY, defaultTreasuryAccounts), getActiveOrgScope(), {
+    loose: true,
+  })
 }
 
 export function saveTreasuryAccounts(accounts) {
@@ -68,7 +70,9 @@ export function saveTreasuryAccounts(accounts) {
 }
 
 export function getTreasuryMovements() {
-  return filterByOrgScope(readJson(MOVEMENTS_KEY, defaultTreasuryMovements), getActiveOrgScope(), { loose: true })
+  return filterByOrgScope(readJson(MOVEMENTS_KEY, defaultTreasuryMovements), getActiveOrgScope(), {
+    loose: true,
+  })
 }
 
 export function saveTreasuryMovements(movements) {
@@ -95,29 +99,36 @@ export function isCashTreasuryAccount(account) {
   const type = String(account?.type || '').trim()
   if (!type) return false
   if (
-    type === CHEQUE_TREASURY_ACCOUNT_TYPE
-    || type === PROMISSORY_TREASURY_ACCOUNT_TYPE
-    || type === BANK_TREASURY_ACCOUNT_TYPE
-  ) return false
+    type === CHEQUE_TREASURY_ACCOUNT_TYPE ||
+    type === PROMISSORY_TREASURY_ACCOUNT_TYPE ||
+    type === BANK_TREASURY_ACCOUNT_TYPE
+  )
+    return false
   if (type === CASH_TREASURY_ACCOUNT_TYPE) return true
 
   const normalized = type.toLocaleLowerCase('tr-TR')
-  if (normalized.includes('çek') || normalized.includes('senet') || normalized.includes('banka')) return false
-  return normalized.includes('nakit') || normalized.includes('kasa') || normalized.includes('merkez')
+  if (normalized.includes('çek') || normalized.includes('senet') || normalized.includes('banka'))
+    return false
+  return (
+    normalized.includes('nakit') || normalized.includes('kasa') || normalized.includes('merkez')
+  )
 }
 
 export function isBankTreasuryAccount(account) {
   const type = String(account?.type || '').trim()
   if (!type) return false
   if (
-    type === CHEQUE_TREASURY_ACCOUNT_TYPE
-    || type === PROMISSORY_TREASURY_ACCOUNT_TYPE
-    || type === CASH_TREASURY_ACCOUNT_TYPE
-  ) return false
+    type === CHEQUE_TREASURY_ACCOUNT_TYPE ||
+    type === PROMISSORY_TREASURY_ACCOUNT_TYPE ||
+    type === CASH_TREASURY_ACCOUNT_TYPE
+  )
+    return false
   if (type === BANK_TREASURY_ACCOUNT_TYPE) return true
 
   const normalized = type.toLocaleLowerCase('tr-TR')
-  return normalized.includes('banka') && !normalized.includes('çek') && !normalized.includes('senet')
+  return (
+    normalized.includes('banka') && !normalized.includes('çek') && !normalized.includes('senet')
+  )
 }
 
 export function isChequeTreasuryAccount(account) {
@@ -146,14 +157,20 @@ export function getBankTreasuryAccounts(accounts = getTreasuryAccounts()) {
   return accounts.filter(isBankTreasuryAccount)
 }
 
-export function getCashTreasuryTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+export function getCashTreasuryTotal(
+  movements = getTreasuryMovements(),
+  accounts = getTreasuryAccounts(),
+) {
   return getCashTreasuryAccounts(accounts).reduce(
     (sum, account) => sum + calculateAccountBalance(account, movements),
     0,
   )
 }
 
-export function getBankTreasuryTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+export function getBankTreasuryTotal(
+  movements = getTreasuryMovements(),
+  accounts = getTreasuryAccounts(),
+) {
   return getBankTreasuryAccounts(accounts).reduce(
     (sum, account) => sum + calculateAccountBalance(account, movements),
     0,
@@ -168,21 +185,30 @@ export function getPromissoryTreasuryAccounts(accounts = getTreasuryAccounts()) 
   return accounts.filter(isPromissoryTreasuryAccount)
 }
 
-export function getChequeTreasuryTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+export function getChequeTreasuryTotal(
+  movements = getTreasuryMovements(),
+  accounts = getTreasuryAccounts(),
+) {
   return getChequeTreasuryAccounts(accounts).reduce(
     (sum, account) => sum + calculateAccountBalance(account, movements),
     0,
   )
 }
 
-export function getPromissoryTreasuryTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+export function getPromissoryTreasuryTotal(
+  movements = getTreasuryMovements(),
+  accounts = getTreasuryAccounts(),
+) {
   return getPromissoryTreasuryAccounts(accounts).reduce(
     (sum, account) => sum + calculateAccountBalance(account, movements),
     0,
   )
 }
 
-export function getLiveAssetTotal(movements = getTreasuryMovements(), accounts = getTreasuryAccounts()) {
+export function getLiveAssetTotal(
+  movements = getTreasuryMovements(),
+  accounts = getTreasuryAccounts(),
+) {
   const cash = getCashTreasuryTotal(movements, accounts)
   const bank = getBankTreasuryTotal(movements, accounts)
   const cheques = getChequeTreasuryTotal(movements, accounts)
@@ -196,7 +222,11 @@ export function getLiveAssetTotal(movements = getTreasuryMovements(), accounts =
   }
 }
 
-export function resolveTreasuryAccountForMovement(method, accountName, accounts = getTreasuryAccounts()) {
+export function resolveTreasuryAccountForMovement(
+  method,
+  accountName,
+  accounts = getTreasuryAccounts(),
+) {
   const label = String(accountName || '').trim()
   if (label) {
     const exact = accounts.find((account) => account.name === label)
@@ -212,7 +242,9 @@ export function resolveTreasuryAccountForMovement(method, accountName, accounts 
     const normalized = label.toLocaleLowerCase('tr-TR')
     const partial = typedAccounts.find((account) => {
       const accountNameNormalized = String(account.name || '').toLocaleLowerCase('tr-TR')
-      return accountNameNormalized.includes(normalized) || normalized.includes(accountNameNormalized)
+      return (
+        accountNameNormalized.includes(normalized) || normalized.includes(accountNameNormalized)
+      )
     })
     if (partial) return partial
   }
@@ -245,7 +277,10 @@ function appendChequeEntryToAccount(accountId, entry) {
       ...account,
       chequeBaseAmount: account.chequeBaseAmount ?? (Number(account.openingBalance) || 0),
       openingBalance: (Number(account.openingBalance) || 0) + signedAmount,
-      chequeEntries: [nextDetail, ...(Array.isArray(account.chequeEntries) ? account.chequeEntries : [])],
+      chequeEntries: [
+        nextDetail,
+        ...(Array.isArray(account.chequeEntries) ? account.chequeEntries : []),
+      ],
     }
   })
 
@@ -307,7 +342,10 @@ export function createCustomerCollection(collection) {
     amount,
   })
 
-  if ((collection.method === 'Çek' || collection.method === 'Senet') && isInstrumentTreasuryAccount(account)) {
+  if (
+    (collection.method === 'Çek' || collection.method === 'Senet') &&
+    isInstrumentTreasuryAccount(account)
+  ) {
     appendChequeEntryToAccount(account.id, {
       amount,
       direction: 'in',
@@ -349,7 +387,10 @@ export function createCustomerPayment(payment) {
     amount,
   })
 
-  if ((payment.method === 'Çek' || payment.method === 'Senet') && isInstrumentTreasuryAccount(account)) {
+  if (
+    (payment.method === 'Çek' || payment.method === 'Senet') &&
+    isInstrumentTreasuryAccount(account)
+  ) {
     appendChequeEntryToAccount(account.id, {
       amount,
       direction: 'out',
@@ -406,10 +447,15 @@ export function updateTreasuryMovement(id, patch) {
   if (index === -1) return null
 
   const current = movements[index]
-  const account = accounts.find((item) => item.id === patch.accountId)
-    || resolveTreasuryAccountForMovement(patch.method || current.method, patch.accountName || current.accountName, accounts)
-    || accounts.find((item) => item.name === patch.accountName)
-    || accounts.find((item) => item.id === current.accountId)
+  const account =
+    accounts.find((item) => item.id === patch.accountId) ||
+    resolveTreasuryAccountForMovement(
+      patch.method || current.method,
+      patch.accountName || current.accountName,
+      accounts,
+    ) ||
+    accounts.find((item) => item.name === patch.accountName) ||
+    accounts.find((item) => item.id === current.accountId)
 
   const updated = {
     ...current,
@@ -425,7 +471,13 @@ export function updateTreasuryMovement(id, patch) {
   return updated
 }
 
-export function syncCustomerOpeningBalanceMovement(customerId, customerName, amount, date, description) {
+export function syncCustomerOpeningBalanceMovement(
+  customerId,
+  customerName,
+  amount,
+  date,
+  description,
+) {
   const movementId = `OPENING-${customerId}`
   const currentMovements = getTreasuryMovements().filter((movement) => movement.id !== movementId)
   const normalizedAmount = Number(amount) || 0
@@ -455,24 +507,21 @@ export function syncCustomerOpeningBalanceMovement(customerId, customerName, amo
 }
 
 export function getCustomerCollections(customerName, movements = getTreasuryMovements()) {
-  return movements.filter((movement) => (
-    movement.type === 'Müşteri Tahsilatı'
-    && movement.customerName === customerName
-  ))
+  return movements.filter(
+    (movement) => movement.type === 'Müşteri Tahsilatı' && movement.customerName === customerName,
+  )
 }
 
 export function getCustomerPayments(customerName, movements = getTreasuryMovements()) {
-  return movements.filter((movement) => (
-    movement.type === 'Müşteri Ödemesi'
-    && movement.customerName === customerName
-  ))
+  return movements.filter(
+    (movement) => movement.type === 'Müşteri Ödemesi' && movement.customerName === customerName,
+  )
 }
 
 export function getCustomerSalesInvoices(customerName, movements = getTreasuryMovements()) {
-  return movements.filter((movement) => (
-    movement.type === 'Satış Faturası'
-    && movement.customerName === customerName
-  ))
+  return movements.filter(
+    (movement) => movement.type === 'Satış Faturası' && movement.customerName === customerName,
+  )
 }
 
 export function createCustomerSalesInvoice({
@@ -509,19 +558,71 @@ export function createCustomerSalesInvoice({
   })
 }
 
+/** Alış / gelen e-fatura — cariyi tedarikçi alacaklı (biz borçlu) yapar. */
+export function createSupplierPurchaseInvoice({
+  customerName,
+  customerId,
+  amount,
+  docNo,
+  date,
+  description,
+  dueDate,
+}) {
+  const normalizedDocNo = String(docNo || '').trim()
+  if (!normalizedDocNo) return null
+
+  const movementId = `PINV-${normalizedDocNo}`
+  const existing = getTreasuryMovements().find((movement) => movement.id === movementId)
+  if (existing) return existing
+
+  return addTreasuryMovement({
+    id: movementId,
+    direction: 'ledger',
+    type: 'Alış Faturası',
+    customerName,
+    customerId: customerId || '',
+    method: 'Fatura',
+    accountId: '',
+    accountName: 'Cari',
+    amount: Number(amount) || 0,
+    date: date || todayForTreasury(),
+    description: description || `Alış faturası ${normalizedDocNo}`,
+    dueDate: dueDate || '',
+    docNo: normalizedDocNo,
+    status: 'İşlendi',
+  })
+}
+
+export function getCustomerPurchaseInvoices(customerName, movements = getTreasuryMovements()) {
+  return movements.filter(
+    (movement) => movement.type === 'Alış Faturası' && movement.customerName === customerName,
+  )
+}
+
 export function getCustomerLedgerBalance(customer, movements = getTreasuryMovements()) {
   const customerName = customer?.company || customer?.companyTitle || ''
   if (!customerName) return 0
 
   const openingBalance = Number(customer.balance) || 0
-  const invoiceTotal = getCustomerSalesInvoices(customerName, movements)
-    .reduce((sum, movement) => sum + Number(movement.amount || 0), 0)
-  const collectedTotal = getCustomerCollections(customerName, movements)
-    .reduce((sum, movement) => sum + Number(movement.amount || 0), 0)
-  const paidTotal = getCustomerPayments(customerName, movements)
-    .reduce((sum, movement) => sum + Number(movement.amount || 0), 0)
+  const invoiceTotal = getCustomerSalesInvoices(customerName, movements).reduce(
+    (sum, movement) => sum + Number(movement.amount || 0),
+    0,
+  )
+  const purchaseTotal = getCustomerPurchaseInvoices(customerName, movements).reduce(
+    (sum, movement) => sum + Number(movement.amount || 0),
+    0,
+  )
+  const collectedTotal = getCustomerCollections(customerName, movements).reduce(
+    (sum, movement) => sum + Number(movement.amount || 0),
+    0,
+  )
+  const paidTotal = getCustomerPayments(customerName, movements).reduce(
+    (sum, movement) => sum + Number(movement.amount || 0),
+    0,
+  )
 
-  return openingBalance + invoiceTotal - collectedTotal - paidTotal
+  // Satış faturası → alacak (+); alış faturası → tedarikçi alacaklı / biz borçlu (−)
+  return openingBalance + invoiceTotal - purchaseTotal - collectedTotal - paidTotal
 }
 
 export function getCustomerLiveBalance(customer, movements = getTreasuryMovements()) {
@@ -651,14 +752,16 @@ export function fixTreasuryAccountBalance(accountId, targetBalance, extra = {}) 
     accountName: account.name,
     direction: diff > 0 ? 'in' : 'out',
     type: 'Bakiye Sabitleme',
-    description: extra.description?.trim() || `Bakiye ${formatTreasuryCurrency(target)} olarak sabitlendi`,
-    method: account.type === 'Banka Hesabı'
-      ? 'Banka'
-      : account.type === 'Senet Kasası'
-        ? 'Senet'
-        : account.type === 'Çek Kasası'
-          ? 'Çek'
-          : 'Nakit',
+    description:
+      extra.description?.trim() || `Bakiye ${formatTreasuryCurrency(target)} olarak sabitlendi`,
+    method:
+      account.type === 'Banka Hesabı'
+        ? 'Banka'
+        : account.type === 'Senet Kasası'
+          ? 'Senet'
+          : account.type === 'Çek Kasası'
+            ? 'Çek'
+            : 'Nakit',
     amount: Math.abs(diff),
     date: extra.date || todayForTreasury(),
   })

@@ -69,7 +69,7 @@ const ROW_B2B_BTN = `${ROW_ICON_BTN} text-[#10b981] hover:bg-[#10b981]/15 hover:
 const ROW_ICON_SIZE = 'h-3 w-3'
 
 function balanceClass(balance) {
-  if (balance > 0) return 'text-[#10b981]'
+  if (balance > 0) return 'text-[#059669]'
   if (balance < 0) return 'text-[#e11d48]'
   return 'text-gray-300'
 }
@@ -375,8 +375,8 @@ export default function CustomersPage({
             title: 'Toplam Tahsil Edilecek',
             value: formatTreasuryCurrency(totalReceivable),
             icon: WalletCards,
-            tone: 'text-[#10b981]',
-            valueTone: 'text-[#10b981]',
+            tone: 'text-[#059669]',
+            valueTone: 'text-[#059669]',
             valueAlign: 'center',
           },
         ]}

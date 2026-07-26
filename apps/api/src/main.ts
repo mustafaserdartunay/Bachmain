@@ -31,6 +31,8 @@ import { analyticsRoutes } from './modules/analytics/analyticsRoutes.js'
 import { platformRoutes } from './modules/platform/platformRoutes.js'
 import { marketplaceRoutes } from './modules/marketplace/marketplaceRoutes.js'
 import { integrationRoutes } from './modules/integrations/integrationRoutes.js'
+import { uploadRoutes } from './modules/files/uploadRoutes.js'
+import { registerCsrf } from './shared/csrf.js'
 
 async function main() {
   const app = Fastify({
@@ -67,6 +69,8 @@ async function main() {
       req.url.startsWith('/v1/health') || req.url.startsWith('/v1/billing/webhooks/'),
     keyGenerator: (req) => req.ip,
   })
+
+  await registerCsrf(app)
 
   // Distributed Redis limiter when REDIS_URL is set (in-memory fallback inside helper)
   app.addHook('onRequest', async (req, reply) => {
@@ -128,6 +132,7 @@ async function main() {
   await app.register(platformRoutes)
   await app.register(marketplaceRoutes)
   await app.register(integrationRoutes)
+  await app.register(uploadRoutes)
 
   await app.ready()
 

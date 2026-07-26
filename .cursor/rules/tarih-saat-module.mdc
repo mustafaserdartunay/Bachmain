@@ -1,0 +1,13 @@
+---
+description: Tarih saat modülü tercihi
+alwaysApply: true
+---
+
+# Tarih Saat Modülü
+
+Kullanıcı "tarih saat" modülü ekle derse, bu projede mevcut ortak `DateRangePicker` bileşenini kullan.
+
+- Import: `src/components/Common/DateRangePicker.jsx`
+- Alanlar: `dateFrom`, `dateTo`, `timeFrom`, `timeTo`, `includeTime`
+- `onChange` çıktısını form state'ine yay: `setForm((current) => ({ ...current, ...value }))`
+- Saat gerektiğinde bileşenin içindeki "Saat aralığı ekle" seçeneğini kullan; ayrı ve uyumsuz date/time picker tasarımı üretme.

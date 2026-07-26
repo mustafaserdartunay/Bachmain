@@ -1,0 +1,64 @@
+---
+description: Standard trash/delete button with inline Quotes-style confirmation popover
+globs: src/**/*.{js,jsx,ts,tsx}
+alwaysApply: false
+---
+
+# Trash / Delete Confirmation (Quotes Standard)
+
+All trash icons and destructive delete buttons MUST use the shared components in `src/components/Common/ListDeleteConfirmPanel.jsx`.
+
+## Required components
+
+- **`DeleteTrashButton`** — trash button + inline confirmation (preferred for row/list actions)
+- **`DeleteConfirmPopover`** — confirmation panel only (when trash button is custom or already exists)
+- **`ListInlineDeleteConfirmPopover`** — alias for anchored popover
+
+## Trash button style
+
+```jsx
+import { DELETE_TRASH_BUTTON_CLASS } from '../Common/ListDeleteConfirmPanel'
+// veya: import { TEKLIFLER_COP_KUTUSU_BUTTON_CLASS } from '../../utils/buttonStyles'
+
+className={DELETE_TRASH_BUTTON_CLASS}
+// border-red-500/25 bg-red-500/10 text-red-300 hover:bg-red-500/20 (Teklifler standardı)
+```
+
+## Confirmation popover (Teklifler / Quotes design)
+
+Horizontal inline popover — never `window.confirm`, never a separate modal for trash:
+
+- Title: **Silinsin mi?**
+- Description: context-specific (default: **Bu satır kaldırılacak.**)
+- Buttons: **Evet** (red) + **Vazgeç** (neutral)
+- Panel: `flex flex-wrap items-center gap-2 rounded-2xl border border-red-500/35 bg-dark-900 p-2 shadow-2xl ring-1 ring-red-500/15`
+- Trash icon in a soft red rounded square on the left (`h-10 w-10 rounded-2xl bg-red-500/15 text-red-300`)
+- Text block must be `min-w-[8rem] flex-1` with wrapping text; never use nowrap in narrow dropdowns
+- Buttons live in a right-aligned `ml-auto flex shrink-0` action group so they wrap below instead of overlapping text
+
+## Standard usage
+
+```jsx
+import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
+
+const [pendingDelete, setPendingDelete] = useState(false)
+
+<DeleteTrashButton
+  pending={pendingDelete}
+  onClick={() => setPendingDelete(true)}
+  onConfirm={() => { handleDelete(); setPendingDelete(false) }}
+  onCancel={() => setPendingDelete(false)}
+  title="Silinsin mi?"
+  description="Bu satır kaldırılacak."
+  popoverClassName="absolute right-0 top-12 z-40"
+  wrapperClassName="relative"
+/>
+```
+
+## Rules
+
+- One confirmation step only; Evet deletes immediately
+- Hide trash button while popover is open (`pointer-events-none invisible`)
+- Wrap in `relative` container for absolute popover positioning
+- Use `onClick={(e) => e.stopPropagation()}` on wrapper when inside clickable rows
+- Non-delete confirmations (depo gönder, geri al) may use `ListInlineActionConfirm` with orange/blue tone

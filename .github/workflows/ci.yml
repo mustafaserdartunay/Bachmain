@@ -116,9 +116,20 @@ jobs:
           node-version: '22'
       - run: node scripts/ci-secret-scan.mjs
 
-  test-placeholder:
-    name: Tests (placeholder)
+  test-security:
+    name: Security smoke
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Unit/integration tests expand in D3; smoke = build jobs above."
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/smoke-security.mjs
+      - run: node scripts/dr-restore-drill.mjs
+
+  test-placeholder:
+    name: Tests (follow-up)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "E2E/Playwright expands after CRM cutover; active smoke is test-security."

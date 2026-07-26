@@ -1,0 +1,32 @@
+---
+description: Düzenleme kalemi — standart kalem (edit) ikon butonu stili
+globs: src/**/*.{js,jsx,ts,tsx}
+alwaysApply: false
+---
+
+# Düzenleme Kalemi
+
+Liste satırlarındaki kalem (edit) ikon butonları **düzenleme kalemi** stilini kullanmalı — üretim sayfası artı (+) butonu ile aynı mavi ton.
+
+## Kaynak
+
+`src/utils/buttonStyles.js` → `DUZENLEME_KALEMI_BUTTON_CLASS` (= `URETIM_ARTI_BUTTON_CLASS` + `p-2`)
+
+## Kullanım
+
+```jsx
+import { DUZENLEME_KALEMI_BUTTON_CLASS } from '../../utils/buttonStyles'
+import { Pencil } from 'lucide-react'
+
+<button type="button" className={`${DUZENLEME_KALEMI_BUTTON_CLASS} shrink-0 rounded-lg`} title="Düzenle">
+  <Pencil className="h-3.5 w-3.5" />
+</button>
+```
+
+CRM satırları için tercih edilen bileşen: `CrmEditAction` (`brand` prop ile).
+
+## Kurallar
+
+- Yeni edit/kalem butonları için inline Tailwind yazma; `DUZENLEME_KALEMI_BUTTON_CLASS` kullan
+- `rounded-lg` ve `shrink-0` genelde buton sarmalayıcısında eklenir (sabit içinde yok)
+- Kullanıcı "düzenleme kalemi" dediğinde bu sabiti uygula

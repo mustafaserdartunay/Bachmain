@@ -4,6 +4,7 @@ import { Check, ChevronDown, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { DeleteConfirmPopover } from './Common/ListDeleteConfirmPanel'
 import {
   dropdownMenuShellClass,
+  DROPDOWN_MENU_FIT_WIDTH_CLASS,
   DROPDOWN_MENU_ITEM_CLASS,
   DROPDOWN_MENU_ITEM_MUTED_CLASS,
 } from './Common/DropdownMenu'
@@ -221,19 +222,20 @@ export default function EditableDropdownPill({
           ? 'top-[calc(100%+4px)]'
           : 'top-11'
   const colorEditorOpen = editingIndex != null || adding
+  const colorEditorMinClass = colorEditorOpen ? ' min-w-[12.5rem]' : ''
   const menuShellClass = menuInline
     ? isLightMenu
       ? `relative mt-1 w-full ${lightMenuShell}`
       : dropdownMenuShellClass({ matchWidth: true, inline: true })
     : isLightMenu
       ? usePortal
-        ? `app-dropdown-portal glass-inset ${lightMenuShell} min-w-[7.5rem] w-max ${colorEditorOpen ? 'max-w-[12rem]' : 'max-w-[11rem]'}${menuMatchWidth ? ' w-full max-w-none' : ''}`
-        : `absolute left-0 ${menuPositionClass} ${lightMenuShell} min-w-[7.5rem] w-max ${colorEditorOpen ? 'max-w-[12rem]' : 'max-w-[11rem]'}${menuMatchWidth ? ' w-full max-w-none' : ''}`
+        ? `app-dropdown-portal glass-inset ${lightMenuShell} ${DROPDOWN_MENU_FIT_WIDTH_CLASS}${colorEditorMinClass}${menuMatchWidth === true ? ' w-full' : ''}`
+        : `absolute left-0 ${menuPositionClass} ${lightMenuShell} ${DROPDOWN_MENU_FIT_WIDTH_CLASS}${colorEditorMinClass}${menuMatchWidth === true ? ' w-full' : ''}`
       : `${dropdownMenuShellClass({
           matchWidth: portalMatchWidth,
           portaled: usePortal,
           positionClass: usePortal ? '' : `absolute left-0 ${menuPositionClass}`,
-        })}${colorEditorOpen ? ' !max-w-[12rem]' : ''}`
+        })}${colorEditorMinClass}`
 
   const optionButtonClass = isLightMenu
     ? 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]'
@@ -269,7 +271,9 @@ export default function EditableDropdownPill({
               className={placeholderButtonClass}
             >
               <OptionLeading empty isLightMenu={isLightMenu} />
-              <span className={isLightMenu ? undefined : 'text-gray-300'}>{placeholder}</span>
+              <span className={`whitespace-nowrap ${isLightMenu ? undefined : 'text-gray-300'}`}>
+                {placeholder}
+              </span>
             </button>
           )}
 
@@ -331,7 +335,7 @@ export default function EditableDropdownPill({
             ) : (
               <div
                 key={option.label}
-                className={`group flex items-center gap-1 rounded-xl ${
+                className={`group flex w-full items-center gap-1 rounded-xl ${
                   isLightMenu ? 'transition-colors hover:bg-[var(--surface-muted)]' : ''
                 }`}
               >
@@ -341,10 +345,10 @@ export default function EditableDropdownPill({
                     onChange(option.label)
                     setActiveMenu(null)
                   }}
-                  className={optionButtonClass}
+                  className={`${optionButtonClass} min-w-0 flex-1 !w-auto`}
                 >
                   <OptionLeading option={option} isLightMenu={isLightMenu} />
-                  <span className="whitespace-nowrap text-gray-300">{option.label}</span>
+                  <span className="whitespace-nowrap">{option.label}</span>
                   {option.label === value ? (
                     <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                   ) : null}

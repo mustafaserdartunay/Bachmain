@@ -1393,7 +1393,11 @@ export default function QuotesPage() {
   }, [selectedQuote?.id, selectedQuote?.items?.length, viewMode])
 
   function updateQuotes(nextQuotes) {
-    if (!saveQuotes(nextQuotes)) return false
+    if (!persistQuotesStore(nextQuotes)) {
+      window.alert('Teklif kaydedilemedi. Tarayıcı depolama alanını veya izinleri kontrol edin.')
+      return false
+    }
+    saveQuotes(nextQuotes, { silent: true })
     setQuotes(nextQuotes)
     return true
   }

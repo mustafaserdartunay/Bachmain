@@ -1,34 +1,77 @@
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+'use client'
+
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  FileText, ShoppingCart, Cog, PackageCheck, Warehouse, Truck, PackageOpen, ArrowRight,
-} from "lucide-react";
-import ScrollReveal from "../ScrollReveal";
-import { processFlow } from "../../data/premiumLanding";
+  FileText,
+  ShoppingCart,
+  Cog,
+  PackageCheck,
+  Warehouse,
+  Truck,
+  PackageOpen,
+  ArrowRight,
+} from 'lucide-react'
+import ScrollReveal from '../ScrollReveal'
+import { processFlow } from '../../data/premiumLanding'
 
 const ICONS = {
-  FileText, ShoppingCart, Cog, PackageCheck, Warehouse, Truck, PackageOpen,
-};
+  FileText,
+  ShoppingCart,
+  Cog,
+  PackageCheck,
+  Warehouse,
+  Truck,
+  PackageOpen,
+}
 
 const TONE = {
-  blue: { bg: "from-blue-500 to-blue-600", soft: "bg-blue-50 text-blue-600 ring-blue-100", glow: "rgba(37,99,235,0.35)" },
-  violet: { bg: "from-violet-500 to-violet-600", soft: "bg-violet-50 text-violet-600 ring-violet-100", glow: "rgba(139,92,246,0.35)" },
-  orange: { bg: "from-orange-500 to-orange-600", soft: "bg-orange-50 text-orange-600 ring-orange-100", glow: "rgba(249,115,22,0.35)" },
-  amber: { bg: "from-amber-500 to-amber-600", soft: "bg-amber-50 text-amber-600 ring-amber-100", glow: "rgba(245,158,11,0.35)" },
-  cyan: { bg: "from-cyan-500 to-cyan-600", soft: "bg-cyan-50 text-cyan-600 ring-cyan-100", glow: "rgba(6,182,212,0.35)" },
-  sky: { bg: "from-sky-500 to-sky-600", soft: "bg-sky-50 text-sky-600 ring-sky-100", glow: "rgba(14,165,233,0.35)" },
-  emerald: { bg: "from-emerald-500 to-emerald-600", soft: "bg-emerald-50 text-emerald-600 ring-emerald-100", glow: "rgba(16,185,129,0.35)" },
-};
+  blue: {
+    bg: 'from-blue-500 to-blue-600',
+    soft: 'bg-blue-50 text-blue-600 ring-blue-100',
+    glow: 'rgba(37,99,235,0.35)',
+  },
+  violet: {
+    bg: 'from-violet-500 to-violet-600',
+    soft: 'bg-violet-50 text-violet-600 ring-violet-100',
+    glow: 'rgba(139,92,246,0.35)',
+  },
+  orange: {
+    bg: 'from-orange-500 to-orange-600',
+    soft: 'bg-orange-50 text-orange-600 ring-orange-100',
+    glow: 'rgba(249,115,22,0.35)',
+  },
+  amber: {
+    bg: 'from-amber-500 to-amber-600',
+    soft: 'bg-amber-50 text-amber-600 ring-amber-100',
+    glow: 'rgba(245,158,11,0.35)',
+  },
+  cyan: {
+    bg: 'from-cyan-500 to-cyan-600',
+    soft: 'bg-cyan-50 text-cyan-600 ring-cyan-100',
+    glow: 'rgba(6,182,212,0.35)',
+  },
+  sky: {
+    bg: 'from-sky-500 to-sky-600',
+    soft: 'bg-sky-50 text-sky-600 ring-sky-100',
+    glow: 'rgba(14,165,233,0.35)',
+  },
+  emerald: {
+    bg: 'from-emerald-500 to-emerald-600',
+    soft: 'bg-emerald-50 text-emerald-600 ring-emerald-100',
+    glow: 'rgba(16,185,129,0.35)',
+  },
+}
 
 export default function ProcessFlowShowcase() {
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(0)
 
   useEffect(() => {
     const t = setInterval(() => {
-      setActive((i) => (i + 1) % processFlow.length);
-    }, 2200);
-    return () => clearInterval(t);
-  }, []);
+      setActive((i) => (i + 1) % processFlow.length)
+    }, 2200)
+    return () => clearInterval(t)
+  }, [])
 
   return (
     <section id="ozellikler" className="section-pad process-section">
@@ -58,21 +101,21 @@ export default function ProcessFlowShowcase() {
 
           <div className="process-nodes">
             {processFlow.map((step, i) => {
-              const Icon = ICONS[step.icon] || FileText;
-              const tone = TONE[step.tone] || TONE.blue;
-              const on = i === active;
-              const done = i < active;
+              const Icon = ICONS[step.icon] || FileText
+              const tone = TONE[step.tone] || TONE.blue
+              const on = i === active
+              const done = i < active
               return (
                 <button
                   key={step.id}
                   type="button"
-                  className={`process-node ${on ? "on" : ""} ${done ? "done" : ""}`}
+                  className={`process-node ${on ? 'on' : ''} ${done ? 'done' : ''}`}
                   onClick={() => setActive(i)}
                 >
                   <motion.div
                     className={`process-node-ico bg-gradient-to-br ${tone.bg}`}
                     animate={on ? { scale: [1, 1.08, 1], y: [0, -4, 0] } : { scale: 1, y: 0 }}
-                    transition={{ duration: 1.6, repeat: on ? Infinity : 0, ease: "easeInOut" }}
+                    transition={{ duration: 1.6, repeat: on ? Infinity : 0, ease: 'easeInOut' }}
                     style={on ? { boxShadow: `0 16px 36px ${tone.glow}` } : undefined}
                   >
                     <Icon className="h-6 w-6 text-white" strokeWidth={2.15} />
@@ -86,7 +129,7 @@ export default function ProcessFlowShowcase() {
                     </span>
                   )}
                 </button>
-              );
+              )
             })}
           </div>
 
@@ -101,8 +144,8 @@ export default function ProcessFlowShowcase() {
             >
               <div className={`process-spotlight-badge ${TONE[processFlow[active].tone].soft}`}>
                 {(() => {
-                  const Icon = ICONS[processFlow[active].icon];
-                  return <Icon className="h-4 w-4" strokeWidth={2.2} />;
+                  const Icon = ICONS[processFlow[active].icon]
+                  return <Icon className="h-4 w-4" strokeWidth={2.2} />
                 })()}
                 Adım {active + 1} / {processFlow.length}
               </div>
@@ -116,7 +159,7 @@ export default function ProcessFlowShowcase() {
                   <button
                     key={s.id}
                     type="button"
-                    className={i === active ? "on" : ""}
+                    className={i === active ? 'on' : ''}
                     aria-label={s.label}
                     onClick={() => setActive(i)}
                   />
@@ -127,5 +170,5 @@ export default function ProcessFlowShowcase() {
         </div>
       </div>
     </section>
-  );
+  )
 }

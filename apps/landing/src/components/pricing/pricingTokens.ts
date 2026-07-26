@@ -36,52 +36,30 @@ export const pricingTokens = {
   },
 } as const
 
-/** Shared feature lists — Pro includes Starter; Enterprise includes Starter + Pro */
-export const starterFeatures = [
-  'Teklif Yönetimi',
-  'Sipariş Yönetimi',
-  'Müşteriler (Cari Kartlar)',
-  'Satış Faturaları',
-  'Tahsilat Takibi',
-  'Temel Stok & Ürün/Hizmet',
-  'Kasa & Banka (Temel)',
-  'Görevler & Randevular',
-  'Not Defteri',
-  'Temel Raporlar (Satış / Tahsilat / Gider)',
-  'E-posta Desteği',
-] as const
+export type BillingPeriod = 'month' | 'year'
 
-export const proExtraFeatures = [
+/** Tek full paketteki tüm özellikler */
+export const fullPackageFeatures = [
+  'Teklif & Sipariş Yönetimi',
+  'Müşteriler / Cari Kartlar',
+  'Satış Faturaları & Tahsilat',
+  'Stok, Depo & Transfer',
   'Üretim Takibi',
-  'Depo Yönetimi & Transfer',
-  'Gelen / Giden İrsaliyeler',
-  'Fiyat Listeleri',
+  'İrsaliye & Fiyat Listeleri',
   'Maliyet Hesaplama',
   'Tedarikçiler & Giderler',
-  'Gelen E-Faturalar',
-  'Çek & Senet Takibi',
-  'Nakit Akışı Raporları',
+  'Kasa, Banka, Çek & Senet',
+  'E-Fatura / E-Arşiv',
   'Mesaj Merkezi (WhatsApp / E-posta)',
   'Saha Satış & Temsilci Takibi',
-  'Gelişmiş Raporlar',
-  'Öncelikli Destek',
-] as const
-
-export const enterpriseExtraFeatures = [
-  'MES / İleri Üretim (İş Emri, BOM, Kalite)',
-  'Finans Merkezi & Muhasebe',
-  'E-Fatura / E-Defter',
+  'Görevler, Randevu & Not Defteri',
+  'Lojistik & Sevkiyat',
   'Analytics, KPI & Dashboard',
-  'Lojistik & Sevkiyat Planlama',
-  'Digital Twin / Canlı İzleme',
-  'Müşteri Deneyimi (CXC)',
-  'API & Özel Entegrasyonlar',
-  'Belge Merkezi & Şablonlar',
+  'API & Entegrasyonlar',
   'Çoklu Şirket / Şube',
+  'AI Modülleri',
   'Sınırsız Kullanıcı',
-  'AI Modülleri (Insights / Growth)',
-  'Özel Geliştirme',
-  '7/24 VIP Destek & Temsilci',
+  '7/24 Destek',
 ] as const
 
 export type FeatureGroup = {
@@ -89,72 +67,121 @@ export type FeatureGroup = {
   items: readonly string[]
 }
 
+/** Tek paket — en iyi full çözüm */
 export const referencePricingPlans = [
   {
-    id: 'starter',
-    name: 'Starter',
-    description: 'Küçük işletmeler için başlangıç paketi.',
-    price: 499,
+    id: 'full',
+    name: 'Enterprise Full Paket',
+    description:
+      'CRM, ERP, stok, üretim, finans ve entegrasyonların tamamı tek pakette. Tüm modüller açık.',
+    price: 2990,
+    /** Yıllık toplam = aylık × 12 × %20 indirim */
+    yearlyTotal: Math.round(2990 * 12 * 0.8),
+    yearlyDiscountPercent: 20,
     period: '/aylık',
+    badge: 'FULL PAKET',
+    kontorGift: 100,
     featureGroups: [
       {
-        title: 'Starter özellikleri',
-        items: starterFeatures,
+        title: 'Pakete dahil',
+        items: fullPackageFeatures,
       },
     ] as const satisfies readonly FeatureGroup[],
-    cta: 'Başla',
-    to: '/register?plan=starter',
-    theme: 'light' as const,
-    mascot: '/bachy/bachy-starter.png',
-    mascotAlt: 'Bachy Starter',
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    description: 'Büyüyen işletmeler için en ideal paket.',
-    price: 1499,
-    period: '/aylık',
-    badge: 'EN POPÜLER',
-    featureGroups: [
-      {
-        title: 'Starter özellikleri (dahil)',
-        items: starterFeatures,
-      },
-      {
-        title: 'Pro ile eklenenler',
-        items: proExtraFeatures,
-      },
-    ] as const satisfies readonly FeatureGroup[],
-    cta: 'Hemen Başla',
-    to: '/register?plan=pro',
+    cta: 'Satın Al',
+    to: '/register?plan=full',
     theme: 'featured' as const,
-    mascot: '/bachy/bachy-pro.png',
-    mascotAlt: 'Bachy Pro',
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    description: 'Büyük ölçekli işletmeler için sınırsız çözüm.',
-    price: 4999,
-    period: '/aylık',
-    featureGroups: [
-      {
-        title: 'Starter özellikleri (dahil)',
-        items: starterFeatures,
-      },
-      {
-        title: 'Pro özellikleri (dahil)',
-        items: proExtraFeatures,
-      },
-      {
-        title: 'Enterprise ile eklenenler',
-        items: enterpriseExtraFeatures,
-      },
-    ] as const satisfies readonly FeatureGroup[],
-    cta: 'Hemen Başla',
-    to: '/register?plan=enterprise',
-    theme: 'dark' as const,
-    mascot: '/bachy/bachy-enterprise.png',
-    mascotAlt: 'Bachy Enterprise',
+    mascot: '/bachy/bachy-pro.webp',
+    mascotAlt: 'Bachy Full',
   },
 ] as const
+
+/** Ek kontör paketleri */
+export const kontorPackages = [
+  {
+    id: 'kontor-100',
+    amount: 100,
+    price: 199,
+    tagline: 'Düşük hacim',
+    popular: false,
+  },
+  {
+    id: 'kontor-300',
+    amount: 300,
+    price: 499,
+    tagline: 'En çok tercih',
+    popular: true,
+  },
+  {
+    id: 'kontor-500',
+    amount: 500,
+    price: 799,
+    tagline: 'Orta hacim',
+    popular: false,
+  },
+  {
+    id: 'kontor-1000',
+    amount: 1000,
+    price: 1499,
+    tagline: 'Yoğun kullanım',
+    popular: false,
+  },
+  {
+    id: 'kontor-2500',
+    amount: 2500,
+    price: 3299,
+    tagline: 'Yüksek hacim',
+    popular: false,
+  },
+  {
+    id: 'kontor-5000',
+    amount: 5000,
+    price: 5999,
+    tagline: 'Kurumsal',
+    popular: false,
+  },
+  {
+    id: 'kontor-10000',
+    amount: 10000,
+    price: 9999,
+    tagline: 'Kurumsal max',
+    popular: false,
+  },
+] as const
+
+export function planDisplayPrice(
+  plan: (typeof referencePricingPlans)[number],
+  period: BillingPeriod,
+) {
+  if (period === 'year') {
+    const monthlyEquiv = Math.round(plan.yearlyTotal / 12)
+    return {
+      display: monthlyEquiv,
+      listDisplay: plan.price,
+      suffix: '/aylık',
+      yearlyTotal: plan.yearlyTotal,
+      discountPercent: plan.yearlyDiscountPercent ?? 20,
+    }
+  }
+  return {
+    display: plan.price,
+    listDisplay: null as number | null,
+    suffix: '/aylık',
+    yearlyTotal: null as number | null,
+    discountPercent: 0,
+  }
+}
+
+export function planCheckoutAmount(
+  plan: (typeof referencePricingPlans)[number],
+  period: BillingPeriod,
+) {
+  return period === 'year' ? plan.yearlyTotal : plan.price
+}
+
+/** Örn. 2990 → "2.990,00₺" */
+export function formatMoneyTry(value: number) {
+  return `${Number(value).toLocaleString('tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}₺`
+}

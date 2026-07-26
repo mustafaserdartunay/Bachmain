@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply } from 'fastify'
 import { z } from 'zod'
 import {
   getMe,
@@ -21,17 +21,24 @@ import {
 } from './mfaService.js'
 import { authenticate } from '../../shared/authGuard.js'
 import { logActivity } from '../audit/activityService.js'
+import { issueCsrfToken } from '../../shared/csrf.js'
 
 const REFRESH_COOKIE = 'bachmain_refresh'
 
-function setRefreshCookie(reply: { setCookie: (name: string, value: string, opts: Record<string, unknown>) => void }, token: string) {
-  reply.setCookie(REFRESH_COOKIE, token, {
+function setRefreshCookie(reply: FastifyReply, token: string) {
+  ;(
+    reply as unknown as { setCookie: (n: string, v: string, o: Record<string, unknown>) => void }
+  ).setCookie(REFRESH_COOKIE, token, {
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     maxAge: 14 * 24 * 60 * 60,
   })
+}
+
+function attachCsrf(reply: FastifyReply) {
+  issueCsrfToken(reply as unknown as Parameters<typeof issueCsrfToken>[0])
 }
 
 export async function authRoutes(app: FastifyInstance) {
@@ -52,6 +59,7 @@ export async function authRoutes(app: FastifyInstance) {
       userAgent: req.headers['user-agent'],
     })
     setRefreshCookie(reply, result.tokens.refreshToken)
+    attachCsrf(reply)
     return result
   })
 
@@ -70,6 +78,7 @@ export async function authRoutes(app: FastifyInstance) {
     })
     if ('tokens' in result && result.tokens) {
       setRefreshCookie(reply, result.tokens.refreshToken)
+      attachCsrf(reply)
     }
     return result
   })
@@ -102,6 +111,7 @@ export async function authRoutes(app: FastifyInstance) {
       userAgent: req.headers['user-agent'],
     })
     setRefreshCookie(reply, session.tokens.refreshToken)
+    attachCsrf(reply)
     return { ok: true, user: session.user, tokens: session.tokens }
   })
 
@@ -114,6 +124,7 @@ export async function authRoutes(app: FastifyInstance) {
     }
     const tokens = await refreshSession(refreshToken)
     setRefreshCookie(reply, tokens.refreshToken)
+    attachCsrf(reply)
     return { ok: true, tokens }
   })
 

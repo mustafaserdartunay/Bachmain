@@ -14,6 +14,7 @@ export default [
       'apps/api/dist/**',
       'apps/admin/dist/**',
       'apps/landing/dist/**',
+      'apps/web/**',
       '.tmp-vercel/**',
       'restore-backups/**',
       'BACHMAIN_DOCUMENT_CENTER/**',

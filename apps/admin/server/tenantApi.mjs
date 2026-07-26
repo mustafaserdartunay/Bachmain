@@ -10,9 +10,14 @@ const ALLOWED_COLLECTIONS = new Set([
   'crmRecords',
   'products',
   'quotes',
+  'orders',
+  'production',
+  'depo',
+  'customers',
   'treasury',
   'settings',
   'workspace',
+  'logistics',
 ])
 
 export async function handleTenantApi(req, res, path, body = {}) {

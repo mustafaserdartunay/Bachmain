@@ -1,92 +1,127 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+'use client'
+
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, TrendingUp, ArrowDownCircle, Banknote, Package,
-  Workflow, Contact, Users, MapPin, Bike, FolderPlus, Store, Network,
-  MessageSquare, Search, LayoutGrid, Bell, ChevronDown, Sun, Moon,
-  ArrowDownToLine, ArrowUpFromLine, Wallet, UserPlus, Shield, FileText,
-  FileInput, MessageCircle, ScrollText, Trophy, UserRound,
-} from "lucide-react";
+  LayoutDashboard,
+  TrendingUp,
+  ArrowDownCircle,
+  Banknote,
+  Package,
+  Workflow,
+  Contact,
+  Users,
+  MapPin,
+  Bike,
+  FolderPlus,
+  Store,
+  Network,
+  MessageSquare,
+  Search,
+  LayoutGrid,
+  Bell,
+  ChevronDown,
+  Sun,
+  Moon,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Wallet,
+  UserPlus,
+  Shield,
+  FileText,
+  FileInput,
+  MessageCircle,
+  ScrollText,
+  Trophy,
+  UserRound,
+} from 'lucide-react'
 
 const SIDE = [
-  { icon: LayoutDashboard, label: "Güncel Durum", on: true },
-  { icon: TrendingUp, label: "Satışlar" },
-  { icon: ArrowDownCircle, label: "Giderler" },
-  { icon: Banknote, label: "Nakit" },
-  { icon: Package, label: "Stok" },
-  { icon: Workflow, label: "Süreç Yönetimi" },
-  { icon: Contact, label: "Crm" },
-  { icon: Users, label: "İnsan Kaynakları" },
-  { icon: MapPin, label: "Saha Satış" },
-  { icon: Bike, label: "Kurye Takip" },
-  { icon: FolderPlus, label: "Yeni Proje" },
-  { icon: Store, label: "Pos" },
-  { icon: Network, label: "Bayi Yönetimi" },
-  { icon: MessageSquare, label: "Mesaj Merkezi", badge: 1 },
-];
+  { icon: LayoutDashboard, label: 'Güncel Durum', on: true },
+  { icon: TrendingUp, label: 'Satışlar' },
+  { icon: ArrowDownCircle, label: 'Giderler' },
+  { icon: Banknote, label: 'Nakit' },
+  { icon: Package, label: 'Stok' },
+  { icon: Workflow, label: 'Süreç Yönetimi' },
+  { icon: Contact, label: 'Crm' },
+  { icon: Users, label: 'İnsan Kaynakları' },
+  { icon: MapPin, label: 'Saha Satış' },
+  { icon: Bike, label: 'Kurye Takip' },
+  { icon: FolderPlus, label: 'Yeni Proje' },
+  { icon: Store, label: 'Pos' },
+  { icon: Network, label: 'Bayi Yönetimi' },
+  { icon: MessageSquare, label: 'Mesaj Merkezi', badge: 1 },
+]
 
 const ACTIONS = [
-  { label: "Gelir Ekle", bg: "linear-gradient(135deg,#34d399,#10b981)", Icon: ArrowDownToLine },
-  { label: "Gider Ekle", bg: "linear-gradient(135deg,#fb923c,#f97316)", Icon: ArrowUpFromLine },
-  { label: "Kasa", bg: "linear-gradient(135deg,#38bdf8,#0ea5e9)", Icon: Wallet },
-  { label: "Yeni Müşteri", bg: "linear-gradient(135deg,#a78bfa,#8b5cf6)", Icon: UserPlus },
-  { label: "Yeni Tedarikçi", bg: "linear-gradient(135deg,#fbbf24,#f59e0b)", Icon: Shield },
-  { label: "Yeni Fatura", bg: "linear-gradient(135deg,#60a5fa,#3b82f6)", Icon: FileText },
-  { label: "Yeni Alış Fatur...", bg: "linear-gradient(135deg,#fb7185,#f43f5e)", Icon: FileInput },
-];
+  { label: 'Gelir Ekle', bg: 'linear-gradient(135deg,#34d399,#10b981)', Icon: ArrowDownToLine },
+  { label: 'Gider Ekle', bg: 'linear-gradient(135deg,#fb923c,#f97316)', Icon: ArrowUpFromLine },
+  { label: 'Kasa', bg: 'linear-gradient(135deg,#38bdf8,#0ea5e9)', Icon: Wallet },
+  { label: 'Yeni Müşteri', bg: 'linear-gradient(135deg,#a78bfa,#8b5cf6)', Icon: UserPlus },
+  { label: 'Yeni Tedarikçi', bg: 'linear-gradient(135deg,#fbbf24,#f59e0b)', Icon: Shield },
+  { label: 'Yeni Fatura', bg: 'linear-gradient(135deg,#60a5fa,#3b82f6)', Icon: FileText },
+  { label: 'Yeni Alış Fatur...', bg: 'linear-gradient(135deg,#fb7185,#f43f5e)', Icon: FileInput },
+]
 
 const FINANCE = [
-  { label: "Tahsilat Bekleyen", value: "0,00₺", tone: "" },
-  { label: "Ödeme Bekleyen", value: "0,00₺", tone: "" },
-  { label: "Stok Toplam Değeri", value: "0,00₺", tone: "" },
-  { label: "Portföydeki Senetler", value: "0,00₺", tone: "" },
-  { label: "Portföydeki Çekler", value: "0,00₺", tone: "" },
-  { label: "Nakit Kasa", value: "50.400,20₺", tone: "green" },
-  { label: "Bankalar", value: "0,00₺", tone: "" },
-  { label: "Kredi Kartı Pos", value: "0,00₺", tone: "" },
-  { label: "Toplam Canlı Varlık", value: "50.400,20₺", tone: "blue" },
-];
+  { label: 'Tahsilat Bekleyen', value: '0,00₺', tone: '' },
+  { label: 'Ödeme Bekleyen', value: '0,00₺', tone: '' },
+  { label: 'Stok Toplam Değeri', value: '0,00₺', tone: '' },
+  { label: 'Portföydeki Senetler', value: '0,00₺', tone: '' },
+  { label: 'Portföydeki Çekler', value: '0,00₺', tone: '' },
+  { label: 'Nakit Kasa', value: '50.400,20₺', tone: 'green' },
+  { label: 'Bankalar', value: '0,00₺', tone: '' },
+  { label: 'Kredi Kartı Pos', value: '0,00₺', tone: '' },
+  { label: 'Toplam Canlı Varlık', value: '50.400,20₺', tone: 'blue' },
+]
 
 const TIMELINE = [
-  { name: "Ayşe Yılmaz", role: "Satış Temsilcisi", amount: "35.000,00₺", date: "01.06.2026" },
-  { name: "Mehmet Kaya", role: "Üretim Müdürü", amount: "48.500,00₺", date: "01.06.2026" },
-  { name: "Zeynep Demir", role: "İK Uzmanı", amount: "32.000,00₺", date: "01.06.2026" },
-  { name: "Can Öztürk", role: "Saha Satış", amount: "28.750,00₺", date: "02.06.2026" },
-  { name: "Elif Aksoy", role: "Muhasebe", amount: "31.200,00₺", date: "03.06.2026" },
-];
+  { name: 'Ayşe Yılmaz', role: 'Satış Temsilcisi', amount: '35.000,00₺', date: '01.06.2026' },
+  { name: 'Mehmet Kaya', role: 'Üretim Müdürü', amount: '48.500,00₺', date: '01.06.2026' },
+  { name: 'Zeynep Demir', role: 'İK Uzmanı', amount: '32.000,00₺', date: '01.06.2026' },
+  { name: 'Can Öztürk', role: 'Saha Satış', amount: '28.750,00₺', date: '02.06.2026' },
+  { name: 'Elif Aksoy', role: 'Muhasebe', amount: '31.200,00₺', date: '03.06.2026' },
+]
 
 const KDV = [
-  ["Hesaplanan KDV", "0,00₺"],
-  ["İndirilecek KDV", "0,00₺"],
-  ["Ödenecek KDV", "0,00₺"],
-  ["Devreden KDV", "0,00₺"],
-];
+  ['Hesaplanan KDV', '0,00₺'],
+  ['İndirilecek KDV', '0,00₺'],
+  ['Ödenecek KDV', '0,00₺'],
+  ['Devreden KDV', '0,00₺'],
+]
 
-const AVATARS = ["#60a5fa", "#34d399", "#f472b6"];
+const AVATARS = ['#60a5fa', '#34d399', '#f472b6']
 
-export default function LiveCrmDashboard({ className = "", full = false }) {
-  const [night, setNight] = useState(false);
+export default function LiveCrmDashboard({ className = '', full = false }) {
+  const [night, setNight] = useState(false)
 
   useEffect(() => {
-    if (!full) return undefined;
+    if (!full) return undefined
     const onKey = (e) => {
-      if (e.key.toLowerCase() === "n") setNight((v) => !v);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [full]);
+      if (e.key.toLowerCase() === 'n') setNight((v) => !v)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [full])
 
   return (
-    <div className={`erp-shell ${full ? "erp-shell-full" : ""} ${className}`}>
+    <div className={`erp-shell ${full ? 'erp-shell-full' : ''} ${className}`}>
       {!full && <div className="erp-glow" aria-hidden="true" />}
-      <div className={`erp-dash ${full ? "full" : "compact"} ${night ? "night" : ""}`}>
+      <div className={`erp-dash ${full ? 'full' : 'compact'} ${night ? 'night' : ''}`}>
         <aside className="erp-side">
           <div className="erp-logo">
-            <img src="/assets/bachmain-logo.png" alt="BACHMAIN" draggable={false} />
+            <img
+              src="/assets/bachmain-logo.png"
+              alt="BACHMAIN"
+              width={140}
+              height={32}
+              decoding="async"
+              draggable={false}
+            />
           </div>
           <nav className="erp-nav">
             {SIDE.map((item) => (
-              <div key={item.label} className={`erp-nav-item ${item.on ? "on" : ""}`}>
+              <div key={item.label} className={`erp-nav-item ${item.on ? 'on' : ''}`}>
                 <item.icon className="erp-nav-ico" strokeWidth={2} />
                 <span className="truncate">{item.label}</span>
                 {item.badge ? <em className="erp-badge">{item.badge}</em> : null}
@@ -111,10 +146,14 @@ export default function LiveCrmDashboard({ className = "", full = false }) {
               </button>
               <span className="erp-pos-pill">POS</span>
               <div className="erp-theme">
-                <button type="button" className={!night ? "on" : ""} onClick={() => setNight(false)}>
+                <button
+                  type="button"
+                  className={!night ? 'on' : ''}
+                  onClick={() => setNight(false)}
+                >
                   <Sun className="erp-ui-ico-sm" /> Gündüz
                 </button>
-                <button type="button" className={night ? "on" : ""} onClick={() => setNight(true)}>
+                <button type="button" className={night ? 'on' : ''} onClick={() => setNight(true)}>
                   <Moon className="erp-ui-ico-sm" /> Gece
                 </button>
               </div>
@@ -141,7 +180,7 @@ export default function LiveCrmDashboard({ className = "", full = false }) {
                 style={{ background: a.bg }}
                 whileHover={{ y: -2, scale: 1.02 }}
                 animate={full ? { y: [0, i % 2 === 0 ? -2 : 2, 0] } : undefined}
-                transition={{ duration: 3.4, delay: i * 0.1, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 3.4, delay: i * 0.1, repeat: Infinity, ease: 'easeInOut' }}
               >
                 <a.Icon className="erp-action-ico" strokeWidth={2.4} />
                 {a.label}
@@ -200,10 +239,18 @@ export default function LiveCrmDashboard({ className = "", full = false }) {
         </div>
 
         <aside className="erp-rail">
-          <button type="button" className="erp-rail-btn blue"><MessageCircle className="erp-ui-ico" /></button>
-          <button type="button" className="erp-rail-btn green"><ScrollText className="erp-ui-ico" /></button>
-          <button type="button" className="erp-rail-btn amber"><Trophy className="erp-ui-ico" /></button>
-          <button type="button" className="erp-rail-btn violet"><UserRound className="erp-ui-ico" /></button>
+          <button type="button" className="erp-rail-btn blue">
+            <MessageCircle className="erp-ui-ico" />
+          </button>
+          <button type="button" className="erp-rail-btn green">
+            <ScrollText className="erp-ui-ico" />
+          </button>
+          <button type="button" className="erp-rail-btn amber">
+            <Trophy className="erp-ui-ico" />
+          </button>
+          <button type="button" className="erp-rail-btn violet">
+            <UserRound className="erp-ui-ico" />
+          </button>
           <div className="erp-rail-avatars">
             {AVATARS.map((c) => (
               <span key={c} style={{ background: c }} />
@@ -212,5 +259,5 @@ export default function LiveCrmDashboard({ className = "", full = false }) {
         </aside>
       </div>
     </div>
-  );
+  )
 }

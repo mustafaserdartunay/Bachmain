@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, Menu, X } from 'lucide-react'
@@ -8,28 +10,33 @@ const nav = [
   {
     label: 'Ürün',
     items: [
-      { label: 'Özellikler', href: '/features' },
-      { label: 'CRM', href: '/features/crm' },
-      { label: 'ERP', href: '/features/erp' },
-      { label: 'E-Fatura', href: '/e-invoice' },
+      { label: 'CRM', href: '/crm' },
+      { label: 'ERP', href: '/erp' },
+      { label: 'Muhasebe', href: '/muhasebe' },
+      { label: 'E-Fatura', href: '/e-fatura' },
+      { label: 'Üretim', href: '/uretim' },
+      { label: 'Depo', href: '/depo' },
+      { label: 'WhatsApp', href: '/whatsapp' },
+      { label: 'AI Asistan', href: '/openai' },
     ],
   },
   {
-    label: 'Modüller',
-    href: '/modules',
+    label: 'Sektörler',
+    href: '/sektorler',
     items: [
-      { label: 'Üretim', href: '/modules/production' },
-      { label: 'Saha Satış', href: '/modules/field-sales' },
-      { label: 'E-Ticaret', href: '/modules/ecommerce' },
-      { label: 'Stok', href: '/features/stock' },
+      { label: 'Tüm sektörler', href: '/sektorler' },
+      { label: 'Üretim', href: '/sektorler/uretim-sektor' },
+      { label: 'E-Ticaret', href: '/sektorler/e-ticaret' },
+      { label: 'Toptan Satış', href: '/sektorler/toptan-satis' },
+      { label: 'Mobilya', href: '/sektorler/mobilya' },
     ],
   },
-  { label: 'Sektörler', href: '/modules' },
-  { label: 'Fiyatlandırma', href: '/pricing' },
-  { label: 'Referanslar', href: '/#referanslar' },
+  { label: 'Fiyatlandırma', href: '/fiyatlar' },
+  { label: 'Referanslar', href: '/referanslar' },
+  { label: 'Başarı Hikayeleri', href: '/basari-hikayeleri' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Eğitim', href: '/egitim' },
-  { label: 'İletişim', href: '/contact' },
+  { label: 'Akademi', href: '/akademi' },
+  { label: 'İletişim', href: '/iletisim' },
 ]
 
 function Dropdown({ label, items, href }) {
@@ -132,11 +139,14 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <Link to="/login" className="btn-gold !px-4 !py-2.5 !text-[13px]">
+          <Link to="/demo" className="btn-secondary !px-4 !py-2.5 !text-[13px]">
+            Demo
+          </Link>
+          <Link to="/giris" className="btn-gold !px-4 !py-2.5 !text-[13px]">
             Giriş Yap
           </Link>
-          <Link to="/register" className="btn-primary !px-4 !py-2.5 !text-[13px]">
-            Üye Ol
+          <Link to="/uye-ol" className="btn-primary !px-4 !py-2.5 !text-[13px]">
+            Ücretsiz Dene
           </Link>
         </div>
 
@@ -184,18 +194,25 @@ export default function Header() {
             ))}
             <div className="mt-3 flex gap-2">
               <Link
-                to="/login"
+                to="/demo"
+                className="btn-secondary flex-1 !py-2.5"
+                onClick={() => setMobileOpen(false)}
+              >
+                Demo
+              </Link>
+              <Link
+                to="/giris"
                 className="btn-gold flex-1 !py-2.5"
                 onClick={() => setMobileOpen(false)}
               >
                 Giriş
               </Link>
               <Link
-                to="/register"
+                to="/uye-ol"
                 className="btn-primary flex-1 !py-2.5"
                 onClick={() => setMobileOpen(false)}
               >
-                Üye Ol
+                Dene
               </Link>
             </div>
           </div>

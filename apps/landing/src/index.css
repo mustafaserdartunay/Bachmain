@@ -16,7 +16,8 @@
   --color-text: #0f172a;
   --color-text-muted: #64748b;
   --color-text-subtle: #94a3b8;
-  --font-sans: 'Manrope', system-ui, sans-serif;
+  --font-sans: var(--font-poppins, 'Poppins'), system-ui, sans-serif;
+  --font-heading: var(--font-poppins, 'Poppins'), system-ui, sans-serif;
   --radius-sm: 0.625rem;
   --radius-md: 0.875rem;
   --radius-lg: 1.25rem;
@@ -36,6 +37,7 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   color: var(--color-text);
   overflow-x: hidden;
@@ -48,6 +50,25 @@ body {
     radial-gradient(ellipse 50% 35% at 48% 38%, rgba(99, 102, 241, 0.07), transparent 60%);
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+/* Büyük başlıklar — Extra Bold */
+h1,
+.section-title,
+.pricing-hero h1,
+.hero-lead {
+  font-family: var(--font-heading);
+  font-weight: 800;
 }
 
 /* Soft ambient mesh — inherits body; keep class for page wrappers */
@@ -233,6 +254,7 @@ body {
   padding: 5.5rem 0;
 }
 .section-title {
+  font-family: var(--font-heading);
   font-size: clamp(1.75rem, 3.5vw, 2.5rem);
   font-weight: 800;
   letter-spacing: -0.04em;
@@ -1286,7 +1308,7 @@ body {
   line-height: 0.7;
   font-weight: 800;
   color: rgba(37, 99, 235, 0.18);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-heading);
 }
 .testimonial-avatar {
   box-shadow:

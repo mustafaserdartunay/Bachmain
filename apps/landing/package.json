@@ -4,25 +4,30 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "next dev --port 5180 --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --port 5180 --hostname 127.0.0.1",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "dev:vite": "vite",
+    "preview": "next start --port 4180 --hostname 127.0.0.1"
   },
   "dependencies": {
     "framer-motion": "^12.42.0",
     "lucide-react": "^1.22.0",
+    "next": "^15.5.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.0"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.2",
     "@tailwindcss/vite": "^4.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "oxlint": "^1.69.0",
     "tailwindcss": "^4.3.2",
+    "typescript": "^5.9.3",
     "vite": "^8.1.0"
   }
 }

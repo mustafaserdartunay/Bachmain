@@ -1,0 +1,31 @@
+---
+description: Fotoğraflı süreç modülü — aşama rayı, aşama geçişi ve aşama fotoğrafı ekleme düzeni
+alwaysApply: true
+---
+
+# Fotoğraflı Süreç Modülü
+
+Kullanıcı "fotoğraflı süreç modülü" dediğinde CRM süreç kartlarındaki aşama rayı modülünü yeniden kullan.
+
+## Ana Bileşenler
+
+- `src/components/Crm/CrmProcessRail.jsx`: yatay süreç/aşama rayı ve her aşamanın butonu.
+- `StageBlock`: aşama butonu, aktif/tamamlandı/pasif görsel durumu ve aşama içi fotoğraf aksiyonu.
+- `src/components/Crm/CrmProcessCard.jsx`: süreç kartı içinde `CrmProcessRail` kullanımı.
+- `src/components/Crm/CrmHome.jsx`: `stagePhotos` değişikliklerini kayda yazan `handleProcessStagePhotosChange`.
+- `src/utils/crmStore.js`: kayıtların `stagePhotos` alanını normalize edip localStorage'a kaydeder.
+
+## Davranış
+
+- Her aşama tıklanabilir olmalı ve ilgili kaydı o aşamaya taşımalı.
+- Her aşama içinde kamera/fotoğraf butonu bulunmalı.
+- Fotoğraflar `stagePhotos` alanında aşama ID'si ile ilişkilendirilmeli.
+- Önizleme için mevcut `PhotoLightbox`/`ProductionLineItemStagePhotos` akışını kullan.
+- Yeni sayfa veya modülde bu yapı istenirse sıfırdan tasarlama; önce mevcut CRM implementasyonunu taşı veya genelleştir.
+
+## Tasarım
+
+- Aktif aşama: renkli border/ring ve açık renkli zemin.
+- Tamamlanan aşama: daha dolu/soft renkli görünüm.
+- Pasif aşama: düşük opaklık, ancak okunur etiket.
+- Kamera butonu aşamanın içinde sağ tarafta yer alır.

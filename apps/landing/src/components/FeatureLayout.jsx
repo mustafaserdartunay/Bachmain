@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
-import { Check } from "lucide-react";
-import LiveCrmDashboard from "./landing/LiveCrmDashboard";
-import ScrollReveal from "./ScrollReveal";
+'use client'
+
+import { Link } from 'react-router-dom'
+import { Check } from 'lucide-react'
+import LiveCrmDashboard from './landing/LiveCrmDashboard'
+import ScrollReveal from './ScrollReveal'
 
 export default function FeatureLayout({
   badge,
@@ -9,8 +11,8 @@ export default function FeatureLayout({
   subtitle,
   features,
   bullets,
-  ctaTo = "/demo",
-  ctaLabel = "Demo Talep Et",
+  ctaTo = '/demo',
+  ctaLabel = 'Demo Talep Et',
 }) {
   return (
     <div className="page-mesh">
@@ -18,9 +20,13 @@ export default function FeatureLayout({
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-2 lg:px-8">
           <ScrollReveal direction="left">
             {badge && <span className="pill">{badge}</span>}
-            <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 lg:text-5xl">{title}</h1>
+            <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 lg:text-5xl">
+              {title}
+            </h1>
             <p className="mt-4 text-lg text-slate-500">{subtitle}</p>
-            <Link to={ctaTo} className="btn-primary mt-8">{ctaLabel} →</Link>
+            <Link to={ctaTo} className="btn-primary mt-8">
+              {ctaLabel} →
+            </Link>
           </ScrollReveal>
           <ScrollReveal direction="right" delay={0.1}>
             <LiveCrmDashboard />
@@ -62,5 +68,5 @@ export default function FeatureLayout({
         </section>
       )}
     </div>
-  );
+  )
 }

@@ -14,7 +14,7 @@ export const DROPDOWN_Z_INDEX = 10000
  * matchWidth:
  *   true  — menu width equals trigger
  *   'min' — menu min-width equals trigger; grows for longer content
- *   false — content-sized (fallback min 210px)
+ *   false — content-sized (min ~7.5rem, max viewport)
  */
 export function useAnchoredPortal(
   isOpen,
@@ -51,13 +51,16 @@ export function useAnchoredPortal(
       return
     }
 
-    const menuWidth =
+    const viewportMax = Math.max(120, window.innerWidth - 16)
+    const menuWidth = Math.min(
+      viewportMax,
       width ??
-      (growToContent
-        ? Math.max(rect.width, measuredWidth)
-        : exactMatch
-          ? rect.width
-          : measuredWidth)
+        (growToContent
+          ? Math.max(rect.width, measuredWidth)
+          : exactMatch
+            ? rect.width
+            : Math.max(measuredWidth, 120)),
+    )
     const menuHeight = measuredHeight
 
     let top = placement === 'above' ? rect.top - menuHeight - offset : rect.bottom + offset
@@ -94,7 +97,12 @@ export function useAnchoredPortal(
           : growToContent
             ? `${menuWidth}px`
             : undefined,
-      minWidth: growToContent ? `${rect.width}px` : !exactMatch && !width ? '210px' : undefined,
+      maxWidth: `${viewportMax}px`,
+      minWidth: growToContent
+        ? `${Math.min(rect.width, viewportMax)}px`
+        : !exactMatch && !width
+          ? '7.5rem'
+          : undefined,
       visibility: 'visible',
       pointerEvents: 'auto',
       zIndex: DROPDOWN_Z_INDEX,

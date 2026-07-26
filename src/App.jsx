@@ -6,6 +6,7 @@ import { cleanupDemoDataOnce } from './utils/demoDataCleanup'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { OrgProvider } from './org/OrgContext'
 import RequireAuth from './auth/RequireAuth'
+import RequirePermission from './auth/RequirePermission'
 import {
   LoginPage,
   RegisterPage,
@@ -54,6 +55,7 @@ import IncomeExpenseReportPage from './pages/IncomeExpenseReportPage'
 import ExpenseListPage from './pages/expenses/ExpenseListPage'
 import LoanPaymentsPage from './pages/expenses/LoanPaymentsPage'
 import IncomingEInvoicesPage from './pages/expenses/IncomingEInvoicesPage'
+import IncomingEInvoiceDetailPage from './pages/expenses/IncomingEInvoiceDetailPage'
 import ExpensesReportPage from './pages/expenses/ExpensesReportPage'
 import PaymentsReportPage from './pages/expenses/PaymentsReportPage'
 import VatReportPage from './pages/expenses/VatReportPage'
@@ -272,24 +274,25 @@ export default function App() {
                       <Route path="/uretim/:jobId" element={<ProductionDetailPage />} />
                       <Route path="/mes" element={<ManufacturingCenterPage />} />
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
-                      <Route path="/finans" element={<FinanceCenterPage />} />
+                      <Route path="/finans" element={<Navigate to="/" replace />} />
+                      <Route path="/platform" element={<Navigate to="/" replace />} />
+                      <Route path="/marketplace" element={<Navigate to="/" replace />} />
+                      <Route path="/integration-hub" element={<Navigate to="/" replace />} />
+                      <Route path="/otomasyon" element={<Navigate to="/" replace />} />
+                      <Route path="/aios" element={<Navigate to="/" replace />} />
+                      <Route path="/bilgi-merkezi" element={<Navigate to="/" replace />} />
+                      <Route path="/dijital-ikiz" element={<Navigate to="/" replace />} />
+                      <Route path="/musteri-deneyimi" element={<Navigate to="/" replace />} />
+                      <Route path="/cxc" element={<Navigate to="/" replace />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
-                      <Route path="/platform" element={<Navigate to="/" replace />} />
                       <Route path="/cekirdek" element={<Navigate to="/" replace />} />
-                      <Route path="/marketplace" element={<Navigate to="/" replace />} />
                       <Route path="/magaza" element={<Navigate to="/" replace />} />
                       <Route path="/entegrasyon" element={<IntegrationCenterPage />} />
                       <Route path="/entegrasyon/loglar" element={<IntegrationLogsPage />} />
                       <Route
-                        path="/integration-hub"
-                        element={<Navigate to="/entegrasyon" replace />}
-                      />
-                      <Route path="/musteri-deneyimi" element={<CustomerExperienceCloudPage />} />
-                      <Route path="/cxc" element={<Navigate to="/musteri-deneyimi" replace />} />
-                      <Route
                         path="/efatura"
-                        element={<Navigate to="/finans?tab=einvoice" replace />}
+                        element={<Navigate to="/giderler/gelen-e-faturalar" replace />}
                       />
                       <Route path="/musteriler/faturalar" element={<SalesInvoicesPage />} />
                       <Route path="/musteriler/satis-raporu" element={<SalesReportPage />} />
@@ -303,6 +306,10 @@ export default function App() {
                       />
                       <Route path="/giderler/liste" element={<ExpenseListPage />} />
                       <Route path="/giderler/kredi-odemeleri" element={<LoanPaymentsPage />} />
+                      <Route
+                        path="/giderler/gelen-e-faturalar/:invoiceId"
+                        element={<IncomingEInvoiceDetailPage />}
+                      />
                       <Route
                         path="/giderler/gelen-e-faturalar"
                         element={<IncomingEInvoicesPage />}
@@ -364,7 +371,14 @@ export default function App() {
                       <Route path="/giderler/odemeler-raporu" element={<PaymentsReportPage />} />
                       <Route path="/giderler/kdv-raporu" element={<VatReportPage />} />
                       <Route path="/giderler" element={<Navigate to="/giderler/liste" replace />} />
-                      <Route path="/musteriler" element={<CustomersPage listKind="customer" />} />
+                      <Route
+                        path="/musteriler"
+                        element={
+                          <RequirePermission anyOf={['crm.customers.view']}>
+                            <CustomersPage listKind="customer" />
+                          </RequirePermission>
+                        }
+                      />
                       <Route
                         path="/musteri-bul"
                         element={<Navigate to="/saha-satis/musteri-bul" replace />}
@@ -402,7 +416,14 @@ export default function App() {
                         path="/saha-satis/temsilci-raporlari"
                         element={<SalesRepReportsPage />}
                       />
-                      <Route path="/musteriler/yeni" element={<CustomerCreatePage />} />
+                      <Route
+                        path="/musteriler/yeni"
+                        element={
+                          <RequirePermission anyOf={['crm.customers.create']}>
+                            <CustomerCreatePage />
+                          </RequirePermission>
+                        }
+                      />
                       <Route
                         path="/musteriler/:customerId/belge/:docType"
                         element={<CustomerDocumentPage />}
@@ -580,43 +601,20 @@ export default function App() {
                       />
                       <Route path="/ayarlar" element={<SettingsPage />} />
                       <Route path="/ayarlar/master-data" element={<MasterDataHubPage />} />
-                      <Route path="/otomasyon" element={<WorkflowHubPage />} />
-                      <Route
-                        path="/otomasyon/designer"
-                        element={
-                          <PageSuspense>
-                            <WorkflowDesignerPage />
-                          </PageSuspense>
-                        }
-                      />
-                      <Route
-                        path="/otomasyon/designer/:id"
-                        element={
-                          <PageSuspense>
-                            <WorkflowDesignerPage />
-                          </PageSuspense>
-                        }
-                      />
-                      <Route path="/aios" element={<AiosHubPage />} />
-                      <Route path="/aios/bachy" element={<BachySettingsPage />} />
-                      <Route path="/ai-beyin" element={<Navigate to="/aios" replace />} />
-                      <Route path="/ai-organizasyon" element={<AiEnterpriseOrgPage />} />
-                      <Route
-                        path="/ai-enterprise-org"
-                        element={<Navigate to="/ai-organizasyon" replace />}
-                      />
-                      <Route path="/ai-otonom" element={<AiAutonomousCompanyPage />} />
-                      <Route
-                        path="/autonomous-company"
-                        element={<Navigate to="/ai-otonom" replace />}
-                      />
-                      <Route path="/ai-uygulama" element={<AiAppBuilderPage />} />
-                      <Route
-                        path="/ai-app-builder"
-                        element={<Navigate to="/ai-uygulama" replace />}
-                      />
-                      <Route path="/bilgi-merkezi" element={<KnowledgeCenterPage />} />
-                      <Route path="/dijital-ikiz" element={<DigitalTwinCenterPage />} />
+                      <Route path="/otomasyon" element={<Navigate to="/" replace />} />
+                      <Route path="/otomasyon/designer" element={<Navigate to="/" replace />} />
+                      <Route path="/otomasyon/designer/:id" element={<Navigate to="/" replace />} />
+                      <Route path="/aios" element={<Navigate to="/" replace />} />
+                      <Route path="/aios/bachy" element={<Navigate to="/" replace />} />
+                      <Route path="/ai-beyin" element={<Navigate to="/" replace />} />
+                      <Route path="/ai-organizasyon" element={<Navigate to="/" replace />} />
+                      <Route path="/ai-enterprise-org" element={<Navigate to="/" replace />} />
+                      <Route path="/ai-otonom" element={<Navigate to="/" replace />} />
+                      <Route path="/autonomous-company" element={<Navigate to="/" replace />} />
+                      <Route path="/ai-uygulama" element={<Navigate to="/" replace />} />
+                      <Route path="/ai-app-builder" element={<Navigate to="/" replace />} />
+                      <Route path="/bilgi-merkezi" element={<Navigate to="/" replace />} />
+                      <Route path="/dijital-ikiz" element={<Navigate to="/" replace />} />
                       <Route path="/ticaret" element={<Navigate to="/" replace />} />
                       <Route path="/commerce" element={<Navigate to="/" replace />} />
                       <Route path="/bayi" element={<Navigate to="/" replace />} />

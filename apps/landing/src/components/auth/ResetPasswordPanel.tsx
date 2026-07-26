@@ -1,3 +1,5 @@
+'use client'
+
 import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, Lock } from 'lucide-react'

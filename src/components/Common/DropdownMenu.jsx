@@ -1,11 +1,16 @@
 /**
  * Standart glass açılır menü — FormSectionPanel / glass-inset ile aynı görsel dil.
  * Menü satırları: metric etiketleri gibi gray-300, zeminsiz (beyaz sütun yok).
+ * Genişlik: içeriğe (yazı + ikon) göre büyür; ekranı taşmaz.
  */
 
 export const DROPDOWN_Z_INDEX = 10000
 
-export const DROPDOWN_MENU_SHELL_BASE_CLASS = 'min-w-[7.5rem] rounded-[26px] p-1.5'
+/** İçeriğe sığacak kadar genişle; viewport dışında kalma. */
+export const DROPDOWN_MENU_FIT_WIDTH_CLASS =
+  'w-max min-w-[7.5rem] max-w-[min(28rem,calc(100vw-1rem))]'
+
+export const DROPDOWN_MENU_SHELL_BASE_CLASS = `rounded-[26px] p-1.5 ${DROPDOWN_MENU_FIT_WIDTH_CLASS}`
 
 export const DROPDOWN_MENU_PANEL_CLASS = `z-50 ${DROPDOWN_MENU_SHELL_BASE_CLASS}`
 
@@ -15,7 +20,7 @@ export const DROPDOWN_MENU_SHELL_CLASS = `absolute left-0 top-11 ${DROPDOWN_MENU
 
 /** Metric label ile aynı: text-xs font-extrabold tracking-wide text-gray-300 */
 export const DROPDOWN_MENU_ITEM_CLASS =
-  'flex w-full items-center gap-1.5 rounded-xl bg-transparent px-2 py-1.5 text-left text-xs font-extrabold tracking-wide text-gray-300 transition-colors hover:text-gray-200'
+  'flex w-full min-w-0 items-center gap-1.5 rounded-xl bg-transparent px-2 py-1.5 text-left text-xs font-extrabold tracking-wide text-gray-300 transition-colors hover:text-gray-200'
 
 export const DROPDOWN_MENU_ITEM_MUTED_CLASS = `${DROPDOWN_MENU_ITEM_CLASS}`
 
@@ -30,14 +35,22 @@ export function dropdownMenuShellClass({
   const panelClass = portaled ? DROPDOWN_MENU_PORTAL_CLASS : DROPDOWN_MENU_PANEL_CLASS
   const growMin = matchWidth === 'min'
   if (inline) {
-    return `relative z-30 mt-1 w-full ${panelClass}`
+    return `relative z-30 mt-1 w-full min-w-[7.5rem] max-w-none rounded-[26px] p-1.5`
   }
   if (portaled) {
-    if (growMin) return `app-dropdown-portal rounded-[26px] p-1.5 w-max max-w-[11rem]`
-    return `${panelClass}${matchWidth ? '' : ' w-max max-w-[11rem]'}`
+    if (growMin) {
+      return `app-dropdown-portal rounded-[26px] p-1.5 ${DROPDOWN_MENU_FIT_WIDTH_CLASS}`
+    }
+    if (matchWidth) return panelClass
+    return `app-dropdown-portal rounded-[26px] p-1.5 ${DROPDOWN_MENU_FIT_WIDTH_CLASS}`
   }
-  if (growMin) return `${positionClass} rounded-[26px] p-1.5 w-max min-w-full max-w-[11rem]`
-  return `${positionClass} ${panelClass}${matchWidth ? ' w-full' : ' w-max max-w-[11rem]'}`
+  if (growMin) {
+    return `${positionClass} rounded-[26px] p-1.5 min-w-full ${DROPDOWN_MENU_FIT_WIDTH_CLASS}`
+  }
+  if (matchWidth) {
+    return `${positionClass} z-50 w-full min-w-[7.5rem] rounded-[26px] p-1.5`
+  }
+  return `${positionClass} z-50 rounded-[26px] p-1.5 ${DROPDOWN_MENU_FIT_WIDTH_CLASS}`
 }
 
 export function DropdownMenuShell({ children, className = '', matchWidth = true, inline = false }) {
@@ -72,7 +85,7 @@ export function DropdownMenuItem({
       {!Icon && dotColor ? (
         <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dotColor}`} />
       ) : null}
-      <span>{label}</span>
+      <span className="whitespace-nowrap">{label}</span>
     </button>
   )
 }

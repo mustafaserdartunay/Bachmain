@@ -95,7 +95,7 @@ CREATE INDEX IF NOT EXISTS "analytics_okrs_company_idx" ON "analytics_okrs" ("co
 CREATE TABLE IF NOT EXISTS "analytics_insights" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "company_id" uuid NOT NULL,
-  "severity" text NOT NULL,
+  "headline" text NOT NULL,
   "severity" text DEFAULT 'info' NOT NULL,
   "domain" text,
   "payload" jsonb DEFAULT '{}'::jsonb,

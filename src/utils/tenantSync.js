@@ -12,12 +12,16 @@ const API_BASE = import.meta.env.VITE_PLATFORM_API_URL || 'https://yonetim.bachm
 async function tenantFetch(collection, { method = 'GET', body } = {}) {
   const { token } = getStoredSession()
   if (!token) throw new Error('Oturum yok')
+  const csrfMatch =
+    typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )bachmain_csrf=([^;]*)/) : null
+  const csrf = csrfMatch ? decodeURIComponent(csrfMatch[1]) : null
   const res = await fetch(`${API_BASE}/tenant/${collection}`, {
     method,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
+      ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
     },
     body: body ? JSON.stringify({ payload: body }) : undefined,
   })

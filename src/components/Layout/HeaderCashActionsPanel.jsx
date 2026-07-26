@@ -9,12 +9,6 @@ import {
   Wallet,
 } from 'lucide-react'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
-import { getCustomerProfiles } from '../../data/customerProfiles'
-import {
-  getCustomerMetaSelection,
-  matchesPartyListFilter,
-  readCustomerMeta,
-} from '../../utils/customerMeta'
 import { getTreasuryAccounts } from '../../utils/treasuryStore'
 
 function getDefaultCashAccountPath(action) {
@@ -26,16 +20,6 @@ function getDefaultCashAccountPath(action) {
     accounts[0]
   const accountId = preferred?.id || 'cash-main'
   return `${CASH_BASE_PATH}/${accountId}?hareket=${action}`
-}
-
-function getPurchaseInvoicePath() {
-  const settings = readCustomerMeta()
-  const supplier = getCustomerProfiles().find((profile) => {
-    const selected = getCustomerMetaSelection(profile, settings[profile.id] || {})
-    return matchesPartyListFilter(selected.type, 'supplier')
-  })
-  if (supplier?.id) return `/musteriler/${supplier.id}/belge/alis-faturasi`
-  return '/giderler/tedarikciler'
 }
 
 const actions = [
@@ -83,7 +67,7 @@ const actions = [
   },
   {
     id: 'purchase-invoice',
-    to: () => getPurchaseInvoicePath(),
+    to: () => '/giderler/gelen-e-faturalar?yeni=1',
     title: 'Yeni Alış Faturası',
     icon: FileText,
     gradient: 'from-[#fda4af] via-[#f43f5e] to-[#e11d48]',
