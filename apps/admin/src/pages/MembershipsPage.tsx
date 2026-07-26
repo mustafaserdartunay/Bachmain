@@ -255,7 +255,7 @@ export function MembershipsPage() {
               >
                 <option value="">Tümü</option>
                 <option value="Web Üyelik">Web Üyelik</option>
-                <option value="Demo Talep">Demo Talep</option>
+                <option value="Demo Kullanıcısı">Demo Kullanıcısı</option>
                 <option value="Demo → Üyelik">Demo → Üyelik</option>
                 <option value="Manuel">Manuel</option>
               </Select>
@@ -270,7 +270,7 @@ export function MembershipsPage() {
                 }}
               >
                 <option value="">Tümü</option>
-                <option value="demo_active">Demo aktif</option>
+                <option value="demo_active">Demo Kullanıcısı</option>
                 <option value="demo_ended">Demo bitti</option>
                 <option value="package_active">Paket aktif</option>
                 <option value="package_ended">Paket bitti</option>

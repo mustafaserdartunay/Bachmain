@@ -66,7 +66,7 @@ export function membershipStatusDisplay({
   if (isTrialish) {
     if (days === null) {
       return {
-        label: isDemo ? 'Demo Talep' : 'Deneme',
+        label: isDemo ? 'Demo Kullanıcısı' : 'Deneme',
         kind: 'demo_unknown',
         remainingDays: null,
         badge: 'gold',
@@ -77,14 +77,14 @@ export function membershipStatusDisplay({
     }
     if (days === 0) {
       return {
-        label: 'Demo bugün bitiyor',
+        label: 'Demo Kullanıcısı · bugün bitiyor',
         kind: 'demo_active',
         remainingDays: 0,
         badge: 'warning',
       }
     }
     return {
-      label: `Demo ${days} gün kaldı`,
+      label: `Demo Kullanıcısı · ${days} gün`,
       kind: 'demo_active',
       remainingDays: days,
       badge: days <= 3 ? 'warning' : 'gold',
@@ -126,7 +126,7 @@ export function membershipStatusDisplay({
 }
 
 function sourceLabel(source, isDemo) {
-  if (isDemo) return 'Demo Talep'
+  if (isDemo) return 'Demo Kullanıcısı'
   const raw = String(source || '')
   if (
     raw === 'self_signup' ||
@@ -136,7 +136,7 @@ function sourceLabel(source, isDemo) {
   ) {
     return 'Web Üyelik'
   }
-  if (raw === 'demo_request') return 'Demo Talep'
+  if (raw === 'demo_request') return 'Demo Kullanıcısı'
   if (raw === 'demo_converted') return 'Demo → Üyelik'
   if (!raw || raw === 'manual' || raw === 'Manuel') return 'Manuel'
   return raw
@@ -230,7 +230,7 @@ export function buildAccountRows(store) {
       role: isDemo ? 'demo' : a.role || 'owner',
       companySize: a.companySize || c?.companySize || '—',
       message: a.demoMessage || c?.demoMessage || '—',
-      canLogin: a.canLogin !== false && !isDemo,
+      canLogin: a.canLogin !== false,
       subscriptionStatus: c?.subscriptionStatus || null,
     }
   })

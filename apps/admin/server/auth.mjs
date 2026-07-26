@@ -461,13 +461,17 @@ export async function loginAccount(store, body) {
   const email = normalizeEmail(body.email)
   const password = String(body.password || '')
   const account = store.accounts.find((a) => a.email === email)
-  if (!account || account.role === 'demo_lead') {
+  if (!account) {
+    const err = new Error('E-posta veya şifre hatalı')
+    err.code = 'INVALID_CREDENTIALS'
+    throw err
+  }
+  // Legacy lead-only rows (no usable login) — must complete /demo once
+  if (account.role === 'demo_lead' && account.canLogin === false) {
     const err = new Error(
-      account?.role === 'demo_lead'
-        ? 'Bu e-posta yalnızca demo talebi olarak kayıtlı. Lütfen üye olun veya uygulama üzerinden kayıt olun.'
-        : 'E-posta veya şifre hatalı',
+      'Bu e-posta yalnızca eski demo talebi. Lütfen /demo üzerinden hesabınızı oluşturun.',
     )
-    err.code = account?.role === 'demo_lead' ? 'DEMO_LEAD_ONLY' : 'INVALID_CREDENTIALS'
+    err.code = 'DEMO_LEAD_ONLY'
     throw err
   }
   if (account.canLogin === false || account.paymentPending) {
@@ -481,6 +485,16 @@ export async function loginAccount(store, body) {
     const err = new Error('E-posta veya şifre hatalı')
     err.code = 'INVALID_CREDENTIALS'
     throw err
+  }
+  const customerForExpiry = store.customers.find((c) => c.id === account.customerId) || null
+  const expiry = customerForExpiry?.licenseExpiry || account.licenseExpiry
+  if (account.role === 'demo_lead' && expiry) {
+    const end = new Date(`${String(expiry).slice(0, 10)}T23:59:59.999`)
+    if (!Number.isNaN(end.getTime()) && end.getTime() < Date.now()) {
+      const err = new Error('Demo süreniz dolmuş. Yönetim süreyi uzatana kadar giriş yapılamaz.')
+      err.code = 'DEMO_EXPIRED'
+      throw err
+    }
   }
   account.lastLoginAt = new Date().toISOString()
   const customer = store.customers.find((c) => c.id === account.customerId) || null

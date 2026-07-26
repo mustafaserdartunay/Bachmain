@@ -325,7 +325,9 @@ export function MembershipDetailPage() {
               >
                 <PauseCircle className="h-4 w-4" /> Askıya al
               </Button>
-              {member.role === 'demo' || member.source === 'Demo Talep' ? (
+              {member.role === 'demo' ||
+              member.source === 'Demo Talep' ||
+              member.source === 'Demo Kullanıcısı' ? (
                 <Button
                   variant="secondary"
                   size="sm"

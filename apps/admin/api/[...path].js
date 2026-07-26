@@ -272,7 +272,7 @@ export default async function handler(req, res) {
           { label: 'Toplam Müşteri', value: String(customers.length), change: '', trend: 'up' },
           { label: 'Web Üyelik', value: String(webSignups), change: '', trend: 'up' },
           {
-            label: 'Demo Talep',
+            label: 'Demo Kullanıcısı',
             value: String(
               customers.filter((c) => c.source === 'demo_request' || c.source === 'demo_converted')
                 .length,

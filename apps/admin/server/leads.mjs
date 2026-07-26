@@ -1,11 +1,11 @@
 /**
- * Public lead capture from bachmain.com (demo form, etc.).
- * Persists into customers + üye (accounts) so yonetim lists stay complete.
+ * Public lead capture from bachmain.com (demo form).
+ * Creates a loginable 7-day demo account (role: demo_lead) listed in Üye Hesapları.
  */
 import { withStore, newId } from './store.mjs'
 import { sendJson } from './authRoutes.mjs'
 import { hitRateLimit } from './db.mjs'
-import { hashPassword } from './auth.mjs'
+import { hashPassword, signToken, validateSignupPassword, buildSessionCookie } from './auth.mjs'
 
 function normalizeEmail(email) {
   return String(email || '')
@@ -26,8 +26,44 @@ function makeTenantCode(store) {
   return code
 }
 
+function isLicenseExpired(licenseExpiry) {
+  if (!licenseExpiry) return false
+  const end = new Date(`${String(licenseExpiry).slice(0, 10)}T23:59:59.999`)
+  if (Number.isNaN(end.getTime())) return false
+  return end.getTime() < Date.now()
+}
+
+function sessionPayload(account, customer) {
+  const token = signToken({
+    sub: account.id,
+    email: account.email,
+    customerId: account.customerId,
+    tenantCode: account.tenantCode,
+    role: account.role,
+  })
+  return {
+    token,
+    user: {
+      id: account.id,
+      email: account.email,
+      fullName: account.fullName,
+      companyName: account.companyName || customer?.company || '',
+      phone: account.phone || customer?.phone || '',
+      role: account.role || 'demo_lead',
+      customerId: account.customerId,
+      plan: customer?.plan || account.plan || 'Starter',
+      status: 'trial',
+      subscriptionStatus: customer?.subscriptionStatus || 'trialing',
+      licenseExpiry: customer?.licenseExpiry || null,
+      tenantCode: account.tenantCode,
+      isDemo: true,
+    },
+  }
+}
+
 /**
- * Save demo request → Üye Hesapları (/uyeler) + Müşteriler (/musteriler).
+ * Create or activate a demo membership → Üye Hesapları (/uyeler).
+ * One email = one demo; admin extend renews days, no second signup.
  */
 export function createDemoLead(store, body = {}) {
   if (!Array.isArray(store.customers)) store.customers = []
@@ -38,14 +74,27 @@ export function createDemoLead(store, body = {}) {
   if (!Array.isArray(store.notifications)) store.notifications = []
 
   const fullName = String(body.name || body.fullName || body.contact || '').trim()
-  const companyName = String(body.company || body.companyName || '').trim() || fullName || 'Demo Talebi'
-  const phone = String(body.phone || '').trim()
+  const companyName =
+    String(body.company || body.companyName || '').trim() || fullName || 'Demo Firma'
+  const phone = String(body.phone || body.gsm || '').trim()
   const email = normalizeEmail(body.email)
+  const taxNo = String(body.taxNo || '').trim()
+  const taxOffice = String(body.taxOffice || '').trim()
+  const address = String(body.address || '').trim()
+  const city = String(body.city || '').trim()
+  const district = String(body.district || '').trim()
   const companySize = String(body.size || body.companySize || '').trim()
   const message = String(body.message || '').trim()
+  const password = String(body.password || '')
+  const source = String(body.source || 'bachmain_demo').trim() || 'bachmain_demo'
 
   if (!fullName) {
     const err = new Error('Ad soyad gerekli')
+    err.code = 'MISSING_FIELDS'
+    throw err
+  }
+  if (!companyName) {
+    const err = new Error('Firma ünvanı gerekli')
     err.code = 'MISSING_FIELDS'
     throw err
   }
@@ -59,9 +108,53 @@ export function createDemoLead(store, body = {}) {
     err.code = 'MISSING_FIELDS'
     throw err
   }
+  if (!taxNo) {
+    const err = new Error('TC veya vergi no gerekli')
+    err.code = 'MISSING_FIELDS'
+    throw err
+  }
+  if (!taxOffice) {
+    const err = new Error('Vergi dairesi gerekli')
+    err.code = 'MISSING_FIELDS'
+    throw err
+  }
+  if (!address || !city || !district) {
+    const err = new Error('Adres, il ve ilçe gerekli')
+    err.code = 'MISSING_FIELDS'
+    throw err
+  }
+  const pwCheck = validateSignupPassword(password)
+  if (!pwCheck.ok) {
+    const err = new Error(pwCheck.message)
+    err.code = 'WEAK_PASSWORD'
+    throw err
+  }
+
+  const existingAccount = store.accounts.find((a) => a.email === email)
+  if (existingAccount) {
+    const isPaidMember = existingAccount.role !== 'demo_lead' && existingAccount.canLogin !== false
+    if (isPaidMember || existingAccount.role === 'owner') {
+      const err = new Error('Bu e-posta ile zaten üyelik var. Giriş yapabilirsiniz.')
+      err.code = 'EMAIL_TAKEN'
+      throw err
+    }
+    // Already activated demo (loginable) — no second demo signup
+    if (existingAccount.role === 'demo_lead' && existingAccount.canLogin !== false) {
+      const customer = store.customers.find((c) => c.id === existingAccount.customerId)
+      const expired = isLicenseExpired(customer?.licenseExpiry || existingAccount.licenseExpiry)
+      const err = new Error(
+        expired
+          ? 'Bu e-posta ile demo süreniz dolmuş. Yönetim süreyi uzatmadan yeni demo açılamaz.'
+          : 'Bu e-posta ile zaten demo hesabınız var. Giriş yaparak devam edin.',
+      )
+      err.code = expired ? 'DEMO_EXPIRED' : 'DEMO_ALREADY_EXISTS'
+      throw err
+    }
+  }
 
   const now = new Date()
   const nowIso = now.toISOString()
+  const licenseExpiry = new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10)
   const requestId = newId('demo')
 
   const demoRequest = {
@@ -70,16 +163,21 @@ export function createDemoLead(store, body = {}) {
     companyName,
     phone,
     email,
+    taxNo,
+    taxOffice,
+    address,
+    city,
+    district,
     companySize,
     message,
-    source: 'bachmain_demo',
-    status: 'pending',
+    source,
+    status: 'activated',
     createdAt: nowIso,
   }
   store.demoRequests.unshift(demoRequest)
   store.demoRequests = store.demoRequests.slice(0, 1000)
 
-  let account = store.accounts.find((a) => a.email === email)
+  let account = existingAccount || null
   let customer = account
     ? store.customers.find((c) => c.id === account.customerId)
     : store.customers.find((c) => normalizeEmail(c.email) === email)
@@ -93,14 +191,19 @@ export function createDemoLead(store, body = {}) {
       contact: fullName,
       email,
       phone,
-      taxNo: '',
-      city: '',
+      gsm: phone,
+      taxNo,
+      taxOffice,
+      address,
+      city,
+      district,
       status: 'trial',
+      subscriptionStatus: 'trialing',
       plan: 'Starter',
       mrr: 0,
       users: 1,
       createdAt: nowIso.slice(0, 10),
-      licenseExpiry: new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10),
+      licenseExpiry,
       balance: 0,
       source: 'demo_request',
       tenantCode,
@@ -113,26 +216,37 @@ export function createDemoLead(store, body = {}) {
       id: customer.id,
       company: customer.company,
       contact: customer.contact,
-      city: '—',
+      city: customer.city || '—',
       plan: customer.plan,
       mrr: '₺0',
-      status: 'Demo Talep',
+      status: 'Demo Kullanıcısı',
       licenseExpiry: customer.licenseExpiry,
     })
   } else {
-    customer.contact = fullName || customer.contact
-    customer.company = companyName || customer.company
-    customer.phone = phone || customer.phone
+    customer.contact = fullName
+    customer.company = companyName
+    customer.phone = phone
+    customer.gsm = phone
     customer.email = email
+    customer.taxNo = taxNo
+    customer.taxOffice = taxOffice
+    customer.address = address
+    customer.city = city
+    customer.district = district
     customer.companySize = companySize || customer.companySize
     customer.demoMessage = message || customer.demoMessage
     customer.lastDemoAt = nowIso
-    if (!customer.source || customer.source === 'Manuel') customer.source = 'demo_request'
+    customer.status = 'trial'
+    customer.subscriptionStatus = 'trialing'
+    customer.licenseExpiry = licenseExpiry
+    customer.source = 'demo_request'
     const moduleRow = store.modules.customers.find((c) => c.id === customer.id)
     if (moduleRow) {
       moduleRow.company = customer.company
       moduleRow.contact = customer.contact
-      moduleRow.status = moduleRow.status || 'Demo Talep'
+      moduleRow.city = customer.city || '—'
+      moduleRow.status = 'Demo Kullanıcısı'
+      moduleRow.licenseExpiry = customer.licenseExpiry
     }
   }
 
@@ -143,10 +257,15 @@ export function createDemoLead(store, body = {}) {
       fullName,
       companyName,
       phone,
-      // Unusable password — demo lead cannot log in until they register
-      passwordHash: hashPassword(`demo-lead-${requestId}-${Math.random().toString(36)}`),
+      gsm: phone,
+      taxNo,
+      taxOffice,
+      address,
+      city,
+      district,
+      passwordHash: hashPassword(password),
       role: 'demo_lead',
-      canLogin: false,
+      canLogin: true,
       customerId: customer.id,
       tenantCode: customer.tenantCode,
       plan: 'Starter',
@@ -154,20 +273,34 @@ export function createDemoLead(store, body = {}) {
       companySize,
       demoMessage: message,
       createdAt: nowIso,
-      lastLoginAt: null,
+      lastLoginAt: nowIso,
       lastDemoAt: nowIso,
+      onboardingCompleted: false,
+      licenseExpiry,
     }
     store.accounts.unshift(account)
   } else {
-    account.fullName = fullName || account.fullName
-    account.companyName = companyName || account.companyName
-    account.phone = phone || account.phone
-    account.lastDemoAt = nowIso
+    // Legacy lead-only row → activate once
+    account.fullName = fullName
+    account.companyName = companyName
+    account.phone = phone
+    account.gsm = phone
+    account.taxNo = taxNo
+    account.taxOffice = taxOffice
+    account.address = address
+    account.city = city
+    account.district = district
+    account.passwordHash = hashPassword(password)
+    account.role = 'demo_lead'
+    account.canLogin = true
+    account.source = 'demo_request'
     account.companySize = companySize || account.companySize
     account.demoMessage = message || account.demoMessage
-    if (account.role === 'demo_lead' || !account.role) {
-      account.source = account.source || 'demo_request'
-    }
+    account.lastDemoAt = nowIso
+    account.lastLoginAt = nowIso
+    account.licenseExpiry = licenseExpiry
+    account.customerId = customer.id
+    account.tenantCode = customer.tenantCode || account.tenantCode
   }
 
   demoRequest.customerId = customer.id
@@ -175,21 +308,25 @@ export function createDemoLead(store, body = {}) {
 
   store.notifications.unshift({
     id: newId('ntf'),
-    title: `Demo talebi: ${companyName}`,
-    body: `${fullName} · ${email} · ${phone}${companySize ? ` · ${companySize}` : ''}`,
+    title: `Demo kullanıcı: ${companyName}`,
+    body: `${fullName} · ${email} · ${phone} · 7 gün demo`,
     type: 'demo_request',
     createdAt: nowIso,
   })
   store.notifications = store.notifications.slice(0, 200)
 
-  return { request: demoRequest, customer, account }
+  const session = sessionPayload(account, customer)
+  return { request: demoRequest, customer, account, ...session }
 }
 
 export async function handleLeadsApi(req, res, path, body = {}) {
   const method = req.method
 
   if (method === 'POST' && (path === 'leads/demo' || path === 'demo-requests')) {
-    const ip = req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown'
+    const ip =
+      req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown'
     const rate = await hitRateLimit(`demo:${ip}`, { limit: 20, windowMs: 60 * 60 * 1000 })
     if (!rate.allowed) {
       sendJson(req, res, 429, {
@@ -200,16 +337,31 @@ export async function handleLeadsApi(req, res, path, body = {}) {
     }
     try {
       const result = await withStore((store) => createDemoLead(store, body))
-      sendJson(req, res, 201, {
-        ok: true,
-        id: result.request.id,
-        customerId: result.customer.id,
-        accountId: result.account.id,
-        message: 'Demo talebiniz alındı. Ekibimiz en kısa sürede sizinle iletişime geçecek.',
-      })
+      sendJson(
+        req,
+        res,
+        201,
+        {
+          ok: true,
+          id: result.request.id,
+          customerId: result.customer.id,
+          accountId: result.account.id,
+          token: result.token,
+          user: result.user,
+          licenseExpiry: result.customer.licenseExpiry,
+          message: 'Demonuz oluşturuldu. Teşekkür ederiz!',
+        },
+        { cookie: buildSessionCookie(result.token) },
+      )
       return true
     } catch (error) {
-      sendJson(req, res, 400, {
+      const status =
+        error.code === 'EMAIL_TAKEN' ||
+        error.code === 'DEMO_ALREADY_EXISTS' ||
+        error.code === 'DEMO_EXPIRED'
+          ? 409
+          : 400
+      sendJson(req, res, status, {
         error: error.code || 'DEMO_FAILED',
         message: error.message,
       })
