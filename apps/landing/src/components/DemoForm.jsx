@@ -212,18 +212,24 @@ export default function DemoForm({ variant = 'panel' } = {}) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
-      <h2 className="mb-8 text-center text-4xl font-extrabold tracking-[-0.04em] text-[#2563EB] uppercase sm:text-5xl">
+      <h2 className="text-center text-4xl font-extrabold tracking-[-0.04em] text-[#2563EB] uppercase sm:text-5xl">
         Demo Oluştur
       </h2>
+      {!done ? (
+        <p className="mx-auto mt-4 max-w-xl text-center text-[14px] leading-relaxed font-medium text-[#64748B]">
+          Detaylı bilgileriniz fatura ve lisans için kullanılır. Demo 7 gün aktiftir; hemen
+          uygulamaya girebilirsiniz. Tüm alanlar zorunludur.
+        </p>
+      ) : null}
 
       <motion.div
-        className="pointer-events-none absolute top-[4.5rem] -inset-x-px bottom-0 rounded-[34px] bg-gradient-to-br from-[#60A5FA]/50 via-[#2563EB]/25 to-[#38BDF8]/40 opacity-70 blur-[1px]"
+        className="pointer-events-none absolute top-[7.5rem] -inset-x-px bottom-0 rounded-[34px] bg-gradient-to-br from-[#60A5FA]/50 via-[#2563EB]/25 to-[#38BDF8]/40 opacity-70 blur-[1px]"
         aria-hidden
         animate={{ opacity: [0.45, 0.75, 0.45] }}
         transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      <div className="relative rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_24px_64px_rgba(37,99,235,0.14)] backdrop-blur-sm sm:p-10">
+      <div className="relative mt-10 rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_24px_64px_rgba(37,99,235,0.14)] backdrop-blur-sm sm:mt-12 sm:p-10">
         {done ? (
           <div className="py-6 text-center">
             <CheckCircle className="mx-auto h-14 w-14 text-[#16A34A]" aria-hidden />
@@ -250,18 +256,12 @@ export default function DemoForm({ variant = 'panel' } = {}) {
           </div>
         ) : (
           <form onSubmit={submitPanel} className="space-y-4" noValidate>
-            <header className="mb-1 pt-1">
-              <p className="text-[14px] leading-relaxed font-medium text-[#64748B]">
-                Detaylı bilgileriniz fatura ve lisans için kullanılır. Demo 7 gün aktiftir; hemen
-                uygulamaya girebilirsiniz.
-              </p>
-            </header>
-
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 name="fullName"
+                required
                 autoComplete="name"
-                placeholder="Ad Soyad"
+                placeholder="Ad Soyad *"
                 value={form.fullName}
                 onChange={setField('fullName')}
                 error={errors.fullName}
@@ -270,8 +270,9 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               />
               <Input
                 name="companyName"
+                required
                 autoComplete="organization"
-                placeholder="Firma ünvanı"
+                placeholder="Firma ünvanı *"
                 value={form.companyName}
                 onChange={setField('companyName')}
                 error={errors.companyName}
@@ -285,8 +286,9 @@ export default function DemoForm({ variant = 'panel' } = {}) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 name="taxNo"
+                required
                 inputMode="numeric"
-                placeholder="TC veya Vergi No"
+                placeholder="TC veya Vergi No *"
                 value={form.taxNo}
                 onChange={setField('taxNo')}
                 error={errors.taxNo}
@@ -295,7 +297,8 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               />
               <Input
                 name="taxOffice"
-                placeholder="Vergi dairesi"
+                required
+                placeholder="Vergi dairesi *"
                 value={form.taxOffice}
                 onChange={setField('taxOffice')}
                 error={errors.taxOffice}
@@ -308,8 +311,9 @@ export default function DemoForm({ variant = 'panel' } = {}) {
 
             <Input
               name="address"
+              required
               autoComplete="street-address"
-              placeholder="Adres"
+              placeholder="Adres *"
               value={form.address}
               onChange={setField('address')}
               error={errors.address}
@@ -320,8 +324,9 @@ export default function DemoForm({ variant = 'panel' } = {}) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 name="city"
+                required
                 autoComplete="address-level1"
-                placeholder="İl"
+                placeholder="İl *"
                 value={form.city}
                 onChange={setField('city')}
                 error={errors.city}
@@ -329,8 +334,9 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               />
               <Input
                 name="district"
+                required
                 autoComplete="address-level2"
-                placeholder="İlçe"
+                placeholder="İlçe *"
                 value={form.district}
                 onChange={setField('district')}
                 error={errors.district}
@@ -341,9 +347,10 @@ export default function DemoForm({ variant = 'panel' } = {}) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 name="phone"
+                required
                 type="tel"
                 autoComplete="tel"
-                placeholder="Telefon"
+                placeholder="Telefon *"
                 value={form.phone}
                 onChange={setField('phone')}
                 error={errors.phone}
@@ -352,9 +359,10 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               />
               <Input
                 name="email"
+                required
                 type="email"
                 autoComplete="email"
-                placeholder="E-posta"
+                placeholder="E-posta *"
                 value={form.email}
                 onChange={setField('email')}
                 error={errors.email}
@@ -365,9 +373,10 @@ export default function DemoForm({ variant = 'panel' } = {}) {
 
             <Input
               name="password"
+              required
               type={showPw ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="Şifre"
+              placeholder="Şifre *"
               value={form.password}
               onChange={setField('password')}
               error={errors.password}
@@ -391,9 +400,10 @@ export default function DemoForm({ variant = 'panel' } = {}) {
             <PasswordStrength password={form.password} />
             <Input
               name="password2"
+              required
               type={showPw2 ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="Şifreyi tekrar girin"
+              placeholder="Şifreyi tekrar girin *"
               value={form.password2}
               onChange={setField('password2')}
               error={errors.password2}
