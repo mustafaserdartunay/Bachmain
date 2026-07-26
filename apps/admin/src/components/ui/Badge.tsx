@@ -38,6 +38,7 @@ export const statusBadgeMap: Record<string, BadgeVariant> = {
   askıda: 'warning',
   churned: 'danger',
   iptal: 'danger',
+  expired: 'danger',
   open: 'warning',
   açık: 'warning',
   in_progress: 'gold',
@@ -62,4 +63,10 @@ export const statusBadgeMap: Record<string, BadgeVariant> = {
   yüksek: 'warning',
   critical: 'danger',
   kritik: 'danger',
+  demo_active: 'gold',
+  demo_ended: 'danger',
+  package_active: 'success',
+  package_ended: 'danger',
+  pending_payment: 'warning',
+  cancelled: 'danger',
 }

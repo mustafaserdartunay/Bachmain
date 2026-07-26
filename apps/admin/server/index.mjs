@@ -8,7 +8,15 @@ import { handleLeadsApi } from './leads.mjs'
 import { handleWhatsAppApi } from './whatsappApi.mjs'
 import { handleBillingApi } from './billingRoutes.mjs'
 import { handlePaymentsApi } from './payments.mjs'
-import { seedBillingIfEmpty } from './subscriptionService.mjs'
+import { seedBillingIfEmpty, extendMembership, activatePlanDirect } from './subscriptionService.mjs'
+import {
+  buildAccountRows,
+  buildCustomerRows,
+  buildMembershipDetail,
+  buildMembershipMetrics,
+  buildPaymentRequestRows,
+  customerToRow,
+} from './membershipViews.mjs'
 import { handleMailApi } from './mailRoutes.mjs'
 import { assertAdminEnv } from './assertEnv.mjs'
 import { handleSecurityApi } from './securityRoutes.mjs'
@@ -115,8 +123,8 @@ async function handle(req, res, url) {
 
   try {
     const apiPath = pathname.replace(/^\/api\/?/, '') || ''
+    let body = {}
     if (method === 'POST' || method === 'GET' || method === 'PUT' || method === 'PATCH') {
-      let body = {}
       if (method !== 'GET' && pathname.startsWith('/api/')) {
         try {
           body = await parseBody(req)
@@ -329,7 +337,28 @@ async function handle(req, res, url) {
     const moduleMatch = pathname.match(/^\/api\/modules\/([^/]+)$/)
     if (method === 'GET' && moduleMatch) {
       const store = await loadStore()
-      const rows = store.modules[moduleMatch[1]]
+      const moduleId = moduleMatch[1]
+      if (moduleId === 'memberships' || moduleId === 'accounts-users') {
+        return sendJson(req, res, 200, {
+          rows: buildAccountRows(store),
+          metrics: buildMembershipMetrics(store).slice(0, 4),
+        })
+      }
+      if (moduleId === 'customers') {
+        return sendJson(req, res, 200, {
+          rows: buildCustomerRows(store),
+          metrics: buildMembershipMetrics(store).slice(0, 4),
+        })
+      }
+      if (moduleId === 'payment-requests' || moduleId === 'payments') {
+        const real = buildPaymentRequestRows(store)
+        const rows = real.length ? real : store.modules?.payments || []
+        return sendJson(req, res, 200, {
+          rows,
+          metrics: buildMembershipMetrics(store).slice(3, 5),
+        })
+      }
+      const rows = store.modules?.[moduleId]
       if (!rows) return sendJson(req, res, 404, { error: 'Modül bulunamadı' })
       return sendJson(req, res, 200, { rows, metrics: computeMetrics(rows) })
     }
@@ -337,11 +366,119 @@ async function handle(req, res, url) {
     const moduleItemMatch = pathname.match(/^\/api\/modules\/([^/]+)\/([^/]+)$/)
     if (method === 'GET' && moduleItemMatch) {
       const store = await loadStore()
-      const rows = store.modules[moduleItemMatch[1]]
+      const moduleId = moduleItemMatch[1]
+      const itemId = moduleItemMatch[2]
+      if (moduleId === 'memberships' || moduleId === 'accounts-users') {
+        const detail = buildMembershipDetail(store, itemId)
+        if (!detail) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+        return sendJson(req, res, 200, detail)
+      }
+      if (moduleId === 'customers') {
+        const customer = (store.customers || []).find((c) => c.id === itemId)
+        if (!customer) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
+        const account = (store.accounts || []).find((a) => a.customerId === itemId)
+        return sendJson(req, res, 200, {
+          ...customerToRow(customer, account),
+          ...customer,
+          accountEmail: account?.email,
+          accountId: account?.id,
+        })
+      }
+      const rows = store.modules?.[moduleId]
       if (!rows) return sendJson(req, res, 404, { error: 'Modül bulunamadı' })
-      const row = rows.find((r) => r.id === moduleItemMatch[2])
+      const row = rows.find((r) => r.id === itemId)
       if (!row) return sendJson(req, res, 404, { error: 'Kayıt bulunamadı' })
       return sendJson(req, res, 200, row)
+    }
+
+    const membershipExtendMatch = pathname.match(/^\/api\/memberships\/([^/]+)\/extend$/)
+    if (method === 'POST' && membershipExtendMatch) {
+      const accountId = membershipExtendMatch[1]
+      try {
+        const result = await withStore((store) => {
+          const account = (store.accounts || []).find((a) => a.id === accountId)
+          if (!account?.customerId) throw new Error('NOT_FOUND')
+          seedBillingIfEmpty(store)
+          const extended = extendMembership(store, account.customerId, {
+            days: body.days ?? 7,
+            mode: body.mode || 'trial',
+            note: body.note || '',
+          })
+          return { ...extended, detail: buildMembershipDetail(store, accountId) }
+        })
+        return sendJson(req, res, 200, { ok: true, ...result })
+      } catch (err) {
+        const status = err.message === 'NOT_FOUND' ? 404 : 400
+        return sendJson(req, res, status, { ok: false, error: err.message })
+      }
+    }
+
+    const membershipActionMatch = pathname.match(/^\/api\/memberships\/([^/]+)\/action$/)
+    if (method === 'POST' && membershipActionMatch) {
+      const accountId = membershipActionMatch[1]
+      const action = String(body.action || '')
+      try {
+        const result = await withStore((store) => {
+          const account = (store.accounts || []).find((a) => a.id === accountId)
+          if (!account) throw new Error('NOT_FOUND')
+          const customer = (store.customers || []).find((c) => c.id === account.customerId)
+          seedBillingIfEmpty(store)
+          if (action === 'suspend') {
+            account.canLogin = false
+            if (customer) {
+              customer.status = 'suspended'
+              customer.subscriptionStatus = 'suspended'
+            }
+          } else if (action === 'activate') {
+            account.canLogin = true
+            if (account.role === 'demo_lead') account.role = 'owner'
+            if (customer) {
+              const stillValid =
+                customer.licenseExpiry &&
+                new Date(`${customer.licenseExpiry}T23:59:59.999`) >= new Date()
+              customer.status = stillValid
+                ? customer.subscriptionStatus === 'trialing' || customer.status === 'trial'
+                  ? 'trial'
+                  : 'active'
+                : 'trial'
+              customer.subscriptionStatus = customer.status === 'trial' ? 'trialing' : 'active'
+            }
+          } else if (action === 'set_plan') {
+            if (!customer) throw new Error('NO_CUSTOMER')
+            activatePlanDirect(
+              store,
+              customer.id,
+              body.planCode || 'starter',
+              body.period || 'month',
+              {
+                action: 'staff_membership_plan',
+                status: body.asTrial ? 'trialing' : 'active',
+              },
+            )
+          } else if (action === 'convert_demo') {
+            account.canLogin = true
+            account.role = 'owner'
+            account.source = 'demo_converted'
+            if (customer) {
+              customer.source = 'demo_converted'
+              if (!customer.licenseExpiry) {
+                extendMembership(store, customer.id, { days: body.days ?? 7, mode: 'trial' })
+              } else {
+                customer.status = 'trial'
+                customer.subscriptionStatus = 'trialing'
+              }
+            }
+          } else {
+            throw new Error('INVALID_ACTION')
+          }
+          account.updatedAt = new Date().toISOString()
+          return buildMembershipDetail(store, accountId)
+        })
+        return sendJson(req, res, 200, { ok: true, detail: result })
+      } catch (err) {
+        const status = err.message === 'NOT_FOUND' ? 404 : 400
+        return sendJson(req, res, status, { ok: false, error: err.message })
+      }
     }
 
     if (method === 'POST' && moduleMatch) {
