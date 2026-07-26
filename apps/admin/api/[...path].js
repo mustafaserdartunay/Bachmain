@@ -58,6 +58,7 @@ export default async function handler(req, res) {
     if (await handleMailApi(req, res, path, body)) return
 
     if (method === 'GET' && (path === '' || path === 'health')) {
+      const mailConfigured = Boolean(String(process.env.RESEND_API_KEY || '').trim())
       return sendJson(req, res, 200, {
         status: 'ok',
         service: 'bachmain-platform-api',
@@ -65,6 +66,12 @@ export default async function handler(req, res) {
         storage: storageBackend(),
         database: hasDatabase(),
         staffAuth: staffAuthEnabled(),
+        mail: {
+          provider: 'resend',
+          configured: mailConfigured,
+          from: process.env.EMAIL_FROM || 'BACHMAIN <noreply@bachmain.com>',
+          webUrl: process.env.WEB_URL || 'https://www.bachmain.com',
+        },
       })
     }
 
