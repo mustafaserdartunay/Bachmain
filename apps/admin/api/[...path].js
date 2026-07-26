@@ -21,6 +21,7 @@ import {
 } from '../server/membershipViews.mjs'
 import {
   extendMembership,
+  extendMembershipByAccount,
   activatePlanDirect,
   seedBillingIfEmpty,
 } from '../server/subscriptionService.mjs'
@@ -327,15 +328,8 @@ export default async function handler(req, res) {
       const accountId = membershipExtendMatch[1]
       try {
         const result = await withStore((store) => {
-          const account = (store.accounts || []).find((a) => a.id === accountId)
-          if (!account?.customerId) {
-            throw Object.assign(new Error('Üye hesabı bulunamadı'), {
-              code: 'NOT_FOUND',
-              status: 404,
-            })
-          }
           seedBillingIfEmpty(store)
-          const extended = extendMembership(store, account.customerId, {
+          const extended = extendMembershipByAccount(store, accountId, {
             days: body.days ?? 7,
             mode: body.mode || 'trial',
             note: body.note || '',

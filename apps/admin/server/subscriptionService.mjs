@@ -721,7 +721,7 @@ export function activatePlanDirect(store, customerId, planCode, period = 'month'
  */
 export function extendMembership(store, customerId, { days = 7, mode = 'trial', note = '' } = {}) {
   const b = seedBillingIfEmpty(store)
-  const customer = (store.customers || []).find((c) => c.id === customerId)
+  let customer = (store.customers || []).find((c) => c.id === customerId)
   if (!customer) {
     throw Object.assign(new Error('Müşteri bulunamadı'), { code: 'NOT_FOUND', status: 404 })
   }
@@ -770,6 +770,7 @@ export function extendMembership(store, customerId, { days = 7, mode = 'trial', 
   if (account) {
     account.canLogin = true
     if (account.role === 'demo_lead') account.role = 'owner'
+    account.licenseExpiry = endDate
     account.updatedAt = now.toISOString()
   }
 
@@ -791,6 +792,61 @@ export function extendMembership(store, customerId, { days = 7, mode = 'trial', 
     subscription: sub,
     snapshot: getSubscriptionSnapshot(store, customerId),
   }
+}
+
+/** Ensure account has a customer, then extend membership (admin üye paneli). */
+export function extendMembershipByAccount(
+  store,
+  accountId,
+  { days = 7, mode = 'trial', note = '' } = {},
+) {
+  if (!Array.isArray(store.accounts)) store.accounts = []
+  if (!Array.isArray(store.customers)) store.customers = []
+
+  const account = store.accounts.find((a) => a.id === accountId)
+  if (!account) {
+    throw Object.assign(new Error('Üye hesabı bulunamadı'), { code: 'NOT_FOUND', status: 404 })
+  }
+
+  let customer = account.customerId
+    ? store.customers.find((c) => c.id === account.customerId)
+    : null
+
+  if (!customer) {
+    const customerId = account.customerId || newId('c')
+    customer = {
+      id: customerId,
+      company: account.companyName || account.fullName || account.email || 'Üye',
+      contact: account.fullName || '',
+      email: account.email || '',
+      phone: account.phone || account.gsm || '',
+      gsm: account.gsm || account.phone || '',
+      taxNo: account.taxNo || '',
+      taxOffice: account.taxOffice || '',
+      address: account.address || '',
+      city: account.city || '',
+      district: account.district || '',
+      status: 'trial',
+      subscriptionStatus: 'trialing',
+      plan: account.plan || 'Starter',
+      planCode: account.planCode || 'starter',
+      mrr: 0,
+      users: 1,
+      balance: 0,
+      source:
+        account.source === 'demo_request' || account.role === 'demo_lead'
+          ? 'demo_request'
+          : 'self_signup',
+      licenseExpiry: account.licenseExpiry || null,
+      tenantCode: account.tenantCode || null,
+      createdAt: account.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    store.customers.unshift(customer)
+    account.customerId = customerId
+  }
+
+  return extendMembership(store, account.customerId, { days, mode, note })
 }
 
 export function staffMutatePlan(store, planId, patch) {

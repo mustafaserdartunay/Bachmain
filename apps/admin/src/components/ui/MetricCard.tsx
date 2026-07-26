@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
@@ -60,9 +61,9 @@ export function PageHeader({ title, subtitle, actions, breadcrumbs }: PageHeader
               <span key={i} className="flex items-center gap-1.5">
                 {i > 0 && <span>/</span>}
                 {b.href ? (
-                  <a href={b.href} className="hover:text-bach-blue">
+                  <Link to={b.href} className="hover:text-bach-blue">
                     {b.label}
-                  </a>
+                  </Link>
                 ) : (
                   <span className="text-text-muted">{b.label}</span>
                 )}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Filter, Plus, Search, X } from 'lucide-react'
+import { ChevronRight, Filter, Plus, Search, X } from 'lucide-react'
 import { PageHeader, MetricCard } from '@/components/ui/MetricCard'
 import { DataTable } from '@/components/ui/DataTable'
 import { Button } from '@/components/ui/Button'
@@ -60,6 +60,11 @@ export function MembershipsPage() {
 
   const rows = (data?.rows ?? []) as unknown as MembershipRow[]
 
+  const openDetail = (id: string) => {
+    if (!id) return
+    navigate(`/uyeler/${encodeURIComponent(id)}`)
+  }
+
   const cities = useMemo(() => {
     const set = new Set<string>()
     rows.forEach((r) => {
@@ -107,10 +112,16 @@ export function MembershipsPage() {
       label: 'Ad Soyad',
       sortable: true,
       render: (row) => (
-        <div>
-          <p className="font-semibold text-text">{row.fullName || '—'}</p>
+        <Link
+          to={`/uyeler/${encodeURIComponent(row.id)}`}
+          className="group block"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="font-semibold text-bach-blue group-hover:underline">
+            {row.fullName || '—'}
+          </p>
           <p className="text-xs text-text-subtle">{row.role === 'demo' ? 'Demo lead' : row.role}</p>
-        </div>
+        </Link>
       ),
     },
     { key: 'email', label: 'E-posta' },
@@ -152,6 +163,22 @@ export function MembershipsPage() {
         </span>
       ),
     },
+    {
+      key: 'id',
+      label: 'İşlem',
+      render: (row) => (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation()
+            openDetail(row.id)
+          }}
+        >
+          Detay / Uzat <ChevronRight className="h-3.5 w-3.5" />
+        </Button>
+      ),
+    },
   ]
 
   if (status === 'loading') {
@@ -169,7 +196,7 @@ export function MembershipsPage() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <PageHeader
         title="Üye Hesapları"
-        subtitle="bachmain.com demo talepleri ve kayıtlı kullanıcılar"
+        subtitle="Satıra veya Detay / Uzat’a tıklayın — demo ve paket süresini buradan yönetin"
         actions={
           <>
             <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((v) => !v)}>
@@ -358,11 +385,7 @@ export function MembershipsPage() {
         />
       ) : (
         <>
-          <DataTable
-            columns={columns}
-            rows={paginated}
-            onRowClick={(row) => navigate(`/uyeler/${row.id}`)}
-          />
+          <DataTable columns={columns} rows={paginated} onRowClick={(row) => openDetail(row.id)} />
           <Pagination
             page={page}
             totalPages={totalPages}

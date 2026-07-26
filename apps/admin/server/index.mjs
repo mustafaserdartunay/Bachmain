@@ -8,7 +8,12 @@ import { handleLeadsApi } from './leads.mjs'
 import { handleWhatsAppApi } from './whatsappApi.mjs'
 import { handleBillingApi } from './billingRoutes.mjs'
 import { handlePaymentsApi } from './payments.mjs'
-import { seedBillingIfEmpty, extendMembership, activatePlanDirect } from './subscriptionService.mjs'
+import {
+  seedBillingIfEmpty,
+  extendMembership,
+  extendMembershipByAccount,
+  activatePlanDirect,
+} from './subscriptionService.mjs'
 import {
   buildAccountRows,
   buildCustomerRows,
@@ -396,10 +401,8 @@ async function handle(req, res, url) {
       const accountId = membershipExtendMatch[1]
       try {
         const result = await withStore((store) => {
-          const account = (store.accounts || []).find((a) => a.id === accountId)
-          if (!account?.customerId) throw new Error('NOT_FOUND')
           seedBillingIfEmpty(store)
-          const extended = extendMembership(store, account.customerId, {
+          const extended = extendMembershipByAccount(store, accountId, {
             days: body.days ?? 7,
             mode: body.mode || 'trial',
             note: body.note || '',
@@ -408,8 +411,12 @@ async function handle(req, res, url) {
         })
         return sendJson(req, res, 200, { ok: true, ...result })
       } catch (err) {
-        const status = err.message === 'NOT_FOUND' ? 404 : 400
-        return sendJson(req, res, status, { ok: false, error: err.message })
+        const status = err.status || (err.message === 'NOT_FOUND' ? 404 : 400)
+        return sendJson(req, res, status, {
+          ok: false,
+          error: err.code || err.message,
+          message: err.message,
+        })
       }
     }
 

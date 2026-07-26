@@ -127,10 +127,19 @@ export function membershipStatusDisplay({
 
 function sourceLabel(source, isDemo) {
   if (isDemo) return 'Demo Talep'
-  if (source === 'self_signup') return 'Web Üyelik'
-  if (source === 'demo_request') return 'Demo Talep'
-  if (source === 'demo_converted') return 'Demo → Üyelik'
-  return source || 'Manuel'
+  const raw = String(source || '')
+  if (
+    raw === 'self_signup' ||
+    raw === 'bachmain_register_page' ||
+    raw === 'bachmain_register_checkout' ||
+    raw === 'web'
+  ) {
+    return 'Web Üyelik'
+  }
+  if (raw === 'demo_request') return 'Demo Talep'
+  if (raw === 'demo_converted') return 'Demo → Üyelik'
+  if (!raw || raw === 'manual' || raw === 'Manuel') return 'Manuel'
+  return raw
 }
 
 export function customerToRow(c, account) {

@@ -57,9 +57,19 @@ export function MembershipDetailPage() {
     setBusy(label)
     setFlash(null)
     try {
-      await fn()
+      const res = (await fn()) as {
+        licenseExpiry?: string
+        daysAdded?: number
+      }
       await reload()
-      setFlash({ ok: true, message: 'İşlem uygulandı' })
+      const expiry = res?.licenseExpiry
+      const days = res?.daysAdded
+      setFlash({
+        ok: true,
+        message: expiry
+          ? `Süre uzatıldı${days ? ` (+${days} gün)` : ''}. Yeni bitiş: ${formatDate(expiry)}`
+          : 'İşlem uygulandı',
+      })
     } catch (err) {
       setFlash({
         ok: false,
@@ -68,6 +78,11 @@ export function MembershipDetailPage() {
     } finally {
       setBusy(null)
     }
+  }
+
+  function extendQuick(days: number, mode: 'trial' | 'active', label: string) {
+    if (!member) return
+    void run(label, () => membershipsApi.extend(member.id, { days, mode, note: label }))
   }
 
   if (status === 'loading') return <DetailSkeleton />
@@ -187,6 +202,32 @@ export function MembershipDetailPage() {
               Biten 7 günlük denemeyi buradan uzatabilirsiniz. Mevcut bitiş gelecekteyse üzerine
               eklenir; bitmişse bugünden başlar.
             </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="gold"
+                size="sm"
+                disabled={!!busy}
+                onClick={() => extendQuick(7, 'trial', 'demo+7')}
+              >
+                +7 gün Demo
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!!busy}
+                onClick={() => extendQuick(14, 'trial', 'demo+14')}
+              >
+                +14 gün Demo
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!!busy}
+                onClick={() => extendQuick(30, 'active', 'paket+30')}
+              >
+                +30 gün Paket
+              </Button>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-xs text-text-muted">Gün</label>
