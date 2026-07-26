@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FileText } from 'lucide-react'
-import { getPlatformApiBase, getStoredSession, fetchCurrentUser } from '../utils/platformAuth'
-import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
+import { getPlatformApiBase, getStoredSession, fetchCurrentUser } from '../../utils/platformAuth'
+import { APP_SURFACE_PANEL_CLASS } from '../../utils/dashboardDesign'
 
 const LAWYER_NOTICE =
   'Bu sözleşmeler yayına alınmadan önce KVKK, e-Ticaret ve Tüketici Hukuku alanında uzman bir avukat tarafından kontrol edilmelidir.'
