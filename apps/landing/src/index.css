@@ -16,7 +16,8 @@
   --color-text: #0f172a;
   --color-text-muted: #64748b;
   --color-text-subtle: #94a3b8;
-  --font-sans: 'Manrope', system-ui, sans-serif;
+  --font-sans: var(--font-poppins, 'Poppins'), system-ui, sans-serif;
+  --font-heading: var(--font-poppins, 'Poppins'), system-ui, sans-serif;
   --radius-sm: 0.625rem;
   --radius-md: 0.875rem;
   --radius-lg: 1.25rem;
@@ -36,6 +37,7 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   color: var(--color-text);
   overflow-x: hidden;
@@ -48,6 +50,25 @@ body {
     radial-gradient(ellipse 50% 35% at 48% 38%, rgba(99, 102, 241, 0.07), transparent 60%);
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+/* Büyük başlıklar — Extra Bold */
+h1,
+.section-title,
+.pricing-hero h1,
+.hero-lead {
+  font-family: var(--font-heading);
+  font-weight: 800;
 }
 
 /* Soft ambient mesh — inherits body; keep class for page wrappers */
@@ -201,6 +222,63 @@ body {
   box-shadow: 0 12px 28px rgba(244, 164, 28, 0.45);
 }
 
+/* Header CTA cluster — BachMain marketing blue system */
+.nav-cta-group {
+  gap: 0.5rem;
+}
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  padding: 0 1.05rem;
+  border-radius: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+.nav-cta:hover {
+  transform: translateY(-1px);
+}
+.nav-cta-demo {
+  color: #1d4ed8;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1.5px solid rgba(37, 99, 235, 0.22);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
+}
+.nav-cta-demo:hover {
+  background: #eff6ff;
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.14);
+}
+.nav-cta-login {
+  color: #fff;
+  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 55%, #1d4ed8 100%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.32);
+}
+.nav-cta-login:hover {
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.42);
+}
+.nav-cta-buy {
+  color: #fff;
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 48%, #ea580c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 22px rgba(249, 115, 22, 0.34);
+}
+.nav-cta-buy:hover {
+  box-shadow: 0 12px 28px rgba(249, 115, 22, 0.44);
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
@@ -233,6 +311,7 @@ body {
   padding: 5.5rem 0;
 }
 .section-title {
+  font-family: var(--font-heading);
   font-size: clamp(1.75rem, 3.5vw, 2.5rem);
   font-weight: 800;
   letter-spacing: -0.04em;
@@ -1171,7 +1250,7 @@ body {
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.65;
-  color: rgba(255, 255, 255, 0.78);
+  color: #fff;
 }
 .site-footer-heading {
   display: block;
@@ -1187,7 +1266,7 @@ body {
 .site-footer-link {
   font-size: 0.875rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.82);
+  color: #fff;
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -1209,11 +1288,16 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: #fff;
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.16);
   transition:
     transform 0.2s,
     background 0.2s;
+}
+.site-footer-social svg {
+  color: #fff;
+  fill: #fff;
 }
 .site-footer-social:hover {
   transform: translateY(-2px);
@@ -1226,11 +1310,11 @@ body {
   text-align: center;
   font-size: 0.875rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.78);
+  color: #fff;
 }
 
 .site-footer a {
-  color: rgba(255, 255, 255, 0.82);
+  color: #fff;
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -1286,7 +1370,7 @@ body {
   line-height: 0.7;
   font-weight: 800;
   color: rgba(37, 99, 235, 0.18);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-heading);
 }
 .testimonial-avatar {
   box-shadow:
