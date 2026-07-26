@@ -29,6 +29,9 @@ const ProcessFlowShowcase = dynamic(() => import('../components/landing/ProcessF
 const DemoForm = dynamic(() => import('../components/DemoForm'), {
   loading: () => <div className="min-h-[320px]" aria-hidden />,
 })
+const HomeSeoContent = dynamic(() => import('../components/landing/HomeSeoContent'), {
+  loading: () => <div className="section-pad min-h-[200px]" aria-hidden />,
+})
 
 export default function HomePage() {
   return (
@@ -437,6 +440,8 @@ export default function HomePage() {
           </ScrollReveal>
         </div>
       </section>
+
+      <HomeSeoContent />
     </div>
   )
 }
