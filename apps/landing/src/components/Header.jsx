@@ -6,7 +6,6 @@ import { ChevronDown, Menu, X } from 'lucide-react'
 import Logo from './Logo'
 
 const nav = [
-  { label: 'Ana Sayfa', href: '/' },
   {
     label: 'Ürün',
     items: [
@@ -35,7 +34,6 @@ const nav = [
   { label: 'Referanslar', href: '/referanslar' },
   { label: 'Başarı Hikayeleri', href: '/basari-hikayeleri' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Akademi', href: '/akademi' },
   { label: 'İletişim', href: '/iletisim' },
 ]
 
@@ -138,15 +136,15 @@ export default function Header() {
           )}
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
-          <Link to="/demo" className="btn-secondary !px-4 !py-2.5 !text-[13px]">
-            Demo
+        <div className="nav-cta-group hidden items-center lg:flex">
+          <Link to="/demo" className="nav-cta nav-cta-demo">
+            Demo Girişi
           </Link>
-          <Link to="/giris" className="btn-gold !px-4 !py-2.5 !text-[13px]">
+          <Link to="/giris" className="nav-cta nav-cta-login">
             Giriş Yap
           </Link>
-          <Link to="/uye-ol" className="btn-primary !px-4 !py-2.5 !text-[13px]">
-            Ücretsiz Dene
+          <Link to="/fiyatlar" className="nav-cta nav-cta-buy">
+            Paket Satın Al
           </Link>
         </div>
 
@@ -192,27 +190,27 @@ export default function Header() {
                 )}
               </div>
             ))}
-            <div className="mt-3 flex gap-2">
+            <div className="nav-cta-group mt-3 flex flex-col gap-2 sm:flex-row">
               <Link
                 to="/demo"
-                className="btn-secondary flex-1 !py-2.5"
+                className="nav-cta nav-cta-demo flex-1"
                 onClick={() => setMobileOpen(false)}
               >
-                Demo
+                Demo Girişi
               </Link>
               <Link
                 to="/giris"
-                className="btn-gold flex-1 !py-2.5"
+                className="nav-cta nav-cta-login flex-1"
                 onClick={() => setMobileOpen(false)}
               >
-                Giriş
+                Giriş Yap
               </Link>
               <Link
-                to="/uye-ol"
-                className="btn-primary flex-1 !py-2.5"
+                to="/fiyatlar"
+                className="nav-cta nav-cta-buy flex-1"
                 onClick={() => setMobileOpen(false)}
               >
-                Dene
+                Paket Satın Al
               </Link>
             </div>
           </div>
