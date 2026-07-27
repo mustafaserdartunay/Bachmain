@@ -14,6 +14,8 @@ const EXCLUDED_KEYS = new Set([
   'bachmain_auth_user',
   WORKSPACE_OWNER_KEY,
   'bach-demo-data-cleanup-version',
+  'bach-app-version-seen',
+  'bach-app-version-transitions',
 ])
 
 /** Known CRM storage keys (also any erlenbox-* / bach-* prefix except excluded). */

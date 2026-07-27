@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-
 import { installAutoCapitalize } from './utils/autoCapitalize'
 import { installFormSubmitGuard } from './utils/formSubmitGuard'
 import { cleanupDemoDataOnce } from './utils/demoDataCleanup'
+import { installAppUpdateChecker } from './version/updateChecker'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { OrgProvider } from './org/OrgContext'
 import RequireAuth from './auth/RequireAuth'
@@ -116,6 +117,7 @@ import LabelsSettingsPage from './pages/LabelsSettingsPage'
 import TagLabelsSettingsPage from './pages/TagLabelsSettingsPage'
 import CashBankSettingsPage from './pages/CashBankSettingsPage'
 import ProfilePage from './pages/ProfilePage'
+import VersionPage from './pages/VersionPage'
 import { MyPlanPage, BuyPlanPage, CheckoutPage } from './pages/billing/BillingPages'
 import PackagesPage from './pages/billing/PackagesPage'
 import AnnouncementsPage from './pages/AnnouncementsPage'
@@ -208,7 +210,12 @@ export default function App() {
   useEffect(() => {
     cleanupDemoDataOnce()
     installAutoCapitalize()
-    return installFormSubmitGuard()
+    const stopFormGuard = installFormSubmitGuard()
+    const stopUpdateCheck = installAppUpdateChecker()
+    return () => {
+      stopFormGuard?.()
+      stopUpdateCheck?.()
+    }
   }, [])
 
   return (
@@ -656,6 +663,8 @@ export default function App() {
                         element={<OrgCompanySettingsPage />}
                       />
                       <Route path="/profil" element={<ProfilePage />} />
+                      <Route path="/surum" element={<VersionPage />} />
+                      <Route path="/versiyon" element={<Navigate to="/surum" replace />} />
                       <Route path="/paketler" element={<PackagesPage />} />
                       <Route path="/profil/paketim" element={<MyPlanPage />} />
                       <Route path="/profil/paket-satin-al" element={<BuyPlanPage />} />

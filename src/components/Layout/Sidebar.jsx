@@ -105,6 +105,7 @@ import {
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
+import { APP_VERSION } from '../../version/appVersion'
 import { useAuth } from '../../auth/AuthContext'
 import { filterMenuByEntitlements } from '../../utils/entitlements'
 import { canUseMultiCompany } from '../../utils/orgScope'
@@ -1154,6 +1155,18 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
       <div className={`mt-auto shrink-0 ${collapsed ? 'px-0 pb-0.5' : 'px-1 pb-1'}`}>
         <TrialBanner collapsed={collapsed} />
+        <NavLink
+          to="/surum"
+          onClick={handleNavigate}
+          title={`Sürüm ${APP_VERSION}`}
+          className={({ isActive }) =>
+            `sidebar-version-label mt-1 block w-full truncate text-center font-mono leading-none transition-opacity hover:opacity-100 ${
+              collapsed ? 'px-0 py-1 text-[8px]' : 'px-1 py-1.5 text-[9px]'
+            } ${isActive ? 'opacity-100' : 'opacity-70'}`
+          }
+        >
+          {APP_VERSION}
+        </NavLink>
       </div>
     </aside>
   )

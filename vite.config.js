@@ -1,13 +1,38 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getOpenAiApiKey } from './server/env.js'
 import { handleVoiceChatRequest } from './server/voiceChat.js'
 import { handleVoiceTranscribeRequest } from './server/voiceTranscribe.js'
 import { handleOmniAnalyzeRequest } from './server/omniChat.js'
+import { APP_VERSION, APP_VERSION_META } from './src/version/appVersion.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+function appVersionPlugin() {
+  const payload = `${JSON.stringify(
+    {
+      version: APP_VERSION,
+      releasedAt: APP_VERSION_META.releasedAt,
+    },
+    null,
+    2,
+  )}\n`
+
+  return {
+    name: 'bach-app-version',
+    buildStart() {
+      const publicPath = path.resolve(__dirname, 'public/app-version.json')
+      fs.writeFileSync(publicPath, payload, 'utf8')
+    },
+    writeBundle(outputOptions) {
+      const outDir = outputOptions.dir || path.resolve(__dirname, 'dist')
+      fs.writeFileSync(path.join(outDir, 'app-version.json'), payload, 'utf8')
+    },
+  }
+}
 
 async function readJsonBody(req) {
   const chunks = []
@@ -28,12 +53,14 @@ function voiceApiPlugin() {
       server.middlewares.use(async (req, res, next) => {
         if (req.url === '/api/voice/health' || req.url === '/api/omni/health') {
           res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({
-            ok: true,
-            hasApiKey: Boolean(getOpenAiApiKey()),
-            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-            transcribe: 'whisper-1',
-          }))
+          res.end(
+            JSON.stringify({
+              ok: true,
+              hasApiKey: Boolean(getOpenAiApiKey()),
+              model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+              transcribe: 'whisper-1',
+            }),
+          )
           return
         }
 
@@ -102,7 +129,10 @@ export default defineConfig({
   optimizeDeps: {
     entries: ['index.html'],
   },
-  plugins: [react(), voiceApiPlugin()],
+  plugins: [react(), voiceApiPlugin(), appVersionPlugin()],
+  define: {
+    __BACH_APP_VERSION__: JSON.stringify(APP_VERSION),
+  },
   server: {
     host: true,
     port: 5173,
