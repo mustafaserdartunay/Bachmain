@@ -81,6 +81,26 @@ export function yonetimPost(path, body, opts = {}) {
   return platformPost(path, body, { ...opts, base: getYonetimApiBase() })
 }
 
+export async function yonetimGet(path, { token } = {}) {
+  const apiBase = getYonetimApiBase().replace(/\/$/, '')
+  const clean = String(path).replace(/^\//, '')
+  const headers = { Accept: 'application/json' }
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(`${apiBase}/${clean}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers,
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const err = new Error(data.message || data.error || `HTTP_${res.status}`)
+    err.code = data.error
+    err.status = res.status
+    throw err
+  }
+  return data
+}
+
 function safeAppPath(next) {
   if (!next || typeof next !== 'string') return '/'
   if (!next.startsWith('/') || next.startsWith('//')) return '/'

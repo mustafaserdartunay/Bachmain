@@ -26,6 +26,7 @@ import {
   activatePlanDirect,
   seedBillingIfEmpty,
 } from '../server/subscriptionService.mjs'
+import { startEmailChange, deleteMembershipAccount } from '../server/emailChange.mjs'
 
 function getPath(req) {
   // Vercel catch-all: /api/[...path] may expose segments via query.path
@@ -98,6 +99,41 @@ async function handleMembershipMutate(req, res, body) {
       return sendJson(req, res, err.status || 400, {
         ok: false,
         error: err.code || 'EXTEND_FAILED',
+        message: err.message,
+      })
+    }
+  }
+
+  if (op === 'delete') {
+    try {
+      const result = await withStore((store) => deleteMembershipAccount(store, accountId))
+      return sendJson(req, res, 200, { ok: true, ...result })
+    } catch (err) {
+      return sendJson(req, res, err.status || 400, {
+        ok: false,
+        error: err.code || 'DELETE_FAILED',
+        message: err.message,
+      })
+    }
+  }
+
+  if (op === 'start_email_change') {
+    try {
+      const result = await withStore(async (store) => {
+        const started = await startEmailChange(store, {
+          accountId,
+          staffEmail: body.staffEmail || null,
+        })
+        return {
+          ...started,
+          detail: buildMembershipDetail(store, accountId),
+        }
+      })
+      return sendJson(req, res, 200, { ok: true, ...result })
+    } catch (err) {
+      return sendJson(req, res, err.status || 400, {
+        ok: false,
+        error: err.code || 'EMAIL_CHANGE_FAILED',
         message: err.message,
       })
     }

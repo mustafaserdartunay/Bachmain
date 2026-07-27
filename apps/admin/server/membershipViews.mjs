@@ -295,6 +295,21 @@ export function buildMembershipDetail(store, accountId) {
     .slice(0, 30)
     .map((e, i) => ({ id: e.id || `auth_${i}`, ...e }))
 
+  const emailChanges = (store.emailChangeRequests || [])
+    .filter((r) => r.accountId === account.id)
+    .slice(0, 40)
+    .map((r, i) => ({
+      id: r.id || `emch_${i}`,
+      oldEmail: r.oldEmail,
+      newEmail: r.newEmail,
+      status: r.status,
+      autoApproved: Boolean(r.autoApproved),
+      staffEmail: r.staffEmail,
+      createdAt: r.createdAt,
+      completedAt: r.completedAt,
+      expiresAt: r.expiresAt,
+    }))
+
   return {
     ...row,
     id: account.id,
@@ -350,6 +365,7 @@ export function buildMembershipDetail(store, accountId) {
     billingHistory: history,
     mailLogs,
     authEvents,
+    emailChanges,
   }
 }
 

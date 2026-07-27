@@ -143,6 +143,17 @@ export interface MembershipDetail extends MembershipRow {
   billingHistory?: Record<string, unknown>[]
   mailLogs?: Record<string, unknown>[]
   authEvents?: Record<string, unknown>[]
+  emailChanges?: Array<{
+    id: string
+    oldEmail?: string
+    newEmail?: string | null
+    status?: string
+    autoApproved?: boolean
+    staffEmail?: string | null
+    createdAt?: string
+    completedAt?: string | null
+    expiresAt?: string
+  }>
 }
 
 export const membershipsApi = {
@@ -173,6 +184,19 @@ export const membershipsApi = {
       id,
       ...body,
     }),
+  delete: (id: string) =>
+    api.post<{ ok: boolean; deletedAccountId?: string }>('/member', {
+      op: 'delete',
+      id,
+    }),
+  startEmailChange: (id: string) =>
+    api.post<{ ok: boolean; request?: Record<string, unknown>; detail?: MembershipDetail }>(
+      '/member',
+      {
+        op: 'start_email_change',
+        id,
+      },
+    ),
 }
 
 export async function fetchModulePage(moduleId: string) {

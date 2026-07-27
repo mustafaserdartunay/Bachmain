@@ -26,6 +26,7 @@ const AUTH_PATHS = new Set([
   '/sifremi-unuttum',
   '/reset-password',
   '/sifre-sifirla',
+  '/email-degistir',
 ])
 
 function ScrollToTop() {

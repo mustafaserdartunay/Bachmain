@@ -12,6 +12,7 @@ import {
 import { loadStore, withStore } from './store.mjs'
 import { hitRateLimit } from './db.mjs'
 import { loginStaff, getStaffSession, buildStaffCookie } from './staffAuth.mjs'
+import { completeEmailChange } from './emailChange.mjs'
 
 async function withLegalUser(_store, user, _account) {
   if (!user) return user
@@ -293,5 +294,80 @@ export async function handleAuthApi(req, res, path, body = {}) {
     }
   }
 
+  if (method === 'GET' && path === 'auth/email-change') {
+    try {
+      const token = String(getQueryToken(req) || body.token || '').trim()
+      const store = await loadStore()
+      const tok = (store.emailTokens || []).find(
+        (t) => t.purpose === 'email_change' && t.token === token,
+      )
+      if (!tok || new Date(tok.expiresAt).getTime() < Date.now()) {
+        sendJson(req, res, 400, {
+          ok: false,
+          error: 'INVALID_TOKEN',
+          message: 'Geçersiz veya süresi dolmuş bağlantı',
+        })
+        return true
+      }
+      const account = (store.accounts || []).find((a) => a.id === tok.accountId)
+      sendJson(req, res, 200, {
+        ok: true,
+        oldEmail: tok.email || account?.email || null,
+        expiresAt: tok.expiresAt,
+      })
+      return true
+    } catch (error) {
+      sendJson(req, res, 400, { error: error.code || 'PEEK_FAILED', message: error.message })
+      return true
+    }
+  }
+
+  if (method === 'POST' && path === 'auth/email-change') {
+    const ip =
+      req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown'
+    const rate = await hitRateLimit(`emailchg:${ip}`, { limit: 12, windowMs: 60 * 60 * 1000 })
+    if (!rate.allowed) {
+      sendJson(req, res, 429, {
+        error: 'RATE_LIMITED',
+        message: 'Çok fazla deneme. Lütfen sonra tekrar deneyin.',
+      })
+      return true
+    }
+    try {
+      const result = await withStore((store) =>
+        completeEmailChange(store, { token: body.token, newEmail: body.newEmail }),
+      )
+      sendJson(req, res, 200, {
+        ok: true,
+        message: 'E-posta adresiniz güncellendi. Yeni adresinizle giriş yapabilirsiniz.',
+        ...result,
+      })
+      return true
+    } catch (error) {
+      sendJson(req, res, error.status || 400, {
+        ok: false,
+        error: error.code || 'EMAIL_CHANGE_FAILED',
+        message: error.message,
+      })
+      return true
+    }
+  }
+
   return false
+}
+
+function getQueryToken(req) {
+  try {
+    if (req.query?.token) return String(req.query.token)
+  } catch {
+    /* ignore */
+  }
+  try {
+    const url = new URL(String(req.url || ''), 'http://localhost')
+    return url.searchParams.get('token')
+  } catch {
+    return null
+  }
 }

@@ -12,6 +12,7 @@ import {
   Phone,
   PlayCircle,
   RefreshCw,
+  Trash2,
   UserCheck,
 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/MetricCard'
@@ -21,6 +22,7 @@ import { Badge, statusBadgeMap } from '@/components/ui/Badge'
 import { Input, Select } from '@/components/ui/Input'
 import { TabNav } from '@/components/ui/Tabs'
 import { DataTable } from '@/components/ui/DataTable'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { usePageState } from '@/hooks/usePageState'
 import { DetailSkeleton } from '@/components/ui/Skeleton'
 import { ErrorState } from '@/components/ui/ErrorState'
@@ -48,6 +50,8 @@ export function MembershipDetailPage() {
   const [flash, setFlash] = useState<{ ok: boolean; message: string } | null>(null)
   const [planCode, setPlanCode] = useState('starter')
   const [errorMessage, setErrorMessage] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmEmailChange, setConfirmEmailChange] = useState(false)
 
   const fetcher = useMemo(
     () => async (): Promise<MembershipDetail> => {
@@ -127,9 +131,54 @@ export function MembershipDetailPage() {
   const history = member.billingHistory || []
   const mailLogs = member.mailLogs || []
   const authEvents = member.authEvents || []
+  const emailChanges = member.emailChanges || []
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Üye silinsin mi?"
+        description={`${member.fullName || member.email} hesabı kalıcı olarak silinecek. Bu işlem geri alınamaz.`}
+        confirmLabel="Evet"
+        cancelLabel="Hayır"
+        tone="danger"
+        busy={busy === 'delete'}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          void (async () => {
+            setBusy('delete')
+            setFlash(null)
+            try {
+              await membershipsApi.delete(member.id)
+              setConfirmDelete(false)
+              navigate('/uyeler')
+            } catch (err) {
+              setFlash({
+                ok: false,
+                message: err instanceof Error ? err.message : 'Silme başarısız',
+              })
+              setConfirmDelete(false)
+            } finally {
+              setBusy(null)
+            }
+          })()
+        }}
+      />
+      <ConfirmDialog
+        open={confirmEmailChange}
+        title="E-posta değişimi başlatılsın mı?"
+        description={`Mevcut adrese (${member.email}) güvenli link gönderilecek. Kullanıcı yeni e-postasını yazınca otomatik onaylanır; yönetim bildirimi düşer.`}
+        confirmLabel="Evet"
+        cancelLabel="Hayır"
+        tone="primary"
+        busy={busy === 'email-change'}
+        onCancel={() => setConfirmEmailChange(false)}
+        onConfirm={() => {
+          setConfirmEmailChange(false)
+          void run('email-change', () => membershipsApi.startEmailChange(member.id))
+        }}
+      />
+
       <PageHeader
         title={member.fullName || member.email}
         subtitle={`${member.company || '—'} · ${member.source || '—'}`}
@@ -151,6 +200,22 @@ export function MembershipDetailPage() {
                 <Building2 className="h-4 w-4" /> Müşteri kartı
               </Button>
             ) : null}
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!!busy}
+              onClick={() => setConfirmEmailChange(true)}
+            >
+              <Mail className="h-4 w-4" /> E-posta değiştir
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={!!busy}
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-4 w-4" /> Sil
+            </Button>
           </>
         }
       />
@@ -324,6 +389,22 @@ export function MembershipDetailPage() {
                 }
               >
                 <PauseCircle className="h-4 w-4" /> Askıya al
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!!busy}
+                onClick={() => setConfirmEmailChange(true)}
+              >
+                <Mail className="h-4 w-4" /> E-posta değiştir
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={!!busy}
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="h-4 w-4" /> Sil
               </Button>
               {member.role === 'demo' ||
               member.source === 'Demo Talep' ||
@@ -509,6 +590,58 @@ export function MembershipDetailPage() {
 
       {activeTab === 'security' && (
         <div className="space-y-6">
+          <Card padding="lg">
+            <CardHeader>
+              <CardTitle className="text-base">E-posta değişim süreci</CardTitle>
+            </CardHeader>
+            <p className="mb-4 text-sm text-text-muted">
+              Kullanıcıya eski adresine link gider; yeni mailini yazar; sistem otomatik onaylar. Tüm
+              adımlar burada görünür.
+            </p>
+            {emailChanges.length === 0 ? (
+              <p className="text-sm text-text-muted">Henüz e-posta değişim kaydı yok.</p>
+            ) : (
+              <DataTable
+                columns={[
+                  {
+                    key: 'status',
+                    label: 'Durum',
+                    render: (r) => (
+                      <Badge
+                        variant={
+                          r.status === 'completed'
+                            ? 'success'
+                            : r.status === 'pending'
+                              ? 'warning'
+                              : 'default'
+                        }
+                      >
+                        {String(r.status || '—')}
+                        {r.autoApproved ? ' · otomatik' : ''}
+                      </Badge>
+                    ),
+                  },
+                  { key: 'oldEmail', label: 'Eski' },
+                  {
+                    key: 'newEmail',
+                    label: 'Yeni',
+                    render: (r) => String(r.newEmail || '—'),
+                  },
+                  {
+                    key: 'createdAt',
+                    label: 'Başlangıç',
+                    render: (r) => formatDateTime(String(r.createdAt || '')),
+                  },
+                  {
+                    key: 'completedAt',
+                    label: 'Tamamlandı',
+                    render: (r) => (r.completedAt ? formatDateTime(String(r.completedAt)) : '—'),
+                  },
+                ]}
+                rows={emailChanges as Array<Record<string, unknown> & { id: string }>}
+              />
+            )}
+          </Card>
           <Card padding="lg">
             <CardHeader>
               <CardTitle className="text-base">Auth olayları</CardTitle>

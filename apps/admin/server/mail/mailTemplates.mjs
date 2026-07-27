@@ -286,6 +286,22 @@ export const MAIL_TEMPLATES = {
       cta: { href: `${MAIL_BRAND.appUrl()}/paketler`, label: 'Paket seç' },
     })
   },
+  email_change_request(data) {
+    return layout({
+      title: 'E-posta adresinizi değiştirin',
+      preview: 'Yeni e-posta adresinizi güvenli bağlantı ile bildirin.',
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('BACHMAIN hesabınız için e-posta değişikliği başlatıldı. Aşağıdaki bağlantıdan yeni e-posta adresinizi yazabilirsiniz.')}${strongLine('Mevcut e-posta', data.oldEmail || '—')}${p('Bağlantı 24 saat geçerlidir. Bu talebi siz oluşturmadıysanız yok sayın.')}`,
+      cta: { href: data.changeUrl, label: 'Yeni e-posta yaz' },
+    })
+  },
+  email_changed(data) {
+    return layout({
+      title: 'E-posta adresiniz güncellendi',
+      preview: 'Hesap e-postanız otomatik onaylandı.',
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('BACHMAIN hesap e-posta adresiniz başarıyla değiştirildi.')}${strongLine('Eski', data.oldEmail || '—')}${strongLine('Yeni', data.newEmail || '—')}${p('Bundan sonra giriş için yeni e-postanızı kullanın.')}`,
+      cta: { href: data.appUrl || MAIL_BRAND.appUrl(), label: 'Uygulamaya git' },
+    })
+  },
   test(data) {
     return layout({
       title: 'BACHMAIN test e-postası',

@@ -2,12 +2,19 @@ import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  History, KeyRound, LogOut, PauseCircle, RefreshCw, Trash2, ArrowUpCircle,
+  History,
+  KeyRound,
+  LogOut,
+  PauseCircle,
+  RefreshCw,
+  Trash2,
+  ArrowUpCircle,
 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/MetricCard'
 import { Badge, statusBadgeMap } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { DataTable } from '@/components/ui/DataTable'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { MetricSkeleton } from '@/components/ui/Skeleton'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -23,6 +30,7 @@ export function UserManagementPage() {
   const { status, data, reload } = usePageState({ fetcher, delay: 0 })
   const [busy, setBusy] = useState<BusyMap>({})
   const [flash, setFlash] = useState<{ ok: boolean; message: string } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<PlatformUserRow | null>(null)
 
   const runAction = useCallback(
     async (userId: string, actionKey: string, fn: () => Promise<unknown>) => {
@@ -35,7 +43,10 @@ export function UserManagementPage() {
       } catch (err) {
         setFlash({
           ok: false,
-          message: err instanceof Error ? err.message : 'İşlem başarısız (endpoint henüz hazır olmayabilir)',
+          message:
+            err instanceof Error
+              ? err.message
+              : 'İşlem başarısız (endpoint henüz hazır olmayabilir)',
         })
       } finally {
         setBusy((b) => ({ ...b, [userId]: undefined }))
@@ -131,7 +142,9 @@ export function UserManagementPage() {
                 size="sm"
                 disabled={disabled}
                 title="Force Logout"
-                onClick={() => runAction(row.id, 'force-logout', () => platformAdminApi.forceLogout(row.id))}
+                onClick={() =>
+                  runAction(row.id, 'force-logout', () => platformAdminApi.forceLogout(row.id))
+                }
               >
                 <LogOut className="h-3.5 w-3.5" />
                 {b === 'force-logout' ? '…' : 'Logout'}
@@ -151,7 +164,9 @@ export function UserManagementPage() {
                 size="sm"
                 disabled={disabled}
                 title="Reset Password"
-                onClick={() => runAction(row.id, 'reset-password', () => platformAdminApi.resetPassword(row.id))}
+                onClick={() =>
+                  runAction(row.id, 'reset-password', () => platformAdminApi.resetPassword(row.id))
+                }
               >
                 <KeyRound className="h-3.5 w-3.5" />
                 Reset PW
@@ -161,7 +176,9 @@ export function UserManagementPage() {
                 size="sm"
                 disabled={disabled}
                 title="Reset Trial"
-                onClick={() => runAction(row.id, 'reset-trial', () => platformAdminApi.resetTrial(row.id))}
+                onClick={() =>
+                  runAction(row.id, 'reset-trial', () => platformAdminApi.resetTrial(row.id))
+                }
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Trial
@@ -172,7 +189,9 @@ export function UserManagementPage() {
                 disabled={disabled}
                 title="Upgrade Plan"
                 onClick={() =>
-                  runAction(row.id, 'upgrade-plan', () => platformAdminApi.upgradePlan(row.id, 'Pro'))
+                  runAction(row.id, 'upgrade-plan', () =>
+                    platformAdminApi.upgradePlan(row.id, 'Pro'),
+                  )
                 }
               >
                 <ArrowUpCircle className="h-3.5 w-3.5" />
@@ -183,10 +202,7 @@ export function UserManagementPage() {
                 size="sm"
                 disabled={disabled}
                 title="Delete"
-                onClick={() => {
-                  if (!window.confirm(`${row.user} kalıcı olarak silinsin mi?`)) return
-                  runAction(row.id, 'delete', () => platformAdminApi.deleteUser(row.id))
-                }}
+                onClick={() => setDeleteTarget(row)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Delete
@@ -214,6 +230,26 @@ export function UserManagementPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Kullanıcı silinsin mi?"
+        description={
+          deleteTarget
+            ? `${deleteTarget.user} (${deleteTarget.email}) kalıcı olarak silinecek.`
+            : undefined
+        }
+        confirmLabel="Evet"
+        cancelLabel="Hayır"
+        tone="danger"
+        busy={!!deleteTarget && busy[deleteTarget.id] === 'delete'}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (!deleteTarget) return
+          const target = deleteTarget
+          setDeleteTarget(null)
+          void runAction(target.id, 'delete', () => platformAdminApi.deleteUser(target.id))
+        }}
+      />
       <PageHeader
         title="User Management"
         subtitle="SUPER_ADMIN — Force logout, suspend, reset, upgrade · /v1/admin/users"

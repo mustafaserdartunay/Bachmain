@@ -24,6 +24,7 @@ import RegisterPage from './views/RegisterPage'
 import LoginPage from './views/LoginPage'
 import ForgotPasswordPage from './views/ForgotPasswordPage'
 import ResetPasswordPage from './views/ResetPasswordPage'
+import EmailChangePage from './views/EmailChangePage'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/email-degistir" element={<EmailChangePage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/demo" element={<DemoPage />} />
           <Route path="/help" element={<HelpPage />} />
