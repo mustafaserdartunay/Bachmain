@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom'
-import { Banknote, Boxes, CircleDollarSign, Landmark, ReceiptText, ScrollText, WalletCards } from 'lucide-react'
+import {
+  Banknote,
+  Boxes,
+  CircleDollarSign,
+  Landmark,
+  ReceiptText,
+  ScrollText,
+  WalletCards,
+} from 'lucide-react'
 import { loadOrders } from '../../utils/ordersStore'
 import { loadProductionJobs } from '../../utils/productionStore'
-import { documentTotals } from '../../utils/documentTotals'
+import { documentMoneyParts, sumMoneyParts } from '../../utils/documentTotals'
 import { getStockProductsReport } from '../../utils/stockStore'
 import {
   calculateAccountBalance,
@@ -11,21 +19,28 @@ import {
   getCashTreasuryTotal,
   getBankTreasuryAccounts,
   getBankTreasuryTotal,
-  getChequeTreasuryTotal,
   getChequeTreasuryAccounts,
   getLiveAssetTotal,
-  getTotalCustomerReceivable,
-  getTotalSupplierPayable,
+  getTotalCustomerReceivableParts,
+  getTotalSupplierPayableParts,
   getTreasuryAccounts,
   getTreasuryMovements,
 } from '../../utils/treasuryStore'
-import { getCustomerChequePortfolioRows, getCustomerChequePortfolioTotal, getCustomerPromissoryNotePortfolioRows, getCustomerPromissoryNotePortfolioTotal } from '../../utils/treasuryReportUtils'
+import {
+  getCustomerChequePortfolioRows,
+  getCustomerChequePortfolioTotal,
+  getCustomerPromissoryNotePortfolioRows,
+  getCustomerPromissoryNotePortfolioTotal,
+} from '../../utils/treasuryReportUtils'
 import {
   getOrderStageOptions,
   getProductionStageOptions,
   loadWorkflowStages,
 } from '../../utils/workflowStages'
-import { DEFAULT_DASHBOARD_FINANCE_CARDS, loadDashboardFinanceCards } from '../../utils/dashboardFinanceCards'
+import {
+  DEFAULT_DASHBOARD_FINANCE_CARDS,
+  loadDashboardFinanceCards,
+} from '../../utils/dashboardFinanceCards'
 
 export const FINANCE_CARD_IDS = DEFAULT_DASHBOARD_FINANCE_CARDS.map((card) => card.id)
 
@@ -59,6 +74,8 @@ function getToneFromColor(color, fallback = 'text-gray-100') {
 export function FinanceMetricCard({
   label,
   value,
+  valueExVat,
+  valueIncVat,
   sub,
   tone = 'text-white',
   valueTone = 'text-emerald-700',
@@ -67,6 +84,11 @@ export function FinanceMetricCard({
   href,
   featured = false,
 }) {
+  const hasDual =
+    valueExVat != null &&
+    valueIncVat != null &&
+    String(valueExVat) !== '' &&
+    String(valueIncVat) !== ''
   const content = (
     <article className="glass-finance-card flex h-full min-h-[84px] flex-col justify-between p-4 transition-transform hover:-translate-y-0.5">
       <div className="flex items-start justify-between gap-1.5">
@@ -79,17 +101,48 @@ export function FinanceMetricCard({
           </span>
         )}
       </div>
-      <p className={`my-auto break-words text-lg font-extrabold leading-tight tracking-tight ${valueTone}`}>{value}</p>
-      {sub && <p className="mt-1 line-clamp-2 text-[13px] font-semibold leading-snug text-[var(--muted)]">{sub}</p>}
+      {hasDual ? (
+        <div className={`my-auto space-y-1 ${valueTone}`}>
+          <p className="break-words text-[13px] font-extrabold leading-tight tracking-tight">
+            <span className="mr-1 text-[10px] font-bold text-[var(--muted)]">KDV Hariç</span>
+            {valueExVat}
+          </p>
+          <p className="break-words text-[13px] font-extrabold leading-tight tracking-tight">
+            <span className="mr-1 text-[10px] font-bold text-[var(--muted)]">KDV Dahil</span>
+            {valueIncVat}
+          </p>
+        </div>
+      ) : (
+        <p
+          className={`my-auto break-words text-lg font-extrabold leading-tight tracking-tight ${valueTone}`}
+        >
+          {value}
+        </p>
+      )}
+      {sub && (
+        <p className="mt-1 line-clamp-2 text-[13px] font-semibold leading-snug text-[var(--muted)]">
+          {sub}
+        </p>
+      )}
     </article>
   )
-  if (href) return <Link to={href} className="block h-full">{content}</Link>
+  if (href)
+    return (
+      <Link to={href} className="block h-full">
+        {content}
+      </Link>
+    )
   return content
 }
 
-function amountOf(record) {
-  if (Number.isFinite(Number(record?.amount))) return Number(record.amount)
-  return documentTotals(record || {}).grandTotal
+function moneyCardValue(parts) {
+  return {
+    value: formatTreasuryCurrency(parts.inclVat),
+    valueExVat: formatTreasuryCurrency(parts.exclVat),
+    valueIncVat: formatTreasuryCurrency(parts.inclVat),
+    exclVat: parts.exclVat,
+    inclVat: parts.inclVat,
+  }
 }
 
 export function buildFinanceMetricCards({ includeHidden = false } = {}) {
@@ -124,33 +177,166 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       .map((stage) => stage.id),
   )
 
-  const activeOrders = loadOrders().filter((order) => (
-    !['Tamamlandı', 'İptal'].includes(order.status) && !terminalOrderStageIds.has(order.currentStageId)
-  ))
-  const activeProductionJobs = loadProductionJobs().filter((job) => (
-    !['Tamamlandı', 'İptal'].includes(job.status) && !completedProductionStageIds.has(job.currentStageId)
-  ))
+  const activeOrders = loadOrders().filter(
+    (order) =>
+      !['Tamamlandı', 'İptal'].includes(order.status) &&
+      !terminalOrderStageIds.has(order.currentStageId),
+  )
+  // Gelecek tutar: yalnızca aktif sipariş + üretim (teklif ve depo dahil edilmez)
+  const activeProductionJobs = loadProductionJobs().filter(
+    (job) =>
+      !['Tamamlandı', 'İptal'].includes(job.status) &&
+      !completedProductionStageIds.has(job.currentStageId),
+  )
 
-  const activeOrderTotal = activeOrders.reduce((sum, order) => sum + amountOf(order), 0)
-  const activeProductionTotal = activeProductionJobs.reduce((sum, job) => sum + amountOf(job), 0)
-  const futureIncomingTotal = activeOrderTotal + activeProductionTotal
+  const futureParts = sumMoneyParts([
+    ...activeOrders.map((order) => documentMoneyParts(order)),
+    ...activeProductionJobs.map((job) => documentMoneyParts(job)),
+  ])
   const liveAssetTotal = liveAssets.total
-  const possibleGrandTotal = liveAssetTotal + futureIncomingTotal
-  const totalReceivable = getTotalCustomerReceivable(movements)
-  const totalPayable = getTotalSupplierPayable(movements)
+  const liveParts = { exclVat: liveAssetTotal, vat: 0, inclVat: liveAssetTotal }
+  const possibleParts = {
+    exclVat: liveAssetTotal + futureParts.exclVat,
+    vat: futureParts.vat,
+    inclVat: liveAssetTotal + futureParts.inclVat,
+  }
+  const receivableParts = getTotalCustomerReceivableParts(movements)
+  const payableParts = getTotalSupplierPayableParts(movements)
   const stockReport = getStockProductsReport()
-  const stockTotalValue = Number(stockReport.totalValue) || 0
+  const stockParts = {
+    exclVat: Number(stockReport.totalValueExVat) || Number(stockReport.totalValue) || 0,
+    vat: Math.max(
+      0,
+      (Number(stockReport.totalValueIncVat) || 0) - (Number(stockReport.totalValueExVat) || 0),
+    ),
+    inclVat: Number(stockReport.totalValueIncVat) || Number(stockReport.totalValue) || 0,
+  }
+  const cashParts = moneyCardValue({ exclVat: cashTotal, vat: 0, inclVat: cashTotal })
+  const bankParts = moneyCardValue({ exclVat: bankTotal, vat: 0, inclVat: bankTotal })
+  const chequeParts = moneyCardValue({
+    exclVat: customerChequePortfolio,
+    vat: 0,
+    inclVat: customerChequePortfolio,
+  })
+  const noteParts = moneyCardValue({
+    exclVat: customerPromissoryNotePortfolio,
+    vat: 0,
+    inclVat: customerPromissoryNotePortfolio,
+  })
+  const receivableValues = moneyCardValue(receivableParts)
+  const payableValues = moneyCardValue(payableParts)
+  const stockValues = moneyCardValue(stockParts)
+  const liveValues = moneyCardValue(liveParts)
+  const futureValues = moneyCardValue(futureParts)
+  const possibleValues = moneyCardValue(possibleParts)
+
   const baseCards = [
-    { id: 'cash', label: 'Nakit Kasa', value: formatTreasuryCurrency(cashTotal), sub: `${cashAccounts.length} nakit kasa toplamı`, href: '/kasa', tone: 'text-emerald-300', iconTone: 'text-emerald-300', icon: Banknote },
-    { id: 'bank', label: 'Bankalar', value: formatTreasuryCurrency(bankTotal), sub: `${bankAccounts.length} banka hesabı toplamı`, href: '/kasa', tone: 'text-blue-300', iconTone: 'text-blue-300', icon: Landmark },
-    { id: 'receivables', label: 'Tahsilat Bekleyen', value: formatTreasuryCurrency(totalReceivable), sub: 'Müşteri cari alacak toplamı', href: '/musteriler', tone: 'text-cyan-300', valueTone: 'text-orange-500', iconTone: 'text-cyan-300', icon: ReceiptText },
-    { id: 'payables', label: 'Ödenecekler Toplamı', value: formatTreasuryCurrency(totalPayable), sub: 'Tedarikçi cari borç toplamı', href: '/giderler/tedarikciler', tone: 'text-orange-300', valueTone: 'text-red-600', iconTone: 'text-orange-300', icon: WalletCards },
-    { id: 'stock-value', label: 'Stok Toplam Değeri', value: formatTreasuryCurrency(stockTotalValue), sub: `${stockReport.totalUnits.toLocaleString('tr-TR')} adet · maliyet değeri`, href: '/stok/urunler', tone: 'text-teal-300', valueTone: 'text-teal-600', iconTone: 'text-teal-300', icon: Boxes },
-    { id: 'cheques', label: 'Portföydeki Çekler', value: formatTreasuryCurrency(customerChequePortfolio), sub: `${customerChequeRows.length} müşteri çeki`, href: '/nakit/cekler', tone: 'text-purple-300', iconTone: 'text-purple-300', icon: CircleDollarSign },
-    { id: 'promissory-notes', label: 'Portföydeki Senetler', value: formatTreasuryCurrency(customerPromissoryNotePortfolio), sub: `${customerPromissoryNoteRows.length} müşteri senedi`, href: '/nakit/cekler', tone: 'text-fuchsia-300', iconTone: 'text-fuchsia-300', icon: ScrollText },
-    { id: 'future', label: 'Gelecek Tutar', value: formatTreasuryCurrency(futureIncomingTotal), sub: 'Sipariş + üretim', tone: 'text-emerald-300', iconTone: 'text-emerald-300', icon: Banknote, featured: true },
-    { id: 'possible', label: 'Genel Olası Tutar', value: formatTreasuryCurrency(possibleGrandTotal), sub: 'Canlı varlık + gelecek tutar', href: '/kasa', tone: 'text-gray-100', valueTone: 'text-blue-600', iconTone: 'text-emerald-300', icon: WalletCards, featured: true },
-    { id: 'live-assets', label: 'Toplam Canlı Varlık', value: formatTreasuryCurrency(liveAssetTotal), sub: `${cashAccounts.length} nakit + ${bankAccounts.length} banka + ${chequeAccounts.length} çek kasası`, tone: 'text-gray-100', valueTone: 'text-emerald-700', iconTone: 'text-blue-300', icon: Landmark, featured: true },
+    {
+      id: 'cash',
+      label: 'Nakit Kasa',
+      ...cashParts,
+      sub: `${cashAccounts.length} nakit kasa toplamı`,
+      href: '/kasa',
+      tone: 'text-emerald-300',
+      iconTone: 'text-emerald-300',
+      icon: Banknote,
+    },
+    {
+      id: 'bank',
+      label: 'Bankalar',
+      ...bankParts,
+      sub: `${bankAccounts.length} banka hesabı toplamı`,
+      href: '/kasa',
+      tone: 'text-blue-300',
+      iconTone: 'text-blue-300',
+      icon: Landmark,
+    },
+    {
+      id: 'receivables',
+      label: 'Tahsilat Bekleyen',
+      ...receivableValues,
+      sub: 'Müşteri cari alacak · KDV hariç / dahil',
+      href: '/musteriler',
+      tone: 'text-cyan-300',
+      valueTone: 'text-orange-500',
+      iconTone: 'text-cyan-300',
+      icon: ReceiptText,
+    },
+    {
+      id: 'payables',
+      label: 'Ödenecekler Toplamı',
+      ...payableValues,
+      sub: 'Tedarikçi cari borç · KDV hariç / dahil',
+      href: '/giderler/tedarikciler',
+      tone: 'text-orange-300',
+      valueTone: 'text-red-600',
+      iconTone: 'text-orange-300',
+      icon: WalletCards,
+    },
+    {
+      id: 'stock-value',
+      label: 'Stok Toplam Değeri',
+      ...stockValues,
+      sub: `${stockReport.totalUnits.toLocaleString('tr-TR')} adet · maliyet · KDV hariç / dahil`,
+      href: '/stok/urunler',
+      tone: 'text-teal-300',
+      valueTone: 'text-teal-600',
+      iconTone: 'text-teal-300',
+      icon: Boxes,
+    },
+    {
+      id: 'cheques',
+      label: 'Portföydeki Çekler',
+      ...chequeParts,
+      sub: `${customerChequeRows.length} müşteri çeki`,
+      href: '/nakit/cekler',
+      tone: 'text-purple-300',
+      iconTone: 'text-purple-300',
+      icon: CircleDollarSign,
+    },
+    {
+      id: 'promissory-notes',
+      label: 'Portföydeki Senetler',
+      ...noteParts,
+      sub: `${customerPromissoryNoteRows.length} müşteri senedi`,
+      href: '/nakit/cekler',
+      tone: 'text-fuchsia-300',
+      iconTone: 'text-fuchsia-300',
+      icon: ScrollText,
+    },
+    {
+      id: 'future',
+      label: 'Gelecek Tutar',
+      ...futureValues,
+      sub: 'Sipariş + üretim · teklif/depo hariç',
+      tone: 'text-emerald-300',
+      iconTone: 'text-emerald-300',
+      icon: Banknote,
+      featured: true,
+    },
+    {
+      id: 'possible',
+      label: 'Genel Olası Tutar',
+      ...possibleValues,
+      sub: 'Canlı varlık + gelecek tutar · KDV hariç / dahil',
+      href: '/kasa',
+      tone: 'text-gray-100',
+      valueTone: 'text-blue-600',
+      iconTone: 'text-emerald-300',
+      icon: WalletCards,
+      featured: true,
+    },
+    {
+      id: 'live-assets',
+      label: 'Toplam Canlı Varlık',
+      ...liveValues,
+      sub: `${cashAccounts.length} nakit + ${bankAccounts.length} banka + ${chequeAccounts.length} çek kasası`,
+      tone: 'text-gray-100',
+      valueTone: 'text-emerald-700',
+      iconTone: 'text-blue-300',
+      icon: Landmark,
+      featured: true,
+    },
   ]
   const baseById = new Map(baseCards.map((card) => [card.id, card]))
   const removedFinanceCardIds = new Set(['orders', 'production', 'depo-stock-sales'])
@@ -158,26 +344,26 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
     .filter((config) => !removedFinanceCardIds.has(config.id))
     .filter((config) => includeHidden || config.visible !== false)
     .map((config) => {
-    const base = baseById.get(config.id)
-    const configTone = getToneFromColor(config.color)
-    if (base) {
-      return {
-        ...base,
-        label: config.label,
-        iconTone: configTone,
+      const base = baseById.get(config.id)
+      const configTone = getToneFromColor(config.color)
+      if (base) {
+        return {
+          ...base,
+          label: config.label,
+          iconTone: configTone,
+        }
       }
-    }
-    return {
-      id: config.id,
-      label: config.label,
-      value: formatTreasuryCurrency(0),
-      sub: 'Ayarlar üzerinden eklenen özel finans kartı',
-      tone: configTone,
-      valueTone: configTone,
-      iconTone: configTone,
-      icon: WalletCards,
-    }
-  })
+      return {
+        id: config.id,
+        label: config.label,
+        value: formatTreasuryCurrency(0),
+        sub: 'Ayarlar üzerinden eklenen özel finans kartı',
+        tone: configTone,
+        valueTone: configTone,
+        iconTone: configTone,
+        icon: WalletCards,
+      }
+    })
 }
 
 export default function StatusAnalysisBoard() {
@@ -187,7 +373,9 @@ export default function StatusAnalysisBoard() {
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-extrabold text-[var(--ink)]">Finans Analizi</h2>
-          <p className="text-xs font-semibold text-[var(--muted)]">Kasa, banka, çek portföyü ve üretim sonrası beklenen toplamlar</p>
+          <p className="text-xs font-semibold text-[var(--muted)]">
+            Kasa, banka, çek portföyü ve üretim sonrası beklenen toplamlar
+          </p>
         </div>
         <div className="flex gap-2">
           <span className="badge badge-green">Canlı kasa</span>

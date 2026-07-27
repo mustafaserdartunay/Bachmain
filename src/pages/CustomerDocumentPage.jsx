@@ -61,7 +61,13 @@ function todayInput() {
 }
 
 function createLine() {
-  return { id: `line-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, description: '', quantity: 1, unitPrice: 0, vat: 20 }
+  return {
+    id: `line-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    description: '',
+    quantity: 1,
+    unitPrice: 0,
+    vat: 20,
+  }
 }
 
 export default function CustomerDocumentPage() {
@@ -72,7 +78,9 @@ export default function CustomerDocumentPage() {
   const display = getCustomerDisplay(customer)
   const accounts = useMemo(() => getTreasuryAccounts(), [])
 
-  const [docNo, setDocNo] = useState(() => `${config?.prefix || 'DOC'}-${Date.now().toString().slice(-6)}`)
+  const [docNo, setDocNo] = useState(
+    () => `${config?.prefix || 'DOC'}-${Date.now().toString().slice(-6)}`,
+  )
   const [date, setDate] = useState(todayInput())
   const [dueDate, setDueDate] = useState('')
   const [description, setDescription] = useState('')
@@ -91,8 +99,9 @@ export default function CustomerDocumentPage() {
   useEffect(() => {
     if (config?.kind !== 'invoice') return
     try {
-      const raw = sessionStorage.getItem('erlenbox-depo-document-draft')
-        || sessionStorage.getItem('erlenbox-production-document-draft')
+      const raw =
+        sessionStorage.getItem('erlenbox-depo-document-draft') ||
+        sessionStorage.getItem('erlenbox-production-document-draft')
       if (!raw) return
       const draft = JSON.parse(raw)
       sessionStorage.removeItem('erlenbox-depo-document-draft')
@@ -102,13 +111,15 @@ export default function CustomerDocumentPage() {
       if (draft.description) setDescription(draft.description)
       if (draft.date) setDate(draft.date)
       if (Array.isArray(draft.lines) && draft.lines.length > 0) {
-        setLines(draft.lines.map((line) => ({
-          id: `line-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          description: line.description || '',
-          quantity: Number(line.quantity) || 1,
-          unitPrice: Number(line.unitPrice) || 0,
-          vat: Number(line.vat) || 20,
-        })))
+        setLines(
+          draft.lines.map((line) => ({
+            id: `line-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            description: line.description || '',
+            quantity: Number(line.quantity) || 1,
+            unitPrice: Number(line.unitPrice) || 0,
+            vat: Number(line.vat) || 20,
+          })),
+        )
       }
     } catch {
       // ignore malformed draft
@@ -120,7 +131,11 @@ export default function CustomerDocumentPage() {
       <div className="space-y-5">
         <section className="card p-6 text-center text-sm font-semibold text-gray-400">
           Belge türü bulunamadı.
-          <button type="button" onClick={() => navigate(-1)} className="ml-2 text-blue-300 hover:underline">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="ml-2 text-blue-300 hover:underline"
+          >
             Geri dön
           </button>
         </section>
@@ -141,7 +156,9 @@ export default function CustomerDocumentPage() {
   const grandTotal = totals.subtotal + totals.vat
 
   function updateLine(id, field, value) {
-    setLines((current) => current.map((line) => (line.id === id ? { ...line, [field]: value } : line)))
+    setLines((current) =>
+      current.map((line) => (line.id === id ? { ...line, [field]: value } : line)),
+    )
   }
 
   function removeLine(id) {
@@ -173,6 +190,8 @@ export default function CustomerDocumentPage() {
         customerName: customer.company,
         customerId: customer.id,
         amount: grandTotal,
+        amountNet: totals.subtotal,
+        vatAmount: totals.vat,
         docNo,
         date: formatCollectionDate(date),
         dueDate: dueDate ? formatCollectionDate(dueDate) : '',
@@ -203,7 +222,8 @@ export default function CustomerDocumentPage() {
 
     appendActivity(customer.id, `${config.title} Oluşturuldu`, detail)
     showSaved()
-    const nextPath = docType === 'satis-faturasi' ? '/musteriler/faturalar' : `/musteriler/${customer.id}`
+    const nextPath =
+      docType === 'satis-faturasi' ? '/musteriler/faturalar' : `/musteriler/${customer.id}`
     setTimeout(() => navigate(nextPath), 800)
   }
 
@@ -226,18 +246,28 @@ export default function CustomerDocumentPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Müşteri Detayı
         </button>
         <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">{config.title}</h1>
+          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
+            {config.title}
+          </h1>
         </div>
       </section>
 
-      <FormSectionPanel icon={Building2} title={`${config.partyLabel || 'Cari'} Bilgileri`} dotColor="violet">
+      <FormSectionPanel
+        icon={Building2}
+        title={`${config.partyLabel || 'Cari'} Bilgileri`}
+        dotColor="violet"
+      >
         <div className={`${FORM_FIELD_ROW_CLASS} flex items-center gap-4`}>
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/35 text-lg font-extrabold text-[var(--ink)]">
             {display.brandShortName.slice(0, 1)}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-extrabold uppercase tracking-wide text-[var(--ink)]">{display.brandShortName}</p>
-            <p className="mt-0.5 truncate text-xs font-semibold text-[var(--muted)]">{display.companyTitle} · {customer.city}</p>
+            <p className="truncate text-sm font-extrabold uppercase tracking-wide text-[var(--ink)]">
+              {display.brandShortName}
+            </p>
+            <p className="mt-0.5 truncate text-xs font-semibold text-[var(--muted)]">
+              {display.companyTitle} · {customer.city}
+            </p>
           </div>
         </div>
       </FormSectionPanel>
@@ -248,27 +278,53 @@ export default function CustomerDocumentPage() {
             <input value={docNo} readOnly className="form-input-readonly" />
           </Field>
           <Field label="Belge Tarihi">
-            <input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="form-input" />
+            <input
+              type="date"
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
+              className="form-input"
+            />
           </Field>
           {config.kind === 'invoice' && (
             <Field label="Vade Tarihi">
-              <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className="form-input" />
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(event) => setDueDate(event.target.value)}
+                className="form-input"
+              />
             </Field>
           )}
           {config.foreign && (
             <>
               <Field label="Döviz">
-                <select value={currency} onChange={(event) => setCurrency(event.target.value)} className="form-input">
-                  {['USD', 'EUR', 'GBP', 'TRY'].map((code) => <option key={code}>{code}</option>)}
+                <select
+                  value={currency}
+                  onChange={(event) => setCurrency(event.target.value)}
+                  className="form-input"
+                >
+                  {['USD', 'EUR', 'GBP', 'TRY'].map((code) => (
+                    <option key={code}>{code}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="Ülke">
-                <input value={country} onChange={(event) => setCountry(event.target.value)} placeholder="Teslim ülkesi" className="form-input" />
+                <input
+                  value={country}
+                  onChange={(event) => setCountry(event.target.value)}
+                  placeholder="Teslim ülkesi"
+                  className="form-input"
+                />
               </Field>
             </>
           )}
           <Field label="Açıklama" full>
-            <input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Belge açıklaması" className="form-input" />
+            <input
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="Belge açıklaması"
+              className="form-input"
+            />
           </Field>
         </div>
       </FormSectionPanel>
@@ -277,17 +333,40 @@ export default function CustomerDocumentPage() {
         <FormSectionPanel icon={ArrowRightLeft} title="Virman Detayı" dotColor="orange">
           <div className="grid max-w-4xl grid-cols-2 gap-1">
             <Field label="Kaynak Hesap">
-              <select value={transfer.fromAccount} onChange={(event) => setTransfer((c) => ({ ...c, fromAccount: event.target.value }))} className="form-input">
-                {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
+              <select
+                value={transfer.fromAccount}
+                onChange={(event) =>
+                  setTransfer((c) => ({ ...c, fromAccount: event.target.value }))
+                }
+                className="form-input"
+              >
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Hedef Hesap">
-              <select value={transfer.toAccount} onChange={(event) => setTransfer((c) => ({ ...c, toAccount: event.target.value }))} className="form-input">
-                {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
+              <select
+                value={transfer.toAccount}
+                onChange={(event) => setTransfer((c) => ({ ...c, toAccount: event.target.value }))}
+                className="form-input"
+              >
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Tutar">
-              <NumericInput value={transfer.amount} onChange={(value) => setTransfer((c) => ({ ...c, amount: value }))} suffix="₺" formatMode="price" />
+              <NumericInput
+                value={transfer.amount}
+                onChange={(value) => setTransfer((c) => ({ ...c, amount: value }))}
+                suffix="₺"
+                formatMode="price"
+              />
             </Field>
           </div>
         </FormSectionPanel>
@@ -306,17 +385,36 @@ export default function CustomerDocumentPage() {
               const net = (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0)
               const lineTotal = net * (1 + (Number(line.vat) || 0) / 100)
               return (
-                <div key={line.id} className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[minmax(0,1fr)_90px_140px_80px_130px_36px] items-center gap-2`}>
+                <div
+                  key={line.id}
+                  className={`${FORM_FIELD_ROW_CLASS} grid grid-cols-[minmax(0,1fr)_90px_140px_80px_130px_36px] items-center gap-2`}
+                >
                   <input
                     value={line.description}
                     onChange={(event) => updateLine(line.id, 'description', event.target.value)}
                     placeholder="Ürün / hizmet"
                     className="form-input"
                   />
-                  <NumericInput value={line.quantity} onChange={(value) => updateLine(line.id, 'quantity', value)} className="text-right" />
-                  <NumericInput value={line.unitPrice} onChange={(value) => updateLine(line.id, 'unitPrice', value)} suffix="₺" formatMode="price" />
-                  <NumericInput value={line.vat} onChange={(value) => updateLine(line.id, 'vat', value)} suffix="%" className="text-right" />
-                  <span className="text-right text-sm font-extrabold text-[var(--ink)]">{formatTL(lineTotal)}</span>
+                  <NumericInput
+                    value={line.quantity}
+                    onChange={(value) => updateLine(line.id, 'quantity', value)}
+                    className="text-right"
+                  />
+                  <NumericInput
+                    value={line.unitPrice}
+                    onChange={(value) => updateLine(line.id, 'unitPrice', value)}
+                    suffix="₺"
+                    formatMode="price"
+                  />
+                  <NumericInput
+                    value={line.vat}
+                    onChange={(value) => updateLine(line.id, 'vat', value)}
+                    suffix="%"
+                    className="text-right"
+                  />
+                  <span className="text-right text-sm font-extrabold text-[var(--ink)]">
+                    {formatTL(lineTotal)}
+                  </span>
                   <button
                     type="button"
                     onClick={() => removeLine(line.id)}
@@ -341,14 +439,18 @@ export default function CustomerDocumentPage() {
             <div className="glass-inset w-full max-w-xs space-y-2 rounded-[16px] p-4">
               <div className="flex items-center justify-between text-xs font-semibold text-[var(--muted)]">
                 <span>Ara Toplam</span>
-                <span className="font-extrabold text-[var(--ink)]">{formatTL(totals.subtotal)}</span>
+                <span className="font-extrabold text-[var(--ink)]">
+                  {formatTL(totals.subtotal)}
+                </span>
               </div>
               <div className="flex items-center justify-between text-xs font-semibold text-[var(--muted)]">
                 <span>KDV</span>
                 <span className="font-extrabold text-[var(--ink)]">{formatTL(totals.vat)}</span>
               </div>
               <div className="flex items-center justify-between border-t border-white/50 pt-2 text-sm">
-                <span className="font-extrabold uppercase tracking-wide text-[var(--ink)]">Genel Toplam</span>
+                <span className="font-extrabold uppercase tracking-wide text-[var(--ink)]">
+                  Genel Toplam
+                </span>
                 <span className="font-extrabold text-emerald-600">{formatTL(grandTotal)}</span>
               </div>
             </div>
@@ -378,7 +480,9 @@ export default function CustomerDocumentPage() {
 
 function Field({ label, children, full = false, icon: Icon }) {
   return (
-    <label className={`app-form-row app-form-field-surface flex items-center gap-2 rounded-xl px-2.5 py-1.5 ${full ? 'col-span-2' : ''}`}>
+    <label
+      className={`app-form-row app-form-field-surface flex items-center gap-2 rounded-xl px-2.5 py-1.5 ${full ? 'col-span-2' : ''}`}
+    >
       <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-black capitalize tracking-wider text-[var(--muted)] whitespace-nowrap">
         {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
         {label}

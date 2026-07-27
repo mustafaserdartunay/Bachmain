@@ -80,11 +80,17 @@ function readState() {
     }
     const parsed = JSON.parse(raw)
     return {
-      warehouses: Array.isArray(parsed.warehouses) && parsed.warehouses.length ? parsed.warehouses : [defaultWarehouse()],
+      warehouses:
+        Array.isArray(parsed.warehouses) && parsed.warehouses.length
+          ? parsed.warehouses
+          : [defaultWarehouse()],
       transfers: Array.isArray(parsed.transfers) ? parsed.transfers : [],
       outgoingWaybills: Array.isArray(parsed.outgoingWaybills) ? parsed.outgoingWaybills : [],
       incomingWaybills: Array.isArray(parsed.incomingWaybills) ? parsed.incomingWaybills : [],
-      priceLists: Array.isArray(parsed.priceLists) && parsed.priceLists.length ? parsed.priceLists : [defaultPriceList()],
+      priceLists:
+        Array.isArray(parsed.priceLists) && parsed.priceLists.length
+          ? parsed.priceLists
+          : [defaultPriceList()],
       history: Array.isArray(parsed.history) ? parsed.history : [],
     }
   } catch {
@@ -113,7 +119,10 @@ function syncWarehouseTotals(warehouse) {
     const critical = Number(row.criticalStock) || 0
     return critical > 0 && qty <= critical
   }).length
-  const estimatedValue = stock.reduce((sum, row) => sum + (Number(row.quantity) || 0) * (Number(row.unitValue) || 0), 0)
+  const estimatedValue = stock.reduce(
+    (sum, row) => sum + (Number(row.quantity) || 0) * (Number(row.unitValue) || 0),
+    0,
+  )
 
   return {
     ...warehouse,
@@ -178,12 +187,15 @@ function adjustWarehouseStock(warehouses, warehouseId, row, delta) {
 function appendHistory(state, entry) {
   return {
     ...state,
-    history: [{
-      id: createId('hist'),
-      createdAt: nowStamp(),
-      date: entry.date || nowIsoDate(),
-      ...entry,
-    }, ...state.history],
+    history: [
+      {
+        id: createId('hist'),
+        createdAt: nowStamp(),
+        date: entry.date || nowIsoDate(),
+        ...entry,
+      },
+      ...state.history,
+    ],
   }
 }
 
@@ -287,7 +299,9 @@ export function createTransfer(payload) {
 
 export function createOutgoingWaybill(payload) {
   const state = readState()
-  const items = Array.isArray(payload.items) ? payload.items.filter((item) => (Number(item.quantity) || 0) > 0) : []
+  const items = Array.isArray(payload.items)
+    ? payload.items.filter((item) => (Number(item.quantity) || 0) > 0)
+    : []
   if (!payload.warehouseId || items.length === 0) throw new Error('İrsaliye bilgileri eksik.')
 
   const warehouse = state.warehouses.find((item) => item.id === payload.warehouseId)
@@ -305,7 +319,8 @@ export function createOutgoingWaybill(payload) {
 
   const waybill = {
     id: createId('g-irs'),
-    waybillNo: payload.waybillNo || `GIR-${String(state.outgoingWaybills.length + 1).padStart(4, '0')}`,
+    waybillNo:
+      payload.waybillNo || `GIR-${String(state.outgoingWaybills.length + 1).padStart(4, '0')}`,
     warehouseId: payload.warehouseId,
     warehouseName: warehouse.name,
     customerName: payload.customerName || '',
@@ -340,7 +355,9 @@ export function createOutgoingWaybill(payload) {
 
 export function createIncomingWaybill(payload) {
   const state = readState()
-  const items = Array.isArray(payload.items) ? payload.items.filter((item) => (Number(item.quantity) || 0) > 0) : []
+  const items = Array.isArray(payload.items)
+    ? payload.items.filter((item) => (Number(item.quantity) || 0) > 0)
+    : []
   if (!payload.warehouseId || items.length === 0) throw new Error('İrsaliye bilgileri eksik.')
 
   const warehouse = state.warehouses.find((item) => item.id === payload.warehouseId)
@@ -348,12 +365,18 @@ export function createIncomingWaybill(payload) {
 
   let warehouses = [...state.warehouses]
   items.forEach((item) => {
-    warehouses = adjustWarehouseStock(warehouses, payload.warehouseId, item, Number(item.quantity) || 0)
+    warehouses = adjustWarehouseStock(
+      warehouses,
+      payload.warehouseId,
+      item,
+      Number(item.quantity) || 0,
+    )
   })
 
   const waybill = {
     id: createId('a-irs'),
-    waybillNo: payload.waybillNo || `AIR-${String(state.incomingWaybills.length + 1).padStart(4, '0')}`,
+    waybillNo:
+      payload.waybillNo || `AIR-${String(state.incomingWaybills.length + 1).padStart(4, '0')}`,
     warehouseId: payload.warehouseId,
     warehouseName: warehouse.name,
     supplierName: payload.supplierName || '',
@@ -443,7 +466,10 @@ export function getStockProductsReport() {
     }, 0)
     const totalStock = Math.max(catalogTotal, storeTotal)
     const criticalStock = Number(product.criticalStock) || 0
-    const value = totalStock * (Number(product.costPrice) || Number(product.purchasePriceExcl) || 0)
+    const unitCost = Number(product.costPrice) || Number(product.purchasePriceExcl) || 0
+    const vatRate = Math.max(0, Number(product.vatRate) || 0)
+    const valueExVat = totalStock * unitCost
+    const valueIncVat = valueExVat * (1 + vatRate / 100)
 
     return {
       id: product.id,
@@ -455,13 +481,18 @@ export function getStockProductsReport() {
       isCritical: criticalStock > 0 && totalStock <= criticalStock,
       isEmpty: totalStock <= 0,
       warehouseStock,
-      value,
+      value: valueExVat,
+      valueExVat,
+      valueIncVat,
+      vatRate,
       salesPrice: Number(product.salesPriceExcl) || 0,
     }
   })
 
   const totalUnits = rows.reduce((sum, row) => sum + row.totalStock, 0)
   const totalValue = rows.reduce((sum, row) => sum + row.value, 0)
+  const totalValueExVat = rows.reduce((sum, row) => sum + row.valueExVat, 0)
+  const totalValueIncVat = rows.reduce((sum, row) => sum + row.valueIncVat, 0)
   const criticalCount = rows.filter((row) => row.isCritical).length
   const emptyCount = rows.filter((row) => row.isEmpty).length
 
@@ -469,6 +500,8 @@ export function getStockProductsReport() {
     rows: rows.sort((a, b) => b.totalStock - a.totalStock),
     totalUnits,
     totalValue,
+    totalValueExVat,
+    totalValueIncVat,
     criticalCount,
     emptyCount,
     warehouseCount: warehouses.length,

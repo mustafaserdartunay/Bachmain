@@ -26,7 +26,9 @@ export function itemTotals(item) {
   const unitPrice = safeNumber(item.unitPrice)
   const discountRate = item.showDiscount ? safeNumber(item.discountRate, 0, 100) : 0
   const exciseTaxRate = item.showExciseTax ? safeNumber(item.exciseTaxRate, 0, 100) : 0
-  const accommodationTaxRate = item.showAccommodationTax ? safeNumber(item.accommodationTaxRate, 0, 100) : 0
+  const accommodationTaxRate = item.showAccommodationTax
+    ? safeNumber(item.accommodationTaxRate, 0, 100)
+    : 0
   const vatRate = safeNumber(item.vatRate, 0, 100)
 
   const subtotal = quantity * unitPrice
@@ -82,4 +84,48 @@ export function documentTotals(document) {
     showExciseTax: items.some((item) => item.showExciseTax) || exciseTax > 0,
     showAccommodationTax: items.some((item) => item.showAccommodationTax) || accommodationTax > 0,
   }
+}
+
+/**
+ * KDV hariç / KDV dahil tutarlar.
+ * Kalemlerde KDV yoksa (vatRate 0) iki tutar eşit gelir.
+ * items yoksa amountNet / vatAmount / amount alanlarından okur.
+ */
+export function documentMoneyParts(document) {
+  const items = document?.items
+  if (Array.isArray(items) && items.length > 0) {
+    const totals = documentTotals(document)
+    const exclVat = totals.net + totals.exciseTax + totals.accommodationTax
+    return {
+      exclVat,
+      vat: totals.vat,
+      inclVat: totals.grandTotal,
+    }
+  }
+
+  const amount = Number(document?.amount)
+  const amountNet = Number(document?.amountNet)
+  const vatAmount = Number(document?.vatAmount)
+  if (Number.isFinite(amountNet) && Number.isFinite(amount)) {
+    return {
+      exclVat: amountNet,
+      vat: Number.isFinite(vatAmount) ? vatAmount : Math.max(0, amount - amountNet),
+      inclVat: amount,
+    }
+  }
+  if (Number.isFinite(amount)) {
+    return { exclVat: amount, vat: 0, inclVat: amount }
+  }
+  return { exclVat: 0, vat: 0, inclVat: 0 }
+}
+
+export function sumMoneyParts(partsList = []) {
+  return partsList.reduce(
+    (acc, part) => ({
+      exclVat: acc.exclVat + (Number(part?.exclVat) || 0),
+      vat: acc.vat + (Number(part?.vat) || 0),
+      inclVat: acc.inclVat + (Number(part?.inclVat) || 0),
+    }),
+    { exclVat: 0, vat: 0, inclVat: 0 },
+  )
 }

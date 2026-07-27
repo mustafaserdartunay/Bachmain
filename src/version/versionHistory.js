@@ -16,6 +16,11 @@ export const VERSION_FEATURES = {
           title: 'Güncel durum paneli',
           detail: 'Operasyon özeti, hızlı erişim ve güncel iş durumu.',
         },
+        {
+          title: 'Finans özeti KDV ayrımı',
+          detail:
+            'Tahsilat, ödeme, stok, gelecek ve olası tutarlar KDV hariç / dahil. Gelecek tutar yalnız sipariş + üretim.',
+        },
         { title: 'Duyurular', detail: 'Firma içi duyuru ve bilgilendirme alanı.' },
         { title: 'Eğitim', detail: 'Modül kullanım rehberleri ve eğitim içerikleri.' },
       ],

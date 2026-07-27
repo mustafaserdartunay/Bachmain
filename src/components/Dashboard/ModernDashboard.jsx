@@ -101,7 +101,12 @@ const DASHBOARD_METRIC_ROW_CLASS = APP_METRIC_ROW_CLASS
 function FinanceMetricCell({ card }) {
   const palette = FINANCE_METRIC_COLORS[card.id] || FINANCE_METRIC_COLORS.cash
   const Icon = card.icon
-  const rowClass = DASHBOARD_METRIC_ROW_CLASS
+  const hasDual =
+    card.valueExVat != null &&
+    card.valueIncVat != null &&
+    String(card.valueExVat) !== '' &&
+    String(card.valueIncVat) !== ''
+  const rowClass = hasDual ? APP_ACTIVATION_ROW_CLASS : DASHBOARD_METRIC_ROW_CLASS
   const content = (
     <>
       <span className="flex min-w-0 items-center gap-1.5">
@@ -110,17 +115,47 @@ function FinanceMetricCell({ card }) {
           {toTitleCaseTr(card.label)}
         </span>
       </span>
-      <span className="flex shrink-0 items-center">
-        <span className={`text-xs font-extrabold tabular-nums leading-tight ${palette.text}`} title={card.value}>
-          {card.value}
-        </span>
+      <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+        {hasDual ? (
+          <>
+            <span
+              className={`text-[11px] font-extrabold tabular-nums leading-tight ${palette.text}`}
+              title={`KDV Hariç ${card.valueExVat}`}
+            >
+              <span className="mr-1 text-[9px] font-bold text-[var(--muted)]">Hariç</span>
+              {card.valueExVat}
+            </span>
+            <span
+              className={`text-[11px] font-extrabold tabular-nums leading-tight ${palette.text}`}
+              title={`KDV Dahil ${card.valueIncVat}`}
+            >
+              <span className="mr-1 text-[9px] font-bold text-[var(--muted)]">Dahil</span>
+              {card.valueIncVat}
+            </span>
+          </>
+        ) : (
+          <span
+            className={`text-xs font-extrabold tabular-nums leading-tight ${palette.text}`}
+            title={card.value}
+          >
+            {card.value}
+          </span>
+        )}
       </span>
     </>
   )
 
   if (card.href) {
     return (
-      <Link to={card.href} title={card.sub || card.label} className={rowClass}>
+      <Link
+        to={card.href}
+        title={
+          hasDual
+            ? `${card.sub || card.label} · KDV Hariç ${card.valueExVat} · KDV Dahil ${card.valueIncVat}`
+            : card.sub || card.label
+        }
+        className={rowClass}
+      >
         {content}
       </Link>
     )
@@ -204,7 +239,9 @@ function MetricStatGroup({ stats }) {
           </span>
           <span
             className={`text-xs font-extrabold tabular-nums leading-none ${
-              Number(stat.value) > 0 ? (stat.tone || 'text-[var(--ink)]') : 'text-[var(--muted)] opacity-70'
+              Number(stat.value) > 0
+                ? stat.tone || 'text-[var(--ink)]'
+                : 'text-[var(--muted)] opacity-70'
             }`}
           >
             {stat.value}
@@ -224,9 +261,21 @@ function QuickActionMetricRow({ action }) {
   const totalOpen = pending + ongoing
   const amount = formatQuickActionAmount(action.stats.pendingAmount)
   const stats = [
-    { label: action.statLabels?.pending || 'Bekleyen', value: pending, tone: QUICK_ACTION_STAT_TONES.pending },
-    { label: action.statLabels?.ongoing || 'İşleme Alındı', value: ongoing, tone: QUICK_ACTION_STAT_TONES.ongoing },
-    { label: action.statLabels?.completed || 'Bitti', value: completed, tone: QUICK_ACTION_STAT_TONES.completed },
+    {
+      label: action.statLabels?.pending || 'Bekleyen',
+      value: pending,
+      tone: QUICK_ACTION_STAT_TONES.pending,
+    },
+    {
+      label: action.statLabels?.ongoing || 'İşleme Alındı',
+      value: ongoing,
+      tone: QUICK_ACTION_STAT_TONES.ongoing,
+    },
+    {
+      label: action.statLabels?.completed || 'Bitti',
+      value: completed,
+      tone: QUICK_ACTION_STAT_TONES.completed,
+    },
   ]
   const detail = action.id === 'delivered' ? amount : `${totalOpen} açık · ${amount}`
 
@@ -340,7 +389,9 @@ function ActivationRowAccent({ item }) {
 
   return (
     <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden="true">
-      <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${tone.ping}`} />
+      <span
+        className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${tone.ping}`}
+      />
       <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${tone.dot}`} />
     </span>
   )
@@ -374,48 +425,75 @@ function ModernTimeline({ className = '' }) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-50" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-violet-500" />
         </span>
-        <h2 className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">Aktivasyon Zaman Tablosu</h2>
+        <h2 className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">
+          Aktivasyon Zaman Tablosu
+        </h2>
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain pr-0.5">
         {items.length === 0 ? (
-          <p className="glass-inset px-3 py-5 text-center text-[12px] font-semibold text-[var(--muted)]">Planlı ödeme veya alacak bulunamadı.</p>
-        ) : items.map((item) => {
-          const amountTone = getActivationAmountTone(item)
-          return (
-            <Link
-              key={item.id}
-              to={item.link || '/kasa'}
-              title={item.title}
-              className={APP_ACTIVATION_ROW_CLASS}
-            >
-              <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                <ActivationRowAccent item={item} />
-                <span className="flex min-w-0 flex-col gap-1">
-                  <span className="truncate text-[12px] font-semibold leading-tight text-[var(--muted)]">{item.title}</span>
-                  {item.subtitle ? (
-                    <span className="truncate text-[11px] font-bold leading-none text-[var(--muted)]">{item.subtitle}</span>
-                  ) : null}
-                </span>
-              </span>
-              <span className="flex shrink-0 flex-col items-end gap-1">
-                {item.amount > 0 ? (
-                  <span className={`text-xs font-extrabold tabular-nums leading-tight ${amountTone}`}>
-                    {formatCurrency(item.amount)}
+          <p className="glass-inset px-3 py-5 text-center text-[12px] font-semibold text-[var(--muted)]">
+            Planlı ödeme veya alacak bulunamadı.
+          </p>
+        ) : (
+          items.map((item) => {
+            const amountTone = getActivationAmountTone(item)
+            return (
+              <Link
+                key={item.id}
+                to={item.link || '/kasa'}
+                title={item.title}
+                className={APP_ACTIVATION_ROW_CLASS}
+              >
+                <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <ActivationRowAccent item={item} />
+                  <span className="flex min-w-0 flex-col gap-1">
+                    <span className="truncate text-[12px] font-semibold leading-tight text-[var(--muted)]">
+                      {item.title}
+                    </span>
+                    {item.subtitle ? (
+                      <span className="truncate text-[11px] font-bold leading-none text-[var(--muted)]">
+                        {item.subtitle}
+                      </span>
+                    ) : null}
                   </span>
-                ) : (
-                  <span className="text-xs font-extrabold leading-tight text-transparent" aria-hidden="true">—</span>
-                )}
-                <span className="text-[11px] font-bold leading-none text-[var(--muted)]">{item.dateLabel}</span>
-              </span>
-            </Link>
-          )
-        })}
+                </span>
+                <span className="flex shrink-0 flex-col items-end gap-1">
+                  {item.amount > 0 ? (
+                    <span
+                      className={`text-xs font-extrabold tabular-nums leading-tight ${amountTone}`}
+                    >
+                      {formatCurrency(item.amount)}
+                    </span>
+                  ) : (
+                    <span
+                      className="text-xs font-extrabold leading-tight text-transparent"
+                      aria-hidden="true"
+                    >
+                      —
+                    </span>
+                  )}
+                  <span className="text-[11px] font-bold leading-none text-[var(--muted)]">
+                    {item.dateLabel}
+                  </span>
+                </span>
+              </Link>
+            )
+          })
+        )}
       </div>
     </section>
   )
 }
 
-function TaxStatusPanel({ issued, supplier, estimatedVatDue, estimatedIncomeTaxDue, onOpenIssued, onOpenSupplier, className = '' }) {
+function TaxStatusPanel({
+  issued,
+  supplier,
+  estimatedVatDue,
+  estimatedIncomeTaxDue,
+  onOpenIssued,
+  onOpenSupplier,
+  className = '',
+}) {
   const rows = [
     {
       id: 'issued',
@@ -466,7 +544,9 @@ function TaxStatusPanel({ issued, supplier, estimatedVatDue, estimatedIncomeTaxD
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-50" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-500" />
         </span>
-        <h2 className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">KDV Durumu</h2>
+        <h2 className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">
+          KDV Durumu
+        </h2>
       </div>
       <div className={APP_DASHBOARD_PANEL_BODY_CLASS}>
         {rows.map((row) => {
@@ -505,13 +585,16 @@ function CustomDashboardBlocks({ blocks = [] }) {
       {visibleBlocks.map((block) => {
         if (block.type === 'note') {
           return (
-            <article
-              key={block.id}
-              className="glass px-4 py-3"
-            >
+            <article key={block.id} className="glass px-4 py-3">
               <p className="text-sm font-extrabold text-[var(--ink)]">{block.title}</p>
-              {block.subtitle ? <p className="mt-0.5 text-xs text-[var(--muted)]">{block.subtitle}</p> : null}
-              {block.content ? <p className="mt-2 text-sm leading-relaxed text-[var(--ink)] opacity-80">{block.content}</p> : null}
+              {block.subtitle ? (
+                <p className="mt-0.5 text-xs text-[var(--muted)]">{block.subtitle}</p>
+              ) : null}
+              {block.content ? (
+                <p className="mt-2 text-sm leading-relaxed text-[var(--ink)] opacity-80">
+                  {block.content}
+                </p>
+              ) : null}
             </article>
           )
         }
@@ -519,7 +602,9 @@ function CustomDashboardBlocks({ blocks = [] }) {
         const content = (
           <article className="glass px-4 py-3 transition-transform hover:-translate-y-0.5">
             <p className="text-sm font-extrabold text-[var(--ink)]">{block.title}</p>
-            {block.subtitle ? <p className="mt-0.5 text-xs text-[var(--muted)]">{block.subtitle}</p> : null}
+            {block.subtitle ? (
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{block.subtitle}</p>
+            ) : null}
             <p className="mt-2 text-xs font-semibold text-[var(--blue2)]">{block.href}</p>
           </article>
         )
@@ -542,9 +627,10 @@ function QuickActionsPanel({ quickActions = [], className = '' }) {
   const [tick, setTick] = useState(0)
   const processIds = new Set(['quote', 'order', 'production', 'depo', 'delivered'])
   const actions = useMemo(
-    () => buildConfiguredQuickActionCards(quickActions)
-      .filter((action) => processIds.has(action.id) || action.isCustom)
-      .slice(0, 5),
+    () =>
+      buildConfiguredQuickActionCards(quickActions)
+        .filter((action) => processIds.has(action.id) || action.isCustom)
+        .slice(0, 5),
     [quickActions, tick],
   )
 
@@ -667,9 +753,8 @@ export default function ModernDashboard({
     () => collectDashboardMetricStatLabels(layout.quickActions),
     [layout.quickActions],
   )
-  const { measurer: metricStatMeasurer, style: metricStatScopeStyle } = useDashboardMetricStatColumnWidth(
-    showQuickActions || showCrmActivity ? metricStatLabels : [],
-  )
+  const { measurer: metricStatMeasurer, style: metricStatScopeStyle } =
+    useDashboardMetricStatColumnWidth(showQuickActions || showCrmActivity ? metricStatLabels : [])
 
   const leftPanels = (
     <>
@@ -680,24 +765,28 @@ export default function ModernDashboard({
     </>
   )
 
-  const dashboardBody = !hasLeftPanels && showTimeline ? (
-    <ModernTimeline className="h-auto w-full" />
-  ) : showTimeline && hasLeftPanels ? (
-    <div className="flex flex-col shell-grid-gap xl:flex-row xl:items-stretch">
-      <div className="flex min-w-0 flex-col shell-grid-gap xl:flex-[2]" style={metricStatScopeStyle}>
+  const dashboardBody =
+    !hasLeftPanels && showTimeline ? (
+      <ModernTimeline className="h-auto w-full" />
+    ) : showTimeline && hasLeftPanels ? (
+      <div className="flex flex-col shell-grid-gap xl:flex-row xl:items-stretch">
+        <div
+          className="flex min-w-0 flex-col shell-grid-gap xl:flex-[2]"
+          style={metricStatScopeStyle}
+        >
+          {metricStatMeasurer}
+          {leftPanels}
+        </div>
+        <div className={APP_DASHBOARD_TIMELINE_RAIL_CLASS}>
+          <ModernTimeline className="h-full min-h-0 w-full" />
+        </div>
+      </div>
+    ) : hasLeftPanels ? (
+      <div className="flex flex-col shell-grid-gap" style={metricStatScopeStyle}>
         {metricStatMeasurer}
         {leftPanels}
       </div>
-      <div className={APP_DASHBOARD_TIMELINE_RAIL_CLASS}>
-        <ModernTimeline className="h-full min-h-0 w-full" />
-      </div>
-    </div>
-  ) : hasLeftPanels ? (
-    <div className="flex flex-col shell-grid-gap" style={metricStatScopeStyle}>
-      {metricStatMeasurer}
-      {leftPanels}
-    </div>
-  ) : null
+    ) : null
 
   return (
     <div className="modern-dashboard">

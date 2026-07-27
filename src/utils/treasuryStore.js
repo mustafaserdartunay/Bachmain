@@ -528,6 +528,8 @@ export function createCustomerSalesInvoice({
   customerName,
   customerId,
   amount,
+  amountNet,
+  vatAmount,
   docNo,
   date,
   description,
@@ -540,6 +542,10 @@ export function createCustomerSalesInvoice({
   const existing = getTreasuryMovements().find((movement) => movement.id === movementId)
   if (existing) return existing
 
+  const incl = Number(amount) || 0
+  const excl = Number.isFinite(Number(amountNet)) ? Number(amountNet) : incl
+  const vat = Number.isFinite(Number(vatAmount)) ? Number(vatAmount) : Math.max(0, incl - excl)
+
   return addTreasuryMovement({
     id: movementId,
     direction: 'ledger',
@@ -549,7 +555,9 @@ export function createCustomerSalesInvoice({
     method: 'Fatura',
     accountId: '',
     accountName: 'Cari',
-    amount: Number(amount) || 0,
+    amount: incl,
+    amountNet: excl,
+    vatAmount: vat,
     date: date || todayForTreasury(),
     description: description || `Satış faturası ${normalizedDocNo}`,
     dueDate: dueDate || '',
@@ -563,6 +571,8 @@ export function createSupplierPurchaseInvoice({
   customerName,
   customerId,
   amount,
+  amountNet,
+  vatAmount,
   docNo,
   date,
   description,
@@ -575,6 +585,10 @@ export function createSupplierPurchaseInvoice({
   const existing = getTreasuryMovements().find((movement) => movement.id === movementId)
   if (existing) return existing
 
+  const incl = Number(amount) || 0
+  const excl = Number.isFinite(Number(amountNet)) ? Number(amountNet) : incl
+  const vat = Number.isFinite(Number(vatAmount)) ? Number(vatAmount) : Math.max(0, incl - excl)
+
   return addTreasuryMovement({
     id: movementId,
     direction: 'ledger',
@@ -584,7 +598,9 @@ export function createSupplierPurchaseInvoice({
     method: 'Fatura',
     accountId: '',
     accountName: 'Cari',
-    amount: Number(amount) || 0,
+    amount: incl,
+    amountNet: excl,
+    vatAmount: vat,
     date: date || todayForTreasury(),
     description: description || `Alış faturası ${normalizedDocNo}`,
     dueDate: dueDate || '',
@@ -599,37 +615,57 @@ export function getCustomerPurchaseInvoices(customerName, movements = getTreasur
   )
 }
 
-export function getCustomerLedgerBalance(customer, movements = getTreasuryMovements()) {
-  const customerName = customer?.company || customer?.companyTitle || ''
-  if (!customerName) return 0
+function movementInclAmount(movement) {
+  return Number(movement?.amount) || 0
+}
 
-  const openingBalance = Number(customer.balance) || 0
-  const invoiceTotal = getCustomerSalesInvoices(customerName, movements).reduce(
-    (sum, movement) => sum + Number(movement.amount || 0),
-    0,
-  )
-  const purchaseTotal = getCustomerPurchaseInvoices(customerName, movements).reduce(
-    (sum, movement) => sum + Number(movement.amount || 0),
-    0,
-  )
-  const collectedTotal = getCustomerCollections(customerName, movements).reduce(
-    (sum, movement) => sum + Number(movement.amount || 0),
-    0,
-  )
-  const paidTotal = getCustomerPayments(customerName, movements).reduce(
-    (sum, movement) => sum + Number(movement.amount || 0),
-    0,
-  )
+function movementExclAmount(movement) {
+  if (Number.isFinite(Number(movement?.amountNet))) return Number(movement.amountNet)
+  return movementInclAmount(movement)
+}
+
+export function getCustomerLedgerBalanceParts(customer, movements = getTreasuryMovements()) {
+  const customerName = customer?.company || customer?.companyTitle || ''
+  if (!customerName) return { exclVat: 0, vat: 0, inclVat: 0 }
+
+  const openingIncl = Number(customer.balance) || 0
+  const openingExcl = Number.isFinite(Number(customer.balanceNet))
+    ? Number(customer.balanceNet)
+    : openingIncl
+
+  const invoices = getCustomerSalesInvoices(customerName, movements)
+  const purchases = getCustomerPurchaseInvoices(customerName, movements)
+  const collections = getCustomerCollections(customerName, movements)
+  const payments = getCustomerPayments(customerName, movements)
+
+  const invoiceIncl = invoices.reduce((sum, row) => sum + movementInclAmount(row), 0)
+  const invoiceExcl = invoices.reduce((sum, row) => sum + movementExclAmount(row), 0)
+  const purchaseIncl = purchases.reduce((sum, row) => sum + movementInclAmount(row), 0)
+  const purchaseExcl = purchases.reduce((sum, row) => sum + movementExclAmount(row), 0)
+  const collectedIncl = collections.reduce((sum, row) => sum + movementInclAmount(row), 0)
+  const collectedExcl = collections.reduce((sum, row) => sum + movementExclAmount(row), 0)
+  const paidIncl = payments.reduce((sum, row) => sum + movementInclAmount(row), 0)
+  const paidExcl = payments.reduce((sum, row) => sum + movementExclAmount(row), 0)
 
   // Satış faturası → alacak (+); alış faturası → tedarikçi alacaklı / biz borçlu (−)
-  return openingBalance + invoiceTotal - purchaseTotal - collectedTotal - paidTotal
+  const inclVat = openingIncl + invoiceIncl - purchaseIncl - collectedIncl - paidIncl
+  const exclVat = openingExcl + invoiceExcl - purchaseExcl - collectedExcl - paidExcl
+  return {
+    exclVat,
+    vat: inclVat - exclVat,
+    inclVat,
+  }
+}
+
+export function getCustomerLedgerBalance(customer, movements = getTreasuryMovements()) {
+  return getCustomerLedgerBalanceParts(customer, movements).inclVat
 }
 
 export function getCustomerLiveBalance(customer, movements = getTreasuryMovements()) {
   return getCustomerLedgerBalance(customer, movements)
 }
 
-function sumPartyBalances(listKind, movements = getTreasuryMovements()) {
+function sumPartyBalanceParts(listKind, movements = getTreasuryMovements()) {
   const customerMeta = readCustomerMeta()
   return getCustomerProfiles()
     .filter((customer) => {
@@ -637,21 +673,44 @@ function sumPartyBalances(listKind, movements = getTreasuryMovements()) {
       const selected = getCustomerMetaSelection(customer, settings)
       return matchesPartyListFilter(selected.type, listKind)
     })
-    .reduce((sum, customer) => {
-      const balance = getCustomerLedgerBalance(customer, movements)
-      if (listKind === 'supplier') {
-        return sum + Math.abs(Math.min(balance, 0))
-      }
-      return sum + Math.max(balance, 0)
-    }, 0)
+    .reduce(
+      (sum, customer) => {
+        const parts = getCustomerLedgerBalanceParts(customer, movements)
+        if (listKind === 'supplier') {
+          const incl = Math.abs(Math.min(parts.inclVat, 0))
+          const excl = Math.abs(Math.min(parts.exclVat, 0))
+          return {
+            exclVat: sum.exclVat + excl,
+            vat: sum.vat + (incl - excl),
+            inclVat: sum.inclVat + incl,
+          }
+        }
+        const incl = Math.max(parts.inclVat, 0)
+        const excl = Math.max(parts.exclVat, 0)
+        return {
+          exclVat: sum.exclVat + excl,
+          vat: sum.vat + (incl - excl),
+          inclVat: sum.inclVat + incl,
+        }
+      },
+      { exclVat: 0, vat: 0, inclVat: 0 },
+    )
 }
 
 export function getTotalCustomerReceivable(movements = getTreasuryMovements()) {
-  return sumPartyBalances('customer', movements)
+  return sumPartyBalanceParts('customer', movements).inclVat
+}
+
+export function getTotalCustomerReceivableParts(movements = getTreasuryMovements()) {
+  return sumPartyBalanceParts('customer', movements)
 }
 
 export function getTotalSupplierPayable(movements = getTreasuryMovements()) {
-  return sumPartyBalances('supplier', movements)
+  return sumPartyBalanceParts('supplier', movements).inclVat
+}
+
+export function getTotalSupplierPayableParts(movements = getTreasuryMovements()) {
+  return sumPartyBalanceParts('supplier', movements)
 }
 
 export function getCustomerBalanceColor(balance) {
