@@ -4,6 +4,7 @@
 import { newId, saveStore } from '../store.mjs'
 import { mailConfig } from './mailConfig.mjs'
 import { listMailTemplates, renderMailTemplate } from './mailTemplates.mjs'
+import { logoAttachments, publicLogoUrl, LOGO_CONTENT_ID } from './mailAssets.mjs'
 
 function ensureMailStore(store) {
   if (!store.mail) store.mail = {}
@@ -18,6 +19,18 @@ function ensureMailStore(store) {
     }
   }
   return store.mail
+}
+
+/** Fix legacy / broken logo paths in stored or custom HTML → CID. */
+function normalizeMailHtml(html) {
+  if (!html) return html
+  const cid = `cid:${LOGO_CONTENT_ID}`
+  const good = publicLogoUrl()
+  return String(html)
+    .replace(/https?:\/\/(?:www\.)?bachmain\.com\/bachmain-logo\.png/gi, cid)
+    .replace(/https?:\/\/(?:www\.)?bachmain\.com\/assets\/bachmain-logo(?:-on-dark)?\.png/gi, cid)
+    .replace(/src=(["'])(?!cid:)[^"']*bachmain-logo[^"']*\1/gi, `src="${cid}"`)
+    .replace(/<!-- fallback url:.*?-->/g, `<!-- fallback url: ${good} -->`)
 }
 
 export function getMailStatus(store) {
@@ -48,16 +61,17 @@ export function getMailStatus(store) {
   }
 }
 
-async function resendSend({ apiKey, from, replyTo, to, subject, html, text, tags }) {
+async function resendSend({ apiKey, from, replyTo, to, subject, html, text, tags, attachments }) {
   const payload = {
     from,
     to: Array.isArray(to) ? to : [to],
     subject,
-    html,
+    html: normalizeMailHtml(html),
     text,
   }
   if (replyTo) payload.reply_to = replyTo
   if (tags?.length) payload.tags = tags
+  if (attachments?.length) payload.attachments = attachments
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -178,6 +192,7 @@ export async function sendQueuedMail(store, mailId) {
   }
 
   try {
+    const attachments = logoAttachments()
     const result = await resendSend({
       apiKey: cfg.apiKey,
       from: mail.settings.defaultFrom || cfg.from,
@@ -186,6 +201,7 @@ export async function sendQueuedMail(store, mailId) {
       subject: row.subject,
       html: row.html,
       text: row.text,
+      attachments,
       tags: [
         { name: 'template', value: String(row.template || 'custom').slice(0, 40) },
         { name: 'type', value: String(row.type || 'mail').slice(0, 40) },

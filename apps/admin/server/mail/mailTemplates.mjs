@@ -1,4 +1,5 @@
 import { MAIL_BRAND } from './mailConfig.mjs'
+import { logoImgSrc, publicLogoUrl } from './mailAssets.mjs'
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -8,49 +9,96 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;')
 }
 
+function logoBlock() {
+  const b = MAIL_BRAND
+  const src = logoImgSrc()
+  const fallback = publicLogoUrl()
+  // CID primary; HTTPS also listed for clients that prefer remote (same file).
+  return `<a href="${escapeHtml(b.webUrl())}" style="text-decoration:none;border:0;outline:none" target="_blank" rel="noopener">
+            <img
+              src="${escapeHtml(src)}"
+              alt="BACHMAIN"
+              width="${b.logoWidth}"
+              height="${b.logoHeight}"
+              style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;height:${b.logoHeight}px;width:auto;max-width:240px"
+            />
+          </a>
+          <!-- fallback url: ${escapeHtml(fallback)} -->`
+}
+
 function layout({ title, preview, bodyHtml, cta }) {
   const b = MAIL_BRAND
   const ctaHtml = cta?.href
-    ? `<p style="margin:28px 0 8px;text-align:center">
-        <a href="${escapeHtml(cta.href)}" style="display:inline-block;background:${b.accent};color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 22px;border-radius:12px">${escapeHtml(cta.label || 'Devam et')}</a>
-      </p>`
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px auto 8px">
+        <tr>
+          <td align="center" style="border-radius:12px;background:${b.accent}">
+            <a href="${escapeHtml(cta.href)}" style="display:inline-block;padding:14px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;line-height:1.2">${escapeHtml(cta.label || 'Devam et')}</a>
+          </td>
+        </tr>
+      </table>`
     : ''
+
   return {
     subject: title,
-    text: [title, preview, cta?.href].filter(Boolean).join('\n\n'),
+    text: [title, preview, cta?.href, `${b.name} — ${b.slogan}`, b.webUrl()]
+      .filter(Boolean)
+      .join('\n\n'),
     html: `<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta http-equiv="x-ua-compatible" content="ie=edge"/>
 <title>${escapeHtml(title)}</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
 </head>
-<body style="margin:0;padding:0;background:${b.bg};font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:${b.ink}">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(preview || '')}</div>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${b.bg};padding:32px 12px">
+<body style="margin:0;padding:0;background:${b.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${b.ink};-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${escapeHtml(preview || '')}</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${b.bg};padding:28px 12px">
     <tr><td align="center">
-      <table role="presentation" width="100%" style="max-width:580px;background:${b.card};border-radius:20px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 20px 50px -28px rgba(11,31,58,.35)">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:${b.card};border-radius:16px;overflow:hidden;border:1px solid ${b.border}">
+        <!-- accent bar -->
         <tr>
-          <td style="background:${b.primary};padding:22px 28px;text-align:center">
-            <img src="${b.logoUrl}" alt="BACHMAIN" height="36" style="display:inline-block;max-height:36px;width:auto" onerror="this.style.display='none'"/>
-            <div style="margin-top:10px;font-size:13px;font-weight:800;letter-spacing:.18em;color:#93c5fd">BACHMAIN</div>
+          <td style="height:4px;line-height:4px;font-size:0;background:${b.accent}">&nbsp;</td>
+        </tr>
+        <!-- logo header (light — original wordmark) -->
+        <tr>
+          <td align="center" style="padding:28px 32px 20px;background:#ffffff">
+            ${logoBlock()}
+            <p style="margin:12px 0 0;font-size:12px;font-weight:600;letter-spacing:0.02em;color:${b.muted}">${escapeHtml(b.slogan)}</p>
           </td>
         </tr>
         <tr>
-          <td style="padding:28px 28px 8px">
-            <h1 style="margin:0 0 12px;font-size:22px;line-height:1.25;color:${b.primary}">${escapeHtml(title)}</h1>
-            <div style="font-size:14px;line-height:1.65;color:${b.ink}">${bodyHtml}</div>
+          <td style="padding:0 32px">
+            <div style="height:1px;background:${b.border};line-height:1px;font-size:0">&nbsp;</div>
+          </td>
+        </tr>
+        <!-- body -->
+        <tr>
+          <td style="padding:28px 32px 12px">
+            <h1 style="margin:0 0 14px;font-size:22px;line-height:1.3;font-weight:800;color:${b.primary};letter-spacing:-0.02em">${escapeHtml(title)}</h1>
+            <div style="font-size:15px;line-height:1.65;color:${b.ink}">${bodyHtml}</div>
             ${ctaHtml}
           </td>
         </tr>
+        <!-- footer -->
         <tr>
-          <td style="padding:8px 28px 24px;font-size:12px;line-height:1.5;color:${b.muted}">
-            Bu e-posta BACHMAIN hesabınızla ilişkilidir.
-            Yardım: <a href="mailto:${escapeHtml(b.supportEmail())}" style="color:${b.accent}">${escapeHtml(b.supportEmail())}</a>
-            · <a href="${escapeHtml(b.webUrl())}" style="color:${b.accent}">bachmain.com</a>
+          <td style="padding:20px 32px 28px">
+            <div style="height:1px;background:${b.border};margin-bottom:18px;line-height:1px;font-size:0">&nbsp;</div>
+            <p style="margin:0 0 8px;font-size:12px;line-height:1.55;color:${b.muted};text-align:center">
+              Bu e-posta BACHMAIN hesabınızla ilişkilidir.
+            </p>
+            <p style="margin:0;font-size:12px;line-height:1.55;color:${b.muted};text-align:center">
+              Yardım: <a href="mailto:${escapeHtml(b.supportEmail())}" style="color:${b.accent};text-decoration:none;font-weight:600">${escapeHtml(b.supportEmail())}</a>
+              &nbsp;·&nbsp;
+              <a href="${escapeHtml(b.webUrl())}" style="color:${b.accent};text-decoration:none;font-weight:600">bachmain.com</a>
+            </p>
           </td>
         </tr>
       </table>
+      <p style="margin:16px 0 0;font-size:11px;color:#94a3b8;text-align:center">
+        © ${new Date().getFullYear()} BACHMAIN · ${escapeHtml(b.slogan)}
+      </p>
     </td></tr>
   </table>
 </body>
@@ -242,7 +290,7 @@ export const MAIL_TEMPLATES = {
     return layout({
       title: 'BACHMAIN test e-postası',
       preview: 'Mail altyapısı başarıyla çalışıyor.',
-      bodyHtml: `${p('Bu bir test mesajıdır.')}${strongLine('Ortam', data.env || process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown')}${strongLine('Zaman', new Date().toISOString())}${p('Resend üzerinden BACHMAIN üretim mail katmanı hazır.')}`,
+      bodyHtml: `${p('Bu bir test mesajıdır.')}${strongLine('Ortam', data.env || process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown')}${strongLine('Zaman', new Date().toISOString())}${p('Resend üzerinden BACHMAIN üretim mail katmanı hazır. Logo CID + HTTPS yedek ile gönderilir.')}`,
       cta: { href: MAIL_BRAND.adminUrl(), label: 'Yönetim paneli' },
     })
   },
