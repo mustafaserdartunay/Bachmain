@@ -15,6 +15,7 @@ const EXCLUDED_KEYS = new Set([
   WORKSPACE_OWNER_KEY,
   'bach-demo-data-cleanup-version',
   'bach-app-version-seen',
+  'bach-app-build-seen',
   'bach-app-version-transitions',
 ])
 

@@ -1,16 +1,16 @@
-import { APP_VERSION, syncSeenVersion } from './appVersion'
+import { APP_VERSION, APP_BUILD, syncSeenVersion } from './appVersion'
 
 const POLL_MS = 5 * 60 * 1000
 const RELOAD_FLAG = 'bach-app-version-reloading'
 
 /**
- * Sunucudaki app-version.json ile paketlenen sürümü karşılaştırır.
+ * Sunucudaki app-version.json ile paketlenen sürüm/build karşılaştırır.
  * Farklıysa soft reload yapar (localStorage / üye verisi silinmez).
  */
 export function installAppUpdateChecker() {
   if (typeof window === 'undefined') return () => {}
 
-  syncSeenVersion(APP_VERSION)
+  syncSeenVersion(APP_VERSION, APP_BUILD)
 
   let cancelled = false
   let timer = null
@@ -24,12 +24,17 @@ export function installAppUpdateChecker() {
       })
       if (!res.ok) return
       const data = await res.json()
-      const remote = String(data?.version || '').trim()
-      if (!remote || remote === APP_VERSION) return
+      const remoteVersion = String(data?.version || '').trim()
+      const remoteBuild = String(data?.build || data?.releasedAt || '').trim()
+      if (!remoteVersion) return
 
-      // Aynı yenileme döngüsünü engelle
-      if (sessionStorage.getItem(RELOAD_FLAG) === remote) return
-      sessionStorage.setItem(RELOAD_FLAG, remote)
+      const versionChanged = remoteVersion !== APP_VERSION
+      const buildChanged = Boolean(remoteBuild) && remoteBuild !== APP_BUILD
+      if (!versionChanged && !buildChanged) return
+
+      const reloadKey = `${remoteVersion}|${remoteBuild}`
+      if (sessionStorage.getItem(RELOAD_FLAG) === reloadKey) return
+      sessionStorage.setItem(RELOAD_FLAG, reloadKey)
       window.location.reload()
     } catch {
       /* ağ yoksa sessizce geç */

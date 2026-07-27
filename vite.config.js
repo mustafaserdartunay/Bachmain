@@ -7,7 +7,7 @@ import { getOpenAiApiKey } from './server/env.js'
 import { handleVoiceChatRequest } from './server/voiceChat.js'
 import { handleVoiceTranscribeRequest } from './server/voiceTranscribe.js'
 import { handleOmniAnalyzeRequest } from './server/omniChat.js'
-import { APP_VERSION, APP_VERSION_META } from './src/version/appVersion.js'
+import { APP_VERSION, APP_BUILD, APP_VERSION_META } from './src/version/appVersion.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -15,6 +15,7 @@ function appVersionPlugin() {
   const payload = `${JSON.stringify(
     {
       version: APP_VERSION,
+      build: APP_BUILD,
       releasedAt: APP_VERSION_META.releasedAt,
     },
     null,

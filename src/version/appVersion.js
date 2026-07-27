@@ -8,6 +8,9 @@
 
 export const APP_VERSION = 'BM-V1.726'
 
+/** Deploy içeriği damgası — sürüm kodu aynı kalsa bile yenilemeyi tetikler */
+export const APP_BUILD = '2026-07-27T20:05:00+03:00'
+
 export const APP_VERSION_META = {
   code: APP_VERSION,
   major: 1,
@@ -15,11 +18,13 @@ export const APP_VERSION_META = {
   year: 2026,
   patch: 0,
   releasedAt: '2026-07-27T19:45:00+03:00',
+  build: APP_BUILD,
   label: 'Temmuz 2026',
 }
 
 /** Yerel görülen sürüm + geçiş kaydı (workspace verisine dokunmaz) */
 export const VERSION_SEEN_KEY = 'bach-app-version-seen'
+export const VERSION_BUILD_SEEN_KEY = 'bach-app-build-seen'
 export const VERSION_TRANSITIONS_KEY = 'bach-app-version-transitions'
 
 /**
@@ -109,13 +114,14 @@ export function recordVersionTransition(from, to, at = new Date().toISOString())
 }
 
 /** Bu tarayıcıda görülen sürümü kaydeder; değiştiyse geçiş ekler. Workspace silmez. */
-export function syncSeenVersion(version = APP_VERSION) {
+export function syncSeenVersion(version = APP_VERSION, build = APP_BUILD) {
   try {
     const seen = localStorage.getItem(VERSION_SEEN_KEY)
     if (seen && seen !== version) {
       recordVersionTransition(seen, version)
     }
     localStorage.setItem(VERSION_SEEN_KEY, version)
+    localStorage.setItem(VERSION_BUILD_SEEN_KEY, build)
   } catch {
     /* ignore */
   }
