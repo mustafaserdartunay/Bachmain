@@ -1,0 +1,18 @@
+'use client'
+
+import AuthAmbient from '../components/auth/AuthAmbient'
+import ForgotPasswordPanel from '../components/auth/ForgotPasswordPanel'
+
+export default function ForgotPasswordPage() {
+  return (
+    <div className="auth-ds relative flex min-h-[100dvh] flex-1 flex-col overflow-hidden bg-[#F8FAFC]">
+      <h1 className="sr-only">Şifremi Unuttum</h1>
+      <AuthAmbient />
+      <section className="relative z-10 flex min-h-[100dvh] flex-1 items-center justify-center px-4 py-20 sm:px-6 lg:px-10">
+        <div className="w-full max-w-[1600px]">
+          <ForgotPasswordPanel />
+        </div>
+      </section>
+    </div>
+  )
+}
