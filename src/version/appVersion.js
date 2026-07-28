@@ -9,7 +9,7 @@
 export const APP_VERSION = 'BM-V1.726'
 
 /** Deploy içeriği damgası — sürüm kodu aynı kalsa bile yenilemeyi tetikler */
-export const APP_BUILD = '2026-07-27T20:35:00+03:00'
+export const APP_BUILD = '2026-07-29T00:20:00+03:00'
 
 export const APP_VERSION_META = {
   code: APP_VERSION,

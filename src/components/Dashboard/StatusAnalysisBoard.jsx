@@ -104,11 +104,9 @@ export function FinanceMetricCard({
       {hasDual ? (
         <div className={`my-auto space-y-1 ${valueTone}`}>
           <p className="break-words text-[13px] font-extrabold leading-tight tracking-tight">
-            <span className="mr-1 text-[10px] font-bold text-[var(--muted)]">KDV Hariç</span>
             {valueExVat}
           </p>
           <p className="break-words text-[13px] font-extrabold leading-tight tracking-tight">
-            <span className="mr-1 text-[10px] font-bold text-[var(--muted)]">KDV Dahil</span>
             {valueIncVat}
           </p>
         </div>
@@ -255,7 +253,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'receivables',
       label: 'Tahsilat Bekleyen',
       ...receivableValues,
-      sub: 'Müşteri cari alacak · KDV hariç / dahil',
+      sub: 'Müşteri cari alacak toplamı',
       href: '/musteriler',
       tone: 'text-cyan-300',
       valueTone: 'text-orange-500',
@@ -266,7 +264,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'payables',
       label: 'Ödenecekler Toplamı',
       ...payableValues,
-      sub: 'Tedarikçi cari borç · KDV hariç / dahil',
+      sub: 'Tedarikçi cari borç toplamı',
       href: '/giderler/tedarikciler',
       tone: 'text-orange-300',
       valueTone: 'text-red-600',
@@ -277,7 +275,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'stock-value',
       label: 'Stok Toplam Değeri',
       ...stockValues,
-      sub: `${stockReport.totalUnits.toLocaleString('tr-TR')} adet · maliyet · KDV hariç / dahil`,
+      sub: `${stockReport.totalUnits.toLocaleString('tr-TR')} adet · maliyet değeri`,
       href: '/stok/urunler',
       tone: 'text-teal-300',
       valueTone: 'text-teal-600',
@@ -318,7 +316,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'possible',
       label: 'Genel Olası Tutar',
       ...possibleValues,
-      sub: 'Canlı varlık + gelecek tutar · KDV hariç / dahil',
+      sub: 'Canlı varlık + gelecek tutar',
       href: '/kasa',
       tone: 'text-gray-100',
       valueTone: 'text-blue-600',
