@@ -17,14 +17,20 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['business', 'productivity'],
     icons: [
       {
-        src: '/favicon.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
+        src: '/favicon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/assets/bachmain-logo.png',
-        sizes: '720x87',
+        src: '/favicon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/apple-touch-icon.png',
+        sizes: '180x180',
         type: 'image/png',
         purpose: 'any',
       },
