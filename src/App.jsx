@@ -167,6 +167,7 @@ import SectoralSettingsPage from './pages/SectoralSettingsPage'
 import SectoralCategorySettingsPage from './pages/SectoralCategorySettingsPage'
 import GuncelDurumSettingsPage from './pages/GuncelDurumSettingsPage'
 import TaxVatSettingsPage from './pages/TaxVatSettingsPage'
+import MessageCenterSettingsPage from './pages/MessageCenterSettingsPage'
 import DocumentCenterPage from './pages/documentCenter/DocumentCenterPage'
 import DocTemplatesPage from './pages/documentCenter/DocTemplatesPage'
 import DocTemplateDesignerPage from './pages/documentCenter/DocTemplateDesignerPage'
@@ -629,7 +630,7 @@ export default function App() {
                       <Route path="/ayarlar/guncel-durum" element={<GuncelDurumSettingsPage />} />
                       <Route
                         path="/ayarlar/mesaj-merkezi"
-                        element={<Navigate to="/mesajlar?ayarlar=1" replace />}
+                        element={<MessageCenterSettingsPage />}
                       />
                       <Route path="/ayarlar/vergi-kdv" element={<TaxVatSettingsPage />} />
                       <Route path="/ayarlar/kasa-banka" element={<CashBankSettingsPage />} />
