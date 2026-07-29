@@ -133,13 +133,13 @@ export function FinanceMetricCard({
   return content
 }
 
-function moneyCardValue(parts) {
+function moneyCardValue(parts, basis = 'inclVat') {
+  const amount = basis === 'exclVat' ? parts.exclVat : parts.inclVat
   return {
-    value: formatTreasuryCurrency(parts.inclVat),
-    valueExVat: formatTreasuryCurrency(parts.exclVat),
-    valueIncVat: formatTreasuryCurrency(parts.inclVat),
+    value: formatTreasuryCurrency(amount),
     exclVat: parts.exclVat,
     inclVat: parts.inclVat,
+    vatBasis: basis,
   }
 }
 
@@ -223,7 +223,9 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
   })
   const receivableValues = moneyCardValue(receivableParts)
   const payableValues = moneyCardValue(payableParts)
-  const stockValues = moneyCardValue(stockParts)
+  // Stok ekranındaki maliyet değeri KDV hariç tutulur; diğer belge/cari
+  // toplamları ekranda görünen genel (KDV dahil) tutarı kullanır.
+  const stockValues = moneyCardValue(stockParts, 'exclVat')
   const liveValues = moneyCardValue(liveParts)
   const futureValues = moneyCardValue(futureParts)
   const possibleValues = moneyCardValue(possibleParts)
