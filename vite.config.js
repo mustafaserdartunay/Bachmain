@@ -134,6 +134,10 @@ export default defineConfig({
   define: {
     __BACH_APP_VERSION__: JSON.stringify(APP_VERSION),
   },
+  // Source maps for Sentry releases (production). Keep hidden maps out of public if CDN strips .map.
+  build: {
+    sourcemap: Boolean(process.env.VITE_SENTRY_DSN || process.env.SENTRY_AUTH_TOKEN),
+  },
   server: {
     host: true,
     port: 5173,

@@ -1,0 +1,19 @@
+meta {
+  name: Me — Authorization
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{apiBase}}/v1/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: in [200, 401]
+}

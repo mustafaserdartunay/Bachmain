@@ -27,6 +27,7 @@ import { handleMailApi } from './mailRoutes.mjs'
 import { assertAdminEnv } from './assertEnv.mjs'
 import { handleSecurityApi } from './securityRoutes.mjs'
 import { handleAiosApi } from './aiosRoutes.mjs'
+import { handleQualityControl } from './qualityControl.mjs'
 
 assertAdminEnv()
 
@@ -147,6 +148,16 @@ async function handle(req, res, url) {
       if (await handleMailApi(req, res, apiPath, body)) return
       if (await handleSecurityApi(req, res, apiPath)) return
       if (await handleAiosApi(req, res, apiPath)) return
+      if (
+        await handleQualityControl(
+          req,
+          res,
+          apiPath,
+          body,
+          Object.fromEntries(url.searchParams.entries()),
+        )
+      )
+        return
     }
 
     if (method === 'GET' && pathname.startsWith('/api/security')) {

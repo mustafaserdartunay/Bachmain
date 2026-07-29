@@ -1,0 +1,19 @@
+meta {
+  name: Expired token
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{apiBase}}/v1/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{expiredToken}}
+}
+
+assert {
+  res.status: in [401, 403]
+}

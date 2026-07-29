@@ -5,6 +5,9 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    sourcemap: Boolean(process.env.VITE_SENTRY_DSN || process.env.SENTRY_AUTH_TOKEN),
+  },
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },

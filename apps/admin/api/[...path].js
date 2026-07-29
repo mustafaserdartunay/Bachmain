@@ -27,6 +27,7 @@ import {
   seedBillingIfEmpty,
 } from '../server/subscriptionService.mjs'
 import { startEmailChange, deleteMembershipAccount } from '../server/emailChange.mjs'
+import { handleQualityControl } from '../server/qualityControl.mjs'
 
 function getPath(req) {
   // Vercel catch-all: /api/[...path] may expose segments via query.path
@@ -260,6 +261,9 @@ export default async function handler(req, res) {
       return sendJson(req, res, staffGate.status, staffGate.body)
     }
 
+    const query = getQuery(req)
+    if (await handleQualityControl(req, res, path, body, query)) return
+
     if (method === 'GET' && path === 'dashboard') {
       const store = await loadStore()
       const customers = store.customers || []
@@ -327,8 +331,6 @@ export default async function handler(req, res) {
         ],
       })
     }
-
-    const query = getQuery(req)
 
     // Single-segment member API (works on Vercel; multi-segment /api/a/b/c returns NOT_FOUND)
     if (path === 'member' || path === 'modules/memberships' || path === 'memberships') {

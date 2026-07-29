@@ -116,9 +116,11 @@ jobs:
           node-version: '22'
       - run: node scripts/ci-secret-scan.mjs
 
-  test-placeholder:
-    name: Tests (placeholder)
+  quality-smoke:
+    name: Quality smoke (delegates)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Unit/integration tests expand in D3; smoke = build jobs above."
+      - run: |
+          echo "Full Playwright / Bruno / Lighthouse / k6 suite runs in workflow Quality (.github/workflows/quality.yml)."
+          echo "Scripts: npm run test:e2e | test:api | test:lighthouse | test:load | test:quality"

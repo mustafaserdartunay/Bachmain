@@ -1,0 +1,15 @@
+meta {
+  name: Missing authorization
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{apiBase}}/v1/customers
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: in [401, 403]
+}

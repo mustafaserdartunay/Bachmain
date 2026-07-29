@@ -1,0 +1,20 @@
+meta {
+  name: Rate limit probe
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{apiBase}}/v1/health
+  body: none
+  auth: none
+}
+
+docs {
+  Rate limit is 300/min on API routes; health is allow-listed.
+  Use scripts/bruno-rate-limit.mjs for aggressive probing against a non-allowlisted endpoint.
+}
+
+assert {
+  res.status: eq 200
+}

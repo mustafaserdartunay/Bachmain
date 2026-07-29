@@ -197,7 +197,7 @@ export async function documentsRoutes(app: FastifyInstance) {
           context: z.record(z.unknown()).optional(),
         })
         .parse(req.body || {})
-      return { ok: true, ...(await renderStub(companyId, body)) }
+      return renderStub(companyId, body)
     },
   )
 

@@ -31,8 +31,12 @@ import { analyticsRoutes } from './modules/analytics/analyticsRoutes.js'
 import { platformRoutes } from './modules/platform/platformRoutes.js'
 import { marketplaceRoutes } from './modules/marketplace/marketplaceRoutes.js'
 import { integrationRoutes } from './modules/integrations/integrationRoutes.js'
+import { registerMetrics } from './shared/metrics.js'
+import { captureApiException, initApiSentry } from './shared/sentry.js'
 
 async function main() {
+  await initApiSentry()
+
   const app = Fastify({
     logger: { level: env.LOG_LEVEL },
     trustProxy: true,
@@ -64,14 +68,21 @@ async function main() {
     timeWindow: '1 minute',
     hook: 'onRequest',
     allowList: (req) =>
-      req.url.startsWith('/v1/health') || req.url.startsWith('/v1/billing/webhooks/'),
+      req.url.startsWith('/v1/health') ||
+      req.url.startsWith('/metrics') ||
+      req.url.startsWith('/v1/billing/webhooks/'),
     keyGenerator: (req) => req.ip,
   })
 
   // Distributed Redis limiter when REDIS_URL is set (in-memory fallback inside helper)
   app.addHook('onRequest', async (req, reply) => {
     if (!env.REDIS_URL) return
-    if (req.url.startsWith('/v1/health') || req.url.startsWith('/v1/billing/webhooks/')) return
+    if (
+      req.url.startsWith('/v1/health') ||
+      req.url.startsWith('/metrics') ||
+      req.url.startsWith('/v1/billing/webhooks/')
+    )
+      return
     const { hitDistributedRateLimit } = await import('./shared/redisRateLimit.js')
     const ok = await hitDistributedRateLimit(`${req.ip}:${req.method}`, {
       limit: 300,
@@ -97,6 +108,7 @@ async function main() {
       })
     }
     req.log.error(err)
+    void captureApiException(err)
     return reply.status(500).send({ error: 'INTERNAL', message: 'Sunucu hatası' })
   })
 
@@ -106,6 +118,8 @@ async function main() {
     env: env.NODE_ENV,
     timestamp: new Date().toISOString(),
   }))
+
+  await registerMetrics(app)
 
   await app.register(authRoutes)
   await app.register(leadRoutes)

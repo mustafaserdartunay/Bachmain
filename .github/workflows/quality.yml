@@ -1,0 +1,130 @@
+name: Quality
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Test paketi
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - e2e
+          - api
+          - lighthouse
+          - load
+      heavy:
+        description: k6 500/1000 eşzamanlı kullanıcı testlerini çalıştır
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: '0 3 * * *'
+  pull_request:
+    branches: [main, develop, staging]
+  push:
+    branches: [main]
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WEB_URL: https://bachmain.com
+  APP_URL: https://uygulama.bachmain.com
+  ADMIN_URL: https://yonetim.bachmain.com
+  API_BASE: https://api.bachmain.com
+
+jobs:
+  e2e:
+    name: Playwright E2E
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.suite == 'all' || inputs.suite == 'e2e' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run E2E
+        env:
+          E2E_MEMBER_EMAIL: ${{ secrets.E2E_MEMBER_EMAIL }}
+          E2E_MEMBER_PASSWORD: ${{ secrets.E2E_MEMBER_PASSWORD }}
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+        run: npm run test:e2e
+      - name: Aggregate report
+        if: always()
+        run: npm run test:report
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: tests/reports
+          retention-days: 14
+
+  api-bruno:
+    name: Bruno API
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.suite == 'all' || inputs.suite == 'api' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Run Bruno collection
+        env:
+          BRUNO_ENV: production
+        run: npm run test:api
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bruno-report
+          path: tests/reports/bruno
+          retention-days: 14
+
+  lighthouse:
+    name: Lighthouse
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.suite == 'all' || inputs.suite == 'lighthouse' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Run Lighthouse
+        run: npm run test:lighthouse
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: tests/reports/lighthouse
+          retention-days: 14
+
+  load-k6:
+    name: k6 load (50/100)
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.suite == 'all' || inputs.suite == 'load' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: grafana/setup-k6-action@v1
+      - name: Run load tiers
+        env:
+          WEB_BASE: ${{ env.WEB_URL }}
+          APP_BASE: ${{ env.APP_URL }}
+          K6_DURATION: 30s
+          K6_ALLOW_HEAVY: ${{ github.event_name == 'workflow_dispatch' && inputs.heavy && '1' || '' }}
+        run: bash scripts/run-k6.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-report
+          path: tests/reports/k6
+          retention-days: 14

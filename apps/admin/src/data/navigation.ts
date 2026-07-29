@@ -30,6 +30,7 @@ import {
   RefreshCw,
   Receipt,
   Mail,
+  TestTube2,
 } from 'lucide-react'
 
 /** Staff roles that may see a nav item. Empty / omitted = all authenticated staff. */
@@ -52,6 +53,14 @@ export const navItems: NavItem[] = [
     label: 'Platform Ops',
     path: '/platform-ops',
     icon: Activity,
+    group: 'Platform',
+    roles: ['super_admin'],
+  },
+  {
+    id: 'quality-control',
+    label: 'Kalite Kontrol',
+    path: '/kalite-kontrol',
+    icon: TestTube2,
     group: 'Platform',
     roles: ['super_admin'],
   },

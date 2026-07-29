@@ -56,6 +56,7 @@ export function envHealthSnapshot() {
     openai: present('OPENAI_API_KEY'),
     aiProxySecret: present('AI_PROXY_SECRET'),
     redis: present('REDIS_URL'),
+    githubActions: present('GITHUB_ACTIONS_TOKEN'),
   }
   const scoreParts = [
     checks.jwt ? 20 : 0,

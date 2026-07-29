@@ -1,0 +1,6 @@
+{
+  "version": "1",
+  "name": "BachMain API",
+  "type": "collection",
+  "ignore": ["node_modules", ".git"]
+}
