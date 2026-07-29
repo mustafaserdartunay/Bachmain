@@ -1,8 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  ArrowRight,
   BarChart3,
   CalendarDays,
+  CheckCircle2,
+  Clock3,
   ClipboardList,
   Factory,
   FileText,
@@ -10,12 +13,14 @@ import {
   MoreHorizontal,
   PackageCheck,
   Percent,
+  Plus,
   ReceiptText,
   ShoppingCart,
   StickyNote,
   Store,
   Users,
   Warehouse,
+  XCircle,
 } from 'lucide-react'
 import { toTitleCaseTr } from '../../utils/autoCapitalize'
 import { formatCurrency, getPaymentActionTimeline } from '../../utils/paymentTimeline'
@@ -66,14 +71,6 @@ const FINANCE_METRIC_COLORS = {
   'stock-value': { text: 'text-teal-600', stroke: '#0d9488' },
 }
 
-const QUICK_ACTION_COLORS = {
-  quote: { text: 'text-blue-600' },
-  order: { text: 'text-emerald-600' },
-  production: { text: 'text-violet-600' },
-  depo: { text: 'text-amber-600' },
-  delivered: { text: 'text-teal-600' },
-}
-
 const CRM_CATEGORY_COLORS = {
   clipboard: { text: 'text-violet-600' },
   calendar: { text: 'text-blue-600' },
@@ -89,6 +86,8 @@ const ACTION_ICONS = {
   warehouse: Warehouse,
   'package-check': PackageCheck,
 }
+
+const QUICK_ACTION_PROCESS_IDS = new Set(['quote', 'order', 'production', 'depo', 'delivered'])
 
 const CRM_CATEGORY_ICONS = {
   clipboard: ClipboardList,
@@ -160,12 +159,6 @@ function FinanceMetricCell({ card }) {
   }
 
   return <div className={`${rowClass} cursor-default`}>{content}</div>
-}
-
-const QUICK_ACTION_STAT_TONES = {
-  pending: 'text-blue-600',
-  ongoing: 'text-emerald-600',
-  completed: 'text-rose-500',
 }
 
 const CRM_STAT_TONES = {
@@ -247,50 +240,6 @@ function MetricStatGroup({ stats }) {
         </span>
       ))}
     </span>
-  )
-}
-
-function QuickActionMetricRow({ action }) {
-  const palette = QUICK_ACTION_COLORS[action.id] || QUICK_ACTION_COLORS.quote
-  const ActionIcon = ACTION_ICONS[action.icon] || FileText
-  const pending = Number(action.stats.pending || 0)
-  const ongoing = Number(action.stats.ongoing || 0)
-  const completed = Number(action.stats.completed || 0)
-  const totalOpen = pending + ongoing
-  const amount = formatQuickActionAmount(action.stats.pendingAmount)
-  const stats = [
-    {
-      label: action.statLabels?.pending || 'Bekleyen',
-      value: pending,
-      tone: QUICK_ACTION_STAT_TONES.pending,
-    },
-    {
-      label: action.statLabels?.ongoing || 'İşleme Alındı',
-      value: ongoing,
-      tone: QUICK_ACTION_STAT_TONES.ongoing,
-    },
-    {
-      label: action.statLabels?.completed || 'Bitti',
-      value: completed,
-      tone: QUICK_ACTION_STAT_TONES.completed,
-    },
-  ]
-  const detail = action.id === 'delivered' ? amount : `${totalOpen} açık · ${amount}`
-
-  return (
-    <Link
-      to={action.href}
-      title={`${action.label} — ${detail}`}
-      className={DASHBOARD_METRIC_ROW_CLASS}
-    >
-      <span className="flex min-w-0 items-center gap-1.5">
-        <ActionIcon className={`h-3.5 w-3.5 shrink-0 ${palette.text}`} />
-        <span className={APP_LABEL_CLASS} title={action.label}>
-          {toTitleCaseTr(action.label)}
-        </span>
-      </span>
-      <MetricStatGroup stats={stats} />
-    </Link>
   )
 }
 
@@ -623,11 +572,10 @@ function CustomDashboardBlocks({ blocks = [] }) {
 
 function QuickActionsPanel({ quickActions = [], className = '' }) {
   const [tick, setTick] = useState(0)
-  const processIds = new Set(['quote', 'order', 'production', 'depo', 'delivered'])
   const actions = useMemo(
     () =>
       buildConfiguredQuickActionCards(quickActions)
-        .filter((action) => processIds.has(action.id) || action.isCustom)
+        .filter((action) => QUICK_ACTION_PROCESS_IDS.has(action.id) || action.isCustom)
         .slice(0, 5),
     [quickActions, tick],
   )
@@ -651,9 +599,42 @@ function QuickActionsPanel({ quickActions = [], className = '' }) {
     return () => events.forEach((event) => window.removeEventListener(event, refresh))
   }, [])
 
+  const accent = {
+    quote: {
+      bar: 'from-[#5B8CFF] to-[#7C5CFF]',
+      soft: 'bg-[rgba(91,140,255,0.12)]',
+      text: 'text-[#3B6FE8]',
+      ring: 'ring-[rgba(91,140,255,0.22)]',
+    },
+    order: {
+      bar: 'from-[#34D399] to-[#10B981]',
+      soft: 'bg-[rgba(16,185,129,0.12)]',
+      text: 'text-[#059669]',
+      ring: 'ring-[rgba(16,185,129,0.22)]',
+    },
+    production: {
+      bar: 'from-[#C084FC] to-[#8B5CF6]',
+      soft: 'bg-[rgba(139,92,246,0.12)]',
+      text: 'text-[#7C3AED]',
+      ring: 'ring-[rgba(139,92,246,0.22)]',
+    },
+    depo: {
+      bar: 'from-[#FBBF24] to-[#F59E0B]',
+      soft: 'bg-[rgba(245,158,11,0.14)]',
+      text: 'text-[#D97706]',
+      ring: 'ring-[rgba(245,158,11,0.22)]',
+    },
+    delivered: {
+      bar: 'from-[#2DD4BF] to-[#14B8A6]',
+      soft: 'bg-[rgba(20,184,166,0.14)]',
+      text: 'text-[#0F766E]',
+      ring: 'ring-[rgba(20,184,166,0.22)]',
+    },
+  }
+
   return (
     <section className={`${APP_PANEL_CLASS} ${APP_DASHBOARD_PANEL_SIZE_CLASS} ${className}`}>
-      <div className="mb-2.5 flex items-center justify-between gap-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span className="relative flex h-1.5 w-1.5 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-50" />
@@ -661,12 +642,110 @@ function QuickActionsPanel({ quickActions = [], className = '' }) {
           </span>
           <h2 className={APP_PANEL_TITLE_CLASS}>Hızlı İşlemler</h2>
         </div>
+        <span className="text-[11px] font-bold text-[var(--muted)]">{actions.length} süreç</span>
       </div>
 
-      <div className={APP_DASHBOARD_PANEL_BODY_CLASS}>
-        {actions.map((action) => (
-          <QuickActionMetricRow key={action.id} action={action} />
-        ))}
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+        {actions.map((action) => {
+          const ActionIcon = ACTION_ICONS[action.icon] || FileText
+          const theme = accent[action.id] || accent.quote
+          const createHref = action.createHref || action.href
+          const stats = [
+            {
+              key: 'pending',
+              label: action.statLabels?.pending || 'Bekleyen',
+              value: action.stats.pending,
+              Icon: Clock3,
+            },
+            {
+              key: 'ongoing',
+              label: action.statLabels?.ongoing || 'İşleme Alındı',
+              value: action.stats.ongoing,
+              Icon: CheckCircle2,
+            },
+            {
+              key: 'completed',
+              label: action.statLabels?.completed || 'Bitti',
+              value: action.stats.completed,
+              Icon: XCircle,
+            },
+          ]
+          const totalOpen = Number(action.stats.pending || 0) + Number(action.stats.ongoing || 0)
+          const amount = formatQuickActionAmount(action.stats.pendingAmount)
+          const hideCreate = action.id === 'delivered'
+
+          return (
+            <article
+              key={action.id}
+              className={`group relative flex min-h-0 flex-1 overflow-hidden rounded-[15px] bg-white/55 ring-1 ${theme.ring} transition-all hover:bg-white/75`}
+            >
+              <div className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${theme.bar}`} />
+              <div className="flex min-h-0 flex-1 items-center gap-2 px-2.5 py-1.5 pl-3">
+                <Link to={action.href} className="flex min-w-0 flex-[1.15] items-center gap-2">
+                  <span
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${theme.soft} ${theme.text}`}
+                  >
+                    <ActionIcon className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[12px] font-extrabold leading-tight text-[var(--ink)]">
+                      {action.label}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[10px] font-semibold text-[var(--muted)]">
+                      {action.id === 'delivered'
+                        ? `${action.stats.completed} teslim · ${amount}`
+                        : `${totalOpen} açık · ${amount}`}
+                    </span>
+                  </span>
+                </Link>
+
+                <div className="grid min-w-0 flex-[1.35] grid-cols-3 gap-1">
+                  {stats.map((stat) => {
+                    const StatIcon = stat.Icon
+                    return (
+                      <Link
+                        key={stat.key}
+                        to={action.href}
+                        className="flex min-h-0 flex-col items-center justify-center rounded-[11px] bg-white/70 px-0.5 py-1 text-center transition-colors hover:bg-white"
+                      >
+                        <StatIcon className={`h-2.5 w-2.5 ${theme.text}`} />
+                        <span
+                          className={`mt-0.5 text-[12px] font-black leading-none tabular-nums ${theme.text}`}
+                        >
+                          {stat.value}
+                        </span>
+                        <span className="mt-0.5 truncate text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                          {stat.label}
+                        </span>
+                      </Link>
+                    )
+                  })}
+                </div>
+
+                <div className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1">
+                  {!hideCreate ? (
+                    <Link
+                      to={createHref}
+                      className={`inline-flex items-center gap-0.5 text-[10px] font-black uppercase tracking-wide ${theme.text} transition-opacity hover:opacity-70`}
+                    >
+                      <Plus className="h-2.5 w-2.5" />
+                      Yeni
+                    </Link>
+                  ) : (
+                    <span className="h-[15px]" aria-hidden="true" />
+                  )}
+                  <Link
+                    to={action.href}
+                    className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${theme.text}`}
+                  >
+                    Aç
+                    <ArrowRight className="h-2.5 w-2.5 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                </div>
+              </div>
+            </article>
+          )
+        })}
       </div>
     </section>
   )
