@@ -56,4 +56,21 @@ See migration `0016_social_media_center.sql`.
 
 ## Env
 
-`META_APP_ID`, `META_APP_SECRET`, `META_REDIRECT_URI`, `META_GRAPH_VERSION`, `OPENAI_API_KEY`, `JWT_ACCESS_SECRET` (crypto key material)
+`META_APP_ID`, `META_APP_SECRET`, `META_REDIRECT_URI`, `META_GRAPH_VERSION`, `META_WEBHOOK_VERIFY_TOKEN`, `META_WEBHOOK_APP_SECRET`, `OPENAI_API_KEY`, `JWT_ACCESS_SECRET` (crypto key material)
+
+## Multi-platform connections (SC-0.5)
+
+Migration `0018_smc_social_connections.sql` — `smc_social_connections`, `smc_oauth_states`, `smc_connection_logs`, `smc_webhook_events`.
+
+| Method          | Path                                     | Purpose                                               |
+| --------------- | ---------------------------------------- | ----------------------------------------------------- |
+| GET             | `/v1/social/oauth/start?platform=`       | PKCE OAuth (instagram\|facebook\|messenger\|whatsapp) |
+| GET             | `/v1/social/oauth/callback`              | Code exchange + picker / auto-connect                 |
+| GET/DELETE/POST | `/v1/social/connections`                 | List / disconnect / refresh                           |
+| GET             | `/v1/social/connections/pending`         | Picker candidates                                     |
+| POST            | `/v1/social/connections/select`          | Confirm account                                       |
+| POST            | `/v1/social/connections/whatsapp/manual` | Permanent token                                       |
+| GET/POST        | `/v1/social/webhooks/meta`               | Meta webhooks                                         |
+| GET             | `/v1/admin/social-connections`           | Staff cross-tenant                                    |
+
+Manuel Meta konsol adımları: [113](./113_META_SOCIAL_CONNECTIONS_MANUAL_SETUP.md)

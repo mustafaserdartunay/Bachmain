@@ -70,7 +70,8 @@ async function main() {
     allowList: (req) =>
       req.url.startsWith('/v1/health') ||
       req.url.startsWith('/metrics') ||
-      req.url.startsWith('/v1/billing/webhooks/'),
+      req.url.startsWith('/v1/billing/webhooks/') ||
+      req.url.startsWith('/v1/social/webhooks/'),
     keyGenerator: (req) => req.ip,
   })
 
@@ -80,7 +81,8 @@ async function main() {
     if (
       req.url.startsWith('/v1/health') ||
       req.url.startsWith('/metrics') ||
-      req.url.startsWith('/v1/billing/webhooks/')
+      req.url.startsWith('/v1/billing/webhooks/') ||
+      req.url.startsWith('/v1/social/webhooks/')
     )
       return
     const { hitDistributedRateLimit } = await import('./shared/redisRateLimit.js')

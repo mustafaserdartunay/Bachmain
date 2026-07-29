@@ -64,7 +64,8 @@ export function socialHealth() {
     graphVersion: process.env.META_GRAPH_VERSION || 'v21.0',
     redirectUriHint:
       platform.redirectUri ||
-      `${process.env.API_PUBLIC_URL || 'https://api.bachmain.com'}/v1/social/instagram/oauth/callback`,
+      `${process.env.API_PUBLIC_URL || 'https://api.bachmain.com'}/v1/social/oauth/callback`,
+    webhookCallbackHint: `${process.env.API_PUBLIC_URL || 'https://api.bachmain.com'}/v1/social/webhooks/meta`,
     setupPath: '/sosyal-medya/meta-kurulum',
   }
 }

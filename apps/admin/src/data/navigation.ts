@@ -31,6 +31,7 @@ import {
   Receipt,
   Mail,
   TestTube2,
+  Link2,
 } from 'lucide-react'
 
 /** Staff roles that may see a nav item. Empty / omitted = all authenticated staff. */
@@ -63,6 +64,14 @@ export const navItems: NavItem[] = [
     icon: TestTube2,
     group: 'Platform',
     roles: ['super_admin'],
+  },
+  {
+    id: 'social-connections',
+    label: 'Sosyal Bağlantılar',
+    path: '/sosyal-baglantilar',
+    icon: Link2,
+    group: 'Platform',
+    roles: ['super_admin', 'admin', 'support'],
   },
   {
     id: 'user-management',

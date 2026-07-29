@@ -28,6 +28,7 @@ import {
 } from '../server/subscriptionService.mjs'
 import { startEmailChange, deleteMembershipAccount } from '../server/emailChange.mjs'
 import { handleQualityControl } from '../server/qualityControl.mjs'
+import { handleSocialConnections } from '../server/socialConnections.mjs'
 
 function getPath(req) {
   // Vercel catch-all: /api/[...path] may expose segments via query.path
@@ -263,6 +264,7 @@ export default async function handler(req, res) {
 
     const query = getQuery(req)
     if (await handleQualityControl(req, res, path, body, query)) return
+    if (await handleSocialConnections(req, res, path)) return
 
     if (method === 'GET' && path === 'dashboard') {
       const store = await loadStore()

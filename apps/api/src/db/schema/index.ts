@@ -2727,3 +2727,103 @@ export const smcMetaApps = pgTable(
   },
   (t) => [uniqueIndex('smc_meta_apps_company_uidx').on(t.companyId)],
 )
+
+/** Multi-platform Meta connections (IG / FB Page / Messenger / WhatsApp) */
+export const smcOauthStates = pgTable(
+  'smc_oauth_states',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    userId: uuid('user_id'),
+    platform: text('platform').notNull(),
+    stateNonce: text('state_nonce').notNull(),
+    codeVerifier: text('code_verifier').notNull(),
+    redirectUri: text('redirect_uri').notNull(),
+    scopes: jsonb('scopes').$type<string[]>().default([]),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('smc_oauth_states_nonce_uidx').on(t.stateNonce),
+    index('smc_oauth_states_company_idx').on(t.companyId, t.platform),
+  ],
+)
+
+export const smcSocialConnections = pgTable(
+  'smc_social_connections',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    platform: text('platform').notNull(),
+    externalId: text('external_id').notNull(),
+    parentExternalId: text('parent_external_id'),
+    displayName: text('display_name'),
+    username: text('username'),
+    phoneNumber: text('phone_number'),
+    tokenCiphertext: text('token_ciphertext').notNull(),
+    refreshTokenCiphertext: text('refresh_token_ciphertext'),
+    tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }),
+    scopes: jsonb('scopes').$type<string[]>().default([]),
+    status: text('status').default('connected').notNull(),
+    lastSyncAt: timestamp('last_sync_at', { withTimezone: true }),
+    lastError: text('last_error'),
+    connectedBy: uuid('connected_by'),
+    connectedAt: timestamp('connected_at', { withTimezone: true }).defaultNow().notNull(),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('smc_social_connections_uidx').on(t.companyId, t.platform, t.externalId),
+    index('smc_social_connections_company_idx').on(t.companyId, t.platform, t.status),
+  ],
+)
+
+export const smcConnectionLogs = pgTable(
+  'smc_connection_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    connectionId: uuid('connection_id'),
+    userId: uuid('user_id'),
+    platform: text('platform').notNull(),
+    action: text('action').notNull(),
+    success: boolean('success').default(true).notNull(),
+    ip: text('ip'),
+    userAgent: text('user_agent'),
+    device: text('device'),
+    os: text('os'),
+    browser: text('browser'),
+    message: text('message'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('smc_connection_logs_company_idx').on(t.companyId, t.createdAt)],
+)
+
+export const smcWebhookEvents = pgTable(
+  'smc_webhook_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id'),
+    platform: text('platform').notNull(),
+    objectType: text('object_type'),
+    entryId: text('entry_id'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    signatureOk: boolean('signature_ok'),
+    processed: boolean('processed').default(false).notNull(),
+    error: text('error'),
+    ...timestamps,
+  },
+  (t) => [
+    index('smc_webhook_events_platform_idx').on(t.platform, t.createdAt),
+    index('smc_webhook_events_company_idx').on(t.companyId, t.createdAt),
+  ],
+)

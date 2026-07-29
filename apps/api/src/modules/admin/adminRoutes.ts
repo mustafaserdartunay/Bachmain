@@ -11,32 +11,41 @@ import {
   users,
 } from '../../db/schema/index.js'
 import { requireStaff } from '../../shared/authGuard.js'
+import * as socialConn from '../social/connectionService.js'
 
 export async function adminRoutes(app: FastifyInstance) {
-  app.get('/v1/admin/dashboard', { preHandler: requireStaff('support', 'billing', 'superadmin') }, async () => {
-    const [companyCount] = await db.select({ count: sql<number>`count(*)::int` }).from(companies)
-    const [userCount] = await db.select({ count: sql<number>`count(*)::int` }).from(users)
-    const [leadCount] = await db.select({ count: sql<number>`count(*)::int` }).from(leads)
-    const [openTickets] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(supportTickets)
-      .where(eq(supportTickets.status, 'open'))
+  app.get(
+    '/v1/admin/dashboard',
+    { preHandler: requireStaff('support', 'billing', 'superadmin') },
+    async () => {
+      const [companyCount] = await db.select({ count: sql<number>`count(*)::int` }).from(companies)
+      const [userCount] = await db.select({ count: sql<number>`count(*)::int` }).from(users)
+      const [leadCount] = await db.select({ count: sql<number>`count(*)::int` }).from(leads)
+      const [openTickets] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(supportTickets)
+        .where(eq(supportTickets.status, 'open'))
 
-    return {
-      ok: true,
-      kpis: [
-        { label: 'Firmalar', value: companyCount.count },
-        { label: 'Kullanıcılar', value: userCount.count },
-        { label: 'Demo Talepleri', value: leadCount.count },
-        { label: 'Açık Ticket', value: openTickets.count },
-      ],
-    }
-  })
+      return {
+        ok: true,
+        kpis: [
+          { label: 'Firmalar', value: companyCount.count },
+          { label: 'Kullanıcılar', value: userCount.count },
+          { label: 'Demo Talepleri', value: leadCount.count },
+          { label: 'Açık Ticket', value: openTickets.count },
+        ],
+      }
+    },
+  )
 
-  app.get('/v1/admin/companies', { preHandler: requireStaff('support', 'billing', 'superadmin') }, async () => {
-    const rows = await db.select().from(companies).orderBy(desc(companies.createdAt)).limit(200)
-    return { ok: true, rows }
-  })
+  app.get(
+    '/v1/admin/companies',
+    { preHandler: requireStaff('support', 'billing', 'superadmin') },
+    async () => {
+      const rows = await db.select().from(companies).orderBy(desc(companies.createdAt)).limit(200)
+      return { ok: true, rows }
+    },
+  )
 
   app.get('/v1/admin/users', { preHandler: requireStaff('superadmin', 'support') }, async () => {
     const rows = await db.select().from(users).orderBy(desc(users.createdAt)).limit(200)
@@ -54,51 +63,96 @@ export async function adminRoutes(app: FastifyInstance) {
     }
   })
 
-  app.get('/v1/admin/subscriptions', { preHandler: requireStaff('billing', 'superadmin') }, async () => {
-    const rows = await db.select().from(subscriptions).orderBy(desc(subscriptions.createdAt)).limit(200)
-    return { ok: true, rows }
-  })
+  app.get(
+    '/v1/admin/subscriptions',
+    { preHandler: requireStaff('billing', 'superadmin') },
+    async () => {
+      const rows = await db
+        .select()
+        .from(subscriptions)
+        .orderBy(desc(subscriptions.createdAt))
+        .limit(200)
+      return { ok: true, rows }
+    },
+  )
 
   app.get('/v1/admin/payments', { preHandler: requireStaff('billing', 'superadmin') }, async () => {
     const rows = await db.select().from(payments).orderBy(desc(payments.createdAt)).limit(200)
     return { ok: true, rows }
   })
 
-  app.get('/v1/admin/activity-logs', { preHandler: requireStaff('superadmin', 'support') }, async () => {
-    const rows = await db.select().from(activityLogs).orderBy(desc(activityLogs.createdAt)).limit(200)
-    return { ok: true, rows, immutable: true }
-  })
+  app.get(
+    '/v1/admin/activity-logs',
+    { preHandler: requireStaff('superadmin', 'support') },
+    async () => {
+      const rows = await db
+        .select()
+        .from(activityLogs)
+        .orderBy(desc(activityLogs.createdAt))
+        .limit(200)
+      return { ok: true, rows, immutable: true }
+    },
+  )
 
   app.delete('/v1/admin/activity-logs', { preHandler: requireStaff('superadmin') }, async () => {
     const { rejectAuditMutation } = await import('../audit/activityService.js')
     rejectAuditMutation()
   })
 
-  app.delete('/v1/admin/activity-logs/:id', { preHandler: requireStaff('superadmin') }, async () => {
-    const { rejectAuditMutation } = await import('../audit/activityService.js')
-    rejectAuditMutation()
-  })
+  app.delete(
+    '/v1/admin/activity-logs/:id',
+    { preHandler: requireStaff('superadmin') },
+    async () => {
+      const { rejectAuditMutation } = await import('../audit/activityService.js')
+      rejectAuditMutation()
+    },
+  )
 
-  app.get('/v1/admin/security-score', { preHandler: requireStaff('superadmin', 'support') }, async () => {
-    const redis = Boolean(process.env.REDIS_URL)
-    const stripeWh = Boolean(process.env.STRIPE_WEBHOOK_SECRET)
-    const openai = Boolean(process.env.OPENAI_API_KEY)
-    let score = 40
-    if (process.env.JWT_ACCESS_SECRET) score += 15
-    if (process.env.DATABASE_URL) score += 15
-    if (stripeWh) score += 10
-    if (openai) score += 10
-    if (redis) score += 10
-    return {
-      ok: true,
-      score: Math.min(100, score),
-      checks: { redis, stripeWebhook: stripeWh, openai, jwt: true, database: true },
-      sampledAt: new Date().toISOString(),
-    }
-  })
+  app.get(
+    '/v1/admin/security-score',
+    { preHandler: requireStaff('superadmin', 'support') },
+    async () => {
+      const redis = Boolean(process.env.REDIS_URL)
+      const stripeWh = Boolean(process.env.STRIPE_WEBHOOK_SECRET)
+      const openai = Boolean(process.env.OPENAI_API_KEY)
+      let score = 40
+      if (process.env.JWT_ACCESS_SECRET) score += 15
+      if (process.env.DATABASE_URL) score += 15
+      if (stripeWh) score += 10
+      if (openai) score += 10
+      if (redis) score += 10
+      return {
+        ok: true,
+        score: Math.min(100, score),
+        checks: { redis, stripeWebhook: stripeWh, openai, jwt: true, database: true },
+        sampledAt: new Date().toISOString(),
+      }
+    },
+  )
 
   app.get('/v1/admin/tickets', { preHandler: requireStaff('support', 'superadmin') }, async () => {
-    const rows = await db.select().from(supportTickets).orderBy(desc(supportTickets.createdAt)).limit(200)
+    const rows = await db
+      .select()
+      .from(supportTickets)
+      .orderBy(desc(supportTickets.createdAt))
+      .limit(200)
     return { ok: true, rows }
   })
+
+  app.get(
+    '/v1/admin/social-connections',
+    { preHandler: requireStaff('support', 'billing', 'superadmin') },
+    async () => {
+      const connections = await socialConn.adminListSocialConnections(500)
+      const logs = await socialConn.adminListConnectionLogs(100)
+      return {
+        ok: true,
+        connections,
+        logs: logs.map((r) => ({
+          ...r.log,
+          companyName: r.companyName,
+        })),
+      }
+    },
+  )
 }

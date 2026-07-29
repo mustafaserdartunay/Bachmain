@@ -1,7 +1,7 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { env } from '../../config/env.js'
 import { AppError } from '../../shared/errors.js'
-import { META_OAUTH_SCOPES } from './catalog.js'
+import { META_OAUTH_SCOPES, META_PLATFORM_SCOPES, type SocialPlatform } from './catalog.js'
 
 export type MetaCredentials = {
   appId: string
@@ -25,6 +25,24 @@ export function platformMetaCredentials(): MetaCredentials {
   }
 }
 
+export function webhookVerifyToken() {
+  return String(
+    (env as { META_WEBHOOK_VERIFY_TOKEN?: string }).META_WEBHOOK_VERIFY_TOKEN ||
+      process.env.META_WEBHOOK_VERIFY_TOKEN ||
+      '',
+  ).trim()
+}
+
+export function webhookAppSecret(creds?: MetaCredentials | null) {
+  return String(
+    (env as { META_WEBHOOK_APP_SECRET?: string }).META_WEBHOOK_APP_SECRET ||
+      process.env.META_WEBHOOK_APP_SECRET ||
+      creds?.appSecret ||
+      platformMetaCredentials().appSecret ||
+      '',
+  ).trim()
+}
+
 export function metaConfigured(creds?: Partial<MetaCredentials> | null) {
   const c = {
     ...platformMetaCredentials(),
@@ -41,6 +59,13 @@ export function graphVersion() {
     process.env.META_GRAPH_VERSION ||
     'v21.0'
   )
+}
+
+/** PKCE S256 */
+export function generatePkcePair() {
+  const codeVerifier = randomBytes(32).toString('base64url')
+  const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url')
+  return { codeVerifier, codeChallenge }
 }
 
 export function signOAuthState(payload: Record<string, string>) {
@@ -63,20 +88,40 @@ export function verifyOAuthState(state: string) {
     uid: string
     nonce: string
     appId?: string
+    platform?: string
+    pkce?: string
   }
 }
 
-export function buildOAuthUrl(state: string, creds?: MetaCredentials) {
+export function buildOAuthUrl(
+  state: string,
+  creds?: MetaCredentials,
+  opts?: {
+    scopes?: string[] | string
+    codeChallenge?: string
+    platform?: SocialPlatform | string
+  },
+) {
   const c = creds || platformMetaCredentials()
   if (!metaConfigured(c)) {
     throw new AppError('META_NOT_CONFIGURED', 'META_APP_ID / SECRET / REDIRECT_URI gerekli', 503)
   }
+  const platform = (opts?.platform || 'instagram') as keyof typeof META_PLATFORM_SCOPES
+  const scopeList = opts?.scopes || META_PLATFORM_SCOPES[platform] || META_PLATFORM_SCOPES.instagram
+  const scope = Array.isArray(scopeList)
+    ? scopeList.join(',')
+    : String(scopeList || META_OAUTH_SCOPES)
+
   const u = new URL(`https://www.facebook.com/${graphVersion()}/dialog/oauth`)
   u.searchParams.set('client_id', c.appId)
   u.searchParams.set('redirect_uri', c.redirectUri)
   u.searchParams.set('state', state)
-  u.searchParams.set('scope', META_OAUTH_SCOPES)
+  u.searchParams.set('scope', scope)
   u.searchParams.set('response_type', 'code')
+  if (opts?.codeChallenge) {
+    u.searchParams.set('code_challenge', opts.codeChallenge)
+    u.searchParams.set('code_challenge_method', 'S256')
+  }
   return u.toString()
 }
 
@@ -109,13 +154,23 @@ async function graphPost(path: string, token: string, body: Record<string, unkno
   return data
 }
 
-export async function exchangeCodeForToken(code: string, creds: MetaCredentials) {
-  return graphGet('/oauth/access_token', '', {
+export async function exchangeCodeForToken(
+  code: string,
+  creds: MetaCredentials,
+  opts?: { codeVerifier?: string },
+) {
+  const params: Record<string, string> = {
     client_id: creds.appId,
     client_secret: creds.appSecret,
     redirect_uri: creds.redirectUri,
     code,
-  }) as Promise<{ access_token: string; expires_in?: number }>
+  }
+  if (opts?.codeVerifier) params.code_verifier = opts.codeVerifier
+  return graphGet('/oauth/access_token', '', params) as Promise<{
+    access_token: string
+    expires_in?: number
+    token_type?: string
+  }>
 }
 
 export async function exchangeLongLived(shortToken: string, creds: MetaCredentials) {
@@ -127,30 +182,217 @@ export async function exchangeLongLived(shortToken: string, creds: MetaCredentia
   }) as Promise<{ access_token: string; expires_in?: number }>
 }
 
-export async function discoverInstagramBusiness(userToken: string) {
+export async function debugToken(inputToken: string, creds: MetaCredentials) {
+  return graphGet('/debug_token', '', {
+    input_token: inputToken,
+    access_token: `${creds.appId}|${creds.appSecret}`,
+  }) as Promise<{
+    data?: {
+      is_valid?: boolean
+      scopes?: string[]
+      expires_at?: number
+      user_id?: string
+      granular_scopes?: Array<{ scope: string; target_ids?: string[] }>
+    }
+  }>
+}
+
+export type FacebookPageCandidate = {
+  pageId: string
+  name: string
+  pageToken: string
+  category?: string
+  igUserId?: string
+  igUsername?: string
+  igName?: string
+}
+
+export async function listFacebookPages(userToken: string): Promise<FacebookPageCandidate[]> {
   const pages = (await graphGet('/me/accounts', userToken, {
-    fields: 'id,name,access_token,instagram_business_account',
+    fields:
+      'id,name,access_token,category,instagram_business_account{id,username,name,profile_picture_url,followers_count}',
+    limit: '100',
   })) as { data?: Array<Record<string, unknown>> }
-  const page = (pages.data || []).find((p) => p.instagram_business_account)
-  if (!page) {
+
+  return (pages.data || []).map((p) => {
+    const ig = p.instagram_business_account as
+      { id?: string; username?: string; name?: string; followers_count?: number } | undefined
+    return {
+      pageId: String(p.id),
+      name: String(p.name || p.id),
+      pageToken: String(p.access_token || userToken),
+      category: p.category ? String(p.category) : undefined,
+      igUserId: ig?.id,
+      igUsername: ig?.username,
+      igName: ig?.name,
+    }
+  })
+}
+
+export async function discoverInstagramBusiness(userToken: string) {
+  const pages = await listFacebookPages(userToken)
+  const page = pages.find((p) => p.igUserId)
+  if (!page || !page.igUserId) {
     throw new AppError(
       'NO_IG_BUSINESS',
-      'Bağlı Facebook Sayfasında Instagram Business hesabı bulunamadı',
+      'Bağlı Facebook Sayfasında Instagram Business/Creator hesabı bulunamadı',
       400,
     )
   }
-  const ig = page.instagram_business_account as { id: string }
-  const pageToken = String(page.access_token || userToken)
-  const profile = (await graphGet(`/${ig.id}`, pageToken, {
-    fields: 'id,username,name',
-  })) as { id: string; username?: string; name?: string }
+  const profile = await getInstagramProfile(page.igUserId, page.pageToken)
   return {
     igUserId: profile.id,
-    pageId: String(page.id),
+    pageId: page.pageId,
     username: profile.username || profile.id,
     displayName: profile.name || profile.username || profile.id,
-    pageToken,
+    pageToken: page.pageToken,
+    followersCount: profile.followers_count,
   }
+}
+
+export async function getInstagramProfile(igUserId: string, token: string) {
+  return graphGet(`/${igUserId}`, token, {
+    fields:
+      'id,username,name,biography,website,profile_picture_url,followers_count,follows_count,media_count',
+  }) as Promise<{
+    id: string
+    username?: string
+    name?: string
+    biography?: string
+    website?: string
+    profile_picture_url?: string
+    followers_count?: number
+    follows_count?: number
+    media_count?: number
+  }>
+}
+
+export async function listInstagramMedia(
+  igUserId: string,
+  token: string,
+  opts?: { limit?: number; mediaType?: string },
+) {
+  const params: Record<string, string> = {
+    fields:
+      'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,children{id,media_type,media_url}',
+    limit: String(opts?.limit || 25),
+  }
+  const data = (await graphGet(`/${igUserId}/media`, token, params)) as {
+    data?: Array<Record<string, unknown>>
+    paging?: Record<string, unknown>
+  }
+  let items = data.data || []
+  if (opts?.mediaType) {
+    items = items.filter((m) => String(m.media_type || '') === opts.mediaType)
+  }
+  return { items, paging: data.paging }
+}
+
+export async function listInstagramStories(igUserId: string, token: string) {
+  const data = (await graphGet(`/${igUserId}/stories`, token, {
+    fields: 'id,media_type,media_url,timestamp,permalink',
+  })) as { data?: Array<Record<string, unknown>> }
+  return data.data || []
+}
+
+export async function listInstagramComments(mediaId: string, token: string) {
+  const data = (await graphGet(`/${mediaId}/comments`, token, {
+    fields: 'id,text,username,timestamp,like_count,replies{id,text,username,timestamp}',
+  })) as { data?: Array<Record<string, unknown>> }
+  return data.data || []
+}
+
+export async function listInstagramConversations(pageId: string, token: string) {
+  const data = (await graphGet(`/${pageId}/conversations`, token, {
+    fields: 'id,updated_time,message_count,participants,snippet',
+    platform: 'instagram',
+  })) as { data?: Array<Record<string, unknown>> }
+  return data.data || []
+}
+
+export async function listWhatsAppBusinessAccounts(userToken: string) {
+  const businesses = (await graphGet('/me/businesses', userToken, {
+    fields: 'id,name',
+  })) as { data?: Array<{ id: string; name?: string }> }
+
+  const out: Array<{
+    wabaId: string
+    wabaName?: string
+    businessId: string
+    businessName?: string
+    phoneNumbers: Array<{ id: string; display_phone_number?: string; verified_name?: string }>
+  }> = []
+
+  for (const biz of businesses.data || []) {
+    try {
+      const owned = (await graphGet(`/${biz.id}/owned_whatsapp_business_accounts`, userToken, {
+        fields: 'id,name,phone_numbers{id,display_phone_number,verified_name}',
+      })) as {
+        data?: Array<{
+          id: string
+          name?: string
+          phone_numbers?: {
+            data?: Array<{ id: string; display_phone_number?: string; verified_name?: string }>
+          }
+        }>
+      }
+      for (const waba of owned.data || []) {
+        out.push({
+          wabaId: waba.id,
+          wabaName: waba.name,
+          businessId: biz.id,
+          businessName: biz.name,
+          phoneNumbers: waba.phone_numbers?.data || [],
+        })
+      }
+    } catch {
+      /* business may lack WA permission — skip */
+    }
+  }
+  return out
+}
+
+export async function getWhatsAppPhoneNumber(phoneNumberId: string, token: string) {
+  return graphGet(`/${phoneNumberId}`, token, {
+    fields: 'id,display_phone_number,verified_name,quality_rating,code_verification_status',
+  }) as Promise<{
+    id: string
+    display_phone_number?: string
+    verified_name?: string
+    quality_rating?: string
+    code_verification_status?: string
+  }>
+}
+
+export function verifyWebhookChallenge(query: {
+  'hub.mode'?: string
+  'hub.verify_token'?: string
+  'hub.challenge'?: string
+}) {
+  const mode = query['hub.mode']
+  const token = query['hub.verify_token']
+  const challenge = query['hub.challenge']
+  const expected = webhookVerifyToken()
+  if (!expected) {
+    throw new AppError('WEBHOOK_NOT_CONFIGURED', 'META_WEBHOOK_VERIFY_TOKEN gerekli', 503)
+  }
+  if (mode === 'subscribe' && token === expected && challenge) {
+    return challenge
+  }
+  throw new AppError('WEBHOOK_VERIFY_FAILED', 'Webhook doğrulama başarısız', 403)
+}
+
+export function verifyWebhookSignature(
+  rawBody: string,
+  signatureHeader: string | undefined,
+  appSecret: string,
+) {
+  if (!signatureHeader || !appSecret) return false
+  const expected = `sha256=${createHmac('sha256', appSecret).update(rawBody).digest('hex')}`
+  const a = Buffer.from(signatureHeader)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
 }
 
 export async function publishImagePost(opts: {

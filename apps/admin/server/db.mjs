@@ -11,7 +11,7 @@ export function hasDatabase() {
   return Boolean(process.env.DATABASE_URL)
 }
 
-function getSql() {
+export function getSql() {
   if (!hasDatabase()) return null
   if (!sql) sql = neon(process.env.DATABASE_URL)
   return sql

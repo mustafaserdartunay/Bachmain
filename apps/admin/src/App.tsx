@@ -26,6 +26,7 @@ import { MembershipsPage } from '@/pages/MembershipsPage'
 import { MembershipDetailPage } from '@/pages/MembershipDetailPage'
 import { LegalContentPage } from '@/pages/LegalContentPage'
 import { QualityControlPage } from '@/pages/QualityControlPage'
+import { SocialConnectionsPage } from '@/pages/SocialConnectionsPage'
 import { ModuleListPage } from '@/components/module/ModuleListPage'
 import { ModuleDetailPage } from '@/components/module/ModuleDetailPage'
 import { ModuleFormPage } from '@/components/module/ModuleFormPage'
@@ -50,6 +51,7 @@ export function AppRoutes() {
 
         <Route path="platform-ops" element={<PlatformOpsPage />} />
         <Route path="kalite-kontrol" element={<QualityControlPage />} />
+        <Route path="sosyal-baglantilar" element={<SocialConnectionsPage />} />
         <Route path="user-management" element={<UserManagementPage />} />
         <Route path="audit-logs" element={<AuditLogPage />} />
         <Route path="guvenlik" element={<SecurityCenterPage />} />

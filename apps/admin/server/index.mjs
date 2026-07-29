@@ -28,6 +28,7 @@ import { assertAdminEnv } from './assertEnv.mjs'
 import { handleSecurityApi } from './securityRoutes.mjs'
 import { handleAiosApi } from './aiosRoutes.mjs'
 import { handleQualityControl } from './qualityControl.mjs'
+import { handleSocialConnections } from './socialConnections.mjs'
 
 assertAdminEnv()
 
@@ -158,6 +159,7 @@ async function handle(req, res, url) {
         )
       )
         return
+      if (await handleSocialConnections(req, res, apiPath)) return
     }
 
     if (method === 'GET' && pathname.startsWith('/api/security')) {
