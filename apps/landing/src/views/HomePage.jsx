@@ -35,18 +35,29 @@ const HomeSeoContent = dynamic(() => import('../components/landing/HomeSeoConten
 
 export default function HomePage() {
   return (
-    <div className="page-mesh">
-      {/* HERO + FULL WIDTH DASHBOARD */}
-      <section
-        className="relative overflow-hidden pt-24 pb-8 lg:pt-28 lg:pb-10"
-        aria-labelledby="home-hero-heading"
-      >
+    <div className="page-mesh home-page">
+      {/* Shared ambient orbs — one continuous canvas under the whole page */}
+      <div className="home-page-orbs" aria-hidden>
         <div className="float-orb left-[-10%] top-[6%] h-[420px] w-[420px] bg-blue-400/25" />
         <div
           className="float-orb right-[-5%] top-[18%] h-[360px] w-[360px] bg-violet-400/20"
           style={{ animationDelay: '2s' }}
         />
+        <div
+          className="float-orb left-[15%] top-[48%] h-[320px] w-[320px] bg-sky-400/15"
+          style={{ animationDelay: '4s' }}
+        />
+        <div
+          className="float-orb right-[8%] top-[72%] h-[380px] w-[380px] bg-blue-400/18"
+          style={{ animationDelay: '1.2s' }}
+        />
+      </div>
 
+      {/* HERO + FULL WIDTH DASHBOARD */}
+      <section
+        className="relative overflow-hidden pt-24 pb-8 lg:pt-28 lg:pb-10"
+        aria-labelledby="home-hero-heading"
+      >
         <div className="relative mx-auto max-w-4xl px-4 text-center lg:px-8">
           <span className="pill">Yeni Nesil CRM & ERP Platformu</span>
           <h1
@@ -108,12 +119,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* STATS BAND — under hero */}
-      <section className="stats-band py-14">
+      {/* STATS — same mesh canvas as hero (no opaque band) */}
+      <section className="stats-band stats-band-mesh py-14">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 sm:grid-cols-3 lg:grid-cols-6 lg:px-8">
           {bandStats.map((s, i) => (
             <ScrollReveal key={s.label} delay={i * 0.05} className="text-center">
-              <div className="text-2xl font-extrabold tracking-tight lg:text-3xl">
+              <div className="text-2xl font-extrabold tracking-tight text-blue-700 lg:text-3xl">
                 {s.value.includes('+') || s.value.includes('%') || s.value.includes('/') ? (
                   s.value
                 ) : (
@@ -123,7 +134,7 @@ export default function HomePage() {
                   />
                 )}
               </div>
-              <div className="mt-1 text-xs font-medium text-white/70">{s.label}</div>
+              <div className="mt-1 text-xs font-medium text-slate-500">{s.label}</div>
             </ScrollReveal>
           ))}
         </div>
@@ -302,7 +313,7 @@ export default function HomePage() {
       </section>
 
       {/* INTEGRATIONS */}
-      <section className="border-y border-slate-200/70 py-12">
+      <section className="border-y border-slate-200/40 py-12">
         <div className="mx-auto max-w-7xl px-4 text-center lg:px-8">
           <p className="text-sm font-bold uppercase tracking-widest text-slate-400">
             Entegrasyonlar

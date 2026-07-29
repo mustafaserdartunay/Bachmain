@@ -77,6 +77,38 @@ h1,
   background: transparent;
 }
 
+/* Homepage: one continuous hero-mesh canvas (July 26 design) */
+.home-page {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+}
+
+.home-page-orbs {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.home-page > *:not(.home-page-orbs) {
+  position: relative;
+  z-index: 1;
+}
+
+.home-page .stats-band-mesh,
+.home-page .process-section,
+.home-page .mod-section:not(.mod-section-night),
+.home-page .home-seo,
+.home-page .section-pad {
+  background: transparent;
+}
+
+.home-page .stats-band-mesh {
+  color: #1e40af;
+}
+
 .site-nav {
   position: fixed;
   inset: 0 0 auto;
@@ -2207,9 +2239,9 @@ h1,
   }
 }
 
-/* Homepage SEO content (below CTA band) */
+/* Homepage SEO content (below CTA band) — shares page mesh */
 .home-seo {
-  background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 40%, #ffffff 100%);
+  background: transparent;
 }
 
 .home-seo-card {
