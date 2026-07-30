@@ -1,5 +1,6 @@
 import { emptyProduct, sampleProducts } from '../data/productsData'
 import { filterByOrgScope, getActiveOrgScope, withOrgScope } from './orgScope'
+import { normalizeProductCustomerIds } from './productCustomerCompatibility'
 
 const PRODUCT_STORAGE_KEY = 'erlenbox-products'
 const PRODUCT_DB_NAME = 'erlenbox-product-storage'
@@ -52,6 +53,7 @@ function cloneProduct(product) {
     ...emptyProduct,
     ...product,
     storeSalesVisible: Boolean(product.storeSalesVisible),
+    customerIds: normalizeProductCustomerIds(product),
     warehouses: [...(product.warehouses || emptyProduct.warehouses)],
   }
 }
@@ -59,10 +61,15 @@ function cloneProduct(product) {
 export function getCatalogProducts() {
   try {
     const saved = localStorage.getItem(PRODUCT_STORAGE_KEY)
-    if (!saved) return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), { loose: true })
+    if (!saved)
+      return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), {
+        loose: true,
+      })
     const parsed = JSON.parse(saved)
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), { loose: true })
+      return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), {
+        loose: true,
+      })
     }
     return filterByOrgScope(parsed.map(cloneProduct), getActiveOrgScope(), { loose: true })
   } catch {
@@ -83,7 +90,10 @@ export async function getCatalogProductsWithMedia() {
 }
 
 export function getTotalStock(product) {
-  return (product.warehouses || []).reduce((sum, warehouse) => sum + Number(warehouse.stock || 0), 0)
+  return (product.warehouses || []).reduce(
+    (sum, warehouse) => sum + Number(warehouse.stock || 0),
+    0,
+  )
 }
 
 export function getSalesPrice(product) {
@@ -109,8 +119,10 @@ export function getProductCategories(products = getCatalogProducts()) {
 }
 
 export function getStockStatus(stock) {
-  if (stock <= 0) return { label: 'Stok Yok', tone: 'text-red-300', badge: 'bg-red-500/15 text-red-300' }
-  if (stock <= 100) return { label: 'Kritik', tone: 'text-amber-300', badge: 'bg-amber-500/15 text-amber-300' }
+  if (stock <= 0)
+    return { label: 'Stok Yok', tone: 'text-red-300', badge: 'bg-red-500/15 text-red-300' }
+  if (stock <= 100)
+    return { label: 'Kritik', tone: 'text-amber-300', badge: 'bg-amber-500/15 text-amber-300' }
   return { label: 'Stokta', tone: 'text-emerald-300', badge: 'bg-emerald-500/15 text-emerald-300' }
 }
 
@@ -149,20 +161,11 @@ export function getStoreSalesProducts() {
 
 export async function getStoreSalesProductsWithMedia() {
   const products = await getCatalogProductsWithMedia()
-  return products
-    .filter((product) => product.storeSalesVisible)
-    .map(mapProductForStoreSales)
+  return products.filter((product) => product.storeSalesVisible).map(mapProductForStoreSales)
 }
 
 export function stripCostFields(product) {
-  const {
-    purchasePriceExcl,
-    costPrice,
-    costRows,
-    laborRows,
-    costColumns,
-    profitMargin,
-    ...safe
-  } = product
+  const { purchasePriceExcl, costPrice, costRows, laborRows, costColumns, profitMargin, ...safe } =
+    product
   return safe
 }

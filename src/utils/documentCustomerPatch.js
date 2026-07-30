@@ -9,10 +9,12 @@ export function customerToDocumentPatch(customer) {
   const contactInfo = resolveCustomerContactInfo(customer)
   const meta = getCustomerMetaSelection(customer, readCustomerMeta()[customer.id] || {})
   return {
+    customerId: customer.id || '',
     customer: customer.companyTitle || customer.company || display.companyTitle || '',
     contact: contactInfo.contactName || '',
     email: contactInfo.email || '',
     phone: contactInfo.phone || '',
-    owner: meta.representative || customer.representative || customer.assignedTo || customer.owner || '',
+    owner:
+      meta.representative || customer.representative || customer.assignedTo || customer.owner || '',
   }
 }

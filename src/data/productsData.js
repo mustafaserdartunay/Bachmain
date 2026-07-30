@@ -33,9 +33,7 @@ export const emptyProduct = {
   notes: '',
   properties: [],
   materials: [],
-  costColumns: [
-    { id: 'extra-1', label: 'Ek Çarpan', field: 'extraFactor1', multiplier: 1 },
-  ],
+  costColumns: [{ id: 'extra-1', label: 'Ek Çarpan', field: 'extraFactor1', multiplier: 1 }],
   costRows: [],
   laborRows: [],
   fileLocationNote: '',
@@ -73,6 +71,8 @@ export const emptyProduct = {
   },
   productCode: '',
   gtipCode: '',
+  /** Boş dizi = tüm müşteriler için genel ürün */
+  customerIds: [],
   stockTracking: true,
   /** general | customer — Depo / lojistik stok ayrımı */
   stockScope: 'general',
@@ -89,9 +89,7 @@ export const emptyProduct = {
   roundUpFinalPrice: true,
   dealerDiscount: 45,
   dealerSalesHistory: [],
-  warehouses: [
-    { id: 'wh-1', name: 'Merkez Depo', stock: 0, shelf: '' },
-  ],
+  warehouses: [{ id: 'wh-1', name: 'Merkez Depo', stock: 0, shelf: '' }],
   files: [],
 }
 

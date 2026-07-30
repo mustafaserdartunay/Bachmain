@@ -14,9 +14,11 @@ import {
   Trash2,
   Truck,
   Upload,
+  Users,
   X,
 } from 'lucide-react'
 import { unitOptions, vatRates } from '../../data/productsData'
+import { getCustomerProfiles } from '../../data/customerProfiles'
 import { OPTION_COLOR_PALETTE, readOptionLists, saveOptionList } from '../../utils/customerMeta'
 import {
   calcExclFromIncl,
@@ -43,6 +45,9 @@ import {
 } from '../DocumentEditor/processPanelUtils'
 import { stageColors } from '../DocumentEditor/stageColors'
 import { isDetailedProductFeaturesEnabled } from '../../utils/sectoralSettings'
+import { normalizeProductCustomerIds } from '../../utils/productCustomerCompatibility'
+import { APP_SURFACE_PANEL_CLASS } from '../../utils/dashboardDesign'
+import CreateCustomerPickModal from '../Common/CreateCustomerPickModal'
 
 const DISCOUNT_RATES = [10, 15, 20, 25, 30, 35, 40]
 
@@ -51,7 +56,9 @@ function generateId(prefix) {
 }
 
 function normalizeOptionLabel(label) {
-  return String(label || '').trim().toLocaleLowerCase('tr-TR')
+  return String(label || '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
 }
 
 function createOptionId(prefix = 'opt') {
@@ -68,9 +75,10 @@ function buildCopyLabel(label, options, fallback = 'Seçenek') {
 }
 
 function createUnitValue(label, units = []) {
-  const base = normalizeOptionLabel(label)
-    .replace(/[^a-z0-9ğüşöçıİĞÜŞÖÇ]+/gi, '-')
-    .replace(/^-+|-+$/g, '') || 'birim'
+  const base =
+    normalizeOptionLabel(label)
+      .replace(/[^a-z0-9ğüşöçıİĞÜŞÖÇ]+/gi, '-')
+      .replace(/^-+|-+$/g, '') || 'birim'
   const used = new Set((units || []).map((unit) => unit.value))
   if (!used.has(base)) return base
   let index = 2
@@ -98,9 +106,32 @@ function fileToDataUrl(file) {
   })
 }
 
+async function cropImageToSquareDataUrl(file, size = 1024) {
+  const source = await fileToDataUrl(file)
+  const image = await new Promise((resolve, reject) => {
+    const nextImage = new Image()
+    nextImage.onload = () => resolve(nextImage)
+    nextImage.onerror = () => reject(new Error('Görsel yüklenemedi.'))
+    nextImage.src = source
+  })
+  const cropSize = Math.min(image.naturalWidth, image.naturalHeight)
+  const sourceX = Math.max(0, (image.naturalWidth - cropSize) / 2)
+  const sourceY = Math.max(0, (image.naturalHeight - cropSize) / 2)
+  const outputSize = Math.min(size, cropSize)
+  const canvas = document.createElement('canvas')
+  canvas.width = outputSize
+  canvas.height = outputSize
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('Görsel işlenemedi.')
+  context.drawImage(image, sourceX, sourceY, cropSize, cropSize, 0, 0, outputSize, outputSize)
+  return canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.9)
+}
+
 function confirmMediaDelete() {
-  return window.confirm('Bu görseli/dosyayı silmek istediğinize emin misiniz?')
-    && window.confirm('Son onay: Bu görsel/dosya kalıcı olarak silinecek. Devam edilsin mi?')
+  return (
+    window.confirm('Bu görseli/dosyayı silmek istediğinize emin misiniz?') &&
+    window.confirm('Son onay: Bu görsel/dosya kalıcı olarak silinecek. Devam edilsin mi?')
+  )
 }
 
 function Panel({ icon: Icon, title, description, children }) {
@@ -273,19 +304,28 @@ function calculateProductCostRow(row, columns = []) {
   const openWidth = Number(row.openWidth) || 0
   const openHeight = Number(row.openHeight) || 0
 
-  const directCount = sheetWidth && sheetHeight && openWidth && openHeight
-    ? Math.floor(sheetWidth / openWidth) * Math.floor(sheetHeight / openHeight)
-    : 0
-  const rotatedCount = sheetWidth && sheetHeight && openWidth && openHeight
-    ? Math.floor(sheetWidth / openHeight) * Math.floor(sheetHeight / openWidth)
-    : 0
+  const directCount =
+    sheetWidth && sheetHeight && openWidth && openHeight
+      ? Math.floor(sheetWidth / openWidth) * Math.floor(sheetHeight / openHeight)
+      : 0
+  const rotatedCount =
+    sheetWidth && sheetHeight && openWidth && openHeight
+      ? Math.floor(sheetWidth / openHeight) * Math.floor(sheetHeight / openWidth)
+      : 0
   const piecesPerSheet = Math.max(directCount, rotatedCount)
 
   const extraMultiplier = getCostColumns(columns).reduce((result, column) => {
     const rawValue = row[column.field]
     const rowValue = Number(rawValue)
     const columnMultiplier = Number(column.multiplier) || 1
-    if (rawValue === '' || rawValue === null || rawValue === undefined || Number.isNaN(rowValue) || !rowValue) return result
+    if (
+      rawValue === '' ||
+      rawValue === null ||
+      rawValue === undefined ||
+      Number.isNaN(rowValue) ||
+      !rowValue
+    )
+      return result
     return result * rowValue * columnMultiplier
   }, 1)
 
@@ -295,7 +335,14 @@ function calculateProductCostRow(row, columns = []) {
   }
 
   const fallbackTotal = (Number(row.quantity) || 0) * (Number(row.price) || 0)
-  return { directCount, rotatedCount, piecesPerSheet: 0, extraMultiplier, unitCost: fallbackTotal, total: fallbackTotal }
+  return {
+    directCount,
+    rotatedCount,
+    piecesPerSheet: 0,
+    extraMultiplier,
+    unitCost: fallbackTotal,
+    total: fallbackTotal,
+  }
 }
 
 function getProductCostTotal(rows = [], columns = []) {
@@ -306,7 +353,16 @@ function getLaborCostTotal(rows = []) {
   return rows.reduce((sum, row) => sum + (Number(row.total) || Number(row.price) || 0), 0)
 }
 
-function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsChange, onChange, createRow, type }) {
+function CostRowsPanel({
+  title,
+  description,
+  rows = [],
+  columns = [],
+  onColumnsChange,
+  onChange,
+  createRow,
+  type,
+}) {
   const [activeRowId, setActiveRowId] = useState(null)
 
   function updateRow(id, field, value) {
@@ -335,7 +391,6 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
     insertRowAfter(activeRowId || rows[0].id)
   }
 
-
   function removeRow(id) {
     if (!window.confirm('Bu satırı silmek istediğinize emin misiniz?')) return
     onChange(rows.filter((row) => row.id !== id))
@@ -347,7 +402,9 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
   const total = isProductCost ? getProductCostTotal(rows, costColumns) : getLaborCostTotal(rows)
 
   function updateCostColumn(id, field, value) {
-    onColumnsChange?.(costColumns.map((column) => (column.id === id ? { ...column, [field]: value } : column)))
+    onColumnsChange?.(
+      costColumns.map((column) => (column.id === id ? { ...column, [field]: value } : column)),
+    )
   }
 
   function removeCostColumn(id) {
@@ -384,7 +441,10 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
           </div>
           <div className="grid grid-cols-2 gap-2">
             {costColumns.map((column) => (
-              <div key={column.id} className="grid grid-cols-12 items-center gap-2 rounded-lg bg-dark-700/60 p-2">
+              <div
+                key={column.id}
+                className="grid grid-cols-12 items-center gap-2 rounded-lg bg-dark-700/60 p-2"
+              >
                 <input
                   value={column.label}
                   onChange={(e) => updateCostColumn(column.id, 'label', e.target.value)}
@@ -398,7 +458,11 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
                     formatMode="plain"
                   />
                 </div>
-                <button type="button" onClick={() => removeCostColumn(column.id)} className="col-span-2 rounded-lg p-2 text-red-400 hover:bg-red-500/10">
+                <button
+                  type="button"
+                  onClick={() => removeCostColumn(column.id)}
+                  className="col-span-2 rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -419,7 +483,9 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
               <span>Tabaka Boy</span>
               <span>Açık En</span>
               <span>Açık Boy</span>
-              {costColumns.map((column) => <span key={column.id}>{column.label}</span>)}
+              {costColumns.map((column) => (
+                <span key={column.id}>{column.label}</span>
+              ))}
               <span>Çıkan Adet</span>
               <span className="text-right">Mamül Maliyeti</span>
               <span />
@@ -436,13 +502,46 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
                   onClick={() => setActiveRowId(row.id)}
                   onFocus={() => setActiveRowId(row.id)}
                 >
-                  <input value={row.text || row.name || ''} onChange={(e) => updateRow(row.id, 'text', e.target.value)} className="form-input" />
-                  <input value={row.section || ''} onChange={(e) => updateRow(row.id, 'section', e.target.value)} className="form-input" />
-                  <NumericInput value={row.sheetPrice ?? row.price} onChange={(value) => updateRow(row.id, 'sheetPrice', value)} suffix="₺" formatMode="price" />
-                  <NumericInput value={row.sheetWidth || 0} onChange={(value) => updateRow(row.id, 'sheetWidth', value)} suffix="mm" formatMode="plain" />
-                  <NumericInput value={row.sheetHeight || 0} onChange={(value) => updateRow(row.id, 'sheetHeight', value)} suffix="mm" formatMode="plain" />
-                  <NumericInput value={row.openWidth || 0} onChange={(value) => updateRow(row.id, 'openWidth', value)} suffix="mm" formatMode="plain" />
-                  <NumericInput value={row.openHeight || 0} onChange={(value) => updateRow(row.id, 'openHeight', value)} suffix="mm" formatMode="plain" />
+                  <input
+                    value={row.text || row.name || ''}
+                    onChange={(e) => updateRow(row.id, 'text', e.target.value)}
+                    className="form-input"
+                  />
+                  <input
+                    value={row.section || ''}
+                    onChange={(e) => updateRow(row.id, 'section', e.target.value)}
+                    className="form-input"
+                  />
+                  <NumericInput
+                    value={row.sheetPrice ?? row.price}
+                    onChange={(value) => updateRow(row.id, 'sheetPrice', value)}
+                    suffix="₺"
+                    formatMode="price"
+                  />
+                  <NumericInput
+                    value={row.sheetWidth || 0}
+                    onChange={(value) => updateRow(row.id, 'sheetWidth', value)}
+                    suffix="mm"
+                    formatMode="plain"
+                  />
+                  <NumericInput
+                    value={row.sheetHeight || 0}
+                    onChange={(value) => updateRow(row.id, 'sheetHeight', value)}
+                    suffix="mm"
+                    formatMode="plain"
+                  />
+                  <NumericInput
+                    value={row.openWidth || 0}
+                    onChange={(value) => updateRow(row.id, 'openWidth', value)}
+                    suffix="mm"
+                    formatMode="plain"
+                  />
+                  <NumericInput
+                    value={row.openHeight || 0}
+                    onChange={(value) => updateRow(row.id, 'openHeight', value)}
+                    suffix="mm"
+                    formatMode="plain"
+                  />
                   {costColumns.map((column) => (
                     <input
                       key={column.id}
@@ -457,10 +556,18 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
                   <div className="rounded-lg bg-dark-800/80 px-2 py-2 text-right text-sm font-semibold text-emerald-300">
                     {formatTL(result.total)}
                   </div>
-                  <button type="button" onClick={() => insertRowAfter(row.id)} className="rounded-lg p-2 text-emerald-300 hover:bg-emerald-500/10">
+                  <button
+                    type="button"
+                    onClick={() => insertRowAfter(row.id)}
+                    className="rounded-lg p-2 text-emerald-300 hover:bg-emerald-500/10"
+                  >
                     <Plus className="h-4 w-4" />
                   </button>
-                  <button type="button" onClick={() => removeRow(row.id)} className="rounded-lg p-2 text-red-400 hover:bg-red-500/10">
+                  <button
+                    type="button"
+                    onClick={() => removeRow(row.id)}
+                    className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -478,11 +585,15 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
         <div className="mt-4 grid grid-cols-3 gap-3">
           <div className="rounded-xl border border-dark-500/50 bg-dark-800/70 p-3">
             <p className="text-xs text-gray-500">Formül</p>
-            <p className="mt-1 text-sm font-semibold text-white">Tabaka fiyatı / çıkan adet x çarpanlar</p>
+            <p className="mt-1 text-sm font-semibold text-white">
+              Tabaka fiyatı / çıkan adet x çarpanlar
+            </p>
           </div>
           <div className="rounded-xl border border-dark-500/50 bg-dark-800/70 p-3">
             <p className="text-xs text-gray-500">Yerleşim hesabı</p>
-            <p className="mt-1 text-sm font-semibold text-blue-300">Düz ve döndürülmüş ölçüden en yüksek adet seçilir.</p>
+            <p className="mt-1 text-sm font-semibold text-blue-300">
+              Düz ve döndürülmüş ölçüden en yüksek adet seçilir.
+            </p>
           </div>
           <div className="rounded-xl border border-dark-500/50 bg-dark-800/70 p-3 text-right">
             <p className="text-xs text-gray-500">{title} Toplamı</p>
@@ -535,17 +646,28 @@ function CostRowsPanel({ title, description, rows = [], columns = [], onColumnsC
               <div className={isProductCost ? 'col-span-2' : 'col-span-3'}>
                 <input
                   value={row.status || row.measure || ''}
-                  onChange={(e) => updateRow(row.id, isProductCost ? 'measure' : 'status', e.target.value)}
+                  onChange={(e) =>
+                    updateRow(row.id, isProductCost ? 'measure' : 'status', e.target.value)
+                  }
                   className="form-input"
                 />
               </div>
               {isProductCost && (
                 <div className="col-span-2">
-                  <NumericInput value={row.quantity} onChange={(value) => updateRow(row.id, 'quantity', value)} formatMode="plain" />
+                  <NumericInput
+                    value={row.quantity}
+                    onChange={(value) => updateRow(row.id, 'quantity', value)}
+                    formatMode="plain"
+                  />
                 </div>
               )}
               <div className="col-span-2">
-                <NumericInput value={row.price} onChange={(value) => updateRow(row.id, 'price', value)} suffix="₺" formatMode="price" />
+                <NumericInput
+                  value={row.price}
+                  onChange={(value) => updateRow(row.id, 'price', value)}
+                  suffix="₺"
+                  formatMode="price"
+                />
               </div>
               <div className="col-span-2 rounded-lg bg-dark-800/80 px-2 py-2 text-right text-sm font-semibold text-emerald-300">
                 {formatTL(rowTotal)}
@@ -581,7 +703,10 @@ function Product3DPreview({ product, cartonResult }) {
   const qty = Math.max(1, Number(product.unitQuantities?.koli) || 1)
   const visibleBoxes = Math.min(qty, 15)
   const displayRows = Math.min(cartonResult?.rows || 1, 2)
-  const displayColumns = Math.min(cartonResult?.columns || visibleBoxes, Math.ceil(visibleBoxes / displayRows))
+  const displayColumns = Math.min(
+    cartonResult?.columns || visibleBoxes,
+    Math.ceil(visibleBoxes / displayRows),
+  )
   const boxStyle = imageUrl
     ? {
         backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.18), rgba(15,23,42,0.22)), url(${imageUrl})`,
@@ -595,7 +720,9 @@ function Product3DPreview({ product, cartonResult }) {
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h4 className="text-sm font-semibold text-white">3D Koli Yerleşim Önizlemesi</h4>
-          <p className="mt-1 text-xs text-gray-500">Ürün görselinden kutu yüzeyi oluşturulur ve koli dizilimi simüle edilir.</p>
+          <p className="mt-1 text-xs text-gray-500">
+            Ürün görselinden kutu yüzeyi oluşturulur ve koli dizilimi simüle edilir.
+          </p>
         </div>
         <span className="rounded-full bg-accent-blue/10 px-3 py-1 text-[12px] font-semibold text-accent-blue">
           {product.boxDimensions?.orientation === 'dik' ? 'Dik dizilim' : 'Yatay dizilim'}
@@ -605,16 +732,22 @@ function Product3DPreview({ product, cartonResult }) {
       <div
         className="relative min-h-[300px] overflow-hidden rounded-2xl border border-dashed border-dark-500/60 p-5"
         style={{
-          background: 'radial-gradient(circle at 45% 25%, rgba(56,189,248,0.18), transparent 35%), linear-gradient(145deg, rgba(15,23,42,0.9), rgba(30,41,59,0.55))',
+          background:
+            'radial-gradient(circle at 45% 25%, rgba(56,189,248,0.18), transparent 35%), linear-gradient(145deg, rgba(15,23,42,0.9), rgba(30,41,59,0.55))',
         }}
       >
         <div
           className="absolute inset-x-10 bottom-10 top-14 rounded-[32px] border border-cyan-300/25 bg-cyan-300/5"
-          style={{ boxShadow: 'inset 0 0 55px rgba(56,189,248,0.12), 0 28px 60px rgba(0,0,0,0.35)' }}
+          style={{
+            boxShadow: 'inset 0 0 55px rgba(56,189,248,0.12), 0 28px 60px rgba(0,0,0,0.35)',
+          }}
         />
         <div className="absolute left-12 right-12 top-14 h-12 -skew-x-12 rounded-t-[28px] border border-white/10 bg-gradient-to-r from-white/10 to-cyan-200/5" />
         <div className="absolute bottom-8 left-14 right-14 h-10 rounded-[50%] bg-black/35 blur-xl" />
-        <div className="relative z-10 flex h-full min-h-[245px] items-center justify-center" style={{ perspective: '1100px' }}>
+        <div
+          className="relative z-10 flex h-full min-h-[245px] items-center justify-center"
+          style={{ perspective: '1100px' }}
+        >
           <div
             className="grid gap-4"
             style={{
@@ -624,10 +757,21 @@ function Product3DPreview({ product, cartonResult }) {
             }}
           >
             {Array.from({ length: visibleBoxes }).map((_, index) => (
-              <div key={index} className="relative h-12 w-16" style={{ transform: `translateZ(${(index % 3) * 1.5}px)`, transformStyle: 'preserve-3d' }}>
+              <div
+                key={index}
+                className="relative h-12 w-16"
+                style={{
+                  transform: `translateZ(${(index % 3) * 1.5}px)`,
+                  transformStyle: 'preserve-3d',
+                }}
+              >
                 <div
                   className="absolute inset-0 rounded-md border border-amber-200/40 bg-gradient-to-br from-amber-100 via-amber-300 to-amber-600"
-                  style={{ transform: 'translateZ(18px)', boxShadow: '0 18px 22px rgba(0,0,0,0.28)', ...boxStyle }}
+                  style={{
+                    transform: 'translateZ(18px)',
+                    boxShadow: '0 18px 22px rgba(0,0,0,0.28)',
+                    ...boxStyle,
+                  }}
                 />
                 <div
                   className="absolute inset-0 rounded-md border border-amber-900/30 bg-gradient-to-r from-amber-700 to-amber-500"
@@ -681,6 +825,8 @@ export default function ProductForm({ product, onChange, isNew }) {
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [unitInput, setUnitInput] = useState('')
   const [unitOpen, setUnitOpen] = useState(false)
+  const [customerModalOpen, setCustomerModalOpen] = useState(false)
+  const [customerProfiles, setCustomerProfiles] = useState(() => getCustomerProfiles())
   const [storeSalesOpen, setStoreSalesOpen] = useState(false)
   const [stockAdjustment, setStockAdjustment] = useState({ type: 'in', quantity: 0, note: '' })
   const [previewMedia, setPreviewMedia] = useState(null)
@@ -688,7 +834,9 @@ export default function ProductForm({ product, onChange, isNew }) {
   const [pendingUnitDeleteId, setPendingUnitDeleteId] = useState(null)
   const [categoryOptions, setCategoryOptions] = useState(() => readOptionLists().productCategory)
   const [units, setUnits] = useState(() => unitOptions.map(normalizeUnitOption))
-  const [detailedFeaturesEnabled, setDetailedFeaturesEnabled] = useState(isDetailedProductFeaturesEnabled)
+  const [detailedFeaturesEnabled, setDetailedFeaturesEnabled] = useState(
+    isDetailedProductFeaturesEnabled,
+  )
 
   useEffect(() => {
     function syncDetailedFeatures() {
@@ -707,6 +855,14 @@ export default function ProductForm({ product, onChange, isNew }) {
     return () => window.removeEventListener('bach:option-lists-updated', syncLists)
   }, [])
 
+  useEffect(() => {
+    function syncCustomers() {
+      setCustomerProfiles(getCustomerProfiles())
+    }
+    window.addEventListener('bach:customers-updated', syncCustomers)
+    return () => window.removeEventListener('bach:customers-updated', syncCustomers)
+  }, [])
+
   const { rates, loading: ratesLoading } = useExchangeRates()
   const pricing = getProductPricing(product)
   const currentStock = Number(product.initialStock) || 0
@@ -715,9 +871,27 @@ export default function ProductForm({ product, onChange, isNew }) {
   const dealerSalesHistory = product.dealerSalesHistory?.length
     ? product.dealerSalesHistory
     : [
-        { id: 'preview-1', company: 'Mavi Kutu Bayi', date: '2026-05-28', quantity: 240, unitPrice: pricing.dealerSalesPriceIncl },
-        { id: 'preview-2', company: 'Anadolu Ambalaj', date: '2026-05-18', quantity: 500, unitPrice: pricing.dealerSalesPriceIncl * 0.98 },
-        { id: 'preview-3', company: 'Ege E-Ticaret', date: '2026-04-30', quantity: 320, unitPrice: pricing.dealerSalesPriceIncl * 1.01 },
+        {
+          id: 'preview-1',
+          company: 'Mavi Kutu Bayi',
+          date: '2026-05-28',
+          quantity: 240,
+          unitPrice: pricing.dealerSalesPriceIncl,
+        },
+        {
+          id: 'preview-2',
+          company: 'Anadolu Ambalaj',
+          date: '2026-05-18',
+          quantity: 500,
+          unitPrice: pricing.dealerSalesPriceIncl * 0.98,
+        },
+        {
+          id: 'preview-3',
+          company: 'Ege E-Ticaret',
+          date: '2026-04-30',
+          quantity: 320,
+          unitPrice: pricing.dealerSalesPriceIncl * 1.01,
+        },
       ]
 
   const totalCalculatedCost = useMemo(() => {
@@ -732,8 +906,18 @@ export default function ProductForm({ product, onChange, isNew }) {
   )
 
   const unitRecord = useMemo(
-    () => optionsToProcessRecord(units.map((unit, index) => normalizeUnitOption(unit, index)), product.salesUnit),
+    () =>
+      optionsToProcessRecord(
+        units.map((unit, index) => normalizeUnitOption(unit, index)),
+        product.salesUnit,
+      ),
     [units, product.salesUnit],
+  )
+
+  const productCustomerIds = normalizeProductCustomerIds(product)
+  const customerById = useMemo(
+    () => new Map(customerProfiles.map((customer) => [String(customer.id), customer])),
+    [customerProfiles],
   )
 
   const cartonResult = useMemo(() => {
@@ -777,6 +961,19 @@ export default function ProductForm({ product, onChange, isNew }) {
     onChange({ ...product, ...patch })
   }
 
+  function addProductCustomer(customer) {
+    if (!customer?.id) return
+    update('customerIds', normalizeProductCustomerIds([...productCustomerIds, customer.id]))
+    setCustomerModalOpen(false)
+  }
+
+  function removeProductCustomer(customerId) {
+    update(
+      'customerIds',
+      productCustomerIds.filter((id) => id !== String(customerId)),
+    )
+  }
+
   function updateNested(group, field, value) {
     update(group, { ...(product[group] || {}), [field]: value })
   }
@@ -813,8 +1010,12 @@ export default function ProductForm({ product, onChange, isNew }) {
     if (!value || isReservedPlaceholderLabel(value)) return
     const lists = readOptionLists()
     const existing = lists.productCategory
-    if (existing.some((item) => normalizeOptionLabel(item.label) === normalizeOptionLabel(value))) return
-    const color = chosenColor || stageColors[existing.length % stageColors.length] || OPTION_COLOR_PALETTE[existing.length % OPTION_COLOR_PALETTE.length]
+    if (existing.some((item) => normalizeOptionLabel(item.label) === normalizeOptionLabel(value)))
+      return
+    const color =
+      chosenColor ||
+      stageColors[existing.length % stageColors.length] ||
+      OPTION_COLOR_PALETTE[existing.length % OPTION_COLOR_PALETTE.length]
     const nextOptions = [...existing, { id: createOptionId('cat'), label: value, color }]
     persistCategoryOptions(nextOptions)
     update('category', value)
@@ -826,14 +1027,26 @@ export default function ProductForm({ product, onChange, isNew }) {
   }
 
   function updateCategoryColor(stage, color) {
-    persistCategoryOptions(mapProcessOptions(categoryOptions, stage, (option) => ({ ...option, color })))
+    persistCategoryOptions(
+      mapProcessOptions(categoryOptions, stage, (option) => ({ ...option, color })),
+    )
   }
 
   function updateCategoryLabel(stage, label) {
     const clean = label.trim()
     if (!clean || isReservedPlaceholderLabel(clean)) return
-    if (categoryOptions.some((option) => !matchProcessOption(option, stage) && normalizeOptionLabel(option.label) === normalizeOptionLabel(clean))) return
-    const nextOptions = mapProcessOptions(categoryOptions, stage, (option) => ({ ...option, label: clean }))
+    if (
+      categoryOptions.some(
+        (option) =>
+          !matchProcessOption(option, stage) &&
+          normalizeOptionLabel(option.label) === normalizeOptionLabel(clean),
+      )
+    )
+      return
+    const nextOptions = mapProcessOptions(categoryOptions, stage, (option) => ({
+      ...option,
+      label: clean,
+    }))
     persistCategoryOptions(nextOptions)
     if (product.category === stage.label) update('category', clean)
   }
@@ -895,16 +1108,26 @@ export default function ProductForm({ product, onChange, isNew }) {
 
   function addUnit(chosenColor, inputLabel) {
     const label = (inputLabel || unitInput).trim()
-    if (!label || isReservedPlaceholderLabel(label) || units.some((unit) => normalizeOptionLabel(unit.label) === normalizeOptionLabel(label))) return
+    if (
+      !label ||
+      isReservedPlaceholderLabel(label) ||
+      units.some((unit) => normalizeOptionLabel(unit.label) === normalizeOptionLabel(label))
+    )
+      return
     const value = createUnitValue(label, units)
-    const nextUnits = [...units, normalizeUnitOption({ value, label, color: chosenColor }, units.length)]
+    const nextUnits = [
+      ...units,
+      normalizeUnitOption({ value, label, color: chosenColor }, units.length),
+    ]
     setUnits(nextUnits)
     update('unitQuantities', { ...(product.unitQuantities || {}), [value]: 0 })
     setUnitInput('')
   }
 
   function selectUnit(stage) {
-    const unit = stage ? units.find((item) => item.value === stage.id || item.label === stage.label) : null
+    const unit = stage
+      ? units.find((item) => item.value === stage.id || item.label === stage.label)
+      : null
     patchProduct({ salesUnit: unit?.value || '', purchaseUnit: unit?.value || '' })
   }
 
@@ -915,7 +1138,14 @@ export default function ProductForm({ product, onChange, isNew }) {
   function updateUnitLabel(stage, label) {
     const clean = label.trim()
     if (!clean || isReservedPlaceholderLabel(clean)) return
-    if (units.some((unit) => unit.value !== stage.id && normalizeOptionLabel(unit.label) === normalizeOptionLabel(clean))) return
+    if (
+      units.some(
+        (unit) =>
+          unit.value !== stage.id &&
+          normalizeOptionLabel(unit.label) === normalizeOptionLabel(clean),
+      )
+    )
+      return
     setUnits(units.map((unit) => (unit.value === stage.id ? { ...unit, label: clean } : unit)))
   }
 
@@ -925,7 +1155,16 @@ export default function ProductForm({ product, onChange, isNew }) {
     const source = units[sourceIndex]
     const label = buildCopyLabel(source.label, units, 'Birim')
     const value = createUnitValue(label, units)
-    const nextUnit = normalizeUnitOption({ ...source, id: value, value, label, color: stageColors[(units.length + 1) % stageColors.length] }, units.length)
+    const nextUnit = normalizeUnitOption(
+      {
+        ...source,
+        id: value,
+        value,
+        label,
+        color: stageColors[(units.length + 1) % stageColors.length],
+      },
+      units.length,
+    )
     const nextUnits = [...units]
     nextUnits.splice(sourceIndex + 1, 0, nextUnit)
     setUnits(nextUnits)
@@ -940,7 +1179,10 @@ export default function ProductForm({ product, onChange, isNew }) {
   function reorderUnits(stages) {
     const nextUnits = stages.map((stage) => {
       const current = units.find((unit) => unit.value === stage.id) || {}
-      return normalizeUnitOption({ ...current, value: stage.id, label: stage.label, color: stage.color }, 0)
+      return normalizeUnitOption(
+        { ...current, value: stage.id, label: stage.label, color: stage.color },
+        0,
+      )
     })
     setUnits(nextUnits)
   }
@@ -954,20 +1196,25 @@ export default function ProductForm({ product, onChange, isNew }) {
   }
 
   async function handleMediaUpload(field, files) {
-    const uploaded = await Promise.all(Array.from(files || []).map(async (file) => ({
-      id: generateId(field),
-      name: file.name,
-      url: await fileToDataUrl(file),
-      type: file.type,
-      size: file.size,
-      file,
-    })))
+    const uploaded = await Promise.all(
+      Array.from(files || []).map(async (file) => ({
+        id: generateId(field),
+        name: file.name,
+        url: await fileToDataUrl(file),
+        type: file.type,
+        size: file.size,
+        file,
+      })),
+    )
     update(field, [...(product[field] || []), ...uploaded])
   }
 
   function removeMedia(field, id) {
     if (!confirmMediaDelete()) return
-    update(field, (product[field] || []).filter((item) => item.id !== id))
+    update(
+      field,
+      (product[field] || []).filter((item) => item.id !== id),
+    )
   }
 
   function downloadMedia(item) {
@@ -980,16 +1227,25 @@ export default function ProductForm({ product, onChange, isNew }) {
   }
 
   function updateWarehouse(id, field, value) {
-    update('warehouses', (product.warehouses || []).map((wh) => (wh.id === id ? { ...wh, [field]: value } : wh)))
+    update(
+      'warehouses',
+      (product.warehouses || []).map((wh) => (wh.id === id ? { ...wh, [field]: value } : wh)),
+    )
   }
 
   function addWarehouse() {
-    update('warehouses', [...(product.warehouses || []), { id: generateId('wh'), name: 'Yeni Depo', stock: 0, shelf: '' }])
+    update('warehouses', [
+      ...(product.warehouses || []),
+      { id: generateId('wh'), name: 'Yeni Depo', stock: 0, shelf: '' },
+    ])
   }
 
   function removeWarehouse(id) {
     if (!window.confirm('Bu depoyu silmek istediğinize emin misiniz?')) return
-    update('warehouses', (product.warehouses || []).filter((wh) => wh.id !== id))
+    update(
+      'warehouses',
+      (product.warehouses || []).filter((wh) => wh.id !== id),
+    )
   }
 
   function applyStockAdjustment() {
@@ -1001,12 +1257,22 @@ export default function ProductForm({ product, onChange, isNew }) {
     const direction = stockAdjustment.type === 'out' ? -1 : 1
     const nextInitialStock = Math.max(0, (Number(product.initialStock) || 0) + direction * quantity)
     const warehouses = product.warehouses?.length
-      ? product.warehouses.map((warehouse, index) => (
+      ? product.warehouses.map((warehouse, index) =>
           index === 0
-            ? { ...warehouse, stock: Math.max(0, (Number(warehouse.stock) || 0) + direction * quantity) }
-            : warehouse
-        ))
-      : [{ id: generateId('wh'), name: 'Merkez Depo', stock: nextInitialStock, shelf: product.shelfLocation || '' }]
+            ? {
+                ...warehouse,
+                stock: Math.max(0, (Number(warehouse.stock) || 0) + direction * quantity),
+              }
+            : warehouse,
+        )
+      : [
+          {
+            id: generateId('wh'),
+            name: 'Merkez Depo',
+            stock: nextInitialStock,
+            shelf: product.shelfLocation || '',
+          },
+        ]
 
     patchProduct({ initialStock: nextInitialStock, warehouses })
     setStockAdjustment({ type: 'in', quantity: 0, note: '' })
@@ -1033,23 +1299,60 @@ export default function ProductForm({ product, onChange, isNew }) {
           <div className="grid grid-cols-[700px_220px] items-start gap-5">
             <div className="grid grid-rows-[16px_28px_28px] text-right">
               <p className="text-xs font-medium text-gray-500">Ürün adı</p>
-              <p className="truncate self-center text-lg font-semibold text-white">{product.name || 'Henüz girilmedi'}</p>
+              <p className="truncate self-center text-lg font-semibold text-white">
+                {product.name || 'Henüz girilmedi'}
+              </p>
               <p className="self-center truncate text-lg font-semibold text-gray-500">
-                Güncel Stok: <span className={currentStock <= (Number(product.criticalStock) || 0) ? 'text-red-400' : 'text-emerald-400'}>{currentStock.toLocaleString('tr-TR')}</span>
-                {firstWarehouse?.name ? <span> · {firstWarehouse.name}: <span className="text-blue-300">{warehouseStock.toLocaleString('tr-TR')}</span></span> : null}
-                <span> · Stok takibi <span className={product.stockTracking ? 'text-emerald-400' : 'text-red-400'}>{product.stockTracking ? 'açık' : 'kapalı'}</span></span>
+                Güncel Stok:{' '}
+                <span
+                  className={
+                    currentStock <= (Number(product.criticalStock) || 0)
+                      ? 'text-red-400'
+                      : 'text-emerald-400'
+                  }
+                >
+                  {currentStock.toLocaleString('tr-TR')}
+                </span>
+                {firstWarehouse?.name ? (
+                  <span>
+                    {' '}
+                    · {firstWarehouse.name}:{' '}
+                    <span className="text-blue-300">{warehouseStock.toLocaleString('tr-TR')}</span>
+                  </span>
+                ) : null}
+                <span>
+                  {' '}
+                  · Stok takibi{' '}
+                  <span className={product.stockTracking ? 'text-emerald-400' : 'text-red-400'}>
+                    {product.stockTracking ? 'açık' : 'kapalı'}
+                  </span>
+                </span>
               </p>
             </div>
             <div className="grid grid-rows-[16px_28px_28px] text-right">
               <p className="text-xs font-medium text-gray-500">Satış Fiyatı</p>
-              <p className="self-center text-lg font-semibold text-gray-500">KDV Hariç: <span className="text-emerald-400">{formatTL(pricing.finalSalesPriceExcl)}</span></p>
-              <p className="self-center text-lg font-semibold text-gray-500">KDV Dahil: <span className="text-green-400">{formatTL(pricing.finalSalesPriceIncl)}</span></p>
+              <p className="self-center text-lg font-semibold text-gray-500">
+                KDV Hariç:{' '}
+                <span className="text-emerald-400">{formatTL(pricing.finalSalesPriceExcl)}</span>
+              </p>
+              <p className="self-center text-lg font-semibold text-gray-500">
+                KDV Dahil:{' '}
+                <span className="text-green-400">{formatTL(pricing.finalSalesPriceIncl)}</span>
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <Panel icon={Package} title="1. Ürün Bilgileri" description={detailedFeaturesEnabled ? "Ürünün kimlik bilgileri, ana görseli, kategori ve tedarikçi bilgileri" : "Standart ürün kimlik bilgileri"}>
+      <Panel
+        icon={Package}
+        title="1. Ürün Bilgileri"
+        description={
+          detailedFeaturesEnabled
+            ? 'Ürünün kimlik bilgileri, ana görseli, kategori ve tedarikçi bilgileri'
+            : 'Standart ürün kimlik bilgileri'
+        }
+      >
         <div className="grid grid-cols-12 items-stretch gap-5">
           <div className="col-span-8 flex h-full flex-col gap-4">
             <Field label="Ürün Adı *">
@@ -1060,16 +1363,79 @@ export default function ProductForm({ product, onChange, isNew }) {
               />
             </Field>
             <Field label="Ürün Kodu *">
-              <input value={product.stockCode} onChange={(e) => update('stockCode', e.target.value.toUpperCase())} className="form-input" />
+              <input
+                value={product.stockCode}
+                onChange={(e) => update('stockCode', e.target.value.toUpperCase())}
+                className="form-input"
+              />
             </Field>
             <Field label="Barkod Kodu">
-              <input value={product.barcode} onChange={(e) => update('barcode', e.target.value)} className="form-input" />
+              <input
+                value={product.barcode}
+                onChange={(e) => update('barcode', e.target.value)}
+                className="form-input"
+              />
             </Field>
             {detailedFeaturesEnabled ? (
-            <Field label="GTIP Kodu">
-              <input value={product.gtipCode} onChange={(e) => update('gtipCode', e.target.value)} className="form-input" />
-            </Field>
+              <Field label="GTIP Kodu">
+                <input
+                  value={product.gtipCode}
+                  onChange={(e) => update('gtipCode', e.target.value)}
+                  className="form-input"
+                />
+              </Field>
             ) : null}
+            <Field label="Müşteri Uyumluluğu">
+              <section className={`${APP_SURFACE_PANEL_CLASS} rounded-2xl p-3`}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Users className="h-4 w-4 shrink-0 text-[var(--muted)]" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-[var(--ink)]">Müşteriye Özel Ürün</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-[var(--muted)]">
+                        Müşteri seçilmezse ürün tüm carilere uygundur.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCustomerModalOpen(true)}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-blue-500/25 px-3 text-xs font-black text-blue-600 transition-colors hover:bg-blue-500/10"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Müşteri Ekle
+                  </button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {productCustomerIds.map((customerId) => {
+                    const customer = customerById.get(customerId)
+                    const display = customer ? getCustomerDisplay(customer) : null
+                    return (
+                      <span
+                        key={customerId}
+                        className="inline-flex max-w-full items-center gap-2 rounded-xl border border-[var(--border)] px-2.5 py-1.5 text-xs font-bold text-[var(--ink)]"
+                      >
+                        <span className="truncate">
+                          {display?.brandShortName || customerId}
+                          {!customer ? ' · kullanılamıyor' : ''}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeProductCustomer(customerId)}
+                          className="shrink-0 text-[var(--muted)] transition-colors hover:text-red-500"
+                          aria-label={`${display?.brandShortName || customerId} ilişkisini kaldır`}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    )
+                  })}
+                  {productCustomerIds.length === 0 ? (
+                    <span className="text-xs font-semibold text-[var(--muted)]">Genel ürün</span>
+                  ) : null}
+                </div>
+              </section>
+            </Field>
             <Field label="Birim Seçenekleri">
               <ProcessPanelModule
                 activeLabel="Aktif Birim"
@@ -1093,7 +1459,9 @@ export default function ProductForm({ product, onChange, isNew }) {
                 pendingStageDeleteId={pendingUnitDeleteId}
                 setPendingStageDeleteId={setPendingUnitDeleteId}
                 onRemoveStage={(stage) => removeUnit(stage.id)}
-                activeDisplayLabel={units.find((unit) => unit.value === product.salesUnit)?.label || ''}
+                activeDisplayLabel={
+                  units.find((unit) => unit.value === product.salesUnit)?.label || ''
+                }
                 emptySelectionLabel="Birim seçmeden devam et"
                 compact
               />
@@ -1126,58 +1494,72 @@ export default function ProductForm({ product, onChange, isNew }) {
                 compact
               />
             </Field>
-{detailedFeaturesEnabled ? (
-            <>
-            <Field label="Mağaza Satışında Görünsün mü?">
-              <StoreSalesVisibilityPanel
-                visible={Boolean(product.storeSalesVisible)}
-                onChange={(value) => update('storeSalesVisible', value)}
-                isOpen={storeSalesOpen}
-                onToggle={() => setStoreSalesOpen((open) => !open)}
-              />
-            </Field>
-            <Field label="Etiketler">
-              <div className="flex gap-2">
-                <input
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  className="form-input"
-                />
-                <MiniButton onClick={addTag}>Ekle</MiniButton>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {(product.tags || []).map((tag) => (
-                  <span key={tag} className="inline-flex items-center gap-1 badge-blue">
-                    <Tag className="h-3 w-3" /> {tag}
-                    <button type="button" onClick={() => update('tags', product.tags.filter((item) => item !== tag))}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </Field>
-            <Field label="Üretici ve Tedarikçi">
-              <div className="flex gap-2">
-                <input
-                  value={producerSupplierInput}
-                  onChange={(e) => setProducerSupplierInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addProducerSupplier())}
-                  className="form-input"
-                />
-                <MiniButton onClick={addProducerSupplier}>Ekle</MiniButton>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {getProducerSuppliers().map((item) => (
-                  <span key={item} className="inline-flex items-center gap-1 badge-purple">
-                    <Store className="h-3 w-3" /> {item}
-                    <button type="button" onClick={() => removeProducerSupplier(item)}><X className="h-3 w-3" /></button>
-                  </span>
-                ))}
-                {getProducerSuppliers().length === 0 && <p className="text-xs text-gray-500">Henüz kayıt yok.</p>}
-              </div>
-            </Field>
-            </>
+            {detailedFeaturesEnabled ? (
+              <>
+                <Field label="Mağaza Satışında Görünsün mü?">
+                  <StoreSalesVisibilityPanel
+                    visible={Boolean(product.storeSalesVisible)}
+                    onChange={(value) => update('storeSalesVisible', value)}
+                    isOpen={storeSalesOpen}
+                    onToggle={() => setStoreSalesOpen((open) => !open)}
+                  />
+                </Field>
+                <Field label="Etiketler">
+                  <div className="flex gap-2">
+                    <input
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                      className="form-input"
+                    />
+                    <MiniButton onClick={addTag}>Ekle</MiniButton>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {(product.tags || []).map((tag) => (
+                      <span key={tag} className="inline-flex items-center gap-1 badge-blue">
+                        <Tag className="h-3 w-3" /> {tag}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            update(
+                              'tags',
+                              product.tags.filter((item) => item !== tag),
+                            )
+                          }
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="Üretici ve Tedarikçi">
+                  <div className="flex gap-2">
+                    <input
+                      value={producerSupplierInput}
+                      onChange={(e) => setProducerSupplierInput(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' && (e.preventDefault(), addProducerSupplier())
+                      }
+                      className="form-input"
+                    />
+                    <MiniButton onClick={addProducerSupplier}>Ekle</MiniButton>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {getProducerSuppliers().map((item) => (
+                      <span key={item} className="inline-flex items-center gap-1 badge-purple">
+                        <Store className="h-3 w-3" /> {item}
+                        <button type="button" onClick={() => removeProducerSupplier(item)}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                    {getProducerSuppliers().length === 0 && (
+                      <p className="text-xs text-gray-500">Henüz kayıt yok.</p>
+                    )}
+                  </div>
+                </Field>
+              </>
             ) : null}
 
             <div className="flex flex-col">
@@ -1199,19 +1581,40 @@ export default function ProductForm({ product, onChange, isNew }) {
                 type="file"
                 accept="image/png,image/jpeg,image/jpg"
                 onChange={async (e) => {
-                  if (!e.target.files?.[0]) return
-                  update('image', await fileToDataUrl(e.target.files[0]))
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  try {
+                    update('image', await cropImageToSquareDataUrl(file))
+                  } catch (error) {
+                    window.alert(error?.message || 'Görsel kare biçime dönüştürülemedi.')
+                  } finally {
+                    e.target.value = ''
+                  }
                 }}
                 className="hidden"
               />
-              <div onClick={() => imageInputRef.current?.click()} className="relative h-[420px] cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-dark-500/50 bg-dark-700/50 hover:border-accent-blue/50 group">
+              <div
+                onClick={() => imageInputRef.current?.click()}
+                className="group relative aspect-square w-full cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-dark-500/50 bg-dark-700/50 hover:border-accent-blue/50"
+              >
                 {product.image ? (
                   <>
-                    <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full w-full object-cover"
+                    />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                       <span className="text-sm text-white">Fotoğrafı Değiştir</span>
                     </div>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); update('image', null) }} className="absolute right-2 top-2 rounded-full bg-dark-900/80 p-1 text-gray-400 hover:text-white">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        update('image', null)
+                      }}
+                      className="absolute right-2 top-2 rounded-full bg-dark-900/80 p-1 text-gray-400 hover:text-white"
+                    >
                       <X className="h-4 w-4" />
                     </button>
                   </>
@@ -1223,469 +1626,785 @@ export default function ProductForm({ product, onChange, isNew }) {
                   </div>
                 )}
               </div>
-{detailedFeaturesEnabled ? (
-              <div className="mt-auto border-t border-dark-500/50 pt-4">
-                <h4 className="mb-3 text-sm font-semibold text-white">Medya Galerisi</h4>
-                <div className="grid gap-2">
-                  {[
-                    ['instagramImages', instagramInputRef, 'Instagram', 'image/*'],
-                    ['webImages', webInputRef, 'Web', 'image/*'],
-                    ['videos', videoInputRef, 'Video', 'video/*'],
-                  ].map(([field, ref, label, accept]) => (
-                    <div key={field} className="grid min-h-[68px] place-items-center rounded-xl border border-dark-500/50 bg-dark-700/30 p-2.5 pt-4">
-                      <input ref={ref} type="file" multiple accept={accept} onChange={(e) => handleMediaUpload(field, e.target.files)} className="hidden" />
-                      <button type="button" onClick={() => ref.current?.click()} className="relative flex min-h-[38px] w-[190px] max-w-full items-center justify-center rounded-lg border border-dashed border-dark-500/60 px-9 py-2 text-center text-xs font-semibold text-gray-400 hover:border-accent-blue/50 hover:text-gray-300">
-                        <span className="block w-full text-center">{label} Yükle</span>
-                        <Upload className="absolute right-3 h-3.5 w-3.5 text-accent-blue" />
-                      </button>
-                      <div className="mt-2 grid w-full grid-cols-4 gap-2">
-                        {(product[field] || []).map((item) => (
-                          <div key={item.id} className="group relative aspect-square overflow-hidden rounded-lg bg-dark-700">
-                            {field === 'videos' ? <video src={item.url} className="h-full w-full object-cover" /> : <img src={item.url} alt="" className="h-full w-full object-cover" />}
-                            <div className="absolute inset-0 hidden items-center justify-center gap-1.5 bg-black/55 group-hover:flex">
+              {detailedFeaturesEnabled ? (
+                <div className="mt-auto border-t border-dark-500/50 pt-4">
+                  <h4 className="mb-3 text-sm font-semibold text-white">Medya Galerisi</h4>
+                  <div className="grid gap-2">
+                    {[
+                      ['instagramImages', instagramInputRef, 'Instagram', 'image/*'],
+                      ['webImages', webInputRef, 'Web', 'image/*'],
+                      ['videos', videoInputRef, 'Video', 'video/*'],
+                    ].map(([field, ref, label, accept]) => (
+                      <div
+                        key={field}
+                        className="grid min-h-[68px] place-items-center rounded-xl border border-dark-500/50 bg-dark-700/30 p-2.5 pt-4"
+                      >
+                        <input
+                          ref={ref}
+                          type="file"
+                          multiple
+                          accept={accept}
+                          onChange={(e) => handleMediaUpload(field, e.target.files)}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => ref.current?.click()}
+                          className="relative flex min-h-[38px] w-[190px] max-w-full items-center justify-center rounded-lg border border-dashed border-dark-500/60 px-9 py-2 text-center text-xs font-semibold text-gray-400 hover:border-accent-blue/50 hover:text-gray-300"
+                        >
+                          <span className="block w-full text-center">{label} Yükle</span>
+                          <Upload className="absolute right-3 h-3.5 w-3.5 text-accent-blue" />
+                        </button>
+                        <div className="mt-2 grid w-full grid-cols-4 gap-2">
+                          {(product[field] || []).map((item) => (
+                            <div
+                              key={item.id}
+                              className="group relative aspect-square overflow-hidden rounded-lg bg-dark-700"
+                            >
+                              {field === 'videos' ? (
+                                <video src={item.url} className="h-full w-full object-cover" />
+                              ) : (
+                                <img src={item.url} alt="" className="h-full w-full object-cover" />
+                              )}
+                              <div className="absolute inset-0 hidden items-center justify-center gap-1.5 bg-black/55 group-hover:flex">
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewMedia(item)}
+                                  className="rounded-lg bg-dark-900/90 px-2 py-1 text-[12px] font-semibold text-white hover:bg-accent-blue/80"
+                                >
+                                  <Maximize2 className="mr-1 inline h-3 w-3" /> Büyüt
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => downloadMedia(item)}
+                                  className="rounded-lg bg-dark-900/90 px-2 py-1 text-[12px] font-semibold text-white hover:bg-emerald-600"
+                                >
+                                  <Download className="mr-1 inline h-3 w-3" /> İndir
+                                </button>
+                              </div>
                               <button
                                 type="button"
-                                onClick={() => setPreviewMedia(item)}
-                                className="rounded-lg bg-dark-900/90 px-2 py-1 text-[12px] font-semibold text-white hover:bg-accent-blue/80"
+                                onClick={() => removeMedia(field, item.id)}
+                                className="absolute right-1 top-1 hidden rounded bg-black/70 p-1 text-white group-hover:block"
                               >
-                                <Maximize2 className="mr-1 inline h-3 w-3" /> Büyüt
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => downloadMedia(item)}
-                                className="rounded-lg bg-dark-900/90 px-2 py-1 text-[12px] font-semibold text-white hover:bg-emerald-600"
-                              >
-                                <Download className="mr-1 inline h-3 w-3" /> İndir
+                                <X className="h-3 w-3" />
                               </button>
                             </div>
-                            <button type="button" onClick={() => removeMedia(field, item.id)} className="absolute right-1 top-1 hidden rounded bg-black/70 p-1 text-white group-hover:block">
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
               ) : null}
             </div>
-
           </div>
         </div>
       </Panel>
 
-      <Panel icon={DollarSign} title="2. Ürün Fiyat Bilgileri" description="Maliyet, alış, satış, KDV ve kar marjı">
+      <Panel
+        icon={DollarSign}
+        title="2. Ürün Fiyat Bilgileri"
+        description="Maliyet, alış, satış, KDV ve kar marjı"
+      >
         <div className="grid grid-cols-5 gap-3">
           <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3">
-            <PriceFieldWithFx label="Vergiler Hariç Ürün Maliyeti" tryValue={product.costPrice} onChange={(v) => updatePricing('costPrice', v)} rates={rates} />
+            <PriceFieldWithFx
+              label="Vergiler Hariç Ürün Maliyeti"
+              tryValue={product.costPrice}
+              onChange={(v) => updatePricing('costPrice', v)}
+              rates={rates}
+            />
           </div>
           <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3">
-            <PriceFieldWithFx label="Vergiler Hariç Alış Fiyatı" tryValue={product.purchasePriceExcl} onChange={(v) => updatePricing('purchasePriceExcl', v)} rates={rates} />
+            <PriceFieldWithFx
+              label="Vergiler Hariç Alış Fiyatı"
+              tryValue={product.purchasePriceExcl}
+              onChange={(v) => updatePricing('purchasePriceExcl', v)}
+              rates={rates}
+            />
           </div>
           <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-3">
-            <PriceFieldWithFx label="Vergiler Hariç Satış Fiyatı" tryValue={pricing.salesExcl} onChange={(v) => updatePricing('salesPriceExcl', v)} readOnly={product.useMarginPricing} rates={rates} />
+            <PriceFieldWithFx
+              label="Vergiler Hariç Satış Fiyatı"
+              tryValue={pricing.salesExcl}
+              onChange={(v) => updatePricing('salesPriceExcl', v)}
+              readOnly={product.useMarginPricing}
+              rates={rates}
+            />
           </div>
           <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3">
-            <PriceFieldWithFx label="Vergiler Dahil Alış Fiyatı" tryValue={calcInclPrice(product.purchasePriceExcl, product.vatRate)} onChange={(v) => updatePricing('purchaseInclManual', v)} rates={rates} />
+            <PriceFieldWithFx
+              label="Vergiler Dahil Alış Fiyatı"
+              tryValue={calcInclPrice(product.purchasePriceExcl, product.vatRate)}
+              onChange={(v) => updatePricing('purchaseInclManual', v)}
+              rates={rates}
+            />
           </div>
           <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-3">
-            <PriceFieldWithFx label="Vergiler Dahil Satış Fiyatı" tryValue={pricing.finalSalesPriceIncl} readOnly highlight rates={rates} />
+            <PriceFieldWithFx
+              label="Vergiler Dahil Satış Fiyatı"
+              tryValue={pricing.finalSalesPriceIncl}
+              readOnly
+              highlight
+              rates={rates}
+            />
           </div>
         </div>
         <div className="mt-4 grid grid-cols-4 gap-4">
           <Field label="KDV Oranı">
-            <select value={product.vatRate} onChange={(e) => update('vatRate', Number(e.target.value))} className="form-input">
-              {vatRates.map((rate) => <option key={rate} value={rate}>%{rate}</option>)}
+            <select
+              value={product.vatRate}
+              onChange={(e) => update('vatRate', Number(e.target.value))}
+              className="form-input"
+            >
+              {vatRates.map((rate) => (
+                <option key={rate} value={rate}>
+                  %{rate}
+                </option>
+              ))}
             </select>
           </Field>
           <Field label="Kar Marjı">
-            <NumericInput value={product.profitMargin} onChange={(v) => updatePricing('profitMargin', v)} suffix="%" />
+            <NumericInput
+              value={product.profitMargin}
+              onChange={(v) => updatePricing('profitMargin', v)}
+              suffix="%"
+            />
           </Field>
-          <div className="flex h-full items-center justify-center pt-7"><Toggle checked={product.useMarginPricing} onChange={(v) => update('useMarginPricing', v)} label="Satışı kar marjından belirle" /></div>
-          <div className="flex h-full items-center justify-center pt-7"><Toggle checked={product.roundUpFinalPrice} onChange={(v) => update('roundUpFinalPrice', v)} label="Üst taban rakama yuvarla" /></div>
+          <div className="flex h-full items-center justify-center pt-7">
+            <Toggle
+              checked={product.useMarginPricing}
+              onChange={(v) => update('useMarginPricing', v)}
+              label="Satışı kar marjından belirle"
+            />
+          </div>
+          <div className="flex h-full items-center justify-center pt-7">
+            <Toggle
+              checked={product.roundUpFinalPrice}
+              onChange={(v) => update('roundUpFinalPrice', v)}
+              label="Üst taban rakama yuvarla"
+            />
+          </div>
         </div>
         {detailedFeaturesEnabled ? (
-        <div className="mt-4 grid grid-cols-2 items-stretch gap-4">
-          <PriceSummary product={product} pricing={pricing} rates={rates} loading={ratesLoading} />
-          <div className="flex h-full flex-col rounded-2xl border border-dark-500/50 bg-dark-700/30 p-4">
-            <div className="mb-4">
-              <h4 className="text-sm font-semibold text-white">Bayi Satış Fiyatlandırması</h4>
-              <p className="mt-1 text-xs text-gray-500">Bayi indirimi ve kademeli iskonto hesapları</p>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="form-label">Bayiye Özel İndirim</label>
-                <NumericInput value={product.dealerDiscount ?? 45} onChange={(v) => update('dealerDiscount', v)} suffix="%" />
+          <div className="mt-4 grid grid-cols-2 items-stretch gap-4">
+            <PriceSummary
+              product={product}
+              pricing={pricing}
+              rates={rates}
+              loading={ratesLoading}
+            />
+            <div className="flex h-full flex-col rounded-2xl border border-dark-500/50 bg-dark-700/30 p-4">
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-white">Bayi Satış Fiyatlandırması</h4>
+                <p className="mt-1 text-xs text-gray-500">
+                  Bayi indirimi ve kademeli iskonto hesapları
+                </p>
               </div>
-              <PriceFieldWithFx label="Bayi KDV Hariç" tryValue={pricing.dealerSalesPriceExcl} readOnly rates={rates} />
-              <PriceFieldWithFx label="Bayi KDV Dahil" tryValue={pricing.dealerSalesPriceIncl} readOnly highlight rates={rates} />
-            </div>
-            <div className="mt-4">
-              <div className="mb-2 flex items-center justify-between">
-                <h5 className="text-sm font-semibold text-white">Diğer İndirim Yüzdeleri</h5>
-                <span className="text-[12px] text-gray-500">İndirim oranlarına göre bayi fiyatı</span>
-              </div>
-              <div className="grid grid-cols-7 gap-2">
-                {DISCOUNT_RATES.map((rate) => {
-                  const excl = pricing.salesExcl * (1 - rate / 100)
-                  const incl = calcInclPrice(excl, product.vatRate)
-                  return (
-                    <div key={rate} className="rounded-2xl border border-dark-500/50 bg-dark-800/40 p-2.5">
-                      <div className="mb-2 flex items-center justify-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-accent-orange" />
-                        <p className="text-xs font-bold text-accent-orange">%{rate}</p>
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="rounded-lg bg-dark-700/40 px-2 py-1.5 text-center">
-                          <p className="text-[11px] text-gray-500">Hariç</p>
-                          <p className="text-[13px] font-semibold text-orange-200">{formatTL(excl)}</p>
-                        </div>
-                        <div className="rounded-lg bg-dark-700/40 px-2 py-1.5 text-center">
-                          <p className="text-[11px] text-gray-500">Dahil</p>
-                          <p className="text-[13px] font-semibold text-white">{formatTL(incl)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-            <div className="mt-4 flex flex-1 flex-col rounded-2xl border border-dark-500/50 bg-dark-800/40 p-3">
-              <div className="mb-3 flex items-center justify-between">
-                <h5 className="text-sm font-semibold text-white">Bayi Satış Geçmişi</h5>
-                <span className="text-[12px] text-gray-500">Ürün bazlı firma satış kayıtları</span>
-              </div>
-              <div className="grid flex-1 grid-cols-[1fr_auto] gap-2">
-                <div className="flex min-w-0 flex-col">
-                  <div className="grid grid-cols-12 gap-2 px-3 pb-2 text-[12px] font-semibold uppercase tracking-wide text-gray-500">
-                    <span className="col-span-3">Firma</span>
-                    <span className="col-span-2">Tarih</span>
-                    <span className="col-span-1 text-right">Adet</span>
-                    <span className="col-span-2 text-right">KDV Hariç</span>
-                    <span className="col-span-2 text-right">KDV Dahil</span>
-                    <span className="col-span-2 text-right">Toplam</span>
-                  </div>
-                  <div ref={dealerHistoryRef} className="min-h-[220px] flex-1 space-y-2 overflow-y-auto pr-1">
-                    {dealerSalesHistory.map((sale) => {
-                      const quantity = Number(sale.quantity) || 0
-                      const inclPrice = Number(sale.unitPrice) || 0
-                      const exclPrice = calcExclFromIncl(inclPrice, product.vatRate)
-                      const display = getCustomerDisplay(sale.company)
-                      return (
-                        <div key={sale.id} className="grid grid-cols-12 items-center gap-2 rounded-xl bg-dark-700/40 px-3 py-2">
-                          <p className="col-span-3 truncate text-xs font-semibold text-gray-200">{display.brandShortName}</p>
-                          <p className="col-span-2 text-[12px] text-gray-500">{sale.date}</p>
-                          <p className="col-span-1 text-right text-xs text-blue-300">{quantity.toLocaleString('tr-TR')}</p>
-                          <p className="col-span-2 text-right text-xs text-emerald-300">{formatTL(exclPrice)}</p>
-                          <p className="col-span-2 text-right text-xs text-green-400">{formatTL(inclPrice)}</p>
-                          <p className="col-span-2 text-right text-xs font-semibold text-white">{formatTL(quantity * inclPrice)}</p>
-                        </div>
-                      )
-                    })}
-                  </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="form-label">Bayiye Özel İndirim</label>
+                  <NumericInput
+                    value={product.dealerDiscount ?? 45}
+                    onChange={(v) => update('dealerDiscount', v)}
+                    suffix="%"
+                  />
                 </div>
-                <div className="flex flex-col items-center justify-center gap-2 self-stretch">
-                  <button
-                    type="button"
-                    onClick={() => dealerHistoryRef.current?.scrollBy({ top: -96, behavior: 'smooth' })}
-                    className="rounded-lg border border-dark-500/60 px-2 py-1 text-xs text-gray-400 hover:text-white"
-                  >
-                    ↑
-                  </button>
-                  <div className="min-h-16 flex-1 w-1 rounded-full bg-dark-500/60" />
-                  <button
-                    type="button"
-                    onClick={() => dealerHistoryRef.current?.scrollBy({ top: 96, behavior: 'smooth' })}
-                    className="rounded-lg border border-dark-500/60 px-2 py-1 text-xs text-gray-400 hover:text-white"
-                  >
-                    ↓
-                  </button>
+                <PriceFieldWithFx
+                  label="Bayi KDV Hariç"
+                  tryValue={pricing.dealerSalesPriceExcl}
+                  readOnly
+                  rates={rates}
+                />
+                <PriceFieldWithFx
+                  label="Bayi KDV Dahil"
+                  tryValue={pricing.dealerSalesPriceIncl}
+                  readOnly
+                  highlight
+                  rates={rates}
+                />
+              </div>
+              <div className="mt-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <h5 className="text-sm font-semibold text-white">Diğer İndirim Yüzdeleri</h5>
+                  <span className="text-[12px] text-gray-500">
+                    İndirim oranlarına göre bayi fiyatı
+                  </span>
+                </div>
+                <div className="grid grid-cols-7 gap-2">
+                  {DISCOUNT_RATES.map((rate) => {
+                    const excl = pricing.salesExcl * (1 - rate / 100)
+                    const incl = calcInclPrice(excl, product.vatRate)
+                    return (
+                      <div
+                        key={rate}
+                        className="rounded-2xl border border-dark-500/50 bg-dark-800/40 p-2.5"
+                      >
+                        <div className="mb-2 flex items-center justify-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-accent-orange" />
+                          <p className="text-xs font-bold text-accent-orange">%{rate}</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="rounded-lg bg-dark-700/40 px-2 py-1.5 text-center">
+                            <p className="text-[11px] text-gray-500">Hariç</p>
+                            <p className="text-[13px] font-semibold text-orange-200">
+                              {formatTL(excl)}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-dark-700/40 px-2 py-1.5 text-center">
+                            <p className="text-[11px] text-gray-500">Dahil</p>
+                            <p className="text-[13px] font-semibold text-white">{formatTL(incl)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="mt-4 flex flex-1 flex-col rounded-2xl border border-dark-500/50 bg-dark-800/40 p-3">
+                <div className="mb-3 flex items-center justify-between">
+                  <h5 className="text-sm font-semibold text-white">Bayi Satış Geçmişi</h5>
+                  <span className="text-[12px] text-gray-500">
+                    Ürün bazlı firma satış kayıtları
+                  </span>
+                </div>
+                <div className="grid flex-1 grid-cols-[1fr_auto] gap-2">
+                  <div className="flex min-w-0 flex-col">
+                    <div className="grid grid-cols-12 gap-2 px-3 pb-2 text-[12px] font-semibold uppercase tracking-wide text-gray-500">
+                      <span className="col-span-3">Firma</span>
+                      <span className="col-span-2">Tarih</span>
+                      <span className="col-span-1 text-right">Adet</span>
+                      <span className="col-span-2 text-right">KDV Hariç</span>
+                      <span className="col-span-2 text-right">KDV Dahil</span>
+                      <span className="col-span-2 text-right">Toplam</span>
+                    </div>
+                    <div
+                      ref={dealerHistoryRef}
+                      className="min-h-[220px] flex-1 space-y-2 overflow-y-auto pr-1"
+                    >
+                      {dealerSalesHistory.map((sale) => {
+                        const quantity = Number(sale.quantity) || 0
+                        const inclPrice = Number(sale.unitPrice) || 0
+                        const exclPrice = calcExclFromIncl(inclPrice, product.vatRate)
+                        const display = getCustomerDisplay(sale.company)
+                        return (
+                          <div
+                            key={sale.id}
+                            className="grid grid-cols-12 items-center gap-2 rounded-xl bg-dark-700/40 px-3 py-2"
+                          >
+                            <p className="col-span-3 truncate text-xs font-semibold text-gray-200">
+                              {display.brandShortName}
+                            </p>
+                            <p className="col-span-2 text-[12px] text-gray-500">{sale.date}</p>
+                            <p className="col-span-1 text-right text-xs text-blue-300">
+                              {quantity.toLocaleString('tr-TR')}
+                            </p>
+                            <p className="col-span-2 text-right text-xs text-emerald-300">
+                              {formatTL(exclPrice)}
+                            </p>
+                            <p className="col-span-2 text-right text-xs text-green-400">
+                              {formatTL(inclPrice)}
+                            </p>
+                            <p className="col-span-2 text-right text-xs font-semibold text-white">
+                              {formatTL(quantity * inclPrice)}
+                            </p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center justify-center gap-2 self-stretch">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        dealerHistoryRef.current?.scrollBy({ top: -96, behavior: 'smooth' })
+                      }
+                      className="rounded-lg border border-dark-500/60 px-2 py-1 text-xs text-gray-400 hover:text-white"
+                    >
+                      ↑
+                    </button>
+                    <div className="min-h-16 flex-1 w-1 rounded-full bg-dark-500/60" />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        dealerHistoryRef.current?.scrollBy({ top: 96, behavior: 'smooth' })
+                      }
+                      className="rounded-lg border border-dark-500/60 px-2 py-1 text-xs text-gray-400 hover:text-white"
+                    >
+                      ↓
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
         ) : (
-        <div className="mt-4">
-          <PriceSummary product={product} pricing={pricing} rates={rates} loading={ratesLoading} />
-        </div>
+          <div className="mt-4">
+            <PriceSummary
+              product={product}
+              pricing={pricing}
+              rates={rates}
+              loading={ratesLoading}
+            />
+          </div>
         )}
-
       </Panel>
 
-      <Panel icon={Boxes} title="4. Stok Takibi" description="Depo, raf ve manuel stok giriş/çıkış işlemleri">
+      <Panel
+        icon={Boxes}
+        title="4. Stok Takibi"
+        description="Depo, raf ve manuel stok giriş/çıkış işlemleri"
+      >
         <div className="mb-4 flex items-center gap-3">
-          <Toggle checked={product.stockTracking} onChange={(v) => update('stockTracking', v)} label="Stok takibi yapılsın" />
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            product.stockTracking
-              ? 'bg-emerald-500/10 text-emerald-300'
-              : 'bg-red-500/10 text-red-300'
-          }`}
+          <Toggle
+            checked={product.stockTracking}
+            onChange={(v) => update('stockTracking', v)}
+            label="Stok takibi yapılsın"
+          />
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              product.stockTracking
+                ? 'bg-emerald-500/10 text-emerald-300'
+                : 'bg-red-500/10 text-red-300'
+            }`}
           >
-            {product.stockTracking ? 'Açık - stok takibi yapılıyor' : 'Kapalı - stok takibi yapılmıyor'}
+            {product.stockTracking
+              ? 'Açık - stok takibi yapılıyor'
+              : 'Kapalı - stok takibi yapılmıyor'}
           </span>
         </div>
-{detailedFeaturesEnabled ? (
-        <div className="mb-4 grid grid-cols-2 gap-3">
-          <Field label="Stok Tipi">
-            <select
-              value={product.stockScope || 'general'}
-              onChange={(e) => update('stockScope', e.target.value)}
-              className="form-input"
-            >
-              <option value="general">Genel Stok</option>
-              <option value="customer">Müşteri Stoğu</option>
-            </select>
-          </Field>
-          <Field label="Müşteri Stoğu Notu">
-            <input
-              value={product.customerStockCustomerId || ''}
-              onChange={(e) => update('customerStockCustomerId', e.target.value)}
-              className="form-input"
-              placeholder="Cari / müşteri referansı"
-              disabled={(product.stockScope || 'general') !== 'customer'}
-            />
-          </Field>
-        </div>
+        {detailedFeaturesEnabled ? (
+          <div className="mb-4 grid grid-cols-2 gap-3">
+            <Field label="Stok Tipi">
+              <select
+                value={product.stockScope || 'general'}
+                onChange={(e) => update('stockScope', e.target.value)}
+                className="form-input"
+              >
+                <option value="general">Genel Stok</option>
+                <option value="customer">Müşteri Stoğu</option>
+              </select>
+            </Field>
+            <Field label="Müşteri Stoğu Notu">
+              <input
+                value={product.customerStockCustomerId || ''}
+                onChange={(e) => update('customerStockCustomerId', e.target.value)}
+                className="form-input"
+                placeholder="Cari / müşteri referansı"
+                disabled={(product.stockScope || 'general') !== 'customer'}
+              />
+            </Field>
+          </div>
         ) : null}
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-4">
             <Field label="Ana Depo">
-              <input value={product.warehouseLocation} onChange={(e) => update('warehouseLocation', e.target.value)} className="form-input" />
+              <input
+                value={product.warehouseLocation}
+                onChange={(e) => update('warehouseLocation', e.target.value)}
+                className="form-input"
+              />
             </Field>
             <Field label="Depo Raf Yeri">
-              <input value={product.shelfLocation} onChange={(e) => update('shelfLocation', e.target.value)} className="form-input" />
+              <input
+                value={product.shelfLocation}
+                onChange={(e) => update('shelfLocation', e.target.value)}
+                className="form-input"
+              />
             </Field>
             <Field label="Mevcut / Başlangıç Stok">
-              <NumericInput value={product.initialStock} onChange={(v) => update('initialStock', v)} />
+              <NumericInput
+                value={product.initialStock}
+                onChange={(v) => update('initialStock', v)}
+              />
             </Field>
             <Field label="Kritik Stok">
-              <NumericInput value={product.criticalStock} onChange={(v) => update('criticalStock', v)} />
+              <NumericInput
+                value={product.criticalStock}
+                onChange={(v) => update('criticalStock', v)}
+              />
             </Field>
           </div>
-{detailedFeaturesEnabled ? (
-          <div className="rounded-2xl border border-dark-500/50 bg-dark-700/30 p-4">
-            <h4 className="mb-3 text-sm font-semibold text-white">Manuel Stok Güncelleme</h4>
-            <div className="grid grid-cols-12 items-end gap-2">
-              <div className="col-span-3">
-                <Field label="İşlem">
-                  <select value={stockAdjustment.type} onChange={(e) => setStockAdjustment({ ...stockAdjustment, type: e.target.value })} className="form-input">
-                    <option value="in">Stok Girişi</option>
-                    <option value="out">Stok Çıkışı</option>
-                  </select>
-                </Field>
-              </div>
-              <div className="col-span-3">
-                <Field label="Miktar">
-                  <NumericInput value={stockAdjustment.quantity} onChange={(v) => setStockAdjustment({ ...stockAdjustment, quantity: v })} />
-                </Field>
-              </div>
-              <div className="col-span-4">
-                <Field label="Açıklama">
-                  <input value={stockAdjustment.note} onChange={(e) => setStockAdjustment({ ...stockAdjustment, note: e.target.value })} className="form-input" />
-                </Field>
-              </div>
-              <div className="col-span-2 flex justify-end">
-                <button type="button" onClick={applyStockAdjustment} className="btn-primary h-[38px] w-full text-sm">Uygula</button>
+          {detailedFeaturesEnabled ? (
+            <div className="rounded-2xl border border-dark-500/50 bg-dark-700/30 p-4">
+              <h4 className="mb-3 text-sm font-semibold text-white">Manuel Stok Güncelleme</h4>
+              <div className="grid grid-cols-12 items-end gap-2">
+                <div className="col-span-3">
+                  <Field label="İşlem">
+                    <select
+                      value={stockAdjustment.type}
+                      onChange={(e) =>
+                        setStockAdjustment({ ...stockAdjustment, type: e.target.value })
+                      }
+                      className="form-input"
+                    >
+                      <option value="in">Stok Girişi</option>
+                      <option value="out">Stok Çıkışı</option>
+                    </select>
+                  </Field>
+                </div>
+                <div className="col-span-3">
+                  <Field label="Miktar">
+                    <NumericInput
+                      value={stockAdjustment.quantity}
+                      onChange={(v) => setStockAdjustment({ ...stockAdjustment, quantity: v })}
+                    />
+                  </Field>
+                </div>
+                <div className="col-span-4">
+                  <Field label="Açıklama">
+                    <input
+                      value={stockAdjustment.note}
+                      onChange={(e) =>
+                        setStockAdjustment({ ...stockAdjustment, note: e.target.value })
+                      }
+                      className="form-input"
+                    />
+                  </Field>
+                </div>
+                <div className="col-span-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={applyStockAdjustment}
+                    className="btn-primary h-[38px] w-full text-sm"
+                  >
+                    Uygula
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
           ) : null}
         </div>
       </Panel>
 
-{detailedFeaturesEnabled ? (
-      <>
-      <Panel icon={Info} title="5. Birim, Koli ve Araç Kapasitesi" description="Ambalaj birimleri, koli ölçüsü ve araç yükleme hesabı">
-        <div className="space-y-4">
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-5 space-y-3 rounded-xl bg-dark-700/30 p-4">
-              <h4 className="text-sm font-semibold text-white">Kutu ölçülerini giriniz</h4>
-              <Field label="Koliye Sığacak Ürün Adedi">
-                <NumericInput value={product.unitQuantities?.koli || 0} onChange={(v) => update('unitQuantities', { ...(product.unitQuantities || {}), koli: v })} />
+      {detailedFeaturesEnabled ? (
+        <>
+          <Panel
+            icon={Info}
+            title="5. Birim, Koli ve Araç Kapasitesi"
+            description="Ambalaj birimleri, koli ölçüsü ve araç yükleme hesabı"
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-5 space-y-3 rounded-xl bg-dark-700/30 p-4">
+                  <h4 className="text-sm font-semibold text-white">Kutu ölçülerini giriniz</h4>
+                  <Field label="Koliye Sığacak Ürün Adedi">
+                    <NumericInput
+                      value={product.unitQuantities?.koli || 0}
+                      onChange={(v) =>
+                        update('unitQuantities', { ...(product.unitQuantities || {}), koli: v })
+                      }
+                    />
+                  </Field>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Field label="En (mm)">
+                      <NumericInput
+                        value={product.boxDimensions?.width || 0}
+                        onChange={(v) => updateNested('boxDimensions', 'width', v)}
+                      />
+                    </Field>
+                    <Field label="Boy (mm)">
+                      <NumericInput
+                        value={product.boxDimensions?.depth || 0}
+                        onChange={(v) => updateNested('boxDimensions', 'depth', v)}
+                      />
+                    </Field>
+                    <Field label="Yükseklik (mm)">
+                      <NumericInput
+                        value={product.boxDimensions?.height || 0}
+                        onChange={(v) => updateNested('boxDimensions', 'height', v)}
+                      />
+                    </Field>
+                  </div>
+                  <p className="rounded-lg bg-dark-800/40 p-3 text-xs text-gray-400">
+                    Ürün görselindeki kutunun yaklaşık ölçülerini mm olarak girin. Koli ölçüsü bu
+                    ürün ölçülerine göre hesaplanır.
+                  </p>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-white">
+                      Kutu koliye nasıl konacak?
+                    </label>
+                    <div className="flex gap-2">
+                      {['yatay', 'dik'].map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => updateNested('boxDimensions', 'orientation', item)}
+                          className={`rounded-lg border px-3 py-2 text-xs font-semibold ${product.boxDimensions?.orientation === item ? 'border-accent-blue bg-accent-blue/20 text-accent-blue' : 'border-dark-500/50 text-gray-400'}`}
+                        >
+                          {item === 'yatay' ? 'Yatay' : 'Dik'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-white">
+                      Koli içi sıra düzeni
+                    </label>
+                    <div className="flex gap-2">
+                      {[
+                        ['single', 'Tek sıra'],
+                        ['double', 'Çift sıra'],
+                      ].map(([value, label]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => updateNested('boxDimensions', 'rowMode', value)}
+                          className={`rounded-lg border px-3 py-2 text-xs font-semibold ${(product.boxDimensions?.rowMode || 'single') === value ? 'border-accent-blue bg-accent-blue/20 text-accent-blue' : 'border-dark-500/50 text-gray-400'}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {cartonResult && (
+                    <p className="rounded-lg bg-blue-500/10 p-3 text-xs text-blue-300">
+                      {cartonResult.note}
+                    </p>
+                  )}
+                </div>
+                <div className="col-span-7">
+                  <Product3DPreview product={product} cartonResult={cartonResult} />
+                </div>
+              </div>
+              <div className="rounded-xl bg-dark-700/30 p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-white">Araç Kapasite Hesabı</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <Field label="Araç En (mm)">
+                    <NumericInput
+                      value={product.vehicleDimensions?.width || 0}
+                      onChange={(v) => updateNested('vehicleDimensions', 'width', v)}
+                    />
+                  </Field>
+                  <Field label="Araç Boy (mm)">
+                    <NumericInput
+                      value={product.vehicleDimensions?.depth || 0}
+                      onChange={(v) => updateNested('vehicleDimensions', 'depth', v)}
+                    />
+                  </Field>
+                  <Field label="Araç Yük. (mm)">
+                    <NumericInput
+                      value={product.vehicleDimensions?.height || 0}
+                      onChange={(v) => updateNested('vehicleDimensions', 'height', v)}
+                    />
+                  </Field>
+                </div>
+                <div className="rounded-lg bg-emerald-500/10 p-3">
+                  <p className="text-xs text-gray-500">Tahmini araç kapasitesi</p>
+                  <p className="text-2xl font-semibold text-emerald-400">
+                    {vehicleCapacity.toLocaleString('tr-TR')} koli
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel
+            icon={Info}
+            title="6. Üretim Bilgileri"
+            description="Ürün özellikleri ve üretimde kullanılacak malzemeler"
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <DynamicRows
+                title="Ürün Özellikleri"
+                rows={product.properties || []}
+                onChange={(rows) => update('properties', rows)}
+                createRow={() => ({ id: generateId('prop'), name: '', value: '' })}
+                columns={[
+                  { field: 'name', placeholder: 'Özellik', className: 'col-span-5' },
+                  { field: 'value', placeholder: 'Bilgi', className: 'col-span-6' },
+                ]}
+              />
+              <DynamicRows
+                title="Kullanılan Malzemeler"
+                rows={product.materials || []}
+                onChange={(rows) => update('materials', rows)}
+                createRow={() => ({ id: generateId('mat'), name: '', quantity: 0, unit: 'adet' })}
+                columns={[
+                  { field: 'name', placeholder: 'Malzeme adı', className: 'col-span-5' },
+                  {
+                    field: 'quantity',
+                    type: 'number',
+                    placeholder: 'Miktar',
+                    className: 'col-span-3',
+                  },
+                  { field: 'unit', placeholder: 'Birim', className: 'col-span-3' },
+                ]}
+              />
+            </div>
+          </Panel>
+
+          <ProductFilesUpload
+            files={product.files || []}
+            fileLocationNote={product.fileLocationNote}
+            onFileLocationNoteChange={(value) => update('fileLocationNote', value)}
+            onChange={(files) => update('files', files)}
+          />
+
+          <Panel
+            icon={DollarSign}
+            title="7. Maliyet Detayları"
+            description="Gerçek maliyet hesabı ve işçilik satırları"
+          >
+            <div className="space-y-4">
+              <CostRowsPanel
+                type="product"
+                title="Ürün Maliyet Satırları"
+                description="Ürüne ait malzeme, baskı, ambalaj gibi maliyetleri satır satır ekleyin."
+                rows={product.costRows || []}
+                columns={product.costColumns || []}
+                onColumnsChange={(columns) => {
+                  const cost =
+                    getProductCostTotal(product.costRows || [], columns) +
+                    getLaborCostTotal(product.laborRows || [])
+                  patchProduct({ costColumns: columns, costPrice: cost })
+                }}
+                onChange={(rows) => {
+                  const cost =
+                    getProductCostTotal(rows, product.costColumns || []) +
+                    getLaborCostTotal(product.laborRows || [])
+                  patchProduct({ costRows: rows, costPrice: cost })
+                }}
+                createRow={() => ({
+                  id: generateId('cost'),
+                  text: '',
+                  sheetPrice: 0,
+                  sheetWidth: 0,
+                  sheetHeight: 0,
+                  openWidth: 0,
+                  openHeight: 0,
+                })}
+              />
+              <CostRowsPanel
+                type="labor"
+                title="İşçilik Maliyeti"
+                description="Kesim, baskı, montaj, paketleme gibi işçilik kalemlerini ayrı ayrı ekleyin."
+                rows={product.laborRows || []}
+                onChange={(rows) => {
+                  const cost =
+                    getProductCostTotal(product.costRows || [], product.costColumns || []) +
+                    getLaborCostTotal(rows)
+                  patchProduct({ laborRows: rows, costPrice: cost })
+                }}
+                createRow={() => ({ id: generateId('labor'), text: '', status: '', price: 0 })}
+              />
+            </div>
+            <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-red-200">Gerçek Maliyet Toplamı</p>
+                  <p className="mt-1 text-xs text-red-300/80">
+                    Ürün maliyeti ve toplam işçilik maliyeti birlikte hesaplanır.
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-semibold text-red-200">
+                    {formatTL(totalCalculatedCost)}
+                  </p>
+                  <FxHint tryValue={totalCalculatedCost} rates={rates} />
+                </div>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel
+            icon={LinkIcon}
+            title="8. Web ve Sosyal Linkler"
+            description="Ürün sayfası ve paylaşım kanalları"
+          >
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                ['productPageUrl', 'Web sayfa linki'],
+                ['instagramUrl', 'Instagram linki'],
+                ['facebookUrl', 'Facebook linki'],
+                ['twitterUrl', 'Twitter / X linki'],
+                ['tiktokUrl', 'TikTok linki'],
+                ['linkedinUrl', 'LinkedIn linki'],
+              ].map(([field, label]) => (
+                <Field key={field} label={label}>
+                  <div className="flex gap-2">
+                    <input
+                      value={product[field] || ''}
+                      onChange={(e) => update(field, e.target.value)}
+                      className="form-input"
+                    />
+                    <MiniButton onClick={() => copySocialLink(field)}>Kopyala</MiniButton>
+                  </div>
+                </Field>
+              ))}
+            </div>
+            <div className="mt-4">
+              <Field label="Instagram / Reel Açıklamaları">
+                <textarea
+                  value={product.instagramNote}
+                  onChange={(e) => update('instagramNote', e.target.value)}
+                  rows={3}
+                  className="form-input resize-none"
+                />
               </Field>
-              <div className="grid grid-cols-3 gap-2">
-                <Field label="En (mm)"><NumericInput value={product.boxDimensions?.width || 0} onChange={(v) => updateNested('boxDimensions', 'width', v)} /></Field>
-                <Field label="Boy (mm)"><NumericInput value={product.boxDimensions?.depth || 0} onChange={(v) => updateNested('boxDimensions', 'depth', v)} /></Field>
-                <Field label="Yükseklik (mm)"><NumericInput value={product.boxDimensions?.height || 0} onChange={(v) => updateNested('boxDimensions', 'height', v)} /></Field>
-              </div>
-              <p className="rounded-lg bg-dark-800/40 p-3 text-xs text-gray-400">
-                Ürün görselindeki kutunun yaklaşık ölçülerini mm olarak girin. Koli ölçüsü bu ürün ölçülerine göre hesaplanır.
-              </p>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Kutu koliye nasıl konacak?</label>
-                <div className="flex gap-2">
-                  {['yatay', 'dik'].map((item) => (
-                    <button key={item} type="button" onClick={() => updateNested('boxDimensions', 'orientation', item)} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${product.boxDimensions?.orientation === item ? 'border-accent-blue bg-accent-blue/20 text-accent-blue' : 'border-dark-500/50 text-gray-400'}`}>
-                      {item === 'yatay' ? 'Yatay' : 'Dik'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Koli içi sıra düzeni</label>
-                <div className="flex gap-2">
-                  {[
-                    ['single', 'Tek sıra'],
-                    ['double', 'Çift sıra'],
-                  ].map(([value, label]) => (
-                    <button key={value} type="button" onClick={() => updateNested('boxDimensions', 'rowMode', value)} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${((product.boxDimensions?.rowMode || 'single') === value) ? 'border-accent-blue bg-accent-blue/20 text-accent-blue' : 'border-dark-500/50 text-gray-400'}`}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {cartonResult && <p className="rounded-lg bg-blue-500/10 p-3 text-xs text-blue-300">{cartonResult.note}</p>}
             </div>
-            <div className="col-span-7">
-              <Product3DPreview product={product} cartonResult={cartonResult} />
-            </div>
-          </div>
-          <div className="rounded-xl bg-dark-700/30 p-4 space-y-3">
-              <h4 className="text-sm font-semibold text-white">Araç Kapasite Hesabı</h4>
-              <div className="grid grid-cols-3 gap-2">
-                <Field label="Araç En (mm)"><NumericInput value={product.vehicleDimensions?.width || 0} onChange={(v) => updateNested('vehicleDimensions', 'width', v)} /></Field>
-                <Field label="Araç Boy (mm)"><NumericInput value={product.vehicleDimensions?.depth || 0} onChange={(v) => updateNested('vehicleDimensions', 'depth', v)} /></Field>
-                <Field label="Araç Yük. (mm)"><NumericInput value={product.vehicleDimensions?.height || 0} onChange={(v) => updateNested('vehicleDimensions', 'height', v)} /></Field>
-              </div>
-              <div className="rounded-lg bg-emerald-500/10 p-3">
-                <p className="text-xs text-gray-500">Tahmini araç kapasitesi</p>
-                <p className="text-2xl font-semibold text-emerald-400">{vehicleCapacity.toLocaleString('tr-TR')} koli</p>
-              </div>
-          </div>
-        </div>
-      </Panel>
-
-      <Panel icon={Info} title="6. Üretim Bilgileri" description="Ürün özellikleri ve üretimde kullanılacak malzemeler">
-        <div className="grid grid-cols-2 gap-4">
-          <DynamicRows
-            title="Ürün Özellikleri"
-            rows={product.properties || []}
-            onChange={(rows) => update('properties', rows)}
-            createRow={() => ({ id: generateId('prop'), name: '', value: '' })}
-            columns={[
-              { field: 'name', placeholder: 'Özellik', className: 'col-span-5' },
-              { field: 'value', placeholder: 'Bilgi', className: 'col-span-6' },
-            ]}
-          />
-          <DynamicRows
-            title="Kullanılan Malzemeler"
-            rows={product.materials || []}
-            onChange={(rows) => update('materials', rows)}
-            createRow={() => ({ id: generateId('mat'), name: '', quantity: 0, unit: 'adet' })}
-            columns={[
-              { field: 'name', placeholder: 'Malzeme adı', className: 'col-span-5' },
-              { field: 'quantity', type: 'number', placeholder: 'Miktar', className: 'col-span-3' },
-              { field: 'unit', placeholder: 'Birim', className: 'col-span-3' },
-            ]}
-          />
-        </div>
-      </Panel>
-
-      <ProductFilesUpload
-        files={product.files || []}
-        fileLocationNote={product.fileLocationNote}
-        onFileLocationNoteChange={(value) => update('fileLocationNote', value)}
-        onChange={(files) => update('files', files)}
-      />
-
-      <Panel icon={DollarSign} title="7. Maliyet Detayları" description="Gerçek maliyet hesabı ve işçilik satırları">
-        <div className="space-y-4">
-          <CostRowsPanel
-            type="product"
-            title="Ürün Maliyet Satırları"
-            description="Ürüne ait malzeme, baskı, ambalaj gibi maliyetleri satır satır ekleyin."
-            rows={product.costRows || []}
-            columns={product.costColumns || []}
-            onColumnsChange={(columns) => {
-              const cost = getProductCostTotal(product.costRows || [], columns) + getLaborCostTotal(product.laborRows || [])
-              patchProduct({ costColumns: columns, costPrice: cost })
-            }}
-            onChange={(rows) => {
-              const cost = getProductCostTotal(rows, product.costColumns || []) + getLaborCostTotal(product.laborRows || [])
-              patchProduct({ costRows: rows, costPrice: cost })
-            }}
-            createRow={() => ({ id: generateId('cost'), text: '', sheetPrice: 0, sheetWidth: 0, sheetHeight: 0, openWidth: 0, openHeight: 0 })}
-          />
-          <CostRowsPanel
-            type="labor"
-            title="İşçilik Maliyeti"
-            description="Kesim, baskı, montaj, paketleme gibi işçilik kalemlerini ayrı ayrı ekleyin."
-            rows={product.laborRows || []}
-            onChange={(rows) => {
-              const cost = getProductCostTotal(product.costRows || [], product.costColumns || []) + getLaborCostTotal(rows)
-              patchProduct({ laborRows: rows, costPrice: cost })
-            }}
-            createRow={() => ({ id: generateId('labor'), text: '', status: '', price: 0 })}
-          />
-        </div>
-        <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-red-200">Gerçek Maliyet Toplamı</p>
-              <p className="mt-1 text-xs text-red-300/80">Ürün maliyeti ve toplam işçilik maliyeti birlikte hesaplanır.</p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-semibold text-red-200">{formatTL(totalCalculatedCost)}</p>
-              <FxHint tryValue={totalCalculatedCost} rates={rates} />
-            </div>
-          </div>
-        </div>
-      </Panel>
-
-      <Panel icon={LinkIcon} title="8. Web ve Sosyal Linkler" description="Ürün sayfası ve paylaşım kanalları">
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            ['productPageUrl', 'Web sayfa linki'],
-            ['instagramUrl', 'Instagram linki'],
-            ['facebookUrl', 'Facebook linki'],
-            ['twitterUrl', 'Twitter / X linki'],
-            ['tiktokUrl', 'TikTok linki'],
-            ['linkedinUrl', 'LinkedIn linki'],
-          ].map(([field, label]) => (
-            <Field key={field} label={label}>
-              <div className="flex gap-2">
-                <input value={product[field] || ''} onChange={(e) => update(field, e.target.value)} className="form-input" />
-                <MiniButton onClick={() => copySocialLink(field)}>Kopyala</MiniButton>
-              </div>
-            </Field>
-          ))}
-        </div>
-        <div className="mt-4">
-          <Field label="Instagram / Reel Açıklamaları">
-            <textarea value={product.instagramNote} onChange={(e) => update('instagramNote', e.target.value)} rows={3} className="form-input resize-none" />
-          </Field>
-        </div>
-      </Panel>
-      </>
+          </Panel>
+        </>
       ) : null}
 
+      <CreateCustomerPickModal
+        open={customerModalOpen}
+        onClose={() => setCustomerModalOpen(false)}
+        onSelect={addProductCustomer}
+        title="Ürün İçin Müşteri Seçin"
+        description="Ürünün uyumlu olduğu müşteriyi seçin. Birden fazla müşteri ekleyebilirsiniz."
+        searchPlaceholder="Müşteri ara..."
+      />
+
       {previewMedia && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-6" onClick={() => setPreviewMedia(null)}>
-          <div className="relative max-h-[88vh] w-full max-w-5xl rounded-2xl border border-dark-500/60 bg-dark-900 p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-6"
+          onClick={() => setPreviewMedia(null)}
+        >
+          <div
+            className="relative max-h-[88vh] w-full max-w-5xl rounded-2xl border border-dark-500/60 bg-dark-900 p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="truncate text-sm font-semibold text-white">{previewMedia.name || 'Medya önizleme'}</p>
+              <p className="truncate text-sm font-semibold text-white">
+                {previewMedia.name || 'Medya önizleme'}
+              </p>
               <div className="flex gap-2">
-                <button type="button" onClick={() => downloadMedia(previewMedia)} className="rounded-lg border border-dark-500/60 px-3 py-2 text-xs font-semibold text-gray-300 hover:text-white">
+                <button
+                  type="button"
+                  onClick={() => downloadMedia(previewMedia)}
+                  className="rounded-lg border border-dark-500/60 px-3 py-2 text-xs font-semibold text-gray-300 hover:text-white"
+                >
                   <Download className="mr-1 inline h-3.5 w-3.5" /> İndir
                 </button>
-                <button type="button" onClick={() => setPreviewMedia(null)} className="rounded-lg border border-dark-500/60 p-2 text-gray-300 hover:text-white">
+                <button
+                  type="button"
+                  onClick={() => setPreviewMedia(null)}
+                  className="rounded-lg border border-dark-500/60 p-2 text-gray-300 hover:text-white"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
             </div>
             <div className="flex max-h-[76vh] items-center justify-center overflow-hidden rounded-xl bg-black/40">
               {previewMedia.type?.startsWith('video') ? (
-                <video src={previewMedia.url} controls className="max-h-[76vh] w-full object-contain" />
+                <video
+                  src={previewMedia.url}
+                  controls
+                  className="max-h-[76vh] w-full object-contain"
+                />
               ) : (
-                <img src={previewMedia.url} alt={previewMedia.name || ''} className="max-h-[76vh] w-full object-contain" />
+                <img
+                  src={previewMedia.url}
+                  alt={previewMedia.name || ''}
+                  className="max-h-[76vh] w-full object-contain"
+                />
               )}
             </div>
           </div>
         </div>
       )}
-
     </div>
   )
 }

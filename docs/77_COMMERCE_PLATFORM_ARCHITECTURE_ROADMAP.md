@@ -28,6 +28,9 @@ flowchart LR
 3. **Price Engine** — resolves price by customer, dealer, country, currency, campaign.
 4. **Stock Sync** — ERP stock is source; outbound push to channels (job queue).
 5. **Event-driven** — inbox normalize → `commerce.order.received`.
+6. **Customer-compatible catalog** — Product Master may store optional `customerIds`; an
+   empty list means general availability. Quote/order pickers rank matching products first,
+   warn on mismatches, and allow an explicit override without blocking document save.
 
 ## Data model (GC-0)
 

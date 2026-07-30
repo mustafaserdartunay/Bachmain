@@ -24,11 +24,16 @@ import SplitCreateButton from '../components/Common/SplitCreateButton'
 import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
 import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
 import { customerToDocumentPatch } from '../utils/documentCustomerPatch'
-import ListDeleteConfirmPanel, { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
+import ListDeleteConfirmPanel, {
+  DeleteTrashButton,
+  LIST_PILL_CLASS,
+} from '../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../components/EditableDropdownPill'
 import CustomerPicker, { findDocumentCustomer } from '../components/DocumentEditor/CustomerPicker'
 import { DocumentField, DocumentMiniButton } from '../components/DocumentEditor/DocumentField'
-import DocumentLineItemRow, { createEmptyDocumentItem } from '../components/DocumentEditor/DocumentLineItemRow'
+import DocumentLineItemRow, {
+  createEmptyDocumentItem,
+} from '../components/DocumentEditor/DocumentLineItemRow'
 import DocumentTermsEditor from '../components/DocumentEditor/DocumentTermsEditor'
 import DocumentActivityPanel from '../components/DocumentEditor/DocumentActivityPanel'
 import DocumentTotalsPanel from '../components/DocumentEditor/DocumentTotalsPanel'
@@ -47,8 +52,17 @@ import { stageColors, getStageColumnSurfaceClasses } from '../components/Documen
 import RepresentativeEditor from '../components/DocumentEditor/RepresentativeEditor'
 import { formatTL } from '../utils/productPricing'
 import { getListCustomerDisplay } from '../data/customerProfiles'
-import { sampleProducts } from '../data/productsData'
-import { cancelOrderFromQuote, deleteOrder, loadOrders, orderHasLinkedQuote, orderTotals, readOpenOrderId, clearOpenOrderId, saveOrders } from '../utils/ordersStore'
+import { getCatalogProducts } from '../utils/productCatalog'
+import {
+  cancelOrderFromQuote,
+  deleteOrder,
+  loadOrders,
+  orderHasLinkedQuote,
+  orderTotals,
+  readOpenOrderId,
+  clearOpenOrderId,
+  saveOrders,
+} from '../utils/ordersStore'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
 import { publishWorkflowStages } from '../utils/workflowStagePublish'
 import { createProductionFromOrder, loadProductionJobs } from '../utils/productionStore'
@@ -90,7 +104,6 @@ const sortLabelByMode = {
   name: 'İsme göre',
   price: 'Fiyata göre',
 }
-
 
 function readImageFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -137,7 +150,13 @@ function formatListDateTime(value) {
 }
 
 function TurkishLiraIcon({ className = '' }) {
-  return <span className={`${className} flex items-center justify-center text-base font-black leading-none`}>₺</span>
+  return (
+    <span
+      className={`${className} flex items-center justify-center text-base font-black leading-none`}
+    >
+      ₺
+    </span>
+  )
 }
 
 function Panel({ title, description, children, action }) {
@@ -155,13 +174,7 @@ function Panel({ title, description, children, action }) {
   )
 }
 
-function OrderPriorityEditor({
-  order,
-  onPatch,
-  optionLists,
-  updateOptionList,
-  compact = false,
-}) {
+function OrderPriorityEditor({ order, onPatch, optionLists, updateOptionList, compact = false }) {
   const [isOpen, setIsOpen] = useState(false)
   const [priorityInput, setPriorityInput] = useState('')
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
@@ -207,13 +220,19 @@ function OrderPriorityEditor({
   }
 
   function updateColor(stage, color) {
-    updateOptionList('priority', mapProcessOptions(optionLists.priority, stage, (option) => ({ ...option, color })))
+    updateOptionList(
+      'priority',
+      mapProcessOptions(optionLists.priority, stage, (option) => ({ ...option, color })),
+    )
   }
 
   function updateLabel(stage, label) {
     const clean = label.trim()
     if (!clean || isReservedPlaceholderLabel(clean)) return
-    updateOptionList('priority', mapProcessOptions(optionLists.priority, stage, (option) => ({ ...option, label: clean })))
+    updateOptionList(
+      'priority',
+      mapProcessOptions(optionLists.priority, stage, (option) => ({ ...option, label: clean })),
+    )
     if (order.priority === stage.label) onPatch({ priority: clean })
   }
 
@@ -339,7 +358,13 @@ function createOrderDraft(baseOrders = []) {
     documentDiscountMode: 'percent',
     documentDiscountRate: 0,
     documentDiscountAmount: 0,
-    activities: [{ id: createId('act'), date: new Date().toLocaleString('tr-TR'), text: 'Yeni sipariş oluşturuldu.' }],
+    activities: [
+      {
+        id: createId('act'),
+        date: new Date().toLocaleString('tr-TR'),
+        text: 'Yeni sipariş oluşturuldu.',
+      },
+    ],
   }
 }
 
@@ -369,7 +394,12 @@ export default function OrdersPage() {
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const syncedCustomerKeyRef = useRef('')
 
-  const selectedOrder = draftOrder || orders.find((order) => order.id === selectedId) || orders[0] || null
+  const selectedOrder =
+    draftOrder || orders.find((order) => order.id === selectedId) || orders[0] || null
+  const selectedCustomer =
+    selectedOrder?.customerId || selectedOrder?.customer
+      ? findDocumentCustomer(selectedOrder.customerId || selectedOrder.customer)
+      : null
   const selectedTotals = selectedOrder ? documentTotals(selectedOrder) : null
   const isDraftOrder = Boolean(draftOrder && selectedOrder?.id === draftOrder.id)
   const orderStageOptions = getOrderStageOptions(workflowStages)
@@ -444,7 +474,11 @@ export default function OrdersPage() {
     if (!openItemMenuId && !openSaveMenu) return undefined
 
     function closeDropdownsOnOutsideClick(event) {
-      if (event.target.closest('[data-document-dropdown]') || event.target.closest('[data-order-dropdown]')) return
+      if (
+        event.target.closest('[data-document-dropdown]') ||
+        event.target.closest('[data-order-dropdown]')
+      )
+        return
       setOpenItemMenuId(null)
       setOpenSaveMenu(false)
       setPendingHeaderOrderDelete(false)
@@ -464,9 +498,12 @@ export default function OrdersPage() {
     syncedCustomerKeyRef.current = syncKey
 
     const patch = {}
-    if (contactInfo.contactName && selectedOrder.contact !== contactInfo.contactName) patch.contact = contactInfo.contactName
-    if (contactInfo.email && selectedOrder.email !== contactInfo.email) patch.email = contactInfo.email
-    if (contactInfo.phone && selectedOrder.phone !== contactInfo.phone) patch.phone = contactInfo.phone
+    if (contactInfo.contactName && selectedOrder.contact !== contactInfo.contactName)
+      patch.contact = contactInfo.contactName
+    if (contactInfo.email && selectedOrder.email !== contactInfo.email)
+      patch.email = contactInfo.email
+    if (contactInfo.phone && selectedOrder.phone !== contactInfo.phone)
+      patch.phone = contactInfo.phone
     if (Object.keys(patch).length > 0) patchSelected(patch)
   }, [selectedOrder?.id, selectedOrder?.customer, viewMode])
 
@@ -498,7 +535,12 @@ export default function OrdersPage() {
     if (draftOrder?.id === id) {
       setDraftOrder((prev) => ({ ...prev, ...patch }))
       if (patch.currentStageId) {
-        syncQuoteFromOrder({ ...draftOrder, ...patch, id, quoteId: draftOrder.quoteId || draftOrder.id })
+        syncQuoteFromOrder({
+          ...draftOrder,
+          ...patch,
+          id,
+          quoteId: draftOrder.quoteId || draftOrder.id,
+        })
       }
       return
     }
@@ -528,9 +570,9 @@ export default function OrdersPage() {
         }
         return
       }
-      const reloaded = loadOrders().map((order) => (
-        order.id === selectedOrder.id ? { ...order, ...patch, stages: syncedStages } : order
-      ))
+      const reloaded = loadOrders().map((order) =>
+        order.id === selectedOrder.id ? { ...order, ...patch, stages: syncedStages } : order,
+      )
       if (!saveOrders(reloaded)) return
       setOrders(reloaded)
       if (patch.currentStageId) {
@@ -551,25 +593,30 @@ export default function OrdersPage() {
     return Number.isNaN(time) ? 0 : time
   }
 
-  const filteredOrders = orders.filter((order) => {
-    const activeStage = resolveOrderActiveStage(order, workflowStages)
-    const q = searchQuery.toLowerCase()
-    const matchesSearch = !q
-      || order.id.toLowerCase().includes(q)
-      || (order.title || '').toLowerCase().includes(q)
-      || order.customer.toLowerCase().includes(q)
-      || (order.contact || '').toLowerCase().includes(q)
-      || (order.quoteId || '').toLowerCase().includes(q)
-    const normalizedPriority = orderPriorityLabels.includes(order.priority) ? order.priority : 'Normal'
-    const matchesPriority = filters.priority === 'Tümü' || normalizedPriority === filters.priority
-    const matchesStage = filters.stage === 'Tümü' || activeStage?.label === filters.stage
-    return matchesSearch && matchesPriority && matchesStage
-  }).sort((a, b) => {
-    if (sortMode === 'date') return getOrderSortDate(b) - getOrderSortDate(a)
-    if (sortMode === 'name') return (a.customer || '').localeCompare(b.customer || '', 'tr')
-    if (sortMode === 'price') return orderTotals(b).grandTotal - orderTotals(a).grandTotal
-    return getOrderSortDate(b) - getOrderSortDate(a)
-  })
+  const filteredOrders = orders
+    .filter((order) => {
+      const activeStage = resolveOrderActiveStage(order, workflowStages)
+      const q = searchQuery.toLowerCase()
+      const matchesSearch =
+        !q ||
+        order.id.toLowerCase().includes(q) ||
+        (order.title || '').toLowerCase().includes(q) ||
+        order.customer.toLowerCase().includes(q) ||
+        (order.contact || '').toLowerCase().includes(q) ||
+        (order.quoteId || '').toLowerCase().includes(q)
+      const normalizedPriority = orderPriorityLabels.includes(order.priority)
+        ? order.priority
+        : 'Normal'
+      const matchesPriority = filters.priority === 'Tümü' || normalizedPriority === filters.priority
+      const matchesStage = filters.stage === 'Tümü' || activeStage?.label === filters.stage
+      return matchesSearch && matchesPriority && matchesStage
+    })
+    .sort((a, b) => {
+      if (sortMode === 'date') return getOrderSortDate(b) - getOrderSortDate(a)
+      if (sortMode === 'name') return (a.customer || '').localeCompare(b.customer || '', 'tr')
+      if (sortMode === 'price') return orderTotals(b).grandTotal - orderTotals(a).grandTotal
+      return getOrderSortDate(b) - getOrderSortDate(a)
+    })
 
   const summary = {
     total: filteredOrders.length,
@@ -580,8 +627,8 @@ export default function OrdersPage() {
   }
 
   function transferOrderToProduction(order, stage) {
-    const productionStage = stage
-      || orderStageOptions.find((item) => item.label === 'Üretime Alındı')
+    const productionStage =
+      stage || orderStageOptions.find((item) => item.label === 'Üretime Alındı')
     if (!productionStage) return null
 
     const job = createProductionFromOrder({ ...order, currentStageId: productionStage.id })
@@ -605,7 +652,9 @@ export default function OrdersPage() {
 
   function setOrderStage(order, stage) {
     if (stage.label === 'Üretime Alındı') {
-      const ok = window.confirm(`"${order.customer || order.id}" siparişini üretime aktarmak istediğinize emin misiniz? Kayıt üretim takibine kopyalanacak ve bu listede kalacaktır.`)
+      const ok = window.confirm(
+        `"${order.customer || order.id}" siparişini üretime aktarmak istediğinize emin misiniz? Kayıt üretim takibine kopyalanacak ve bu listede kalacaktır.`,
+      )
       if (!ok) return
       transferOrderToProduction(order, stage)
       return
@@ -615,7 +664,11 @@ export default function OrdersPage() {
       currentStageId: stage.id,
       activities: [
         ...(order.activities || []),
-        { id: createId('act'), date: new Date().toLocaleString('tr-TR'), text: `Süreç "${stage.label}" olarak güncellendi.` },
+        {
+          id: createId('act'),
+          date: new Date().toLocaleString('tr-TR'),
+          text: `Süreç "${stage.label}" olarak güncellendi.`,
+        },
       ],
     })
     setActiveMenu(null)
@@ -689,24 +742,35 @@ export default function OrdersPage() {
 
     const exists = orders.some((order) => order.id === sanitized.id)
     const nextOrders = exists
-      ? orders.map((order) => (order.id === sanitized.id ? {
-        ...sanitized,
-        activities: [
-          ...(sanitized.activities || []),
+      ? orders.map((order) =>
+          order.id === sanitized.id
+            ? {
+                ...sanitized,
+                activities: [
+                  ...(sanitized.activities || []),
+                  {
+                    id: createId('act'),
+                    date: new Date().toLocaleString('tr-TR'),
+                    text: 'Sipariş güncellenerek kaydedildi.',
+                  },
+                ],
+              }
+            : order,
+        )
+      : [
           {
-            id: createId('act'),
-            date: new Date().toLocaleString('tr-TR'),
-            text: 'Sipariş güncellenerek kaydedildi.',
+            ...sanitized,
+            activities: [
+              ...(sanitized.activities || []),
+              {
+                id: createId('act'),
+                date: new Date().toLocaleString('tr-TR'),
+                text: 'Sipariş kaydedildi.',
+              },
+            ],
           },
-        ],
-      } : order))
-      : [{
-        ...sanitized,
-        activities: [
-          ...(sanitized.activities || []),
-          { id: createId('act'), date: new Date().toLocaleString('tr-TR'), text: 'Sipariş kaydedildi.' },
-        ],
-      }, ...orders]
+          ...orders,
+        ]
 
     const saved = updateOrders(nextOrders)
     if (!saved) {
@@ -740,7 +804,9 @@ export default function OrdersPage() {
   function deleteCurrentOrder({ navigateToList = false, skipConfirm = false } = {}) {
     if (!selectedOrder) return
     if (!skipConfirm) {
-      const ok = window.confirm(`Son onay: "${selectedOrder.id}" siparişi kalıcı olarak silinecek. Devam edilsin mi?`)
+      const ok = window.confirm(
+        `Son onay: "${selectedOrder.id}" siparişi kalıcı olarak silinecek. Devam edilsin mi?`,
+      )
       if (!ok) return
     }
     deleteOrder(selectedOrder.id)
@@ -785,25 +851,39 @@ export default function OrdersPage() {
       items: selectedOrder.items.map((item) => {
         if (item.id !== id) return item
         if (field === 'discountRate') {
-          return { ...item, discountRate: value, showDiscount: value > 0 ? true : item.showDiscount }
+          return {
+            ...item,
+            discountRate: value,
+            showDiscount: value > 0 ? true : item.showDiscount,
+          }
         }
         return { ...item, [field]: value }
       }),
     })
   }
 
-  function selectProductForItem(id, productName) {
-    const product = sampleProducts.find((item) => item.name === productName)
+  function selectProductForItem(id, productOrName) {
+    const product =
+      typeof productOrName === 'string'
+        ? getCatalogProducts().find((item) => item.name === productOrName)
+        : productOrName
+    const productName =
+      typeof productOrName === 'string' ? productOrName : productOrName?.name || ''
     patchSelected({
-      items: selectedOrder.items.map((item) => item.id === id
-        ? {
-          ...item,
-          product: productName,
-          description: product?.notes || item.description || '',
-          unitPrice: Number(product?.salesPriceExcl || product?.purchasePriceExcl || item.unitPrice || 0),
-          vatRate: Number(product?.vatRate ?? item.vatRate ?? 20),
-        }
-        : item),
+      items: selectedOrder.items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              productId: product?.id || item.productId || '',
+              product: productName,
+              description: product?.notes || item.description || '',
+              unitPrice: Number(
+                product?.salesPriceExcl || product?.purchasePriceExcl || item.unitPrice || 0,
+              ),
+              vatRate: Number(product?.vatRate ?? item.vatRate ?? 20),
+            }
+          : item,
+      ),
     })
   }
 
@@ -814,7 +894,9 @@ export default function OrdersPage() {
 
   function disableItemOption(id, option, resetPatch = {}) {
     patchSelected({
-      items: selectedOrder.items.map((item) => item.id === id ? { ...item, [option]: false, ...resetPatch } : item),
+      items: selectedOrder.items.map((item) =>
+        item.id === id ? { ...item, [option]: false, ...resetPatch } : item,
+      ),
     })
   }
 
@@ -840,7 +922,9 @@ export default function OrdersPage() {
   function handleSelectOrderStage(stage) {
     if (!selectedOrder || !stage) return
     if (stage.label === 'Üretime Alındı') {
-      const ok = window.confirm(`"${selectedOrder.customer || selectedOrder.id}" siparişini üretime aktarmak istediğinize emin misiniz? Kayıt üretim takibine kopyalanacak ve bu listede kalacaktır.`)
+      const ok = window.confirm(
+        `"${selectedOrder.customer || selectedOrder.id}" siparişini üretime aktarmak istediğinize emin misiniz? Kayıt üretim takibine kopyalanacak ve bu listede kalacaktır.`,
+      )
       if (!ok) return
       saveCurrentOrder({ returnToList: false })
       transferOrderToProduction({ ...selectedOrder, currentStageId: stage.id }, stage)
@@ -887,9 +971,9 @@ export default function OrdersPage() {
   function updateOrderStageColor(stage, color) {
     if (!selectedOrder) return
     const currentStages = loadWorkflowStages()
-    const orderStages = getOrderStageOptions(currentStages).map((item) => (
-      item.id === stage.id ? { ...item, color } : item
-    ))
+    const orderStages = getOrderStageOptions(currentStages).map((item) =>
+      item.id === stage.id ? { ...item, color } : item,
+    )
     patchSelected({ stages: mergeOrderStagesIntoWorkflow(currentStages, orderStages) })
   }
 
@@ -898,9 +982,9 @@ export default function OrdersPage() {
     const cleanLabel = String(label || '').trim()
     if (!cleanLabel) return
     const currentStages = loadWorkflowStages()
-    const orderStages = getOrderStageOptions(currentStages).map((item) => (
-      item.id === stage.id ? { ...item, label: cleanLabel } : item
-    ))
+    const orderStages = getOrderStageOptions(currentStages).map((item) =>
+      item.id === stage.id ? { ...item, label: cleanLabel } : item,
+    )
     patchSelected({ stages: mergeOrderStagesIntoWorkflow(currentStages, orderStages) })
   }
 
@@ -924,12 +1008,15 @@ export default function OrdersPage() {
     if (!selectedOrder) return
     const ok = window.confirm(`Son onay: "${stage.label}" süreci kaldırılacak. Devam edilsin mi?`)
     if (!ok) return
-    const nextOrderStages = getOrderStageOptions(workflowStages).filter((item) => item.id !== stage.id)
+    const nextOrderStages = getOrderStageOptions(workflowStages).filter(
+      (item) => item.id !== stage.id,
+    )
     addSelectedActivity(`Süreç silindi: "${stage.label}".`, {
       stages: mergeOrderStagesIntoWorkflow(workflowStages, nextOrderStages),
-      currentStageId: selectedOrder.currentStageId === stage.id
-        ? (nextOrderStages[0]?.id || '')
-        : selectedOrder.currentStageId,
+      currentStageId:
+        selectedOrder.currentStageId === stage.id
+          ? nextOrderStages[0]?.id || ''
+          : selectedOrder.currentStageId,
     })
     setPendingStageDeleteId(null)
   }
@@ -944,7 +1031,7 @@ export default function OrdersPage() {
       {viewMode === 'list' ? (
         <AppPageHeader
           title="Sipariş Yönetimi"
-          actions={(
+          actions={
             <SplitCreateButton
               label="Yeni Sipariş Oluştur"
               onPrimaryClick={() => addOrder()}
@@ -966,14 +1053,14 @@ export default function OrdersPage() {
                 },
               ]}
             />
-          )}
+          }
         />
       ) : (
         <AppPageHeader
           title={isDraftOrder ? 'Yeni Sipariş Oluştur' : 'Sipariş Düzenle'}
           onBack={returnToOrderList}
           backLabel="Sipariş listesine dön"
-          actions={(
+          actions={
             <div className="relative flex shrink-0 items-center gap-2" data-order-dropdown>
               {selectedOrder && !isDraftOrder ? (
                 <Link
@@ -1010,11 +1097,16 @@ export default function OrdersPage() {
                     aria-expanded={openSaveMenu}
                     aria-haspopup="menu"
                   >
-                    <ChevronDown className={`h-4 w-4 transition-transform ${openSaveMenu ? 'rotate-180' : ''}`} />
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${openSaveMenu ? 'rotate-180' : ''}`}
+                    />
                   </button>
                 </div>
                 {openSaveMenu && (
-                  <div className="absolute right-0 top-full z-40 mt-2 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card" role="menu">
+                  <div
+                    className="absolute right-0 top-full z-40 mt-2 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card"
+                    role="menu"
+                  >
                     <button
                       type="button"
                       role="menuitem"
@@ -1036,7 +1128,9 @@ export default function OrdersPage() {
                       <ListDeleteConfirmPanel
                         title="Sipariş silinsin mi?"
                         description="Bu işlem geri alınamaz. Sipariş kalıcı olarak silinir."
-                        onConfirm={() => deleteCurrentOrder({ navigateToList: true, skipConfirm: true })}
+                        onConfirm={() =>
+                          deleteCurrentOrder({ navigateToList: true, skipConfirm: true })
+                        }
                         onCancel={() => setPendingHeaderOrderDelete(false)}
                       />
                     ) : (
@@ -1053,7 +1147,7 @@ export default function OrdersPage() {
                 )}
               </div>
             </div>
-          )}
+          }
         />
       )}
 
@@ -1061,10 +1155,34 @@ export default function OrdersPage() {
         <SummaryMetrics
           items={[
             { title: 'Toplam Sipariş', value: summary.total, icon: ClipboardList },
-            { title: 'Yeni Sipariş', value: summary.newOrders, icon: Send, tone: 'orange', valueTone: 'orange' },
-            { title: 'Üretimde', value: summary.production, icon: CheckCircle2, tone: 'emerald', valueTone: 'emerald' },
-            { title: 'Toplam KDV Hariç', value: `${formatTL(summary.totalNet)}`, icon: TurkishLiraIcon, tone: 'purple', valueTone: 'red' },
-            { title: 'Toplam KDV Dahil', value: `${formatTL(summary.totalAmount)}`, icon: TurkishLiraIcon, tone: 'orange', valueTone: 'emerald' },
+            {
+              title: 'Yeni Sipariş',
+              value: summary.newOrders,
+              icon: Send,
+              tone: 'orange',
+              valueTone: 'orange',
+            },
+            {
+              title: 'Üretimde',
+              value: summary.production,
+              icon: CheckCircle2,
+              tone: 'emerald',
+              valueTone: 'emerald',
+            },
+            {
+              title: 'Toplam KDV Hariç',
+              value: `${formatTL(summary.totalNet)}`,
+              icon: TurkishLiraIcon,
+              tone: 'purple',
+              valueTone: 'red',
+            },
+            {
+              title: 'Toplam KDV Dahil',
+              value: `${formatTL(summary.totalAmount)}`,
+              icon: TurkishLiraIcon,
+              tone: 'orange',
+              valueTone: 'emerald',
+            },
           ]}
         />
       )}
@@ -1072,7 +1190,11 @@ export default function OrdersPage() {
       {viewMode === 'list' ? (
         <Panel
           title="Sipariş Listesi"
-          action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{filteredOrders.length} kayıt</span>}
+          action={
+            <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">
+              {filteredOrders.length} kayıt
+            </span>
+          }
         >
           <div className="mb-4 space-y-3">
             <SearchInput
@@ -1082,7 +1204,9 @@ export default function OrdersPage() {
             />
             <div className="grid grid-cols-2 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3 lg:grid-cols-3">
               <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Öncelik</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
+                  Öncelik
+                </p>
                 <EditableDropdownPill
                   value={filters.priority}
                   options={orderPriorityFilterOptions}
@@ -1096,7 +1220,9 @@ export default function OrdersPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Süreç</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
+                  Süreç
+                </p>
                 <EditableDropdownPill
                   value={filters.stage}
                   options={orderStageFilterOptions}
@@ -1110,7 +1236,9 @@ export default function OrdersPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Sıralama</p>
+                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
+                  Sıralama
+                </p>
                 <EditableDropdownPill
                   value={sortLabelByMode[sortMode] || 'Son işleme göre'}
                   options={sortFilterOptions}
@@ -1143,13 +1271,19 @@ export default function OrdersPage() {
             {filteredOrders.map((order) => {
               const totals = orderTotals(order)
               const activeStage = resolveOrderActiveStage(order, workflowStages)
-              const isInProduction = activeStage?.label === 'Üretime Alındı' || order.status === 'Üretimde'
-              const productionEntryStage = orderStageOptions.find((item) => item.label === 'Üretime Alındı')
-              const stageSurfaceStage = isInProduction ? (activeStage || productionEntryStage) : null
+              const isInProduction =
+                activeStage?.label === 'Üretime Alındı' || order.status === 'Üretimde'
+              const productionEntryStage = orderStageOptions.find(
+                (item) => item.label === 'Üretime Alındı',
+              )
+              const stageSurfaceStage = isInProduction ? activeStage || productionEntryStage : null
               const stageColumnSurface = stageSurfaceStage
                 ? getStageColumnSurfaceClasses(stageSurfaceStage)
                 : ''
-              const priorityValue = resolveListColumnLabel(order.priority, orderPriorityDropdownOptions)
+              const priorityValue = resolveListColumnLabel(
+                order.priority,
+                orderPriorityDropdownOptions,
+              )
               const customerDisplay = getListCustomerDisplay(order.customer)
               const hasLinkedQuote = orderHasLinkedQuote(order)
               return (
@@ -1170,11 +1304,15 @@ export default function OrdersPage() {
                     </p>
                   </div>
                   <div className="min-w-0 text-left">
-                    <p className="text-left text-xs font-black tabular-nums text-blue-300">{order.id}</p>
+                    <p className="text-left text-xs font-black tabular-nums text-blue-300">
+                      {order.id}
+                    </p>
                   </div>
                   <div className="min-w-0 w-full text-left">
                     <div className="flex w-full min-w-0 items-center justify-start gap-2 text-left text-sm font-black text-white">
-                      <span className="truncate">{customerDisplay.brandShortName || 'Müşteri girilmedi'}</span>
+                      <span className="truncate">
+                        {customerDisplay.brandShortName || 'Müşteri girilmedi'}
+                      </span>
                       {customerDisplay.companyTitle && (
                         <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[12px] font-black text-gray-400">
                           <span className="truncate">{customerDisplay.companyTitle}</span>
@@ -1182,7 +1320,10 @@ export default function OrdersPage() {
                       )}
                     </div>
                   </div>
-                  <div className="min-w-0 w-full justify-self-start text-left" onClick={(event) => event.stopPropagation()}>
+                  <div
+                    className="min-w-0 w-full justify-self-start text-left"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <EditableDropdownPill
                       value={priorityValue}
                       options={orderPriorityDropdownOptions}
@@ -1213,9 +1354,16 @@ export default function OrdersPage() {
                       onChange={(value) => handleOrderStageLabelChange(order, value)}
                     />
                   </div>
-                  <span className="block min-w-0 w-full pr-2 text-right text-sm font-bold tabular-nums text-gray-200">{formatTL(totals.net)}</span>
-                  <span className="block min-w-0 w-full pr-2 text-right text-sm font-black tabular-nums text-white">{formatTL(totals.grandTotal)}</span>
-                  <div className="relative z-10 flex h-9 w-full items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
+                  <span className="block min-w-0 w-full pr-2 text-right text-sm font-bold tabular-nums text-gray-200">
+                    {formatTL(totals.net)}
+                  </span>
+                  <span className="block min-w-0 w-full pr-2 text-right text-sm font-black tabular-nums text-white">
+                    {formatTL(totals.grandTotal)}
+                  </span>
+                  <div
+                    className="relative z-10 flex h-9 w-full items-center justify-end gap-2"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     {isInProduction ? (
                       <span className="whitespace-nowrap rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-[12px] font-bold text-emerald-400/90">
                         Üretimde
@@ -1224,23 +1372,28 @@ export default function OrdersPage() {
                     <MoreMenu
                       items={[
                         ...(hasLinkedQuote
-                          ? [{
-                              id: 'cancel',
-                              label: 'Vazgeç',
-                              icon: Undo2,
-                              onClick: () => handleCancelOrderFromList(order, { stopPropagation: () => {} }),
-                            }]
+                          ? [
+                              {
+                                id: 'cancel',
+                                label: 'Vazgeç',
+                                icon: Undo2,
+                                onClick: () =>
+                                  handleCancelOrderFromList(order, { stopPropagation: () => {} }),
+                              },
+                            ]
                           : []),
                         ...(!isInProduction && productionEntryStage
-                          ? [{
-                              id: 'produce',
-                              label: 'Üretime al',
-                              icon: Factory,
-                              onClick: () => {
-                                transferOrderToProduction(order, productionEntryStage)
-                                navigate('/uretim')
+                          ? [
+                              {
+                                id: 'produce',
+                                label: 'Üretime al',
+                                icon: Factory,
+                                onClick: () => {
+                                  transferOrderToProduction(order, productionEntryStage)
+                                  navigate('/uretim')
+                                },
                               },
-                            }]
+                            ]
                           : []),
                         {
                           id: 'delete',
@@ -1279,123 +1432,141 @@ export default function OrdersPage() {
             </div>
           )}
         </Panel>
-      ) : selectedOrder && (
-        <div className="space-y-5">
-          <div className="grid grid-cols-12 gap-4">
-            <section className="col-span-12 rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_200px]">
-                  <DocumentField label="Sipariş Başlığı">
-                    <input value={selectedOrder.title} onChange={(e) => patchSelected({ title: e.target.value })} className="form-input" />
-                  </DocumentField>
-                  {selectedOrder.quoteId && (
-                    <DocumentField label="Kaynak Teklif">
-                      <div className="form-input flex items-center bg-dark-900/40 font-bold text-emerald-300">
-                        {selectedOrder.quoteId}
-                      </div>
+      ) : (
+        selectedOrder && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-12 gap-4">
+              <section className="col-span-12 rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_200px]">
+                    <DocumentField label="Sipariş Başlığı">
+                      <input
+                        value={selectedOrder.title}
+                        onChange={(e) => patchSelected({ title: e.target.value })}
+                        className="form-input"
+                      />
                     </DocumentField>
-                  )}
+                    {selectedOrder.quoteId && (
+                      <DocumentField label="Kaynak Teklif">
+                        <div className="form-input flex items-center bg-dark-900/40 font-bold text-emerald-300">
+                          {selectedOrder.quoteId}
+                        </div>
+                      </DocumentField>
+                    )}
+                  </div>
+                  <CustomerPicker record={selectedOrder} onPatch={patchSelected} />
+                  <DocumentField label="Oluşturma Tarihi">
+                    <input
+                      type="date"
+                      value={selectedOrder.createdAt}
+                      onChange={(e) => patchSelected({ createdAt: e.target.value })}
+                      className="form-input"
+                    />
+                  </DocumentField>
+                  <DocumentField label="Teslim Tarihi">
+                    <input
+                      type="date"
+                      value={selectedOrder.deliveryDate || ''}
+                      onChange={(e) => patchSelected({ deliveryDate: e.target.value })}
+                      className="form-input"
+                    />
+                  </DocumentField>
+                  <div className="col-span-2">
+                    <RepresentativeEditor
+                      record={selectedOrder}
+                      onPatch={patchSelected}
+                      optionLists={optionLists}
+                      updateOptionList={updateOptionList}
+                      activeMenu={activeMenu}
+                      setActiveMenu={setActiveMenu}
+                      openKey="order-representative"
+                    />
+                  </div>
                 </div>
-                <CustomerPicker record={selectedOrder} onPatch={patchSelected} />
-                <DocumentField label="Oluşturma Tarihi">
-                  <input type="date" value={selectedOrder.createdAt} onChange={(e) => patchSelected({ createdAt: e.target.value })} className="form-input" />
-                </DocumentField>
-                <DocumentField label="Teslim Tarihi">
-                  <input type="date" value={selectedOrder.deliveryDate || ''} onChange={(e) => patchSelected({ deliveryDate: e.target.value })} className="form-input" />
-                </DocumentField>
-                <div className="col-span-2">
-                  <RepresentativeEditor
-                    record={selectedOrder}
-                    onPatch={patchSelected}
-                    optionLists={optionLists}
-                    updateOptionList={updateOptionList}
-                    activeMenu={activeMenu}
-                    setActiveMenu={setActiveMenu}
-                    openKey="order-representative"
-                  />
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-            <OrderProcessManagement
-              order={selectedOrder}
-              onPatch={patchSelected}
-              optionLists={optionLists}
-              updateOptionList={updateOptionList}
-              orderStageRecord={orderStageRecord}
-              isStagePanelOpen={isStagePanelOpen}
-              toggleStagePanel={toggleStagePanel}
-              stageInput={stageInput}
-              setStageInput={setStageInput}
-              onAddOrderStage={addOrderStage}
-              onSelectOrderStage={selectOrderStageInEditor}
-              onUpdateOrderStageColor={updateOrderStageColor}
-              onUpdateOrderStageLabel={updateOrderStageLabel}
-              onReorderOrderStages={reorderOrderStages}
-              pendingStageDeleteId={pendingStageDeleteId}
-              setPendingStageDeleteId={setPendingStageDeleteId}
-              onRemoveOrderStage={removeOrderStage}
-            />
-          </section>
-
-          <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-bold text-white">Ürün Seçimi</h2>
-              </div>
-              <DocumentMiniButton onClick={addItem}>Ürün Ekle</DocumentMiniButton>
+              </section>
             </div>
-            <div className="space-y-3">
-              {(selectedOrder.items || []).map((item) => (
-                <DocumentLineItemRow
-                  key={item.id}
-                  item={item}
-                  openItemMenuId={openItemMenuId}
-                  setOpenItemMenuId={setOpenItemMenuId}
-                  pendingItemDeleteId={pendingItemDeleteId}
-                  setPendingItemDeleteId={setPendingItemDeleteId}
-                  onUpdate={updateItem}
-                  onSelectProduct={selectProductForItem}
-                  onEnableOption={enableItemOption}
-                  onDisableOption={disableItemOption}
-                  onUploadImage={uploadItemLineImage}
-                  onRemove={removeItem}
-                />
-              ))}
-              {(selectedOrder.items || []).length === 0 && (
-                <div className="rounded-2xl border border-dashed border-dark-500/60 bg-dark-700/20 p-8 text-center text-sm font-semibold text-gray-500">
-                  Henüz ürün eklenmedi. Ürün Ekle butonu ile sipariş satırı oluşturun.
-                </div>
-              )}
-            </div>
-          </section>
 
-          {selectedTotals && (
             <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-              <div className="grid grid-cols-[minmax(0,1fr)_480px] items-start gap-4">
-                <div className="min-w-0">
-                  <DocumentTermsEditor
-                    record={selectedOrder}
-                    onPatch={patchSelected}
-                    compact
-                    title="Sipariş Koşulları"
-                    savedTermsTitle="Hazır Sipariş Koşulları"
-                    descriptionPlaceholder="Siparişin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
-                  />
+              <OrderProcessManagement
+                order={selectedOrder}
+                onPatch={patchSelected}
+                optionLists={optionLists}
+                updateOptionList={updateOptionList}
+                orderStageRecord={orderStageRecord}
+                isStagePanelOpen={isStagePanelOpen}
+                toggleStagePanel={toggleStagePanel}
+                stageInput={stageInput}
+                setStageInput={setStageInput}
+                onAddOrderStage={addOrderStage}
+                onSelectOrderStage={selectOrderStageInEditor}
+                onUpdateOrderStageColor={updateOrderStageColor}
+                onUpdateOrderStageLabel={updateOrderStageLabel}
+                onReorderOrderStages={reorderOrderStages}
+                pendingStageDeleteId={pendingStageDeleteId}
+                setPendingStageDeleteId={setPendingStageDeleteId}
+                onRemoveOrderStage={removeOrderStage}
+              />
+            </section>
+
+            <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-white">Ürün Seçimi</h2>
                 </div>
-                <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
+                <DocumentMiniButton onClick={addItem}>Ürün Ekle</DocumentMiniButton>
+              </div>
+              <div className="space-y-3">
+                {(selectedOrder.items || []).map((item) => (
+                  <DocumentLineItemRow
+                    key={item.id}
+                    item={item}
+                    openItemMenuId={openItemMenuId}
+                    setOpenItemMenuId={setOpenItemMenuId}
+                    pendingItemDeleteId={pendingItemDeleteId}
+                    setPendingItemDeleteId={setPendingItemDeleteId}
+                    onUpdate={updateItem}
+                    onSelectProduct={selectProductForItem}
+                    onEnableOption={enableItemOption}
+                    onDisableOption={disableItemOption}
+                    onUploadImage={uploadItemLineImage}
+                    onRemove={removeItem}
+                    customerId={selectedCustomer?.id || ''}
+                    customerLabel={selectedOrder.customer || ''}
+                  />
+                ))}
+                {(selectedOrder.items || []).length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-dark-500/60 bg-dark-700/20 p-8 text-center text-sm font-semibold text-gray-500">
+                    Henüz ürün eklenmedi. Ürün Ekle butonu ile sipariş satırı oluşturun.
+                  </div>
+                )}
               </div>
             </section>
-          )}
 
-          <DocumentActivityPanel
-            activities={selectedOrder.activities || []}
-            isOpen={isActivityOpen}
-            onToggle={() => setIsActivityOpen((current) => !current)}
-          />
-        </div>
+            {selectedTotals && (
+              <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
+                <div className="grid grid-cols-[minmax(0,1fr)_480px] items-start gap-4">
+                  <div className="min-w-0">
+                    <DocumentTermsEditor
+                      record={selectedOrder}
+                      onPatch={patchSelected}
+                      compact
+                      title="Sipariş Koşulları"
+                      savedTermsTitle="Hazır Sipariş Koşulları"
+                      descriptionPlaceholder="Siparişin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
+                    />
+                  </div>
+                  <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
+                </div>
+              </section>
+            )}
+
+            <DocumentActivityPanel
+              activities={selectedOrder.activities || []}
+              isOpen={isActivityOpen}
+              onToggle={() => setIsActivityOpen((current) => !current)}
+            />
+          </div>
+        )
       )}
 
       <CreateCustomerPickModal

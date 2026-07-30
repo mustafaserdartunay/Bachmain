@@ -1,5 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight, Plus, ArrowLeft, Trash2, Pencil, CheckCircle2, Send, ChevronDown, Package, Boxes, AlertTriangle, WalletCards } from 'lucide-react'
+import {
+  ChevronRight,
+  Plus,
+  ArrowLeft,
+  Trash2,
+  Pencil,
+  CheckCircle2,
+  Send,
+  ChevronDown,
+  Package,
+  Boxes,
+  AlertTriangle,
+  WalletCards,
+} from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import ProductsTable from '../../components/Products/ProductsTable'
 import ProductForm from '../../components/Products/ProductForm'
@@ -12,6 +25,7 @@ import SplitCreateButton from '../../components/Common/SplitCreateButton'
 import { appendActivityEntry } from '../../utils/activityArchiveStore'
 import { BTN_SUCCESS } from '../../utils/buttonStyles'
 import { formatTL, getProductPricing } from '../../utils/productPricing'
+import { normalizeProductCustomerIds } from '../../utils/productCustomerCompatibility'
 
 const PRODUCT_STORAGE_KEY = 'erlenbox-products'
 const PRODUCT_DB_NAME = 'erlenbox-product-storage'
@@ -36,7 +50,8 @@ function stripHeavyMedia(value) {
     return Object.fromEntries(
       Object.entries(value).map(([key, item]) => {
         if (key === 'image') return [key, null]
-        if (['instagramImages', 'webImages', 'videos', 'gallery', 'files'].includes(key)) return [key, []]
+        if (['instagramImages', 'webImages', 'videos', 'gallery', 'files'].includes(key))
+          return [key, []]
         return [key, stripHeavyMedia(item)]
       }),
     )
@@ -119,6 +134,7 @@ function cloneProduct(product) {
     properties: (base.properties || []).map((item) => ({ ...item })),
     materials: (base.materials || []).map((item) => ({ ...item })),
     producerSuppliers: [...(base.producerSuppliers || [])],
+    customerIds: normalizeProductCustomerIds(base),
     costColumns: (base.costColumns || []).map((item) => ({ ...item })),
     costRows: (base.costRows || []).map((item) => ({ ...item })),
     laborRows: (base.laborRows || []).map((item) => ({ ...item })),
@@ -183,27 +199,31 @@ export default function ProductsPage() {
   const isNew = view === 'create'
 
   const productSummary = useMemo(() => {
-    return products.reduce((summary, product) => {
-      const stock = product.stockTracking ? Number(product.initialStock) || 0 : 0
-      const pricing = getProductPricing(product)
-      const isCritical = product.stockTracking
-        && Number(product.criticalStock) > 0
-        && Number(product.initialStock) <= Number(product.criticalStock)
+    return products.reduce(
+      (summary, product) => {
+        const stock = product.stockTracking ? Number(product.initialStock) || 0 : 0
+        const pricing = getProductPricing(product)
+        const isCritical =
+          product.stockTracking &&
+          Number(product.criticalStock) > 0 &&
+          Number(product.initialStock) <= Number(product.criticalStock)
 
-      return {
-        stockTracked: summary.stockTracked + (product.stockTracking ? 1 : 0),
-        totalStock: summary.totalStock + stock,
-        critical: summary.critical + (isCritical ? 1 : 0),
-        salesIncl: summary.salesIncl + stock * (Number(pricing.finalSalesPriceIncl) || 0),
-        cost: summary.cost + stock * (Number(product.costPrice) || 0),
-      }
-    }, {
-      stockTracked: 0,
-      totalStock: 0,
-      critical: 0,
-      salesIncl: 0,
-      cost: 0,
-    })
+        return {
+          stockTracked: summary.stockTracked + (product.stockTracking ? 1 : 0),
+          totalStock: summary.totalStock + stock,
+          critical: summary.critical + (isCritical ? 1 : 0),
+          salesIncl: summary.salesIncl + stock * (Number(pricing.finalSalesPriceIncl) || 0),
+          cost: summary.cost + stock * (Number(product.costPrice) || 0),
+        }
+      },
+      {
+        stockTracked: 0,
+        totalStock: 0,
+        critical: 0,
+        salesIncl: 0,
+        cost: 0,
+      },
+    )
   }, [products])
 
   useEffect(() => {
@@ -231,6 +251,7 @@ export default function ProductsPage() {
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(stripHeavyMedia(cleanProducts)))
       window.dispatchEvent(new CustomEvent('erlenbox:products-updated'))
+      window.dispatchEvent(new CustomEvent('bach:products-updated'))
     } catch {
       localStorage.removeItem(PRODUCT_STORAGE_KEY)
     }
@@ -320,7 +341,9 @@ export default function ProductsPage() {
         setView('list')
       }
     } else {
-      setProducts((prev) => prev.map((p) => (p.id === selectedId ? { ...productToSave, id: selectedId } : p)))
+      setProducts((prev) =>
+        prev.map((p) => (p.id === selectedId ? { ...productToSave, id: selectedId } : p)),
+      )
       setDraft(cloneProduct({ ...productToSave, id: selectedId }))
       showToast('Ürün kaydedildi')
       setSelectedId(null)
@@ -412,11 +435,9 @@ export default function ProductsPage() {
   function handleRestoreArchiveEntry(entry) {
     const product = entry.snapshot
     if (!product?.id) return false
-    setProducts((prev) => (
-      prev.some((item) => item.id === product.id)
-        ? prev
-        : [cloneProduct(product), ...prev]
-    ))
+    setProducts((prev) =>
+      prev.some((item) => item.id === product.id) ? prev : [cloneProduct(product), ...prev],
+    )
     showToast('Ürün geri alındı')
     return true
   }
@@ -426,7 +447,7 @@ export default function ProductsPage() {
       {view === 'list' ? (
         <AppPageHeader
           title="Hizmet ve Ürünler"
-          actions={(
+          actions={
             <SplitCreateButton
               label="Yeni Ürün Oluştur"
               onPrimaryClick={handleNew}
@@ -448,14 +469,14 @@ export default function ProductsPage() {
                 },
               ]}
             />
-          )}
+          }
         />
       ) : (
         <AppPageHeader
           title={isNew ? 'Yeni Ürün Oluştur' : 'Ürün Düzenle'}
           onBack={handleBack}
           backLabel="Ürün listesine dön"
-          actions={(
+          actions={
             <div className="relative flex flex-wrap items-center justify-end gap-2">
               <button
                 type="button"
@@ -466,7 +487,11 @@ export default function ProductsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => alert('Ürün önerme modülü sonraki adımda WhatsApp / mail / görsel seçimleriyle bağlanacak.')}
+                onClick={() =>
+                  alert(
+                    'Ürün önerme modülü sonraki adımda WhatsApp / mail / görsel seçimleriyle bağlanacak.',
+                  )
+                }
                 className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2.5 text-sm text-blue-300 transition-colors hover:bg-blue-500/20"
               >
                 <Send className="w-4 h-4" /> Ürünü Öner
@@ -496,7 +521,11 @@ export default function ProductsPage() {
                 </>
               )}
               <div className="btn-split">
-                <button type="button" onClick={handleSave} className={`${BTN_SUCCESS} gap-1.5 px-4 text-sm`}>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className={`${BTN_SUCCESS} gap-1.5 px-4 text-sm`}
+                >
                   Kaydet
                 </button>
                 <span className="btn-split-divider" aria-hidden />
@@ -506,24 +535,38 @@ export default function ProductsPage() {
                   className={`${BTN_SUCCESS} w-14 px-0`}
                   aria-label="Kaydet menüsü"
                 >
-                  <ChevronDown className={`w-4 h-4 transition-transform ${saveMenuOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${saveMenuOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
               </div>
               {saveMenuOpen ? (
                 <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-dark-500/70 bg-dark-800 shadow-2xl">
-                  <button type="button" onClick={handleSave} className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-dark-700">
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-dark-700"
+                  >
                     Kaydet
                   </button>
-                  <button type="button" onClick={handleSaveAndNew} className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-dark-700">
+                  <button
+                    type="button"
+                    onClick={handleSaveAndNew}
+                    className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-dark-700"
+                  >
                     Kaydet ve yeni ürün oluştur
                   </button>
-                  <button type="button" onClick={handleCopyAndCreate} className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-dark-700">
+                  <button
+                    type="button"
+                    onClick={handleCopyAndCreate}
+                    className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-dark-700"
+                  >
                     Kopyala ve Oluştur
                   </button>
                 </div>
               ) : null}
             </div>
-          )}
+          }
         />
       )}
 
@@ -532,10 +575,34 @@ export default function ProductsPage() {
           columns={5}
           items={[
             { title: 'Toplam Kayıt', value: products.length, icon: Package },
-            { title: 'Stok Takipli', value: productSummary.stockTracked, icon: CheckCircle2, tone: 'blue', valueTone: 'blue' },
-            { title: 'Toplam Stok', value: productSummary.totalStock.toLocaleString('tr-TR'), icon: Boxes, tone: 'emerald', valueTone: 'emerald' },
-            { title: 'Kritik Ürün', value: productSummary.critical, icon: AlertTriangle, tone: 'red', valueTone: 'red' },
-            { title: 'Stok Toplam Maliyeti', value: formatTL(productSummary.cost), icon: WalletCards, tone: 'purple', valueTone: 'red' },
+            {
+              title: 'Stok Takipli',
+              value: productSummary.stockTracked,
+              icon: CheckCircle2,
+              tone: 'blue',
+              valueTone: 'blue',
+            },
+            {
+              title: 'Toplam Stok',
+              value: productSummary.totalStock.toLocaleString('tr-TR'),
+              icon: Boxes,
+              tone: 'emerald',
+              valueTone: 'emerald',
+            },
+            {
+              title: 'Kritik Ürün',
+              value: productSummary.critical,
+              icon: AlertTriangle,
+              tone: 'red',
+              valueTone: 'red',
+            },
+            {
+              title: 'Stok Toplam Maliyeti',
+              value: formatTL(productSummary.cost),
+              icon: WalletCards,
+              tone: 'purple',
+              valueTone: 'red',
+            },
           ]}
         />
       )}
@@ -544,7 +611,11 @@ export default function ProductsPage() {
         <>
           <Panel
             title="Detaylı Ürün ve Hizmet Listesi"
-            action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{products.length} kayıt</span>}
+            action={
+              <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">
+                {products.length} kayıt
+              </span>
+            }
           >
             <ProductsTable
               products={products}

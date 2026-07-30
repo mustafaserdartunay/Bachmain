@@ -1,19 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import SearchInput from '../Common/SearchInput'
-import {
-  Instagram,
-  Landmark,
-  Mail,
-  MapPin,
-  Phone,
-  Plus,
-  UserRound,
-  Warehouse,
-} from 'lucide-react'
+import { Instagram, Landmark, Mail, MapPin, Phone, Plus, UserRound, Warehouse } from 'lucide-react'
 import { customers as customerData } from '../../data/mockData'
 import { findCustomerProfileByReference, getCustomerProfiles } from '../../data/customerProfiles'
 import { getCustomerDisplay } from '../../utils/customerDisplay'
-import { getCustomerContacts, resolveContactLinkHref, resolveCustomerContactInfo } from '../../utils/customerContacts'
+import {
+  getCustomerContacts,
+  resolveContactLinkHref,
+  resolveCustomerContactInfo,
+} from '../../utils/customerContacts'
 import {
   getCustomerMetaSelection,
   getDefaultCustomerScoring,
@@ -41,22 +36,33 @@ function resolveCustomerWarehouse(customer) {
 }
 
 function findDocumentCustomer(customerName) {
-  return findCustomerProfileByReference(customerName)
-    || (customerData.list || []).find((customer) => {
-      const normalized = String(customerName || '').trim().toLowerCase()
+  return (
+    findCustomerProfileByReference(customerName) ||
+    (customerData.list || []).find((customer) => {
+      const normalized = String(customerName || '')
+        .trim()
+        .toLowerCase()
       if (!normalized) return false
       const display = getCustomerDisplay(customer)
-      return customer.company?.toLowerCase() === normalized
-        || display.brandShortName.toLowerCase() === normalized
-        || display.companyTitle.toLowerCase() === normalized
-    })
-    || null
+      return (
+        customer.company?.toLowerCase() === normalized ||
+        display.brandShortName.toLowerCase() === normalized ||
+        display.companyTitle.toLowerCase() === normalized
+      )
+    }) ||
+    null
+  )
 }
 
 function customerSearchTexts(customer) {
   const display = getCustomerDisplay(customer)
   const contactInfo = resolveCustomerContactInfo(customer)
-  const savedContacts = (customer.contacts || []).flatMap((row) => [row.name, row.phone, row.email, row.instagram])
+  const savedContacts = (customer.contacts || []).flatMap((row) => [
+    row.name,
+    row.phone,
+    row.email,
+    row.instagram,
+  ])
   return [
     customer.company,
     customer.companyTitle,
@@ -74,11 +80,13 @@ function customerSearchTexts(customer) {
 
 function getCustomerRepresentative(customer) {
   if (!customer) return ''
-  return getCustomerMetaSelection(customer, readCustomerMeta()[customer.id] || {}).representative
-    || customer.representative
-    || customer.assignedTo
-    || customer.owner
-    || ''
+  return (
+    getCustomerMetaSelection(customer, readCustomerMeta()[customer.id] || {}).representative ||
+    customer.representative ||
+    customer.assignedTo ||
+    customer.owner ||
+    ''
+  )
 }
 
 function buildMetaPills(customer) {
@@ -164,13 +172,15 @@ function buildCustomerContactRows(customer, record) {
   const email = record.email || customer.email || ''
   if (!contact && !phone && !email) return []
 
-  return [{
-    key: 'primary',
-    title: 'Yetkili',
-    name: contact,
-    phone,
-    email,
-  }]
+  return [
+    {
+      key: 'primary',
+      title: 'Yetkili',
+      name: contact,
+      phone,
+      email,
+    },
+  ]
 }
 
 function CustomerInfoStrip({ customer, record }) {
@@ -179,12 +189,7 @@ function CustomerInfoStrip({ customer, record }) {
   const scorePill = buildScorePill(customer)
   const balancePill = buildBalancePill(customer)
   const representativePill = buildRepresentativePill(record.owner)
-  const metaItems = [
-    scorePill,
-    balancePill,
-    representativePill,
-    ...pills,
-  ].filter(Boolean)
+  const metaItems = [scorePill, balancePill, representativePill, ...pills].filter(Boolean)
 
   const contactRows = buildCustomerContactRows(customer, record)
   const detailedAddress = customer.address?.trim() || customer.city || ''
@@ -203,18 +208,27 @@ function CustomerInfoStrip({ customer, record }) {
   return (
     <div className="mt-2 rounded-xl border border-dark-500/30 bg-dark-800/35 px-3 py-2">
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="text-sm font-black text-white">{display.brandShortName || record.customer}</span>
+        <span className="text-sm font-black text-white">
+          {display.brandShortName || record.customer}
+        </span>
         {display.companyTitle && display.companyTitle !== display.brandShortName && (
           <>
             <span className="text-[12px] text-gray-600">·</span>
-            <span className="min-w-0 truncate text-xs font-semibold text-gray-400">{display.companyTitle}</span>
+            <span className="min-w-0 truncate text-xs font-semibold text-gray-400">
+              {display.companyTitle}
+            </span>
           </>
         )}
         {metaItems.length > 0 && (
           <span className="ml-auto flex flex-wrap items-end justify-end gap-2">
             {metaItems.map((item) => (
-              <div key={`${item.title}-${item.label}`} className="flex flex-col items-center gap-0.5">
-                <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-500">{item.title}</span>
+              <div
+                key={`${item.title}-${item.label}`}
+                className="flex flex-col items-center gap-0.5"
+              >
+                <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-500">
+                  {item.title}
+                </span>
                 <span className="inline-flex items-center gap-1 rounded-md bg-dark-700/80 px-1.5 py-0.5 text-[12px] font-bold text-gray-300">
                   <span className={`h-1.5 w-1.5 rounded-full ${item.color}`} />
                   {item.label}
@@ -228,12 +242,13 @@ function CustomerInfoStrip({ customer, record }) {
       {taxLine.length > 0 && (
         <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
           {taxLine.map(({ label, text }) => (
-            <span key={label} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] text-gray-500">
+            <span
+              key={label}
+              className="inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] text-gray-500"
+            >
               <Landmark className="h-3 w-3 shrink-0 text-gray-600" />
               <span className="truncate">
-                <span className="font-semibold text-gray-400">{label}:</span>
-                {' '}
-                {text}
+                <span className="font-semibold text-gray-400">{label}:</span> {text}
               </span>
             </span>
           ))}
@@ -245,9 +260,18 @@ function CustomerInfoStrip({ customer, record }) {
           {contactRows.map((row) => {
             const items = [
               row.name && { icon: UserRound, text: row.name },
-              row.phone && { icon: Phone, text: row.phone, href: `tel:${row.phone.replace(/\s/g, '')}` },
+              row.phone && {
+                icon: Phone,
+                text: row.phone,
+                href: `tel:${row.phone.replace(/\s/g, '')}`,
+              },
               row.email && { icon: Mail, text: row.email, href: `mailto:${row.email}` },
-              row.instagram && { icon: Instagram, text: row.instagram, href: resolveContactLinkHref(row.instagram, { instagram: true }), external: true },
+              row.instagram && {
+                icon: Instagram,
+                text: row.instagram,
+                href: resolveContactLinkHref(row.instagram, { instagram: true }),
+                external: true,
+              },
             ].filter(Boolean)
 
             return (
@@ -256,7 +280,10 @@ function CustomerInfoStrip({ customer, record }) {
                   {row.title}
                 </span>
                 {items.map(({ icon: Icon, text, href, external }) => (
-                  <span key={`${row.key}-${text}`} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] text-gray-400">
+                  <span
+                    key={`${row.key}-${text}`}
+                    className="inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] text-gray-400"
+                  >
                     <Icon className="h-3 w-3 shrink-0 text-gray-600" />
                     {href ? (
                       <a
@@ -281,10 +308,15 @@ function CustomerInfoStrip({ customer, record }) {
       {detailLine.length > 0 && (
         <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-dark-500/20 pt-1">
           {detailLine.map(({ icon: Icon, text, href }) => (
-            <span key={text} className="inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] text-gray-500">
+            <span
+              key={text}
+              className="inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] text-gray-500"
+            >
               <Icon className="h-3 w-3 shrink-0 text-gray-600" />
               {href ? (
-                <a href={href} className="truncate transition-colors hover:text-blue-300">{text}</a>
+                <a href={href} className="truncate transition-colors hover:text-blue-300">
+                  {text}
+                </a>
               ) : (
                 <span className="truncate">{text}</span>
               )}
@@ -292,7 +324,6 @@ function CustomerInfoStrip({ customer, record }) {
           ))}
         </div>
       )}
-
     </div>
   )
 }
@@ -318,9 +349,11 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
   const query = doc.customer || ''
   const normalizedQuery = query.trim().toLowerCase()
   const filteredCustomers = normalizedQuery
-    ? customerOptions.filter((customer) => customerSearchTexts(customer)
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(normalizedQuery)))
+    ? customerOptions.filter((customer) =>
+        customerSearchTexts(customer)
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedQuery)),
+      )
     : customerOptions
   const matchedCustomer = findDocumentCustomer(query)
 
@@ -349,6 +382,7 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
     const display = getCustomerDisplay(customer)
     const contactInfo = resolveCustomerContactInfo(customer)
     onPatch({
+      customerId: customer.id || '',
       customer: customer.companyTitle || customer.company || display.companyTitle,
       contact: contactInfo.contactName,
       email: contactInfo.email,
@@ -362,7 +396,7 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
     const company = window.prompt('Yeni müşteri adı')
     const customerName = company?.trim()
     if (!customerName) return
-    onPatch({ customer: customerName, contact: '', email: '', phone: '' })
+    onPatch({ customerId: '', customer: customerName, contact: '', email: '', phone: '' })
     setIsOpen(false)
   }
 
@@ -370,6 +404,7 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
     const display = getCustomerDisplay(customer)
     const contactInfo = resolveCustomerContactInfo(customer)
     onPatch({
+      customerId: customer.id || '',
       customer: customer.companyTitle || customer.company || display.companyTitle,
       contact: contactInfo.contactName,
       email: contactInfo.email,
@@ -384,7 +419,7 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
     <div ref={pickerRef} className="col-span-2">
       <DocumentField label="Müşteri">
         <CustomerFieldActionRow
-          actions={(
+          actions={
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
@@ -404,12 +439,12 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
                 </button>
               ) : null}
             </div>
-          )}
+          }
         >
           <SearchInput
             value={query}
             onChange={(event) => {
-              onPatch({ customer: event.target.value })
+              onPatch({ customerId: '', customer: event.target.value })
               setIsOpen(true)
             }}
             onFocus={() => setIsOpen(true)}
@@ -428,8 +463,12 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
                       className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-dark-700"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-white">{display.brandShortName}</p>
-                        <p className="truncate text-xs text-gray-500">{display.companyTitle} · {customer.email}</p>
+                        <p className="truncate text-sm font-bold text-white">
+                          {display.brandShortName}
+                        </p>
+                        <p className="truncate text-xs text-gray-500">
+                          {display.companyTitle} · {customer.email}
+                        </p>
                       </div>
                       <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[12px] font-bold text-blue-300">
                         Seç
@@ -447,7 +486,13 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
           )}
         </CustomerFieldActionRow>
       </DocumentField>
-      {matchedCustomer && <CustomerInfoStrip key={`${matchedCustomer.id}-${profileVersion}`} customer={matchedCustomer} record={doc} />}
+      {matchedCustomer && (
+        <CustomerInfoStrip
+          key={`${matchedCustomer.id}-${profileVersion}`}
+          customer={matchedCustomer}
+          record={doc}
+        />
+      )}
       {isQuickEditOpen && matchedCustomer && (
         <CustomerQuickEditModal
           customer={matchedCustomer}
