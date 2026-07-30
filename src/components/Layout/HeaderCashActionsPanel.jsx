@@ -2,35 +2,24 @@ import { Link } from 'react-router-dom'
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
-  FileText,
   Handshake,
+  Inbox,
   ReceiptText,
   UserPlus,
   Wallet,
 } from 'lucide-react'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
-import { getCustomerProfiles } from '../../data/customerProfiles'
-import { getCustomerMetaSelection, matchesPartyListFilter, readCustomerMeta } from '../../utils/customerMeta'
 import { getTreasuryAccounts } from '../../utils/treasuryStore'
 
 function getDefaultCashAccountPath(action) {
   const accounts = getTreasuryAccounts()
-  const preferred = accounts.find((account) => account.type === 'Nakit Kasa')
-    || accounts.find((account) => account.type === 'Banka Hesabı')
-    || accounts.find((account) => account.type !== 'Çek Kasası')
-    || accounts[0]
+  const preferred =
+    accounts.find((account) => account.type === 'Nakit Kasa') ||
+    accounts.find((account) => account.type === 'Banka Hesabı') ||
+    accounts.find((account) => account.type !== 'Çek Kasası') ||
+    accounts[0]
   const accountId = preferred?.id || 'cash-main'
   return `${CASH_BASE_PATH}/${accountId}?hareket=${action}`
-}
-
-function getPurchaseInvoicePath() {
-  const settings = readCustomerMeta()
-  const supplier = getCustomerProfiles().find((profile) => {
-    const selected = getCustomerMetaSelection(profile, settings[profile.id] || {})
-    return matchesPartyListFilter(selected.type, 'supplier')
-  })
-  if (supplier?.id) return `/musteriler/${supplier.id}/belge/alis-faturasi`
-  return '/giderler/tedarikciler'
 }
 
 const actions = [
@@ -77,10 +66,10 @@ const actions = [
     gradient: 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]',
   },
   {
-    id: 'purchase-invoice',
-    to: () => getPurchaseInvoicePath(),
-    title: 'Yeni Alış Faturası',
-    icon: FileText,
+    id: 'incoming-e-invoices',
+    to: () => '/giderler/gelen-e-faturalar',
+    title: 'Gelen E-Faturalar',
+    icon: Inbox,
     gradient: 'from-[#fda4af] via-[#f43f5e] to-[#e11d48]',
   },
 ]
@@ -96,7 +85,9 @@ function QuickActionCard({ action }) {
       <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-[#ffffff] ring-1 ring-white/25">
         <Icon className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
       </span>
-      <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">{action.title}</span>
+      <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
+        {action.title}
+      </span>
     </Link>
   )
 }
