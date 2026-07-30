@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Handshake, Link2, UserPlus, Users, WalletCards } from 'lucide-react'
+import { CheckCircle2, Handshake, Link2, Pencil, UserPlus, Users, WalletCards } from 'lucide-react'
 import { DataTable } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import { useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
-import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
+import { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import { APP_FILTER_LABEL_CLASS } from '../utils/dashboardDesign'
-import { getCustomerProfiles } from '../data/customerProfiles'
+import { deleteCustomer, getCustomerProfiles } from '../data/customerProfiles'
 import { appendActivity } from '../utils/customerActivity'
 import {
   formatTreasuryCurrency,
@@ -43,9 +43,9 @@ const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !t
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
 
 function balanceClass(balance) {
-  if (balance > 0) return 'text-emerald-600'
-  if (balance < 0) return 'text-red-600'
-  return 'text-orange-600'
+  if (balance > 0) return 'text-[#10b981]'
+  if (balance < 0) return 'text-[#e11d48]'
+  return 'text-[var(--muted)]'
 }
 
 function currentBalance(customer, movements) {
@@ -75,6 +75,7 @@ export default function CustomersPage({
   const [customerSettings, setCustomerSettings] = useState(readCustomerMeta)
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
+  const [pendingDeleteCustomerId, setPendingDeleteCustomerId] = useState(null)
   const [b2bMap, setB2bMap] = useState(() => {
     const map = {}
     getCustomerProfiles().forEach((customer) => {
@@ -197,6 +198,12 @@ export default function CustomersPage({
     setFilters((current) => ({ ...current, [field]: value }))
   }
 
+  function handleDeleteCustomer(customer) {
+    deleteCustomer(customer.id)
+    setPendingDeleteCustomerId(null)
+    setCustomerProfiles(getCustomerProfiles())
+  }
+
   function handleRestoreDeletedOrArchived(record, item) {
     const label = getCustomerDisplay(record).brandShortName || record.company || 'Kayıt'
     const from = item?.kind === 'archived' ? 'arşivden' : 'silinenlerden'
@@ -258,75 +265,6 @@ export default function CustomersPage({
         ]}
       />
 
-      <AppPagePanel>
-        <div className="space-y-3">
-          <SearchInput
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Marka veya ünvan ara..."
-            className="customer-filter-search"
-          />
-          <div className="app-filter-bar grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Tipi :</p>
-              <EditableDropdownPill
-                value={filters.type}
-                options={[filterAllOption, ...typeOptions]}
-                includePlaceholderOption={false}
-                editable={false}
-                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                openKey="filter-type"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateFilter('type', value)}
-              />
-            </div>
-            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Temsilci :</p>
-              <EditableDropdownPill
-                value={filters.representative}
-                options={[filterAllOption, ...optionLists.representative]}
-                includePlaceholderOption={false}
-                editable={false}
-                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                openKey="filter-representative"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateFilter('representative', value)}
-              />
-            </div>
-            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Puantaj :</p>
-              <EditableDropdownPill
-                value={filters.scoring}
-                options={[filterAllOption, ...optionLists.scoring]}
-                includePlaceholderOption={false}
-                editable={false}
-                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                openKey="filter-scoring"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateFilter('scoring', value)}
-              />
-            </div>
-            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Bakiye :</p>
-              <EditableDropdownPill
-                value={filters.balance}
-                options={balanceFilterOptions}
-                includePlaceholderOption={false}
-                editable={false}
-                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                openKey="filter-balance"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateFilter('balance', value)}
-              />
-            </div>
-          </div>
-        </div>
-      </AppPagePanel>
-
       <AppPagePanel
         title={listTitle}
         dotColor="blue"
@@ -337,6 +275,82 @@ export default function CustomersPage({
           </span>
         }
       >
+        <div className="mb-4 space-y-3">
+          <SearchInput
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Marka veya ünvan ara..."
+            className="customer-filter-search"
+          />
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+            <div className="flex shrink-0 items-center gap-2 px-1">
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
+              </span>
+              <span className="text-xs font-extrabold text-[var(--ink)]">Filtre :</span>
+            </div>
+            <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Tipi :</p>
+                <EditableDropdownPill
+                  value={filters.type}
+                  options={[filterAllOption, ...typeOptions]}
+                  includePlaceholderOption={false}
+                  editable={false}
+                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                  openKey="filter-type"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  onChange={(value) => updateFilter('type', value)}
+                />
+              </div>
+              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Temsilci :</p>
+                <EditableDropdownPill
+                  value={filters.representative}
+                  options={[filterAllOption, ...optionLists.representative]}
+                  includePlaceholderOption={false}
+                  editable={false}
+                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                  openKey="filter-representative"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  onChange={(value) => updateFilter('representative', value)}
+                />
+              </div>
+              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Puantaj :</p>
+                <EditableDropdownPill
+                  value={filters.scoring}
+                  options={[filterAllOption, ...optionLists.scoring]}
+                  includePlaceholderOption={false}
+                  editable={false}
+                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                  openKey="filter-scoring"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  onChange={(value) => updateFilter('scoring', value)}
+                />
+              </div>
+              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Bakiye :</p>
+                <EditableDropdownPill
+                  value={filters.balance}
+                  options={balanceFilterOptions}
+                  includePlaceholderOption={false}
+                  editable={false}
+                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                  openKey="filter-balance"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  onChange={(value) => updateFilter('balance', value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <DataTable
           emptyTitle={emptyTitle}
           emptyDescription="Arama veya segment filtresini değiştirin."
@@ -346,7 +360,7 @@ export default function CustomersPage({
           columns={[
             {
               id: 'name',
-              header: columnLabel,
+              header: columnLabel.toLocaleUpperCase('tr-TR'),
               sortable: true,
               accessorKey: 'name',
               cell: (customer) => {
@@ -365,7 +379,7 @@ export default function CustomersPage({
             },
             {
               id: 'type',
-              header: 'Tipi',
+              header: 'TİPİ',
               hideOnMobile: true,
               cell: (customer) => {
                 const settings = customerSettings[customer.id] || {}
@@ -388,7 +402,7 @@ export default function CustomersPage({
             },
             {
               id: 'representative',
-              header: 'Temsilci',
+              header: 'TEMSİLCİ',
               hideOnMobile: true,
               cell: (customer) => {
                 const settings = customerSettings[customer.id] || {}
@@ -416,7 +430,7 @@ export default function CustomersPage({
             },
             {
               id: 'scoring',
-              header: 'Puantaj',
+              header: 'PUANTAJ',
               hideOnMobile: true,
               cell: (customer) => {
                 const settings = customerSettings[customer.id] || {}
@@ -439,7 +453,7 @@ export default function CustomersPage({
             },
             {
               id: 'balance',
-              header: 'Güncel Bakiye',
+              header: 'GÜNCEL BAKİYE',
               sortable: true,
               className: 'text-right',
               cell: (customer) => {
@@ -451,26 +465,64 @@ export default function CustomersPage({
                 )
               },
             },
-          ]}
-          getRowActions={(customer) => [
-            b2bMap[customer.id]?.enabled
-              ? {
-                  id: 'portal',
-                  label: 'B2B Panel',
-                  icon: Link2,
-                  onClick: () =>
-                    window.open(
-                      getPortalUrl(b2bMap[customer.id].accessToken),
-                      '_blank',
-                      'noreferrer',
-                    ),
-                }
-              : {
-                  id: 'grant',
-                  label: 'B2B İzin Ver',
-                  icon: Link2,
-                  onClick: () => grantB2bAccess({ stopPropagation() {} }, customer.id),
-                },
+            {
+              id: 'actions',
+              header: '',
+              className: 'text-right',
+              cell: (customer) => {
+                const portalAccess = b2bMap[customer.id]
+                const actionButtonClass =
+                  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--muted)] transition-colors hover:border-[var(--border)] hover:text-[var(--ink)]'
+                return (
+                  <div
+                    className="flex items-center justify-end gap-1"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/musteriler/${customer.id}`)}
+                      className={actionButtonClass}
+                      title="Düzenle"
+                      aria-label="Düzenle"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <DeleteTrashButton
+                      pending={pendingDeleteCustomerId === customer.id}
+                      onClick={() => setPendingDeleteCustomerId(customer.id)}
+                      onConfirm={() => handleDeleteCustomer(customer)}
+                      onCancel={() => setPendingDeleteCustomerId(null)}
+                      title="Müşteri silinsin mi?"
+                      description="Kayıt silinenler alanına taşınacak."
+                      buttonClassName={actionButtonClass}
+                      iconClassName="h-4 w-4"
+                      buttonTitle="Sil"
+                    />
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        if (portalAccess?.enabled) {
+                          window.open(
+                            getPortalUrl(portalAccess.accessToken),
+                            '_blank',
+                            'noreferrer',
+                          )
+                        } else {
+                          grantB2bAccess(event, customer.id)
+                        }
+                      }}
+                      className={`${actionButtonClass} ${
+                        portalAccess?.enabled ? 'text-blue-600' : ''
+                      }`}
+                      title={portalAccess?.enabled ? 'B2B Paneli Aç' : 'B2B İzin Ver'}
+                      aria-label={portalAccess?.enabled ? 'B2B Paneli Aç' : 'B2B İzin Ver'}
+                    >
+                      <Link2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )
+              },
+            },
           ]}
         />
       </AppPagePanel>
