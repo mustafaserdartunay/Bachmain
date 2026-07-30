@@ -1036,6 +1036,11 @@ textarea:not(.form-input)::placeholder {
   padding: 0.75rem 1rem;
 }
 
+.customer-summary-metrics .app-page-metric p,
+.customer-summary-metrics .app-page-metric .app-titlecase-words {
+  font-weight: 400;
+}
+
 .glass-pill {
   display: flex;
   width: 100%;
@@ -1079,6 +1084,8 @@ textarea:not(.form-input)::placeholder {
   background: transparent !important;
   padding: 0;
   box-shadow: none !important;
+  color: var(--muted) !important;
+  font-weight: 400;
 }
 
 .app-responsive .customer-filter-field .customer-filter-pill:hover {
@@ -1094,6 +1101,12 @@ textarea:not(.form-input)::placeholder {
   background: transparent !important;
   border-color: var(--search-border) !important;
   box-shadow: none !important;
+}
+
+.app-responsive .customer-list-panel h2,
+.app-responsive .customer-deleted-archived-panel .app-titlecase-words {
+  color: var(--muted) !important;
+  font-weight: 400;
 }
 
 .app-responsive .customer-list-panel .customer-list-dropdown-pill {

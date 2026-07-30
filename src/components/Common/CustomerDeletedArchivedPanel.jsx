@@ -44,6 +44,7 @@ export default function CustomerDeletedArchivedPanel({
   listKind = 'customer',
   onRestored,
   emptyMessage = 'Silinen veya arşivlenen kayıt yok.',
+  className = '',
 }) {
   const [open, setOpen] = useState(false)
   const [version, setVersion] = useState(0)
@@ -112,11 +113,11 @@ export default function CustomerDeletedArchivedPanel({
   }
 
   return (
-    <section className="card overflow-hidden p-0">
+    <section className={`card overflow-hidden p-0 ${className}`.trim()}>
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-white/35"
+        className="flex min-h-[4.75rem] w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-white/35"
       >
         <span className="flex min-w-0 items-center gap-2">
           <span className={`${APP_ICON_WRAP_CLASS} text-rose-500`}>

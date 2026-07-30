@@ -49,7 +49,7 @@ const balanceFilterOptions = [
 ]
 const CUSTOMER_FILTER_FIELD_CLASS =
   'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
-const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !text-[var(--ink)]`
+const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !font-normal !tracking-normal !text-[var(--muted)]`
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
 const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill`
 const CUSTOMER_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max max-w-full'
@@ -223,7 +223,7 @@ export default function CustomersPage({
   }
 
   return (
-    <AppPageShell>
+    <AppPageShell className="w-full">
       <AppPageHeader
         title={
           <span className="inline-flex min-w-0 items-center gap-2 text-xs font-extrabold leading-none text-[var(--muted)]">
@@ -240,9 +240,11 @@ export default function CustomersPage({
           <button
             type="button"
             onClick={() => navigate(createPath)}
-            className="inline-flex items-center gap-2 bg-transparent p-0 text-xs font-extrabold leading-none text-[#2563eb] transition-colors hover:text-[#1d4ed8]"
+            className="inline-flex items-center gap-2 bg-transparent p-0 text-xs font-normal leading-none text-[var(--muted)] transition-transform hover:-translate-y-0.5 hover:text-[#2563eb]"
           >
-            <UserPlus className="h-4 w-4 shrink-0" />
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-[#2563eb] ring-1 ring-blue-500/20">
+              <UserPlus className="h-4 w-4 shrink-0" />
+            </span>
             <span className="whitespace-nowrap">{createLabel}</span>
           </button>
         }
@@ -250,15 +252,20 @@ export default function CustomersPage({
 
       <SummaryMetrics
         columns={4}
-        className="customer-summary-metrics"
+        className="customer-summary-metrics w-full"
         items={[
-          { title: totalLabel, value: scopedProfiles.length, icon: Users },
+          {
+            title: totalLabel,
+            value: scopedProfiles.length,
+            icon: Users,
+            valueTone: 'text-[#8b5cf6]',
+          },
           {
             title: 'Aktif Cari',
             value: filteredCustomers.length,
             icon: CheckCircle2,
             tone: 'emerald',
-            valueTone: 'emerald',
+            valueTone: 'text-[var(--muted)]',
           },
           {
             title: 'Toplam Ödenecek',
@@ -277,14 +284,14 @@ export default function CustomersPage({
         ]}
       />
 
-      <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] items-center">
+      <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
         <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
           <div className="flex shrink-0 items-center gap-2 px-1">
             <span className="relative flex h-1.5 w-1.5 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
             </span>
-            <span className="text-xs font-extrabold text-[var(--ink)]">Filtre :</span>
+            <span className="text-xs font-normal text-[var(--muted)]">Filtre :</span>
           </div>
           <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className={CUSTOMER_FILTER_FIELD_CLASS}>
@@ -350,7 +357,7 @@ export default function CustomersPage({
       <AppPagePanel
         title={listTitle}
         dotColor="blue"
-        className="customer-list-panel"
+        className="customer-list-panel w-full"
         action={
           <span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px]">
             {filteredCustomers.length} kayıt
@@ -544,6 +551,7 @@ export default function CustomersPage({
       <CustomerDeletedArchivedPanel
         title="Silinenler ve Arşivlenenler"
         listKind={listKind}
+        className="customer-deleted-archived-panel w-full"
         onRestored={handleRestoreDeletedOrArchived}
         emptyMessage={
           listKind === 'supplier'
