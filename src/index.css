@@ -2152,7 +2152,8 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
   transform: translateX(2px);
 }
 
-.glass-team-hub.app-sidebar {
+.glass-team-hub.app-sidebar,
+.customer-deleted-archived-panel {
   border-radius: 24px;
   background: var(--glass-bg) !important;
   backdrop-filter: blur(26px) saturate(180%);
