@@ -313,7 +313,7 @@ export default function CustomersPage({
     <AppPageShell className="w-full">
       <AppPageHeader
         title={
-          <span className="inline-flex min-w-0 items-center gap-2 text-xs font-extrabold leading-none text-[var(--muted)]">
+          <span className="inline-flex min-w-0 items-center gap-2 text-xs font-normal uppercase leading-none text-[var(--muted)]">
             {listKind === 'supplier' ? (
               <Handshake className="h-4 w-4 shrink-0" />
             ) : (
@@ -322,14 +322,14 @@ export default function CustomersPage({
             <span className="truncate">{pageTitle}</span>
           </span>
         }
-        titleClassName="!text-xs !leading-none !text-[var(--muted)]"
+        titleClassName="!text-xs !font-normal !uppercase !leading-none !text-[var(--muted)]"
         actions={
           <button
             type="button"
             onClick={() => navigate(createPath)}
-            className="inline-flex items-center gap-2 bg-transparent p-0 text-xs font-normal leading-none text-[var(--muted)] transition-transform hover:-translate-y-0.5 hover:text-[#2563eb]"
+            className="inline-flex items-center gap-2 bg-transparent p-0 text-xs font-normal leading-none text-[#2563eb] transition-transform duration-hover hover:-translate-y-0.5"
           >
-            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-[#2563eb] ring-1 ring-blue-500/20">
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#2563eb]">
               <UserPlus className="h-4 w-4 shrink-0" />
             </span>
             <span className="whitespace-nowrap">{createLabel}</span>
