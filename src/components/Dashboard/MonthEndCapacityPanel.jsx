@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ArrowRight,
   CircleAlert,
   CircleCheckBig,
   Factory,
@@ -9,7 +8,6 @@ import {
   ReceiptText,
   ShoppingCart,
   TrendingUp,
-  UsersRound,
   WalletCards,
   Warehouse,
 } from 'lucide-react'
@@ -19,7 +17,7 @@ import { RECURRING_PAYMENTS_EVENT } from '../../utils/recurringPaymentsStore'
 
 const STATUS_STYLES = {
   red: {
-    label: 'Ödeme açığı var',
+    label: 'Açık',
     badge: 'border-rose-500/25 bg-rose-500/10 text-rose-600',
     text: 'text-rose-600',
     marker: 'border-rose-600 bg-rose-500',
@@ -31,7 +29,7 @@ const STATUS_STYLES = {
     marker: 'border-amber-600 bg-amber-500',
   },
   green: {
-    label: 'Ödemeler karşılanıyor',
+    label: 'Güçlü',
     badge: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600',
     text: 'text-emerald-600',
     marker: 'border-emerald-600 bg-emerald-500',
@@ -75,7 +73,7 @@ function StatusBadge({ tone }) {
 function CapacityBar({ status }) {
   const style = STATUS_STYLES[status.tone] || STATUS_STYLES.red
   return (
-    <div>
+    <div className="pt-1">
       <div className="relative h-3 overflow-visible rounded-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-500 shadow-inner">
         <span
           className={`absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white shadow-md ${style.marker}`}
@@ -83,23 +81,26 @@ function CapacityBar({ status }) {
           aria-label={`Karşılama oranı yüzde ${Math.round(status.coverage)}`}
         />
       </div>
-      <div className="mt-1.5 flex justify-between text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
-        <span>Açık</span>
-        <span>Sınırda</span>
-        <span>Güçlü</span>
-      </div>
     </div>
   )
 }
 
-function AmountCell({ label, value, icon: Icon, href, tone = 'text-[var(--ink)]' }) {
+function MetricCell({ label, value, icon: Icon, href, tone = 'text-[var(--ink)]', title }) {
   const content = (
     <>
-      <span className="flex min-w-0 items-center gap-1.5">
-        <Icon className={`h-3.5 w-3.5 shrink-0 ${tone}`} />
-        <span className="truncate text-[10px] font-bold text-[var(--muted)]">{label}</span>
+      <span
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/60 ${tone}`}
+      >
+        <Icon className="h-3.5 w-3.5" />
       </span>
-      <span className={`mt-1 block text-sm font-black tabular-nums ${tone}`}>{money(value)}</span>
+      <span className="min-w-0">
+        <span className="block truncate text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
+          {label}
+        </span>
+        <span className={`block truncate text-xs font-black tabular-nums ${tone}`}>
+          {money(value)}
+        </span>
+      </span>
     </>
   )
 
@@ -107,184 +108,149 @@ function AmountCell({ label, value, icon: Icon, href, tone = 'text-[var(--ink)]'
     return (
       <Link
         to={href}
-        className="rounded-xl bg-white/45 px-2.5 py-2 transition-colors hover:bg-white/70"
+        title={title || label}
+        className="flex min-w-0 items-center gap-2 rounded-xl bg-white/45 px-2 py-2 transition-colors hover:bg-white/70"
       >
         {content}
       </Link>
     )
   }
-  return <div className="rounded-xl bg-white/45 px-2.5 py-2">{content}</div>
+  return (
+    <div
+      title={title || label}
+      className="flex min-w-0 items-center gap-2 rounded-xl bg-white/45 px-2 py-2"
+    >
+      {content}
+    </div>
+  )
 }
 
 function CurrentCapacity({ data }) {
   const style = STATUS_STYLES[data.tone] || STATUS_STYLES.red
   return (
-    <article className="glass-inset flex min-w-0 flex-col rounded-2xl p-3.5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-xs font-extrabold text-[var(--ink)]">1. Alacak–Borç Ödeme Gücü</p>
-          <p className="mt-0.5 text-[10px] font-semibold text-[var(--muted)]">
-            Mevcut varlık + müşteri alacağı / zorunlu ödemeler
-          </p>
+    <article className="glass-inset flex min-w-0 flex-col rounded-2xl p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
+            <Landmark className="h-4 w-4" />
+          </span>
+          <p className="truncate text-xs font-extrabold text-[var(--ink)]">Mevcut Denge</p>
         </div>
         <StatusBadge tone={data.tone} />
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <AmountCell
-          label="Canlı Varlık"
+      <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-white/35 p-2">
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
+            Net Denge
+          </p>
+          <p className={`truncate text-lg font-black tabular-nums ${style.text}`}>
+            {data.balance >= 0 ? '+' : '−'}
+            {money(Math.abs(data.balance))}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
+            Karşılama
+          </p>
+          <p className={`text-lg font-black tabular-nums ${style.text}`}>
+            %{Math.max(0, Math.round(data.coverage))}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-2">
+        <CapacityBar status={data} />
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        <MetricCell
+          label="Varlık"
           value={data.liveAssets}
           icon={Landmark}
           href="/kasa"
           tone="text-blue-600"
         />
-        <AmountCell
-          label="Müşteri Alacağı"
+        <MetricCell
+          label="Alacak"
           value={data.receivables}
           icon={ReceiptText}
           href="/musteriler"
           tone="text-cyan-600"
         />
-        <AmountCell
-          label="Tedarikçi Borcu"
-          value={data.supplierPayables}
+        <MetricCell
+          label="Ödemeler"
+          value={data.obligations}
           icon={WalletCards}
           href="/giderler/tedarikciler"
           tone="text-rose-600"
+          title={`Tedarikçi ${money(data.supplierPayables)} · Maaş ${money(data.payroll)} · Gider ${money(data.fixedExpenses)}`}
         />
-        <AmountCell
-          label="Kalan Maaş"
-          value={data.payroll}
-          icon={UsersRound}
-          href="/personel"
-          tone="text-violet-600"
-        />
-        <AmountCell
-          label="Sabit Genel Gider"
-          value={data.fixedExpenses}
-          icon={WalletCards}
-          href="/kasa"
-          tone="text-orange-600"
-        />
-        <AmountCell
-          label={data.balance >= 0 ? 'Ödeme Sonrası Artı' : 'Kapanması Gereken Açık'}
-          value={Math.abs(data.balance)}
-          icon={data.balance >= 0 ? TrendingUp : CircleAlert}
-          tone={style.text}
-        />
-      </div>
-
-      <div className="mt-3">
-        <div className="mb-1.5 flex items-end justify-between gap-3">
-          <span className="text-[10px] font-bold text-[var(--muted)]">Karşılama oranı</span>
-          <span className={`text-base font-black tabular-nums ${style.text}`}>
-            %{Math.max(0, Math.round(data.coverage))}
-          </span>
-        </div>
-        <CapacityBar status={data} />
       </div>
     </article>
   )
 }
 
-function ProcessStep({ label, value, count, icon: Icon, href, tone }) {
-  return (
-    <Link
-      to={href}
-      className="group flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-white/45 px-2.5 py-2 transition-all hover:-translate-y-0.5 hover:bg-white/70"
-    >
-      <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/70 ${tone}`}
-      >
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="min-w-0">
-        <span className="block truncate text-[10px] font-bold text-[var(--muted)]">
-          {label} · {count}
-        </span>
-        <span className={`block truncate text-sm font-black tabular-nums ${tone}`}>
-          {money(value)}
-        </span>
-      </span>
-    </Link>
-  )
-}
-
-function OperationalCapacity({ operational, projected, guidance }) {
+function OperationalCapacity({ operational, projected }) {
   const style = STATUS_STYLES[projected.tone] || STATUS_STYLES.red
   return (
-    <article className="glass-inset flex min-w-0 flex-col rounded-2xl p-3.5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-xs font-extrabold text-[var(--ink)]">2. Operasyonel Nakit Rotası</p>
-          <p className="mt-0.5 text-[10px] font-semibold text-[var(--muted)]">
-            Sipariş → üretim → depo → satış/tahsilat
-          </p>
+    <article className="glass-inset flex min-w-0 flex-col rounded-2xl p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500/10 text-fuchsia-600">
+            <Factory className="h-4 w-4" />
+          </span>
+          <p className="truncate text-xs font-extrabold text-[var(--ink)]">Operasyonel Senaryo</p>
         </div>
         <StatusBadge tone={projected.tone} />
       </div>
 
-      <div className="mt-3 flex flex-col items-stretch gap-1.5 sm:flex-row sm:items-center">
-        <ProcessStep
-          label="Siparişte"
+      <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-white/35 p-2">
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
+            Senaryo Neti
+          </p>
+          <p className={`truncate text-lg font-black tabular-nums ${style.text}`}>
+            {projected.balance >= 0 ? '+' : '−'}
+            {money(Math.abs(projected.balance))}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
+            Karşılama
+          </p>
+          <p className={`text-lg font-black tabular-nums ${style.text}`}>
+            %{Math.max(0, Math.round(projected.coverage))}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-2">
+        <CapacityBar status={projected} />
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        <MetricCell
+          label={`Sipariş · ${operational.counts.orders}`}
           value={operational.orders}
-          count={operational.counts.orders}
           icon={ShoppingCart}
           href="/siparisler"
           tone="text-emerald-600"
         />
-        <ArrowRight className="mx-auto h-3.5 w-3.5 rotate-90 text-[var(--muted)] sm:rotate-0" />
-        <ProcessStep
-          label="Üretimde"
+        <MetricCell
+          label={`Üretim · ${operational.counts.production}`}
           value={operational.production}
-          count={operational.counts.production}
           icon={Factory}
           href="/uretim"
           tone="text-fuchsia-600"
         />
-        <ArrowRight className="mx-auto h-3.5 w-3.5 rotate-90 text-[var(--muted)] sm:rotate-0" />
-        <ProcessStep
-          label="Depoda"
+        <MetricCell
+          label={`Depo · ${operational.counts.depot}`}
           value={operational.depot}
-          count={operational.counts.depot}
           icon={Warehouse}
           href="/depo"
           tone="text-amber-600"
         />
-      </div>
-
-      <div className="mt-3 rounded-xl border border-blue-500/15 bg-blue-500/5 px-3 py-2.5">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <p className="text-[10px] font-bold text-[var(--muted)]">
-              Nakde dönüşebilir brüt değer
-            </p>
-            <p className="text-lg font-black tabular-nums text-blue-600">
-              {money(operational.total)}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] font-bold text-[var(--muted)]">Senaryo sonrası bakiye</p>
-            <p className={`text-lg font-black tabular-nums ${style.text}`}>
-              {projected.balance >= 0 ? '+' : '−'}
-              {money(Math.abs(projected.balance))}
-            </p>
-          </div>
-        </div>
-        <div className="mt-2">
-          <CapacityBar status={projected} />
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-start gap-2 rounded-xl bg-white/45 px-3 py-2.5">
-        <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-        <div>
-          <p className="text-[11px] font-extrabold leading-snug text-[var(--ink)]">{guidance}</p>
-          <p className="mt-1 text-[9px] font-semibold text-[var(--muted)]">
-            Operasyonel değer tahmini brüt nakit senaryosudur; gerçekleşmiş tahsilat veya kâr
-            değildir.
-          </p>
-        </div>
       </div>
     </article>
   )
@@ -306,34 +272,36 @@ export default function MonthEndCapacityPanel() {
   }, [])
 
   return (
-    <section className={`${APP_SURFACE_PANEL_CLASS} overflow-hidden p-4`}>
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-black text-[var(--ink)]">
-            Ay Sonu Ödeme ve Nakit Dönüşüm Çizelgesi
-          </p>
-          <p className="mt-0.5 text-[11px] font-semibold text-[var(--muted)]">
-            {snapshot.monthLabel} · kayıtlı finans, personel ve operasyon verilerinden canlı
-            hesaplanır
-          </p>
+    <section className={`${APP_SURFACE_PANEL_CLASS} overflow-hidden p-3.5`}>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          </span>
+          <p className="truncate text-sm font-black text-[var(--ink)]">Ay Sonu Nakit Dengesi</p>
         </div>
-        <div className="rounded-xl bg-white/45 px-3 py-2 text-right">
-          <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
-            Önce mevcut durum
-          </p>
-          <p className="text-[11px] font-extrabold text-[var(--ink)]">
-            Sonra satış ve üretim senaryosu
-          </p>
-        </div>
+        <span className="shrink-0 rounded-lg bg-white/45 px-2.5 py-1 text-[10px] font-extrabold capitalize text-[var(--muted)]">
+          {snapshot.monthLabel}
+        </span>
       </div>
 
       <div className="grid gap-3 xl:grid-cols-2">
         <CurrentCapacity data={snapshot.current} />
-        <OperationalCapacity
-          operational={snapshot.operational}
-          projected={snapshot.projected}
-          guidance={snapshot.guidance}
-        />
+        <OperationalCapacity operational={snapshot.operational} projected={snapshot.projected} />
+      </div>
+
+      <div
+        title="Operasyonel değer brüt nakit senaryosudur; gerçekleşmiş tahsilat veya kâr değildir."
+        className="mt-3 flex items-center gap-2 rounded-xl bg-white/35 px-3 py-2"
+      >
+        <TrendingUp className="h-3.5 w-3.5 shrink-0 text-blue-600" />
+        <p className="min-w-0 flex-1 truncate text-[10px] font-bold text-[var(--ink)]">
+          {snapshot.guidance}
+        </p>
+        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
+          Brüt senaryo
+        </span>
       </div>
     </section>
   )
