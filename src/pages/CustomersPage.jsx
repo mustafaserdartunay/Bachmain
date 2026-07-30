@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Handshake, Link2, Pencil, UserPlus, Users, WalletCards } from 'lucide-react'
+import {
+  CheckCircle2,
+  Handshake,
+  Link2,
+  Pencil,
+  Trash2,
+  UserPlus,
+  Users,
+  WalletCards,
+} from 'lucide-react'
 import { DataTable } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
+import ConfirmModal from '../components/Common/ConfirmModal'
 import { useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
-import { DeleteTrashButton, LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
+import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import { APP_FILTER_LABEL_CLASS } from '../utils/dashboardDesign'
 import { deleteCustomer, getCustomerProfiles } from '../data/customerProfiles'
 import { appendActivity } from '../utils/customerActivity'
@@ -41,8 +51,6 @@ const CUSTOMER_FILTER_FIELD_CLASS =
   'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
 const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !text-[var(--ink)]`
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
-const CUSTOMER_ROW_ACTION_CLASS =
-  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent transition-colors'
 
 function balanceClass(balance) {
   if (balance > 0) return 'text-[#10b981]'
@@ -174,8 +182,7 @@ export default function CustomersPage({
     0,
   )
 
-  function grantB2bAccess(event, customerId) {
-    event.stopPropagation()
+  function grantB2bAccess(customerId) {
     const access = enableB2bAccess(customerId)
     setB2bMap((current) => ({ ...current, [customerId]: access }))
     appendActivity(customerId, 'B2B', 'Müşteri paneli erişimi verildi')
@@ -470,63 +477,56 @@ export default function CustomersPage({
                 )
               },
             },
-            {
-              id: 'actions',
-              header: '',
-              className: 'text-right',
-              cell: (customer) => {
-                const portalAccess = b2bMap[customer.id]
-                return (
-                  <div
-                    className="flex items-center justify-end gap-1"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/musteriler/${customer.id}`)}
-                      className={`${CUSTOMER_ROW_ACTION_CLASS} text-[#2563eb] hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-[#1d4ed8]`}
-                      title="Düzenle"
-                      aria-label="Düzenle"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <DeleteTrashButton
-                      pending={pendingDeleteCustomerId === customer.id}
-                      onClick={() => setPendingDeleteCustomerId(customer.id)}
-                      onConfirm={() => handleDeleteCustomer(customer)}
-                      onCancel={() => setPendingDeleteCustomerId(null)}
-                      title="Müşteri silinsin mi?"
-                      description="Kayıt silinenler alanına taşınacak."
-                      buttonClassName={`${CUSTOMER_ROW_ACTION_CLASS} text-[#e11d48] hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-[#be123c]`}
-                      iconClassName="h-4 w-4"
-                      buttonTitle="Sil"
-                    />
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        if (portalAccess?.enabled) {
-                          window.open(
-                            getPortalUrl(portalAccess.accessToken),
-                            '_blank',
-                            'noreferrer',
-                          )
-                        } else {
-                          grantB2bAccess(event, customer.id)
-                        }
-                      }}
-                      className={`${CUSTOMER_ROW_ACTION_CLASS} text-[#10b981] hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-[#059669]`}
-                      title={portalAccess?.enabled ? 'B2B Paneli Aç' : 'B2B İzin Ver'}
-                      aria-label={portalAccess?.enabled ? 'B2B Paneli Aç' : 'B2B İzin Ver'}
-                    >
-                      <Link2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                )
-              },
-            },
           ]}
+          getRowActions={(customer) => {
+            const portalAccess = b2bMap[customer.id]
+            return [
+              {
+                id: 'edit',
+                label: 'Düzenle',
+                icon: Pencil,
+                tone: 'primary',
+                onClick: () => navigate(`/musteriler/${customer.id}`),
+              },
+              {
+                id: 'delete',
+                label: 'Sil',
+                icon: Trash2,
+                tone: 'danger',
+                onClick: () => setPendingDeleteCustomerId(customer.id),
+              },
+              {
+                id: portalAccess?.enabled ? 'portal' : 'grant',
+                label: portalAccess?.enabled ? 'B2B Paneli Aç' : 'B2B İzin Ver',
+                icon: Link2,
+                tone: 'success',
+                onClick: () => {
+                  if (portalAccess?.enabled) {
+                    window.open(getPortalUrl(portalAccess.accessToken), '_blank', 'noreferrer')
+                  } else {
+                    grantB2bAccess(customer.id)
+                  }
+                },
+              },
+            ]
+          }}
         />
       </AppPagePanel>
+
+      <ConfirmModal
+        open={Boolean(pendingDeleteCustomerId)}
+        title="Müşteri silinsin mi?"
+        description="Kayıt silinenler alanına taşınacak."
+        confirmLabel="Sil"
+        onCancel={() => setPendingDeleteCustomerId(null)}
+        onConfirm={() => {
+          const customer = customerProfiles.find(
+            (profile) => profile.id === pendingDeleteCustomerId,
+          )
+          if (customer) handleDeleteCustomer(customer)
+          else setPendingDeleteCustomerId(null)
+        }}
+      />
 
       <CustomerDeletedArchivedPanel
         title="Silinenler ve Arşivlenenler"

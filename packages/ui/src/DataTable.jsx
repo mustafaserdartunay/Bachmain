@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from 'lucide-react'
 import { MoreMenu } from './MoreMenu'
 import { EmptyState } from './States'
 import { Tooltip } from './Tooltip'
@@ -69,7 +69,11 @@ export function DataTable({
                     >
                       <span className="truncate">{col.header}</span>
                       {sort.key === (col.accessorKey || col.id) ? (
-                        sort.dir === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
+                        sort.dir === 'asc' ? (
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        )
                       ) : (
                         <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
                       )}
@@ -79,7 +83,16 @@ export function DataTable({
                   )}
                 </th>
               ))}
-              {getRowActions ? <th className="w-12 px-2" aria-label="İşlemler" /> : null}
+              {getRowActions ? (
+                <th className="w-12 px-2 text-center" aria-label="İşlemler">
+                  <span
+                    className="inline-flex h-8 w-8 items-center justify-center text-ds-muted"
+                    title="İşlemler"
+                  >
+                    <MoreHorizontal className="h-5 w-5" />
+                  </span>
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
@@ -95,9 +108,19 @@ export function DataTable({
                   {columns.map((col) => {
                     const raw = col.accessorKey ? row[col.accessorKey] : undefined
                     const content = col.cell ? col.cell(row) : raw
-                    const text = content == null ? '' : String(typeof content === 'string' || typeof content === 'number' ? content : '')
+                    const text =
+                      content == null
+                        ? ''
+                        : String(
+                            typeof content === 'string' || typeof content === 'number'
+                              ? content
+                              : '',
+                          )
                     return (
-                      <td key={col.id} className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-ds-body text-ds-ink ${col.className || ''}`}>
+                      <td
+                        key={col.id}
+                        className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-ds-body text-ds-ink ${col.className || ''}`}
+                      >
                         {typeof content === 'string' || typeof content === 'number' ? (
                           <Tooltip content={text.length > 28 ? text : undefined}>
                             <span className="block truncate">{content}</span>
@@ -139,7 +162,9 @@ export function DataTable({
                     const content = col.cell ? col.cell(row) : raw
                     return (
                       <div key={col.id} className="min-w-0">
-                        <p className="text-ds-caption font-semibold uppercase tracking-wide text-ds-muted">{col.header}</p>
+                        <p className="text-ds-caption font-semibold uppercase tracking-wide text-ds-muted">
+                          {col.header}
+                        </p>
                         <div className="truncate text-ds-body font-medium text-ds-ink">
                           {content ?? '—'}
                         </div>

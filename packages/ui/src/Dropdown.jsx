@@ -59,7 +59,9 @@ export function Dropdown({
               className={`rounded-ds-lg border border-ds-border bg-ds-surface p-1.5 shadow-ds-lg ${menuClassName}`}
               role="menu"
             >
-              {typeof children === 'function' ? children({ close: () => setOpen(false) }) : children}
+              {typeof children === 'function'
+                ? children({ close: () => setOpen(false) })
+                : children}
             </div>,
             document.body,
           )
@@ -69,7 +71,14 @@ export function Dropdown({
 }
 
 export function DropdownItem({ icon: Icon, label, onClick, tone = 'default', close }) {
-  const toneClass = tone === 'danger' ? 'text-ds-danger' : 'text-ds-ink'
+  const toneClass =
+    tone === 'danger'
+      ? 'text-ds-danger'
+      : tone === 'primary'
+        ? 'text-blue-600'
+        : tone === 'success'
+          ? 'text-emerald-600'
+          : 'text-ds-ink'
   return (
     <button
       type="button"
