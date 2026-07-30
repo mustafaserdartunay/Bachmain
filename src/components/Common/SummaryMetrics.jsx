@@ -35,7 +35,7 @@ export function SummaryMetricCard({ title, value, icon: Icon, valueTone = 'white
   )
 }
 
-export default function SummaryMetrics({ items, columns = 5 }) {
+export default function SummaryMetrics({ items, columns = 5, className = '' }) {
   const columnsClass =
     columns === 8
       ? 'grid-cols-2 sm:grid-cols-4 xl:grid-cols-8'
@@ -46,7 +46,7 @@ export default function SummaryMetrics({ items, columns = 5 }) {
           : 'grid-cols-3'
 
   return (
-    <div className={`grid gap-4 ${columnsClass}`}>
+    <div className={`grid gap-4 ${columnsClass} ${className}`.trim()}>
       {items.map((item) => (
         <SummaryMetricCard key={item.title} {...item} />
       ))}

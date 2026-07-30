@@ -250,6 +250,7 @@ export default function CustomersPage({
 
       <SummaryMetrics
         columns={4}
+        className="customer-summary-metrics"
         items={[
           { title: totalLabel, value: scopedProfiles.length, icon: Users },
           {
@@ -276,8 +277,8 @@ export default function CustomersPage({
         ]}
       />
 
-      <AppPagePanel className="customer-filter-panel">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+      <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] items-center">
+        <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
           <div className="flex shrink-0 items-center gap-2 px-1">
             <span className="relative flex h-1.5 w-1.5 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
@@ -377,6 +378,7 @@ export default function CustomersPage({
               header: columnLabel.toLocaleUpperCase('tr-TR'),
               sortable: true,
               accessorKey: 'name',
+              className: 'w-[12rem]',
               cell: (customer) => {
                 const display = getCustomerDisplay(customer)
                 return (
@@ -394,6 +396,7 @@ export default function CustomersPage({
             {
               id: 'type',
               header: 'TİPİ',
+              className: 'w-[10rem]',
               hideOnMobile: true,
               cell: (customer) => {
                 const settings = customerSettings[customer.id] || {}
@@ -419,6 +422,7 @@ export default function CustomersPage({
             {
               id: 'representative',
               header: 'TEMSİLCİ',
+              className: 'w-[10rem]',
               hideOnMobile: true,
               cell: (customer) => {
                 const settings = customerSettings[customer.id] || {}
@@ -449,6 +453,7 @@ export default function CustomersPage({
             {
               id: 'scoring',
               header: 'PUANTAJ',
+              className: 'w-[10rem]',
               hideOnMobile: true,
               cell: (customer) => {
                 const settings = customerSettings[customer.id] || {}
@@ -475,7 +480,7 @@ export default function CustomersPage({
               id: 'balance',
               header: 'GÜNCEL BAKİYE',
               sortable: true,
-              className: 'text-right',
+              className: 'whitespace-nowrap text-right',
               cell: (customer) => {
                 const balance = currentBalance(customer, movements)
                 return (
