@@ -60,6 +60,7 @@ const CUSTOMER_FILTER_FIELD_CLASS =
   'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
 const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !font-normal !tracking-normal !text-[var(--muted)]`
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
+const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu'
 const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill`
 const CUSTOMER_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max max-w-full'
 
@@ -322,14 +323,14 @@ export default function CustomersPage({
             <span className="truncate">{pageTitle}</span>
           </span>
         }
-        titleClassName="!text-xs !font-normal !uppercase !leading-none !text-[var(--muted)]"
+        titleClassName="!flex !items-center !text-xs !font-normal !uppercase !leading-none !text-[var(--muted)]"
         actions={
           <button
             type="button"
             onClick={() => navigate(createPath)}
-            className="inline-flex items-center gap-2 bg-transparent p-0 text-xs font-normal leading-none text-[#2563eb] transition-transform duration-hover hover:-translate-y-0.5"
+            className="inline-flex items-center gap-1 bg-transparent p-0 text-xs font-normal leading-none text-[#2563eb] transition-transform duration-hover hover:-translate-y-0.5"
           >
-            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#2563eb]">
+            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-[#2563eb]">
               <UserPlus className="h-4 w-4 shrink-0" />
             </span>
             <span className="whitespace-nowrap">{createLabel}</span>
@@ -352,7 +353,7 @@ export default function CustomersPage({
             value: filteredCustomers.length,
             icon: CheckCircle2,
             tone: 'emerald',
-            valueTone: 'text-[var(--muted)]',
+            valueTone: 'text-[#2563eb]',
           },
           {
             title: 'Toplam Ödenecek',
@@ -389,6 +390,7 @@ export default function CustomersPage({
                 includePlaceholderOption={false}
                 editable={false}
                 buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 openKey="filter-type"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -403,6 +405,7 @@ export default function CustomersPage({
                 includePlaceholderOption={false}
                 editable={false}
                 buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 openKey="filter-representative"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -417,6 +420,7 @@ export default function CustomersPage({
                 includePlaceholderOption={false}
                 editable={false}
                 buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 openKey="filter-scoring"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -431,6 +435,7 @@ export default function CustomersPage({
                 includePlaceholderOption={false}
                 editable={false}
                 buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 openKey="filter-balance"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}

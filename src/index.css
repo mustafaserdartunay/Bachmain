@@ -1092,6 +1092,16 @@ textarea:not(.form-input)::placeholder {
   background: transparent !important;
 }
 
+.customer-filter-dropdown-menu button {
+  font-size: 0.75rem !important;
+  font-weight: 400 !important;
+  color: var(--ink) !important;
+}
+
+.customer-filter-dropdown-menu button span.truncate {
+  color: var(--ink) !important;
+}
+
 .app-responsive .customer-filter-field .customer-filter-pill span.truncate,
 .app-responsive .customer-list-panel .glass-pill span.truncate {
   color: var(--muted) !important;
