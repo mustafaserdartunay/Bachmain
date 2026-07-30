@@ -41,6 +41,8 @@ const CUSTOMER_FILTER_FIELD_CLASS =
   'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
 const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !text-[var(--ink)]`
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
+const CUSTOMER_ROW_ACTION_CLASS =
+  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent transition-colors'
 
 function balanceClass(balance) {
   if (balance > 0) return 'text-[#10b981]'
@@ -215,7 +217,7 @@ export default function CustomersPage({
     <AppPageShell>
       <AppPageHeader
         title={
-          <span className="inline-flex min-w-0 items-center gap-2 text-xs leading-none text-[var(--muted)]">
+          <span className="inline-flex min-w-0 items-center gap-2 text-xs font-extrabold leading-none text-[var(--muted)]">
             {listKind === 'supplier' ? (
               <Handshake className="h-4 w-4 shrink-0" />
             ) : (
@@ -265,6 +267,76 @@ export default function CustomersPage({
         ]}
       />
 
+      <AppPagePanel className="customer-filter-panel">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+          <div className="flex shrink-0 items-center gap-2 px-1">
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
+            </span>
+            <span className="text-xs font-extrabold text-[var(--ink)]">Filtre :</span>
+          </div>
+          <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Tipi :</p>
+              <EditableDropdownPill
+                value={filters.type}
+                options={[filterAllOption, ...typeOptions]}
+                includePlaceholderOption={false}
+                editable={false}
+                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                openKey="filter-type"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => updateFilter('type', value)}
+              />
+            </div>
+            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Temsilci :</p>
+              <EditableDropdownPill
+                value={filters.representative}
+                options={[filterAllOption, ...optionLists.representative]}
+                includePlaceholderOption={false}
+                editable={false}
+                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                openKey="filter-representative"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => updateFilter('representative', value)}
+              />
+            </div>
+            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Puantaj :</p>
+              <EditableDropdownPill
+                value={filters.scoring}
+                options={[filterAllOption, ...optionLists.scoring]}
+                includePlaceholderOption={false}
+                editable={false}
+                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                openKey="filter-scoring"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => updateFilter('scoring', value)}
+              />
+            </div>
+            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Bakiye :</p>
+              <EditableDropdownPill
+                value={filters.balance}
+                options={balanceFilterOptions}
+                includePlaceholderOption={false}
+                editable={false}
+                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                openKey="filter-balance"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => updateFilter('balance', value)}
+              />
+            </div>
+          </div>
+        </div>
+      </AppPagePanel>
+
       <AppPagePanel
         title={listTitle}
         dotColor="blue"
@@ -275,80 +347,13 @@ export default function CustomersPage({
           </span>
         }
       >
-        <div className="mb-4 space-y-3">
+        <div className="mb-4">
           <SearchInput
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Marka veya ünvan ara..."
             className="customer-filter-search"
           />
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-            <div className="flex shrink-0 items-center gap-2 px-1">
-              <span className="relative flex h-1.5 w-1.5 shrink-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
-              </span>
-              <span className="text-xs font-extrabold text-[var(--ink)]">Filtre :</span>
-            </div>
-            <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Tipi :</p>
-                <EditableDropdownPill
-                  value={filters.type}
-                  options={[filterAllOption, ...typeOptions]}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                  openKey="filter-type"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateFilter('type', value)}
-                />
-              </div>
-              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Temsilci :</p>
-                <EditableDropdownPill
-                  value={filters.representative}
-                  options={[filterAllOption, ...optionLists.representative]}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                  openKey="filter-representative"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateFilter('representative', value)}
-                />
-              </div>
-              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Puantaj :</p>
-                <EditableDropdownPill
-                  value={filters.scoring}
-                  options={[filterAllOption, ...optionLists.scoring]}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                  openKey="filter-scoring"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateFilter('scoring', value)}
-                />
-              </div>
-              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Bakiye :</p>
-                <EditableDropdownPill
-                  value={filters.balance}
-                  options={balanceFilterOptions}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                  openKey="filter-balance"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateFilter('balance', value)}
-                />
-              </div>
-            </div>
-          </div>
         </div>
 
         <DataTable
@@ -471,8 +476,6 @@ export default function CustomersPage({
               className: 'text-right',
               cell: (customer) => {
                 const portalAccess = b2bMap[customer.id]
-                const actionButtonClass =
-                  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--muted)] transition-colors hover:border-[var(--border)] hover:text-[var(--ink)]'
                 return (
                   <div
                     className="flex items-center justify-end gap-1"
@@ -481,7 +484,7 @@ export default function CustomersPage({
                     <button
                       type="button"
                       onClick={() => navigate(`/musteriler/${customer.id}`)}
-                      className={actionButtonClass}
+                      className={`${CUSTOMER_ROW_ACTION_CLASS} text-[#2563eb] hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-[#1d4ed8]`}
                       title="Düzenle"
                       aria-label="Düzenle"
                     >
@@ -494,7 +497,7 @@ export default function CustomersPage({
                       onCancel={() => setPendingDeleteCustomerId(null)}
                       title="Müşteri silinsin mi?"
                       description="Kayıt silinenler alanına taşınacak."
-                      buttonClassName={actionButtonClass}
+                      buttonClassName={`${CUSTOMER_ROW_ACTION_CLASS} text-[#e11d48] hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-[#be123c]`}
                       iconClassName="h-4 w-4"
                       buttonTitle="Sil"
                     />
@@ -511,9 +514,7 @@ export default function CustomersPage({
                           grantB2bAccess(event, customer.id)
                         }
                       }}
-                      className={`${actionButtonClass} ${
-                        portalAccess?.enabled ? 'text-blue-600' : ''
-                      }`}
+                      className={`${CUSTOMER_ROW_ACTION_CLASS} text-[#10b981] hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-[#059669]`}
                       title={portalAccess?.enabled ? 'B2B Paneli Aç' : 'B2B İzin Ver'}
                       aria-label={portalAccess?.enabled ? 'B2B Paneli Aç' : 'B2B İzin Ver'}
                     >
