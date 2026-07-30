@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  ArrowLeft,
   BadgeCheck,
   Building2,
   ChevronDown,
@@ -28,6 +27,7 @@ import {
   Youtube,
 } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { AppPageHeader } from '../components/Layout/AppPageLayout'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import {
   FormFieldCompact,
@@ -60,7 +60,7 @@ import {
   saveOptionList,
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
-import { BTN_BACK, BTN_CANCEL as BTN_CANCEL_BASE, BTN_SUCCESS } from '../utils/buttonStyles'
+import { BTN_CANCEL as BTN_CANCEL_BASE, BTN_SUCCESS } from '../utils/buttonStyles'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
 import { checkCustomerDuplicates } from '../utils/mdmDuplicateCheck'
@@ -434,64 +434,63 @@ export default function CustomerCreatePage() {
       )}
 
       <div className="space-y-5">
-        <section className={`${APP_SURFACE_PANEL_CLASS} p-5 text-center`}>
-          <button
-            type="button"
-            onClick={() => navigate(backPath)}
-            className={`${BTN_BACK} absolute left-5 top-1/2 -translate-y-1/2 hover:!-translate-y-[calc(50%+0.125rem)]`}
-          >
-            <ArrowLeft className="h-4 w-4" /> {isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'}
-          </button>
-          <div className="mx-auto max-w-2xl">
-            <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-              {pageHeading}
-            </h1>
-          </div>
-          <div
-            ref={actionMenuAnchorRef}
-            className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2.5 bg-transparent"
-          >
-            <button type="button" onClick={() => navigate(backPath)} className={BTN_CANCEL}>
-              <X className="h-4 w-4" /> Vazgeç
-            </button>
-            <div className="btn-split">
-              <button type="submit" className={BTN_SAVE}>
-                <Save className="h-4 w-4" /> Kaydet
+        <AppPageHeader
+          title={
+            <span className="inline-flex min-w-0 items-center gap-2 text-xs font-normal uppercase leading-none text-[var(--muted)]">
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="truncate">{pageHeading}</span>
+            </span>
+          }
+          titleClassName="!flex !items-center !text-xs !font-normal !uppercase !leading-none !text-[var(--muted)]"
+          onBack={() => navigate(backPath)}
+          backLabel={isSupplierForm ? 'Tedarikçilere dön' : 'Müşterilere dön'}
+          actions={
+            <div
+              ref={actionMenuAnchorRef}
+              className="relative flex items-center gap-2.5 bg-transparent"
+            >
+              <button type="button" onClick={() => navigate(backPath)} className={BTN_CANCEL}>
+                <X className="h-4 w-4" /> Vazgeç
               </button>
-              <span className="btn-split-divider" aria-hidden />
-              <button
-                type="button"
-                onClick={() => setActionMenuOpen((open) => !open)}
-                className={BTN_SAVE_MENU}
-                aria-label="Kaydet işlemleri"
-                aria-expanded={actionMenuOpen}
-              >
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-            </div>
-            {actionMenuOpen &&
-              actionMenuStyle &&
-              createPortal(
-                <div
-                  ref={actionMenuRef}
-                  style={actionMenuStyle}
-                  className={`${DROPDOWN_MENU_PORTAL_CLASS} w-56`}
-                  onClick={(event) => event.stopPropagation()}
+              <div className="btn-split">
+                <button type="submit" className={BTN_SAVE}>
+                  <Save className="h-4 w-4" /> Kaydet
+                </button>
+                <span className="btn-split-divider" aria-hidden />
+                <button
+                  type="button"
+                  onClick={() => setActionMenuOpen((open) => !open)}
+                  className={BTN_SAVE_MENU}
+                  aria-label="Kaydet işlemleri"
+                  aria-expanded={actionMenuOpen}
                 >
-                  <button
-                    type="button"
-                    onClick={saveAndContinue}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-extrabold tracking-wide text-[var(--ink)] transition-colors hover:bg-white/45"
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              </div>
+              {actionMenuOpen &&
+                actionMenuStyle &&
+                createPortal(
+                  <div
+                    ref={actionMenuRef}
+                    style={actionMenuStyle}
+                    className={`${DROPDOWN_MENU_PORTAL_CLASS} w-56`}
+                    onClick={(event) => event.stopPropagation()}
                   >
-                    <Save className="h-4 w-4 text-emerald-300" /> Kaydet ve devam et
-                  </button>
-                </div>,
-                document.body,
-              )}
-          </div>
-        </section>
+                    <button
+                      type="button"
+                      onClick={saveAndContinue}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-extrabold tracking-wide text-[var(--ink)] transition-colors hover:bg-white/45"
+                    >
+                      <Save className="h-4 w-4 text-emerald-300" /> Kaydet ve devam et
+                    </button>
+                  </div>,
+                  document.body,
+                )}
+            </div>
+          }
+        />
 
         <div className="space-y-5">
           <FormSectionPanel
