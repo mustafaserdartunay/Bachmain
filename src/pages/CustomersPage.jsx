@@ -37,6 +37,10 @@ const balanceFilterOptions = [
   { label: 'Borç', color: 'bg-red-500' },
   { label: 'Sıfır', color: 'bg-orange-500' },
 ]
+const CUSTOMER_FILTER_FIELD_CLASS =
+  'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
+const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !text-[var(--ink)]`
+const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
 
 function balanceClass(balance) {
   if (balance > 0) return 'text-emerald-600'
@@ -204,23 +208,23 @@ export default function CustomersPage({
     <AppPageShell>
       <AppPageHeader
         title={
-          <span className="inline-flex min-w-0 items-center gap-2 text-[var(--muted)]">
+          <span className="inline-flex min-w-0 items-center gap-2 text-xs leading-none text-[var(--muted)]">
             {listKind === 'supplier' ? (
-              <Handshake className="h-5 w-5 shrink-0" />
+              <Handshake className="h-4 w-4 shrink-0" />
             ) : (
-              <Users className="h-5 w-5 shrink-0" />
+              <Users className="h-4 w-4 shrink-0" />
             )}
             <span className="truncate">{pageTitle}</span>
           </span>
         }
-        titleClassName="!text-[var(--muted)]"
+        titleClassName="!text-xs !leading-none !text-[var(--muted)]"
         actions={
           <button
             type="button"
             onClick={() => navigate(createPath)}
-            className="inline-flex items-center gap-2 bg-transparent p-0 text-xl font-extrabold tracking-wide text-[#2563eb] transition-colors hover:text-[#1d4ed8]"
+            className="inline-flex items-center gap-2 bg-transparent p-0 text-xs font-extrabold leading-none text-[#2563eb] transition-colors hover:text-[#1d4ed8]"
           >
-            <UserPlus className="h-5 w-5 shrink-0" />
+            <UserPlus className="h-4 w-4 shrink-0" />
             <span className="whitespace-nowrap">{createLabel}</span>
           </button>
         }
@@ -260,58 +264,59 @@ export default function CustomersPage({
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Marka veya ünvan ara..."
+            className="customer-filter-search"
           />
           <div className="app-filter-bar grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="glass-inset grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl p-2.5">
-              <p className={`${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0`}>Tipi</p>
+            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Tipi :</p>
               <EditableDropdownPill
                 value={filters.type}
                 options={[filterAllOption, ...typeOptions]}
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName={LIST_PILL_CLASS}
+                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
                 openKey="filter-type"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
                 onChange={(value) => updateFilter('type', value)}
               />
             </div>
-            <div className="glass-inset grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl p-2.5">
-              <p className={`${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0`}>Temsilci</p>
+            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Temsilci :</p>
               <EditableDropdownPill
                 value={filters.representative}
                 options={[filterAllOption, ...optionLists.representative]}
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName={LIST_PILL_CLASS}
+                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
                 openKey="filter-representative"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
                 onChange={(value) => updateFilter('representative', value)}
               />
             </div>
-            <div className="glass-inset grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl p-2.5">
-              <p className={`${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0`}>Puantaj</p>
+            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Puantaj :</p>
               <EditableDropdownPill
                 value={filters.scoring}
                 options={[filterAllOption, ...optionLists.scoring]}
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName={LIST_PILL_CLASS}
+                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
                 openKey="filter-scoring"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
                 onChange={(value) => updateFilter('scoring', value)}
               />
             </div>
-            <div className="glass-inset grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl p-2.5">
-              <p className={`${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0`}>Bakiye</p>
+            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Bakiye :</p>
               <EditableDropdownPill
                 value={filters.balance}
                 options={balanceFilterOptions}
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName={LIST_PILL_CLASS}
+                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
                 openKey="filter-balance"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -325,6 +330,7 @@ export default function CustomersPage({
       <AppPagePanel
         title={listTitle}
         dotColor="blue"
+        className="customer-list-panel"
         action={
           <span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px]">
             {filteredCustomers.length} kayıt
