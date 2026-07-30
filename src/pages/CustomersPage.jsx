@@ -254,24 +254,16 @@ export default function CustomersPage({
         ]}
       />
 
-      <AppPagePanel
-        title={listTitle}
-        dotColor="blue"
-        action={
-          <span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px]">
-            {filteredCustomers.length} kayıt
-          </span>
-        }
-      >
-        <div className="mb-4 space-y-3">
+      <AppPagePanel>
+        <div className="space-y-3">
           <SearchInput
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Marka veya ünvan ara..."
           />
-          <div className="glass-inset app-filter-bar grid grid-cols-4 gap-3 p-3">
-            <div>
-              <p className={APP_FILTER_LABEL_CLASS}>Tipi</p>
+          <div className="app-filter-bar grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="glass-inset grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl p-2.5">
+              <p className={`${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0`}>Tipi</p>
               <EditableDropdownPill
                 value={filters.type}
                 options={[filterAllOption, ...typeOptions]}
@@ -284,8 +276,8 @@ export default function CustomersPage({
                 onChange={(value) => updateFilter('type', value)}
               />
             </div>
-            <div>
-              <p className={APP_FILTER_LABEL_CLASS}>Temsilci</p>
+            <div className="glass-inset grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl p-2.5">
+              <p className={`${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0`}>Temsilci</p>
               <EditableDropdownPill
                 value={filters.representative}
                 options={[filterAllOption, ...optionLists.representative]}
@@ -298,8 +290,8 @@ export default function CustomersPage({
                 onChange={(value) => updateFilter('representative', value)}
               />
             </div>
-            <div>
-              <p className={APP_FILTER_LABEL_CLASS}>Puantaj</p>
+            <div className="glass-inset grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl p-2.5">
+              <p className={`${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0`}>Puantaj</p>
               <EditableDropdownPill
                 value={filters.scoring}
                 options={[filterAllOption, ...optionLists.scoring]}
@@ -312,8 +304,8 @@ export default function CustomersPage({
                 onChange={(value) => updateFilter('scoring', value)}
               />
             </div>
-            <div>
-              <p className={APP_FILTER_LABEL_CLASS}>Bakiye</p>
+            <div className="glass-inset grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl p-2.5">
+              <p className={`${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0`}>Bakiye</p>
               <EditableDropdownPill
                 value={filters.balance}
                 options={balanceFilterOptions}
@@ -328,9 +320,18 @@ export default function CustomersPage({
             </div>
           </div>
         </div>
+      </AppPagePanel>
 
+      <AppPagePanel
+        title={listTitle}
+        dotColor="blue"
+        action={
+          <span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px]">
+            {filteredCustomers.length} kayıt
+          </span>
+        }
+      >
         <DataTable
-          className="mt-3"
           emptyTitle={emptyTitle}
           emptyDescription="Arama veya segment filtresini değiştirin."
           data={filteredCustomers}
