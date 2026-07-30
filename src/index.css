@@ -1090,14 +1090,25 @@ textarea:not(.form-input)::placeholder {
   box-shadow: none !important;
 }
 
+.app-responsive .customer-list-panel .customer-list-dropdown-pill {
+  width: max-content;
+  min-width: 9rem;
+  max-width: none;
+}
+
 .app-responsive input.customer-filter-search.search-pill.app-search-field {
   background: transparent !important;
   box-shadow: none !important;
+  transition: none !important;
 }
 
 .app-responsive input.customer-filter-search.search-pill.app-search-field:hover,
-.app-responsive input.customer-filter-search.search-pill.app-search-field:focus {
+.app-responsive input.customer-filter-search.search-pill.app-search-field:focus,
+.app-responsive input.customer-filter-search.search-pill.app-search-field:focus-visible {
   background: transparent !important;
+  border-color: var(--search-border) !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .app-list-row {

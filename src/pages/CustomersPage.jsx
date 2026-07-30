@@ -51,6 +51,8 @@ const CUSTOMER_FILTER_FIELD_CLASS =
   'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
 const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !text-[var(--ink)]`
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
+const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill`
+const CUSTOMER_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max max-w-full'
 
 function balanceClass(balance) {
   if (balance > 0) return 'text-[#10b981]'
@@ -402,7 +404,9 @@ export default function CustomersPage({
                       value={resolveListColumnLabel(meta.type, optionLists.type)}
                       options={typeOptions}
                       onOptionsChange={(next) => updateOptionList('type', next)}
-                      buttonClassName={LIST_PILL_CLASS}
+                      buttonClassName={CUSTOMER_LIST_PILL_CLASS}
+                      wrapperClassName={CUSTOMER_LIST_PILL_WRAPPER_CLASS}
+                      menuClassName="!min-w-0"
                       openKey={`${customer.id}-type`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
@@ -428,7 +432,9 @@ export default function CustomersPage({
                       )}
                       options={optionLists.representative}
                       onOptionsChange={(next) => updateOptionList('representative', next)}
-                      buttonClassName={LIST_PILL_CLASS}
+                      buttonClassName={CUSTOMER_LIST_PILL_CLASS}
+                      wrapperClassName={CUSTOMER_LIST_PILL_WRAPPER_CLASS}
+                      menuClassName="!min-w-0"
                       openKey={`${customer.id}-representative`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
@@ -453,7 +459,9 @@ export default function CustomersPage({
                       value={resolveListColumnLabel(meta.scoring, optionLists.scoring)}
                       options={optionLists.scoring}
                       onOptionsChange={(next) => updateOptionList('scoring', next)}
-                      buttonClassName={LIST_PILL_CLASS}
+                      buttonClassName={CUSTOMER_LIST_PILL_CLASS}
+                      wrapperClassName={CUSTOMER_LIST_PILL_WRAPPER_CLASS}
+                      menuClassName="!min-w-0"
                       openKey={`${customer.id}-scoring`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
