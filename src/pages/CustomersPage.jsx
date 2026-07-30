@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Handshake, Link2, Search, UserPlus, Users, WalletCards } from 'lucide-react'
+import { CheckCircle2, Handshake, Link2, UserPlus, Users, WalletCards } from 'lucide-react'
 import { DataTable } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
-import SplitCreateButton from '../components/Common/SplitCreateButton'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import { APP_FILTER_LABEL_CLASS } from '../utils/dashboardDesign'
@@ -204,57 +203,26 @@ export default function CustomersPage({
   return (
     <AppPageShell>
       <AppPageHeader
-        title={pageTitle}
+        title={
+          <span className="inline-flex min-w-0 items-center gap-2 text-[var(--muted)]">
+            {listKind === 'supplier' ? (
+              <Handshake className="h-5 w-5 shrink-0" />
+            ) : (
+              <Users className="h-5 w-5 shrink-0" />
+            )}
+            <span className="truncate">{pageTitle}</span>
+          </span>
+        }
+        titleClassName="!text-[var(--muted)]"
         actions={
-          <SplitCreateButton
-            label={createLabel}
-            onPrimaryClick={() => navigate(createPath)}
-            menuAriaLabel={
-              listKind === 'supplier' ? 'Tedarikçi seçenekleri' : 'Müşteri seçenekleri'
-            }
-            menuItems={
-              listKind === 'supplier'
-                ? [
-                    {
-                      id: 'supplier',
-                      label: 'Hızlı Tedarikçi Oluştur',
-                      icon: Handshake,
-                      iconClassName: 'text-blue-300',
-                      onClick: () => navigate(createPath),
-                    },
-                    {
-                      id: 'customer',
-                      label: 'Yeni Müşteri Oluştur',
-                      icon: UserPlus,
-                      iconClassName: 'text-emerald-300',
-                      onClick: () => navigate('/musteriler/yeni'),
-                    },
-                  ]
-                : [
-                    {
-                      id: 'customer',
-                      label: 'Hızlı Müşteri Oluştur',
-                      icon: UserPlus,
-                      iconClassName: 'text-blue-300',
-                      onClick: () => navigate(createPath),
-                    },
-                    {
-                      id: 'supplier',
-                      label: 'Yeni Tedarikçi Oluştur',
-                      icon: Handshake,
-                      iconClassName: 'text-emerald-300',
-                      onClick: () => navigate('/musteriler/yeni?kind=supplier'),
-                    },
-                    {
-                      id: 'finder',
-                      label: 'Müşteri Bul',
-                      icon: Search,
-                      iconClassName: 'text-orange-300',
-                      onClick: () => navigate('/saha-satis/musteri-bul'),
-                    },
-                  ]
-            }
-          />
+          <button
+            type="button"
+            onClick={() => navigate(createPath)}
+            className="inline-flex items-center gap-2 bg-transparent p-0 text-xl font-extrabold tracking-wide text-[#2563eb] transition-colors hover:text-[#1d4ed8]"
+          >
+            <UserPlus className="h-5 w-5 shrink-0" />
+            <span className="whitespace-nowrap">{createLabel}</span>
+          </button>
         }
       />
 
