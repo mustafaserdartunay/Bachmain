@@ -1880,10 +1880,11 @@ html.special .app-sidebar .sidebar-menu-active {
   gap: 0.55rem;
   margin: 0.85rem 0.2rem 0.35rem;
   padding: 0.15rem 0.2rem 0.15rem 0.35rem;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  line-height: 1.1;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.25;
   text-transform: uppercase;
   color: var(--bach-sky, #79a6d2);
   background: none;
@@ -1950,9 +1951,10 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
   padding: 9px 12px;
   border-radius: 16px;
   color: var(--muted);
-  font-weight: 600;
-  font-size: 13px;
-  line-height: 1.2;
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.25;
   background: transparent;
   border: 1px solid transparent;
   box-shadow: none;
@@ -1965,9 +1967,10 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 13px;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: normal;
   text-transform: capitalize;
 }
 
