@@ -16,30 +16,20 @@ function resolveToneClass(tone, fallback = 'text-[var(--ink)]') {
   return TONE_CLASSES[tone] || fallback
 }
 
-export function SummaryMetricCard({
-  title,
-  value,
-  icon: Icon,
-  tone = 'blue',
-  valueTone = 'white',
-  subtitle,
-}) {
-  const iconToneClass = resolveToneClass(tone, TONE_CLASSES.blue)
+export function SummaryMetricCard({ title, value, icon: Icon, valueTone = 'white', subtitle }) {
   const valueToneClass = resolveToneClass(valueTone, TONE_CLASSES.white)
 
   return (
     <div className="app-page-metric flex min-h-[94px] items-center justify-center rounded-[18px] p-4">
-      <div className="flex min-w-0 items-center justify-center gap-3">
-        {Icon && (
-          <span className={`flex h-8 w-8 shrink-0 items-center justify-center ${iconToneClass}`}>
-            <Icon className="h-5 w-5" />
-          </span>
-        )}
-        <div className="flex min-w-0 flex-col gap-1">
+      <div className="flex min-w-0 flex-col items-center gap-1 text-center">
+        <div className="flex min-w-0 items-center justify-center gap-2 text-[var(--muted)]">
+          {Icon && <Icon className="h-4 w-4 shrink-0" />}
           <span className={APP_LABEL_CLASS}>{title}</span>
-          <p className={`${APP_VALUE_CLASS} truncate text-xl ${valueToneClass}`}>{value}</p>
-          {subtitle && <p className={APP_LABEL_CLASS}>{subtitle}</p>}
         </div>
+        <p className={`${APP_VALUE_CLASS} max-w-full truncate text-xl ${valueToneClass}`}>
+          {value}
+        </p>
+        {subtitle && <p className={APP_LABEL_CLASS}>{subtitle}</p>}
       </div>
     </div>
   )
