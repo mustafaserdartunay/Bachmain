@@ -8,15 +8,15 @@
 
 ## 1. Findings (before)
 
-| Risk | Severity | Notes |
-|------|----------|-------|
-| OpenAI proxies accepted client API keys in prod | Critical | Key leak / abuse |
-| Stripe webhooks without signature verify | Critical | Fake payment activation |
-| Secrets / `db.json` tracked | High | Credential exposure in git |
-| Weak / missing ENV fail-fast | High | Misconfigured prod boots |
-| CRM multi-tenant mostly client-side | High | No server least-privilege |
-| Security Center mock-only | Medium | No live telemetri |
-| Missing HSTS / CSP | Medium | Browser hardening gap |
+| Risk                                            | Severity | Notes                      |
+| ----------------------------------------------- | -------- | -------------------------- |
+| OpenAI proxies accepted client API keys in prod | Critical | Key leak / abuse           |
+| Stripe webhooks without signature verify        | Critical | Fake payment activation    |
+| Secrets / `db.json` tracked                     | High     | Credential exposure in git |
+| Weak / missing ENV fail-fast                    | High     | Misconfigured prod boots   |
+| CRM multi-tenant mostly client-side             | High     | No server least-privilege  |
+| Security Center mock-only                       | Medium   | No live telemetri          |
+| Missing HSTS / CSP                              | Medium   | Browser hardening gap      |
 
 ---
 
@@ -63,42 +63,43 @@
 
 ## 3. Remaining risks
 
-| Risk | Severity | Next step |
-|------|----------|-----------|
-| CRM still localStorage-primary | High | Complete dual-write soak → API-first (gated) |
-| Tokens in localStorage / XSS | High | HttpOnly cookies cutover |
-| Argon2id not yet primary hash | Medium | Add `argon2` package + migrate on login |
-| CSP report-only only | Medium | Tighten after violation review |
-| Private R2 not wired | Medium | Phase 5 implementation |
-| AI proxy secret optional | Medium | Require `AI_PROXY_SECRET` in prod |
+| Risk                           | Severity | Next step                                    |
+| ------------------------------ | -------- | -------------------------------------------- |
+| CRM still localStorage-primary | High     | Complete dual-write soak → API-first (gated) |
+| Tokens in localStorage / XSS   | High     | HttpOnly cookies cutover                     |
+| Argon2id not yet primary hash  | Medium   | Add `argon2` package + migrate on login      |
+| CSP report-only only           | Medium   | Tighten after violation review               |
+| Private R2 not wired           | Medium   | Phase 5 implementation                       |
+| AI proxy secret optional       | Medium   | Require `AI_PROXY_SECRET` in prod            |
 
 ---
 
 ## 4. Scores (self-assessment)
 
-| Dimension | Score | Comment |
-|-----------|-------|---------|
-| Security posture | **72 / 100** | P0 closed; tenancy cutover pending |
-| Performance readiness | **70 / 100** | Rate limits + SSL; Redis optional |
-| Code / architecture | **68 / 100** | Dual planes (admin + api) converging |
-| Ops / DR maturity | **55 / 100** | Documented; automation pending |
+| Dimension             | Score        | Comment                              |
+| --------------------- | ------------ | ------------------------------------ |
+| Security posture      | **72 / 100** | P0 closed; tenancy cutover pending   |
+| Performance readiness | **70 / 100** | Rate limits + SSL; Redis optional    |
+| Code / architecture   | **68 / 100** | Dual planes (admin + api) converging |
+| Ops / DR maturity     | **55 / 100** | Documented; automation pending       |
 
 ---
 
 ## 5. Recommendations
 
-1. Require `AI_PROXY_SECRET` in production within 14 days  
-2. Run staging dual-write for ≥ 7 days before API-first reads  
-3. Move session tokens to HttpOnly Secure cookies  
-4. Enforce CSP (non-report-only) after 2 weeks of reports  
-5. Wire Neon PITR verification into Security Center backup panel  
+1. Require `AI_PROXY_SECRET` in production within 14 days
+2. Run staging dual-write for ≥ 7 days before API-first reads
+3. Move session tokens to HttpOnly Secure cookies
+4. Enforce CSP (non-report-only) after 2 weeks of reports
+5. Wire Neon PITR verification into Security Center backup panel
 
 ---
 
 ## 6. Regression checklist
 
-- [ ] Staff / tenant login  
-- [ ] One CRM page load + save  
-- [ ] AI health endpoint  
-- [ ] Stripe test webhook (signed)  
-- [ ] Admin `/guvenlik` score loads  
+- [ ] Staff / tenant login
+- [ ] Same tenant user login from two independent PC/Mac sessions; notification-mail failure must not block either login
+- [ ] One CRM page load + save
+- [ ] AI health endpoint
+- [ ] Stripe test webhook (signed)
+- [ ] Admin `/guvenlik` score loads

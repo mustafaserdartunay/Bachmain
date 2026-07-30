@@ -562,21 +562,30 @@ export async function loginAccount(store, body) {
   })
   store.customerExtras.loginHistory = store.customerExtras.loginHistory.slice(0, 200)
 
-  await sendTemplateMail(store, {
-    to: account.email,
-    template: 'new_login',
-    type: 'new_login',
-    customerId: account.customerId,
-    accountId: account.id,
-    data: {
-      name: account.fullName,
-      at: account.lastLoginAt,
-      userAgent: body.userAgent || '—',
-      ip: body.ip || '—',
-    },
-    immediate: true,
-    meta: { quiet: true },
-  })
+  try {
+    await sendTemplateMail(store, {
+      to: account.email,
+      template: 'new_login',
+      type: 'new_login',
+      customerId: account.customerId,
+      accountId: account.id,
+      data: {
+        name: account.fullName,
+        at: account.lastLoginAt,
+        userAgent: body.userAgent || '—',
+        ip: body.ip || '—',
+      },
+      immediate: true,
+      meta: { quiet: true },
+    })
+  } catch (error) {
+    // Login notifications are best-effort. A mail provider outage must not block
+    // a valid account from opening an independent session on another device.
+    console.warn('[bachmain] new-login notification failed', {
+      accountId: account.id,
+      code: error?.code || 'MAIL_FAILED',
+    })
+  }
 
   if (!Array.isArray(store.authEvents)) store.authEvents = []
   store.authEvents.unshift({
