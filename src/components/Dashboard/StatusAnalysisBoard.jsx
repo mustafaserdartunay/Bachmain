@@ -135,13 +135,13 @@ export function FinanceMetricCard({
   return content
 }
 
-function moneyCardValue(parts) {
+function moneyCardValue(parts, basis = 'inclVat') {
+  const amount = basis === 'exclVat' ? parts.exclVat : parts.inclVat
   return {
-    value: formatTreasuryCurrency(parts.inclVat),
-    valueExVat: formatTreasuryCurrency(parts.exclVat),
-    valueIncVat: formatTreasuryCurrency(parts.inclVat),
+    value: formatTreasuryCurrency(amount),
     exclVat: parts.exclVat,
     inclVat: parts.inclVat,
+    vatBasis: basis,
   }
 }
 
@@ -225,7 +225,8 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
   })
   const receivableValues = moneyCardValue(receivableParts)
   const payableValues = moneyCardValue(payableParts)
-  const stockValues = moneyCardValue(stockParts)
+  // Stok maliyeti KDV hariç; belge ve cari kartları ekrandaki genel toplamı kullanır.
+  const stockValues = moneyCardValue(stockParts, 'exclVat')
   const liveValues = moneyCardValue(liveParts)
   const futureValues = moneyCardValue(futureParts)
   const possibleValues = moneyCardValue(possibleParts)
@@ -255,7 +256,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'receivables',
       label: 'Tahsilat Bekleyen',
       ...receivableValues,
-      sub: 'Müşteri cari alacak · KDV hariç / dahil',
+      sub: 'Müşteri cari alacak toplamı',
       href: '/musteriler',
       tone: 'text-cyan-300',
       valueTone: 'text-orange-500',
@@ -266,7 +267,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'payables',
       label: 'Ödenecekler Toplamı',
       ...payableValues,
-      sub: 'Tedarikçi cari borç · KDV hariç / dahil',
+      sub: 'Tedarikçi cari borç toplamı',
       href: '/giderler/tedarikciler',
       tone: 'text-orange-300',
       valueTone: 'text-red-600',
@@ -277,7 +278,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'stock-value',
       label: 'Stok Toplam Değeri',
       ...stockValues,
-      sub: `${stockReport.totalUnits.toLocaleString('tr-TR')} adet · maliyet · KDV hariç / dahil`,
+      sub: `${stockReport.totalUnits.toLocaleString('tr-TR')} adet · maliyet değeri`,
       href: '/stok/urunler',
       tone: 'text-teal-300',
       valueTone: 'text-teal-600',
@@ -318,7 +319,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'possible',
       label: 'Genel Olası Tutar',
       ...possibleValues,
-      sub: 'Canlı varlık + gelecek tutar · KDV hariç / dahil',
+      sub: 'Canlı varlık + gelecek tutar',
       href: '/kasa',
       tone: 'text-gray-100',
       valueTone: 'text-blue-600',
