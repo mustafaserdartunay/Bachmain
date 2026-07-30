@@ -13,6 +13,7 @@ import {
   GraduationCap,
   ShoppingBag,
   Package,
+  LayoutGrid,
 } from 'lucide-react'
 import { ensureUserProfile, readUserProfile } from '../../utils/userProfile'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -29,6 +30,135 @@ import OrgSwitcher from './OrgSwitcher'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { HeaderPopoverProvider, useHeaderPopover } from '../../hooks/useHeaderPopover'
 
+function useCompactHeader() {
+  const [compact, setCompact] = useState(() =>
+    typeof window === 'undefined' ? false : window.matchMedia('(max-width: 1279px)').matches,
+  )
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 1279px)')
+    const sync = () => setCompact(media.matches)
+    sync()
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [])
+
+  return compact
+}
+
+function MobileToolItem({ label, children }) {
+  return (
+    <div className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl px-1 py-2 text-center">
+      {children}
+      <span className="w-full truncate text-[10px] font-semibold text-[var(--muted)]">{label}</span>
+    </div>
+  )
+}
+
+function MobileHeaderTools({ onNavigate }) {
+  const [open, setOpen] = useState(false)
+  const {
+    anchorRef,
+    menuRef,
+    style: menuStyle,
+  } = useAnchoredPortal(open, {
+    align: 'right',
+    matchWidth: false,
+    width: 304,
+    offset: 8,
+  })
+
+  useEffect(() => {
+    if (!open) return undefined
+    function closeOnOutsideClick(event) {
+      if (anchorRef.current?.contains(event.target) || menuRef.current?.contains(event.target))
+        return
+      if (event.target.closest?.('[data-header-popover]')) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick)
+  }, [anchorRef, menuRef, open])
+
+  return (
+    <div ref={anchorRef} className="relative flex shrink-0 items-center">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only`}
+        aria-label="Hızlı araçlar"
+        aria-expanded={open}
+        title="Hızlı araçlar"
+      >
+        <span className="icon-wrap">
+          <LayoutGrid className="h-4 w-4" />
+        </span>
+      </button>
+
+      {open
+        ? createPortal(
+            <div
+              ref={menuRef}
+              style={
+                menuStyle ?? {
+                  position: 'fixed',
+                  visibility: 'hidden',
+                  pointerEvents: 'none',
+                  zIndex: 10000,
+                }
+              }
+              className="app-header-dropdown w-[min(19rem,calc(100vw-1rem))] overflow-visible p-2"
+            >
+              <p className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                Hızlı Araçlar
+              </p>
+              <div className="grid grid-cols-3 gap-1">
+                <MobileToolItem label="Firma">
+                  <OrgSwitcher />
+                </MobileToolItem>
+                <MobileToolItem label="Mesajlar">
+                  <HeaderMessageCenter />
+                </MobileToolItem>
+                <MobileToolItem label="Notlar">
+                  <HeaderNotebook />
+                </MobileToolItem>
+                <MobileToolItem label="Takvim">
+                  <HeaderCalendar />
+                </MobileToolItem>
+                <MobileToolItem label="Asistan">
+                  <HeaderAiAssistant />
+                </MobileToolItem>
+                <MobileToolItem label="Görünüm">
+                  <AppearanceToggle />
+                </MobileToolItem>
+                <MobileToolItem label="POS">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false)
+                      onNavigate('/shopping')
+                    }}
+                    className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only`}
+                    aria-label="POS"
+                    title="POS / Shopping"
+                  >
+                    <span className="icon-wrap">
+                      <ShoppingBag className="h-4 w-4 shrink-0" />
+                    </span>
+                  </button>
+                </MobileToolItem>
+                <MobileToolItem label="Bildirimler">
+                  <NotificationDropdown />
+                </MobileToolItem>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
+  )
+}
+
 export default function Header({ onMenuClick }) {
   return (
     <header className="app-header-banner sticky top-[var(--shell-gap)] z-40 flex h-[var(--ds-header-h,4.5rem)] min-h-[var(--ds-header-h,4.5rem)] shrink-0 items-center px-4 py-2 sm:px-6">
@@ -42,6 +172,7 @@ export default function Header({ onMenuClick }) {
 function HeaderBar({ onMenuClick }) {
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const compactHeader = useCompactHeader()
   const { open: menuOpen, setOpen: setMenuOpen, toggle: toggleMenu } = useHeaderPopover('user-menu')
   const [pendingLogout, setPendingLogout] = useState(false)
   const [profile, setProfile] = useState(() => ensureUserProfile())
@@ -94,8 +225,8 @@ function HeaderBar({ onMenuClick }) {
   ]
 
   return (
-    <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-1.5 lg:flex-nowrap lg:gap-2">
-      <div className="order-1 flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
+    <div className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 lg:gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
         <button
           type="button"
           onClick={onMenuClick}
@@ -108,29 +239,37 @@ function HeaderBar({ onMenuClick }) {
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
           <input type="text" placeholder="Ara..." className={HEADER_SEARCH_INPUT_CLASS} />
         </div>
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-          <OrgSwitcher />
-          <HeaderMessageCenter />
-          <HeaderNotebook />
-          <HeaderCalendar />
-          <HeaderAiAssistant />
-          <AppearanceToggle />
-        </div>
+        {!compactHeader ? (
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+            <OrgSwitcher />
+            <HeaderMessageCenter />
+            <HeaderNotebook />
+            <HeaderCalendar />
+            <HeaderAiAssistant />
+            <AppearanceToggle />
+          </div>
+        ) : null}
       </div>
 
-      <div className="order-2 flex min-w-0 shrink-0 items-center gap-1 sm:gap-1.5">
-        <button
-          type="button"
-          onClick={() => navigate('/shopping')}
-          className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only`}
-          aria-label="POS"
-          title="POS / Shopping"
-        >
-          <span className="icon-wrap">
-            <ShoppingBag className="h-4 w-4 shrink-0" />
-          </span>
-        </button>
-        <NotificationDropdown />
+      <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-1.5">
+        {compactHeader ? (
+          <MobileHeaderTools onNavigate={navigate} />
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => navigate('/shopping')}
+              className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only`}
+              aria-label="POS"
+              title="POS / Shopping"
+            >
+              <span className="icon-wrap">
+                <ShoppingBag className="h-4 w-4 shrink-0" />
+              </span>
+            </button>
+            <NotificationDropdown />
+          </>
+        )}
 
         <div className="flex items-center gap-1 sm:gap-1.5">
           <div
@@ -165,7 +304,7 @@ function HeaderBar({ onMenuClick }) {
                   )}
                 </div>
               </div>
-              <div className="hidden text-left leading-none sm:block">
+              <div className={compactHeader ? 'hidden' : 'hidden text-left leading-none sm:block'}>
                 <p className="text-xs font-extrabold text-[var(--ink)]">{profile.displayName}</p>
                 <p className="mt-0.5 text-[12px] font-semibold text-[var(--muted)]">
                   {companyName || profile.companyName}
