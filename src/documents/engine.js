@@ -9,14 +9,16 @@ import { downloadPdfFromHtml, openPrintWindow } from '../utils/docPrint'
 import { publishDomainEvent } from '../workflow/eventBus'
 
 /**
- * @param {{ docType?: string, documentId?: string, templateId?: string, context?: object }} input
+ * @param {{ docType?: string, documentId?: string, templateId?: string, context?: object, html?: string }} input
  */
 export async function renderDocument(input = {}) {
   const template = input.templateId ? getDocTemplateById(input.templateId) : null
   const context = input.context || buildDocumentContext({})
-  const html = template
-    ? renderTemplateHtml(template, context)
-    : `<div style="font-family:system-ui;padding:24px"><h1>${input.docType || 'Belge'}</h1><p>Document Platform engine · DP-0</p></div>`
+  const renderedTemplate = template ? renderTemplateHtml(template, context) : null
+  const html =
+    input.html ||
+    (typeof renderedTemplate === 'string' ? renderedTemplate : renderedTemplate?.html) ||
+    `<div style="font-family:system-ui;padding:24px"><h1>${input.docType || 'Belge'}</h1><p>Document Platform engine · DP-0</p></div>`
 
   publishDomainEvent(
     'trigger.document.rendered',
@@ -40,11 +42,11 @@ export async function printDocument(input = {}) {
 
 export async function downloadDocumentPdf(input = {}) {
   const { html, template } = await renderDocument(input)
-  const filename = `${template?.name || input.docType || 'belge'}.pdf`
+  const filename = input.filename || `${template?.name || input.docType || 'belge'}.pdf`
   await downloadPdfFromHtml(html, filename)
   publishDomainEvent(
     'trigger.document.pdf.downloaded',
-    { templateId: template?.id },
+    { docType: input.docType, documentId: input.documentId, templateId: template?.id },
     { source: 'documents/engine' },
   )
   return { ok: true }

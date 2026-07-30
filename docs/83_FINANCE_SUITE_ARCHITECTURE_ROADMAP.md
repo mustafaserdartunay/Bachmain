@@ -79,6 +79,9 @@ Operational conversion is a gross cash scenario, not booked revenue, guaranteed 
 profit. Invoiced/collected records stay in the current projection and must not be counted again in
 the operational scenario.
 
+The detailed month-end PDF report is rendered through the canonical Document Platform adapter
+(`documents/engine` → `docPrint`); Finance must not introduce a separate PDF stack.
+
 ## Phases
 
 ### FS-0 — Foundation (this sprint)

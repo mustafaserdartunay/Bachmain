@@ -4,6 +4,7 @@ import {
   CircleAlert,
   CircleCheckBig,
   Factory,
+  FileDown,
   Landmark,
   ReceiptText,
   ShoppingCart,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react'
 import { APP_SURFACE_PANEL_CLASS } from '../../utils/dashboardDesign'
 import { buildMonthEndPaymentCapacity } from '../../utils/monthEndPaymentCapacity'
+import { downloadMonthEndCapacityReport } from '../../utils/monthEndCapacityReport'
 import { RECURRING_PAYMENTS_EVENT } from '../../utils/recurringPaymentsStore'
 
 const STATUS_STYLES = {
@@ -258,6 +260,7 @@ function OperationalCapacity({ operational, projected }) {
 
 export default function MonthEndCapacityPanel() {
   const [snapshot, setSnapshot] = useState(() => buildMonthEndPaymentCapacity())
+  const [reportBusy, setReportBusy] = useState(false)
 
   useEffect(() => {
     const refresh = () => setSnapshot(buildMonthEndPaymentCapacity())
@@ -271,6 +274,18 @@ export default function MonthEndCapacityPanel() {
     }
   }, [])
 
+  async function handleReport() {
+    if (reportBusy) return
+    setReportBusy(true)
+    try {
+      await downloadMonthEndCapacityReport(snapshot)
+    } catch (error) {
+      window.alert(error?.message || 'Rapor PDF olarak oluşturulamadı.')
+    } finally {
+      setReportBusy(false)
+    }
+  }
+
   return (
     <section className={`${APP_SURFACE_PANEL_CLASS} overflow-hidden p-3.5`}>
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -281,9 +296,17 @@ export default function MonthEndCapacityPanel() {
           </span>
           <p className="truncate text-sm font-black text-[var(--ink)]">Ay Sonu Nakit Dengesi</p>
         </div>
-        <span className="shrink-0 rounded-lg bg-white/45 px-2.5 py-1 text-[10px] font-extrabold capitalize text-[var(--muted)]">
-          {snapshot.monthLabel}
-        </span>
+        <button
+          type="button"
+          onClick={handleReport}
+          disabled={reportBusy}
+          aria-busy={reportBusy}
+          title={`${snapshot.monthLabel} ayrıntılı PDF raporunu indir`}
+          className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg bg-white/45 px-2.5 text-[10px] font-extrabold text-blue-600 transition-colors hover:bg-white/70 disabled:cursor-wait disabled:opacity-60"
+        >
+          <FileDown className="h-3.5 w-3.5" />
+          Rapor
+        </button>
       </div>
 
       <div className="grid gap-3 xl:grid-cols-2">
