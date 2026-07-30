@@ -480,7 +480,7 @@ export default function CustomersPage({
               id: 'balance',
               header: 'GÜNCEL BAKİYE',
               sortable: true,
-              className: 'whitespace-nowrap text-right',
+              className: 'w-[1%] whitespace-nowrap text-right',
               cell: (customer) => {
                 const balance = currentBalance(customer, movements)
                 return (
