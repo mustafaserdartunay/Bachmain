@@ -1,5 +1,13 @@
 import { getAllCustomerProfiles } from '../data/customerProfiles'
-import { getCustomerMetaSelection, readCustomerMeta } from './customerMeta'
+import { CUSTOMER_META_KEY, getCustomerMetaSelection, readCustomerMeta } from './customerMeta'
+import { getCatalogProducts, stripCostFields } from './productCatalog'
+import { getTreasuryMovements } from './treasuryStore'
+import { loadOrders } from './ordersStore'
+import { loadQuotes } from './quotesStore'
+import { loadProductionJobs } from './productionStore'
+import { loadWorkflowStages } from './workflowStages'
+import { readCompanySettings } from './companySettings'
+import { readCustomerPortalSettings } from './customerPortalSettings'
 
 const ACCESS_KEY = 'erlenbox-b2b-access'
 const ORDERS_KEY = 'erlenbox-b2b-orders'
@@ -34,7 +42,12 @@ function writeJson(key, value) {
 }
 
 function createToken() {
-  return `b2b-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const bytes = crypto.getRandomValues(new Uint8Array(32))
+    const value = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+    return `b2b-${value}`
+  }
+  return `b2b-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
 }
 
 function createId(prefix) {
@@ -63,12 +76,6 @@ function seedProductionForOrder(order) {
   }))
 }
 
-function ensureSeedData() {
-  // Demo portal records are intentionally not seeded.
-}
-
-
-
 export function readB2bAccessMap() {
   return readJson(ACCESS_KEY, {})
 }
@@ -79,7 +86,9 @@ export function getB2bAccess(customerId) {
 
 export function findCustomerByToken(token) {
   const map = readB2bAccessMap()
-  const entry = Object.entries(map).find(([, value]) => value.enabled && value.accessToken === token)
+  const entry = Object.entries(map).find(
+    ([, value]) => value.enabled && value.accessToken === token,
+  )
   if (!entry) return null
   const [customerId, access] = entry
   const customer = getAllCustomerProfiles().find((item) => item.id === customerId)
@@ -96,9 +105,11 @@ export function findCustomerByToken(token) {
 export function enableB2bAccess(customerId, customPrices = {}) {
   const map = readB2bAccessMap()
   const existing = map[customerId]
+  const reusableToken =
+    typeof existing?.accessToken === 'string' && existing.accessToken.length >= 40
   const access = {
     enabled: true,
-    accessToken: existing?.accessToken || createToken(),
+    accessToken: reusableToken ? existing.accessToken : createToken(),
     enabledAt: existing?.enabledAt || new Date().toISOString(),
     customPrices: { ...(existing?.customPrices || {}), ...customPrices },
   }
@@ -120,20 +131,131 @@ export function getPortalUrl(token) {
   return `${window.location.origin}/portal/${token}`
 }
 
+function normalized(value) {
+  return String(value || '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
+}
+
+function recordBelongsToCustomer(record, customer) {
+  if (!record || !customer) return false
+  if (record.customerId && record.customerId === customer.id) return true
+  const customerNames = new Set(
+    [
+      customer.company,
+      customer.companyTitle,
+      customer.shortBrandName,
+      customer.brandShortName,
+      customer.name,
+    ]
+      .map(normalized)
+      .filter(Boolean),
+  )
+  return [record.customer, record.customerName, record.customerTitle, record.company]
+    .map(normalized)
+    .some((value) => value && customerNames.has(value))
+}
+
+function stripEmbeddedMedia(value) {
+  return JSON.parse(
+    JSON.stringify(value, (_key, item) =>
+      typeof item === 'string' && item.startsWith('data:') ? null : item,
+    ),
+  )
+}
+
+export function buildB2bPortalSnapshot(customerId) {
+  const customer = getAllCustomerProfiles().find((item) => item.id === customerId)
+  const access = getB2bAccess(customerId)
+  if (!customer || !access?.enabled) return null
+
+  const meta = readCustomerMeta()[customerId] || {}
+  const portalSettings = readCustomerPortalSettings(customerId, customer)
+  const company = readCompanySettings()
+  const sharedIbanIds = new Set(portalSettings.sharedIbanIds || [])
+  const products = getCatalogProducts()
+    .filter((product) => {
+      const customerIds = Array.isArray(product.customerIds) ? product.customerIds : []
+      return customerIds.length === 0 || customerIds.includes(customerId)
+    })
+    .map(stripCostFields)
+
+  return stripEmbeddedMedia({
+    version: 1,
+    publishedAt: new Date().toISOString(),
+    customer,
+    access,
+    meta,
+    portalSettings,
+    company: {
+      ...company,
+      bankAccounts: (company.bankAccounts || []).filter((account) => sharedIbanIds.has(account.id)),
+    },
+    products,
+    movements: getTreasuryMovements().filter((record) => recordBelongsToCustomer(record, customer)),
+    b2bOrders: readB2bOrders(customerId),
+    b2bQuotes: readB2bQuotes(customerId),
+    b2bTickets: readB2bTickets(customerId),
+    b2bProduction: readB2bProduction(customerId),
+    orders: loadOrders().filter((record) => recordBelongsToCustomer(record, customer)),
+    quotes: loadQuotes().filter((record) => recordBelongsToCustomer(record, customer)),
+    production: loadProductionJobs().filter((record) => recordBelongsToCustomer(record, customer)),
+    workflowStages: loadWorkflowStages(),
+  })
+}
+
+export function hydrateB2bPortalSnapshot(snapshot) {
+  if (!snapshot?.customer?.id || !snapshot?.access?.accessToken) return false
+  const customerId = snapshot.customer.id
+  const write = (key, value) => localStorage.setItem(key, JSON.stringify(value))
+
+  write('erlenbox-created-customers', [snapshot.customer])
+  write(CUSTOMER_META_KEY, { [customerId]: snapshot.meta || {} })
+  write(ACCESS_KEY, { [customerId]: snapshot.access })
+  write(ORDERS_KEY, snapshot.b2bOrders || [])
+  write(QUOTES_KEY, snapshot.b2bQuotes || [])
+  write(TICKETS_KEY, snapshot.b2bTickets || [])
+  write(PRODUCTION_KEY, snapshot.b2bProduction || [])
+  write('erlenbox-orders', snapshot.orders || [])
+  write('erlenbox-quotes', snapshot.quotes || [])
+  write('erlenbox-production', snapshot.production || [])
+  write('erlenbox-products', snapshot.products || [])
+  write('erlenbox-treasury-movements', snapshot.movements || [])
+  write('erlenbox-workflow-stages', snapshot.workflowStages || [])
+  write('erlenbox-company-settings', snapshot.company || {})
+  write('erlenbox-customer-portal-settings', {
+    [customerId]: snapshot.portalSettings || {},
+  })
+  sessionStorage.setItem(
+    'bach-b2b-remote-snapshot',
+    snapshot.publishedAt || new Date().toISOString(),
+  )
+  window.dispatchEvent(new CustomEvent('erlenbox:b2b-updated'))
+  return true
+}
+
 export function readB2bOrders(customerId) {
   return readJson(ORDERS_KEY, []).filter((order) => order.customerId === customerId)
 }
 
 export function readAllB2bOrders() {
-  return readJson(ORDERS_KEY, [])
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+  return readJson(ORDERS_KEY, []).sort(
+    (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
+  )
 }
 
 export function readB2bQuotes(customerId) {
   return readJson(QUOTES_KEY, []).filter((quote) => quote.customerId === customerId)
 }
 
-export function createB2bOrder({ customerId, customerName, lines, note = '', paymentMethod = 'havale', total = 0 }) {
+export function createB2bOrder({
+  customerId,
+  customerName,
+  lines,
+  note = '',
+  paymentMethod = 'havale',
+  total = 0,
+}) {
   const order = {
     id: createId('ORD'),
     customerId,

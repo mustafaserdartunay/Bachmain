@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
+  Copy,
+  Eye,
   Handshake,
   Link2,
+  Mail,
   Pencil,
   Trash2,
   UserPlus,
   Users,
   WalletCards,
 } from 'lucide-react'
-import { DataTable } from '@bachmain/ui'
+import { Button, DataTable, Modal } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import ConfirmModal from '../components/Common/ConfirmModal'
 import { useNavigate } from 'react-router-dom'
@@ -17,7 +20,7 @@ import SummaryMetrics from '../components/Common/SummaryMetrics'
 import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
-import { APP_FILTER_LABEL_CLASS } from '../utils/dashboardDesign'
+import { APP_FILTER_LABEL_CLASS, APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 import { deleteCustomer, getCustomerProfiles } from '../data/customerProfiles'
 import { appendActivity } from '../utils/customerActivity'
 import {
@@ -38,7 +41,13 @@ import {
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
 import { resolveListColumnLabel } from '../components/DocumentEditor/processPanelUtils'
-import { enableB2bAccess, getB2bAccess, getPortalUrl } from '../utils/b2bPortalStore'
+import {
+  buildB2bPortalSnapshot,
+  enableB2bAccess,
+  getB2bAccess,
+  getPortalUrl,
+} from '../utils/b2bPortalStore'
+import { publishB2bPortal } from '../utils/platformAuth'
 
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const balanceFilterOptions = [
@@ -62,6 +71,21 @@ function balanceClass(balance) {
 
 function currentBalance(customer, movements) {
   return getCustomerLedgerBalance(customer, movements)
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value)
+    return
+  }
+  const textarea = document.createElement('textarea')
+  textarea.value = value
+  textarea.style.position = 'fixed'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.select()
+  document.execCommand('copy')
+  textarea.remove()
 }
 
 export default function CustomersPage({
@@ -88,6 +112,10 @@ export default function CustomersPage({
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDeleteCustomerId, setPendingDeleteCustomerId] = useState(null)
+  const [b2bDialogCustomer, setB2bDialogCustomer] = useState(null)
+  const [b2bBusy, setB2bBusy] = useState(false)
+  const [b2bNotice, setB2bNotice] = useState('')
+  const [b2bError, setB2bError] = useState('')
   const [b2bMap, setB2bMap] = useState(() => {
     const map = {}
     getCustomerProfiles().forEach((customer) => {
@@ -184,10 +212,69 @@ export default function CustomersPage({
     0,
   )
 
-  function grantB2bAccess(customerId) {
-    const access = enableB2bAccess(customerId)
-    setB2bMap((current) => ({ ...current, [customerId]: access }))
-    appendActivity(customerId, 'B2B', 'Müşteri paneli erişimi verildi')
+  function openB2bDialog(customer) {
+    setB2bDialogCustomer(customer)
+    setB2bNotice('')
+    setB2bError('')
+  }
+
+  async function publishCustomerB2bPortal({ sendEmail, copyLink = false }) {
+    const customer = b2bDialogCustomer
+    if (!customer) return
+    if (sendEmail && !customer.email) {
+      setB2bError('Müşterinin kayıtlı e-posta adresi bulunamadı.')
+      return
+    }
+
+    setB2bBusy(true)
+    setB2bNotice('')
+    setB2bError('')
+    try {
+      const access =
+        b2bMap[customer.id]?.enabled && b2bMap[customer.id]?.accessToken?.length >= 40
+          ? b2bMap[customer.id]
+          : enableB2bAccess(customer.id)
+      setB2bMap((current) => ({ ...current, [customer.id]: access }))
+      const snapshot = buildB2bPortalSnapshot(customer.id)
+      if (!snapshot) throw new Error('B2B panel verileri hazırlanamadı.')
+
+      const display = getCustomerDisplay(customer)
+      const result = await publishB2bPortal({
+        accessToken: access.accessToken,
+        customerId: customer.id,
+        customerName: display.brandShortName || display.companyTitle || customer.company,
+        email: customer.email || '',
+        snapshot,
+        sendEmail,
+      })
+      const portalUrl = result.portalUrl || getPortalUrl(access.accessToken)
+
+      if (copyLink) {
+        await copyText(portalUrl)
+      }
+      appendActivity(
+        customer.id,
+        'B2B',
+        sendEmail
+          ? `B2B panel daveti ${customer.email} adresine gönderildi`
+          : 'B2B panel bağlantısı oluşturuldu',
+      )
+      if (sendEmail && result.mailStatus !== 'sent') {
+        setB2bError(
+          'Panel bağlantısı oluşturuldu; ancak e-posta gönderilemedi. Bağlantıyı kopyalayarak paylaşabilirsiniz.',
+        )
+      } else {
+        setB2bNotice(
+          sendEmail
+            ? `Davet e-postası ${customer.email} adresine gönderildi.`
+            : 'B2B panel bağlantısı oluşturuldu ve panoya kopyalandı.',
+        )
+      }
+    } catch (error) {
+      setB2bError(error.message || 'B2B panel erişimi oluşturulamadı.')
+    } finally {
+      setB2bBusy(false)
+    }
   }
 
   function updateCustomerSetting(customerId, field, value) {
@@ -516,22 +603,98 @@ export default function CustomersPage({
                 onClick: () => setPendingDeleteCustomerId(customer.id),
               },
               {
-                id: portalAccess?.enabled ? 'portal' : 'grant',
-                label: portalAccess?.enabled ? 'B2B Paneli Aç' : 'B2B İzin Ver',
-                icon: Link2,
+                id: portalAccess?.enabled ? 'invite' : 'grant',
+                label: portalAccess?.enabled ? 'B2B Daveti / Link' : 'B2B İzin Ver',
+                icon: portalAccess?.enabled ? Mail : Link2,
                 tone: 'success',
-                onClick: () => {
-                  if (portalAccess?.enabled) {
-                    window.open(getPortalUrl(portalAccess.accessToken), '_blank', 'noreferrer')
-                  } else {
-                    grantB2bAccess(customer.id)
-                  }
-                },
+                onClick: () => openB2bDialog(customer),
               },
+              ...(portalAccess?.enabled
+                ? [
+                    {
+                      id: 'portal-view',
+                      label: 'B2B Panelini Gör',
+                      icon: Eye,
+                      tone: 'success',
+                      onClick: () =>
+                        window.open(getPortalUrl(portalAccess.accessToken), '_blank', 'noreferrer'),
+                    },
+                  ]
+                : []),
             ]
           }}
         />
       </AppPagePanel>
+
+      <Modal
+        open={Boolean(b2bDialogCustomer)}
+        onClose={() => {
+          if (!b2bBusy) setB2bDialogCustomer(null)
+        }}
+        title="B2B Müşteri Paneli Erişimi"
+        size="md"
+        footer={
+          <>
+            <Button variant="cancel" disabled={b2bBusy} onClick={() => setB2bDialogCustomer(null)}>
+              Vazgeç
+            </Button>
+            <Button
+              variant="outline"
+              disabled={b2bBusy}
+              onClick={() => publishCustomerB2bPortal({ sendEmail: false, copyLink: true })}
+            >
+              <Copy className="h-4 w-4" />
+              Link Oluştur ve Kopyala
+            </Button>
+            <Button
+              variant="primary"
+              disabled={b2bBusy || !b2bDialogCustomer?.email}
+              onClick={() => publishCustomerB2bPortal({ sendEmail: true })}
+            >
+              <Mail className="h-4 w-4" />
+              {b2bBusy ? 'Gönderiliyor…' : 'İzin Ver ve Mail Gönder'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-[var(--muted)]">
+            Müşteriniz kendisine özel bağlantıdan cari hareketlerini, teklif ve siparişlerini,
+            ürünlerini ve üretim durumunu görüntüleyebilir.
+          </p>
+          <div className={`${APP_SURFACE_PANEL_CLASS} space-y-3 p-4`}>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                Müşteri
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[var(--ink)]">
+                {b2bDialogCustomer
+                  ? getCustomerDisplay(b2bDialogCustomer).brandShortName ||
+                    getCustomerDisplay(b2bDialogCustomer).companyTitle
+                  : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                Davet E-postası
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[var(--ink)]">
+                {b2bDialogCustomer?.email || 'Kayıtlı e-posta bulunamadı'}
+              </p>
+            </div>
+          </div>
+          {b2bNotice ? (
+            <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-600">
+              {b2bNotice}
+            </p>
+          ) : null}
+          {b2bError ? (
+            <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-600">
+              {b2bError}
+            </p>
+          ) : null}
+        </div>
+      </Modal>
 
       <ConfirmModal
         open={Boolean(pendingDeleteCustomerId)}

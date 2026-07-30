@@ -31,6 +31,11 @@ flowchart LR
 6. **Customer-compatible catalog** — Product Master may store optional `customerIds`; an
    empty list means general availability. Quote/order pickers rank matching products first,
    warn on mismatches, and allow an explicit override without blocking document save.
+7. **B2B portal invitation** — CRM users publish a customer-scoped, cost-sanitized portal
+   snapshot behind a high-entropy bearer link. The platform stores only the token hash, verifies
+   tenant edit access before publishing, and sends the registered customer e-mail a branded
+   invitation. Public portal payloads must never contain another customer's records or product
+   cost fields.
 
 ## Data model (GC-0)
 

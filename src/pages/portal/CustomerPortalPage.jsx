@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   Building2,
@@ -21,11 +21,16 @@ import {
   createB2bOrder,
   createB2bTicket,
   findCustomerByToken,
+  hydrateB2bPortalSnapshot,
   readB2bOrders,
   readB2bQuotes,
   readB2bTickets,
 } from '../../utils/b2bPortalStore'
-import { countActiveProductionJobs, readCustomerProductionTracking } from '../../utils/customerPortalProduction'
+import { fetchB2bPortalSnapshot } from '../../utils/platformAuth'
+import {
+  countActiveProductionJobs,
+  readCustomerProductionTracking,
+} from '../../utils/customerPortalProduction'
 import CustomerPortalProductionView from '../../components/Portal/CustomerPortalProductionView'
 import { readCustomerPortalSettings } from '../../utils/customerPortalSettings'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -47,7 +52,12 @@ import {
   getTreasuryMovements,
 } from '../../utils/treasuryStore'
 import { getCustomerDisplay } from '../../utils/customerDisplay'
-import { cycleTheme, getStoredTheme, THEME_MODES, THEME_TOGGLE_BUTTON_CLASS } from '../../utils/themeMode'
+import {
+  cycleTheme,
+  getStoredTheme,
+  THEME_MODES,
+  THEME_TOGGLE_BUTTON_CLASS,
+} from '../../utils/themeMode'
 import { BTN_PRIMARY } from '../../utils/buttonStyles'
 
 const TABS = [
@@ -97,6 +107,8 @@ export default function CustomerPortalPage() {
   const [checkoutStep, setCheckoutStep] = useState('cart')
   const [paymentMethod, setPaymentMethod] = useState('havale')
   const [lastOrderId, setLastOrderId] = useState(null)
+  const [portalLoading, setPortalLoading] = useState(() => !findCustomerByToken(token))
+  const [portalError, setPortalError] = useState('')
 
   const activeTheme = THEME_MODES[theme] || THEME_MODES.dark
 
@@ -104,24 +116,56 @@ export default function CustomerPortalPage() {
     writeCart(token, cart)
   }, [cart, token])
 
-  function refreshCatalog() {
+  const refreshCatalog = useCallback(() => {
     setCatalog(getCatalogProducts().map(stripCostFields))
-  }
+  }, [])
 
-  function refreshData(customer) {
-    setMovements(getTreasuryMovements())
-    setOrders(readB2bOrders(customer.id))
-    setQuotes(readB2bQuotes(customer.id))
-    setProductionJobs(readCustomerProductionTracking(customer))
-    setTickets(readB2bTickets(customer.id))
-    refreshCatalog()
-  }
+  const refreshData = useCallback(
+    (customer) => {
+      setMovements(getTreasuryMovements())
+      setOrders(readB2bOrders(customer.id))
+      setQuotes(readB2bQuotes(customer.id))
+      setProductionJobs(readCustomerProductionTracking(customer))
+      setTickets(readB2bTickets(customer.id))
+      refreshCatalog()
+    },
+    [refreshCatalog],
+  )
 
   useEffect(() => {
-    const next = findCustomerByToken(token)
-    setSession(next)
-    if (next) refreshData(next.customer)
-  }, [token])
+    let cancelled = false
+    async function bootstrapPortal() {
+      const local = findCustomerByToken(token)
+      if (local) {
+        setSession(local)
+        refreshData(local.customer)
+        setPortalLoading(false)
+        return
+      }
+
+      setPortalLoading(true)
+      setPortalError('')
+      try {
+        const snapshot = await fetchB2bPortalSnapshot(token)
+        if (cancelled || !snapshot) return
+        hydrateB2bPortalSnapshot(snapshot)
+        const remote = findCustomerByToken(token)
+        setSession(remote)
+        if (remote) refreshData(remote.customer)
+        else setPortalError('Panel verileri yüklenemedi.')
+      } catch (error) {
+        if (!cancelled) {
+          setPortalError(error.message || 'B2B panel bağlantısı yüklenemedi.')
+        }
+      } finally {
+        if (!cancelled) setPortalLoading(false)
+      }
+    }
+    bootstrapPortal()
+    return () => {
+      cancelled = true
+    }
+  }, [refreshData, token])
 
   useEffect(() => {
     if (!session?.customer) return undefined
@@ -142,7 +186,7 @@ export default function CustomerPortalPage() {
       window.removeEventListener('storage', sync)
       window.removeEventListener('focus', refreshCatalog)
     }
-  }, [session?.customer])
+  }, [refreshCatalog, refreshData, session?.customer])
 
   const categories = useMemo(() => ['Tümü', ...getProductCategories(catalog)], [catalog])
 
@@ -154,12 +198,27 @@ export default function CustomerPortalPage() {
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
   const cartTotal = cart.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
 
+  if (portalLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-dark-900 p-6">
+        <div className="card max-w-md text-center">
+          <p className="text-lg font-black text-white">B2B paneliniz hazırlanıyor</p>
+          <p className="mt-2 text-xs font-semibold text-gray-500">
+            Güncel firma verileriniz güvenli bağlantıdan yükleniyor.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (!session) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-dark-900 p-6">
         <div className="card max-w-md text-center">
           <p className="text-lg font-black text-white">Panel erişimi bulunamadı</p>
-          <p className="mt-2 text-xs font-semibold text-gray-500">Bağlantınız geçersiz veya B2B erişiminiz kapatılmış olabilir.</p>
+          <p className="mt-2 text-xs font-semibold text-gray-500">
+            {portalError || 'Bağlantınız geçersiz veya B2B erişiminiz kapatılmış olabilir.'}
+          </p>
         </div>
       </div>
     )
@@ -169,9 +228,9 @@ export default function CustomerPortalPage() {
   const display = getCustomerDisplay(customer)
   const company = readCompanySettings()
   const portalPrefs = readCustomerPortalSettings(customer.id, customer)
-  const visibleBankAccounts = company.bankAccounts.filter((account) => (
-    portalPrefs.sharedIbanIds?.includes(account.id)
-  ))
+  const visibleBankAccounts = company.bankAccounts.filter((account) =>
+    portalPrefs.sharedIbanIds?.includes(account.id),
+  )
   const collections = getCustomerCollections(customer.company, movements)
   const payments = getCustomerPayments(customer.company, movements)
   const opening = Number(customer.balance) || 0
@@ -198,30 +257,34 @@ export default function CustomerPortalPage() {
     setCart((current) => {
       const existing = current.find((item) => item.productId === product.id)
       if (existing) {
-        return current.map((item) => (
+        return current.map((item) =>
           item.productId === product.id
             ? { ...item, quantity: item.quantity + quantity, unitPrice: getPrice(product) }
-            : item
-        ))
+            : item,
+        )
       }
-      return [...current, {
-        productId: product.id,
-        productName: product.name,
-        quantity,
-        unitPrice: getPrice(product),
-        stockAtAdd: getTotalStock(product),
-      }]
+      return [
+        ...current,
+        {
+          productId: product.id,
+          productName: product.name,
+          quantity,
+          unitPrice: getPrice(product),
+          stockAtAdd: getTotalStock(product),
+        },
+      ]
     })
     showCartToast(`${product.name} sepete eklendi`)
   }
 
   function updateCartQty(productId, delta) {
-    setCart((current) => current
-      .map((item) => (
+    setCart((current) =>
+      current.map((item) =>
         item.productId === productId
           ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )))
+          : item,
+      ),
+    )
   }
 
   function removeFromCart(productId) {
@@ -277,7 +340,9 @@ export default function CustomerPortalPage() {
             </div>
             <div>
               <p className="text-sm font-black text-white">{company.companyName}</p>
-              <p className="text-xs font-semibold text-gray-500">B2B Müşteri Paneli · {display.brandShortName}</p>
+              <p className="text-xs font-semibold text-gray-500">
+                B2B Müşteri Paneli · {display.brandShortName}
+              </p>
             </div>
           </div>
 
@@ -307,8 +372,12 @@ export default function CustomerPortalPage() {
             </button>
 
             <div className="rounded-xl border border-blue-500/25 bg-blue-500/10 px-3 py-2 text-right">
-              <p className="text-[12px] font-black uppercase tracking-wider text-blue-300">Güncel Bakiye</p>
-              <p className={`text-sm font-black ${balance >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+              <p className="text-[12px] font-black uppercase tracking-wider text-blue-300">
+                Güncel Bakiye
+              </p>
+              <p
+                className={`text-sm font-black ${balance >= 0 ? 'text-emerald-300' : 'text-red-300'}`}
+              >
                 {formatTreasuryCurrency(balance)}
               </p>
             </div>
@@ -324,13 +393,17 @@ export default function CustomerPortalPage() {
               type="button"
               onClick={() => setTab(id)}
               className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-xs font-black uppercase tracking-wide transition-colors ${
-                tab === id ? 'bg-blue-500/15 text-blue-200' : 'text-gray-400 hover:bg-dark-700/60 hover:text-white'
+                tab === id
+                  ? 'bg-blue-500/15 text-blue-200'
+                  : 'text-gray-400 hover:bg-dark-700/60 hover:text-white'
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
               {label}
               {id === 'cart' && cartCount > 0 && (
-                <span className="ml-auto rounded-md bg-blue-500/20 px-1.5 py-0.5 text-[12px] text-blue-200">{cartCount}</span>
+                <span className="ml-auto rounded-md bg-blue-500/20 px-1.5 py-0.5 text-[12px] text-blue-200">
+                  {cartCount}
+                </span>
               )}
             </button>
           ))}
@@ -340,13 +413,19 @@ export default function CustomerPortalPage() {
           {tab === 'dashboard' && (
             <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {[
-                ['Açık Sipariş', orders.filter((o) => o.status !== 'Tamamlandı').length, 'text-blue-300'],
+                [
+                  'Açık Sipariş',
+                  orders.filter((o) => o.status !== 'Tamamlandı').length,
+                  'text-blue-300',
+                ],
                 ['Sepet', cartCount, 'text-cyan-300'],
                 ['Üretimde', countActiveProductionJobs(productionJobs), 'text-amber-300'],
                 ['Canlı Not', tickets.length, 'text-emerald-300'],
               ].map(([label, value, tone]) => (
                 <div key={label} className="card">
-                  <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">{label}</p>
+                  <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">
+                    {label}
+                  </p>
                   <p className={`mt-1 text-2xl font-black ${tone}`}>{value}</p>
                 </div>
               ))}
@@ -364,12 +443,19 @@ export default function CustomerPortalPage() {
               </div>
               <div className="divide-y divide-dark-500/35">
                 {statementRows.map((row) => (
-                  <div key={row.id} className="grid grid-cols-[130px_130px_minmax(0,1fr)_120px_110px] items-center px-5 py-4 text-sm">
-                    <span className="font-bold text-gray-300">{row.method} {row.isPayment ? 'Ödeme' : 'Tahsilat'}</span>
+                  <div
+                    key={row.id}
+                    className="grid grid-cols-[130px_130px_minmax(0,1fr)_120px_110px] items-center px-5 py-4 text-sm"
+                  >
+                    <span className="font-bold text-gray-300">
+                      {row.method} {row.isPayment ? 'Ödeme' : 'Tahsilat'}
+                    </span>
                     <span className="truncate text-xs text-gray-500">{row.accountName || '—'}</span>
                     <span className="truncate text-xs text-gray-500">{row.description}</span>
                     <span className="text-xs text-gray-500">{row.date}</span>
-                    <span className={`text-right font-black ${getCustomerStatementAmountTone(row)}`}>
+                    <span
+                      className={`text-right font-black ${getCustomerStatementAmountTone(row)}`}
+                    >
                       {formatCustomerStatementAmount(row)}
                     </span>
                   </div>
@@ -381,7 +467,9 @@ export default function CustomerPortalPage() {
           {tab === 'products' && (
             <section className="space-y-4">
               <div className="card">
-                <p className="mb-3 text-[12px] font-black uppercase tracking-wider text-gray-500">Kategori</p>
+                <p className="mb-3 text-[12px] font-black uppercase tracking-wider text-gray-500">
+                  Kategori
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {categories.map((category) => (
                     <button
@@ -426,29 +514,45 @@ export default function CustomerPortalPage() {
                       >
                         <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-dark-500/40 bg-dark-700/40">
                           {product.image ? (
-                            <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
-                            <span className="text-lg font-black text-gray-600">{product.name.slice(0, 1)}</span>
+                            <span className="text-lg font-black text-gray-600">
+                              {product.name.slice(0, 1)}
+                            </span>
                           )}
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-black text-white">{product.name}</p>
-                          <p className="truncate text-[13px] font-semibold text-gray-500">{product.stockCode}</p>
+                          <p className="truncate text-[13px] font-semibold text-gray-500">
+                            {product.stockCode}
+                          </p>
                           {inCart && (
-                            <p className="mt-0.5 text-[12px] font-bold text-blue-300">Sepette: {inCart.quantity} adet</p>
+                            <p className="mt-0.5 text-[12px] font-bold text-blue-300">
+                              Sepette: {inCart.quantity} adet
+                            </p>
                           )}
                         </div>
-                        <span className="truncate text-xs font-semibold text-gray-500">{product.category || '—'}</span>
+                        <span className="truncate text-xs font-semibold text-gray-500">
+                          {product.category || '—'}
+                        </span>
                         <div className="text-right">
                           <p className={`text-sm font-black ${stockInfo.tone}`}>{stock}</p>
-                          <span className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-black uppercase ${stockInfo.badge}`}>
+                          <span
+                            className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-black uppercase ${stockInfo.badge}`}
+                          >
                             {stockInfo.label}
                           </span>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-black text-emerald-300">{formatTL(price)}</p>
                           {isDealer && price !== listPrice && (
-                            <p className="text-[12px] text-gray-500 line-through">{formatTL(listPrice)}</p>
+                            <p className="text-[12px] text-gray-500 line-through">
+                              {formatTL(listPrice)}
+                            </p>
                           )}
                         </div>
                         <div className="flex justify-end">
@@ -476,7 +580,10 @@ export default function CustomerPortalPage() {
                   <p className="text-xs text-gray-500">Sipariş no: {lastOrderId}</p>
                   <button
                     type="button"
-                    onClick={() => { setCheckoutStep('cart'); setTab('quotes') }}
+                    onClick={() => {
+                      setCheckoutStep('cart')
+                      setTab('quotes')
+                    }}
                     className={`${BTN_PRIMARY} px-4 py-3 text-xs uppercase`}
                   >
                     Siparişlerime Git
@@ -486,7 +593,10 @@ export default function CustomerPortalPage() {
                 <div className="space-y-4">
                   <div className="card space-y-3">
                     <p className="text-sm font-black text-white">Ödeme Yöntemi</p>
-                    <p className="text-xs text-gray-500">Toplam: <span className="font-black text-emerald-300">{formatTL(cartTotal)}</span></p>
+                    <p className="text-xs text-gray-500">
+                      Toplam:{' '}
+                      <span className="font-black text-emerald-300">{formatTL(cartTotal)}</span>
+                    </p>
 
                     <div className="grid gap-2 sm:grid-cols-3">
                       {[
@@ -513,14 +623,23 @@ export default function CustomerPortalPage() {
 
                     {paymentMethod === 'havale' && (
                       <div className="space-y-2 rounded-2xl border border-dark-500/40 bg-dark-700/30 p-4">
-                        <p className="text-[12px] font-black uppercase text-gray-500">Havale Bilgileri</p>
+                        <p className="text-[12px] font-black uppercase text-gray-500">
+                          Havale Bilgileri
+                        </p>
                         {visibleBankAccounts.map((account) => (
-                          <div key={account.id} className="rounded-xl border border-dark-500/35 px-3 py-2">
-                            <p className="text-xs font-bold text-gray-300">{account.bankName} · {account.label}</p>
+                          <div
+                            key={account.id}
+                            className="rounded-xl border border-dark-500/35 px-3 py-2"
+                          >
+                            <p className="text-xs font-bold text-gray-300">
+                              {account.bankName} · {account.label}
+                            </p>
                             <p className="text-[13px] text-gray-500">{account.iban}</p>
                           </div>
                         ))}
-                        <p className="text-[13px] text-gray-500">Açıklama kısmına sipariş numaranızı yazınız.</p>
+                        <p className="text-[13px] text-gray-500">
+                          Açıklama kısmına sipariş numaranızı yazınız.
+                        </p>
                       </div>
                     )}
 
@@ -536,7 +655,9 @@ export default function CustomerPortalPage() {
                     {paymentMethod === 'cari' && (
                       <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
                         <p className="text-xs text-gray-400">Tutar cari hesabınıza işlenecek.</p>
-                        <p className="mt-1 text-sm font-black text-emerald-300">Güncel bakiye: {formatTreasuryCurrency(balance)}</p>
+                        <p className="mt-1 text-sm font-black text-emerald-300">
+                          Güncel bakiye: {formatTreasuryCurrency(balance)}
+                        </p>
                       </div>
                     )}
 
@@ -582,22 +703,43 @@ export default function CustomerPortalPage() {
                     <>
                       <div className="space-y-2">
                         {cart.map((line) => (
-                          <div key={line.productId} className="flex flex-wrap items-center gap-3 rounded-xl border border-dark-500/40 bg-dark-700/30 px-4 py-3">
+                          <div
+                            key={line.productId}
+                            className="flex flex-wrap items-center gap-3 rounded-xl border border-dark-500/40 bg-dark-700/30 px-4 py-3"
+                          >
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-bold text-gray-200">{line.productName}</p>
-                              <p className="text-xs text-gray-500">{formatTL(line.unitPrice)} / adet</p>
+                              <p className="text-xs text-gray-500">
+                                {formatTL(line.unitPrice)} / adet
+                              </p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button type="button" onClick={() => updateCartQty(line.productId, -1)} className="rounded-lg border border-dark-500/50 p-1.5 text-gray-400 hover:text-white">
+                              <button
+                                type="button"
+                                onClick={() => updateCartQty(line.productId, -1)}
+                                className="rounded-lg border border-dark-500/50 p-1.5 text-gray-400 hover:text-white"
+                              >
                                 <Minus className="h-3.5 w-3.5" />
                               </button>
-                              <span className="min-w-[28px] text-center text-sm font-black text-white">{line.quantity}</span>
-                              <button type="button" onClick={() => updateCartQty(line.productId, 1)} className="rounded-lg border border-dark-500/50 p-1.5 text-gray-400 hover:text-white">
+                              <span className="min-w-[28px] text-center text-sm font-black text-white">
+                                {line.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => updateCartQty(line.productId, 1)}
+                                className="rounded-lg border border-dark-500/50 p-1.5 text-gray-400 hover:text-white"
+                              >
                                 <Plus className="h-3.5 w-3.5" />
                               </button>
                             </div>
-                            <p className="min-w-[90px] text-right font-black text-emerald-300">{formatTL(line.quantity * line.unitPrice)}</p>
-                            <button type="button" onClick={() => removeFromCart(line.productId)} className="text-gray-500 hover:text-red-300">
+                            <p className="min-w-[90px] text-right font-black text-emerald-300">
+                              {formatTL(line.quantity * line.unitPrice)}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => removeFromCart(line.productId)}
+                              className="text-gray-500 hover:text-red-300"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
@@ -623,14 +765,23 @@ export default function CustomerPortalPage() {
 
           {tab === 'quotes' && (
             <section className="space-y-3">
-              {[...orders.map((o) => ({ ...o, kind: 'Sipariş' })), ...quotes.map((q) => ({ ...q, kind: 'Teklif' }))].map((item) => (
+              {[
+                ...orders.map((o) => ({ ...o, kind: 'Sipariş' })),
+                ...quotes.map((q) => ({ ...q, kind: 'Teklif' })),
+              ].map((item) => (
                 <article key={item.id} className="card">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-black text-white">{item.kind} · {item.id}</p>
-                      <p className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleString('tr-TR')}</p>
+                      <p className="text-sm font-black text-white">
+                        {item.kind} · {item.id}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(item.createdAt).toLocaleString('tr-TR')}
+                      </p>
                     </div>
-                    <span className="rounded-lg bg-blue-500/15 px-2 py-1 text-[12px] font-black uppercase text-blue-300">{item.status}</span>
+                    <span className="rounded-lg bg-blue-500/15 px-2 py-1 text-[12px] font-black uppercase text-blue-300">
+                      {item.status}
+                    </span>
                   </div>
                   <div className="mt-3 space-y-1">
                     {item.lines.map((line) => (
@@ -644,29 +795,44 @@ export default function CustomerPortalPage() {
             </section>
           )}
 
-          {tab === 'production' && (
-            <CustomerPortalProductionView jobs={productionJobs} />
-          )}
+          {tab === 'production' && <CustomerPortalProductionView jobs={productionJobs} />}
 
           {tab === 'notes' && (
             <section className="space-y-4">
               <form onSubmit={submitNote} className="card space-y-3">
                 <p className="text-sm font-black text-white">Canlı Not Gönder</p>
-                <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} className="form-input min-h-[100px]" placeholder="Mesajınız yönetim paneline iletilir..." />
-                <button type="submit" className={`${BTN_PRIMARY} gap-2 px-4 py-2.5 text-xs uppercase`}>
+                <textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  className="form-input min-h-[100px]"
+                  placeholder="Mesajınız yönetim paneline iletilir..."
+                />
+                <button
+                  type="submit"
+                  className={`${BTN_PRIMARY} gap-2 px-4 py-2.5 text-xs uppercase`}
+                >
                   <Send className="h-4 w-4" /> Gönder
                 </button>
               </form>
               {tickets.map((ticket) => (
                 <article key={ticket.id} className="card space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase text-gray-400">{new Date(ticket.createdAt).toLocaleString('tr-TR')}</p>
-                    <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[12px] font-black text-emerald-300">{ticket.status}</span>
+                    <p className="text-xs font-black uppercase text-gray-400">
+                      {new Date(ticket.createdAt).toLocaleString('tr-TR')}
+                    </p>
+                    <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[12px] font-black text-emerald-300">
+                      {ticket.status}
+                    </span>
                   </div>
                   <p className="text-sm text-gray-200">{ticket.message}</p>
                   {(ticket.replies || []).map((reply) => (
-                    <div key={reply.id} className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2">
-                      <p className="text-[12px] font-black uppercase text-blue-300">{reply.author}</p>
+                    <div
+                      key={reply.id}
+                      className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2"
+                    >
+                      <p className="text-[12px] font-black uppercase text-blue-300">
+                        {reply.author}
+                      </p>
                       <p className="mt-1 text-xs text-gray-300">{reply.message}</p>
                     </div>
                   ))}
@@ -683,16 +849,25 @@ export default function CustomerPortalPage() {
                 <p className="text-xs text-gray-400">Yetkili: {customer.contact || '—'}</p>
                 <p className="text-xs text-gray-400">E-posta: {customer.email || '—'}</p>
                 <p className="text-xs text-gray-400">Şehir: {customer.city || '—'}</p>
-                {isDealer && <span className="inline-flex rounded-lg bg-emerald-500/15 px-2 py-1 text-[12px] font-black uppercase text-emerald-300">Bayi Hesabı</span>}
+                {isDealer && (
+                  <span className="inline-flex rounded-lg bg-emerald-500/15 px-2 py-1 text-[12px] font-black uppercase text-emerald-300">
+                    Bayi Hesabı
+                  </span>
+                )}
               </div>
               <div className="card space-y-3">
                 <p className="text-sm font-black text-white">Firma Bilgilerimiz</p>
                 <p className="text-xs text-gray-400">{company.legalTitle}</p>
                 <p className="text-xs text-gray-400">{company.address}</p>
-                <p className="text-xs text-gray-400">{company.phone} · {company.email}</p>
+                <p className="text-xs text-gray-400">
+                  {company.phone} · {company.email}
+                </p>
                 <div className="space-y-2 pt-2">
                   {visibleBankAccounts.map((account) => (
-                    <div key={account.id} className="rounded-xl border border-dark-500/40 bg-dark-700/30 px-3 py-2">
+                    <div
+                      key={account.id}
+                      className="rounded-xl border border-dark-500/40 bg-dark-700/30 px-3 py-2"
+                    >
                       <p className="flex items-center gap-2 text-xs font-bold text-gray-300">
                         <Landmark className="h-3.5 w-3.5" /> {account.bankName} · {account.label}
                       </p>

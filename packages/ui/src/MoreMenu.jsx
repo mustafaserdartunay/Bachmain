@@ -6,13 +6,25 @@ import { Button } from './Button'
  * Row overflow menu — Sil / Düzenle / Yazdır / Excel / PDF / …
  * @param {{ items: Array<{ id?: string, label: string, icon?: any, onClick?: Function, tone?: string }> }} props
  */
-export function MoreMenu({ items = [], align = 'end', className = '', 'aria-label': ariaLabel = 'Diğer işlemler' }) {
+export function MoreMenu({
+  items = [],
+  align = 'end',
+  className = '',
+  menuClassName = 'app-dropdown-portal',
+  'aria-label': ariaLabel = 'Diğer işlemler',
+}) {
   return (
     <Dropdown
       align={align}
       className={className}
+      menuClassName={menuClassName}
       trigger={
-        <Button variant="ghost" size="iconOnly" aria-label={ariaLabel}>
+        <Button
+          variant="ghost"
+          size="iconOnly"
+          className="hover:!bg-transparent"
+          aria-label={ariaLabel}
+        >
           <MoreHorizontal className="h-5 w-5" />
         </Button>
       }

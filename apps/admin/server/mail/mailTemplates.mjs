@@ -251,6 +251,14 @@ export const MAIL_TEMPLATES = {
       cta: { href: data.messageUrl || `${MAIL_BRAND.appUrl()}/mesajlar`, label: 'Mesajları aç' },
     })
   },
+  b2b_portal_invitation(data) {
+    return layout({
+      title: `${data.companyName || 'Firmanız'} B2B panel erişiminizi açtı`,
+      preview: 'Sipariş, teklif, cari ve üretim bilgilerinizi tek panelden görüntüleyin.',
+      bodyHtml: `${p(`Merhaba ${data.name || 'değerli iş ortağımız'},`)}${p(`${data.companyName || 'Firmanız'} size özel B2B müşteri paneli erişimini etkinleştirdi.`)}${p('Bu panelden güncel cari hareketlerinizi, teklif ve siparişlerinizi, size açık ürünleri ve üretim durumlarını görüntüleyebilirsiniz.')}${strongLine('Yetkilendiren', data.senderName || data.companyName || 'Firma yetkilisi')}${p('Bağlantı size özeldir. Hesap ve ticari bilgilerinizin güvenliği için bağlantıyı başkalarıyla paylaşmayın.')}`,
+      cta: { href: data.portalUrl, label: 'B2B Panelimi Aç' },
+    })
+  },
   campaign(data) {
     return layout({
       title: data.title || 'Kampanya',

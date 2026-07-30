@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import {
   registerAccount,
   loginAccount,
@@ -17,6 +18,14 @@ import { loadStore, withStore } from './store.mjs'
 import { hitRateLimit } from './db.mjs'
 import { loginStaff, getStaffSession, buildStaffCookie } from './staffAuth.mjs'
 import { completeEmailChange } from './emailChange.mjs'
+import { sendTemplateMail } from './mail/mailService.mjs'
+
+function hashB2bToken(token) {
+  return crypto
+    .createHash('sha256')
+    .update(String(token || ''))
+    .digest('hex')
+}
 
 async function withLegalUser(_store, user, _account) {
   if (!user) return user
@@ -217,6 +226,158 @@ export async function handleAuthApi(req, res, path, body = {}) {
     await withLegalUser(store, session.user, session.account)
     sendJson(req, res, 200, { ok: true, user: session.user, legal: session.user?.legal || null })
     return true
+  }
+
+  if (method === 'GET' && path.startsWith('b2b/portal/')) {
+    const token = decodeURIComponent(path.slice('b2b/portal/'.length))
+    const ip =
+      req.headers?.['x-forwarded-for']?.split?.(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown'
+    const rate = await hitRateLimit(`b2b-portal:${ip}`, { limit: 120, windowMs: 15 * 60 * 1000 })
+    if (!rate.allowed) {
+      sendJson(req, res, 429, {
+        error: 'RATE_LIMITED',
+        message: 'Çok fazla panel isteği. Lütfen kısa süre sonra tekrar deneyin.',
+      })
+      return true
+    }
+    const store = await loadStore()
+    const portal = (store.b2bPortals || []).find(
+      (row) => row.enabled !== false && row.tokenHash === hashB2bToken(token),
+    )
+    if (!portal) {
+      sendJson(req, res, 404, {
+        error: 'PORTAL_NOT_FOUND',
+        message: 'B2B panel bağlantısı geçersiz veya erişim kapatılmış.',
+      })
+      return true
+    }
+    sendJson(req, res, 200, {
+      ok: true,
+      snapshot: portal.snapshot,
+      publishedAt: portal.updatedAt,
+    })
+    return true
+  }
+
+  if (method === 'POST' && path === 'auth/b2b/portal') {
+    const token = getBearerOrCookieToken(req)
+    try {
+      const result = await withStore(async (store) => {
+        const session = getAccountFromToken(store, token)
+        if (!session) {
+          const err = new Error('Oturum bulunamadı')
+          err.code = 'UNAUTHORIZED'
+          throw err
+        }
+        if (!['owner', 'editor'].includes(session.user.accessLevel)) {
+          const err = new Error('B2B erişimi oluşturma yetkiniz yok')
+          err.code = 'FORBIDDEN'
+          throw err
+        }
+
+        const accessToken = String(body.accessToken || '').trim()
+        const customerId = String(body.customerId || '').trim()
+        const customerName = String(body.customerName || '').trim()
+        const email = String(body.email || '')
+          .trim()
+          .toLowerCase()
+        const snapshot = body.snapshot
+        if (
+          !accessToken.startsWith('b2b-') ||
+          accessToken.length < 40 ||
+          !customerId ||
+          !snapshot ||
+          typeof snapshot !== 'object'
+        ) {
+          const err = new Error('Geçersiz B2B panel verisi')
+          err.code = 'INVALID_B2B_PAYLOAD'
+          throw err
+        }
+        if (JSON.stringify(snapshot).length > 2_000_000) {
+          const err = new Error('B2B panel verisi izin verilen boyutu aşıyor')
+          err.code = 'B2B_PAYLOAD_TOO_LARGE'
+          throw err
+        }
+        if (body.sendEmail && !email.includes('@')) {
+          const err = new Error('Müşterinin kayıtlı e-posta adresi bulunamadı')
+          err.code = 'INVALID_EMAIL'
+          throw err
+        }
+
+        if (!Array.isArray(store.b2bPortals)) store.b2bPortals = []
+        const tokenHash = hashB2bToken(accessToken)
+        const now = new Date().toISOString()
+        const existing = store.b2bPortals.find(
+          (row) => row.tenantCode === session.user.tenantCode && row.customerId === customerId,
+        )
+        const portal = {
+          id: existing?.id || `b2b_${crypto.randomUUID()}`,
+          tenantCode: session.user.tenantCode,
+          customerId,
+          tokenHash,
+          enabled: true,
+          snapshot,
+          createdByAccountId: session.account.id,
+          createdAt: existing?.createdAt || now,
+          updatedAt: now,
+        }
+        store.b2bPortals = [
+          portal,
+          ...store.b2bPortals.filter((row) => row.id !== portal.id),
+        ].slice(0, 5000)
+
+        const portalUrl = `https://uygulama.bachmain.com/portal/${encodeURIComponent(accessToken)}`
+        let mail = null
+        if (body.sendEmail) {
+          try {
+            mail = await sendTemplateMail(store, {
+              to: email,
+              template: 'b2b_portal_invitation',
+              type: 'b2b_portal_invitation',
+              customerId,
+              accountId: session.account.id,
+              immediate: true,
+              data: {
+                name: customerName,
+                companyName: session.user.companyName,
+                senderName: session.user.fullName,
+                portalUrl,
+              },
+              meta: {
+                source: 'crm_customer_list',
+                tenantCode: session.user.tenantCode,
+              },
+            })
+          } catch (mailError) {
+            mail = { status: 'failed', error: mailError.message }
+          }
+        }
+        return { portalUrl, mail }
+      })
+      sendJson(req, res, 200, {
+        ok: true,
+        portalUrl: result.portalUrl,
+        mailStatus: result.mail?.status || (body.sendEmail ? 'failed' : 'not_requested'),
+        mailError: result.mail?.error || null,
+      })
+      return true
+    } catch (error) {
+      const status =
+        error.code === 'UNAUTHORIZED'
+          ? 401
+          : error.code === 'FORBIDDEN'
+            ? 403
+            : error.code === 'INVALID_EMAIL'
+              ? 422
+              : 400
+      sendJson(req, res, status, {
+        error: error.code || 'B2B_PORTAL_FAILED',
+        message: error.message,
+      })
+      return true
+    }
   }
 
   if (method === 'GET' && path === 'auth/companies') {

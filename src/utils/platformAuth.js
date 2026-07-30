@@ -122,6 +122,32 @@ export async function updateCompanyUserAccess({ email, accessLevel }) {
   return Array.isArray(data.users) ? data.users : []
 }
 
+export async function publishB2bPortal({
+  accessToken,
+  customerId,
+  customerName,
+  email,
+  snapshot,
+  sendEmail,
+}) {
+  return authRequest('auth/b2b/portal', {
+    method: 'POST',
+    body: {
+      accessToken,
+      customerId,
+      customerName,
+      email,
+      snapshot,
+      sendEmail: Boolean(sendEmail),
+    },
+  })
+}
+
+export async function fetchB2bPortalSnapshot(accessToken) {
+  const data = await authRequest(`b2b/portal/${encodeURIComponent(accessToken)}`)
+  return data.snapshot || null
+}
+
 export async function completeOnboarding() {
   const data = await authRequest('auth/onboarding/complete', { method: 'POST', body: {} })
   if (data.user) persistSession({ token: getStoredSession().token, user: data.user })
