@@ -154,7 +154,14 @@ function remainingTrialDays(licenseExpiry) {
   return Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 }
 
-function publicUser(account, customer, entitlements = null) {
+function normalizeCompanyAccessLevel(value) {
+  const level = String(value || '').toLowerCase()
+  if (level === 'owner') return 'owner'
+  if (level === 'editor' || level === 'admin' || level === 'manager') return 'editor'
+  return 'viewer'
+}
+
+function publicUser(account, customer, entitlements = null, companySession = null) {
   const licenseExpiry = entitlements?.licenseExpiry || customer?.licenseExpiry || null
   const status =
     entitlements?.subscriptionStatus === 'expired'
@@ -175,10 +182,11 @@ function publicUser(account, customer, entitlements = null) {
     id: account.id,
     email: account.email,
     fullName: account.fullName,
-    companyName: account.companyName || customer?.company || '',
+    companyName: customer?.company || account.companyName || '',
     phone: account.phone || customer?.phone || '',
-    role: account.role || 'owner',
-    customerId: account.customerId,
+    role: companySession?.accessLevel || account.role || 'owner',
+    accessLevel: companySession?.accessLevel || normalizeCompanyAccessLevel(account.role),
+    customerId: companySession?.customerId || account.customerId,
     plan: entitlements?.plan || customer?.plan || account.plan || 'Starter',
     planCode: entitlements?.planCode || customer?.planCode || null,
     status,
@@ -192,30 +200,71 @@ function publicUser(account, customer, entitlements = null) {
     entitlements: entitlements?.entitlements || customer?.entitlements || null,
     limits: entitlements?.limits || customer?.limits || null,
     onboardingCompleted: account.onboardingCompleted !== false,
-    tenantCode: account.tenantCode,
+    tenantCode: companySession?.tenantCode || account.tenantCode,
   }
 }
 
-function enrichUser(store, account, customer) {
+function enrichUser(store, account, customer, companySession = null) {
   try {
     seedBillingIfEmpty(store)
     if (customer?.id) {
-      return publicUser(account, customer, entitlementPayloadForCustomer(store, customer.id))
+      return publicUser(
+        account,
+        customer,
+        entitlementPayloadForCustomer(store, customer.id),
+        companySession,
+      )
     }
   } catch {
     // fallback below
   }
-  return publicUser(account, customer)
+  return publicUser(account, customer, null, companySession)
 }
 
 function ensureCollections(store) {
   if (!Array.isArray(store.accounts)) store.accounts = []
   if (!Array.isArray(store.customers)) store.customers = []
+  if (!Array.isArray(store.companyAccess)) store.companyAccess = []
   if (!Array.isArray(store.emailTokens)) store.emailTokens = []
   if (!store.modules) store.modules = {}
   if (!Array.isArray(store.modules.customers)) store.modules.customers = []
   if (!store.customerExtras) store.customerExtras = {}
   if (!Array.isArray(store.customerExtras.loginHistory)) store.customerExtras.loginHistory = []
+}
+
+function primaryCompanySession(account) {
+  return {
+    customerId: account.customerId,
+    tenantCode: account.tenantCode,
+    accessLevel: normalizeCompanyAccessLevel(account.role === 'viewer' ? 'viewer' : 'owner'),
+    primary: true,
+  }
+}
+
+function resolveCompanySession(store, account, requestedTenantCode) {
+  const primary = primaryCompanySession(account)
+  if (!requestedTenantCode || requestedTenantCode === primary.tenantCode) return primary
+  const grant = store.companyAccess.find(
+    (row) =>
+      row.accountId === account.id &&
+      row.tenantCode === requestedTenantCode &&
+      row.accessLevel !== 'no_access',
+  )
+  if (!grant) return null
+  return {
+    customerId: grant.customerId,
+    tenantCode: grant.tenantCode,
+    accessLevel: normalizeCompanyAccessLevel(grant.accessLevel),
+    primary: false,
+  }
+}
+
+function customerForCompanySession(store, companySession) {
+  return (
+    store.customers.find((customer) => customer.id === companySession?.customerId) ||
+    store.customers.find((customer) => customer.tenantCode === companySession?.tenantCode) ||
+    null
+  )
 }
 
 function makeTenantCode(store) {
@@ -558,6 +607,159 @@ export async function loginAccount(store, body) {
   }
 }
 
+export function listAccessibleCompanies(store, accountId) {
+  ensureCollections(store)
+  const account = store.accounts.find((row) => row.id === accountId)
+  if (!account) return []
+
+  const sessions = [
+    primaryCompanySession(account),
+    ...store.companyAccess
+      .filter((row) => row.accountId === account.id && row.accessLevel !== 'no_access')
+      .map((row) => ({
+        customerId: row.customerId,
+        tenantCode: row.tenantCode,
+        accessLevel: normalizeCompanyAccessLevel(row.accessLevel),
+        primary: false,
+      })),
+  ]
+
+  return sessions
+    .filter(
+      (session, index, rows) =>
+        session.tenantCode &&
+        rows.findIndex((candidate) => candidate.tenantCode === session.tenantCode) === index,
+    )
+    .map((session) => {
+      const customer = customerForCompanySession(store, session)
+      return {
+        id: customer?.id || session.customerId,
+        name: customer?.company || (session.primary ? account.companyName : 'Firma'),
+        tenantCode: session.tenantCode,
+        accessLevel: session.accessLevel,
+        primary: session.primary,
+      }
+    })
+}
+
+export function switchCompanySession(store, accountId, tenantCode) {
+  ensureCollections(store)
+  const account = store.accounts.find((row) => row.id === accountId)
+  if (!account) {
+    const err = new Error('Hesap bulunamadı')
+    err.code = 'NOT_FOUND'
+    throw err
+  }
+  const companySession = resolveCompanySession(store, account, String(tenantCode || '').trim())
+  if (!companySession) {
+    const err = new Error('Bu firmaya erişim yetkiniz yok')
+    err.code = 'COMPANY_FORBIDDEN'
+    throw err
+  }
+  const customer = customerForCompanySession(store, companySession)
+  if (!customer) {
+    const err = new Error('Firma bulunamadı')
+    err.code = 'COMPANY_NOT_FOUND'
+    throw err
+  }
+  const token = signToken({
+    sub: account.id,
+    email: account.email,
+    customerId: companySession.customerId,
+    tenantCode: companySession.tenantCode,
+    role: companySession.accessLevel,
+    accessLevel: companySession.accessLevel,
+  })
+  return {
+    token,
+    user: enrichUser(store, account, customer, companySession),
+  }
+}
+
+export function listCompanyUsers(store, session) {
+  ensureCollections(store)
+  if (!session || !['owner', 'editor'].includes(session.user?.accessLevel)) {
+    const err = new Error('Firma kullanıcılarını yönetme yetkiniz yok')
+    err.code = 'FORBIDDEN'
+    throw err
+  }
+  const tenantCode = session.user.tenantCode
+  const primaryAccounts = store.accounts.filter((account) => account.tenantCode === tenantCode)
+  const grantedAccounts = store.companyAccess
+    .filter((row) => row.tenantCode === tenantCode && row.accessLevel !== 'no_access')
+    .map((row) => store.accounts.find((account) => account.id === row.accountId))
+    .filter(Boolean)
+
+  return [...primaryAccounts, ...grantedAccounts]
+    .filter(
+      (account, index, rows) =>
+        rows.findIndex((candidate) => candidate.id === account.id) === index,
+    )
+    .map((account) => {
+      const primary = account.tenantCode === tenantCode
+      const grant = store.companyAccess.find(
+        (row) => row.accountId === account.id && row.tenantCode === tenantCode,
+      )
+      return {
+        accountId: account.id,
+        email: account.email,
+        fullName: account.fullName,
+        accessLevel: primary
+          ? normalizeCompanyAccessLevel(account.role === 'viewer' ? 'viewer' : 'owner')
+          : normalizeCompanyAccessLevel(grant?.accessLevel),
+        primary,
+      }
+    })
+}
+
+export function setCompanyUserAccess(store, session, { email, accessLevel }) {
+  ensureCollections(store)
+  if (session?.user?.accessLevel !== 'owner') {
+    const err = new Error('Firma yetkilerini yalnızca firma sahibi değiştirebilir')
+    err.code = 'FORBIDDEN'
+    throw err
+  }
+  const normalizedEmail = normalizeEmail(email)
+  const target = store.accounts.find(
+    (account) => account.email === normalizedEmail && account.canLogin !== false,
+  )
+  if (!target) {
+    const err = new Error('Bu e-posta ile giriş yapabilen bir kullanıcı bulunamadı')
+    err.code = 'ACCOUNT_NOT_FOUND'
+    throw err
+  }
+
+  const tenantCode = session.user.tenantCode
+  if (target.tenantCode === tenantCode) {
+    const err = new Error('Firmanın ana hesabının erişimi kaldırılamaz veya değiştirilemez')
+    err.code = 'PRIMARY_ACCESS'
+    throw err
+  }
+
+  const level = String(accessLevel || '').toLowerCase()
+  store.companyAccess = store.companyAccess.filter(
+    (row) => !(row.accountId === target.id && row.tenantCode === tenantCode),
+  )
+  if (level !== 'no_access') {
+    if (!['viewer', 'editor'].includes(level)) {
+      const err = new Error('Geçersiz firma erişim seviyesi')
+      err.code = 'INVALID_ACCESS_LEVEL'
+      throw err
+    }
+    store.companyAccess.unshift({
+      id: newId('caccess'),
+      accountId: target.id,
+      customerId: session.user.customerId,
+      tenantCode,
+      accessLevel: level,
+      grantedByAccountId: session.account.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+  }
+  return listCompanyUsers(store, session)
+}
+
 export async function requestPasswordReset(store, emailRaw) {
   ensureCollections(store)
   if (!Array.isArray(store.authEvents)) store.authEvents = []
@@ -704,8 +906,17 @@ export function getAccountFromToken(store, token) {
   if (!payload?.sub) return null
   const account = store.accounts.find((a) => a.id === payload.sub)
   if (!account) return null
-  const customer = store.customers.find((c) => c.id === account.customerId) || null
-  return { account, customer, user: enrichUser(store, account, customer), payload }
+  const companySession = resolveCompanySession(store, account, payload.tenantCode)
+  if (!companySession) return null
+  const customer = customerForCompanySession(store, companySession)
+  if (!customer) return null
+  return {
+    account,
+    customer,
+    user: enrichUser(store, account, customer, companySession),
+    companySession,
+    payload,
+  }
 }
 
 export { COOKIE_NAME, TOKEN_TTL_SECONDS }

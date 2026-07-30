@@ -11,10 +11,10 @@
 
 ## Feature flags
 
-| Flag | Default | Effect |
-|------|---------|--------|
-| `VITE_CRM_DUAL_WRITE=1` | off | Mirror local writes → `/api/tenant/:collection` |
-| `VITE_CRM_READ_SOURCE=api` | `local` | Read from API first (experimental) |
+| Flag                       | Default | Effect                                          |
+| -------------------------- | ------- | ----------------------------------------------- |
+| `VITE_CRM_DUAL_WRITE=1`    | off     | Mirror local writes → `/api/tenant/:collection` |
+| `VITE_CRM_READ_SOURCE=api` | `local` | Read from API first (experimental)              |
 
 Helpers: `src/utils/crmApiDualWrite.js`, `src/utils/tenantSync.js`.
 
@@ -41,3 +41,23 @@ Helpers: `src/utils/crmApiDualWrite.js`, `src/utils/tenantSync.js`.
 - Zero silent data loss
 - Server rejects cross-tenant reads
 - Audit log entries for customer.create/update
+
+## Company-first context authorization
+
+The current CRM control plane (`yonetim.bachmain.com/api`) supports a backward-compatible
+company-first authorization step before branch and warehouse authorization:
+
+- A session may access its primary tenant plus explicitly granted tenant codes.
+- Company switching issues a new signed token scoped to the selected `tenantCode`.
+- Every tenant collection request resolves the selected company from the server-side grant list;
+  a client-supplied tenant code alone never grants access.
+- Access levels are `viewer` (read-only) and `editor` (read/write). The primary company owner
+  remains `owner`; removing primary-owner access is forbidden.
+- Revoking a grant invalidates existing scoped tokens on their next request because membership is
+  re-checked server-side.
+- The CRM clears and hydrates its workspace when the tenant code changes. A rejected read-only
+  write is replaced with the authoritative server workspace.
+
+Branch and warehouse selectors remain UX scopes inside the active company. Server-enforced
+`branch_id` / `warehouse_id` authorization is a later migration and must not be represented as a
+security boundary until normalized tables and repository filters are live.

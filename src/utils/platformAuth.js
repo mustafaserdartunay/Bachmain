@@ -7,11 +7,15 @@ const TOKEN_KEY = 'bachmain_auth_token'
 const USER_KEY = 'bachmain_auth_user'
 
 export function getPlatformApiBase() {
-  if (import.meta.env.VITE_PLATFORM_API_URL) return import.meta.env.VITE_PLATFORM_API_URL.replace(/\/$/, '')
+  if (import.meta.env.VITE_PLATFORM_API_URL)
+    return import.meta.env.VITE_PLATFORM_API_URL.replace(/\/$/, '')
   if (typeof window !== 'undefined' && window.location.hostname.endsWith('bachmain.com')) {
     return 'https://yonetim.bachmain.com/api'
   }
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
     return 'http://127.0.0.1:5201/api'
   }
   return 'https://yonetim.bachmain.com/api'
@@ -86,6 +90,36 @@ export async function fetchCurrentUser() {
   const data = await authRequest('auth/me')
   if (data.user) persistSession({ token: getStoredSession().token, user: data.user })
   return data.user
+}
+
+export async function fetchAccessibleCompanies() {
+  const data = await authRequest('auth/companies')
+  return {
+    companies: Array.isArray(data.companies) ? data.companies : [],
+    activeTenantCode: data.activeTenantCode || null,
+  }
+}
+
+export async function switchActiveCompany(tenantCode) {
+  const data = await authRequest('auth/company/switch', {
+    method: 'POST',
+    body: { tenantCode },
+  })
+  persistSession({ token: data.token, user: data.user })
+  return data
+}
+
+export async function fetchCompanyUsers() {
+  const data = await authRequest('auth/company/users')
+  return Array.isArray(data.users) ? data.users : []
+}
+
+export async function updateCompanyUserAccess({ email, accessLevel }) {
+  const data = await authRequest('auth/company/access', {
+    method: 'PUT',
+    body: { email, accessLevel },
+  })
+  return Array.isArray(data.users) ? data.users : []
 }
 
 export async function completeOnboarding() {

@@ -8,6 +8,8 @@ import {
   persistSession,
   registerAccount,
   completeOnboarding as completeOnboardingRequest,
+  fetchAccessibleCompanies,
+  switchActiveCompany,
 } from '../utils/platformAuth'
 import { saveUserProfile } from '../utils/userProfile'
 import { updateCompanySettings, readCompanySettings } from '../utils/companySettings'
@@ -196,6 +198,16 @@ export function AuthProvider({ children }) {
       setUser(next)
       await activateWorkspace(next)
       return next
+    },
+    async listAccessibleCompanies() {
+      return fetchAccessibleCompanies()
+    },
+    async switchCompany(tenantCode) {
+      await flushWorkspaceNow()
+      const data = await switchActiveCompany(tenantCode)
+      setUser(data.user)
+      await activateWorkspace(data.user)
+      return data.user
     },
     async login(form) {
       const data = await loginAccount(form)

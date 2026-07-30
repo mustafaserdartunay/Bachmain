@@ -139,23 +139,28 @@ export function clearWorkspaceStorage() {
 }
 
 export function restoreWorkspace(payload) {
-  clearWorkspaceStorage()
-  const keys = payload?.keys
-  if (!keys || typeof keys !== 'object') return
-  Object.entries(keys).forEach(([key, value]) => {
-    if (!isWorkspaceKey(key) || typeof value !== 'string') return
-    try {
-      localStorage.setItem(key, value)
-    } catch {
-      // quota / private mode
-    }
-  })
-  window.dispatchEvent(new CustomEvent(WORKSPACE_HYDRATED_EVENT))
+  globalThis.__bachWorkspaceRestoring = true
+  try {
+    clearWorkspaceStorage()
+    const keys = payload?.keys
+    if (!keys || typeof keys !== 'object') return
+    Object.entries(keys).forEach(([key, value]) => {
+      if (!isWorkspaceKey(key) || typeof value !== 'string') return
+      try {
+        localStorage.setItem(key, value)
+      } catch {
+        // quota / private mode
+      }
+    })
+    window.dispatchEvent(new CustomEvent(WORKSPACE_HYDRATED_EVENT))
+  } finally {
+    globalThis.__bachWorkspaceRestoring = false
+  }
 }
 
 export function getWorkspaceOwnerId(user) {
   if (!user) return ''
-  return String(user.id || user.customerId || user.email || user.tenantCode || '')
+  return String(user.tenantCode || user.customerId || user.id || user.email || '')
 }
 
 /**
@@ -215,14 +220,18 @@ export function installWorkspaceAutoSync() {
   const originalSetItem = localStorage.setItem.bind(localStorage)
   localStorage.setItem = (key, value) => {
     originalSetItem(key, value)
-    if (isWorkspaceKey(key)) scheduleWorkspacePush()
+    if (isWorkspaceKey(key) && !globalThis.__bachWorkspaceRestoring) scheduleWorkspacePush()
   }
 
   const originalRemoveItem = localStorage.removeItem.bind(localStorage)
   localStorage.removeItem = (key) => {
     originalRemoveItem(key)
-    if (isWorkspaceKey(key)) scheduleWorkspacePush()
+    if (isWorkspaceKey(key) && !globalThis.__bachWorkspaceRestoring) scheduleWorkspacePush()
   }
+
+  window.addEventListener('bach:company-read-only-write-blocked', () => {
+    hydrateTenantWorkspace()
+  })
 
   // Periodic safety flush while tab is open
   globalThis.__bachWorkspaceFlushTimer = setInterval(() => {

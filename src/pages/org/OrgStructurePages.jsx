@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { Building2, MapPin, Plus, Trash2, Warehouse, Users, Settings2, Network } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../../components/Layout/AppPageLayout'
@@ -16,6 +16,8 @@ import {
   saveOrgStructure,
 } from '../../utils/orgStructureStore'
 import { BTN_SUCCESS } from '../../utils/buttonStyles'
+import { fetchCompanyUsers, updateCompanyUserAccess } from '../../utils/platformAuth'
+import { APP_SURFACE_PANEL_CLASS } from '../../utils/dashboardDesign'
 
 const BASE = '/ayarlar/kurumsal-yapi'
 
@@ -552,74 +554,129 @@ function DepartmentsPage() {
 
 function UserPermissionsPage() {
   const { user } = useAuth()
-  const { structure, companies, refreshStructure } = useOrg()
-  const [companyId, setCompanyId] = useState(companies[0]?.id || '')
-  const [role, setRole] = useState('viewer')
-  const email = user?.email || ''
+  const [email, setEmail] = useState('')
+  const [accessLevel, setAccessLevel] = useState('viewer')
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
-  function assign() {
-    if (!companyId || !email) return
-    saveOrgStructure((s) => ({
-      ...s,
-      companyUsers: [
-        { id: `cu-${Date.now()}`, companyId, email, role, createdAt: new Date().toISOString() },
-        ...s.companyUsers.filter((x) => !(x.companyId === companyId && x.email === email)),
-      ],
-    }))
-    appendOrgLog('user_company_assigned', { email, companyId, role })
-    refreshStructure()
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    fetchCompanyUsers()
+      .then((users) => {
+        if (!cancelled) setRows(users)
+      })
+      .catch((requestError) => {
+        if (!cancelled) setError(requestError.message || 'Firma kullanıcıları alınamadı')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user?.tenantCode])
+
+  async function assign() {
+    if (!email.trim()) return
+    setSaving(true)
+    setError('')
+    setNotice('')
+    try {
+      const users = await updateCompanyUserAccess({
+        email: email.trim(),
+        accessLevel,
+      })
+      setRows(users)
+      setNotice(
+        accessLevel === 'no_access'
+          ? 'Kullanıcının firma erişimi kaldırıldı.'
+          : 'Firma erişim yetkisi güncellendi.',
+      )
+      setEmail('')
+    } catch (requestError) {
+      setError(requestError.message || 'Yetki güncellenemedi')
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const rows = structure.companyUsers.filter((x) => x.companyId === companyId)
-
   return (
-    <div className="card space-y-4 p-4">
-      <p className="text-sm text-gray-400">
-        Kullanıcıları şirket bazında yetkilendirin. Aynı e-posta birden fazla şirkette farklı rolle
-        yer alabilir.
-      </p>
+    <section className={`${APP_SURFACE_PANEL_CLASS} space-y-4 p-4`}>
+      <div>
+        <h3 className="text-sm font-semibold text-[var(--ink)]">
+          {user?.companyName || 'Aktif Firma'}
+        </h3>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          Kullanıcı mevcut hesabının e-posta ve şifresiyle giriş yapar; yalnızca burada verilen
+          firma erişimini kullanabilir.
+        </p>
+      </div>
       <div className="grid gap-2 sm:grid-cols-3">
         <label className="block space-y-1">
-          <span className="text-[10px] font-black uppercase text-gray-500">Şirket</span>
+          <span className="text-[10px] font-bold uppercase text-[var(--muted)]">Firma</span>
+          <input className="form-input" value={user?.companyName || ''} readOnly />
+        </label>
+        <label className="block space-y-1">
+          <span className="text-[10px] font-bold uppercase text-[var(--muted)]">
+            Kullanıcı E-postası
+          </span>
+          <input
+            className="form-input"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="kullanici@firma.com"
+          />
+        </label>
+        <label className="block space-y-1">
+          <span className="text-[10px] font-bold uppercase text-[var(--muted)]">Erişim</span>
           <select
             className="form-input"
-            value={companyId}
-            onChange={(e) => setCompanyId(e.target.value)}
+            value={accessLevel}
+            onChange={(event) => setAccessLevel(event.target.value)}
           >
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block space-y-1">
-          <span className="text-[10px] font-black uppercase text-gray-500">E-posta</span>
-          <input className="form-input" value={email} readOnly />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-[10px] font-black uppercase text-gray-500">Rol</span>
-          <select className="form-input" value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="admin">Yönetici</option>
-            <option value="manager">Müdür</option>
-            <option value="viewer">Görüntüleyici</option>
+            <option value="no_access">Göremez</option>
+            <option value="viewer">Sadece Görebilir</option>
+            <option value="editor">Görebilir ve Düzenleyebilir</option>
           </select>
         </label>
       </div>
-      <button type="button" onClick={assign} className={`${BTN_SUCCESS} px-4 py-2 text-sm`}>
-        Yetkiyi Kaydet
+      <button
+        type="button"
+        onClick={assign}
+        disabled={saving || !email.trim()}
+        className="btn-primary px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {saving ? 'Kaydediliyor…' : 'Yetkiyi Kaydet'}
       </button>
+      {error ? <p className="text-sm font-semibold text-rose-600">{error}</p> : null}
+      {notice ? <p className="text-sm font-semibold text-emerald-600">{notice}</p> : null}
       <ul className="space-y-2 text-sm">
+        {loading ? <li className="text-[var(--muted)]">Kullanıcılar yükleniyor…</li> : null}
         {rows.map((r) => (
           <li
-            key={r.id}
-            className="rounded-xl border border-dark-500/40 bg-dark-700/40 px-3 py-2 text-gray-200"
+            key={r.accountId}
+            className="flex items-center justify-between gap-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-[var(--ink)]"
           >
-            {r.email} · {r.role}
+            <span className="min-w-0">
+              <span className="block truncate font-semibold">{r.fullName || r.email}</span>
+              <span className="block truncate text-xs text-[var(--muted)]">{r.email}</span>
+            </span>
+            <span className="shrink-0 text-xs font-semibold text-[var(--muted)]">
+              {r.primary
+                ? 'Firma Sahibi'
+                : r.accessLevel === 'viewer'
+                  ? 'Sadece Görebilir'
+                  : 'Görebilir ve Düzenleyebilir'}
+            </span>
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   )
 }
 

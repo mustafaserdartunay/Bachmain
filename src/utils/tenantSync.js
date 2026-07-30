@@ -47,6 +47,10 @@ export function scheduleTenantPush(collection, payload, delayMs = 1200) {
   globalThis[key] = setTimeout(() => {
     pushTenantCollection(collection, payload).catch((err) => {
       if (err?.code === 'DATABASE_REQUIRED') return
+      if (err?.code === 'READ_ONLY_COMPANY') {
+        window.dispatchEvent(new CustomEvent('bach:company-read-only-write-blocked'))
+        return
+      }
       console.warn('[tenant-sync]', collection, err.message)
     })
   }, delayMs)

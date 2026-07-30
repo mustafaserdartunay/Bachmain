@@ -36,6 +36,7 @@ export async function handleTenantApi(req, res, path, body = {}) {
   }
 
   const tenantCode = session.user.tenantCode
+  const accessLevel = session.user.accessLevel || session.user.role || 'viewer'
   const parts = path.split('/')
   // tenant/:collection
   const collection = parts[1]
@@ -64,6 +65,13 @@ export async function handleTenantApi(req, res, path, body = {}) {
       message: 'Abonelik süresi dolmuş. Verileriniz korunuyor; işlem için paketinizi yenileyin.',
       licenseExpiry: customer.licenseExpiry,
       status: subStatus,
+    })
+    return true
+  }
+  if (accessLevel === 'viewer' && method !== 'GET') {
+    sendJson(req, res, 403, {
+      error: 'READ_ONLY_COMPANY',
+      message: 'Bu firmada yalnızca görüntüleme yetkiniz var.',
     })
     return true
   }

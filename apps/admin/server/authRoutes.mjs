@@ -8,6 +8,10 @@ import {
   requestPasswordReset,
   resetPasswordWithToken,
   verifyEmailWithToken,
+  listAccessibleCompanies,
+  switchCompanySession,
+  listCompanyUsers,
+  setCompanyUserAccess,
 } from './auth.mjs'
 import { loadStore, withStore } from './store.mjs'
 import { hitRateLimit } from './db.mjs'
@@ -213,6 +217,98 @@ export async function handleAuthApi(req, res, path, body = {}) {
     await withLegalUser(store, session.user, session.account)
     sendJson(req, res, 200, { ok: true, user: session.user, legal: session.user?.legal || null })
     return true
+  }
+
+  if (method === 'GET' && path === 'auth/companies') {
+    const token = getBearerOrCookieToken(req)
+    const store = await loadStore()
+    const session = getAccountFromToken(store, token)
+    if (!session) {
+      sendJson(req, res, 401, { error: 'UNAUTHORIZED', message: 'Oturum bulunamadı' })
+      return true
+    }
+    sendJson(req, res, 200, {
+      ok: true,
+      activeTenantCode: session.user.tenantCode,
+      companies: listAccessibleCompanies(store, session.account.id),
+    })
+    return true
+  }
+
+  if (method === 'POST' && path === 'auth/company/switch') {
+    const token = getBearerOrCookieToken(req)
+    const store = await loadStore()
+    const session = getAccountFromToken(store, token)
+    if (!session) {
+      sendJson(req, res, 401, { error: 'UNAUTHORIZED', message: 'Oturum bulunamadı' })
+      return true
+    }
+    try {
+      const result = switchCompanySession(store, session.account.id, body.tenantCode)
+      sendJson(
+        req,
+        res,
+        200,
+        { ok: true, user: result.user, token: result.token },
+        { cookie: buildSessionCookie(result.token) },
+      )
+      return true
+    } catch (error) {
+      const status = error.code === 'COMPANY_FORBIDDEN' ? 403 : 404
+      sendJson(req, res, status, {
+        error: error.code || 'COMPANY_SWITCH_FAILED',
+        message: error.message,
+      })
+      return true
+    }
+  }
+
+  if (method === 'GET' && path === 'auth/company/users') {
+    const token = getBearerOrCookieToken(req)
+    const store = await loadStore()
+    const session = getAccountFromToken(store, token)
+    if (!session) {
+      sendJson(req, res, 401, { error: 'UNAUTHORIZED', message: 'Oturum bulunamadı' })
+      return true
+    }
+    try {
+      sendJson(req, res, 200, { ok: true, users: listCompanyUsers(store, session) })
+      return true
+    } catch (error) {
+      sendJson(req, res, 403, { error: error.code || 'FORBIDDEN', message: error.message })
+      return true
+    }
+  }
+
+  if (method === 'PUT' && path === 'auth/company/access') {
+    const token = getBearerOrCookieToken(req)
+    try {
+      const users = await withStore((store) => {
+        const session = getAccountFromToken(store, token)
+        if (!session) {
+          const err = new Error('Oturum bulunamadı')
+          err.code = 'UNAUTHORIZED'
+          throw err
+        }
+        return setCompanyUserAccess(store, session, body)
+      })
+      sendJson(req, res, 200, { ok: true, users })
+      return true
+    } catch (error) {
+      const status =
+        error.code === 'UNAUTHORIZED'
+          ? 401
+          : error.code === 'FORBIDDEN'
+            ? 403
+            : error.code === 'ACCOUNT_NOT_FOUND'
+              ? 404
+              : 400
+      sendJson(req, res, status, {
+        error: error.code || 'COMPANY_ACCESS_FAILED',
+        message: error.message,
+      })
+      return true
+    }
   }
 
   if (method === 'POST' && path === 'auth/onboarding/complete') {
