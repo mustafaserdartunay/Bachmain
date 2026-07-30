@@ -2779,6 +2779,24 @@ html.night .trial-banner-cta:hover {
   outline: none;
 }
 
+html .app-header-banner input.header-search-input.search-pill {
+  background: transparent !important;
+  border: 1px solid var(--search-border) !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
+  color: var(--search-text) !important;
+  transition: none !important;
+}
+
+html .app-header-banner input.header-search-input.search-pill:hover,
+html .app-header-banner input.header-search-input.search-pill:focus,
+html .app-header-banner input.header-search-input.search-pill:focus-visible {
+  background: transparent !important;
+  border-color: var(--search-border) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
 .app-header-dropdown textarea.header-search-input,
 .app-header-popover textarea.header-search-input {
   background: #ffffff !important;
