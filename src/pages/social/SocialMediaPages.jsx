@@ -161,52 +161,19 @@ export function SocialMediaDashboardPage() {
 export function SocialAccountsPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const [connections, setConnections] = useState([])
+  const [accounts, setAccounts] = useState([])
   const [health, setHealth] = useState(null)
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
-  const [picker, setPicker] = useState(null)
-  const [waManual, setWaManual] = useState({
-    open: false,
-    phoneNumberId: '',
-    wabaId: '',
-    accessToken: '',
-    displayPhone: '',
-  })
-
-  const platforms = [
-    {
-      id: 'instagram',
-      label: 'Instagram',
-      hint: 'Business / Creator',
-      icon: Instagram,
-    },
-    { id: 'facebook', label: 'Facebook', hint: 'Sayfa', icon: Megaphone },
-    { id: 'messenger', label: 'Messenger', hint: 'Sayfa mesajları', icon: MessageCircle },
-    { id: 'whatsapp', label: 'WhatsApp', hint: 'Business Cloud', icon: Mail },
-  ]
 
   async function refresh() {
     try {
-      const [h, c] = await Promise.all([smcApi.health(), smcApi.connections()])
+      const [h, a] = await Promise.all([smcApi.health(), smcApi.accounts()])
       setHealth(h)
-      setConnections(c.connections || [])
+      setAccounts(a.accounts || [])
     } catch {
-      try {
-        const [h, a] = await Promise.all([smcApi.health(), smcApi.accounts()])
-        setHealth(h)
-        setConnections(
-          (a.accounts || []).map((x) => ({
-            ...x,
-            platform: 'instagram',
-            displayName: x.displayName || x.username,
-            tokenStatus: x.status,
-          })),
-        )
-      } catch {
-        setHealth({ metaConfigured: false })
-        setConnections([])
-      }
+      setHealth({ metaConfigured: false })
+      setAccounts([])
     }
   }
 
@@ -215,48 +182,12 @@ export function SocialAccountsPage() {
     const oauth = params.get('oauth')
     if (oauth === 'ok') {
       const u = params.get('u')
-      const platform = params.get('platform') || 'instagram'
-      setMsg(u ? `${platform} bağlandı: ${u}` : 'Bağlantı tamamlandı.')
+      setMsg(u ? `Instagram bağlandı: @${u}` : 'Instagram bağlandı.')
     }
     if (oauth === 'error') setMsg(params.get('msg') || 'OAuth hatası')
-    if (oauth === 'select') {
-      const sessionId = params.get('session')
-      const platform = params.get('platform') || 'instagram'
-      if (sessionId) {
-        setPicker({ sessionId, platform, loading: true, candidates: [], error: '' })
-        smcApi
-          .pendingCandidates(sessionId)
-          .then((d) => {
-            const key = d.platform || platform
-            const list = (d.candidates && d.candidates[key]) || []
-            setPicker({
-              sessionId,
-              platform: key,
-              loading: false,
-              candidates: list,
-              missingScopes: d.missingScopes || [],
-              error: '',
-            })
-            setMsg(
-              list.length
-                ? `${list.length} hesap bulundu — bağlanacak hesabı seçin.`
-                : 'Aday hesap bulunamadı. İzinleri ve Meta App Review’ı kontrol edin.',
-            )
-          })
-          .catch((e) => {
-            setPicker({
-              sessionId,
-              platform,
-              loading: false,
-              candidates: [],
-              error: e.message || 'Adaylar yüklenemedi',
-            })
-          })
-      }
-    }
   }, [params])
 
-  async function connect(platform) {
+  async function connect() {
     setBusy(true)
     setMsg('')
     try {
@@ -266,268 +197,89 @@ export function SocialAccountsPage() {
         navigate('/sosyal-medya/meta-kurulum')
         return
       }
-      const data = await smcApi.oauthStart(platform)
+      const data = await smcApi.oauthStart()
       window.location.href = data.url
     } catch (e) {
       if (e.code === 'META_NOT_CONFIGURED' || e.status === 503) {
         navigate('/sosyal-medya/meta-kurulum')
         return
       }
+      // API yoksa da kurulum sayfasına git — kullanıcı App ID girebilsin
       navigate('/sosyal-medya/meta-kurulum')
     } finally {
       setBusy(false)
     }
   }
 
-  async function confirmPick(selection) {
-    if (!picker?.sessionId) return
-    setBusy(true)
-    try {
-      await smcApi.selectConnection({
-        sessionId: picker.sessionId,
-        platform: picker.platform,
-        selection,
-      })
-      setPicker(null)
-      setMsg('Bağlantı tamamlandı.')
-      await refresh()
-    } catch (e) {
-      setMsg(e.message || 'Seçim başarısız')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function saveWaManual(e) {
-    e.preventDefault()
-    setBusy(true)
-    try {
-      await smcApi.connectWhatsAppManual(waManual)
-      setWaManual((s) => ({ ...s, open: false, accessToken: '' }))
-      setMsg('WhatsApp kalıcı token ile bağlandı.')
-      await refresh()
-    } catch (err) {
-      setMsg(err.message || 'WhatsApp bağlantısı başarısız')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const byPlatform = (id) => connections.filter((c) => c.platform === id)
-
   return (
-    <Shell title="Sosyal Bağlantılar">
-      {msg ? <p className="mb-3 text-sm text-emerald-700">{msg}</p> : null}
+    <Shell
+      title="Instagram Hesapları"
+      actions={
+        <button
+          type="button"
+          disabled={busy}
+          onClick={connect}
+          className={`${BTN_SUCCESS} gap-2 px-4 text-xs`}
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlugZap className="h-4 w-4" />}
+          Meta ile bağla
+        </button>
+      }
+    >
+      {msg ? <p className="text-sm text-emerald-700">{msg}</p> : null}
       {!health?.metaConfigured && !health?.ready ? (
         <AppPagePanel title="Hızlı kurulum">
           <p className="mb-3 text-sm text-[var(--muted)]">
-            Meta App ID / Secret gerekir. OAuth 2.0 + PKCE ile Instagram, Facebook, Messenger ve
-            WhatsApp bağlanır.
+            Instagram bağlamak için Meta App ID / Secret gerekir. Sihirbaz adım adım yönlendirir —
+            demo ve paket kullanıcıları aynı bağlantıyı kullanır.
           </p>
           <Link to="/sosyal-medya/meta-kurulum" className={`${BTN_PRIMARY} gap-2 px-4 text-xs`}>
             API ayarlarını aç
           </Link>
         </AppPagePanel>
       ) : null}
-
-      <div className="mb-4 grid gap-3 md:grid-cols-2">
-        {platforms.map((p) => {
-          const Icon = p.icon
-          const list = byPlatform(p.id)
-          return (
-            <AppPagePanel
-              key={p.id}
-              title={p.label}
-              action={
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => connect(p.id)}
-                    className={`${BTN_SUCCESS} gap-2 !px-3 !py-2 text-xs`}
-                  >
-                    {busy ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <PlugZap className="h-3.5 w-3.5" />
-                    )}
-                    Bağlan
-                  </button>
-                  {p.id === 'whatsapp' ? (
-                    <button
-                      type="button"
-                      className="btn-ghost !px-3 !py-2 text-xs"
-                      onClick={() => setWaManual((s) => ({ ...s, open: true }))}
-                    >
-                      Kalıcı token
-                    </button>
-                  ) : null}
-                </div>
-              }
-            >
-              <p className="mb-3 text-xs text-[var(--muted)]">{p.hint}</p>
-              {list.length === 0 ? (
-                <p className="text-sm text-[var(--muted)]">Bağlı hesap yok.</p>
-              ) : (
-                <div className="grid gap-2">
-                  {list.map((a) => (
-                    <div
-                      key={a.id}
-                      className="glass-inset flex flex-wrap items-center justify-between gap-3 rounded-xl p-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className="h-5 w-5 shrink-0" />
-                        <div>
-                          <p className="font-semibold">
-                            {a.username
-                              ? `@${a.username}`
-                              : a.displayName || a.phoneNumber || a.externalId}
-                          </p>
-                          <p className="text-xs text-[var(--muted)]">
-                            Durum: {a.status} · Token: {a.tokenStatus || '—'}
-                            {a.lastSyncAt
-                              ? ` · Senkron: ${new Date(a.lastSyncAt).toLocaleString('tr-TR')}`
-                              : ''}
-                          </p>
-                          {Array.isArray(a.scopes) && a.scopes.length ? (
-                            <p className="mt-1 max-w-md truncate text-[10px] text-[var(--muted)]">
-                              İzinler: {a.scopes.join(', ')}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          className="btn-ghost !px-3 !py-2 text-xs"
-                          onClick={() =>
-                            smcApi
-                              .refreshConnection(a.id)
-                              .then(refresh)
-                              .catch((e) => setMsg(e.message))
-                          }
-                        >
-                          Yenile
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-ghost !px-3 !py-2 text-xs text-rose-600"
-                          onClick={() =>
-                            smcApi
-                              .disconnectConnection(a.id)
-                              .then(refresh)
-                              .catch((e) => setMsg(e.message))
-                          }
-                        >
-                          Kaldır
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </AppPagePanel>
-          )
-        })}
-      </div>
-
-      {picker?.sessionId ? (
-        <AppPagePanel title="Hesap seç">
-          {picker.loading ? (
-            <p className="text-sm text-[var(--muted)]">Aday hesaplar yükleniyor…</p>
-          ) : null}
-          {picker.error ? <p className="text-sm text-rose-600">{picker.error}</p> : null}
-          {picker.missingScopes?.length ? (
-            <p className="mb-2 text-xs text-amber-700">
-              Eksik izinler (App Review gerekebilir): {picker.missingScopes.join(', ')}
+      <div className="grid gap-3">
+        {accounts.length === 0 ? (
+          <AppPagePanel title="Bağlı hesap yok">
+            <p className="text-sm text-[var(--muted)]">
+              Tek tıkla Instagram Business hesabını bağlayın.
             </p>
-          ) : null}
-          <div className="grid gap-2">
-            {(picker.candidates || []).map((c) => {
-              const label =
-                c.username ||
-                c.displayName ||
-                c.name ||
-                c.displayPhone ||
-                c.verifiedName ||
-                c.pageId ||
-                c.phoneNumberId
-              return (
+          </AppPagePanel>
+        ) : (
+          accounts.map((a) => (
+            <div
+              key={a.id}
+              className="glass-inset flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4"
+            >
+              <div className="flex items-center gap-3">
+                <Instagram className="h-5 w-5" />
+                <div>
+                  <p className="font-semibold">@{a.username}</p>
+                  <p className="text-xs text-[var(--muted)]">
+                    {a.status} · {a.displayName}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
                 <button
-                  key={c.igUserId || c.pageId || c.phoneNumberId || label}
                   type="button"
-                  disabled={busy}
-                  className="glass-inset flex items-center justify-between rounded-xl p-3 text-left text-sm hover:opacity-90"
-                  onClick={() => {
-                    if (picker.platform === 'instagram') {
-                      confirmPick({ pageId: c.pageId, igUserId: c.igUserId })
-                    } else if (picker.platform === 'whatsapp') {
-                      confirmPick({
-                        phoneNumberId: c.phoneNumberId,
-                        wabaId: c.wabaId,
-                        displayPhone: c.displayPhone || '',
-                        verifiedName: c.verifiedName || '',
-                      })
-                    } else {
-                      confirmPick({ pageId: c.pageId })
-                    }
-                  }}
+                  className="btn-ghost !px-3 !py-2 text-xs"
+                  onClick={() => smcApi.refresh(a.id).then(refresh)}
                 >
-                  <span className="font-semibold">{label}</span>
-                  <span className="text-xs text-[var(--muted)]">Seç</span>
+                  Token yenile
                 </button>
-              )
-            })}
-          </div>
-        </AppPagePanel>
-      ) : null}
-
-      {waManual.open ? (
-        <AppPagePanel title="WhatsApp kalıcı token">
-          <form className="grid gap-2 sm:grid-cols-2" onSubmit={saveWaManual}>
-            <input
-              className="input text-sm"
-              placeholder="Phone Number ID"
-              value={waManual.phoneNumberId}
-              onChange={(e) => setWaManual((s) => ({ ...s, phoneNumberId: e.target.value }))}
-              required
-            />
-            <input
-              className="input text-sm"
-              placeholder="Business Account ID (WABA)"
-              value={waManual.wabaId}
-              onChange={(e) => setWaManual((s) => ({ ...s, wabaId: e.target.value }))}
-              required
-            />
-            <input
-              className="input text-sm sm:col-span-2"
-              placeholder="Permanent Access Token"
-              type="password"
-              value={waManual.accessToken}
-              onChange={(e) => setWaManual((s) => ({ ...s, accessToken: e.target.value }))}
-              required
-            />
-            <input
-              className="input text-sm"
-              placeholder="Görünen numara (opsiyonel)"
-              value={waManual.displayPhone}
-              onChange={(e) => setWaManual((s) => ({ ...s, displayPhone: e.target.value }))}
-            />
-            <div className="flex gap-2">
-              <button type="submit" className={`${BTN_PRIMARY} text-xs`} disabled={busy}>
-                Kaydet
-              </button>
-              <button
-                type="button"
-                className="btn-ghost text-xs"
-                onClick={() => setWaManual((s) => ({ ...s, open: false }))}
-              >
-                Vazgeç
-              </button>
+                <button
+                  type="button"
+                  className="btn-ghost !px-3 !py-2 text-xs text-rose-600"
+                  onClick={() => smcApi.disconnect(a.id).then(refresh)}
+                >
+                  Kes
+                </button>
+              </div>
             </div>
-          </form>
-        </AppPagePanel>
-      ) : null}
+          ))
+        )}
+      </div>
     </Shell>
   )
 }

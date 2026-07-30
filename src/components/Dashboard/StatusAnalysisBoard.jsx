@@ -104,9 +104,11 @@ export function FinanceMetricCard({
       {hasDual ? (
         <div className={`my-auto space-y-1 ${valueTone}`}>
           <p className="break-words text-[13px] font-extrabold leading-tight tracking-tight">
+            <span className="mr-1 text-[10px] font-bold text-[var(--muted)]">KDV Hariç</span>
             {valueExVat}
           </p>
           <p className="break-words text-[13px] font-extrabold leading-tight tracking-tight">
+            <span className="mr-1 text-[10px] font-bold text-[var(--muted)]">KDV Dahil</span>
             {valueIncVat}
           </p>
         </div>
@@ -133,13 +135,13 @@ export function FinanceMetricCard({
   return content
 }
 
-function moneyCardValue(parts, basis = 'inclVat') {
-  const amount = basis === 'exclVat' ? parts.exclVat : parts.inclVat
+function moneyCardValue(parts) {
   return {
-    value: formatTreasuryCurrency(amount),
+    value: formatTreasuryCurrency(parts.inclVat),
+    valueExVat: formatTreasuryCurrency(parts.exclVat),
+    valueIncVat: formatTreasuryCurrency(parts.inclVat),
     exclVat: parts.exclVat,
     inclVat: parts.inclVat,
-    vatBasis: basis,
   }
 }
 
@@ -223,9 +225,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
   })
   const receivableValues = moneyCardValue(receivableParts)
   const payableValues = moneyCardValue(payableParts)
-  // Stok ekranındaki maliyet değeri KDV hariç tutulur; diğer belge/cari
-  // toplamları ekranda görünen genel (KDV dahil) tutarı kullanır.
-  const stockValues = moneyCardValue(stockParts, 'exclVat')
+  const stockValues = moneyCardValue(stockParts)
   const liveValues = moneyCardValue(liveParts)
   const futureValues = moneyCardValue(futureParts)
   const possibleValues = moneyCardValue(possibleParts)
@@ -255,7 +255,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'receivables',
       label: 'Tahsilat Bekleyen',
       ...receivableValues,
-      sub: 'Müşteri cari alacak toplamı',
+      sub: 'Müşteri cari alacak · KDV hariç / dahil',
       href: '/musteriler',
       tone: 'text-cyan-300',
       valueTone: 'text-orange-500',
@@ -266,7 +266,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'payables',
       label: 'Ödenecekler Toplamı',
       ...payableValues,
-      sub: 'Tedarikçi cari borç toplamı',
+      sub: 'Tedarikçi cari borç · KDV hariç / dahil',
       href: '/giderler/tedarikciler',
       tone: 'text-orange-300',
       valueTone: 'text-red-600',
@@ -277,7 +277,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'stock-value',
       label: 'Stok Toplam Değeri',
       ...stockValues,
-      sub: `${stockReport.totalUnits.toLocaleString('tr-TR')} adet · maliyet değeri`,
+      sub: `${stockReport.totalUnits.toLocaleString('tr-TR')} adet · maliyet · KDV hariç / dahil`,
       href: '/stok/urunler',
       tone: 'text-teal-300',
       valueTone: 'text-teal-600',
@@ -318,7 +318,7 @@ export function buildFinanceMetricCards({ includeHidden = false } = {}) {
       id: 'possible',
       label: 'Genel Olası Tutar',
       ...possibleValues,
-      sub: 'Canlı varlık + gelecek tutar',
+      sub: 'Canlı varlık + gelecek tutar · KDV hariç / dahil',
       href: '/kasa',
       tone: 'text-gray-100',
       valueTone: 'text-blue-600',

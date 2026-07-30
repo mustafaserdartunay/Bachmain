@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import ConversationList, { ConversationToolbar } from '../components/Omnichannel/ConversationList'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Bot, Inbox, Settings2 } from 'lucide-react'
+import ConversationList from '../components/Omnichannel/ConversationList'
 import ChatThread from '../components/Omnichannel/ChatThread'
 import MessageComposer from '../components/Omnichannel/MessageComposer'
 import CrmContextPanel from '../components/Omnichannel/CrmContextPanel'
 import AiInsightsPanel from '../components/Omnichannel/AiInsightsPanel'
 import ActivityArchivePanel from '../components/Common/ActivityArchivePanel'
-import { analyzeConversationWithAi, buildConversationContext } from '../omnichannel/ai/omniAiApi'
+import { AppPanelDot } from '../components/Layout/AppPageLayout'
+import {
+  analyzeConversationWithAi,
+  buildConversationContext,
+  checkOmniAiHealth,
+} from '../omnichannel/ai/omniAiApi'
 import {
   getLearningStats,
   recordAcceptedReply,
@@ -15,26 +21,40 @@ import {
 import { readAiSettings, saveAiSettings } from '../omnichannel/ai/settings'
 import {
   assignConversation,
+  createWhatsAppExampleThread,
   getConversationMessages,
   mergeWhatsAppInbox,
+  readChannelConfig,
   readConversations,
   readLeads,
 } from '../omnichannel/store'
 import { sendChannelMessage, openConversation } from '../omnichannel/services/hub'
 import { pullWhatsAppInbox } from '../utils/whatsappChannelApi'
 import { getCustomerProfiles } from '../data/customerProfiles'
+import { BTN_SUCCESS } from '../utils/buttonStyles'
+import { getClientOpenAiApiKey, saveVoiceSettings } from '../utils/voiceSettings'
+import {
+  APP_FILTER_LABEL_CLASS,
+  APP_OMNI_SECTION_CLASS,
+  APP_PANEL_TITLE_CLASS,
+} from '../utils/dashboardDesign'
+import MessageCenterSettingsPanel from '../components/Settings/MessageCenterSettingsPanel'
 
 export default function OmnichannelPage() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [conversations, setConversations] = useState(() => readConversations())
   const [selectedId, setSelectedId] = useState(() => readConversations()[0]?.id || null)
   const [channelFilter, setChannelFilter] = useState(() => searchParams.get('kanal') || 'all')
   const [search, setSearch] = useState('')
   const [sending, setSending] = useState(false)
   const [suggestedText, setSuggestedText] = useState('')
+  const [settingsOpen, setSettingsOpen] = useState(() => searchParams.get('ayarlar') === '1')
+  const [channelConfig, setChannelConfig] = useState(() => readChannelConfig())
   const [aiSettings, setAiSettings] = useState(() => readAiSettings())
+  const [openAiKeyInput, setOpenAiKeyInput] = useState(() => getClientOpenAiApiKey())
   const [insights, setInsights] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
+  const [aiHealth, setAiHealth] = useState(null)
   const [learningStats, setLearningStats] = useState(() => getLearningStats())
 
   const appliedSuggestionRef = useRef('')
@@ -44,12 +64,25 @@ export default function OmnichannelPage() {
   const refresh = useCallback(() => {
     setConversations(readConversations())
     setLearningStats(getLearningStats())
+    setChannelConfig(readChannelConfig())
   }, [])
 
   useEffect(() => {
     const kanal = searchParams.get('kanal')
     if (kanal) setChannelFilter(kanal)
+    setSettingsOpen(searchParams.get('ayarlar') === '1')
   }, [searchParams])
+
+  function toggleSettings() {
+    setSettingsOpen((open) => {
+      const next = !open
+      const params = new URLSearchParams(searchParams)
+      if (next) params.set('ayarlar', '1')
+      else params.delete('ayarlar')
+      setSearchParams(params, { replace: true })
+      return next
+    })
+  }
 
   useEffect(() => {
     window.addEventListener('bach:omni-updated', refresh)
@@ -83,6 +116,10 @@ export default function OmnichannelPage() {
       window.clearInterval(timer)
     }
   }, [refresh])
+
+  useEffect(() => {
+    checkOmniAiHealth().then(setAiHealth)
+  }, [openAiKeyInput])
 
   const customers = useMemo(() => getCustomerProfiles(), [conversations])
   const leads = useMemo(() => readLeads(), [conversations])
@@ -284,57 +321,226 @@ export default function OmnichannelPage() {
     setAiSettings(next)
   }
 
+  function handleSaveConfig() {
+    saveAiSettings(aiSettings)
+    if (openAiKeyInput.trim()) {
+      saveVoiceSettings({ openAiApiKey: openAiKeyInput.trim() })
+    }
+    checkOmniAiHealth().then(setAiHealth)
+  }
+
+  function handleCreateWhatsAppExample() {
+    const id = createWhatsAppExampleThread({
+      contactName: 'Örnek Müşteri',
+      contactPhone: '+905301285610',
+    })
+    setChannelFilter('whatsapp')
+    setSelectedId(id)
+    refresh()
+  }
+
+  const connectedCount = Object.values(channelConfig).filter((item) => item.connected).length
+
   return (
-    <div className="modern-dashboard space-y-2.5">
-      <ConversationToolbar
-        channelFilter={channelFilter}
-        onChannelFilter={setChannelFilter}
-        search={search}
-        onSearch={setSearch}
-        conversationCount={filteredConversations.length}
-      />
-
-      <div className="grid min-h-[calc(100dvh-9rem)] grid-cols-1 gap-2 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)_minmax(0,16rem)]">
-        <ConversationList
-          conversations={filteredConversations}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-        />
-
-        <section className="glass flex min-h-0 flex-col overflow-hidden rounded-2xl">
-          <ChatThread conversation={selectedConversation} messages={messages} />
-          <AiInsightsPanel
-            insights={insights}
-            loading={aiLoading}
-            aiSettings={aiSettings}
-            learningStats={learningStats}
-            onApplySuggestion={handleApplySuggestion}
-            onSendPrimary={handleSendPrimary}
-            onRegenerate={runAiAnalysis}
-            onFeedback={handleFeedback}
-            onToggleAutoReply={handleToggleAutoReply}
-          />
-          <MessageComposer
-            onSend={handleSend}
-            disabled={!selectedConversation || sending}
-            suggestedText={suggestedText}
-          />
-        </section>
-
-        <CrmContextPanel
-          conversation={selectedConversation}
-          customer={customer}
-          lead={lead}
-          onAssignUser={handleAssignUser}
-          onAssignDepartment={handleAssignDepartment}
-        />
+    <div className="modern-dashboard space-y-4">
+      <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-[20px] px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <AppPanelDot color="emerald" />
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] bg-[rgba(140,145,165,0.14)] text-emerald-600">
+            <Inbox className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0">
+            <h1 className={APP_PANEL_TITLE_CLASS}>Mesaj Merkezi</h1>
+            <p className="text-[12px] font-semibold text-[var(--muted)]">
+              WhatsApp · Instagram · Messenger · E-posta · TikTok Leads
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`glass-pill !h-8 !px-3 !text-[12px] !font-bold ${
+              aiHealth?.hasApiKey ? 'text-violet-600' : 'text-amber-600'
+            }`}
+          >
+            <Bot className="mr-1 inline h-3.5 w-3.5" />
+            {aiHealth?.hasApiKey ? 'OpenAI bağlı' : 'OpenAI anahtarı gerekli'}
+          </span>
+          <span className="glass-pill !h-8 !px-3 !text-[12px] !font-bold text-emerald-600">
+            {connectedCount}/5 kanal bağlı
+          </span>
+          <button
+            type="button"
+            onClick={handleCreateWhatsAppExample}
+            className="btn-ghost inline-flex items-center gap-2 !px-3 !py-2 text-[12px] font-bold"
+          >
+            Örnek WhatsApp
+          </button>
+          <button
+            type="button"
+            onClick={toggleSettings}
+            className="btn-ghost inline-flex items-center gap-2 !px-3 !py-2 text-[12px] font-bold"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+            {settingsOpen ? 'Gelen Kutusu' : 'Kanal Ayarları'}
+          </button>
+        </div>
       </div>
 
-      <ActivityArchivePanel
-        title="Mesaj Merkezi Arşiv ve İşlem Geçmişi"
-        modules={['omnichannel']}
-        emptyMessage="Henüz mesaj merkezi arşiv veya silme kaydı yok."
-      />
+      {settingsOpen ? (
+        <div className="space-y-4">
+          <div className="glass space-y-4 rounded-[20px] p-4">
+            <div className={APP_OMNI_SECTION_CLASS}>
+              <p className={`mb-3 flex items-center gap-2 ${APP_FILTER_LABEL_CLASS}`}>
+                <Bot className="h-3.5 w-3.5" /> Yapay Zeka Ayarları
+              </p>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--ink)]">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(aiSettings.enabled)}
+                    onChange={(e) =>
+                      setAiSettings((prev) => ({ ...prev, enabled: e.target.checked }))
+                    }
+                  />
+                  OpenAI analizi aktif
+                </label>
+                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--ink)]">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(aiSettings.autoReply)}
+                    onChange={(e) =>
+                      setAiSettings((prev) => ({ ...prev, autoReply: e.target.checked }))
+                    }
+                  />
+                  Otomatik müşteri yanıtı
+                </label>
+                <input
+                  type="password"
+                  placeholder="OpenAI API Key (sk-...)"
+                  value={openAiKeyInput}
+                  onChange={(e) => setOpenAiKeyInput(e.target.value)}
+                  className="form-input text-xs"
+                />
+                <input
+                  placeholder="Firma adı"
+                  value={aiSettings.companyName}
+                  onChange={(e) =>
+                    setAiSettings((prev) => ({ ...prev, companyName: e.target.value }))
+                  }
+                  className="form-input text-xs"
+                />
+                <input
+                  placeholder="Marka sesi / ton"
+                  value={aiSettings.brandVoice}
+                  onChange={(e) =>
+                    setAiSettings((prev) => ({ ...prev, brandVoice: e.target.value }))
+                  }
+                  className="form-input text-xs md:col-span-2"
+                />
+                <label className="text-xs text-[var(--muted)]">
+                  Min. güven ({Math.round((aiSettings.autoReplyMinConfidence || 0.72) * 100)}%)
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="0.95"
+                    step="0.01"
+                    value={aiSettings.autoReplyMinConfidence}
+                    onChange={(e) =>
+                      setAiSettings((prev) => ({
+                        ...prev,
+                        autoReplyMinConfidence: Number(e.target.value),
+                      }))
+                    }
+                    className="mt-1 w-full"
+                  />
+                </label>
+                <p className="text-[12px] font-semibold text-[var(--muted)] md:col-span-2">
+                  {learningStats.exampleCount} öğrenilmiş yanıt · {learningStats.positiveFeedback}{' '}
+                  olumlu geri bildirim
+                </p>
+              </div>
+              <div className="mt-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveConfig}
+                  className={`${BTN_SUCCESS} px-4 py-2 text-xs`}
+                >
+                  Yapay Zeka Ayarlarını Kaydet
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass rounded-[20px] p-4">
+            <p className={`mb-3 ${APP_FILTER_LABEL_CLASS}`}>Kanal Bağlantıları</p>
+            <MessageCenterSettingsPanel />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid min-h-[calc(100dvh-14rem)] grid-cols-1 gap-3 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)_minmax(0,18rem)] xl:grid-cols-3">
+            <ConversationList
+              conversations={filteredConversations}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              channelFilter={channelFilter}
+              onChannelFilter={setChannelFilter}
+              search={search}
+              onSearch={setSearch}
+            />
+
+            <section className="glass flex min-h-0 flex-col overflow-hidden rounded-[20px]">
+              <ChatThread conversation={selectedConversation} messages={messages} />
+              <AiInsightsPanel
+                insights={insights}
+                loading={aiLoading}
+                aiSettings={aiSettings}
+                learningStats={learningStats}
+                onApplySuggestion={handleApplySuggestion}
+                onSendPrimary={handleSendPrimary}
+                onRegenerate={runAiAnalysis}
+                onFeedback={handleFeedback}
+                onToggleAutoReply={handleToggleAutoReply}
+              />
+              <MessageComposer
+                onSend={handleSend}
+                disabled={!selectedConversation || sending}
+                suggestedText={suggestedText}
+              />
+            </section>
+
+            <CrmContextPanel
+              conversation={selectedConversation}
+              customer={customer}
+              lead={lead}
+              onAssignUser={handleAssignUser}
+              onAssignDepartment={handleAssignDepartment}
+            />
+          </div>
+
+          <div className="glass-inset rounded-[16px] px-4 py-2 text-[12px] font-semibold text-[var(--muted)]">
+            Webhook uçları: <code className="text-[var(--ink)]">/api/webhooks/whatsapp</code> ·{' '}
+            <code className="text-[var(--ink)]">/api/webhooks/instagram</code> ·{' '}
+            <code className="text-[var(--ink)]">/api/webhooks/facebook</code> ·{' '}
+            <code className="text-[var(--ink)]">/api/webhooks/email</code> ·{' '}
+            <code className="text-[var(--ink)]">/api/webhooks/tiktok</code>
+            {' · '}
+            <Link to="/teklifler" className="font-bold text-blue-600 hover:text-blue-700">
+              Teklifler
+            </Link>
+            {' · '}
+            <Link to="/siparisler" className="font-bold text-blue-600 hover:text-blue-700">
+              Siparişler
+            </Link>
+          </div>
+
+          <ActivityArchivePanel
+            title="Mesaj Merkezi Arşiv ve İşlem Geçmişi"
+            modules={['omnichannel']}
+            emptyMessage="Henüz mesaj merkezi arşiv veya silme kaydı yok."
+          />
+        </>
+      )}
     </div>
   )
 }

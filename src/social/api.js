@@ -96,61 +96,24 @@ export const smcApi = {
       return { ok: true, ready: true, tenantConfigured: true, ...body, local: true }
     }
   },
-  oauthStart: async (platform = 'instagram') => {
+  oauthStart: async () => {
     const local = readLocalMetaApp()
     const { user } = getStoredSession()
     try {
-      return await platformSocial(`/oauth/start?platform=${encodeURIComponent(platform)}`)
+      return await platformSocial('/instagram/oauth/start')
     } catch {
-      try {
-        return await platformSocial('/instagram/oauth/start')
-      } catch {
-        return crmSocial('/oauth-start', {
-          method: 'POST',
-          body: {
-            appId: local?.appId,
-            appSecret: local?.appSecret,
-            redirectUri: local?.redirectUri,
-            companyId: user?.companyId || user?.cid || 'local',
-            userId: user?.id || 'user',
-            platform,
-          },
-        })
-      }
+      return crmSocial('/oauth-start', {
+        method: 'POST',
+        body: {
+          appId: local?.appId,
+          appSecret: local?.appSecret,
+          redirectUri: local?.redirectUri,
+          companyId: user?.companyId || user?.cid || 'local',
+          userId: user?.id || 'user',
+        },
+      })
     }
   },
-  connections: async (platform) => {
-    const q = platform ? `?platform=${encodeURIComponent(platform)}` : ''
-    try {
-      return await platformSocial(`/connections${q}`)
-    } catch {
-      const a = await crmSocial('/accounts').catch(() => ({ accounts: [] }))
-      return {
-        ok: true,
-        connections: (a.accounts || []).map((x) => ({
-          ...x,
-          platform: 'instagram',
-          externalId: x.igUserId,
-          tokenStatus: x.status,
-        })),
-      }
-    }
-  },
-  pendingCandidates: (sessionId) =>
-    platformSocial(`/connections/pending?sessionId=${encodeURIComponent(sessionId)}`),
-  selectConnection: (body) => platformSocial('/connections/select', { method: 'POST', body }),
-  connectWhatsAppManual: (body) =>
-    platformSocial('/connections/whatsapp/manual', { method: 'POST', body }),
-  disconnectConnection: async (id) => {
-    try {
-      return await platformSocial(`/connections/${id}`, { method: 'DELETE' })
-    } catch {
-      return crmSocial('/accounts', { method: 'DELETE' })
-    }
-  },
-  refreshConnection: (id) => platformSocial(`/connections/${id}/refresh`, { method: 'POST' }),
-  connectionResources: (id, kind) => platformSocial(`/connections/${id}/resources/${kind}`),
-  connectionLogs: () => platformSocial('/connection-logs'),
   accounts: async () => {
     try {
       return await platformSocial('/instagram/accounts')

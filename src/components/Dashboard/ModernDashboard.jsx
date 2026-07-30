@@ -120,14 +120,16 @@ function FinanceMetricCell({ card }) {
           <>
             <span
               className={`text-[11px] font-extrabold tabular-nums leading-tight ${palette.text}`}
-              title={card.valueExVat}
+              title={`KDV Hariç ${card.valueExVat}`}
             >
+              <span className="mr-1 text-[9px] font-bold text-[var(--muted)]">Hariç</span>
               {card.valueExVat}
             </span>
             <span
               className={`text-[11px] font-extrabold tabular-nums leading-tight ${palette.text}`}
-              title={card.valueIncVat}
+              title={`KDV Dahil ${card.valueIncVat}`}
             >
+              <span className="mr-1 text-[9px] font-bold text-[var(--muted)]">Dahil</span>
               {card.valueIncVat}
             </span>
           </>
@@ -149,7 +151,7 @@ function FinanceMetricCell({ card }) {
         to={card.href}
         title={
           hasDual
-            ? `${card.sub || card.label} · ${card.valueExVat} / ${card.valueIncVat}`
+            ? `${card.sub || card.label} · KDV Hariç ${card.valueExVat} · KDV Dahil ${card.valueIncVat}`
             : card.sub || card.label
         }
         className={rowClass}
