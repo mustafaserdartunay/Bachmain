@@ -49,6 +49,7 @@ import {
   APP_SUBLABEL_CLASS,
   APP_VALUE_CLASS,
 } from '../../utils/dashboardDesign'
+import MonthEndCapacityPanel from './MonthEndCapacityPanel'
 
 const FINANCE_METRIC_COLORS = {
   cash: { text: 'text-emerald-600', stroke: '#10b981' },
@@ -790,6 +791,8 @@ export default function ModernDashboard({
 
   return (
     <div className="modern-dashboard">
+      <MonthEndCapacityPanel />
+
       {showCustomBlocks && layout.customBlocks?.length ? (
         <CustomDashboardBlocks blocks={layout.customBlocks} />
       ) : null}

@@ -65,6 +65,20 @@ flowchart LR
 | `/efatura`                           | Redirect → `/finans?tab=einvoice` |
 | `/nakit/*`, `/giderler/*`, faturalar | **Unchanged**                     |
 
+### Dashboard month-end capacity projection
+
+The dashboard may present two explicitly separated projections without creating a parallel balance:
+
+1. **Current payment capacity:** `treasuryStore` live assets + customer ledger receivables,
+   compared with supplier ledger payables + unpaid monthly payroll + unpaid recurring general
+   expenses.
+2. **Operational conversion scenario:** active orders, production, and undelivered warehouse
+   value partitioned by their furthest stage so one commercial value is counted only once.
+
+Operational conversion is a gross cash scenario, not booked revenue, guaranteed collection, or
+profit. Invoiced/collected records stay in the current projection and must not be counted again in
+the operational scenario.
+
 ## Phases
 
 ### FS-0 — Foundation (this sprint)
