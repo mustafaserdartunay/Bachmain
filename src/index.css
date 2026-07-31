@@ -579,10 +579,11 @@ textarea:not(.form-input)::placeholder {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
-  padding: 0 0.75rem;
-  border: 1px solid var(--search-border) !important;
-  border-radius: 9999px !important;
+  padding: 0.25rem 0;
+  border: 0 !important;
+  border-radius: 0 !important;
   background: transparent !important;
+  box-shadow: none !important;
 }
 
 #customer-edit-form .app-form-row > span,
