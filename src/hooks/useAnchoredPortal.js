@@ -2,9 +2,41 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 export const DROPDOWN_Z_INDEX = 10000
 
+function resolveInsetPx(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value !== 'string' || !value.trim()) return 0
+  const raw = value.trim()
+  if (raw.endsWith('rem')) {
+    const rem = Number.parseFloat(raw)
+    const root =
+      typeof document !== 'undefined'
+        ? Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+        : 16
+    return rem * root
+  }
+  if (raw.endsWith('px')) return Number.parseFloat(raw) || 0
+  if (raw.startsWith('var(') && typeof document !== 'undefined') {
+    const match = raw.match(/^var\(\s*(--[\w-]+)/)
+    if (match) {
+      return resolveInsetPx(getComputedStyle(document.documentElement).getPropertyValue(match[1]))
+    }
+  }
+  return Number.parseFloat(raw) || 0
+}
+
 export function useAnchoredPortal(
   isOpen,
-  { placement = 'below', matchWidth = true, align = 'left', width, offset = 4 } = {},
+  {
+    placement = 'below',
+    matchWidth = true,
+    align = 'left',
+    width,
+    offset = 4,
+    /** Distance from viewport bottom the menu must not cross (px, rem, or CSS var). */
+    maxBottomInset = 8,
+    /** When false, keep opening below even if content is tall (clips via maxHeight). */
+    flip = true,
+  } = {},
 ) {
   const anchorRef = useRef(null)
   const menuRef = useRef(null)
@@ -21,6 +53,8 @@ export function useAnchoredPortal(
     const measuredHeight = menuEl?.offsetHeight ?? 0
     const menuWidth = width ?? (matchWidth ? rect.width : measuredWidth)
     const menuHeight = measuredHeight
+    const bottomInset = resolveInsetPx(maxBottomInset)
+    const bottomLimit = window.innerHeight - bottomInset
 
     const needsMeasure = !matchWidth && !width
     if (needsMeasure && (!menuEl || measuredWidth === 0)) {
@@ -44,13 +78,16 @@ export function useAnchoredPortal(
     let top = placement === 'above' ? rect.top - menuHeight - offset : rect.bottom + offset
 
     if (
+      flip &&
       placement === 'below' &&
       menuHeight > 0 &&
-      top + menuHeight > window.innerHeight - 8 &&
+      top + menuHeight > bottomLimit &&
       rect.top - menuHeight - offset > 8
     ) {
       top = rect.top - menuHeight - offset
     }
+
+    const maxHeight = Math.max(120, bottomLimit - top)
 
     let left =
       align === 'right'
@@ -70,12 +107,13 @@ export function useAnchoredPortal(
       left: `${left}px`,
       width: matchWidth ? `${rect.width}px` : width ? `${width}px` : undefined,
       minWidth: !matchWidth && !width ? '210px' : undefined,
+      maxHeight: `${maxHeight}px`,
       visibility: 'visible',
       pointerEvents: 'auto',
       zIndex: DROPDOWN_Z_INDEX,
     })
     setIsPositioned(true)
-  }, [align, matchWidth, offset, placement, width])
+  }, [align, flip, matchWidth, maxBottomInset, offset, placement, width])
 
   useLayoutEffect(() => {
     if (!isOpen) {

@@ -746,6 +746,9 @@ textarea:not(.form-input)::placeholder {
 
 .header-notebook-dropdown {
   width: min(26rem, calc(100vw - 1rem)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
   border-radius: 24px !important;
   background: var(--glass-bg) !important;
   backdrop-filter: blur(26px) saturate(180%) !important;
@@ -805,8 +808,13 @@ textarea:not(.form-input)::placeholder {
 }
 
 .header-notebook-dropdown .header-notebook-body {
-  min-height: min(34rem, calc(100dvh - 6.5rem));
-  max-height: min(52rem, calc(100dvh - 5rem));
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  /* Height grows with notes; parent maxHeight (sidebar bottom) clips and list scrolls. */
+  max-height: none;
 }
 
 .message-center-body {

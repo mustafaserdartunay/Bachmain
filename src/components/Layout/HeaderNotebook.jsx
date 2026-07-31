@@ -29,6 +29,9 @@ export default function HeaderNotebook() {
     align: 'center',
     matchWidth: false,
     offset: 8,
+    flip: false,
+    // Match glass-sidebar bottom: bottom-[var(--shell-gap)]
+    maxBottomInset: 'var(--shell-gap)',
   })
 
   useEffect(() => {
