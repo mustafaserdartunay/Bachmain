@@ -759,6 +759,13 @@ textarea:not(.form-input)::placeholder {
     inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
 
+.header-notebook-dropdown[data-mobile-handoff='true'] {
+  top: var(--bach-handoff-top) !important;
+  left: var(--bach-handoff-left) !important;
+  width: var(--bach-handoff-width) !important;
+  max-height: var(--bach-handoff-max-height) !important;
+}
+
 .message-center-dropdown {
   width: min(17.5rem, calc(100vw - 1rem)) !important;
 }

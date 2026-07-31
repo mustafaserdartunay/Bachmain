@@ -17,16 +17,22 @@ import {
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { useHeaderPopover } from '../../hooks/useHeaderPopover'
+import {
+  clearMobileToolsHandoff,
+  styleFromMobileToolsHandoff,
+  useMobileToolsHandoff,
+} from '../../hooks/useMobileToolsHandoff'
 
-export default function HeaderNotebook() {
+export default function HeaderNotebook({ hideTrigger = false }) {
   const { open, toggle } = useHeaderPopover('notebook')
+  const mobileHandoff = useMobileToolsHandoff('notebook')
   const [notes, setNotes] = useState(() => loadAgendaNotes())
   const [focusToken, setFocusToken] = useState(0)
   const {
     anchorRef,
     menuRef,
     style: menuStyle,
-  } = useAnchoredPortal(open, {
+  } = useAnchoredPortal(open && !mobileHandoff, {
     align: 'center',
     matchWidth: false,
     offset: 8,
@@ -44,12 +50,18 @@ export default function HeaderNotebook() {
   }, [])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      clearMobileToolsHandoff('notebook')
+      return
+    }
     setFocusToken((value) => value + 1)
   }, [open])
 
   const sortedNotes = useMemo(() => sortAgendaNotes(notes), [notes])
   const incompleteCount = useMemo(() => countIncompleteAgendaNotes(notes), [notes])
+  const portalStyle = mobileHandoff
+    ? styleFromMobileToolsHandoff(mobileHandoff, { maxBottomInset: 16 })
+    : menuStyle
 
   function refreshNotes() {
     setNotes(loadAgendaNotes())
@@ -114,34 +126,40 @@ export default function HeaderNotebook() {
 
   return (
     <div
-      className="relative flex items-center"
+      className={
+        hideTrigger
+          ? 'pointer-events-none fixed left-0 top-0 h-0 w-0 overflow-hidden opacity-0'
+          : 'relative flex items-center'
+      }
       ref={anchorRef}
       onClick={(event) => event.stopPropagation()}
     >
-      <button
-        type="button"
-        data-header-popover-trigger="notebook"
-        onClick={toggle}
-        className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only relative`}
-        aria-label="Not Defteri"
-        title="Not Defteri"
-      >
-        <span className="icon-wrap">
-          <StickyNote className="h-4 w-4 shrink-0" />
-        </span>
-        {incompleteCount > 0 && (
-          <span className={AGENDA_NOTE_BADGE_CLASS}>
-            {incompleteCount > 99 ? '99+' : incompleteCount}
+      {!hideTrigger ? (
+        <button
+          type="button"
+          data-header-popover-trigger="notebook"
+          onClick={toggle}
+          className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only relative`}
+          aria-label="Not Defteri"
+          title="Not Defteri"
+        >
+          <span className="icon-wrap">
+            <StickyNote className="h-4 w-4 shrink-0" />
           </span>
-        )}
-      </button>
+          {incompleteCount > 0 && (
+            <span className={AGENDA_NOTE_BADGE_CLASS}>
+              {incompleteCount > 99 ? '99+' : incompleteCount}
+            </span>
+          )}
+        </button>
+      ) : null}
 
       {open &&
         createPortal(
           <div
             ref={menuRef}
             style={
-              menuStyle ?? {
+              portalStyle ?? {
                 position: 'fixed',
                 visibility: 'hidden',
                 pointerEvents: 'none',
@@ -150,6 +168,7 @@ export default function HeaderNotebook() {
             }
             className="app-header-dropdown header-popover-panel header-notebook-dropdown overflow-hidden"
             data-header-popover="notebook"
+            data-mobile-handoff={mobileHandoff ? 'true' : undefined}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="header-popover-head !px-3 !py-2">

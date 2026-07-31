@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Package,
   LayoutGrid,
+  StickyNote,
 } from 'lucide-react'
 import { ensureUserProfile, readUserProfile } from '../../utils/userProfile'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -28,7 +29,14 @@ import HeaderCalendar from './HeaderCalendar'
 import HeaderAiAssistant from './HeaderAiAssistant'
 import OrgSwitcher from './OrgSwitcher'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
-import { HeaderPopoverProvider, useHeaderPopover } from '../../hooks/useHeaderPopover'
+import {
+  HeaderPopoverProvider,
+  openHeaderPopover,
+  useHeaderPopover,
+} from '../../hooks/useHeaderPopover'
+import { publishMobileToolsHandoff } from '../../hooks/useMobileToolsHandoff'
+import { AGENDA_NOTE_BADGE_CLASS, countIncompleteAgendaNotes } from '../Crm/AgendaNoteBoard'
+import { loadAgendaNotes } from '../../utils/crmStore'
 
 function useCompactHeader() {
   const [compact, setCompact] = useState(() =>
@@ -57,6 +65,7 @@ function MobileToolItem({ label, children }) {
 
 function MobileHeaderTools({ onNavigate }) {
   const [open, setOpen] = useState(false)
+  const [noteBadge, setNoteBadge] = useState(() => countIncompleteAgendaNotes(loadAgendaNotes()))
   const {
     anchorRef,
     menuRef,
@@ -69,6 +78,14 @@ function MobileHeaderTools({ onNavigate }) {
   })
 
   useEffect(() => {
+    function refreshNotes() {
+      setNoteBadge(countIncompleteAgendaNotes(loadAgendaNotes()))
+    }
+    window.addEventListener('bach:crm-updated', refreshNotes)
+    return () => window.removeEventListener('bach:crm-updated', refreshNotes)
+  }, [])
+
+  useEffect(() => {
     if (!open) return undefined
     function closeOnOutsideClick(event) {
       if (anchorRef.current?.contains(event.target) || menuRef.current?.contains(event.target))
@@ -79,6 +96,13 @@ function MobileHeaderTools({ onNavigate }) {
     document.addEventListener('mousedown', closeOnOutsideClick)
     return () => document.removeEventListener('mousedown', closeOnOutsideClick)
   }, [anchorRef, menuRef, open])
+
+  function openNestedTool(popoverId) {
+    const rect = menuRef.current?.getBoundingClientRect()
+    if (rect) publishMobileToolsHandoff(popoverId, rect)
+    setOpen(false)
+    openHeaderPopover(popoverId)
+  }
 
   return (
     <div ref={anchorRef} className="relative flex shrink-0 items-center">
@@ -108,6 +132,7 @@ function MobileHeaderTools({ onNavigate }) {
                 }
               }
               className="app-header-dropdown w-[min(19rem,calc(100vw-1rem))] overflow-visible p-2"
+              data-mobile-header-tools="true"
             >
               <p className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
                 Hızlı Araçlar
@@ -120,7 +145,23 @@ function MobileHeaderTools({ onNavigate }) {
                   <HeaderMessageCenter />
                 </MobileToolItem>
                 <MobileToolItem label="Notlar">
-                  <HeaderNotebook />
+                  <button
+                    type="button"
+                    data-header-popover-trigger="notebook"
+                    onClick={() => openNestedTool('notebook')}
+                    className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only relative`}
+                    aria-label="Not Defteri"
+                    title="Not Defteri"
+                  >
+                    <span className="icon-wrap">
+                      <StickyNote className="h-4 w-4 shrink-0" />
+                    </span>
+                    {noteBadge > 0 ? (
+                      <span className={AGENDA_NOTE_BADGE_CLASS}>
+                        {noteBadge > 99 ? '99+' : noteBadge}
+                      </span>
+                    ) : null}
+                  </button>
                 </MobileToolItem>
                 <MobileToolItem label="Takvim">
                   <HeaderCalendar />
@@ -253,7 +294,10 @@ function HeaderBar({ onMenuClick }) {
 
       <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-1.5">
         {compactHeader ? (
-          <MobileHeaderTools onNavigate={navigate} />
+          <>
+            <MobileHeaderTools onNavigate={navigate} />
+            <HeaderNotebook hideTrigger />
+          </>
         ) : (
           <>
             <button
