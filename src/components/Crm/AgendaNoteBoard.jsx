@@ -35,27 +35,33 @@ export function countCompletedAgendaNotes(notes = []) {
 
 const AGENDA_NOTE_ACTION_BTN_CLASS = 'agenda-note-action-btn'
 
-const AGENDA_NOTE_DELETE_BTN_CLASS =
-  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-bold leading-none text-[#e11d48] transition-all disabled:pointer-events-none disabled:opacity-50`
+const AGENDA_NOTE_DELETE_BTN_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[12px] font-semibold leading-none text-[#e11d48] transition-all disabled:pointer-events-none disabled:opacity-50`
 
-const AGENDA_NOTE_SAVE_BTN_CLASS =
-  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-bold leading-none text-[#10b981] transition-all disabled:cursor-not-allowed disabled:opacity-50`
+const AGENDA_NOTE_SAVE_BTN_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[12px] font-semibold leading-none text-[#10b981] transition-all disabled:cursor-not-allowed disabled:opacity-50`
 
-const NOTE_ACTION_EDIT_CLASS =
-  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-[#2563eb] transition-all`
+const NOTE_ACTION_EDIT_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-[#2563eb] transition-all`
 
-const NOTE_ACTION_COMPLETE_CLASS =
-  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-teal-600 transition-all`
+const NOTE_ACTION_COMPLETE_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-teal-600 transition-all`
 
-const NOTE_ACTION_DELETE_CLASS =
-  `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-[#e11d48] transition-all`
+const NOTE_ACTION_DELETE_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-[#e11d48] transition-all`
 
-const AGENDA_NOTE_CONFIRM_POPOVER_CLASS = 'absolute right-0 top-[calc(100%+0.35rem)] z-40 w-[min(18rem,calc(100vw-2rem))]'
+const AGENDA_NOTE_CONFIRM_POPOVER_CLASS =
+  'absolute right-0 top-[calc(100%+0.35rem)] z-40 w-[min(18rem,calc(100vw-2rem))]'
+
+const NOTE_TEXTAREA_CLASS =
+  'form-input !h-auto !min-h-[60px] w-full !resize-none !py-2 !pl-3 !pr-3 !text-sm'
 
 export const AGENDA_NOTE_BADGE_CLASS =
   'absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#7cf2c6] via-[#34d399] to-[#10b981] px-1 text-[11px] font-black text-white shadow-[0_0_10px_rgba(52,211,153,0.45)]'
 
-export function AgendaNoteItem({ note, onToggleComplete, onEdit, onUpdate, onDelete, confirmVariant = 'dark' }) {
+export function AgendaNoteItem({
+  note,
+  onToggleComplete,
+  onEdit,
+  onUpdate,
+  onDelete,
+  confirmVariant = 'dark',
+}) {
   const [pendingDelete, setPendingDelete] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editDraft, setEditDraft] = useState('')
@@ -98,7 +104,9 @@ export function AgendaNoteItem({ note, onToggleComplete, onEdit, onUpdate, onDel
         }`}
       >
         {formatAgendaNoteStamp(note) ? (
-          <p className="mb-1.5 text-[11px] font-bold text-[var(--muted)]">{formatAgendaNoteStamp(note)}</p>
+          <p className="mb-1.5 text-[11px] font-semibold text-[var(--muted)]">
+            {formatAgendaNoteStamp(note)}
+          </p>
         ) : null}
         <textarea
           value={editDraft}
@@ -115,13 +123,13 @@ export function AgendaNoteItem({ note, onToggleComplete, onEdit, onUpdate, onDel
           }}
           rows={2}
           autoFocus
-          className={`${HEADER_SEARCH_INPUT_CLASS} !h-auto !min-h-[60px] !resize-none !py-2 !pl-3 !pr-3 !text-sm`}
+          className={NOTE_TEXTAREA_CLASS}
         />
         <div className="mt-2 flex items-center justify-end gap-1.5">
           <button
             type="button"
             onClick={handleCancelEdit}
-            className="inline-flex h-7 items-center rounded-xl px-3 text-[12px] font-bold text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+            className="inline-flex h-7 items-center rounded-xl px-3 text-[12px] font-semibold text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
           >
             İptal
           </button>
@@ -150,16 +158,26 @@ export function AgendaNoteItem({ note, onToggleComplete, onEdit, onUpdate, onDel
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
           {formatAgendaNoteStamp(note) ? (
-            <p className="mb-1 text-[11px] font-bold text-[var(--muted)]">{formatAgendaNoteStamp(note)}</p>
+            <p className="mb-1 text-[11px] font-semibold text-[var(--muted)]">
+              {formatAgendaNoteStamp(note)}
+            </p>
           ) : null}
-          <p className={`text-sm font-bold leading-snug text-[var(--ink)] ${isCompleted ? 'line-through opacity-60' : ''}`}>
+          <p
+            className={`text-sm font-normal leading-snug text-[var(--ink)] ${
+              isCompleted ? 'line-through opacity-60' : ''
+            }`}
+          >
             {note.content || note.title}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-0.5 self-center">
           <button
             type="button"
-            onClick={startEdit}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              startEdit()
+            }}
             className={NOTE_ACTION_EDIT_CLASS}
             title="Düzenle"
           >
@@ -167,7 +185,11 @@ export function AgendaNoteItem({ note, onToggleComplete, onEdit, onUpdate, onDel
           </button>
           <button
             type="button"
-            onClick={() => onToggleComplete?.(note)}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              onToggleComplete?.(note)
+            }}
             className={NOTE_ACTION_COMPLETE_CLASS}
             title={isCompleted ? 'Tamamlandı' : 'Tamamla'}
           >
@@ -176,7 +198,11 @@ export function AgendaNoteItem({ note, onToggleComplete, onEdit, onUpdate, onDel
           <div className="relative">
             <button
               type="button"
-              onClick={() => setPendingDelete((value) => !value)}
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                setPendingDelete((value) => !value)
+              }}
               className={NOTE_ACTION_DELETE_CLASS}
               title="Sil"
             >
@@ -226,13 +252,26 @@ export default function AgendaNoteBoard({
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
   const sortedNotes = sortAgendaNotes(notes)
   const completedCount = countCompletedAgendaNotes(sortedNotes)
+  const canSave = Boolean(draft.trim())
+
+  function commitDraft() {
+    const content = draft.trim()
+    if (!content || typeof onSave !== 'function') return false
+    onSave(content)
+    setDraft('')
+    return true
+  }
 
   function handleSave(event) {
-    event.preventDefault()
-    const content = draft.trim()
-    if (!content) return
-    onSave?.(content)
-    setDraft('')
+    event?.preventDefault?.()
+    event?.stopPropagation?.()
+    commitDraft()
+  }
+
+  function handleBulkDeleteConfirm() {
+    if (typeof onDeleteCompleted !== 'function' || completedCount === 0) return
+    onDeleteCompleted()
+    setPendingBulkDelete(false)
   }
 
   return (
@@ -249,16 +288,22 @@ export default function AgendaNoteBoard({
             }}
             placeholder="Notunuzu Yazınız..."
             rows={3}
-            className="form-input !h-auto !min-h-[82px] w-full !resize-none !py-2.5 !pl-3 !pr-3 text-sm"
+            className="form-input !h-auto !min-h-[72px] w-full !resize-none !py-2.5 !pl-3 !pr-3 text-sm"
           />
           <div className="mt-2 flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold text-[var(--muted)]">{totalRecordCount ?? sortedNotes.length} kayıt</p>
+            <p className="text-[11px] font-normal text-[var(--muted)]">
+              {totalRecordCount ?? sortedNotes.length} kayıt
+            </p>
             <div className="flex min-w-0 items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {onDeleteCompleted && !pendingBulkDelete ? (
                 <button
                   type="button"
                   disabled={completedCount === 0}
-                  onClick={() => setPendingBulkDelete(true)}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    setPendingBulkDelete(true)
+                  }}
                   className={AGENDA_NOTE_DELETE_BTN_CLASS}
                 >
                   <Trash2 className="h-3.5 w-3.5 shrink-0" />
@@ -267,8 +312,9 @@ export default function AgendaNoteBoard({
               ) : null}
               {!pendingBulkDelete ? (
                 <button
-                  type="submit"
-                  disabled={!draft.trim()}
+                  type="button"
+                  disabled={!canSave}
+                  onClick={handleSave}
                   className={AGENDA_NOTE_SAVE_BTN_CLASS}
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -286,10 +332,7 @@ export default function AgendaNoteBoard({
                 cancelLabel="Hayır"
                 variant={confirmVariant}
                 onCancel={() => setPendingBulkDelete(false)}
-                onConfirm={() => {
-                  onDeleteCompleted()
-                  setPendingBulkDelete(false)
-                }}
+                onConfirm={handleBulkDeleteConfirm}
                 className="w-full max-w-none"
               />
             </div>
@@ -298,27 +341,27 @@ export default function AgendaNoteBoard({
       ) : null}
 
       {!composerOnly ? (
-      <div className={fill ? 'min-h-0 flex-1 overflow-y-auto p-2' : listClassName}>
-        {sortedNotes.length === 0 ? (
-          <p className="px-3 py-8 text-center text-xs font-semibold text-[var(--muted)]">
-            {emptyMessage}
-          </p>
-        ) : (
-          <div className="space-y-1.5">
-            {sortedNotes.map((note) => (
-              <AgendaNoteItem
-                key={note.id}
-                note={note}
-                onToggleComplete={onToggleComplete}
-                onEdit={onEdit}
-                onUpdate={onUpdate}
-                onDelete={onDelete}
-                confirmVariant={confirmVariant}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+        <div className={fill ? 'min-h-0 flex-1 overflow-y-auto p-2' : listClassName}>
+          {sortedNotes.length === 0 ? (
+            <p className="px-3 py-8 text-center text-xs font-normal text-[var(--muted)]">
+              {emptyMessage}
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {sortedNotes.map((note) => (
+                <AgendaNoteItem
+                  key={note.id}
+                  note={note}
+                  onToggleComplete={onToggleComplete}
+                  onEdit={onEdit}
+                  onUpdate={onUpdate}
+                  onDelete={onDelete}
+                  confirmVariant={confirmVariant}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       ) : null}
     </div>
   )

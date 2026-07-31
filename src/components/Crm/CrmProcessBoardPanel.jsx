@@ -32,6 +32,7 @@ export default function CrmProcessBoardPanel({
   onNoteSave,
   onNoteToggleComplete,
   onNoteEdit,
+  onNoteUpdate,
   onNoteDelete,
   onNoteDeleteCompleted,
 }) {
@@ -39,7 +40,7 @@ export default function CrmProcessBoardPanel({
     <AppPagePanel
       title="CRM Süreçleri"
       description="Görev, randevu ve notları filtreleyin; süreç aşamalarını güncelleyin."
-      action={(
+      action={
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">
             {entries.length} kayıt
@@ -64,7 +65,7 @@ export default function CrmProcessBoardPanel({
             ))}
           </div>
         </div>
-      )}
+      }
     >
       {onNoteSave ? (
         <AgendaNoteBoard
@@ -93,7 +94,8 @@ export default function CrmProcessBoardPanel({
             <GitBranch className="mx-auto mb-2 h-6 w-6 text-[var(--muted)]" />
             <p className="text-sm font-black text-[var(--ink)]">Filtreye uygun kayıt yok</p>
             <p className="mt-1 text-xs text-[var(--muted)]">
-              Filtreleri gevşetin veya yukarıdan not ekleyin; header takvim ve oluştur butonları da buraya yansır.
+              Filtreleri gevşetin veya yukarıdan not ekleyin; header takvim ve oluştur butonları da
+              buraya yansır.
             </p>
           </div>
         ) : (
@@ -105,7 +107,9 @@ export default function CrmProcessBoardPanel({
                   note={entry.record}
                   onToggleComplete={onNoteToggleComplete}
                   onEdit={onNoteEdit}
+                  onUpdate={onNoteUpdate}
                   onDelete={onNoteDelete}
+                  confirmVariant="warm"
                 />
               )
             }

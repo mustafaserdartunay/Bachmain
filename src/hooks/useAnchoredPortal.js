@@ -4,13 +4,7 @@ export const DROPDOWN_Z_INDEX = 10000
 
 export function useAnchoredPortal(
   isOpen,
-  {
-    placement = 'below',
-    matchWidth = true,
-    align = 'left',
-    width,
-    offset = 4,
-  } = {},
+  { placement = 'below', matchWidth = true, align = 'left', width, offset = 4 } = {},
 ) {
   const anchorRef = useRef(null)
   const menuRef = useRef(null)
@@ -30,36 +24,40 @@ export function useAnchoredPortal(
 
     const needsMeasure = !matchWidth && !width
     if (needsMeasure && (!menuEl || measuredWidth === 0)) {
-      setStyle({
-        position: 'fixed',
-        top: '0px',
-        left: '0px',
-        visibility: 'hidden',
-        pointerEvents: 'none',
-        zIndex: DROPDOWN_Z_INDEX,
-      })
+      // Keep clickable if we already showed the menu; only hide on first measure.
+      setStyle((prev) =>
+        prev?.visibility === 'visible'
+          ? prev
+          : {
+              position: 'fixed',
+              top: '0px',
+              left: '0px',
+              visibility: 'hidden',
+              pointerEvents: 'none',
+              zIndex: DROPDOWN_Z_INDEX,
+            },
+      )
       setIsPositioned(false)
       return
     }
 
-    let top = placement === 'above'
-      ? rect.top - menuHeight - offset
-      : rect.bottom + offset
+    let top = placement === 'above' ? rect.top - menuHeight - offset : rect.bottom + offset
 
     if (
-      placement === 'below'
-      && menuHeight > 0
-      && top + menuHeight > window.innerHeight - 8
-      && rect.top - menuHeight - offset > 8
+      placement === 'below' &&
+      menuHeight > 0 &&
+      top + menuHeight > window.innerHeight - 8 &&
+      rect.top - menuHeight - offset > 8
     ) {
       top = rect.top - menuHeight - offset
     }
 
-    let left = align === 'right'
-      ? rect.right - menuWidth
-      : align === 'center'
-        ? rect.left + rect.width / 2 - menuWidth / 2
-        : rect.left
+    let left =
+      align === 'right'
+        ? rect.right - menuWidth
+        : align === 'center'
+          ? rect.left + rect.width / 2 - menuWidth / 2
+          : rect.left
 
     if (left + menuWidth > window.innerWidth - 8) {
       left = Math.max(8, window.innerWidth - menuWidth - 8)

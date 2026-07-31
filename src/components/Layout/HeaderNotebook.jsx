@@ -18,9 +18,13 @@ import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { useHeaderPopover } from '../../hooks/useHeaderPopover'
 
 export default function HeaderNotebook() {
-  const { open, setOpen, toggle } = useHeaderPopover('notebook')
+  const { open, toggle } = useHeaderPopover('notebook')
   const [notes, setNotes] = useState(() => loadAgendaNotes())
-  const { anchorRef, menuRef, style: menuStyle } = useAnchoredPortal(open, {
+  const {
+    anchorRef,
+    menuRef,
+    style: menuStyle,
+  } = useAnchoredPortal(open, {
     align: 'center',
     matchWidth: false,
     offset: 8,
@@ -43,7 +47,12 @@ export default function HeaderNotebook() {
 
   function handleSave(content) {
     const stamp = getAgendaNoteStamp()
-    const title = content.split('\n').find((line) => line.trim())?.trim().slice(0, 80) || 'Not'
+    const title =
+      content
+        .split('\n')
+        .find((line) => line.trim())
+        ?.trim()
+        .slice(0, 80) || 'Not'
     upsertAgendaNote({
       title,
       content,
@@ -64,7 +73,12 @@ export default function HeaderNotebook() {
   }
 
   function handleUpdateNote(note, content) {
-    const title = content.split('\n').find((line) => line.trim())?.trim().slice(0, 80) || 'Not'
+    const title =
+      content
+        .split('\n')
+        .find((line) => line.trim())
+        ?.trim()
+        .slice(0, 80) || 'Not'
     upsertAgendaNote({
       ...note,
       title,
@@ -84,7 +98,11 @@ export default function HeaderNotebook() {
   }
 
   return (
-    <div className="relative flex items-center" ref={anchorRef} onClick={(event) => event.stopPropagation()}>
+    <div
+      className="relative flex items-center"
+      ref={anchorRef}
+      onClick={(event) => event.stopPropagation()}
+    >
       <button
         type="button"
         data-header-popover-trigger="notebook"
@@ -103,33 +121,43 @@ export default function HeaderNotebook() {
         )}
       </button>
 
-      {open && createPortal(
-        <div
-          ref={menuRef}
-          style={menuStyle ?? { position: 'fixed', visibility: 'hidden', pointerEvents: 'none', zIndex: 10000 }}
-          className="app-header-dropdown header-popover-panel header-notebook-dropdown overflow-hidden"
-          data-header-popover="notebook"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <div className="header-popover-head">
-            <p className="text-sm font-extrabold text-[var(--ink)]">Not Defteri</p>
-          </div>
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={
+              menuStyle ?? {
+                position: 'fixed',
+                visibility: 'hidden',
+                pointerEvents: 'none',
+                zIndex: 10000,
+              }
+            }
+            className="app-header-dropdown header-popover-panel header-notebook-dropdown overflow-hidden"
+            data-header-popover="notebook"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="header-popover-head !px-3 !py-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Not Defteri
+              </p>
+            </div>
 
-          <div className="header-notebook-body">
-            <AgendaNoteBoard
-              fill
-              notes={sortedNotes}
-              confirmVariant="warm"
-              onSave={handleSave}
-              onToggleComplete={handleToggleComplete}
-              onUpdate={handleUpdateNote}
-              onDelete={handleDelete}
-              onDeleteCompleted={handleDeleteCompleted}
-            />
-          </div>
-        </div>,
-        document.body,
-      )}
+            <div className="header-notebook-body">
+              <AgendaNoteBoard
+                fill
+                notes={sortedNotes}
+                confirmVariant="warm"
+                onSave={handleSave}
+                onToggleComplete={handleToggleComplete}
+                onUpdate={handleUpdateNote}
+                onDelete={handleDelete}
+                onDeleteCompleted={handleDeleteCompleted}
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }

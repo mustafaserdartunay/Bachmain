@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  AlertTriangle,
-  Calendar,
-  CalendarRange,
-  CheckSquare,
-  NotebookPen,
-} from 'lucide-react'
+import { AlertTriangle, Calendar, CalendarRange, CheckSquare, NotebookPen } from 'lucide-react'
 import SummaryMetrics from '../Common/SummaryMetrics'
 import ActivityArchivePanel from '../Common/ActivityArchivePanel'
 import SplitCreateButton from '../Common/SplitCreateButton'
@@ -56,9 +50,27 @@ const VIEW_CONFIG = {
     createLabel: 'Yeni Kayıt Oluştur',
     createPrimaryTo: '/crm/gorev-yeni',
     createMenu: [
-      { id: 'task', to: '/crm/gorev-yeni', label: 'Görev Oluştur', icon: CheckSquare, iconClassName: 'text-blue-300' },
-      { id: 'appointment', to: '/crm/randevu-yeni', label: 'Randevu Oluştur', icon: Calendar, iconClassName: 'text-emerald-300' },
-      { id: 'note', to: '/crm/not-yeni', label: 'Not Oluştur', icon: NotebookPen, iconClassName: 'text-orange-300' },
+      {
+        id: 'task',
+        to: '/crm/gorev-yeni',
+        label: 'Görev Oluştur',
+        icon: CheckSquare,
+        iconClassName: 'text-blue-300',
+      },
+      {
+        id: 'appointment',
+        to: '/crm/randevu-yeni',
+        label: 'Randevu Oluştur',
+        icon: Calendar,
+        iconClassName: 'text-emerald-300',
+      },
+      {
+        id: 'note',
+        to: '/crm/not-yeni',
+        label: 'Not Oluştur',
+        icon: NotebookPen,
+        iconClassName: 'text-orange-300',
+      },
     ],
   },
   note: {
@@ -67,8 +79,20 @@ const VIEW_CONFIG = {
     createLabel: 'Yeni Not Oluştur',
     createPrimaryTo: '/crm/not-yeni',
     createMenu: [
-      { id: 'note', to: '/crm/not-yeni', label: 'Hızlı Not', icon: NotebookPen, iconClassName: 'text-blue-300' },
-      { id: 'task', to: '/crm/gorev-yeni', label: 'Görev Oluştur', icon: CheckSquare, iconClassName: 'text-emerald-300' },
+      {
+        id: 'note',
+        to: '/crm/not-yeni',
+        label: 'Hızlı Not',
+        icon: NotebookPen,
+        iconClassName: 'text-blue-300',
+      },
+      {
+        id: 'task',
+        to: '/crm/gorev-yeni',
+        label: 'Görev Oluştur',
+        icon: CheckSquare,
+        iconClassName: 'text-emerald-300',
+      },
     ],
   },
   task: {
@@ -77,8 +101,20 @@ const VIEW_CONFIG = {
     createLabel: 'Yeni Görev Oluştur',
     createPrimaryTo: '/crm/gorev-yeni',
     createMenu: [
-      { id: 'task', to: '/crm/gorev-yeni', label: 'Hızlı Görev', icon: CheckSquare, iconClassName: 'text-blue-300' },
-      { id: 'appointment', to: '/crm/randevu-yeni', label: 'Randevu Oluştur', icon: Calendar, iconClassName: 'text-emerald-300' },
+      {
+        id: 'task',
+        to: '/crm/gorev-yeni',
+        label: 'Hızlı Görev',
+        icon: CheckSquare,
+        iconClassName: 'text-blue-300',
+      },
+      {
+        id: 'appointment',
+        to: '/crm/randevu-yeni',
+        label: 'Randevu Oluştur',
+        icon: Calendar,
+        iconClassName: 'text-emerald-300',
+      },
     ],
   },
   appointment: {
@@ -87,8 +123,20 @@ const VIEW_CONFIG = {
     createLabel: 'Yeni Randevu Oluştur',
     createPrimaryTo: '/crm/randevu-yeni',
     createMenu: [
-      { id: 'appointment', to: '/crm/randevu-yeni', label: 'Hızlı Randevu', icon: Calendar, iconClassName: 'text-blue-300' },
-      { id: 'task', to: '/crm/gorev-yeni', label: 'Görev Oluştur', icon: CheckSquare, iconClassName: 'text-emerald-300' },
+      {
+        id: 'appointment',
+        to: '/crm/randevu-yeni',
+        label: 'Hızlı Randevu',
+        icon: Calendar,
+        iconClassName: 'text-blue-300',
+      },
+      {
+        id: 'task',
+        to: '/crm/gorev-yeni',
+        label: 'Görev Oluştur',
+        icon: CheckSquare,
+        iconClassName: 'text-emerald-300',
+      },
     ],
   },
 }
@@ -136,10 +184,7 @@ export default function CrmHome({ view = 'all' }) {
     [scopedEntries, filters, searchQuery, processFilter],
   )
 
-  const processItems = useMemo(
-    () => crmEntriesToProcessItems(filteredEntries),
-    [filteredEntries],
-  )
+  const processItems = useMemo(() => crmEntriesToProcessItems(filteredEntries), [filteredEntries])
 
   const kanbanStages = useMemo(
     () => deriveCrmKanbanStages(filteredEntries, moduleId),
@@ -187,10 +232,7 @@ export default function CrmHome({ view = 'all' }) {
     const entry = filteredEntries.find((e) => e.id === itemId)
     if (!entry || entry.kind === 'note') return
     const { kind, record } = entry
-    const next =
-      kind === 'task'
-        ? { ...record, dueDate: isoDate }
-        : { ...record, date: isoDate }
+    const next = kind === 'task' ? { ...record, dueDate: isoDate } : { ...record, date: isoDate }
     if (kind === 'task') upsertTask(next)
     else upsertAppointment(next)
     refresh()
@@ -224,7 +266,12 @@ export default function CrmHome({ view = 'all' }) {
 
   function handleSaveNote(content) {
     const stamp = getAgendaNoteStamp()
-    const title = content.split('\n').find((line) => line.trim())?.trim().slice(0, 80) || 'Not'
+    const title =
+      content
+        .split('\n')
+        .find((line) => line.trim())
+        ?.trim()
+        .slice(0, 80) || 'Not'
     upsertAgendaNote({
       title,
       content,
@@ -246,6 +293,21 @@ export default function CrmHome({ view = 'all' }) {
 
   function handleEditNote(note) {
     navigate(`/crm/not/${note.id}/duzenle`)
+  }
+
+  function handleUpdateNote(note, content) {
+    const title =
+      content
+        .split('\n')
+        .find((line) => line.trim())
+        ?.trim()
+        .slice(0, 80) || 'Not'
+    upsertAgendaNote({
+      ...note,
+      title,
+      content,
+    })
+    refresh()
   }
 
   function handleDeleteNote(noteId) {
@@ -305,6 +367,7 @@ export default function CrmHome({ view = 'all' }) {
       onNoteSave={showNoteComposer ? handleSaveNote : undefined}
       onNoteToggleComplete={handleToggleNoteComplete}
       onNoteEdit={handleEditNote}
+      onNoteUpdate={handleUpdateNote}
       onNoteDelete={handleDeleteNote}
       onNoteDeleteCompleted={handleDeleteCompletedNotes}
     />
@@ -314,7 +377,7 @@ export default function CrmHome({ view = 'all' }) {
     <AppPageShell className="flex min-h-[calc(100vh-2rem)] flex-col">
       <AppPageHeader
         title={viewConfig.title}
-        actions={(
+        actions={
           <SplitCreateButton
             label={viewConfig.createLabel}
             onPrimaryClick={() => navigate(viewConfig.createPrimaryTo)}
@@ -327,17 +390,41 @@ export default function CrmHome({ view = 'all' }) {
               onClick: () => navigate(item.to),
             }))}
           />
-        )}
+        }
       />
 
       {view === 'all' ? (
         <SummaryMetrics
           columns={4}
           items={[
-            { title: 'Açık görev', value: summary.tasksPending, icon: CheckSquare, tone: 'orange', valueTone: 'orange' },
-            { title: 'Bugün randevu', value: summary.appointmentsToday, icon: Calendar, tone: 'blue', valueTone: 'blue' },
-            { title: 'Geciken', value: summary.tasksOverdue, icon: AlertTriangle, tone: 'red', valueTone: 'red' },
-            { title: 'Bu hafta', value: summary.appointmentsWeek, icon: CalendarRange, tone: 'cyan', valueTone: 'cyan' },
+            {
+              title: 'Açık görev',
+              value: summary.tasksPending,
+              icon: CheckSquare,
+              tone: 'orange',
+              valueTone: 'orange',
+            },
+            {
+              title: 'Bugün randevu',
+              value: summary.appointmentsToday,
+              icon: Calendar,
+              tone: 'blue',
+              valueTone: 'blue',
+            },
+            {
+              title: 'Geciken',
+              value: summary.tasksOverdue,
+              icon: AlertTriangle,
+              tone: 'red',
+              valueTone: 'red',
+            },
+            {
+              title: 'Bu hafta',
+              value: summary.appointmentsWeek,
+              icon: CalendarRange,
+              tone: 'cyan',
+              valueTone: 'cyan',
+            },
           ]}
         />
       ) : null}
