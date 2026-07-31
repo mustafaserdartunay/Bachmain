@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, GripVertical, Pencil, Plus, Trash2 } from 'lucide-react'
 import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
 
 export function getAgendaNoteStamp() {
@@ -17,11 +17,32 @@ export function formatAgendaNoteStamp(note) {
   return [formattedDate, time].filter(Boolean).join(' ')
 }
 
+export function getAgendaNoteTimestamp(note) {
+  if (note?.createdAt) {
+    const parsed = Date.parse(note.createdAt)
+    if (!Number.isNaN(parsed)) return parsed
+  }
+  const date = note?.date || ''
+  const time = note?.time || '00:00'
+  if (date) {
+    const normalizedTime = time.length === 5 ? `${time}:00` : time
+    const parsed = Date.parse(`${date}T${normalizedTime}`)
+    if (!Number.isNaN(parsed)) return parsed
+  }
+  return 0
+}
+
 export function sortAgendaNotes(notes = []) {
+  const hasManualOrder = notes.some((note) => Number.isFinite(note?.sortIndex))
   return [...notes].sort((left, right) => {
-    const leftStamp = `${left.date || ''} ${left.time || ''} ${left.createdAt || ''}`
-    const rightStamp = `${right.date || ''} ${right.time || ''} ${right.createdAt || ''}`
-    return rightStamp.localeCompare(leftStamp)
+    if (hasManualOrder) {
+      const leftOrder = Number.isFinite(left.sortIndex) ? left.sortIndex : Number.MAX_SAFE_INTEGER
+      const rightOrder = Number.isFinite(right.sortIndex)
+        ? right.sortIndex
+        : Number.MAX_SAFE_INTEGER
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder
+    }
+    return getAgendaNoteTimestamp(right) - getAgendaNoteTimestamp(left)
   })
 }
 
@@ -61,6 +82,10 @@ export function AgendaNoteItem({
   onUpdate,
   onDelete,
   confirmVariant = 'dark',
+  showDragHandle = false,
+  dragHandleProps,
+  isDragging = false,
+  isDragOver = false,
 }) {
   const [pendingDelete, setPendingDelete] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -94,135 +119,150 @@ export function AgendaNoteItem({
     setEditDraft('')
   }
 
+  const shellClass = `rounded-xl border px-3 py-2.5 transition-colors ${
+    isDragOver
+      ? 'border-blue-400/70 bg-blue-500/10 ring-2 ring-blue-400/30'
+      : isCompleted
+        ? 'border-emerald-500/20 bg-emerald-500/5'
+        : 'border-[rgba(140,145,165,0.14)] bg-white/35'
+  } ${isDragging ? 'opacity-40' : ''}`
+
+  const dragHandle = showDragHandle ? (
+    <div
+      {...dragHandleProps}
+      className="mt-0.5 shrink-0 cursor-grab touch-none px-0.5 py-0.5 text-[var(--muted)] opacity-55 transition-opacity hover:opacity-100 active:cursor-grabbing"
+      title="Sürükleyerek sırala"
+      aria-label="Sürükleyerek sırala"
+    >
+      <GripVertical className="h-3.5 w-3.5 pointer-events-none" />
+    </div>
+  ) : null
+
   if (isEditing) {
     return (
-      <article
-        className={`rounded-xl border px-3 py-2.5 ${
-          isCompleted
-            ? 'border-emerald-500/20 bg-emerald-500/5'
-            : 'border-[rgba(140,145,165,0.14)] bg-white/35'
-        }`}
-      >
-        {formatAgendaNoteStamp(note) ? (
-          <p className="mb-1.5 text-[11px] font-semibold text-[var(--muted)]">
-            {formatAgendaNoteStamp(note)}
-          </p>
-        ) : null}
-        <textarea
-          value={editDraft}
-          onChange={(event) => setEditDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') {
-              event.preventDefault()
-              handleCancelEdit()
-            }
-            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-              event.preventDefault()
-              handleSaveEdit()
-            }
-          }}
-          rows={2}
-          autoFocus
-          className={NOTE_TEXTAREA_CLASS}
-        />
-        <div className="mt-2 flex items-center justify-end gap-1.5">
-          <button
-            type="button"
-            onClick={handleCancelEdit}
-            className="inline-flex h-7 items-center rounded-xl px-3 text-[12px] font-semibold text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
-          >
-            İptal
-          </button>
-          <button
-            type="button"
-            onClick={handleSaveEdit}
-            disabled={!editDraft.trim()}
-            className={`${AGENDA_NOTE_SAVE_BTN_CLASS} !h-7`}
-          >
-            <Check className="h-3.5 w-3.5" />
-            Kaydet
-          </button>
+      <article className={shellClass}>
+        <div className="flex items-start gap-1.5">
+          {dragHandle}
+          <div className="min-w-0 flex-1">
+            {formatAgendaNoteStamp(note) ? (
+              <p className="mb-1.5 text-[11px] font-semibold text-[var(--muted)]">
+                {formatAgendaNoteStamp(note)}
+              </p>
+            ) : null}
+            <textarea
+              value={editDraft}
+              onChange={(event) => setEditDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  event.preventDefault()
+                  handleCancelEdit()
+                }
+                if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                  event.preventDefault()
+                  handleSaveEdit()
+                }
+              }}
+              rows={2}
+              autoFocus
+              className={NOTE_TEXTAREA_CLASS}
+            />
+            <div className="mt-2 flex items-center justify-end gap-1.5">
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="inline-flex h-7 items-center rounded-xl px-3 text-[12px] font-semibold text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={!editDraft.trim()}
+                className={`${AGENDA_NOTE_SAVE_BTN_CLASS} !h-7`}
+              >
+                <Check className="h-3.5 w-3.5" />
+                Kaydet
+              </button>
+            </div>
+          </div>
         </div>
       </article>
     )
   }
 
   return (
-    <article
-      className={`rounded-xl border px-3 py-2.5 ${
-        isCompleted
-          ? 'border-emerald-500/20 bg-emerald-500/5'
-          : 'border-[rgba(140,145,165,0.14)] bg-white/35'
-      }`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          {formatAgendaNoteStamp(note) ? (
-            <p className="mb-1 text-[11px] font-semibold text-[var(--muted)]">
-              {formatAgendaNoteStamp(note)}
+    <article className={shellClass}>
+      <div className="flex items-start gap-1.5">
+        {dragHandle}
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            {formatAgendaNoteStamp(note) ? (
+              <p className="mb-1 text-[11px] font-semibold text-[var(--muted)]">
+                {formatAgendaNoteStamp(note)}
+              </p>
+            ) : null}
+            <p
+              className={`text-sm font-normal leading-snug text-[var(--ink)] ${
+                isCompleted ? 'line-through opacity-60' : ''
+              }`}
+            >
+              {note.content || note.title}
             </p>
-          ) : null}
-          <p
-            className={`text-sm font-normal leading-snug text-[var(--ink)] ${
-              isCompleted ? 'line-through opacity-60' : ''
-            }`}
-          >
-            {note.content || note.title}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-0.5 self-center">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              startEdit()
-            }}
-            className={NOTE_ACTION_EDIT_CLASS}
-            title="Düzenle"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onToggleComplete?.(note)
-            }}
-            className={NOTE_ACTION_COMPLETE_CLASS}
-            title={isCompleted ? 'Tamamlandı' : 'Tamamla'}
-          >
-            <Check className="h-3.5 w-3.5" />
-          </button>
-          <div className="relative">
+          </div>
+          <div className="flex shrink-0 items-center gap-0.5 self-center">
             <button
               type="button"
               onClick={(event) => {
                 event.preventDefault()
                 event.stopPropagation()
-                setPendingDelete((value) => !value)
+                startEdit()
               }}
-              className={NOTE_ACTION_DELETE_CLASS}
-              title="Sil"
+              className={NOTE_ACTION_EDIT_CLASS}
+              title="Düzenle"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Pencil className="h-3.5 w-3.5" />
             </button>
-            {pendingDelete ? (
-              <DeleteConfirmPopover
-                title="Not silinsin mi?"
-                description="Bu not kalıcı olarak kaldırılacak."
-                confirmLabel="Evet"
-                cancelLabel="Hayır"
-                variant={confirmVariant}
-                onCancel={() => setPendingDelete(false)}
-                onConfirm={() => {
-                  onDelete?.(note.id)
-                  setPendingDelete(false)
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onToggleComplete?.(note)
+              }}
+              className={NOTE_ACTION_COMPLETE_CLASS}
+              title={isCompleted ? 'Tamamlandı' : 'Tamamla'}
+            >
+              <Check className="h-3.5 w-3.5" />
+            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  setPendingDelete((value) => !value)
                 }}
-                className={AGENDA_NOTE_CONFIRM_POPOVER_CLASS}
-              />
-            ) : null}
+                className={NOTE_ACTION_DELETE_CLASS}
+                title="Sil"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+              {pendingDelete ? (
+                <DeleteConfirmPopover
+                  title="Not silinsin mi?"
+                  description="Bu not kalıcı olarak kaldırılacak."
+                  confirmLabel="Evet"
+                  cancelLabel="Hayır"
+                  variant={confirmVariant}
+                  onCancel={() => setPendingDelete(false)}
+                  onConfirm={() => {
+                    onDelete?.(note.id)
+                    setPendingDelete(false)
+                  }}
+                  className={AGENDA_NOTE_CONFIRM_POPOVER_CLASS}
+                />
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
@@ -238,6 +278,7 @@ export default function AgendaNoteBoard({
   onUpdate,
   onDelete,
   onDeleteCompleted,
+  onReorder,
   confirmVariant = 'dark',
   showComposer = true,
   composerOnly = false,
@@ -254,10 +295,13 @@ export default function AgendaNoteBoard({
 }) {
   const [draft, setDraft] = useState('')
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const [draggedIndex, setDraggedIndex] = useState(null)
+  const [dragOverIndex, setDragOverIndex] = useState(null)
   const composerRef = useRef(null)
   const sortedNotes = sortAgendaNotes(notes)
   const completedCount = countCompletedAgendaNotes(sortedNotes)
   const canSave = Boolean(draft.trim())
+  const canReorder = typeof onReorder === 'function'
 
   useEffect(() => {
     if (!autoFocusComposer || !showComposer || listOnly) return undefined
@@ -305,6 +349,32 @@ export default function AgendaNoteBoard({
     if (typeof onDeleteCompleted !== 'function' || completedCount === 0) return
     onDeleteCompleted()
     setPendingBulkDelete(false)
+  }
+
+  function endDrag() {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  function beginDrag(index, event) {
+    if (!canReorder) return
+    setDraggedIndex(index)
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(index))
+  }
+
+  function handleDrop(targetIndex, event) {
+    event.preventDefault()
+    event.stopPropagation()
+    if (!canReorder || draggedIndex == null || draggedIndex === targetIndex) {
+      endDrag()
+      return
+    }
+    const next = [...sortedNotes]
+    const [moved] = next.splice(draggedIndex, 1)
+    next.splice(targetIndex, 0, moved)
+    onReorder(next.map((note) => note.id))
+    endDrag()
   }
 
   return (
@@ -390,16 +460,44 @@ export default function AgendaNoteBoard({
             </p>
           ) : (
             <div className="space-y-1.5">
-              {sortedNotes.map((note) => (
-                <AgendaNoteItem
+              {sortedNotes.map((note, index) => (
+                <div
                   key={note.id}
-                  note={note}
-                  onToggleComplete={onToggleComplete}
-                  onEdit={onEdit}
-                  onUpdate={onUpdate}
-                  onDelete={onDelete}
-                  confirmVariant={confirmVariant}
-                />
+                  onDragOver={(event) => {
+                    if (!canReorder || draggedIndex == null) return
+                    event.preventDefault()
+                    event.dataTransfer.dropEffect = 'move'
+                    if (draggedIndex !== index) setDragOverIndex(index)
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverIndex === index) setDragOverIndex(null)
+                  }}
+                  onDrop={(event) => handleDrop(index, event)}
+                >
+                  <AgendaNoteItem
+                    note={note}
+                    onToggleComplete={onToggleComplete}
+                    onEdit={onEdit}
+                    onUpdate={onUpdate}
+                    onDelete={onDelete}
+                    confirmVariant={confirmVariant}
+                    showDragHandle={canReorder}
+                    isDragging={draggedIndex === index}
+                    isDragOver={dragOverIndex === index && draggedIndex !== index}
+                    dragHandleProps={
+                      canReorder
+                        ? {
+                            draggable: true,
+                            onDragStart: (event) => {
+                              event.stopPropagation()
+                              beginDrag(index, event)
+                            },
+                            onDragEnd: endDrag,
+                          }
+                        : undefined
+                    }
+                  />
+                </div>
               ))}
             </div>
           )}

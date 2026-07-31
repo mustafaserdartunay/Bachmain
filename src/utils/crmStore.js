@@ -216,16 +216,42 @@ export function saveAgendaNotes(notes) {
   writeJson(NOTES_KEY, notes)
 }
 
+export function reorderAgendaNotes(orderedIds = []) {
+  const notes = loadAgendaNotes()
+  const byId = new Map(notes.map((item) => [item.id, item]))
+  const next = []
+  const seen = new Set()
+  orderedIds.forEach((id, sortIndex) => {
+    const item = byId.get(id)
+    if (!item || seen.has(id)) return
+    next.push({ ...item, sortIndex })
+    seen.add(id)
+  })
+  notes.forEach((item) => {
+    if (seen.has(item.id)) return
+    next.push({ ...item, sortIndex: next.length })
+  })
+  saveAgendaNotes(next)
+  return next
+}
+
 export function upsertAgendaNote(note) {
   const notes = loadAgendaNotes()
   const index = notes.findIndex((item) => item.id === note.id)
-  const next =
-    index >= 0
-      ? notes.map((item) => (item.id === note.id ? { ...item, ...note } : item))
-      : [
-          { ...note, id: note.id || createId('note'), createdAt: note.createdAt || offsetDate(0) },
-          ...notes,
-        ]
+  if (index >= 0) {
+    const next = notes.map((item) => (item.id === note.id ? { ...item, ...note } : item))
+    saveAgendaNotes(next)
+    return next
+  }
+  const hasManualOrder = notes.some((item) => Number.isFinite(item.sortIndex))
+  const created = {
+    ...note,
+    id: note.id || createId('note'),
+    createdAt: note.createdAt || new Date().toISOString(),
+  }
+  const next = hasManualOrder
+    ? [{ ...created, sortIndex: -1 }, ...notes].map((item, sortIndex) => ({ ...item, sortIndex }))
+    : [created, ...notes]
   saveAgendaNotes(next)
   return next
 }

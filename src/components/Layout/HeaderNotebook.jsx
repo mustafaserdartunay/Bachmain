@@ -11,6 +11,7 @@ import {
   deleteAgendaNote,
   deleteCompletedAgendaNotes,
   loadAgendaNotes,
+  reorderAgendaNotes,
   upsertAgendaNote,
 } from '../../utils/crmStore'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
@@ -106,6 +107,11 @@ export default function HeaderNotebook() {
     refreshNotes()
   }
 
+  function handleReorder(orderedIds) {
+    reorderAgendaNotes(orderedIds)
+    refreshNotes()
+  }
+
   return (
     <div
       className="relative flex items-center"
@@ -169,6 +175,7 @@ export default function HeaderNotebook() {
                 onUpdate={handleUpdateNote}
                 onDelete={handleDelete}
                 onDeleteCompleted={handleDeleteCompleted}
+                onReorder={handleReorder}
               />
             </div>
           </div>,
