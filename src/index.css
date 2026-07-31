@@ -734,7 +734,15 @@ textarea:not(.form-input)::placeholder {
 }
 
 .header-notebook-dropdown {
-  width: min(22rem, calc(100vw - 1rem)) !important;
+  width: min(26rem, calc(100vw - 1rem)) !important;
+  border-radius: 24px !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(26px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(180%) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow:
+    0 10px 36px -14px rgba(30, 35, 60, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
 
 .message-center-dropdown {
@@ -2909,6 +2917,21 @@ html .app-header-banner input.header-search-input.search-pill:focus-visible {
 .crm-notes-panel textarea.agenda-note-textarea,
 textarea.agenda-note-textarea {
   border-radius: 6px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 1px solid var(--search-border) !important;
+}
+
+.header-notebook-dropdown textarea.agenda-note-textarea:hover,
+.header-notebook-dropdown textarea.form-input:hover,
+.header-notebook-dropdown textarea.agenda-note-textarea:focus,
+.header-notebook-dropdown textarea.form-input:focus,
+.header-notebook-dropdown textarea.agenda-note-textarea:focus-visible,
+.header-notebook-dropdown textarea.form-input:focus-visible {
+  background: transparent !important;
+  border-color: var(--search-border) !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .search-pill,

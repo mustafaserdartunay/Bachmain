@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
 
@@ -247,12 +247,24 @@ export default function AgendaNoteBoard({
   listClassName = 'max-h-[22rem] overflow-y-auto p-2',
   emptyMessage = 'Henüz not yok. Yukarıdan hızlıca ekleyebilirsin.',
   fill = false,
+  autoFocusComposer = false,
+  enterToSave = false,
+  stackActions = false,
 }) {
   const [draft, setDraft] = useState('')
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const composerRef = useRef(null)
   const sortedNotes = sortAgendaNotes(notes)
   const completedCount = countCompletedAgendaNotes(sortedNotes)
   const canSave = Boolean(draft.trim())
+
+  useEffect(() => {
+    if (!autoFocusComposer || !showComposer || listOnly) return undefined
+    const id = window.requestAnimationFrame(() => {
+      composerRef.current?.focus?.()
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [autoFocusComposer, showComposer, listOnly])
 
   function commitDraft() {
     const content = draft.trim()
@@ -274,14 +286,55 @@ export default function AgendaNoteBoard({
     setPendingBulkDelete(false)
   }
 
+  const actionButtons = !pendingBulkDelete ? (
+    <div
+      className={
+        stackActions
+          ? 'flex w-full flex-col items-stretch gap-1.5'
+          : 'flex min-w-0 items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+      }
+    >
+      <button
+        type="button"
+        disabled={!canSave}
+        onClick={handleSave}
+        className={`${AGENDA_NOTE_SAVE_BTN_CLASS} ${stackActions ? 'w-full justify-center' : ''}`}
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Kaydet
+      </button>
+      {onDeleteCompleted ? (
+        <button
+          type="button"
+          disabled={completedCount === 0}
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            setPendingBulkDelete(true)
+          }}
+          className={`${AGENDA_NOTE_DELETE_BTN_CLASS} ${stackActions ? 'w-full justify-center' : ''}`}
+        >
+          <Trash2 className="h-3.5 w-3.5 shrink-0" />
+          Tamamlananların Hepsini Sil
+        </button>
+      ) : null}
+    </div>
+  ) : null
+
   return (
     <div className={fill ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : ''}>
       {showComposer && !listOnly ? (
         <form onSubmit={handleSave} className={composerClassName}>
           <textarea
+            ref={composerRef}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
+              if (enterToSave && event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                handleSave(event)
+                return
+              }
               if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
                 handleSave(event)
               }
@@ -290,38 +343,15 @@ export default function AgendaNoteBoard({
             rows={3}
             className="form-input agenda-note-textarea !h-auto !min-h-[72px] w-full !resize-none !rounded-md !py-2.5 !pl-3 !pr-3 text-sm"
           />
-          <div className="mt-2 flex items-center justify-between gap-2">
+          <div
+            className={`mt-2 flex gap-2 ${
+              stackActions ? 'flex-col' : 'items-center justify-between'
+            }`}
+          >
             <p className="text-[11px] font-normal text-[var(--muted)]">
               {totalRecordCount ?? sortedNotes.length} kayıt
             </p>
-            <div className="flex min-w-0 items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {onDeleteCompleted && !pendingBulkDelete ? (
-                <button
-                  type="button"
-                  disabled={completedCount === 0}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    setPendingBulkDelete(true)
-                  }}
-                  className={AGENDA_NOTE_DELETE_BTN_CLASS}
-                >
-                  <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                  Tamamlananların Hepsini Sil
-                </button>
-              ) : null}
-              {!pendingBulkDelete ? (
-                <button
-                  type="button"
-                  disabled={!canSave}
-                  onClick={handleSave}
-                  className={AGENDA_NOTE_SAVE_BTN_CLASS}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Kaydet
-                </button>
-              ) : null}
-            </div>
+            {actionButtons}
           </div>
           {pendingBulkDelete ? (
             <div className="mt-2">

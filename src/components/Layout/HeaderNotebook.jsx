@@ -148,6 +148,9 @@ export default function HeaderNotebook() {
                 fill
                 notes={sortedNotes}
                 confirmVariant="warm"
+                autoFocusComposer
+                enterToSave
+                stackActions
                 onSave={handleSave}
                 onToggleComplete={handleToggleComplete}
                 onUpdate={handleUpdateNote}
