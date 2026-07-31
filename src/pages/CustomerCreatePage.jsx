@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  BadgeCheck,
   Building2,
   ChevronDown,
   ExternalLink,
   Facebook,
-  Gauge,
   Globe,
   Hash,
   Instagram,
@@ -18,7 +16,6 @@ import {
   Pin,
   Plus,
   Save,
-  Tags,
   Twitter,
   UserRound,
   Users,
@@ -32,7 +29,6 @@ import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import {
   FormFieldCompact,
   FormSectionPanel,
-  FORM_FIELD_GRID_CLASS,
   FORM_FIELD_RULED_STACK_CLASS,
 } from '../components/Common/FormSectionPanel'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
@@ -60,18 +56,24 @@ import {
   saveOptionList,
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
-import { BTN_CANCEL as BTN_CANCEL_BASE, BTN_SUCCESS } from '../utils/buttonStyles'
+import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
 import { checkCustomerDuplicates } from '../utils/mdmDuplicateCheck'
-import { APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
+import { APP_FILTER_LABEL_CLASS, APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 
 const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 
-const CREATE_PILL_CLASS = 'glass-pill !h-8 !min-h-8 !w-full !justify-between !text-[12px]'
-const BTN_CANCEL = `${BTN_CANCEL_BASE} gap-2.5 px-3`
-const BTN_SAVE = `${BTN_SUCCESS} gap-2.5 px-3`
-const BTN_SAVE_MENU = `${BTN_SUCCESS} w-14 px-0`
+const CUSTOMER_FILTER_FIELD_CLASS =
+  'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
+const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !font-normal !tracking-normal !text-[var(--muted)]`
+const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
+const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu'
+
+const TEXT_ACTION_CLASS =
+  'inline-flex items-center gap-1 bg-transparent p-0 text-xs font-normal leading-none transition-transform duration-hover hover:-translate-y-0.5'
+const TEXT_CANCEL_CLASS = `${TEXT_ACTION_CLASS} text-[var(--muted)]`
+const TEXT_SAVE_CLASS = `${TEXT_ACTION_CLASS} text-[#2563eb]`
 
 function emptyMeta(defaultType = '') {
   return { type: defaultType, representative: '', scoring: '', category: '' }
@@ -449,26 +451,29 @@ export default function CustomerCreatePage() {
               ref={actionMenuAnchorRef}
               className="relative flex items-center gap-2.5 bg-transparent"
             >
-              <button type="button" onClick={() => navigate(backPath)} className={BTN_CANCEL}>
-                <X className="h-4 w-4" /> Vazgeç
+              <button
+                type="button"
+                onClick={() => navigate(backPath)}
+                className={TEXT_CANCEL_CLASS}
+              >
+                <X className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">Vazgeç</span>
               </button>
-              <div className="btn-split">
-                <button type="submit" className={BTN_SAVE}>
-                  <Save className="h-4 w-4" /> Kaydet
-                </button>
-                <span className="btn-split-divider" aria-hidden />
-                <button
-                  type="button"
-                  onClick={() => setActionMenuOpen((open) => !open)}
-                  className={BTN_SAVE_MENU}
-                  aria-label="Kaydet işlemleri"
-                  aria-expanded={actionMenuOpen}
-                >
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-              </div>
+              <button type="submit" className={TEXT_SAVE_CLASS}>
+                <Save className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">Kaydet</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActionMenuOpen((open) => !open)}
+                className={TEXT_SAVE_CLASS}
+                aria-label="Kaydet işlemleri"
+                aria-expanded={actionMenuOpen}
+              >
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
               {actionMenuOpen &&
                 actionMenuStyle &&
                 createPortal(
@@ -481,9 +486,9 @@ export default function CustomerCreatePage() {
                     <button
                       type="button"
                       onClick={saveAndContinue}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-extrabold tracking-wide text-[var(--ink)] transition-colors hover:bg-white/45"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-normal tracking-normal text-[var(--ink)] transition-colors hover:bg-white/45"
                     >
-                      <Save className="h-4 w-4 text-emerald-300" /> Kaydet ve devam et
+                      <Save className="h-4 w-4 text-[#2563eb]" /> Kaydet ve devam et
                     </button>
                   </div>,
                   document.body,
@@ -495,12 +500,13 @@ export default function CustomerCreatePage() {
         <div className="space-y-5">
           <FormSectionPanel
             compact
-            icon={UserRound}
             title={isSupplierForm ? 'Tedarikçi Bilgileri' : 'Müşteri Bilgileri'}
             dotColor="blue"
+            className="customer-form-primary-panel"
           >
-            <div className={`${FORM_FIELD_GRID_CLASS} grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`}>
-              <FormFieldCompact icon={BadgeCheck} label="Tipi">
+            <div className="app-filter-bar grid min-w-0 w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Tipi :</p>
                 <EditableDropdownPill
                   value={meta.type}
                   options={optionLists.type}
@@ -509,10 +515,12 @@ export default function CustomerCreatePage() {
                   activeMenu={activeMenu}
                   setActiveMenu={setActiveMenu}
                   onChange={(value) => updateMetaField('type', value)}
-                  buttonClassName={CREATE_PILL_CLASS}
+                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                  menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 />
-              </FormFieldCompact>
-              <FormFieldCompact icon={Users} label="Temsilci">
+              </div>
+              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Temsilci :</p>
                 <EditableDropdownPill
                   value={meta.representative}
                   options={optionLists.representative}
@@ -521,10 +529,12 @@ export default function CustomerCreatePage() {
                   activeMenu={activeMenu}
                   setActiveMenu={setActiveMenu}
                   onChange={(value) => updateMetaField('representative', value)}
-                  buttonClassName={CREATE_PILL_CLASS}
+                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                  menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 />
-              </FormFieldCompact>
-              <FormFieldCompact icon={Gauge} label="Puantaj">
+              </div>
+              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Puantaj :</p>
                 <EditableDropdownPill
                   value={meta.scoring}
                   options={optionLists.scoring}
@@ -533,10 +543,12 @@ export default function CustomerCreatePage() {
                   activeMenu={activeMenu}
                   setActiveMenu={setActiveMenu}
                   onChange={(value) => updateMetaField('scoring', value)}
-                  buttonClassName={CREATE_PILL_CLASS}
+                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                  menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 />
-              </FormFieldCompact>
-              <FormFieldCompact icon={Tags} label="Kategori">
+              </div>
+              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
+                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Kategori :</p>
                 <EditableDropdownPill
                   value={meta.category}
                   options={optionLists.category}
@@ -545,9 +557,10 @@ export default function CustomerCreatePage() {
                   activeMenu={activeMenu}
                   setActiveMenu={setActiveMenu}
                   onChange={(value) => updateMetaField('category', value)}
-                  buttonClassName={CREATE_PILL_CLASS}
+                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
+                  menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 />
-              </FormFieldCompact>
+              </div>
             </div>
           </FormSectionPanel>
 
@@ -715,18 +728,20 @@ export default function CustomerCreatePage() {
       <section
         className={`${APP_SURFACE_PANEL_CLASS} flex h-[4.625rem] items-center justify-between px-5`}
       >
-        <div className="flex min-w-0 items-center gap-3 text-xs font-semibold text-gray-500">
+        <div className="flex min-w-0 items-center gap-3 text-xs font-normal text-[var(--muted)]">
           <UserRound className="h-4 w-4 shrink-0" />
           <span className="truncate">
             Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
-          <button type="button" onClick={() => navigate(-1)} className={BTN_CANCEL}>
-            <X className="h-4 w-4" /> Vazgeç
+          <button type="button" onClick={() => navigate(-1)} className={TEXT_CANCEL_CLASS}>
+            <X className="h-4 w-4 shrink-0" />
+            <span className="whitespace-nowrap">Vazgeç</span>
           </button>
-          <button type="submit" className={BTN_SAVE}>
-            <Save className="h-4 w-4" /> Kaydet
+          <button type="submit" className={TEXT_SAVE_CLASS}>
+            <Save className="h-4 w-4 shrink-0" />
+            <span className="whitespace-nowrap">Kaydet</span>
           </button>
         </div>
       </section>
