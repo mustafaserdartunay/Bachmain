@@ -1208,16 +1208,6 @@ textarea:not(.form-input)::placeholder {
   background: transparent !important;
 }
 
-.customer-save-action-menu {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(26px) saturate(180%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow:
-    0 10px 36px -14px rgba(30, 35, 60, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
-}
-
 .customer-save-action-menu button {
   display: inline-flex !important;
   align-items: center !important;
