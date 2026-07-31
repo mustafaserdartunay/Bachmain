@@ -143,6 +143,7 @@ export default function CustomerCreatePage() {
   )
   const [deleteDialog, setDeleteDialog] = useState(null)
   const [successVisible, setSuccessVisible] = useState(false)
+  const [formEpoch, setFormEpoch] = useState(0)
   const [meta, setMeta] = useState(() =>
     incomingDraft?.category
       ? { ...emptyMeta(), category: incomingDraft.category }
@@ -404,14 +405,14 @@ export default function CustomerCreatePage() {
       },
       { source: 'CustomerCreatePage' },
     )
-    form.reset()
-    setAddressRows([{ id: 0 }])
-    setContactRows(initialContactRows(null, null))
-    setOpeningEnabled(false)
-    setMeta(emptyMeta())
     setActionMenuOpen(false)
     showSavedMessage()
     flushWorkspaceNow()
+    const nextParams = new URLSearchParams()
+    if (isSupplierForm) nextParams.set('kind', 'supplier')
+    nextParams.set('edit', savedProfile.id)
+    navigate(`/musteriler/yeni?${nextParams.toString()}`, { replace: true })
+    setFormEpoch((epoch) => epoch + 1)
   }
 
   function confirmTwoStepDelete(label, onConfirm, key) {
@@ -428,7 +429,12 @@ export default function CustomerCreatePage() {
   }
 
   return (
-    <form id="customer-edit-form" onSubmit={collectAndSave} className="space-y-5">
+    <form
+      key={`customer-edit-form-${editingCustomer?.id || 'new'}-${formEpoch}`}
+      id="customer-edit-form"
+      onSubmit={collectAndSave}
+      className="space-y-5"
+    >
       {successVisible && (
         <div className="fixed right-6 top-20 z-[80] rounded-2xl border border-emerald-500/30 bg-emerald-500/15 px-5 py-3 text-sm font-black text-emerald-300 shadow-2xl shadow-emerald-950/20">
           Düzenlemeler kaydedildi
@@ -480,15 +486,16 @@ export default function CustomerCreatePage() {
                   <div
                     ref={actionMenuRef}
                     style={actionMenuStyle}
-                    className={`${DROPDOWN_MENU_PORTAL_CLASS} w-56`}
+                    className={`${DROPDOWN_MENU_PORTAL_CLASS} customer-save-action-menu w-56`}
                     onClick={(event) => event.stopPropagation()}
                   >
                     <button
                       type="button"
                       onClick={saveAndContinue}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs font-normal tracking-normal text-[var(--ink)] transition-colors hover:bg-white/45"
+                      className="inline-flex w-full items-center gap-1 origin-left rounded-xl px-3 py-2.5 text-left text-xs font-normal leading-none text-[#2563eb] transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold hover:bg-transparent"
                     >
-                      <Save className="h-4 w-4 text-[#2563eb]" /> Kaydet ve devam et
+                      <Save className="h-4 w-4 shrink-0" />
+                      <span className="whitespace-nowrap">Kaydet ve devam et</span>
                     </button>
                   </div>,
                   document.body,
