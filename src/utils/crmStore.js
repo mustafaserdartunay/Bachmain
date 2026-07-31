@@ -1,5 +1,8 @@
-import { customers } from '../data/mockData'
-import { applyTaskStatusToProcessTrack, isTaskCompleted, normalizeProcessTrack } from './crmProcessHelpers'
+import {
+  applyTaskStatusToProcessTrack,
+  isTaskCompleted,
+  normalizeProcessTrack,
+} from './crmProcessHelpers'
 import { normalizeStagePhotos } from './productionStagePhotos'
 import { getLoggedInUserDisplayName } from './userProfile'
 import { appendActivityEntry } from './activityArchiveStore'
@@ -64,11 +67,13 @@ function seedAppointments() {
 
 export function loadTasks() {
   const saved = readJson(TASKS_KEY, null)
-  const items = saved || (() => {
-    const seeded = seedTasks()
-    writeJson(TASKS_KEY, seeded)
-    return seeded
-  })()
+  const items =
+    saved ||
+    (() => {
+      const seeded = seedTasks()
+      writeJson(TASKS_KEY, seeded)
+      return seeded
+    })()
   const normalized = items.map((item) => ({
     ...item,
     processTrack: normalizeProcessTrack(item, 'task'),
@@ -82,11 +87,13 @@ export function loadTasks() {
 
 export function loadAppointments() {
   const saved = readJson(APPOINTMENTS_KEY, null)
-  const items = saved || (() => {
-    const seeded = seedAppointments()
-    writeJson(APPOINTMENTS_KEY, seeded)
-    return seeded
-  })()
+  const items =
+    saved ||
+    (() => {
+      const seeded = seedAppointments()
+      writeJson(APPOINTMENTS_KEY, seeded)
+      return seeded
+    })()
   const normalized = items.map((item) => ({
     ...item,
     processTrack: normalizeProcessTrack(item, 'appointment'),
@@ -119,9 +126,8 @@ export function upsertTask(task) {
       }
     : { ...tasks[index], ...task }
   const existing = index >= 0 ? tasks[index] : null
-  const statusOrCategoryChanged = !existing
-    || existing.status !== merged.status
-    || existing.category !== merged.category
+  const statusOrCategoryChanged =
+    !existing || existing.status !== merged.status || existing.category !== merged.category
   const withProcess = {
     ...merged,
     processTrack: statusOrCategoryChanged
@@ -129,9 +135,10 @@ export function upsertTask(task) {
       : normalizeProcessTrack(merged, 'task'),
     stagePhotos: normalizeStagePhotos(merged.stagePhotos),
   }
-  const next = index >= 0
-    ? tasks.map((item) => (item.id === task.id ? withProcess : item))
-    : [withProcess, ...tasks]
+  const next =
+    index >= 0
+      ? tasks.map((item) => (item.id === task.id ? withProcess : item))
+      : [withProcess, ...tasks]
   saveTasks(next)
   return next
 }
@@ -153,9 +160,10 @@ export function upsertAppointment(appointment) {
     processTrack: normalizeProcessTrack(merged, 'appointment'),
     stagePhotos: normalizeStagePhotos(merged.stagePhotos),
   }
-  const next = index >= 0
-    ? appointments.map((item) => (item.id === appointment.id ? withProcess : item))
-    : [withProcess, ...appointments]
+  const next =
+    index >= 0
+      ? appointments.map((item) => (item.id === appointment.id ? withProcess : item))
+      : [withProcess, ...appointments]
   saveAppointments(next)
   return next
 }
@@ -211,9 +219,13 @@ export function saveAgendaNotes(notes) {
 export function upsertAgendaNote(note) {
   const notes = loadAgendaNotes()
   const index = notes.findIndex((item) => item.id === note.id)
-  const next = index >= 0
-    ? notes.map((item) => (item.id === note.id ? { ...item, ...note } : item))
-    : [{ ...note, id: note.id || createId('note'), createdAt: note.createdAt || offsetDate(0) }, ...notes]
+  const next =
+    index >= 0
+      ? notes.map((item) => (item.id === note.id ? { ...item, ...note } : item))
+      : [
+          { ...note, id: note.id || createId('note'), createdAt: note.createdAt || offsetDate(0) },
+          ...notes,
+        ]
   saveAgendaNotes(next)
   return next
 }
@@ -264,7 +276,8 @@ export function restoreCrmEntry(entryType, snapshot) {
   }
   if (entryType === 'appointment') {
     const appointments = loadAppointments()
-    if (!appointments.some((item) => item.id === snapshot.id)) saveAppointments([snapshot, ...appointments])
+    if (!appointments.some((item) => item.id === snapshot.id))
+      saveAppointments([snapshot, ...appointments])
     return true
   }
   if (entryType === 'note') {
