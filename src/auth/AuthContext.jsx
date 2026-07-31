@@ -63,13 +63,18 @@ function syncLocalProfile(user) {
     licenseExpiry: user.licenseExpiry || '',
   })
 
-  // Fill company card from membership only when still empty (never inject demo firm).
+  // Fill company card from membership only when still empty (user's own firm data).
   const company = readCompanySettings()
   if (!company.companyName && user.companyName) {
     updateCompanySettings({
       companyName: user.companyName,
+      legalTitle: user.companyName,
       email: user.email || company.email,
       phone: user.phone || company.phone,
+      taxOffice: user.taxOffice || company.taxOffice,
+      taxNumber: user.taxNo || company.taxNumber,
+      address:
+        [user.address, user.district, user.city].filter(Boolean).join(', ') || company.address,
     })
   }
 }

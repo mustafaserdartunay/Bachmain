@@ -201,6 +201,11 @@ function publicUser(account, customer, entitlements = null, companySession = nul
     limits: entitlements?.limits || customer?.limits || null,
     onboardingCompleted: account.onboardingCompleted !== false,
     tenantCode: companySession?.tenantCode || account.tenantCode,
+    taxNo: account.taxNo || customer?.taxNo || '',
+    taxOffice: account.taxOffice || customer?.taxOffice || '',
+    address: account.address || customer?.address || '',
+    city: account.city || customer?.city || '',
+    district: account.district || customer?.district || '',
   }
 }
 
