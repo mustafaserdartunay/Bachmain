@@ -49,7 +49,7 @@ const AGENDA_NOTE_CONFIRM_POPOVER_CLASS =
   'absolute right-0 top-[calc(100%+0.35rem)] z-40 w-[min(18rem,calc(100vw-2rem))]'
 
 const NOTE_TEXTAREA_CLASS =
-  'form-input !h-auto !min-h-[60px] w-full !resize-none !py-2 !pl-3 !pr-3 !text-sm'
+  'form-input agenda-note-textarea !h-auto !min-h-[60px] w-full !resize-none !rounded-md !py-2 !pl-3 !pr-3 !text-sm'
 
 export const AGENDA_NOTE_BADGE_CLASS =
   'absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#7cf2c6] via-[#34d399] to-[#10b981] px-1 text-[11px] font-black text-white shadow-[0_0_10px_rgba(52,211,153,0.45)]'
@@ -288,7 +288,7 @@ export default function AgendaNoteBoard({
             }}
             placeholder="Notunuzu Yazınız..."
             rows={3}
-            className="form-input !h-auto !min-h-[72px] w-full !resize-none !py-2.5 !pl-3 !pr-3 text-sm"
+            className="form-input agenda-note-textarea !h-auto !min-h-[72px] w-full !resize-none !rounded-md !py-2.5 !pl-3 !pr-3 text-sm"
           />
           <div className="mt-2 flex items-center justify-between gap-2">
             <p className="text-[11px] font-normal text-[var(--muted)]">

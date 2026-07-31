@@ -2904,6 +2904,13 @@ html .app-header-banner input.header-search-input.search-pill:focus-visible {
   color: currentColor !important;
 }
 
+.header-notebook-dropdown textarea.agenda-note-textarea,
+.header-notebook-dropdown textarea.form-input,
+.crm-notes-panel textarea.agenda-note-textarea,
+textarea.agenda-note-textarea {
+  border-radius: 6px !important;
+}
+
 .search-pill,
 input.search-pill,
 textarea.search-pill,
