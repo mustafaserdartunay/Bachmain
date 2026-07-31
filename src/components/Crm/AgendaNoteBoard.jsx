@@ -330,7 +330,7 @@ export default function AgendaNoteBoard({
             rows={3}
             className="form-input agenda-note-textarea !h-auto !min-h-[72px] w-full !resize-none !rounded-md !py-2.5 !pl-3 !pr-3 text-sm"
           />
-          <div className="mt-2 flex items-center justify-end gap-2">
+          <div className="mt-2 flex items-center gap-2">
             {showRecordCount ? (
               <p className="mr-auto text-[11px] font-normal text-[var(--muted)]">
                 {totalRecordCount ?? sortedNotes.length} kayıt
@@ -338,15 +338,6 @@ export default function AgendaNoteBoard({
             ) : null}
             {!pendingBulkDelete ? (
               <>
-                <button
-                  type="button"
-                  disabled={!canSave}
-                  onClick={handleSave}
-                  className={AGENDA_NOTE_SAVE_BTN_CLASS}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Kaydet
-                </button>
                 {onDeleteCompleted ? (
                   <button
                     type="button"
@@ -362,6 +353,15 @@ export default function AgendaNoteBoard({
                     Tamamlananların Hepsini Sil
                   </button>
                 ) : null}
+                <button
+                  type="button"
+                  disabled={!canSave}
+                  onClick={handleSave}
+                  className={`${AGENDA_NOTE_SAVE_BTN_CLASS} ml-auto`}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Kaydet
+                </button>
               </>
             ) : null}
           </div>

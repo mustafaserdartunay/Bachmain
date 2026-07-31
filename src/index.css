@@ -794,8 +794,8 @@ textarea:not(.form-input)::placeholder {
 }
 
 .header-notebook-dropdown .header-notebook-body {
-  min-height: min(28rem, calc(100dvh - 7.5rem));
-  max-height: min(42rem, calc(100dvh - 6.5rem));
+  min-height: min(34rem, calc(100dvh - 6.5rem));
+  max-height: min(52rem, calc(100dvh - 5rem));
 }
 
 .message-center-body {
