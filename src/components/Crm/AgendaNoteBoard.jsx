@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, GripVertical, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
 
 export function getAgendaNoteStamp() {
@@ -130,11 +130,18 @@ export function AgendaNoteItem({
   const dragHandle = showDragHandle ? (
     <div
       {...dragHandleProps}
-      className="mt-0.5 shrink-0 cursor-grab touch-none px-0.5 py-0.5 text-[var(--muted)] opacity-55 transition-opacity hover:opacity-100 active:cursor-grabbing"
+      className="flex h-5 w-4 shrink-0 cursor-grab touch-none items-center justify-center self-center text-[var(--muted)] opacity-55 transition-opacity hover:opacity-100 active:cursor-grabbing"
       title="Sürükleyerek sırala"
       aria-label="Sürükleyerek sırala"
     >
-      <GripVertical className="h-3.5 w-3.5 pointer-events-none" />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none grid grid-cols-2 gap-x-[3px] gap-y-[2.5px]"
+      >
+        {Array.from({ length: 12 }, (_, index) => (
+          <span key={index} className="h-[2.5px] w-[2.5px] rounded-full bg-current" />
+        ))}
+      </span>
     </div>
   ) : null
 
