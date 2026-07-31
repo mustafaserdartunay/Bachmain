@@ -3,11 +3,15 @@ import { createPortal } from 'react-dom'
 import { Check, ChevronRight, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { DeleteConfirmPopover } from './Common/ListDeleteConfirmPanel'
 import { dropdownMenuShellClass } from './Common/DropdownMenu'
+import StageColorSwatches from './DocumentEditor/StageColorSwatches'
+import { stageColors } from './DocumentEditor/stageColors'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { OPTION_COLOR_PALETTE } from '../utils/customerMeta'
 
 const DEFAULT_BUTTON_CLASS =
   'flex h-control min-h-control w-full items-center justify-between gap-2 rounded-ds-md border border-ds-border bg-[var(--ds-surface-raised)] px-3 text-ds-small font-semibold text-ds-ink transition-colors duration-hover hover:bg-[var(--ds-surface-muted)]'
+
+const COLOR_PALETTE = OPTION_COLOR_PALETTE?.length ? OPTION_COLOR_PALETTE : stageColors
 
 function OptionLeading({ option, empty = false, isLightMenu = false }) {
   if (empty) {
@@ -25,6 +29,14 @@ function OptionLeading({ option, empty = false, isLightMenu = false }) {
     )
   }
   return <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${option?.color || 'bg-gray-500'}`} />
+}
+
+function OptionColorPicker({ value, onChange }) {
+  return (
+    <div className="customer-filter-color-swatches pl-0.5">
+      <StageColorSwatches value={value} onChange={onChange} size="sm" />
+    </div>
+  )
 }
 
 export default function EditableDropdownPill({
@@ -58,9 +70,10 @@ export default function EditableDropdownPill({
 
   const [editingIndex, setEditingIndex] = useState(null)
   const [draftName, setDraftName] = useState('')
+  const [draftColor, setDraftColor] = useState(COLOR_PALETTE[0])
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
-  const [newColor, setNewColor] = useState(() => OPTION_COLOR_PALETTE[0] || 'bg-blue-500')
+  const [newColor, setNewColor] = useState(() => COLOR_PALETTE[0] || 'bg-blue-500')
   const [confirmIndex, setConfirmIndex] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -68,9 +81,10 @@ export default function EditableDropdownPill({
     if (!isOpen) {
       setEditingIndex(null)
       setDraftName('')
+      setDraftColor(COLOR_PALETTE[0])
       setAdding(false)
       setNewName('')
-      setNewColor(OPTION_COLOR_PALETTE[options.length % OPTION_COLOR_PALETTE.length])
+      setNewColor(COLOR_PALETTE[options.length % COLOR_PALETTE.length])
       setConfirmIndex(null)
       setSearchTerm('')
     }
@@ -91,6 +105,7 @@ export default function EditableDropdownPill({
     setAdding(false)
     setEditingIndex(index)
     setDraftName(options[index].label)
+    setDraftColor(options[index].color || COLOR_PALETTE[index % COLOR_PALETTE.length])
   }
 
   function commitEdit() {
@@ -98,13 +113,16 @@ export default function EditableDropdownPill({
     if (name && editingIndex != null) {
       const previous = options[editingIndex]
       const next = options.map((option, index) =>
-        index === editingIndex ? { ...option, label: name } : option,
+        index === editingIndex
+          ? { ...option, label: name, color: draftColor || option.color }
+          : option,
       )
       onOptionsChange(next)
       if (previous.label === value) onChange(name)
     }
     setEditingIndex(null)
     setDraftName('')
+    setDraftColor(COLOR_PALETTE[0])
   }
 
   function removeOption(index) {
@@ -118,13 +136,13 @@ export default function EditableDropdownPill({
   function commitAdd() {
     const name = newName.trim()
     if (name && !options.some((option) => option.label === name)) {
-      const color = newColor || OPTION_COLOR_PALETTE[options.length % OPTION_COLOR_PALETTE.length]
+      const color = newColor || COLOR_PALETTE[options.length % COLOR_PALETTE.length]
       onOptionsChange([...options, { label: name, color }])
       onChange(name)
     }
     setAdding(false)
     setNewName('')
-    setNewColor(OPTION_COLOR_PALETTE[(options.length + 1) % OPTION_COLOR_PALETTE.length])
+    setNewColor(COLOR_PALETTE[(options.length + 1) % COLOR_PALETTE.length])
   }
 
   const isLightMenu = menuVariant === 'light'
@@ -223,43 +241,45 @@ export default function EditableDropdownPill({
                 className="w-full"
               />
             ) : editingIndex === index ? (
-              <div
-                key={`edit-${index}`}
-                className="flex items-center gap-1.5 rounded-xl bg-white/35 px-2 py-1.5"
-              >
-                <OptionLeading option={option} isLightMenu={isLightMenu} />
-                <input
-                  autoFocus
-                  value={draftName}
-                  onChange={(event) => setDraftName(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') commitEdit()
-                    if (event.key === 'Escape') {
+              <div key={`edit-${index}`} className="space-y-1.5 rounded-xl bg-white/35 px-2 py-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${draftColor}`} />
+                  <input
+                    autoFocus
+                    value={draftName}
+                    onChange={(event) => setDraftName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') commitEdit()
+                      if (event.key === 'Escape') {
+                        setEditingIndex(null)
+                        setDraftName('')
+                        setDraftColor(COLOR_PALETTE[0])
+                      }
+                    }}
+                    className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/42 px-2 py-1 text-xs font-bold text-[var(--ink)] focus:outline-none focus:border-white/75 focus:bg-white/52"
+                  />
+                  <button
+                    type="button"
+                    onClick={commitEdit}
+                    className="rounded-lg p-1 text-emerald-700 transition-colors hover:bg-emerald-500/15"
+                    title="Kaydet"
+                  >
+                    <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
                       setEditingIndex(null)
                       setDraftName('')
-                    }
-                  }}
-                  className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/42 px-2 py-1 text-xs font-bold text-[var(--ink)] focus:outline-none focus:border-white/75 focus:bg-white/52"
-                />
-                <button
-                  type="button"
-                  onClick={commitEdit}
-                  className="rounded-lg p-1 text-emerald-700 transition-colors hover:bg-emerald-500/15"
-                  title="Kaydet"
-                >
-                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingIndex(null)
-                    setDraftName('')
-                  }}
-                  className="rounded-lg bg-red-500/15 p-1 text-red-500 transition-colors hover:bg-red-500/25 hover:text-red-600"
-                  title="Vazgeç"
-                >
-                  <X className="h-3.5 w-3.5" strokeWidth={2.5} />
-                </button>
+                      setDraftColor(COLOR_PALETTE[0])
+                    }}
+                    className="rounded-lg bg-red-500/15 p-1 text-red-500 transition-colors hover:bg-red-500/25 hover:text-red-600"
+                    title="Vazgeç"
+                  >
+                    <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  </button>
+                </div>
+                <OptionColorPicker value={draftColor} onChange={setDraftColor} />
               </div>
             ) : (
               <div key={option.label} className="group flex items-center gap-1 rounded-xl">
@@ -345,35 +365,14 @@ export default function EditableDropdownPill({
                     <X className="h-3.5 w-3.5" strokeWidth={2.5} />
                   </button>
                 </div>
-                <div className="flex flex-wrap items-center gap-1 pl-0.5">
-                  {OPTION_COLOR_PALETTE.map((colorClass) => {
-                    const selectedColor = newColor === colorClass
-                    return (
-                      <button
-                        key={colorClass}
-                        type="button"
-                        title="Renk seç"
-                        aria-label="Renk seç"
-                        aria-pressed={selectedColor}
-                        onClick={() => setNewColor(colorClass)}
-                        className={`flex h-5 w-5 items-center justify-center rounded-full transition-transform ${
-                          selectedColor
-                            ? 'scale-110 ring-2 ring-[var(--ink)]/35 ring-offset-1 ring-offset-transparent'
-                            : 'opacity-80 hover:scale-110 hover:opacity-100'
-                        }`}
-                      >
-                        <span className={`h-3 w-3 rounded-full ${colorClass}`} />
-                      </button>
-                    )
-                  })}
-                </div>
+                <OptionColorPicker value={newColor} onChange={setNewColor} />
               </div>
             ) : (
               <button
                 type="button"
                 onClick={() => {
                   setEditingIndex(null)
-                  setNewColor(OPTION_COLOR_PALETTE[options.length % OPTION_COLOR_PALETTE.length])
+                  setNewColor(COLOR_PALETTE[options.length % COLOR_PALETTE.length])
                   setAdding(true)
                 }}
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-black uppercase tracking-wide text-blue-600 transition-colors hover:bg-white/45"

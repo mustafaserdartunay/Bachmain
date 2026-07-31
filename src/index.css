@@ -1285,11 +1285,26 @@ textarea:not(.form-input)::placeholder {
   color: #dc2626 !important;
 }
 
-.customer-filter-dropdown-menu button[title='Renk seç'] {
+.customer-filter-dropdown-menu button[title='Renk seç'],
+.customer-filter-dropdown-menu .customer-filter-color-swatches button {
   color: inherit !important;
   background: transparent !important;
   font-weight: 400 !important;
   transform: none !important;
+  font-size: inherit !important;
+}
+
+.customer-filter-dropdown-menu .customer-filter-color-swatches button {
+  opacity: 0.75;
+}
+
+.customer-filter-dropdown-menu .customer-filter-color-swatches button:hover {
+  opacity: 1;
+  transform: scale(1.08) !important;
+}
+
+.customer-filter-color-swatches {
+  max-width: 100%;
 }
 
 .customer-filter-dropdown-menu button span.truncate {

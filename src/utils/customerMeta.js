@@ -1,4 +1,5 @@
 import { findCustomerProfileByReference } from '../data/customerProfiles'
+import { stageColors } from '../components/DocumentEditor/stageColors'
 
 export const CUSTOMER_META_KEY = 'erlenbox-customer-list-settings'
 
@@ -90,36 +91,18 @@ export const accountOptions = [
   { label: 'Senet Kasası', color: 'bg-amber-500' },
 ]
 
-export const cashAccountOptions = [
-  { label: 'Merkez Kasa', color: 'bg-emerald-500' },
-]
+export const cashAccountOptions = [{ label: 'Merkez Kasa', color: 'bg-emerald-500' }]
 
-export const bankAccountOptions = [
-  { label: 'Ticari Banka Hesabı', color: 'bg-blue-500' },
-]
+export const bankAccountOptions = [{ label: 'Ticari Banka Hesabı', color: 'bg-blue-500' }]
 
-export const chequeAccountOptions = [
-  { label: 'Merkez Çek Kasası', color: 'bg-purple-500' },
-]
+export const chequeAccountOptions = [{ label: 'Merkez Çek Kasası', color: 'bg-purple-500' }]
 
-export const promissoryAccountOptions = [
-  { label: 'Merkez Senet Kasası', color: 'bg-amber-500' },
-]
+export const promissoryAccountOptions = [{ label: 'Merkez Senet Kasası', color: 'bg-amber-500' }]
 
 export const OPTION_LISTS_KEY = 'erlenbox-customer-option-lists'
 
-export const OPTION_COLOR_PALETTE = [
-  'bg-blue-500',
-  'bg-emerald-500',
-  'bg-purple-500',
-  'bg-orange-500',
-  'bg-cyan-500',
-  'bg-fuchsia-500',
-  'bg-pink-500',
-  'bg-amber-500',
-  'bg-teal-500',
-  'bg-rose-500',
-]
+/** Same palette as Settings / WorkflowStageEditor (`stageColors`). */
+export const OPTION_COLOR_PALETTE = stageColors
 
 const defaultOptionLists = {
   type: customerTypeOptions,
@@ -218,7 +201,11 @@ export function readCustomerMeta() {
 }
 
 export function getDefaultCustomerType(customer) {
-  return String(customer?.segment || '').toLocaleLowerCase('tr-TR').includes('bayi') ? 'Bayi' : 'Müşteri'
+  return String(customer?.segment || '')
+    .toLocaleLowerCase('tr-TR')
+    .includes('bayi')
+    ? 'Bayi'
+    : 'Müşteri'
 }
 
 export function getDefaultCustomerScoring(customer) {
@@ -240,9 +227,10 @@ export function getCustomerMetaSelection(customer, savedMeta = {}) {
 }
 
 export function resolveCustomerRepresentative(customerOrRef) {
-  const customer = typeof customerOrRef === 'object' && customerOrRef
-    ? customerOrRef
-    : findCustomerProfileByReference(customerOrRef)
+  const customer =
+    typeof customerOrRef === 'object' && customerOrRef
+      ? customerOrRef
+      : findCustomerProfileByReference(customerOrRef)
   if (!customer) return ''
   return getCustomerMetaSelection(customer, readCustomerMeta()[customer.id] || {}).representative
 }
