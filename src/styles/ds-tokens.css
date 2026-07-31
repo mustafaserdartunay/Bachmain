@@ -40,7 +40,9 @@
   --ds-font-body: 0.9375rem; /* 15 */
   --ds-font-small: 0.8125rem; /* 13 */
   --ds-font-caption: 0.75rem; /* 12 */
-  --ds-font-family: Inter, system-ui, 'SF Pro Display', Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ds-font-family:
+    Inter, system-ui, 'SF Pro Display', Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
 
   /* Spacing (4px grid) */
   --ds-space-1: 0.25rem;
@@ -117,9 +119,10 @@
   --text-strong: var(--ds-ink);
   --text-muted: var(--ds-muted);
   --text-soft: var(--ds-muted-soft);
+  /* Keep translucent glass; do not swap to opaque DS surface on mobile */
   --glass-bg: rgba(255, 255, 255, 0.78);
   --glass-bg-strong: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(226, 232, 240, 0.95);
+  --glass-border: rgba(255, 255, 255, 0.75);
   --accent: var(--ds-secondary);
   --accent-hover: var(--ds-secondary-hover);
   --shell-rail-expanded: var(--ds-sidebar-expanded);
@@ -147,23 +150,24 @@
 }
 
 html.night {
-  --ds-bg: #1c1917;
-  --ds-bg-soft: #292524;
-  --ds-surface: #292524;
-  --ds-surface-raised: #35302c;
-  --ds-surface-muted: #44403c;
-  --ds-border: rgba(168, 162, 158, 0.22);
-  --ds-border-strong: rgba(168, 162, 158, 0.35);
-  --ds-ink: #fafaf9;
-  --ds-ink-body: #e7e5e4;
-  --ds-muted: #a8a29e;
-  --ds-muted-soft: #78716c;
+  /* Align DS night shell with navy glass used by desktop chrome (index.css) */
+  --ds-bg: #050a14;
+  --ds-bg-soft: #08111f;
+  --ds-surface: #0c1528;
+  --ds-surface-raised: #111d34;
+  --ds-surface-muted: #1b2b48;
+  --ds-border: rgba(148, 163, 184, 0.12);
+  --ds-border-strong: rgba(148, 163, 184, 0.22);
+  --ds-ink: #eef2f9;
+  --ds-ink-body: #dbe4f2;
+  --ds-muted: #9aa8be;
+  --ds-muted-soft: #7b8aa3;
   --ds-primary: #79a6d2;
   --ds-primary-hover: #9bbce0;
   --ds-secondary: #a8c5e3;
-  --glass-bg: rgba(41, 37, 36, 0.78);
-  --glass-bg-strong: rgba(53, 48, 44, 0.92);
-  --glass-border: rgba(168, 162, 158, 0.18);
+  --glass-bg: rgba(12, 20, 38, 0.72);
+  --glass-bg-strong: rgba(14, 24, 44, 0.86);
+  --glass-border: rgba(148, 163, 184, 0.16);
   --ink: var(--ds-ink);
   --muted: var(--ds-muted);
   --app-bg: var(--ds-bg);
@@ -176,24 +180,24 @@ html.night {
   --text: var(--ds-ink-body);
   --border: var(--ds-border);
   --border-strong: var(--ds-border-strong);
-  --input-bg: #35302c;
-  --search-bg: #35302c;
-  --search-bg-hover: #3f3a36;
-  --search-bg-focus: #3f3a36;
-  --search-text: #fafaf9;
-  --search-placeholder: #a8a29e;
-  --search-border: rgba(168, 162, 158, 0.28);
-  --header-bg: rgba(41, 37, 36, 0.92);
-  --sidebar-bg: #292524;
+  --input-bg: #101a30;
+  --search-bg: rgba(12, 20, 38, 0.62);
+  --search-bg-hover: rgba(18, 30, 54, 0.72);
+  --search-bg-focus: rgba(18, 30, 54, 0.82);
+  --search-text: #eef2f9;
+  --search-placeholder: #9aa8be;
+  --search-border: rgba(148, 163, 184, 0.16);
+  --header-bg: rgba(12, 20, 38, 0.88);
+  --sidebar-bg: #0c1528;
   --sidebar-item: rgba(255, 255, 255, 0.04);
-  --sidebar-item-text: #e7e5e4;
-  --sidebar-item-icon: #a8a29e;
+  --sidebar-item-text: #dbe4f2;
+  --sidebar-item-icon: #9aa8be;
   --sidebar-item-hover: rgba(255, 255, 255, 0.08);
-  --sidebar-item-hover-text: #fafaf9;
+  --sidebar-item-hover-text: #f4f7fc;
   --sidebar-active: linear-gradient(90deg, rgba(121, 166, 210, 0.28), rgba(121, 166, 210, 0.1));
   --sidebar-active-text: #ffffff;
   --sidebar-item-border: rgba(255, 255, 255, 0.06);
-  --sidebar-border: rgba(168, 162, 158, 0.18);
+  --sidebar-border: rgba(148, 163, 184, 0.16);
 }
 
 /* Density */

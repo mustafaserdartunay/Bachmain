@@ -102,7 +102,7 @@ export default function Layout({ children }) {
           type="button"
           aria-label="Menüyü kapat"
           onClick={() => setMobileSidebarOpen(false)}
-          className="fixed inset-0 z-40 bg-black/55 backdrop-blur-sm lg:hidden"
+          className="app-mobile-sidebar-scrim fixed inset-y-0 right-0 z-40 bg-black/40 lg:hidden"
         />
       )}
       <Sidebar
@@ -112,7 +112,7 @@ export default function Layout({ children }) {
         onToggle={toggleSidebar}
       />
       <div
-        className="app-shell-content min-w-0 transition-all duration-page pb-[calc(var(--ds-bottom-nav-h,4rem)+env(safe-area-inset-bottom))] lg:pb-[var(--shell-gap)]"
+        className="app-shell-content min-w-0 transition-all duration-page pb-[calc(var(--ds-bottom-nav-h,4rem)+env(safe-area-inset-bottom)+(2*var(--shell-gap)))] lg:pb-[var(--shell-gap)]"
         data-sidebar-collapsed={!isMobile && effectiveCollapsed ? 'true' : 'false'}
         data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
       >

@@ -372,7 +372,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   return (
     <aside
       data-collapsed={collapsed ? 'true' : 'false'}
-      className={`glass-sidebar app-sidebar fixed top-[var(--shell-gap)] bottom-[var(--shell-gap)] left-0 z-50 flex h-[calc(100dvh-(2*var(--shell-gap)))] flex-col transition-all duration-300 lg:left-[var(--shell-gap)] ${sidebarPaddingClass} ${sidebarWidthClass} ${mobileStateClass}`}
+      className={`glass-sidebar app-sidebar fixed top-[var(--shell-gap)] left-[var(--shell-gap)] z-50 flex flex-col transition-all duration-300 bottom-[calc(var(--ds-bottom-nav-h,4rem)+env(safe-area-inset-bottom)+var(--shell-gap))] h-auto lg:bottom-[var(--shell-gap)] lg:h-[calc(100dvh-(2*var(--shell-gap)))] ${sidebarPaddingClass} ${sidebarWidthClass} ${mobileStateClass}`}
     >
       <div
         className={`flex w-full items-center gap-1.5 ${collapsed ? 'flex-col justify-center px-0 pt-2' : 'justify-between px-1 pt-1 pb-1'}`}

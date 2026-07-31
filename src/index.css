@@ -2123,6 +2123,46 @@ html.special .app-sidebar .sidebar-menu-active {
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
+/* Mobile drawer scrim — starts after the sidebar so glass keeps desktop color */
+.app-mobile-sidebar-scrim {
+  left: calc(var(--shell-gap) + var(--ds-sidebar-expanded, 17.5rem) + 0.5rem);
+}
+
+/* Bottom nav — same glass chrome as .glass-sidebar */
+.glass-bottom-nav {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 26px;
+  box-shadow:
+    0 10px 36px -14px rgba(30, 35, 60, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: var(--ink);
+}
+
+.glass-bottom-nav-item {
+  color: var(--muted);
+}
+
+.glass-bottom-nav-item.is-active {
+  color: var(--bach-navy, #203375);
+}
+
+.glass-bottom-nav-item.is-active svg {
+  color: inherit;
+}
+
+html.night .glass-bottom-nav {
+  box-shadow:
+    0 14px 40px -16px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+html.night .glass-bottom-nav-item.is-active {
+  color: var(--bach-sky, #79a6d2);
+}
+
 .glass-sidebar .sidebar-section-label {
   display: flex;
   align-items: center;

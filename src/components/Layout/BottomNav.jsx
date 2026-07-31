@@ -9,11 +9,11 @@ const ITEMS = [
   { to: '/profil', label: 'Profil', icon: UserRound },
 ]
 
-/** Mobile bottom navigation — Design System 3.0 */
+/** Mobile bottom navigation — same glass chrome as desktop sidebar */
 export default function BottomNav() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-sticky flex h-[var(--ds-bottom-nav-h,4rem)] items-stretch border-t border-ds-border bg-ds-surface/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
+      className="glass-bottom-nav fixed inset-x-[var(--shell-gap)] bottom-[var(--shell-gap)] z-40 flex h-[var(--ds-bottom-nav-h,4rem)] items-stretch px-1 pb-[env(safe-area-inset-bottom)] lg:hidden"
       aria-label="Alt navigasyon"
     >
       {ITEMS.map(({ to, label, icon: Icon, end }) => (
@@ -22,8 +22,8 @@ export default function BottomNav() {
           to={to}
           end={end}
           className={({ isActive }) =>
-            `flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-ds-caption font-semibold transition-colors duration-hover ${
-              isActive ? 'text-ds-primary' : 'text-ds-muted'
+            `glass-bottom-nav-item flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[0.75rem] font-semibold transition-colors ${
+              isActive ? 'is-active' : ''
             }`
           }
         >
