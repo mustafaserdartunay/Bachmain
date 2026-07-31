@@ -535,6 +535,11 @@ export async function loginAccount(store, body) {
     err.code = 'INVALID_CREDENTIALS'
     throw err
   }
+  // Demo accounts skip the multi-step installer and enter the app immediately.
+  if (account.role === 'demo_lead' && account.onboardingCompleted === false) {
+    account.onboardingCompleted = true
+    account.onboardingCompletedAt = new Date().toISOString()
+  }
   const customerForExpiry = store.customers.find((c) => c.id === account.customerId) || null
   const expiry = customerForExpiry?.licenseExpiry || account.licenseExpiry
   if (account.role === 'demo_lead' && expiry) {

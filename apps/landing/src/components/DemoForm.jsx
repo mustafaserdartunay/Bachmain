@@ -135,12 +135,18 @@ export default function DemoForm({ variant = 'panel' } = {}) {
         language: typeof navigator !== 'undefined' ? navigator.language : 'tr',
       })
       trackCta('demo_submit', { source: 'demo_panel' })
-      setSessionToken(data.token || '')
+      const token = data.token || data.tokens?.accessToken || ''
+      if (!token) {
+        throw new Error('Demo oluşturuldu ancak oturum alınamadı. Giriş sayfasından deneyin.')
+      }
+      setSessionToken(token)
       setLicenseExpiry(data.licenseExpiry || data.user?.licenseExpiry || '')
       setDone(true)
+      // Thank-you briefly, then enter the app — no multi-step follow-up forms.
+      window.setTimeout(() => redirectToAppWithToken(token), 900)
     } catch (err) {
+      setDone(false)
       setSubmitError(err.message || 'Demonuz oluşturulamadı. Lütfen tekrar deneyin.')
-    } finally {
       setBusy(false)
     }
   }
@@ -242,8 +248,11 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               ) : null}
               .
             </p>
-            <Button type="button" fullWidth className="mt-8" onClick={enterApp}>
-              Uygulamaya Giriş Yap
+            <p className="mt-4 text-[14px] font-medium text-[#64748B]">
+              Uygulamaya yönlendiriliyorsunuz…
+            </p>
+            <Button type="button" fullWidth className="mt-6" onClick={enterApp}>
+              Hemen Giriş Yap
             </Button>
             <p className="mt-4 text-[13px] font-medium text-[#64748B]">
               Aynı e-posta ile ikinci demo açılamaz. Süre bitince yönetim uzatabilir.

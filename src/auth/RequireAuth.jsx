@@ -118,7 +118,7 @@ export default function RequireAuth({ children }) {
     return <Navigate to="/hesap/lisans" replace state={{ reason: 'license_expired' }} />
   }
 
-  if (user?.onboardingCompleted === false && path !== '/kurulum') {
+  if (user?.onboardingCompleted === false && user?.role !== 'demo_lead' && path !== '/kurulum') {
     return <Navigate to="/kurulum" replace state={{ reason: 'onboarding' }} />
   }
 

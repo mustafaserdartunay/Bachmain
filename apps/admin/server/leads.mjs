@@ -276,7 +276,8 @@ export function createDemoLead(store, body = {}) {
       createdAt: nowIso,
       lastLoginAt: nowIso,
       lastDemoAt: nowIso,
-      onboardingCompleted: false,
+      onboardingCompleted: true,
+      onboardingCompletedAt: nowIso,
       licenseExpiry,
     }
     store.accounts.unshift(account)
@@ -302,6 +303,8 @@ export function createDemoLead(store, body = {}) {
     account.licenseExpiry = licenseExpiry
     account.customerId = customer.id
     account.tenantCode = customer.tenantCode || account.tenantCode
+    account.onboardingCompleted = true
+    account.onboardingCompletedAt = nowIso
   }
 
   demoRequest.customerId = customer.id
