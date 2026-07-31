@@ -570,7 +570,7 @@ textarea:not(.form-input)::placeholder {
 }
 
 #customer-edit-form .glass-pill:hover {
-  background: rgba(140, 145, 165, 0.1) !important;
+  background: transparent !important;
 }
 
 #customer-edit-form .app-form-row {
@@ -1201,10 +1201,45 @@ textarea:not(.form-input)::placeholder {
   background: transparent !important;
 }
 
+.customer-filter-dropdown-menu .group:hover {
+  background: transparent !important;
+}
+
 .customer-filter-dropdown-menu button {
   font-size: 0.75rem !important;
   font-weight: 400 !important;
   color: var(--ink) !important;
+}
+
+.customer-filter-dropdown-menu button.flex.w-full:hover {
+  background: transparent !important;
+  font-weight: 700 !important;
+  transform: scale(1.03);
+  transform-origin: left center;
+}
+
+.customer-filter-dropdown-menu button.flex.w-full:hover span.truncate {
+  font-weight: 700 !important;
+}
+
+.customer-filter-dropdown-menu button[title='Düzenle'] {
+  color: #2563eb !important;
+}
+
+.customer-filter-dropdown-menu button[title='Düzenle']:hover {
+  background: rgba(37, 99, 235, 0.15) !important;
+  color: #1d4ed8 !important;
+  transform: scale(1.1);
+}
+
+.customer-filter-dropdown-menu button[title='Sil'] {
+  color: #ef4444 !important;
+}
+
+.customer-filter-dropdown-menu button[title='Sil']:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
+  transform: scale(1.1);
 }
 
 .customer-filter-dropdown-menu button span.truncate {
@@ -3928,7 +3963,7 @@ html.night #customer-edit-form .glass-pill {
 }
 
 html.night #customer-edit-form .glass-pill:hover {
-  background: rgba(148, 163, 184, 0.12) !important;
+  background: transparent !important;
 }
 
 html.night .app-responsive .card [class*='bg-dark-900'],

@@ -328,7 +328,7 @@ export default function CustomersPage({
           <button
             type="button"
             onClick={() => navigate(createPath)}
-            className="inline-flex items-center gap-1 bg-transparent p-0 text-xs font-normal leading-none text-[#2563eb] transition-transform duration-hover hover:-translate-y-0.5"
+            className="inline-flex items-center gap-1 origin-center bg-transparent p-0 text-xs font-normal leading-none text-[#2563eb] transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold"
           >
             <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-[#2563eb]">
               <UserPlus className="h-4 w-4 shrink-0" />

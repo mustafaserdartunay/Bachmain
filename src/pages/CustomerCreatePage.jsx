@@ -71,8 +71,8 @@ const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
 const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu'
 
 const TEXT_ACTION_CLASS =
-  'inline-flex items-center gap-1 bg-transparent p-0 text-xs font-normal leading-none transition-transform duration-hover hover:-translate-y-0.5'
-const TEXT_CANCEL_CLASS = `${TEXT_ACTION_CLASS} text-[var(--muted)]`
+  'inline-flex items-center gap-1 origin-center bg-transparent p-0 text-xs font-normal leading-none transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold'
+const TEXT_CANCEL_CLASS = `${TEXT_ACTION_CLASS} text-[#e11d48]`
 const TEXT_SAVE_CLASS = `${TEXT_ACTION_CLASS} text-[#2563eb]`
 
 function emptyMeta(defaultType = '') {

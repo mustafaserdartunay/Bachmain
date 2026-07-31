@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, ChevronRight, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { DeleteConfirmPopover } from './Common/ListDeleteConfirmPanel'
-import {
-  dropdownMenuShellClass,
-  DROPDOWN_MENU_ITEM_CLASS,
-  DROPDOWN_MENU_ITEM_MUTED_CLASS,
-} from './Common/DropdownMenu'
+import { dropdownMenuShellClass } from './Common/DropdownMenu'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
 import { OPTION_COLOR_PALETTE } from '../utils/customerMeta'
 
@@ -172,11 +168,11 @@ export default function EditableDropdownPill({
         })
 
   const optionButtonClass = isLightMenu
-    ? 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-muted)]'
-    : DROPDOWN_MENU_ITEM_CLASS
+    ? 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold text-[var(--text-strong)]'
+    : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-[var(--ink)]'
   const placeholderButtonClass = isLightMenu
-    ? `${optionButtonClass} text-[var(--text-muted)]`
-    : DROPDOWN_MENU_ITEM_MUTED_CLASS
+    ? `${optionButtonClass} origin-left text-[var(--text-muted)] transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
+    : `${optionButtonClass} origin-left text-[var(--muted)] transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
 
   function renderMenu() {
     return (
@@ -263,19 +259,14 @@ export default function EditableDropdownPill({
                 </button>
               </div>
             ) : (
-              <div
-                key={option.label}
-                className={`group flex items-center gap-1 rounded-xl transition-colors ${isLightMenu ? 'hover:bg-[var(--surface-muted)]' : 'hover:bg-white/45'}`}
-              >
+              <div key={option.label} className="group flex items-center gap-1 rounded-xl">
                 <button
                   type="button"
                   onClick={() => {
                     onChange(option.label)
                     setActiveMenu(null)
                   }}
-                  className={
-                    isLightMenu ? optionButtonClass : `${optionButtonClass} hover:bg-white/45`
-                  }
+                  className={`${optionButtonClass} origin-left transition-[transform,font-weight,background-color] hover:scale-[1.03] hover:font-bold hover:bg-transparent`}
                 >
                   <OptionLeading option={option} isLightMenu={isLightMenu} />
                   <span className="truncate">{option.label}</span>
@@ -285,10 +276,10 @@ export default function EditableDropdownPill({
                     <button
                       type="button"
                       onClick={() => startEdit(index)}
-                      className="rounded-lg p-1 text-[var(--muted)] transition-colors hover:bg-white/45 hover:text-blue-600"
+                      className="rounded-lg p-1 text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-blue-500/15 hover:text-blue-700"
                       title="Düzenle"
                     >
-                      <Pencil className="h-3.5 w-3.5" />
+                      <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
                     </button>
                     <button
                       type="button"
@@ -296,10 +287,10 @@ export default function EditableDropdownPill({
                         setEditingIndex(null)
                         setConfirmIndex(index)
                       }}
-                      className="rounded-lg p-1 text-[var(--muted)] transition-colors hover:bg-red-500/15 hover:text-red-500"
+                      className="rounded-lg p-1 text-red-500 transition-[transform,background-color,color] hover:scale-110 hover:bg-red-500/15 hover:text-red-600"
                       title="Sil"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
                     </button>
                   </span>
                 )}
