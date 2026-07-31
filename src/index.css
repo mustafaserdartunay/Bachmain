@@ -1263,6 +1263,35 @@ textarea:not(.form-input)::placeholder {
   transform: scale(1.1);
 }
 
+.customer-filter-dropdown-menu button[title='Ekle'],
+.customer-filter-dropdown-menu button[title='Kaydet'] {
+  color: #047857 !important;
+  background: transparent !important;
+}
+
+.customer-filter-dropdown-menu button[title='Ekle']:hover,
+.customer-filter-dropdown-menu button[title='Kaydet']:hover {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #065f46 !important;
+}
+
+.customer-filter-dropdown-menu button[title='Vazgeç'] {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+}
+
+.customer-filter-dropdown-menu button[title='Vazgeç']:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #dc2626 !important;
+}
+
+.customer-filter-dropdown-menu button[title='Renk seç'] {
+  color: inherit !important;
+  background: transparent !important;
+  font-weight: 400 !important;
+  transform: none !important;
+}
+
 .customer-filter-dropdown-menu button span.truncate {
   color: var(--ink) !important;
 }
