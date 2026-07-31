@@ -80,27 +80,56 @@ async function activateWorkspace(user) {
   syncLocalProfile(user)
 }
 
+function readHandoffToken() {
+  if (typeof window === 'undefined') return ''
+  try {
+    return new URLSearchParams(window.location.search).get('authToken') || ''
+  } catch {
+    return ''
+  }
+}
+
+/** Capture marketing→app SSO token before the first paint so RequireAuth never races. */
+function captureHandoffToken() {
+  const handoffToken = readHandoffToken()
+  if (!handoffToken) return false
+  // Drop any stale profile from a previous account; /auth/me will refill it.
+  try {
+    localStorage.removeItem('bachmain_auth_user')
+  } catch {
+    /* ignore */
+  }
+  persistSession({ token: handoffToken })
+  try {
+    const params = new URLSearchParams(window.location.search)
+    params.delete('authToken')
+    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash || ''}`
+    window.history.replaceState({}, '', nextUrl || '/')
+  } catch {
+    /* ignore URL cleanup failures */
+  }
+  return true
+}
+
+const HAND_OFF_ON_LOAD = typeof window !== 'undefined' ? captureHandoffToken() : false
+
 export function AuthProvider({ children }) {
   const stored = getStoredSession()
   const localBoot = typeof window !== 'undefined' && isLocalDevHost()
   const initialUser = localBoot ? LOCAL_DEV_USER : stored.user
+  const pendingSession = Boolean(stored.token) || HAND_OFF_ON_LOAD
   const [user, setUser] = useState(initialUser)
-  const [loading, setLoading] = useState(localBoot ? false : Boolean(stored.token))
-  const [bootstrapped, setBootstrapped] = useState(localBoot ? true : !stored.token)
+  const [loading, setLoading] = useState(localBoot ? false : pendingSession)
+  const [bootstrapped, setBootstrapped] = useState(localBoot ? true : !pendingSession)
 
   useEffect(() => {
     let cancelled = false
     async function boot() {
-      const params = new URLSearchParams(window.location.search)
-      const handoffToken = params.get('authToken')
-      if (handoffToken) {
-        persistSession({ token: handoffToken, user: getStoredSession().user })
-        params.delete('authToken')
-        const nextUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash || ''}`
-        window.history.replaceState({}, '', nextUrl || '/')
-      }
+      // Re-check in case the token arrived after module init (rare deep-link timing).
+      const lateHandoff = captureHandoffToken()
 
       let { token, user: cached } = getStoredSession()
+      const arrivedViaHandoff = HAND_OFF_ON_LOAD || lateHandoff || Boolean(token && !cached)
 
       // Localhost: never block on login — open the CRM UI with a local session.
       if (isLocalDevHost()) {
@@ -133,13 +162,44 @@ export function AuthProvider({ children }) {
           const next = await fetchCurrentUser()
           if (!cancelled) {
             setUser(next)
-            await activateWorkspace(next)
+            try {
+              await activateWorkspace(next)
+            } catch (workspaceError) {
+              // Workspace sync must not undo a valid login.
+              console.warn('[auth] workspace activate failed', workspaceError)
+            }
           }
         }
-      } catch {
+      } catch (error) {
         if (cached && !cancelled) {
           setUser(cached)
-          await activateWorkspace(cached)
+          try {
+            await activateWorkspace(cached)
+          } catch {
+            /* ignore */
+          }
+        } else if (arrivedViaHandoff && !cancelled) {
+          // Fresh SSO handoff: keep the token and retry once before giving up.
+          try {
+            await new Promise((resolve) => window.setTimeout(resolve, 400))
+            const retry = await fetchCurrentUser()
+            if (!cancelled && retry) {
+              setUser(retry)
+              try {
+                await activateWorkspace(retry)
+              } catch {
+                /* ignore */
+              }
+              return
+            }
+          } catch {
+            /* fall through to clear */
+          }
+          console.warn('[auth] handoff session validation failed', error?.message || error)
+          clearSession()
+          clearWorkspaceStorage()
+          localStorage.removeItem(WORKSPACE_OWNER_KEY)
+          setUser(null)
         } else if (!cancelled) {
           clearSession()
           clearWorkspaceStorage()

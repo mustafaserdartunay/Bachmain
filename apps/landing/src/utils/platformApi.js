@@ -108,11 +108,17 @@ function safeAppPath(next) {
 }
 
 export function redirectToAppWithToken(token) {
+  if (!token) {
+    console.warn('[bachmain] redirectToAppWithToken called without token')
+    window.location.replace(LOGIN_URL)
+    return
+  }
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
   const path = safeAppPath(params.get('next'))
   const url = new URL(path, APP_URL)
-  if (token) url.searchParams.set('authToken', token)
-  window.location.href = url.toString()
+  url.searchParams.set('authToken', token)
+  // replace avoids bouncing back to /giris via browser history after SSO handoff
+  window.location.replace(url.toString())
 }
 
 export function redirectToAppLogin() {

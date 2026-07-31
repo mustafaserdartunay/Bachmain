@@ -99,6 +99,7 @@
 
 - [ ] Staff / tenant login
 - [ ] Same tenant user login from two independent PC/Mac sessions; notification-mail failure must not block either login
+- [ ] Marketing `/giris` → uygulama SSO handoff with empty localStorage (private window); must enter app, not bounce back to `/giris`
 - [ ] One CRM page load + save
 - [ ] AI health endpoint
 - [ ] Stripe test webhook (signed)

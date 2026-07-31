@@ -36,11 +36,17 @@ export default function LoginPanel() {
         password: form.password,
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
       })
+      const token = data?.token || data?.tokens?.accessToken || ''
+      if (!token) {
+        throw new Error('Giriş tamamlandı ancak oturum anahtarı alınamadı. Lütfen tekrar deneyin.')
+      }
       setDone(true)
-      setTimeout(() => redirectToAppWithToken(data.token), 900)
+      // Immediate replace — delayed href redirects can be cancelled by tab throttling
+      // and leave the user staring at /giris after a successful login.
+      window.setTimeout(() => redirectToAppWithToken(token), 250)
     } catch (err) {
+      setDone(false)
       setSubmitError(err instanceof Error ? err.message : 'Giriş başarısız')
-    } finally {
       setBusy(false)
     }
   }

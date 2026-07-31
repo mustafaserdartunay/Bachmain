@@ -915,10 +915,14 @@ export function getAccountFromToken(store, token) {
   if (!payload?.sub) return null
   const account = store.accounts.find((a) => a.id === payload.sub)
   if (!account) return null
-  const companySession = resolveCompanySession(store, account, payload.tenantCode)
-  if (!companySession) return null
-  const customer = customerForCompanySession(store, companySession)
-  if (!customer) return null
+  // Prefer tenant from JWT; fall back to the account's primary company so a
+  // missing/stale companyAccess row cannot bounce a valid login to /giris.
+  const companySession =
+    resolveCompanySession(store, account, payload.tenantCode) || primaryCompanySession(account)
+  const customer =
+    customerForCompanySession(store, companySession) ||
+    store.customers.find((row) => row.id === account.customerId) ||
+    null
   return {
     account,
     customer,

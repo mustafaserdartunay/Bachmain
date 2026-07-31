@@ -41,8 +41,10 @@ export function persistSession({ token, user }) {
     localStorage.setItem(TOKEN_KEY, token)
     setAuthCookie('bachmain_token', token)
   }
-  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user))
-  window.dispatchEvent(new CustomEvent('bachmain:auth-changed', { detail: { user } }))
+  if (user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user))
+    window.dispatchEvent(new CustomEvent('bachmain:auth-changed', { detail: { user } }))
+  }
 }
 
 export function clearSession() {

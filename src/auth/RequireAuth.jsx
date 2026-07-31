@@ -81,8 +81,10 @@ export default function RequireAuth({ children }) {
   const { isAuthenticated, bootstrapped, loading, user } = useAuth()
   const location = useLocation()
   const path = location.pathname
+  const hasHandoffToken =
+    typeof window !== 'undefined' && Boolean(new URLSearchParams(location.search).get('authToken'))
 
-  if (!bootstrapped || loading) {
+  if (!bootstrapped || loading || hasHandoffToken) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-600">
         Oturum kontrol ediliyor…
