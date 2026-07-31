@@ -26,7 +26,9 @@ export function loadQuotes() {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (!saved) return initialQuotes.map(normalizeQuoteStages)
     const parsed = JSON.parse(saved)
-    return Array.isArray(parsed) ? parsed.map(normalizeQuoteStages) : initialQuotes.map(normalizeQuoteStages)
+    return Array.isArray(parsed)
+      ? parsed.map(normalizeQuoteStages)
+      : initialQuotes.map(normalizeQuoteStages)
   } catch {
     return initialQuotes.map(normalizeQuoteStages)
   }
@@ -86,17 +88,20 @@ export function createVoiceQuote(payload = {}) {
   const createdAt = today.toISOString().slice(0, 10)
   const validUntil = new Date(today.getTime() + 14 * 86400000).toISOString().slice(0, 10)
 
-  const items = (payload.items || []).length > 0
-    ? payload.items.map((item) => createEmptyQuoteItem(
-      item.product || item.name || '',
-      item.quantity,
-      item.unitPrice ?? item.price,
-      item.vatRate,
-    ))
-    : [createEmptyQuoteItem()]
+  const items =
+    (payload.items || []).length > 0
+      ? payload.items.map((item) =>
+          createEmptyQuoteItem(
+            item.product || item.name || '',
+            item.quantity,
+            item.unitPrice ?? item.price,
+            item.vatRate,
+          ),
+        )
+      : [createEmptyQuoteItem()]
 
   const quote = {
-    ...initialQuotes[0],
+    ...(initialQuotes[0] || {}),
     id: nextId,
     title: payload.title || '',
     customer: payload.customer || '',
@@ -116,11 +121,13 @@ export function createVoiceQuote(payload = {}) {
     currentStageId: getQuoteStageOptions(loadWorkflowStages())[0]?.id || '',
     stages: loadWorkflowStages(),
     items,
-    activities: [{
-      id: `act-${Date.now()}`,
-      date: new Date().toLocaleString('tr-TR'),
-      text: 'Sesli asistan ile teklif oluşturuldu.',
-    }],
+    activities: [
+      {
+        id: `act-${Date.now()}`,
+        date: new Date().toLocaleString('tr-TR'),
+        text: 'Sesli asistan ile teklif oluşturuldu.',
+      },
+    ],
   }
 
   saveQuotes([quote, ...quotes.filter((item) => item.id !== quote.id)])

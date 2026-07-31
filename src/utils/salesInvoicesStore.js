@@ -1,4 +1,3 @@
-import { getCustomerProfiles } from '../data/customerProfiles'
 import { createCustomerSalesInvoice, getTreasuryMovements } from './treasuryStore'
 
 const STORAGE_KEY = 'erlenbox-sales-invoices'
@@ -61,48 +60,6 @@ function normalizeInvoice(raw = {}) {
   }
 }
 
-function buildSeedInvoices() {
-  const customers = getCustomerProfiles().slice(0, 8)
-  const names = [
-    'Mazlum Çikolata San. ve Tic. Ltd. Şti.',
-    'Teslim Edilen - 5800',
-    'Satış Faturaları',
-    'Özel Baskılı Kraft Kutu',
-    'Oluklu Mukavva Siparişi',
-    'Proforma Teklif Faturası',
-    'İhracat Satış Faturası',
-    'Perakende Satış',
-  ]
-
-  const baseDate = new Date()
-  return names.map((title, index) => {
-    const customer = customers[index % customers.length]
-    const issue = new Date(baseDate)
-    issue.setDate(issue.getDate() - index * 4)
-    const due = new Date(issue)
-    due.setDate(due.getDate() + 15)
-    const totalAmount = [20353.2, 5800, 12450, 8900, 45600, 3200, 156780, 980][index] || 5000
-    const collected = index === 2 || index === 6 ? totalAmount : index === 5 ? totalAmount * 0.4 : 0
-    const invoiceNo = index % 3 === 0 ? `AB020260000000${33 - index}` : ''
-
-    return normalizeInvoice({
-      id: `SINV-SEED-${index + 1}`,
-      title,
-      invoiceNo,
-      customerId: customer?.id || '',
-      customerName: customer?.company || customer?.companyTitle || title,
-      issueDate: issue.toISOString().slice(0, 10),
-      dueDate: due.toISOString().slice(0, 10),
-      totalAmount,
-      collectedAmount: collected,
-      invoiceKind: index === 1 ? 'a-fatura' : 'e-fatura',
-      status: collected >= totalAmount ? 'collected' : index === 4 ? 'draft' : 'approved',
-      description: `${title} · ${customer?.company || 'Müşteri'}`,
-      source: 'seed',
-    })
-  })
-}
-
 function syncTreasuryInvoices(invoices) {
   const movements = getTreasuryMovements().filter((item) => item.type === 'Satış Faturası')
   const byDocNo = new Map(invoices.map((item) => [item.invoiceNo, item]))
@@ -111,21 +68,23 @@ function syncTreasuryInvoices(invoices) {
   movements.forEach((movement) => {
     const docNo = String(movement.docNo || '').trim()
     if (!docNo || byDocNo.has(docNo)) return
-    invoices.unshift(normalizeInvoice({
-      id: movement.id,
-      title: 'Satış Faturaları',
-      invoiceNo: docNo,
-      customerId: movement.customerId || '',
-      customerName: movement.customerName || '',
-      issueDate: movement.date || todayIso(),
-      dueDate: movement.dueDate || movement.date || todayIso(),
-      totalAmount: movement.amount,
-      collectedAmount: 0,
-      invoiceKind: 'e-fatura',
-      status: 'approved',
-      description: movement.description || '',
-      source: 'treasury',
-    }))
+    invoices.unshift(
+      normalizeInvoice({
+        id: movement.id,
+        title: 'Satış Faturaları',
+        invoiceNo: docNo,
+        customerId: movement.customerId || '',
+        customerName: movement.customerName || '',
+        issueDate: movement.date || todayIso(),
+        dueDate: movement.dueDate || movement.date || todayIso(),
+        totalAmount: movement.amount,
+        collectedAmount: 0,
+        invoiceKind: 'e-fatura',
+        status: 'approved',
+        description: movement.description || '',
+        source: 'treasury',
+      }),
+    )
     changed = true
   })
 
@@ -134,10 +93,10 @@ function syncTreasuryInvoices(invoices) {
 
 export function readSalesInvoices() {
   let invoices = readJson(STORAGE_KEY, null)
-  if (!Array.isArray(invoices) || invoices.length === 0) {
-    invoices = buildSeedInvoices()
+  if (!Array.isArray(invoices)) {
+    invoices = []
     writeJson(STORAGE_KEY, invoices)
-    return invoices.map(normalizeInvoice)
+    return []
   }
 
   const synced = syncTreasuryInvoices([...invoices.map(normalizeInvoice)])
@@ -156,9 +115,11 @@ export function saveSalesInvoices(items) {
 export function upsertSalesInvoice(partial) {
   const invoices = readSalesInvoices()
   const normalized = normalizeInvoice(partial)
-  const index = invoices.findIndex((item) => item.id === normalized.id || (
-    normalized.invoiceNo && item.invoiceNo === normalized.invoiceNo
-  ))
+  const index = invoices.findIndex(
+    (item) =>
+      item.id === normalized.id ||
+      (normalized.invoiceNo && item.invoiceNo === normalized.invoiceNo),
+  )
 
   if (index >= 0) {
     invoices[index] = normalizeInvoice({ ...invoices[index], ...partial })
@@ -176,7 +137,10 @@ export function recordInvoiceCollection(invoiceId, amount) {
   if (index < 0) return null
 
   const current = invoices[index]
-  const nextCollected = Math.min(current.totalAmount, current.collectedAmount + Math.max(0, Number(amount) || 0))
+  const nextCollected = Math.min(
+    current.totalAmount,
+    current.collectedAmount + Math.max(0, Number(amount) || 0),
+  )
   invoices[index] = normalizeInvoice({
     ...current,
     collectedAmount: nextCollected,
@@ -239,7 +203,9 @@ export function getSalesInvoiceStats(invoices = readSalesInvoices()) {
   const grandTotal = invoices.reduce((sum, item) => sum + item.totalAmount, 0)
   const remainingTotal = invoices.reduce((sum, item) => sum + item.remainingAmount, 0)
   const collectedTotal = invoices.reduce((sum, item) => sum + item.collectedAmount, 0)
-  const overdueCount = invoices.filter((item) => item.remainingAmount > 0 && item.overdueDays > 0).length
+  const overdueCount = invoices.filter(
+    (item) => item.remainingAmount > 0 && item.overdueDays > 0,
+  ).length
 
   return {
     totalRecords,

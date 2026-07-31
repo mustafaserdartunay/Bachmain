@@ -129,38 +129,8 @@ function seedBoxes() {
   }))
 }
 
-function seedVehicles() {
-  const eu = TRAILER_TEMPLATES[0]
-  return [
-    {
-      id: uid('veh'),
-      type: 'truck',
-      brand: 'Mercedes-Benz',
-      model: 'Actros',
-      plate: '34 BM 0101',
-      driver: 'Ahmet Yılmaz',
-      phone: '+90 532 000 00 00',
-      company: 'BachMain Lojistik',
-      weightKg: 7500,
-      volumeM3: eu.maxVolumeM3,
-      innerLengthMm: eu.innerLengthMm,
-      innerWidthMm: eu.innerWidthMm,
-      innerHeightMm: eu.innerHeightMm,
-      maxPallets: eu.maxPallets,
-      maxWeightKg: eu.maxWeightKg,
-      maxVolumeM3: eu.maxVolumeM3,
-      doorType: 'rear',
-      refrigerated: false,
-      gps: true,
-      trackingNo: 'TRK-DEMO-001',
-      trailerTemplateId: 'eu-standard',
-      createdAt: new Date().toISOString(),
-    },
-  ]
-}
-
 export function loadVehicles() {
-  return ensureSeed(KEYS.vehicles, seedVehicles)
+  return read(KEYS.vehicles, [])
 }
 export function saveVehicles(rows) {
   return write(KEYS.vehicles, rows)
@@ -189,7 +159,8 @@ export function upsertTrailer(row) {
   const next = {
     ...row,
     id: row.id || uid('trl'),
-    maxVolumeM3: row.maxVolumeM3 || volumeM3(row.innerLengthMm, row.innerWidthMm, row.innerHeightMm),
+    maxVolumeM3:
+      row.maxVolumeM3 || volumeM3(row.innerLengthMm, row.innerWidthMm, row.innerHeightMm),
     updatedAt: new Date().toISOString(),
   }
   const idx = rows.findIndex((r) => r.id === next.id)

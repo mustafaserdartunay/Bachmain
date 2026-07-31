@@ -78,6 +78,8 @@ export const WORKSPACE_STORAGE_KEYS = [
   'erlenbox-doc-templates',
   'erlenbox-doc-labels',
   'erlenbox-doc-print-jobs',
+  'erlenbox-sales-invoices',
+  'erlenbox-incoming-e-invoices',
   'bach-org-structure',
   'bach-org-context',
 ]
@@ -160,11 +162,18 @@ export function restoreWorkspace(payload) {
 
 export function getWorkspaceOwnerId(user) {
   if (!user) return ''
-  return String(user.tenantCode || user.customerId || user.id || user.email || '')
+  // Membership email is the stable key across demo → paid conversion.
+  const email = String(user.email || '')
+    .trim()
+    .toLowerCase()
+  if (email.includes('@')) return `email:${email}`
+  return String(user.tenantCode || user.customerId || user.id || '')
 }
 
 /**
  * Switch local CRM data to this account: clear foreign data, pull from DB.
+ * New members start empty; returning members restore their email-scoped workspace
+ * so purchase continues from the same place.
  */
 export async function bindUserWorkspace(user) {
   const ownerId = getWorkspaceOwnerId(user)
@@ -176,23 +185,32 @@ export async function bindUserWorkspace(user) {
   }
   localStorage.setItem(WORKSPACE_OWNER_KEY, ownerId)
 
-  await hydrateTenantWorkspace()
+  await hydrateTenantWorkspace({ ownerChanged: Boolean(previous && previous !== ownerId) })
   installWorkspaceAutoSync()
 }
 
-export async function hydrateTenantWorkspace() {
+export async function hydrateTenantWorkspace({ ownerChanged = false } = {}) {
   try {
     const payload = await pullTenantCollection('workspace')
     const hasKeys = payload?.keys && Object.keys(payload.keys).length > 0
     if (hasKeys) {
       restoreWorkspace(payload)
-    } else {
-      // Brand-new member: empty workspace, no demo data.
+      return
+    }
+
+    const snap = snapshotWorkspace()
+    const localCount = Object.keys(snap.keys || {}).length
+    if (ownerChanged || localCount === 0) {
+      // Brand-new member / switched account: empty workspace, no demo data.
       clearWorkspaceStorage()
-      // Keep owner marker
       const owner = localStorage.getItem(WORKSPACE_OWNER_KEY)
       if (owner) localStorage.setItem(WORKSPACE_OWNER_KEY, owner)
+      return
     }
+
+    // Same membership email, empty server blob: keep local rows and push up
+    // so package purchase later continues from this workspace.
+    scheduleWorkspacePush(0)
   } catch (err) {
     if (err?.code === 'DATABASE_REQUIRED' || err?.status === 503) return
     if (err?.status === 401) return

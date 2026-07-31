@@ -35,8 +35,8 @@ function readPrefill() {
 }
 
 /**
- * Demo lead form — single short form creates the demo and enters the app.
- * No second billing form, no kurulum sihirbazı.
+ * Demo lead form — short form creates the account; user enters the app
+ * only via the thank-you “Giriş” button (no auto-redirect).
  * - panel: /demo card
  * - band: homepage CTA glass
  */
@@ -91,7 +91,7 @@ export default function DemoForm({ variant = 'panel' } = {}) {
       setSessionToken(token)
       setLicenseExpiry(data.licenseExpiry || data.user?.licenseExpiry || '')
       setDone(true)
-      window.setTimeout(() => redirectToAppWithToken(token), 900)
+      setBusy(false)
     } catch (err) {
       setDone(false)
       setSubmitError(err.message || 'Demonuz oluşturulamadı. Lütfen tekrar deneyin.')
@@ -117,7 +117,7 @@ export default function DemoForm({ variant = 'panel' } = {}) {
           <CheckCircle className="mx-auto h-12 w-12 text-emerald-300" aria-hidden />
           <p className="mt-4 text-lg font-bold text-white">Demonuz oluşturuldu</p>
           <p className="mt-2 text-sm text-white/75">
-            Teşekkür ederiz. Uygulamaya yönlendiriliyorsunuz…
+            Teşekkür ederiz. 7 günlük hesabınız hazır
             {licenseExpiry ? (
               <>
                 {' '}
@@ -125,13 +125,14 @@ export default function DemoForm({ variant = 'panel' } = {}) {
                 <span className="font-semibold tabular-nums text-white">{licenseExpiry}</span>
               </>
             ) : null}
+            . Giriş yaparak boş çalışma alanınızı açabilirsiniz.
           </p>
           <button
             type="button"
             onClick={enterApp}
             className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-white px-6 text-sm font-bold text-blue-700 shadow-lg transition hover:bg-blue-50 sm:w-auto"
           >
-            Hemen Giriş Yap
+            Giriş Yap
           </button>
         </div>
       )
@@ -186,8 +187,8 @@ export default function DemoForm({ variant = 'panel' } = {}) {
       </h2>
       {!done ? (
         <p className="mx-auto mt-4 max-w-xl text-center text-[14px] leading-relaxed font-medium text-[#64748B]">
-          Bilgilerinizi girin; 7 günlük demo hemen açılsın. Kurulum sihirbazı yok — doğrudan
-          uygulamaya girersiniz.
+          Bilgilerinizi girin; 7 günlük demo hemen açılsın. Teşekkür ekranından Giriş Yap ile boş
+          çalışma alanınıza girebilirsiniz.
         </p>
       ) : null}
 
@@ -210,10 +211,11 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               .
             </p>
             <p className="mt-4 text-[14px] font-medium text-[#64748B]">
-              Uygulamaya yönlendiriliyorsunuz…
+              Giriş Yap ile boş çalışma alanınıza gidin. Verileriniz üyelik e-postanıza bağlı
+              saklanır; paket satın aldığınızda kaldığınız yerden devam edersiniz.
             </p>
             <Button type="button" fullWidth className="mt-6" onClick={enterApp}>
-              Hemen Giriş Yap
+              Giriş Yap
             </Button>
             <p className="mt-4 text-[13px] font-medium text-[#64748B]">
               Aynı e-posta ile ikinci demo açılamaz. Süre bitince yönetim uzatabilir.

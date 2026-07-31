@@ -1,4 +1,3 @@
-import { productionOrders as seedProductionOrders } from '../data/mockData'
 import { syncQuoteFromProduction } from './quoteWorkflowSync'
 import { nextDocumentCode } from './documentCodes'
 import {
@@ -19,11 +18,7 @@ import {
 } from './workflowStages'
 import { softDeleteRecord, restoreDeletedRecord } from './deletedRecordsStore'
 import { loadOrders, updateOrder } from './ordersStore'
-import {
-  addDepoItem,
-  createDepoItemFromRow,
-  getDepoItemByProductionRow,
-} from './depoStore'
+import { addDepoItem, createDepoItemFromRow, getDepoItemByProductionRow } from './depoStore'
 
 const STORAGE_KEY = 'erlenbox-production'
 const DELETED_COLLECTION = 'production'
@@ -57,36 +52,17 @@ export function normalizeProductionJob(job) {
   }
 }
 
-function mapSeedJob(item) {
-  return normalizeProductionJob({
-    id: item.workOrder || item.orderId,
-    orderId: item.orderId,
-    customer: '',
-    title: '',
-    product: item.product,
-    quantity: item.quantity,
-    stage: item.stage,
-    status: item.status,
-    priority: 'Normal',
-    createdAt: '',
-    deliveryDate: '',
-    endDate: item.endDate,
-    items: [],
-    activities: [],
-  })
-}
-
 export { resolveProductionStageLabel } from './workflowStages'
 
 export function loadProductionJobs() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (!saved) return seedProductionOrders.map(mapSeedJob)
+    if (!saved) return []
     const parsed = JSON.parse(saved)
-    const jobs = Array.isArray(parsed) ? parsed : seedProductionOrders.map(mapSeedJob)
+    const jobs = Array.isArray(parsed) ? parsed : []
     return jobs.map(normalizeProductionJob)
   } catch {
-    return seedProductionOrders.map(mapSeedJob)
+    return []
   }
 }
 
@@ -108,26 +84,29 @@ export function createProductionFromOrder(order) {
   const entryStage = findWorkflowStage(stages, PRODUCTION_ENTRY_STAGE_ID)
   const initialStage = productionStages[0] || entryStage
   const orderItems = (order.items || []).filter((item) => item?.product || item?.description)
-  const lineItems = orderItems.length > 0
-    ? orderItems.map((item) => ({
-      id: item.id || createId('line'),
-      product: item.product || '',
-      description: item.description || '',
-      quantity: Number(item.quantity) || 1,
-      currentStageId: initialStage?.id || '',
-      fulfillmentStatus: 'Devam Ediyor',
-      producedQuantity: 0,
-      deliveredQuantity: 0,
-    }))
-    : [{
-      id: createId('line'),
-      product: order.title || 'Üretim kalemi',
-      quantity: 1,
-      currentStageId: initialStage?.id || '',
-      fulfillmentStatus: 'Devam Ediyor',
-      producedQuantity: 0,
-      deliveredQuantity: 0,
-    }]
+  const lineItems =
+    orderItems.length > 0
+      ? orderItems.map((item) => ({
+          id: item.id || createId('line'),
+          product: item.product || '',
+          description: item.description || '',
+          quantity: Number(item.quantity) || 1,
+          currentStageId: initialStage?.id || '',
+          fulfillmentStatus: 'Devam Ediyor',
+          producedQuantity: 0,
+          deliveredQuantity: 0,
+        }))
+      : [
+          {
+            id: createId('line'),
+            product: order.title || 'Üretim kalemi',
+            quantity: 1,
+            currentStageId: initialStage?.id || '',
+            fulfillmentStatus: 'Devam Ediyor',
+            producedQuantity: 0,
+            deliveredQuantity: 0,
+          },
+        ]
 
   const quantity = lineItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
   const product = lineItems.length === 1 ? lineItems[0].product : `${lineItems.length} kalem`
@@ -189,11 +168,13 @@ export function createStandaloneProductionJob() {
     deliveryDate: '',
     endDate: '',
     items: [],
-    activities: [{
-      id: createId('act'),
-      date: new Date().toLocaleString('tr-TR'),
-      text: 'Yeni üretim kaydı oluşturuldu.',
-    }],
+    activities: [
+      {
+        id: createId('act'),
+        date: new Date().toLocaleString('tr-TR'),
+        text: 'Yeni üretim kaydı oluşturuldu.',
+      },
+    ],
   })
 
   saveProductionJobs([job, ...jobs])
@@ -207,11 +188,12 @@ export function updateProductionJob(jobId, patch) {
   })
   saveProductionJobs(jobs)
   const updated = jobs.find((job) => job.id === jobId)
-  if (updated && (
-    Object.prototype.hasOwnProperty.call(patch, 'stage')
-    || Object.prototype.hasOwnProperty.call(patch, 'currentStageId')
-    || Object.prototype.hasOwnProperty.call(patch, 'lineItems')
-  )) {
+  if (
+    updated &&
+    (Object.prototype.hasOwnProperty.call(patch, 'stage') ||
+      Object.prototype.hasOwnProperty.call(patch, 'currentStageId') ||
+      Object.prototype.hasOwnProperty.call(patch, 'lineItems'))
+  ) {
     syncQuoteFromProduction(updated)
   }
   return updated
@@ -223,9 +205,9 @@ export function updateProductionLineItem(jobId, lineItemId, patch) {
   if (!job) return null
 
   const stages = loadWorkflowStages()
-  const nextLineItems = ensureLineItems(job, stages).map((line) => (
-    line.id === lineItemId ? { ...line, ...patch } : line
-  ))
+  const nextLineItems = ensureLineItems(job, stages).map((line) =>
+    line.id === lineItemId ? { ...line, ...patch } : line,
+  )
 
   return updateProductionJob(jobId, { lineItems: nextLineItems })
 }
@@ -263,9 +245,10 @@ export function cancelProductionBackToOrder(jobId) {
 
   const stages = loadWorkflowStages()
   const orderStages = getOrderStageOptions(stages)
-  const fallBack = orderStages.find((stage) => isOrderReceivedStage(stage))
-    || orderStages.find((stage) => stage.label !== 'Üretime Alındı')
-    || orderStages[0]
+  const fallBack =
+    orderStages.find((stage) => isOrderReceivedStage(stage)) ||
+    orderStages.find((stage) => stage.label !== 'Üretime Alındı') ||
+    orderStages[0]
 
   updateOrder(orderId, {
     status: order.status === 'Üretimde' ? 'Yeni' : order.status,
@@ -341,7 +324,8 @@ export function sendProductionJobToDepo(jobId) {
       {
         id: createId('act'),
         date: new Date().toLocaleString('tr-TR'),
-        text: sent > 0 ? `${sent} kalem depoya gönderildi.` : 'Depoya gönderilecek kalem bulunamadı.',
+        text:
+          sent > 0 ? `${sent} kalem depoya gönderildi.` : 'Depoya gönderilecek kalem bulunamadı.',
       },
     ],
   })

@@ -4,103 +4,6 @@ import { createSupplierPurchaseInvoice } from './treasuryStore'
 export const INCOMING_E_INVOICES_KEY = 'erlenbox-incoming-e-invoices'
 export const INCOMING_E_INVOICES_EVENT = 'erlenbox:incoming-e-invoices-updated'
 
-const SEED = [
-  {
-    id: 'IN-1',
-    supplier: 'Kağıt Ambalaj Ltd.',
-    supplierTitle: 'KAĞIT AMBALAJ SAN. VE TİC. LTD. ŞTİ.',
-    supplierAddress: 'Organize Sanayi Bölgesi 12. Cad. No:8 İstanbul',
-    supplierTaxOffice: 'İstanbul',
-    supplierTaxId: '1234567890',
-    buyer: 'WAGON AMBALAJ GIDA TEKSTİL İNŞ. SAN. VE TİCARET LTD. ŞTİ.',
-    buyerAddress: 'Merkez Mah. Ambalaj Cad. No:15 İstanbul',
-    buyerTaxOffice: 'İstanbul',
-    buyerTaxId: '9876543210',
-    invoiceNo: 'GB0202600000012',
-    date: '2026-06-10',
-    amount: 12450,
-    net: 10375,
-    vat: 2075,
-    status: 'Kabul Edildi',
-    acceptanceLabel: 'KABUL EDİLDİ(TEMEL)',
-    scenario: 'TEMELFATURA',
-    invoiceType: 'SATIŞ',
-    customizationNo: 'TR1.2',
-    paymentTerms: 'PEŞİN',
-    ettn: 'A1B2C3D4-E5F6-7890-ABCD-EF1234567890',
-    imported: false,
-    importedAt: '',
-    treasuryMovementId: '',
-    supplierId: '',
-    note: '',
-    notes: [],
-    lines: [
-      {
-        id: 'L1',
-        code: 'KRAFT-01',
-        description: 'Kraft kutu 30x20x15',
-        quantity: 500,
-        unit: 'Adet',
-        unitPrice: 18.5,
-        vatRate: 20,
-        amount: 9250,
-      },
-      {
-        id: 'L2',
-        code: 'BANT-02',
-        description: 'Koli bandı 48mm',
-        quantity: 50,
-        unit: 'Adet',
-        unitPrice: 22.5,
-        vatRate: 20,
-        amount: 1125,
-      },
-    ],
-  },
-  {
-    id: 'IN-2',
-    supplier: 'Baskı Mürekkep A.Ş.',
-    supplierTitle: 'BASKI MÜREKKEP A.Ş.',
-    supplierAddress: 'Kimya Sanayi Sit. A Blok No:4 İzmir',
-    supplierTaxOffice: 'İzmir',
-    supplierTaxId: '5554443332',
-    buyer: 'WAGON AMBALAJ GIDA TEKSTİL İNŞ. SAN. VE TİCARET LTD. ŞTİ.',
-    buyerAddress: 'Merkez Mah. Ambalaj Cad. No:15 İstanbul',
-    buyerTaxOffice: 'İstanbul',
-    buyerTaxId: '9876543210',
-    invoiceNo: 'GB0202600000008',
-    date: '2026-06-05',
-    amount: 3200,
-    net: 2666.67,
-    vat: 533.33,
-    status: 'Bekliyor',
-    acceptanceLabel: 'BEKLİYOR',
-    scenario: 'TEMELFATURA',
-    invoiceType: 'SATIŞ',
-    customizationNo: 'TR1.2',
-    paymentTerms: '30 GÜN',
-    ettn: 'B2C3D4E5-F6A7-8901-BCDE-F12345678901',
-    imported: false,
-    importedAt: '',
-    treasuryMovementId: '',
-    supplierId: '',
-    note: '',
-    notes: [],
-    lines: [
-      {
-        id: 'L1',
-        code: 'INK-CMYK',
-        description: 'CMYK baskı mürekkebi seti',
-        quantity: 4,
-        unit: 'Takım',
-        unitPrice: 666.67,
-        vatRate: 20,
-        amount: 2666.68,
-      },
-    ],
-  },
-]
-
 function notify() {
   window.dispatchEvent(new CustomEvent(INCOMING_E_INVOICES_EVENT))
 }
@@ -150,21 +53,10 @@ function normalizeInvoice(raw) {
 export function readIncomingEInvoices() {
   try {
     const saved = JSON.parse(localStorage.getItem(INCOMING_E_INVOICES_KEY) || '[]')
-    if (!Array.isArray(saved) || saved.length === 0) {
-      localStorage.setItem(INCOMING_E_INVOICES_KEY, JSON.stringify(SEED))
-      return SEED.map(normalizeInvoice)
-    }
-    const byId = new Map(SEED.map((item) => [item.id, item]))
-    return saved
-      .map((item) => {
-        const seed = byId.get(item.id)
-        return normalizeInvoice(
-          seed ? { ...seed, ...item, lines: item.lines?.length ? item.lines : seed.lines } : item,
-        )
-      })
-      .filter(Boolean)
+    if (!Array.isArray(saved)) return []
+    return saved.map((item) => normalizeInvoice(item)).filter(Boolean)
   } catch {
-    return SEED.map(normalizeInvoice)
+    return []
   }
 }
 
