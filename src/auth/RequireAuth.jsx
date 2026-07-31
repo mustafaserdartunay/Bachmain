@@ -118,8 +118,15 @@ export default function RequireAuth({ children }) {
     return <Navigate to="/hesap/lisans" replace state={{ reason: 'license_expired' }} />
   }
 
-  if (user?.onboardingCompleted === false && user?.role !== 'demo_lead' && path !== '/kurulum') {
-    return <Navigate to="/kurulum" replace state={{ reason: 'onboarding' }} />
+  if (user?.onboardingCompleted === false && path !== '/kurulum') {
+    // Demo / trial sessions never enter the multi-step installer.
+    const isDemoOrTrial =
+      user?.role === 'demo_lead' ||
+      user?.status === 'trial' ||
+      user?.subscriptionStatus === 'trialing'
+    if (!isDemoOrTrial) {
+      return <Navigate to="/kurulum" replace state={{ reason: 'onboarding' }} />
+    }
   }
 
   // Sözleşmeler yalnızca paket satın alma akışında istenir; uygulama girişinde kapı yok.

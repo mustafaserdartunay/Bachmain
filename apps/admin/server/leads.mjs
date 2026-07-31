@@ -7,11 +7,17 @@ import { sendJson } from './authRoutes.mjs'
 import { hitRateLimit } from './db.mjs'
 import { hashPassword, signToken, validateSignupPassword, buildSessionCookie } from './auth.mjs'
 import { ensureLegalStore, assertPackConsents, recordConsentBatch } from './legal.mjs'
+import crypto from 'node:crypto'
 
 function normalizeEmail(email) {
   return String(email || '')
     .trim()
     .toLowerCase()
+}
+
+function generateDemoPassword() {
+  // Meets validateSignupPassword rules without asking the visitor for a second form.
+  return `Dm1!${crypto.randomBytes(9).toString('base64url')}`
 }
 
 function makeTenantCode(store) {
@@ -58,6 +64,7 @@ function sessionPayload(account, customer) {
       licenseExpiry: customer?.licenseExpiry || null,
       tenantCode: account.tenantCode,
       isDemo: true,
+      onboardingCompleted: account.onboardingCompleted !== false,
     },
   }
 }
@@ -79,14 +86,14 @@ export function createDemoLead(store, body = {}) {
     String(body.company || body.companyName || '').trim() || fullName || 'Demo Firma'
   const phone = String(body.phone || body.gsm || '').trim()
   const email = normalizeEmail(body.email)
-  const taxNo = String(body.taxNo || '').trim()
-  const taxOffice = String(body.taxOffice || '').trim()
-  const address = String(body.address || '').trim()
-  const city = String(body.city || '').trim()
-  const district = String(body.district || '').trim()
+  const taxNo = String(body.taxNo || '').trim() || '0000000000'
+  const taxOffice = String(body.taxOffice || '').trim() || 'Demo'
+  const address = String(body.address || '').trim() || 'Demo adres'
+  const city = String(body.city || '').trim() || 'İstanbul'
+  const district = String(body.district || '').trim() || 'Merkez'
   const companySize = String(body.size || body.companySize || '').trim()
   const message = String(body.message || '').trim()
-  const password = String(body.password || '')
+  let password = String(body.password || '')
   const source = String(body.source || 'bachmain_demo').trim() || 'bachmain_demo'
 
   if (!fullName) {
@@ -109,26 +116,15 @@ export function createDemoLead(store, body = {}) {
     err.code = 'MISSING_FIELDS'
     throw err
   }
-  if (!taxNo) {
-    const err = new Error('TC veya vergi no gerekli')
-    err.code = 'MISSING_FIELDS'
-    throw err
-  }
-  if (!taxOffice) {
-    const err = new Error('Vergi dairesi gerekli')
-    err.code = 'MISSING_FIELDS'
-    throw err
-  }
-  if (!address || !city || !district) {
-    const err = new Error('Adres, il ve ilçe gerekli')
-    err.code = 'MISSING_FIELDS'
-    throw err
-  }
-  const pwCheck = validateSignupPassword(password)
-  if (!pwCheck.ok) {
-    const err = new Error(pwCheck.message)
-    err.code = 'WEAK_PASSWORD'
-    throw err
+  if (!password) {
+    password = generateDemoPassword()
+  } else {
+    const pwCheck = validateSignupPassword(password)
+    if (!pwCheck.ok) {
+      const err = new Error(pwCheck.message)
+      err.code = 'WEAK_PASSWORD'
+      throw err
+    }
   }
 
   const existingAccount = store.accounts.find((a) => a.email === email)
