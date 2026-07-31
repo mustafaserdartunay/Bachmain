@@ -71,9 +71,11 @@ const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
 const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu'
 
 const TEXT_ACTION_CLASS =
-  'inline-flex items-center gap-1 origin-center bg-transparent p-0 text-xs font-normal leading-none transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold'
+  'inline-flex items-center justify-center gap-1.5 origin-center bg-transparent p-0 text-xs font-normal leading-none transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold [&_svg]:block [&_svg]:shrink-0'
 const TEXT_CANCEL_CLASS = `${TEXT_ACTION_CLASS} text-[#e11d48]`
 const TEXT_SAVE_CLASS = `${TEXT_ACTION_CLASS} text-[#2563eb]`
+const TEXT_SAVE_MENU_ITEM_CLASS =
+  'inline-flex w-full items-center justify-start gap-1.5 origin-left rounded-xl px-3 py-2.5 text-left text-xs font-normal leading-none text-[#2563eb] transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold hover:bg-transparent [&_svg]:block [&_svg]:shrink-0'
 
 function emptyMeta(defaultType = '') {
   return { type: defaultType, representative: '', scoring: '', category: '' }
@@ -462,12 +464,12 @@ export default function CustomerCreatePage() {
                 onClick={() => navigate(backPath)}
                 className={TEXT_CANCEL_CLASS}
               >
-                <X className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap">Vazgeç</span>
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="whitespace-nowrap leading-none">Vazgeç</span>
               </button>
               <button type="submit" className={TEXT_SAVE_CLASS}>
-                <Save className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap">Kaydet</span>
+                <Save className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="whitespace-nowrap leading-none">Kaydet</span>
               </button>
               <button
                 type="button"
@@ -477,7 +479,8 @@ export default function CustomerCreatePage() {
                 aria-expanded={actionMenuOpen}
               >
                 <ChevronDown
-                  className={`h-4 w-4 shrink-0 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
+                  className={`h-3.5 w-3.5 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
                 />
               </button>
               {actionMenuOpen &&
@@ -492,10 +495,10 @@ export default function CustomerCreatePage() {
                     <button
                       type="button"
                       onClick={saveAndContinue}
-                      className="inline-flex w-full items-center gap-1 origin-left rounded-xl px-3 py-2.5 text-left text-xs font-normal leading-none text-[#2563eb] transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold hover:bg-transparent"
+                      className={TEXT_SAVE_MENU_ITEM_CLASS}
                     >
-                      <Save className="h-4 w-4 shrink-0" />
-                      <span className="whitespace-nowrap">Kaydet ve devam et</span>
+                      <Save className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span className="whitespace-nowrap leading-none">Kaydet ve devam et</span>
                     </button>
                   </div>,
                   document.body,
@@ -743,12 +746,12 @@ export default function CustomerCreatePage() {
         </div>
         <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
           <button type="button" onClick={() => navigate(-1)} className={TEXT_CANCEL_CLASS}>
-            <X className="h-4 w-4 shrink-0" />
-            <span className="whitespace-nowrap">Vazgeç</span>
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="whitespace-nowrap leading-none">Vazgeç</span>
           </button>
           <button type="submit" className={TEXT_SAVE_CLASS}>
-            <Save className="h-4 w-4 shrink-0" />
-            <span className="whitespace-nowrap">Kaydet</span>
+            <Save className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="whitespace-nowrap leading-none">Kaydet</span>
           </button>
         </div>
       </section>
