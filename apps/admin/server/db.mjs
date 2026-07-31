@@ -154,16 +154,21 @@ export async function savePayload(payload, id = 'main') {
   return payload
 }
 
-export async function getTenantCollection(tenantCode, collection) {
+export async function getTenantCollectionRow(tenantCode, collection) {
   const db = getSql()
   if (!db) return null
   await ensureSchema()
   const rows = await db`
-    SELECT payload FROM tenant_data
+    SELECT payload, updated_at FROM tenant_data
     WHERE tenant_code = ${tenantCode} AND collection = ${collection}
     LIMIT 1
   `
-  return rows[0]?.payload ?? null
+  return rows[0] ?? null
+}
+
+export async function getTenantCollection(tenantCode, collection) {
+  const row = await getTenantCollectionRow(tenantCode, collection)
+  return row?.payload ?? null
 }
 
 export async function setTenantCollection(tenantCode, collection, payload) {
@@ -171,13 +176,14 @@ export async function setTenantCollection(tenantCode, collection, payload) {
   if (!db) throw new Error('DATABASE_URL required for tenant sync')
   await ensureSchema()
   const json = JSON.stringify(payload ?? {})
-  await db`
+  const rows = await db`
     INSERT INTO tenant_data (tenant_code, collection, payload, updated_at)
     VALUES (${tenantCode}, ${collection}, ${json}::jsonb, now())
     ON CONFLICT (tenant_code, collection) DO UPDATE
     SET payload = EXCLUDED.payload, updated_at = now()
+    RETURNING updated_at
   `
-  return payload
+  return { payload, updatedAt: rows[0]?.updated_at ?? null }
 }
 
 export async function insertPaymentEvent(event) {

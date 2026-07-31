@@ -9,10 +9,14 @@ import { getStoredSession } from './platformAuth'
 
 const API_BASE = import.meta.env.VITE_PLATFORM_API_URL || 'https://yonetim.bachmain.com/api'
 
-async function tenantFetch(collection, { method = 'GET', body } = {}) {
+const pendingTimers = new Map()
+const pendingPayloads = new Map()
+const inFlight = new Set()
+
+async function tenantFetch(path, { method = 'GET', body } = {}) {
   const { token } = getStoredSession()
   if (!token) throw new Error('Oturum yok')
-  const res = await fetch(`${API_BASE}/tenant/${collection}`, {
+  const res = await fetch(`${API_BASE}/tenant/${path}`, {
     method,
     credentials: 'include',
     headers: {
@@ -31,27 +35,60 @@ async function tenantFetch(collection, { method = 'GET', body } = {}) {
   return data
 }
 
+export function isTenantPushBusy(collection) {
+  if (!collection) return pendingTimers.size > 0 || inFlight.size > 0
+  return pendingTimers.has(collection) || inFlight.has(collection)
+}
+
 export async function pullTenantCollection(collection) {
   const data = await tenantFetch(collection)
   return data.payload
 }
 
+export async function fetchTenantCollection(collection) {
+  return tenantFetch(collection)
+}
+
+export async function pullTenantCollectionMeta(collection) {
+  return tenantFetch(`${collection}/meta`)
+}
+
 export async function pushTenantCollection(collection, payload) {
-  return tenantFetch(collection, { method: 'PUT', body: payload })
+  inFlight.add(collection)
+  try {
+    return await tenantFetch(collection, { method: 'PUT', body: payload })
+  } finally {
+    inFlight.delete(collection)
+  }
 }
 
 /** Debounced push helper for localStorage-backed stores. */
-export function scheduleTenantPush(collection, payload, delayMs = 1200) {
-  const key = `__bachTenantPush_${collection}`
-  if (globalThis[key]) clearTimeout(globalThis[key])
-  globalThis[key] = setTimeout(() => {
-    pushTenantCollection(collection, payload).catch((err) => {
-      if (err?.code === 'DATABASE_REQUIRED') return
-      if (err?.code === 'READ_ONLY_COMPANY') {
-        window.dispatchEvent(new CustomEvent('bach:company-read-only-write-blocked'))
-        return
-      }
-      console.warn('[tenant-sync]', collection, err.message)
-    })
-  }, delayMs)
+export function scheduleTenantPush(collection, payload, delayMs = 800) {
+  const nextPayload = typeof payload === 'function' ? payload() : payload
+  pendingPayloads.set(collection, nextPayload)
+  if (pendingTimers.has(collection)) clearTimeout(pendingTimers.get(collection))
+  pendingTimers.set(
+    collection,
+    setTimeout(() => {
+      pendingTimers.delete(collection)
+      const body = pendingPayloads.get(collection)
+      pendingPayloads.delete(collection)
+      pushTenantCollection(collection, body)
+        .then((result) => {
+          window.dispatchEvent(
+            new CustomEvent('bach:tenant-push-ok', {
+              detail: { collection, updatedAt: result?.updatedAt || null, payload: body },
+            }),
+          )
+        })
+        .catch((err) => {
+          if (err?.code === 'DATABASE_REQUIRED') return
+          if (err?.code === 'READ_ONLY_COMPANY') {
+            window.dispatchEvent(new CustomEvent('bach:company-read-only-write-blocked'))
+            return
+          }
+          console.warn('[tenant-sync]', collection, err.message)
+        })
+    }, delayMs),
+  )
 }

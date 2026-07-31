@@ -3,7 +3,7 @@
  */
 import { getBearerOrCookieToken, getAccountFromToken } from './auth.mjs'
 import { loadStore } from './store.mjs'
-import { getTenantCollection, setTenantCollection, hasDatabase } from './db.mjs'
+import { getTenantCollectionRow, setTenantCollection, hasDatabase } from './db.mjs'
 import { sendJson } from './authRoutes.mjs'
 
 const ALLOWED_COLLECTIONS = new Set([
@@ -77,15 +77,40 @@ export async function handleTenantApi(req, res, path, body = {}) {
   }
 
   if (method === 'GET') {
-    const payload = (await getTenantCollection(tenantCode, collection)) || {}
-    sendJson(req, res, 200, { ok: true, tenantCode, collection, payload })
+    const sub = parts[2] || ''
+    if (sub === 'meta') {
+      const row = await getTenantCollectionRow(tenantCode, collection)
+      const payload = row?.payload || {}
+      sendJson(req, res, 200, {
+        ok: true,
+        tenantCode,
+        collection,
+        updatedAt: row?.updated_at ? new Date(row.updated_at).toISOString() : null,
+        savedAt: payload?.savedAt || null,
+      })
+      return true
+    }
+    const row = await getTenantCollectionRow(tenantCode, collection)
+    const payload = row?.payload || {}
+    sendJson(req, res, 200, {
+      ok: true,
+      tenantCode,
+      collection,
+      payload,
+      updatedAt: row?.updated_at ? new Date(row.updated_at).toISOString() : null,
+    })
     return true
   }
 
   if (method === 'PUT' || method === 'POST') {
     const payload = body.payload ?? body
-    await setTenantCollection(tenantCode, collection, payload)
-    sendJson(req, res, 200, { ok: true, tenantCode, collection })
+    const saved = await setTenantCollection(tenantCode, collection, payload)
+    sendJson(req, res, 200, {
+      ok: true,
+      tenantCode,
+      collection,
+      updatedAt: saved?.updatedAt ? new Date(saved.updatedAt).toISOString() : null,
+    })
     return true
   }
 
