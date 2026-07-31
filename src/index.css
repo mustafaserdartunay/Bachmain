@@ -614,6 +614,16 @@ textarea:not(.form-input)::placeholder {
   box-shadow: none !important;
 }
 
+#customer-edit-form .customer-form-primary-panel .customer-filter-field {
+  border: 1px solid var(--search-border);
+  background: transparent;
+  box-shadow: none;
+}
+
+#customer-edit-form .customer-form-primary-panel .customer-filter-field:hover {
+  border-color: var(--ds-border-strong, rgba(148, 163, 184, 0.28));
+}
+
 #customer-edit-form .customer-form-primary-panel {
   min-height: 4.75rem;
   display: flex;
