@@ -793,6 +793,11 @@ textarea:not(.form-input)::placeholder {
   overflow: hidden;
 }
 
+.header-notebook-dropdown .header-notebook-body {
+  min-height: min(28rem, calc(100dvh - 7.5rem));
+  max-height: min(42rem, calc(100dvh - 6.5rem));
+}
+
 .message-center-body {
   display: flex;
   min-height: 0;

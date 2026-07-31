@@ -243,13 +243,14 @@ export default function AgendaNoteBoard({
   composerOnly = false,
   listOnly = false,
   totalRecordCount,
+  showRecordCount = true,
   composerClassName = 'border-b border-[rgba(140,145,165,0.14)] p-3',
   listClassName = 'max-h-[22rem] overflow-y-auto p-2',
   emptyMessage = 'Henüz not yok. Yukarıdan hızlıca ekleyebilirsin.',
   fill = false,
   autoFocusComposer = false,
   enterToSave = false,
-  stackActions = false,
+  focusToken = 0,
 }) {
   const [draft, setDraft] = useState('')
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
@@ -260,11 +261,31 @@ export default function AgendaNoteBoard({
 
   useEffect(() => {
     if (!autoFocusComposer || !showComposer || listOnly) return undefined
-    const id = window.requestAnimationFrame(() => {
-      composerRef.current?.focus?.()
-    })
-    return () => window.cancelAnimationFrame(id)
-  }, [autoFocusComposer, showComposer, listOnly])
+    let cancelled = false
+    const focusComposer = () => {
+      if (cancelled) return
+      const el = composerRef.current
+      if (!el) return
+      el.focus({ preventScroll: true })
+      const len = el.value?.length ?? 0
+      try {
+        el.setSelectionRange(len, len)
+      } catch {
+        /* ignore */
+      }
+    }
+    const raf = window.requestAnimationFrame(focusComposer)
+    const t1 = window.setTimeout(focusComposer, 0)
+    const t2 = window.setTimeout(focusComposer, 60)
+    const t3 = window.setTimeout(focusComposer, 160)
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(raf)
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+      window.clearTimeout(t3)
+    }
+  }, [autoFocusComposer, showComposer, listOnly, focusToken])
 
   function commitDraft() {
     const content = draft.trim()
@@ -286,47 +307,13 @@ export default function AgendaNoteBoard({
     setPendingBulkDelete(false)
   }
 
-  const actionButtons = !pendingBulkDelete ? (
-    <div
-      className={
-        stackActions
-          ? 'flex w-full flex-col items-stretch gap-1.5'
-          : 'flex min-w-0 items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
-      }
-    >
-      <button
-        type="button"
-        disabled={!canSave}
-        onClick={handleSave}
-        className={`${AGENDA_NOTE_SAVE_BTN_CLASS} ${stackActions ? 'w-full justify-center' : ''}`}
-      >
-        <Plus className="h-3.5 w-3.5" />
-        Kaydet
-      </button>
-      {onDeleteCompleted ? (
-        <button
-          type="button"
-          disabled={completedCount === 0}
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            setPendingBulkDelete(true)
-          }}
-          className={`${AGENDA_NOTE_DELETE_BTN_CLASS} ${stackActions ? 'w-full justify-center' : ''}`}
-        >
-          <Trash2 className="h-3.5 w-3.5 shrink-0" />
-          Tamamlananların Hepsini Sil
-        </button>
-      ) : null}
-    </div>
-  ) : null
-
   return (
     <div className={fill ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : ''}>
       {showComposer && !listOnly ? (
         <form onSubmit={handleSave} className={composerClassName}>
           <textarea
             ref={composerRef}
+            autoFocus={autoFocusComposer}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
@@ -343,15 +330,40 @@ export default function AgendaNoteBoard({
             rows={3}
             className="form-input agenda-note-textarea !h-auto !min-h-[72px] w-full !resize-none !rounded-md !py-2.5 !pl-3 !pr-3 text-sm"
           />
-          <div
-            className={`mt-2 flex gap-2 ${
-              stackActions ? 'flex-col' : 'items-center justify-between'
-            }`}
-          >
-            <p className="text-[11px] font-normal text-[var(--muted)]">
-              {totalRecordCount ?? sortedNotes.length} kayıt
-            </p>
-            {actionButtons}
+          <div className="mt-2 flex items-center justify-end gap-2">
+            {showRecordCount ? (
+              <p className="mr-auto text-[11px] font-normal text-[var(--muted)]">
+                {totalRecordCount ?? sortedNotes.length} kayıt
+              </p>
+            ) : null}
+            {!pendingBulkDelete ? (
+              <>
+                <button
+                  type="button"
+                  disabled={!canSave}
+                  onClick={handleSave}
+                  className={AGENDA_NOTE_SAVE_BTN_CLASS}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Kaydet
+                </button>
+                {onDeleteCompleted ? (
+                  <button
+                    type="button"
+                    disabled={completedCount === 0}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      setPendingBulkDelete(true)
+                    }}
+                    className={AGENDA_NOTE_DELETE_BTN_CLASS}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                    Tamamlananların Hepsini Sil
+                  </button>
+                ) : null}
+              </>
+            ) : null}
           </div>
           {pendingBulkDelete ? (
             <div className="mt-2">

@@ -20,6 +20,7 @@ import { useHeaderPopover } from '../../hooks/useHeaderPopover'
 export default function HeaderNotebook() {
   const { open, toggle } = useHeaderPopover('notebook')
   const [notes, setNotes] = useState(() => loadAgendaNotes())
+  const [focusToken, setFocusToken] = useState(0)
   const {
     anchorRef,
     menuRef,
@@ -37,6 +38,11 @@ export default function HeaderNotebook() {
     window.addEventListener('bach:crm-updated', refresh)
     return () => window.removeEventListener('bach:crm-updated', refresh)
   }, [])
+
+  useEffect(() => {
+    if (!open) return
+    setFocusToken((value) => value + 1)
+  }, [open])
 
   const sortedNotes = useMemo(() => sortAgendaNotes(notes), [notes])
   const incompleteCount = useMemo(() => countIncompleteAgendaNotes(notes), [notes])
@@ -141,6 +147,9 @@ export default function HeaderNotebook() {
               <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                 Not Defteri
               </p>
+              <p className="shrink-0 text-[11px] font-normal text-[var(--muted)]">
+                {sortedNotes.length} kayıt
+              </p>
             </div>
 
             <div className="header-notebook-body">
@@ -150,7 +159,8 @@ export default function HeaderNotebook() {
                 confirmVariant="warm"
                 autoFocusComposer
                 enterToSave
-                stackActions
+                showRecordCount={false}
+                focusToken={focusToken}
                 onSave={handleSave}
                 onToggleComplete={handleToggleComplete}
                 onUpdate={handleUpdateNote}
