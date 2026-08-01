@@ -6,6 +6,7 @@ import { loadStore, withStore, newId } from './store.mjs'
 import { handleAuthApi, applyCors, sendJson as sendAuthJson } from './authRoutes.mjs'
 import { handleLeadsApi } from './leads.mjs'
 import { handleLegalApi } from './legal.mjs'
+import { handleAnnouncementsApi } from './announcements.mjs'
 import { handleWhatsAppApi } from './whatsappApi.mjs'
 import { handleBillingApi } from './billingRoutes.mjs'
 import { handlePaymentsApi } from './payments.mjs'
@@ -29,6 +30,7 @@ import { handleSecurityApi } from './securityRoutes.mjs'
 import { handleAiosApi } from './aiosRoutes.mjs'
 import { handleQualityControl } from './qualityControl.mjs'
 import { handleSocialConnections } from './socialConnections.mjs'
+import { handlePlatformAdminApi } from './platformAdminRoutes.mjs'
 
 assertAdminEnv()
 
@@ -143,6 +145,7 @@ async function handle(req, res, url) {
       if (await handleAuthApi(req, res, apiPath, body)) return
       if (await handleLeadsApi(req, res, apiPath, body)) return
       if (await handleLegalApi(req, res, apiPath, body)) return
+      if (await handleAnnouncementsApi(req, res, apiPath, body)) return
       if (await handleBillingApi(req, res, apiPath, body)) return
       if (await handlePaymentsApi(req, res, apiPath, body)) return
       if (await handleWhatsAppApi(req, res, apiPath, body)) return
@@ -160,6 +163,12 @@ async function handle(req, res, url) {
       )
         return
       if (await handleSocialConnections(req, res, apiPath)) return
+      if (await handlePlatformAdminApi(req, res, apiPath, body)) return
+    }
+
+    // DELETE (ve diğer) platform admin yolları
+    if (method === 'DELETE' && pathname.startsWith('/api/v1/admin')) {
+      if (await handlePlatformAdminApi(req, res, apiPath, {})) return
     }
 
     if (method === 'GET' && pathname.startsWith('/api/security')) {

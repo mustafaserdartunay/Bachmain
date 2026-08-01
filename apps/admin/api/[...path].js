@@ -9,6 +9,7 @@ import { handleBillingApi } from '../server/billingRoutes.mjs'
 import { handleTenantApi } from '../server/tenantApi.mjs'
 import { handleLeadsApi } from '../server/leads.mjs'
 import { handleLegalApi } from '../server/legal.mjs'
+import { handleAnnouncementsApi } from '../server/announcements.mjs'
 import { handleWhatsAppApi } from '../server/whatsappApi.mjs'
 import { handleMailApi } from '../server/mailRoutes.mjs'
 import { hasDatabase } from '../server/db.mjs'
@@ -29,6 +30,9 @@ import {
 import { startEmailChange, deleteMembershipAccount } from '../server/emailChange.mjs'
 import { handleQualityControl } from '../server/qualityControl.mjs'
 import { handleSocialConnections } from '../server/socialConnections.mjs'
+import { handlePlatformAdminApi } from '../server/platformAdminRoutes.mjs'
+import { handleSecurityApi } from '../server/securityRoutes.mjs'
+import { handleAiosApi } from '../server/aiosRoutes.mjs'
 
 function getPath(req) {
   // Vercel catch-all: /api/[...path] may expose segments via query.path
@@ -240,6 +244,7 @@ export default async function handler(req, res) {
     if (await handleAuthApi(req, res, path, body)) return
     if (await handleLeadsApi(req, res, path, body)) return
     if (await handleLegalApi(req, res, path, body)) return
+    if (await handleAnnouncementsApi(req, res, path, body)) return
     if (await handleBillingApi(req, res, path, body)) return
     if (await handlePaymentsApi(req, res, path, body)) return
     if (await handleWhatsAppApi(req, res, path, body)) return
@@ -265,6 +270,9 @@ export default async function handler(req, res) {
     const query = getQuery(req)
     if (await handleQualityControl(req, res, path, body, query)) return
     if (await handleSocialConnections(req, res, path)) return
+    if (await handleSecurityApi(req, res, path)) return
+    if (await handleAiosApi(req, res, path)) return
+    if (await handlePlatformAdminApi(req, res, path, body)) return
 
     if (method === 'GET' && path === 'dashboard') {
       const store = await loadStore()

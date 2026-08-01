@@ -9,6 +9,7 @@ import {
   Headphones,
   MessageCircle,
   Bell,
+  Megaphone,
   Sparkles,
   BarChart3,
   Server,
@@ -48,10 +49,10 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', path: '/', icon: LayoutDashboard, group: 'Ana' },
+  { id: 'dashboard', label: 'Kontrol Paneli', path: '/', icon: LayoutDashboard, group: 'Ana' },
   {
     id: 'platform-ops',
-    label: 'Platform Ops',
+    label: 'Platform Operasyon',
     path: '/platform-ops',
     icon: Activity,
     group: 'Platform',
@@ -75,7 +76,7 @@ export const navItems: NavItem[] = [
   },
   {
     id: 'user-management',
-    label: 'User Management',
+    label: 'Kullanıcı Yönetimi',
     path: '/user-management',
     icon: UserCog,
     group: 'Platform',
@@ -83,7 +84,7 @@ export const navItems: NavItem[] = [
   },
   {
     id: 'audit-logs',
-    label: 'Audit Logs',
+    label: 'Denetim Kayıtları',
     path: '/audit-logs',
     icon: ScrollText,
     group: 'Platform',
@@ -231,6 +232,14 @@ export const navItems: NavItem[] = [
     icon: Bell,
     badge: 5,
     group: 'Destek',
+  },
+  {
+    id: 'announcements',
+    label: 'Duyurular',
+    path: '/duyurular',
+    icon: Megaphone,
+    group: 'Destek',
+    roles: ['super_admin', 'admin', 'support'],
   },
   { id: 'ai', label: 'AI Control Center', path: '/ai-yonetimi', icon: Sparkles, group: 'Sistem' },
   {

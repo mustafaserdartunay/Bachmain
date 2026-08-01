@@ -137,6 +137,8 @@ export function isPublicApiPath(path, method) {
   if (path === 'legal/pack' || path === 'legal/required' || path === 'legal/consents/me')
     return true
   if (path === 'legal/consents' || path === 'legal/cookies') return true
+  // Public CRM feed (admin CRUD stays under announcements/admin/*)
+  if (path === 'announcements') return true
   return false
 }
 

@@ -99,4 +99,50 @@ export const seedData = {
     ],
   },
   modules: genModuleRows(),
+  announcements: [
+    {
+      id: 'ann_seed_1',
+      title: 'Müşteri Ekstre PDF Yenilendi',
+      detail:
+        'Cari hareketler sayfasından gönderilen ekstre PDF artık firma logonuz, IBAN bilgileriniz ve modern renk tonlarıyla oluşturuluyor.',
+      badge: 'Yeni',
+      status: 'published',
+      publishedAt: '2026-06-05T10:00:00.000Z',
+      createdAt: '2026-06-05T10:00:00.000Z',
+      updatedAt: '2026-06-05T10:00:00.000Z',
+    },
+    {
+      id: 'ann_seed_2',
+      title: 'Tahsilat ve Ödeme Modülü',
+      detail:
+        'Müşteri detayında tahsilat ve ödeme işlemleri kasa/banka seçimiyle cari hareketlere işleniyor. İşlem yeri kolonu eklendi.',
+      badge: 'Güncelleme',
+      status: 'published',
+      publishedAt: '2026-06-04T10:00:00.000Z',
+      createdAt: '2026-06-04T10:00:00.000Z',
+      updatedAt: '2026-06-04T10:00:00.000Z',
+    },
+    {
+      id: 'ann_seed_3',
+      title: 'Profil ve Müşteri Numarası',
+      detail:
+        'Her firma için benzersiz müşteri numarası otomatik oluşturuluyor. Yönetici kontrol panelinden destek ekibi erişebilir.',
+      badge: 'Duyuru',
+      status: 'published',
+      publishedAt: '2026-06-03T10:00:00.000Z',
+      createdAt: '2026-06-03T10:00:00.000Z',
+      updatedAt: '2026-06-03T10:00:00.000Z',
+    },
+    {
+      id: 'ann_seed_4',
+      title: 'Düzenlenebilir Açılır Menüler',
+      detail:
+        'Tip, temsilci, puantaj, kategori ve kasa/banka listelerine yeni seçenek ekleyebilir, düzenleyebilir ve silebilirsiniz.',
+      badge: 'Özellik',
+      status: 'published',
+      publishedAt: '2026-06-02T10:00:00.000Z',
+      createdAt: '2026-06-02T10:00:00.000Z',
+      updatedAt: '2026-06-02T10:00:00.000Z',
+    },
+  ],
 }

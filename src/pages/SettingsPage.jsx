@@ -1,14 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  Building2,
-  Factory,
-  GitBranch,
-  ImagePlus,
-  Library,
-  Save,
-  ShieldCheck,
-  Sparkles,
-} from 'lucide-react'
+import { Building2, ImagePlus, Save, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
   defaultCompanySettings,
@@ -65,59 +56,6 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-          Yönetici Ayarları
-        </h1>
-        <p className="mt-2 text-xs font-semibold text-gray-500">
-          Firma bilgileri ekstre PDF ve sistem genelinde kullanılır.
-        </p>
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
-          <Link
-            to="/ayarlar/master-data"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-blue-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <ShieldCheck className="h-4 w-4" />
-            Master Data (MDM)
-          </Link>
-          <Link
-            to="/otomasyon"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-emerald-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <GitBranch className="h-4 w-4" />
-            Workflow Engine
-          </Link>
-          <Link
-            to="/aios"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-violet-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <Sparkles className="h-4 w-4" />
-            AIOS
-          </Link>
-          <Link
-            to="/bilgi-merkezi"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-sky-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <Library className="h-4 w-4" />
-            Knowledge
-          </Link>
-          <Link
-            to="/dijital-ikiz"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-cyan-200 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <Factory className="h-4 w-4" />
-            Digital Twin
-          </Link>
-          <Link
-            to="/ayarlar/kurumsal-yapi"
-            className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2 text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
-          >
-            <Building2 className="h-4 w-4" />
-            Kurumsal Yapı
-          </Link>
-        </div>
-      </section>
-
       <form onSubmit={handleSave} className="space-y-4">
         <section className="card space-y-4">
           <div className="flex items-center gap-3">

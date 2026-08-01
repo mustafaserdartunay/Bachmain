@@ -58,6 +58,12 @@ export async function loadStore() {
   } catch {
     // ignore seed errors on cold start
   }
+  try {
+    const { ensureAnnouncementsStore } = await import('./announcements.mjs')
+    ensureAnnouncementsStore(data)
+  } catch {
+    // ignore seed errors on cold start
+  }
   return data
 }
 
