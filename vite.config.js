@@ -7,6 +7,7 @@ import { getOpenAiApiKey } from './server/env.js'
 import { handleVoiceChatRequest } from './server/voiceChat.js'
 import { handleVoiceTranscribeRequest } from './server/voiceTranscribe.js'
 import { handleOmniAnalyzeRequest } from './server/omniChat.js'
+import { resolveChatModel, resolveTranscribeModel } from './server/openaiModels.js'
 import { APP_VERSION, APP_BUILD, APP_VERSION_META } from './src/version/appVersion.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -58,8 +59,9 @@ function voiceApiPlugin() {
             JSON.stringify({
               ok: true,
               hasApiKey: Boolean(getOpenAiApiKey()),
-              model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-              transcribe: 'whisper-1',
+              model: resolveChatModel(),
+              transcribe: resolveTranscribeModel(),
+              reasoningEffort: process.env.OPENAI_REASONING_EFFORT || 'high',
             }),
           )
           return

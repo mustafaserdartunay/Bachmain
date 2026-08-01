@@ -1,4 +1,5 @@
 import { getOpenAiApiKey } from '../../server/env.js'
+import { resolveChatModel, resolveTranscribeModel } from '../../server/openaiModels.js'
 
 export default function handler(req, res) {
   if (req.method !== 'GET') {
@@ -9,7 +10,8 @@ export default function handler(req, res) {
   return res.status(200).json({
     ok: true,
     hasApiKey: Boolean(getOpenAiApiKey()),
-    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-    transcribe: process.env.OPENAI_WHISPER_MODEL || 'whisper-1',
+    model: resolveChatModel(),
+    transcribe: resolveTranscribeModel(),
+    reasoningEffort: process.env.OPENAI_REASONING_EFFORT || 'high',
   })
 }

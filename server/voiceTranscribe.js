@@ -4,10 +4,13 @@ import {
   requireOpenAiApiKey,
   resolveRequestApiKey,
 } from './env.js'
+import { resolveTranscribeModel } from './openaiModels.js'
 
 function guardAiRequest(reqHeaders = {}) {
   assertAiProxyAuthorized(reqHeaders)
-  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon').split(',')[0].trim()
+  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon')
+    .split(',')[0]
+    .trim()
   hitAiRateLimit(ip)
 }
 
@@ -39,8 +42,9 @@ function buildMultipartBody({ fields, fileName, fileBuffer, mimeType }) {
   }
 }
 
-export async function transcribeAudioBuffer({ buffer, mimeType = 'audio/webm', apiKey, model = 'whisper-1' }) {
+export async function transcribeAudioBuffer({ buffer, mimeType = 'audio/webm', apiKey, model }) {
   const resolvedKey = requireOpenAiApiKey(apiKey)
+  const selectedModel = resolveTranscribeModel(model)
 
   if (!buffer?.length) {
     throw new Error('Ses kaydı boş.')
@@ -49,7 +53,7 @@ export async function transcribeAudioBuffer({ buffer, mimeType = 'audio/webm', a
   const extension = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm'
   const { body, contentType } = buildMultipartBody({
     fields: {
-      model,
+      model: selectedModel,
       language: 'tr',
     },
     fileName: `voice.${extension}`,
@@ -75,6 +79,7 @@ export async function transcribeAudioBuffer({ buffer, mimeType = 'audio/webm', a
   const data = await response.json()
   return {
     text: String(data.text || '').trim(),
+    model: selectedModel,
   }
 }
 
@@ -87,12 +92,11 @@ export async function handleVoiceTranscribeRequest(reqBody, reqHeaders = {}) {
   }
 
   const buffer = Buffer.from(String(audio), 'base64')
-  const model = process.env.OPENAI_WHISPER_MODEL || 'whisper-1'
 
   return transcribeAudioBuffer({
     buffer,
     mimeType,
     apiKey: resolveRequestApiKey(reqBody, reqHeaders),
-    model,
+    model: resolveTranscribeModel(reqBody?.model),
   })
 }

@@ -5,7 +5,7 @@ const defaultAiSettings = {
   autoReply: false,
   autoReplyMinConfidence: 0.72,
   autoReplyDelayMs: 1500,
-  model: 'gpt-4o-mini',
+  model: 'gpt-5.5',
   companyName: 'Erlenbox',
   brandVoice: 'Profesyonel, sıcak ve çözüm odaklı. Kısa ve net cevaplar ver.',
 }

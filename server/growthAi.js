@@ -5,20 +5,21 @@ import {
   requireOpenAiApiKey,
   resolveRequestApiKey,
 } from './env.js'
+import {
+  OPENAI_CHAT_MODEL_PRESETS,
+  buildChatCompletionBody,
+  resolveChatModel,
+} from './openaiModels.js'
 
 function guardAiRequest(reqHeaders = {}) {
   assertAiProxyAuthorized(reqHeaders)
-  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon').split(',')[0].trim()
+  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon')
+    .split(',')[0]
+    .trim()
   hitAiRateLimit(ip)
 }
 
-const DEFAULT_MODELS = [
-  { id: 'gpt-5.5', label: 'GPT-5.5' },
-  { id: 'gpt-5', label: 'GPT-5' },
-  { id: 'gpt-4.1', label: 'GPT-4.1' },
-  { id: 'gpt-4o', label: 'GPT-4o' },
-  { id: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-]
+const DEFAULT_MODELS = OPENAI_CHAT_MODEL_PRESETS
 
 function brandSystemAddon(brand = {}) {
   const parts = [
@@ -39,7 +40,7 @@ export async function handleGrowthHealthRequest(reqHeaders = {}) {
     ok: true,
     hasApiKey: Boolean(apiKey),
     source: process.env.OPENAI_API_KEY && getOpenAiApiKey() ? 'env' : apiKey ? 'request' : 'none',
-    defaultModel: process.env.OPENAI_MODEL || 'gpt-4o',
+    defaultModel: resolveChatModel(),
     module: 'ai-growth-center',
   }
 }
@@ -55,7 +56,12 @@ export async function handleGrowthModelsRequest(reqHeaders = {}) {
       headers: { Authorization: `Bearer ${apiKey}` },
     })
     if (!response.ok) {
-      return { ok: true, models: DEFAULT_MODELS, source: 'preset', warning: `OpenAI models ${response.status}` }
+      return {
+        ok: true,
+        models: DEFAULT_MODELS,
+        source: 'preset',
+        warning: `OpenAI models ${response.status}`,
+      }
     }
     const data = await response.json()
     const ids = (data.data || [])
@@ -87,29 +93,10 @@ export async function handleGrowthModelsRequest(reqHeaders = {}) {
 
 export async function handleGrowthChatRequest(reqBody = {}, reqHeaders = {}) {
   guardAiRequest(reqHeaders)
-  const {
-    messages = [],
-    model,
-    temperature = 0.7,
-    json = false,
-    brand = {},
-  } = reqBody
+  const { messages = [], model, temperature = 0.7, json = false, brand = {} } = reqBody
 
   const apiKey = requireOpenAiApiKey(resolveRequestApiKey(reqBody, reqHeaders))
-  const selectedModel = String(model || process.env.OPENAI_MODEL || 'gpt-4o').trim()
-
-  const payload = {
-    model: selectedModel,
-    temperature: Number(temperature) || 0.7,
-    messages: [
-      { role: 'system', content: brandSystemAddon(brand) },
-      ...messages.filter((item) => item?.role && item?.content),
-    ],
-  }
-
-  if (json) {
-    payload.response_format = { type: 'json_object' }
-  }
+  const selectedModel = resolveChatModel(model)
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -117,7 +104,19 @@ export async function handleGrowthChatRequest(reqBody = {}, reqHeaders = {}) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(
+      buildChatCompletionBody({
+        model: selectedModel,
+        temperature: Number(temperature) || 0.7,
+        json: Boolean(json),
+        reasoningEffort: 'high',
+        maxCompletionTokens: 8192,
+        messages: [
+          { role: 'system', content: brandSystemAddon(brand) },
+          ...messages.filter((item) => item?.role && item?.content),
+        ],
+      }),
+    ),
   })
 
   if (!response.ok) {

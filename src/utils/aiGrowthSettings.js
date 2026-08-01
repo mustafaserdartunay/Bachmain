@@ -6,7 +6,8 @@ const AUTOMATION_KEY = 'bach-ai-growth-automation'
 
 /** Display labels → API model ids (dynamic list can override). */
 export const AI_GROWTH_MODEL_PRESETS = [
-  { id: 'gpt-5.5', label: 'GPT-5.5' },
+  { id: 'gpt-5.5-pro', label: 'GPT-5.5 Pro (en yüksek kalite)' },
+  { id: 'gpt-5.5', label: 'GPT-5.5 (önerilen)' },
   { id: 'gpt-5', label: 'GPT-5' },
   { id: 'gpt-4.1', label: 'GPT-4.1' },
   { id: 'gpt-4o', label: 'GPT-4o' },
@@ -15,7 +16,8 @@ export const AI_GROWTH_MODEL_PRESETS = [
 
 /** Rough USD / 1M tokens (estimate only). */
 export const AI_GROWTH_MODEL_RATES = {
-  'gpt-5.5': { input: 5, output: 15 },
+  'gpt-5.5-pro': { input: 30, output: 180 },
+  'gpt-5.5': { input: 5, output: 30 },
   'gpt-5': { input: 4, output: 12 },
   'gpt-4.1': { input: 2, output: 8 },
   'gpt-4o': { input: 2.5, output: 10 },
@@ -24,7 +26,7 @@ export const AI_GROWTH_MODEL_RATES = {
 
 const DEFAULT_SETTINGS = {
   apiKey: '',
-  model: 'gpt-4o',
+  model: 'gpt-5.5',
   brandVoice: 'Profesyonel, samimi, satış odaklı',
   industry: 'Genel',
   companyName: '',

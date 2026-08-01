@@ -4,10 +4,13 @@ import {
   requireOpenAiApiKey,
   resolveRequestApiKey,
 } from './env.js'
+import { buildChatCompletionBody, resolveChatModel } from './openaiModels.js'
 
 function guardAiRequest(reqHeaders = {}) {
   assertAiProxyAuthorized(reqHeaders)
-  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon').split(',')[0].trim()
+  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon')
+    .split(',')[0]
+    .trim()
   hitAiRateLimit(ip)
 }
 
@@ -49,8 +52,9 @@ Kurallar:
 - Türkçe konuş, samimi ve kısa ol.
 - Bağlamdaki mevcut müşteri/ürün/görev listesini referans alarak doğru kayıtları hedefle.`
 
-export async function runVoiceChat({ messages, context, apiKey, model = 'gpt-4o-mini' }) {
+export async function runVoiceChat({ messages, context, apiKey, model }) {
   const resolvedKey = requireOpenAiApiKey(apiKey)
+  const selectedModel = resolveChatModel(model)
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -58,18 +62,22 @@ export async function runVoiceChat({ messages, context, apiKey, model = 'gpt-4o-
       'Content-Type': 'application/json',
       Authorization: `Bearer ${resolvedKey}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: `${SYSTEM_PROMPT}\n\nUygulama bağlamı:\n${JSON.stringify(context, null, 2)}`,
-        },
-        ...messages,
-      ],
-    }),
+    body: JSON.stringify(
+      buildChatCompletionBody({
+        model: selectedModel,
+        temperature: 0.2,
+        json: true,
+        reasoningEffort: 'high',
+        maxCompletionTokens: 4096,
+        messages: [
+          {
+            role: 'system',
+            content: `${SYSTEM_PROMPT}\n\nUygulama bağlamı:\n${JSON.stringify(context, null, 2)}`,
+          },
+          ...messages,
+        ],
+      }),
+    ),
   })
 
   if (!response.ok) {
@@ -86,12 +94,14 @@ export async function runVoiceChat({ messages, context, apiKey, model = 'gpt-4o-
       message: String(parsed.message || 'Tamam.'),
       actions: Array.isArray(parsed.actions) ? parsed.actions : [],
       raw: parsed,
+      model: data.model || selectedModel,
     }
   } catch {
     return {
       message: content,
       actions: [],
       raw: null,
+      model: data.model || selectedModel,
     }
   }
 }
@@ -99,12 +109,11 @@ export async function runVoiceChat({ messages, context, apiKey, model = 'gpt-4o-
 export async function handleVoiceChatRequest(reqBody, reqHeaders = {}) {
   guardAiRequest(reqHeaders)
   const { messages = [], context = {} } = reqBody || {}
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 
   return runVoiceChat({
     messages: messages.filter((item) => item?.role && item?.content),
     context,
     apiKey: resolveRequestApiKey(reqBody, reqHeaders),
-    model,
+    model: resolveChatModel(reqBody?.model),
   })
 }

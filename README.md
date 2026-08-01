@@ -38,11 +38,13 @@ Tarayıcıda `http://localhost:5173` adresini açın. Geliştirme modunda sesli 
 Header'daki mikrofon simgesine tıklayın. Konuşun veya yazın; asistan müşteri oluşturma, ürün ekleme, teklif hazırlama ve sayfa gezintisi gibi işlemleri otomatik yapar.
 
 **Desteklenen komut örnekleri:**
+
 - "ABC Ambalaj için yeni müşteri oluştur"
 - "5000 adet kraft kutu teklifi hazırla"
 - "Teklifler sayfasına git"
 
 **Gereksinimler:**
+
 - Chrome, Edge veya Firefox (mikrofon kaydı)
 - Sunucuda `OPENAI_API_KEY` tanımlı olmalı (Whisper + GPT aynı anahtar)
 
@@ -50,11 +52,11 @@ Header'daki mikrofon simgesine tıklayın. Konuşun veya yazın; asistan müşte
 
 Platform domain yapısı (Paraşüt modeli):
 
-| Domain | Uygulama |
-|--------|----------|
-| `bachmain.com` / `www` | Kurumsal web (`apps/web`) |
-| `uygulama.bachmain.com` | CRM (repo root) |
-| `yonetim.bachmain.com` | Admin (`apps/admin`) |
+| Domain                  | Uygulama                  |
+| ----------------------- | ------------------------- |
+| `bachmain.com` / `www`  | Kurumsal web (`apps/web`) |
+| `uygulama.bachmain.com` | CRM (repo root)           |
+| `yonetim.bachmain.com`  | Admin (`apps/admin`)      |
 
 Detay: [`docs/PRODUCTION.md`](docs/PRODUCTION.md)
 
@@ -75,7 +77,9 @@ Detay: [`docs/PRODUCTION.md`](docs/PRODUCTION.md)
 2. [Vercel](https://vercel.com) → Import Project → GitHub repo.
 3. Environment Variables ekleyin:
    - `OPENAI_API_KEY` = `sk-...`
-   - `OPENAI_MODEL` = `gpt-4o-mini` (opsiyonel)
+   - `OPENAI_MODEL` = `gpt-5.5` (opsiyonel; varsayılan en iyi paket)
+   - `OPENAI_REASONING_EFFORT` = `high` (opsiyonel)
+   - `OPENAI_WHISPER_MODEL` = `gpt-4o-transcribe` (opsiyonel)
 4. Deploy sonrası Domains → ilgili subdomain’leri ekleyin.
 5. Google Workspace / domain DNS’te Vercel’in verdiği kayıtları ekleyin:
    - `A` → `76.76.21.21` (apex)
@@ -100,11 +104,13 @@ npm start
 
 Varsayılan port: `4173`. Ortam değişkenleri:
 
-| Değişken | Açıklama |
-|----------|----------|
-| `OPENAI_API_KEY` | OpenAI API anahtarı (zorunlu) |
-| `OPENAI_MODEL` | Model adı (varsayılan: gpt-4o-mini) |
-| `PORT` | Sunucu portu (varsayılan: 4173) |
+| Değişken                  | Açıklama                                   |
+| ------------------------- | ------------------------------------------ |
+| `OPENAI_API_KEY`          | OpenAI API anahtarı (zorunlu)              |
+| `OPENAI_MODEL`            | Model adı (varsayılan: gpt-5.5)            |
+| `OPENAI_REASONING_EFFORT` | GPT-5 reasoning (varsayılan: high)         |
+| `OPENAI_WHISPER_MODEL`    | Ses yazıya (varsayılan: gpt-4o-transcribe) |
+| `PORT`                    | Sunucu portu (varsayılan: 4173)            |
 
 ## Teknolojiler
 

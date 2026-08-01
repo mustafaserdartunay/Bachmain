@@ -4,10 +4,13 @@ import {
   requireOpenAiApiKey,
   resolveRequestApiKey,
 } from './env.js'
+import { buildChatCompletionBody, resolveChatModel } from './openaiModels.js'
 
 function guardAiRequest(reqHeaders = {}) {
   assertAiProxyAuthorized(reqHeaders)
-  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon').split(',')[0].trim()
+  const ip = String(reqHeaders['x-forwarded-for'] || reqHeaders['x-real-ip'] || 'anon')
+    .split(',')[0]
+    .trim()
   hitAiRateLimit(ip)
 }
 
@@ -66,11 +69,12 @@ export async function runOmniAnalyze({
   context = {},
   learningExamples = [],
   apiKey,
-  model = 'gpt-4o-mini',
+  model,
   brandVoice = '',
   companyName = 'Erlenbox',
 }) {
   const resolvedKey = requireOpenAiApiKey(apiKey)
+  const selectedModel = resolveChatModel(model)
   const thread = formatThreadForModel(messages)
 
   if (thread.length === 0) {
@@ -93,22 +97,27 @@ export async function runOmniAnalyze({
       'Content-Type': 'application/json',
       Authorization: `Bearer ${resolvedKey}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.4,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: `${systemPrompt}\n\nMüşteri/CRM bağlamı:\n${JSON.stringify(context, null, 2)}`,
-        },
-        ...thread,
-        {
-          role: 'user',
-          content: 'Yukarıdaki konuşmaya göre JSON formatında özet, duygu analizi, birincil yanıt, alternatif yanıtlar ve uygun CRM aksiyonlarını üret.',
-        },
-      ],
-    }),
+    body: JSON.stringify(
+      buildChatCompletionBody({
+        model: selectedModel,
+        temperature: 0.4,
+        json: true,
+        reasoningEffort: 'high',
+        maxCompletionTokens: 4096,
+        messages: [
+          {
+            role: 'system',
+            content: `${systemPrompt}\n\nMüşteri/CRM bağlamı:\n${JSON.stringify(context, null, 2)}`,
+          },
+          ...thread,
+          {
+            role: 'user',
+            content:
+              'Yukarıdaki konuşmaya göre JSON formatında özet, duygu analizi, birincil yanıt, alternatif yanıtlar ve uygun CRM aksiyonlarını üret.',
+          },
+        ],
+      }),
+    ),
   })
 
   if (!response.ok) {
@@ -126,9 +135,14 @@ export async function runOmniAnalyze({
 
     return {
       summary: String(parsed.summary || 'Konuşma analiz edildi.'),
-      sentiment: ['positive', 'negative', 'neutral'].includes(parsed.sentiment) ? parsed.sentiment : 'neutral',
+      sentiment: ['positive', 'negative', 'neutral'].includes(parsed.sentiment)
+        ? parsed.sentiment
+        : 'neutral',
       primaryReply: primary,
-      replies: primary && !replies.includes(primary) ? [primary, ...replies].slice(0, 4) : replies.slice(0, 4),
+      replies:
+        primary && !replies.includes(primary)
+          ? [primary, ...replies].slice(0, 4)
+          : replies.slice(0, 4),
       actions: Array.isArray(parsed.actions) ? parsed.actions : [],
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.75,
       source: 'openai',
@@ -164,6 +178,6 @@ export async function handleOmniAnalyzeRequest(reqBody, reqHeaders = {}) {
     brandVoice,
     companyName,
     apiKey: resolveRequestApiKey(reqBody, reqHeaders),
-    model: model || process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    model: resolveChatModel(model),
   })
 }

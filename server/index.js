@@ -16,6 +16,7 @@ import {
   handleGrowthHealthRequest,
   handleGrowthModelsRequest,
 } from './growthAi.js'
+import { resolveChatModel, resolveTranscribeModel } from './openaiModels.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -35,9 +36,9 @@ try {
 app.use(express.json({ limit: '15mb' }))
 
 function clientKey(req) {
-  return req.headers['x-forwarded-for']?.split(',')[0]?.trim()
-    || req.socket?.remoteAddress
-    || 'anon'
+  return (
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'anon'
+  )
 }
 
 function guardAi(req) {
@@ -54,8 +55,9 @@ app.get('/api/voice/health', (_req, res) => {
   res.json({
     ok: true,
     hasApiKey: Boolean(getOpenAiApiKey()),
-    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-    transcribe: process.env.OPENAI_WHISPER_MODEL || 'whisper-1',
+    model: resolveChatModel(),
+    transcribe: resolveTranscribeModel(),
+    reasoningEffort: process.env.OPENAI_REASONING_EFFORT || 'high',
     clientKeysAllowed: !isProductionRuntime(),
   })
 })
@@ -84,7 +86,7 @@ app.get('/api/omni/health', (_req, res) => {
   res.json({
     ok: true,
     hasApiKey: Boolean(getOpenAiApiKey()),
-    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    model: resolveChatModel(),
     clientKeysAllowed: !isProductionRuntime(),
   })
 })
@@ -134,6 +136,8 @@ app.get('*', (_req, res) => {
 app.listen(port, () => {
   console.log(`Erlenbox online: http://localhost:${port}`)
   if (!getOpenAiApiKey()) {
-    console.warn('Uyarı: OPENAI_API_KEY tanımlı değil. .env dosyası oluşturun veya Ayarlar > Sesli AI bölümünden anahtar girin.')
+    console.warn(
+      'Uyarı: OPENAI_API_KEY tanımlı değil. .env dosyası oluşturun veya Ayarlar > Sesli AI bölümünden anahtar girin.',
+    )
   }
 })
