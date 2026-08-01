@@ -91,7 +91,7 @@ async function copyText(value) {
 
 export default function CustomersPage({
   pageTitle = 'Müşteriler',
-  createLabel = 'Yeni Müşteri Oluştur',
+  createLabel = 'Yeni Müşteri',
   listTitle = 'Müşteriler Listesi',
   totalLabel = 'Toplam Müşteri',
   columnLabel = 'Müşteri',
@@ -314,22 +314,36 @@ export default function CustomersPage({
     <AppPageShell className="w-full">
       <AppPageHeader
         title={
-          <span className="inline-flex min-w-0 items-center gap-2 text-xs font-normal uppercase leading-none text-[var(--muted)]">
-            {listKind === 'supplier' ? (
-              <Handshake className="h-4 w-4 shrink-0" />
-            ) : (
-              <Users className="h-4 w-4 shrink-0" />
-            )}
-            <span className="truncate">{pageTitle}</span>
+          <span
+            className={`inline-flex h-[52px] min-w-[8.5rem] max-w-full items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] ${
+              listKind === 'supplier'
+                ? 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
+                : 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
+            }`}
+          >
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-[#ffffff] ring-1 ring-white/25">
+              {listKind === 'supplier' ? (
+                <Handshake className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
+              ) : (
+                <Users className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
+              )}
+            </span>
+            <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
+              {pageTitle}
+            </span>
           </span>
         }
-        titleClassName="!flex !items-center !text-xs !font-normal !uppercase !leading-none !text-[var(--muted)]"
+        titleClassName="!flex !min-w-0 !items-center !overflow-visible"
         actions={
           <button
             type="button"
             onClick={() => navigate(createPath)}
             title={createLabel}
-            className="group inline-flex h-[52px] min-w-[8.5rem] shrink-0 items-center gap-2.5 rounded-xl bg-gradient-to-br from-[#ffb25e] via-[#ff8a65] to-[#ff5e62] px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5"
+            className={`group inline-flex h-[52px] min-w-[8.5rem] shrink-0 items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 ${
+              listKind === 'supplier'
+                ? 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
+                : 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
+            }`}
           >
             <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-[#ffffff] ring-1 ring-white/25">
               {listKind === 'supplier' ? (

@@ -4,7 +4,7 @@ export default function SuppliersPage() {
   return (
     <CustomersPage
       pageTitle="Tedarikçiler"
-      createLabel="Yeni Tedarikçi Oluştur"
+      createLabel="Yeni Tedarikçi"
       listTitle="Tedarikçiler Listesi"
       totalLabel="Toplam Tedarikçi"
       columnLabel="Tedarikçi"
