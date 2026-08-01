@@ -170,9 +170,7 @@ export default function EditableDropdownPill({
     ? hasSelection
       ? 'text-[var(--text-strong)]'
       : 'text-[var(--text-muted)]'
-    : hasSelection
-      ? 'text-[var(--ink)]'
-      : 'text-[var(--muted)]'
+    : 'text-[12px] font-semibold leading-tight text-[var(--muted)]'
   const lightMenuShell =
     'z-30 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1.5 shadow-[var(--shadow)]'
   const menuPositionClass =
