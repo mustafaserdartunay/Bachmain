@@ -1322,7 +1322,7 @@ textarea:not(.form-input)::placeholder {
   border-color: var(--search-border) !important;
   box-shadow: none !important;
   font-size: 12px !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.25 !important;
   color: var(--muted) !important;
 }
@@ -1330,7 +1330,7 @@ textarea:not(.form-input)::placeholder {
 .app-responsive .customer-list-panel .glass-pill span.truncate {
   color: var(--muted) !important;
   font-size: 12px !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.25 !important;
 }
 
