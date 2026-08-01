@@ -1478,13 +1478,6 @@ html:not(.night) .app-responsive [class*='bg-white/'] {
   color: var(--ink) !important;
 }
 
-/* Keep translucent icon shells on gradient CTAs (do not flatten to solid white) */
-html:not(.night) .app-responsive a[class*='bg-gradient'] [class*='bg-white/'] {
-  background: rgba(255, 255, 255, 0.22) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
-  color: #ffffff !important;
-}
-
 html:not(.night) .app-responsive .text-white {
   color: var(--ink) !important;
 }
