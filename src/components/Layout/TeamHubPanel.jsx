@@ -296,12 +296,18 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
   const panelPaddingClass = collapsed ? 'p-4 lg:px-2 lg:py-4' : 'px-3 py-4'
 
   function handleSendMessage(event) {
-    event.preventDefault()
+    event?.preventDefault?.()
     if (!messageDraft.trim()) return
     const author = resolveCurrentTeamAuthor()
     sendTeamMessage(messageDraft, author)
     setMessageDraft('')
     setTick((value) => value + 1)
+  }
+
+  function handleMessageKeyDown(event) {
+    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
+    event.preventDefault()
+    handleSendMessage(event)
   }
 
   function handleAssignTask(event) {
@@ -408,7 +414,9 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
                 <input
                   value={messageDraft}
                   onChange={(event) => setMessageDraft(event.target.value)}
+                  onKeyDown={handleMessageKeyDown}
                   placeholder="Mesaj yaz..."
+                  enterKeyHint="send"
                   className={`${TEAM_HUB_FIELD_CLASS} min-w-0 flex-1 !rounded-full`}
                 />
                 <button
