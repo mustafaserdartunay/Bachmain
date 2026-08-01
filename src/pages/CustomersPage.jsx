@@ -463,7 +463,7 @@ export default function CustomersPage({
         dotColor="blue"
         className="customer-list-panel w-full"
         action={
-          <span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px] !font-semibold !leading-tight">
+          <span className="app-titlecase-words shrink-0 text-[12px] font-semibold leading-tight text-[var(--muted)]">
             {filteredCustomers.length} kayıt
           </span>
         }

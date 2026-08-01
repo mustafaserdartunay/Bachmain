@@ -1357,12 +1357,6 @@ textarea:not(.form-input)::placeholder {
   color: var(--muted) !important;
 }
 
-.app-responsive .customer-list-panel .badge {
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  line-height: 1.25 !important;
-}
-
 .app-responsive .customer-list-panel h2,
 .app-responsive .customer-deleted-archived-panel .app-titlecase-words {
   color: var(--muted) !important;
