@@ -1,13 +1,13 @@
 /** Shared OpenAI model defaults — best quality package for BachMain. */
 
-export const DEFAULT_OPENAI_CHAT_MODEL = 'gpt-5.5'
+export const DEFAULT_OPENAI_CHAT_MODEL = 'gpt-5.5-pro'
 export const DEFAULT_OPENAI_TRANSCRIBE_MODEL = 'gpt-4o-transcribe'
 /** Quality-first reasoning for GPT-5.x (none | low | medium | high | xhigh). */
 export const DEFAULT_OPENAI_REASONING_EFFORT = 'high'
 
 export const OPENAI_CHAT_MODEL_PRESETS = [
-  { id: 'gpt-5.5-pro', label: 'GPT-5.5 Pro (en yüksek kalite)' },
-  { id: 'gpt-5.5', label: 'GPT-5.5 (önerilen)' },
+  { id: 'gpt-5.5-pro', label: 'GPT-5.5 Pro (önerilen · en yüksek kalite)' },
+  { id: 'gpt-5.5', label: 'GPT-5.5' },
   { id: 'gpt-5', label: 'GPT-5' },
   { id: 'gpt-4.1', label: 'GPT-4.1' },
   { id: 'gpt-4o', label: 'GPT-4o' },

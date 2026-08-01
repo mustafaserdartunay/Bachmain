@@ -77,7 +77,7 @@ Detay: [`docs/PRODUCTION.md`](docs/PRODUCTION.md)
 2. [Vercel](https://vercel.com) → Import Project → GitHub repo.
 3. Environment Variables ekleyin:
    - `OPENAI_API_KEY` = `sk-...`
-   - `OPENAI_MODEL` = `gpt-5.5` (opsiyonel; varsayılan en iyi paket)
+   - `OPENAI_MODEL` = `gpt-5.5-pro` (opsiyonel; varsayılan en yüksek kalite)
    - `OPENAI_REASONING_EFFORT` = `high` (opsiyonel)
    - `OPENAI_WHISPER_MODEL` = `gpt-4o-transcribe` (opsiyonel)
 4. Deploy sonrası Domains → ilgili subdomain’leri ekleyin.
@@ -107,7 +107,7 @@ Varsayılan port: `4173`. Ortam değişkenleri:
 | Değişken                  | Açıklama                                   |
 | ------------------------- | ------------------------------------------ |
 | `OPENAI_API_KEY`          | OpenAI API anahtarı (zorunlu)              |
-| `OPENAI_MODEL`            | Model adı (varsayılan: gpt-5.5)            |
+| `OPENAI_MODEL`            | Model adı (varsayılan: gpt-5.5-pro)        |
 | `OPENAI_REASONING_EFFORT` | GPT-5 reasoning (varsayılan: high)         |
 | `OPENAI_WHISPER_MODEL`    | Ses yazıya (varsayılan: gpt-4o-transcribe) |
 | `PORT`                    | Sunucu portu (varsayılan: 4173)            |
