@@ -3063,6 +3063,33 @@ html.night .trial-banner-cta:hover {
   opacity: 0.55;
 }
 
+.appearance-switch[data-mode='day']
+  .appearance-switch-track:has(.appearance-switch-icon--night:hover)
+  .appearance-switch-thumb {
+  transform: translateX(100%);
+  background: linear-gradient(135deg, #93c5fd 0%, #3b82f6 50%, #1e3a8a 100%);
+  box-shadow:
+    0 4px 12px -4px rgba(30, 58, 138, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.appearance-switch[data-mode='night']
+  .appearance-switch-track:has(.appearance-switch-icon--day:hover)
+  .appearance-switch-thumb {
+  transform: translateX(0);
+  background: linear-gradient(135deg, #fde68a 0%, #f59e0b 55%, #ea580c 100%);
+  box-shadow:
+    0 4px 10px -4px rgba(30, 35, 60, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.appearance-switch-track:has(.appearance-switch-icon--day:hover) .appearance-switch-icon--day,
+.appearance-switch-track:has(.appearance-switch-icon--night:hover) .appearance-switch-icon--night {
+  color: #ffffff;
+  opacity: 1;
+  transform: scale(1.05);
+}
+
 .appearance-switch:hover .appearance-switch-track {
   border-color: rgba(140, 145, 165, 0.38);
 }
@@ -3122,7 +3149,7 @@ html.night .trial-banner-cta:hover {
     box-shadow 0.22s ease,
     opacity 0.18s ease;
   z-index: 0;
-  opacity: 0.42;
+  opacity: 0;
 }
 
 .header-ai-switch-thumb.is-chat {
@@ -3137,6 +3164,30 @@ html.night .trial-banner-cta:hover {
   box-shadow:
     0 4px 12px -4px rgba(190, 18, 60, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.header-ai-switch-track:has(.header-ai-switch-btn--chat:hover) .header-ai-switch-thumb {
+  transform: translateX(0);
+  opacity: 1;
+  background: linear-gradient(135deg, #c7b6ff 0%, #a78bfa 50%, #7c3aed 100%);
+  box-shadow:
+    0 4px 10px -4px rgba(76, 29, 149, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.header-ai-switch-track:has(.header-ai-switch-btn--mic:hover) .header-ai-switch-thumb {
+  transform: translateX(100%);
+  opacity: 1;
+  background: linear-gradient(135deg, #fda4af 0%, #f43f5e 50%, #e11d48 100%);
+  box-shadow:
+    0 4px 12px -4px rgba(190, 18, 60, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.header-ai-switch-track:has(.header-ai-switch-btn--chat:hover) .header-ai-switch-btn--chat,
+.header-ai-switch-track:has(.header-ai-switch-btn--mic:hover) .header-ai-switch-btn--mic {
+  color: #ffffff;
+  transform: scale(1.05);
 }
 
 .header-ai-switch.is-open:not(.is-recording):not(.is-busy) .header-ai-switch-track {
@@ -3292,6 +3343,46 @@ html.night .header-ai-switch.is-busy .header-ai-switch-track {
   box-shadow:
     0 4px 10px -4px rgba(37, 99, 235, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Hover: ikon arkasında renk belirsin (basılı/aktif state kalır) */
+.header-agenda-switch-track:has(.header-agenda-switch-btn--notebook:hover)
+  .header-agenda-switch-thumb {
+  transform: translateX(0);
+  opacity: 1;
+  background: linear-gradient(135deg, #fde68a 0%, #f59e0b 55%, #ea580c 100%);
+  box-shadow:
+    0 4px 10px -4px rgba(234, 88, 12, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.header-agenda-switch-track:has(.header-agenda-switch-btn--task:hover) .header-agenda-switch-thumb {
+  transform: translateX(100%);
+  opacity: 1;
+  background: linear-gradient(135deg, #7cf2c6 0%, #34d399 50%, #10b981 100%);
+  box-shadow:
+    0 4px 10px -4px rgba(16, 185, 129, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.header-agenda-switch-track:has(.header-agenda-switch-btn--appointment:hover)
+  .header-agenda-switch-thumb {
+  transform: translateX(200%);
+  opacity: 1;
+  background: linear-gradient(135deg, #93c5fd 0%, #3b82f6 50%, #2563eb 100%);
+  box-shadow:
+    0 4px 10px -4px rgba(37, 99, 235, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.header-agenda-switch-track:has(.header-agenda-switch-btn--notebook:hover)
+  .header-agenda-switch-btn--notebook,
+.header-agenda-switch-track:has(.header-agenda-switch-btn--task:hover)
+  .header-agenda-switch-btn--task,
+.header-agenda-switch-track:has(.header-agenda-switch-btn--appointment:hover)
+  .header-agenda-switch-btn--appointment {
+  color: #ffffff;
+  transform: scale(1.05);
 }
 
 .header-agenda-switch.is-open .header-agenda-switch-track {

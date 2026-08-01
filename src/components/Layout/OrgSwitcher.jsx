@@ -29,22 +29,12 @@ export default function OrgSwitcher() {
   } = useOrg()
   const anchorRef = useRef(null)
   const menuRef = useRef(null)
-  const closeTimerRef = useRef(null)
   const [open, setOpen] = useState(false)
   const [style, setStyle] = useState(null)
   const [companies, setCompanies] = useState([])
   const [loading, setLoading] = useState(false)
   const [switchingTenantCode, setSwitchingTenantCode] = useState('')
   const [error, setError] = useState('')
-
-  const cancelClose = useCallback(() => {
-    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
-  }, [])
-
-  const closeSoon = useCallback(() => {
-    cancelClose()
-    closeTimerRef.current = window.setTimeout(() => setOpen(false), 160)
-  }, [cancelClose])
 
   const loadCompanies = useCallback(async () => {
     setLoading(true)
@@ -99,13 +89,6 @@ export default function OrgSwitcher() {
     }
   }, [loadCompanies, open])
 
-  useEffect(
-    () => () => {
-      cancelClose()
-    },
-    [cancelClose],
-  )
-
   async function handleCompanySwitch(tenantCode) {
     if (!tenantCode || tenantCode === user?.tenantCode) {
       setOpen(false)
@@ -122,23 +105,25 @@ export default function OrgSwitcher() {
     }
   }
 
+  function handleBranchSelect(branchId) {
+    setBranch(branchId)
+    setOpen(false)
+  }
+
+  function handleWarehouseSelect(warehouseId) {
+    setWarehouse(warehouseId)
+    setOpen(false)
+  }
+
   const activeCompany = companies.find((company) => company.tenantCode === user?.tenantCode)
   const accessLevel = activeCompany?.accessLevel || user?.accessLevel || user?.role
   const readOnly = accessLevel === 'viewer'
 
   return (
-    <div
-      ref={anchorRef}
-      className="relative"
-      onMouseEnter={() => {
-        cancelClose()
-        setOpen(true)
-      }}
-      onMouseLeave={closeSoon}
-    >
+    <div ref={anchorRef} className="relative">
       <button
         type="button"
-        className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only`}
+        className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only ${open ? 'ring-2 ring-[rgba(37,99,235,0.22)]' : ''}`}
         onClick={() => setOpen((value) => !value)}
         aria-label="Firma, şube ve depo seçimi"
         aria-expanded={open}
@@ -155,8 +140,7 @@ export default function OrgSwitcher() {
               ref={menuRef}
               style={style || { visibility: 'hidden' }}
               className="app-header-dropdown overflow-hidden"
-              onMouseEnter={cancelClose}
-              onMouseLeave={closeSoon}
+              onClick={(event) => event.stopPropagation()}
             >
               <div className="flex items-center gap-3 border-b border-[rgba(140,145,165,0.14)] p-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 ring-1 ring-blue-500/20">
@@ -164,7 +148,7 @@ export default function OrgSwitcher() {
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-xs font-bold text-[var(--ink)]">
-                    {activeCompany?.name || user?.companyName || 'Firma Seçimi'}
+                    {activeCompany?.name || user?.companyName || 'Organizasyon'}
                   </p>
                   <p
                     className={`mt-0.5 flex items-center gap-1 text-[10px] font-semibold ${
@@ -177,15 +161,20 @@ export default function OrgSwitcher() {
                 </div>
               </div>
 
-              <div className="max-h-[26rem] overflow-y-auto p-2">
+              <div className="max-h-[28rem] overflow-y-auto p-2">
                 <p className="px-2 pb-1 pt-1 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
-                  Firmalar
+                  Firma Seçimi
                 </p>
                 {loading ? (
                   <div className="flex items-center gap-2 px-3 py-3 text-xs text-[var(--muted)]">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Firmalar yükleniyor
                   </div>
+                ) : null}
+                {!loading && companies.length === 0 ? (
+                  <p className="px-3 py-2 text-xs font-semibold text-[var(--muted)]">
+                    Kayıtlı firma bulunamadı.
+                  </p>
                 ) : null}
                 {!loading
                   ? companies.map((company) => {
@@ -209,6 +198,7 @@ export default function OrgSwitcher() {
                               {company.accessLevel === 'viewer'
                                 ? 'Sadece görüntüleme'
                                 : 'Görüntüleme ve düzenleme'}
+                              {selected ? ' · aktif veri alanı' : ''}
                             </span>
                           </span>
                           {switching ? (
@@ -223,63 +213,72 @@ export default function OrgSwitcher() {
                     })
                   : null}
 
-                {multiBranch ? (
-                  <>
-                    <p className="px-2 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
-                      Şubeler
-                    </p>
-                    {branches.map((branch) => (
+                <p className="px-2 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                  Şube Seçimi
+                </p>
+                {!multiBranch ? (
+                  <p className="px-3 py-2 text-xs font-semibold text-[var(--muted)]">
+                    Çoklu şube bu planda kapalı. Seçili firmanın varsayılan şubesi kullanılır.
+                  </p>
+                ) : null}
+                {multiBranch && branches.length === 0 ? (
+                  <p className="px-3 py-2 text-xs font-semibold text-[var(--muted)]">
+                    Bu firmaya ait şube yok.
+                  </p>
+                ) : null}
+                {multiBranch
+                  ? branches.map((branch) => (
                       <button
                         key={branch.id}
                         type="button"
-                        onClick={() => {
-                          setBranch(branch.id)
-                          setOpen(false)
-                        }}
-                        className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold ${
+                        onClick={() => handleBranchSelect(branch.id)}
+                        className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold transition-colors ${
                           branch.id === activeBranch?.id
                             ? 'bg-blue-500/10 text-blue-600'
                             : 'text-[var(--ink)] hover:bg-white/55'
                         }`}
                       >
-                        <MapPin className="h-3.5 w-3.5" />
-                        <span className="truncate">{branch.name}</span>
-                        {branch.id === activeBranch?.id ? (
-                          <Check className="ml-auto h-3.5 w-3.5" />
-                        ) : null}
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        <span className="min-w-0 flex-1 truncate">{branch.name}</span>
+                        {branch.id === activeBranch?.id ? <Check className="h-3.5 w-3.5" /> : null}
                       </button>
-                    ))}
-                  </>
-                ) : null}
+                    ))
+                  : null}
 
-                {multiWarehouse ? (
-                  <>
-                    <p className="px-2 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
-                      Depolar
-                    </p>
-                    {warehouses.map((warehouse) => (
+                <p className="px-2 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                  Depo Seçimi
+                </p>
+                {!multiWarehouse ? (
+                  <p className="px-3 py-2 text-xs font-semibold text-[var(--muted)]">
+                    Çoklu depo bu planda kapalı. Seçili firmanın varsayılan deposu kullanılır.
+                  </p>
+                ) : null}
+                {multiWarehouse && warehouses.length === 0 ? (
+                  <p className="px-3 py-2 text-xs font-semibold text-[var(--muted)]">
+                    Bu şubeye ait depo yok.
+                  </p>
+                ) : null}
+                {multiWarehouse
+                  ? warehouses.map((warehouse) => (
                       <button
                         key={warehouse.id}
                         type="button"
-                        onClick={() => {
-                          setWarehouse(warehouse.id)
-                          setOpen(false)
-                        }}
-                        className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold ${
+                        onClick={() => handleWarehouseSelect(warehouse.id)}
+                        className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold transition-colors ${
                           warehouse.id === activeWarehouse?.id
                             ? 'bg-blue-500/10 text-blue-600'
                             : 'text-[var(--ink)] hover:bg-white/55'
                         }`}
                       >
-                        <Warehouse className="h-3.5 w-3.5" />
-                        <span className="truncate">{warehouse.name}</span>
+                        <Warehouse className="h-3.5 w-3.5 shrink-0" />
+                        <span className="min-w-0 flex-1 truncate">{warehouse.name}</span>
                         {warehouse.id === activeWarehouse?.id ? (
-                          <Check className="ml-auto h-3.5 w-3.5" />
+                          <Check className="h-3.5 w-3.5" />
                         ) : null}
                       </button>
-                    ))}
-                  </>
-                ) : null}
+                    ))
+                  : null}
+
                 {error ? (
                   <p className="px-3 py-2 text-xs font-semibold text-rose-600">{error}</p>
                 ) : null}
