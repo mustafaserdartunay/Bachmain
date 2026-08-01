@@ -388,7 +388,7 @@ export default function EditableDropdownPill({
                   setNewColor(COLOR_PALETTE[options.length % COLOR_PALETTE.length])
                   setAdding(true)
                 }}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-black uppercase tracking-wide text-blue-600 transition-colors hover:bg-[rgba(37,99,235,0.1)]"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-semibold leading-tight text-blue-600 transition-colors hover:bg-[rgba(37,99,235,0.1)]"
               >
                 <Plus className="h-4 w-4" /> Ekle
               </button>

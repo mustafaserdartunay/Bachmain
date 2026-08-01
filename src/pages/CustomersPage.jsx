@@ -463,7 +463,7 @@ export default function CustomersPage({
         dotColor="blue"
         className="customer-list-panel w-full"
         action={
-          <span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px]">
+          <span className="badge badge-blue shrink-0 !px-2 !py-0.5 !text-[12px] !font-semibold !leading-tight">
             {filteredCustomers.length} kayıt
           </span>
         }
@@ -494,10 +494,10 @@ export default function CustomersPage({
                 const display = getCustomerDisplay(customer)
                 return (
                   <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
-                    <span className="truncate font-semibold leading-tight">
+                    <span className="truncate text-[12px] font-semibold leading-tight text-[var(--muted)]">
                       {display.brandShortName}
                     </span>
-                    <span className="truncate text-ds-caption leading-tight text-ds-muted">
+                    <span className="truncate text-[12px] font-semibold leading-tight text-[var(--muted)]">
                       {display.companyTitle}
                     </span>
                   </span>

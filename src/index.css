@@ -1317,15 +1317,50 @@ textarea:not(.form-input)::placeholder {
   color: var(--ink) !important;
 }
 
-.app-responsive .customer-filter-field .customer-filter-pill span.truncate,
-.app-responsive .customer-list-panel .glass-pill span.truncate {
-  color: var(--muted) !important;
-}
-
 .app-responsive .customer-list-panel .glass-pill {
   background: transparent !important;
   border-color: var(--search-border) !important;
   box-shadow: none !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: var(--muted) !important;
+}
+
+.app-responsive .customer-list-panel .glass-pill span.truncate {
+  color: var(--muted) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.app-responsive .customer-list-panel table thead th {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  color: var(--muted) !important;
+}
+
+.app-responsive .customer-list-panel table tbody td {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: var(--muted) !important;
+}
+
+.app-responsive .customer-list-panel table tbody td .text-ds-caption,
+.app-responsive .customer-list-panel table tbody td .text-ds-muted {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: var(--muted) !important;
+}
+
+.app-responsive .customer-list-panel .badge {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
 }
 
 .app-responsive .customer-list-panel h2,
