@@ -67,6 +67,7 @@ const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
 const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu'
 const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill`
 const CUSTOMER_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max max-w-full'
+const CUSTOMER_LIST_MENU_CLASS = '!min-w-[18rem] w-[18rem]'
 
 function balanceClass(balance) {
   if (balance > 0) return 'text-[#10b981]'
@@ -488,15 +489,15 @@ export default function CustomersPage({
               header: columnLabel.toLocaleUpperCase('tr-TR'),
               sortable: true,
               accessorKey: 'name',
-              className: 'w-[12rem]',
+              className: 'min-w-[18rem] w-[44%]',
               cell: (customer) => {
                 const display = getCustomerDisplay(customer)
                 return (
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 truncate font-semibold">
+                  <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
+                    <span className="truncate font-semibold leading-tight">
                       {display.brandShortName}
                     </span>
-                    <span className="truncate text-ds-caption text-ds-muted">
+                    <span className="truncate text-ds-caption leading-tight text-ds-muted">
                       {display.companyTitle}
                     </span>
                   </span>
@@ -506,7 +507,7 @@ export default function CustomersPage({
             {
               id: 'type',
               header: 'TİPİ',
-              className: 'w-[10rem]',
+              className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
                 const settings = customerSettings[customer.id] || {}
@@ -519,7 +520,8 @@ export default function CustomersPage({
                       onOptionsChange={(next) => updateOptionList('type', next)}
                       buttonClassName={CUSTOMER_LIST_PILL_CLASS}
                       wrapperClassName={CUSTOMER_LIST_PILL_WRAPPER_CLASS}
-                      menuClassName="!min-w-0"
+                      menuClassName={CUSTOMER_LIST_MENU_CLASS}
+                      menuMatchWidth={false}
                       openKey={`${customer.id}-type`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
@@ -532,7 +534,7 @@ export default function CustomersPage({
             {
               id: 'representative',
               header: 'TEMSİLCİ',
-              className: 'w-[10rem]',
+              className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
                 const settings = customerSettings[customer.id] || {}
@@ -548,7 +550,8 @@ export default function CustomersPage({
                       onOptionsChange={(next) => updateOptionList('representative', next)}
                       buttonClassName={CUSTOMER_LIST_PILL_CLASS}
                       wrapperClassName={CUSTOMER_LIST_PILL_WRAPPER_CLASS}
-                      menuClassName="!min-w-0"
+                      menuClassName={CUSTOMER_LIST_MENU_CLASS}
+                      menuMatchWidth={false}
                       openKey={`${customer.id}-representative`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
@@ -563,7 +566,7 @@ export default function CustomersPage({
             {
               id: 'scoring',
               header: 'PUANTAJ',
-              className: 'w-[10rem]',
+              className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
                 const settings = customerSettings[customer.id] || {}
@@ -576,7 +579,8 @@ export default function CustomersPage({
                       onOptionsChange={(next) => updateOptionList('scoring', next)}
                       buttonClassName={CUSTOMER_LIST_PILL_CLASS}
                       wrapperClassName={CUSTOMER_LIST_PILL_WRAPPER_CLASS}
-                      menuClassName="!min-w-0"
+                      menuClassName={CUSTOMER_LIST_MENU_CLASS}
+                      menuMatchWidth={false}
                       openKey={`${customer.id}-scoring`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}

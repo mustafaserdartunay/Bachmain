@@ -148,14 +148,23 @@ export default function EditableDropdownPill({
   const isLightMenu = menuVariant === 'light'
   const usePortal = !menuInline
   const portalPlacement = menuPlacement === 'above' ? 'above' : 'below'
+  const editorExpanded = adding || editingIndex != null
   const {
     anchorRef,
     menuRef,
     style: portalStyle,
+    updatePosition,
   } = useAnchoredPortal(isOpen && usePortal && isInteractive, {
     placement: portalPlacement,
     matchWidth: menuMatchWidth,
+    width: editorExpanded ? 320 : undefined,
   })
+
+  useEffect(() => {
+    if (!isOpen || !usePortal) return undefined
+    const raf = window.requestAnimationFrame(() => updatePosition?.())
+    return () => window.cancelAnimationFrame(raf)
+  }, [editorExpanded, isOpen, updatePosition, usePortal])
 
   const selectedTextClass = isLightMenu
     ? hasSelection
@@ -196,10 +205,11 @@ export default function EditableDropdownPill({
     : `${optionButtonClass} origin-left text-[var(--muted)] transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
 
   function renderMenu() {
+    const expandedEditor = adding || editingIndex != null
     return (
       <div
         ref={usePortal ? menuRef : undefined}
-        className={`${menuShellClass} ${menuClassName}`.trim()}
+        className={`${menuShellClass} ${menuClassName} ${expandedEditor ? '!min-w-[20rem] !w-[20rem]' : ''}`.trim()}
       >
         {searchable && (
           <input
@@ -299,7 +309,7 @@ export default function EditableDropdownPill({
                     <button
                       type="button"
                       onClick={() => startEdit(index)}
-                      className="rounded-lg p-1 text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-blue-500/15 hover:text-blue-700"
+                      className="rounded-lg p-1 text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-[rgba(37,99,235,0.16)] hover:text-blue-700"
                       title="Düzenle"
                     >
                       <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -328,13 +338,16 @@ export default function EditableDropdownPill({
         {canEdit && (
           <div className="mt-1 border-t border-white/50 pt-1">
             {adding ? (
-              <div className="space-y-1.5 rounded-xl bg-white/35 px-2 py-1.5">
-                <div className="flex items-center gap-1.5">
+              <div className="space-y-2 rounded-xl border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.05)] px-2.5 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                  Yeni seçenek
+                </p>
+                <div className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${newColor}`} />
                   <input
                     autoFocus
                     value={newName}
-                    placeholder="Yeni seçenek..."
+                    placeholder="Seçenek adı yazın…"
                     onChange={(event) => setNewName(event.target.value)}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter') commitAdd()
@@ -343,29 +356,29 @@ export default function EditableDropdownPill({
                         setNewName('')
                       }
                     }}
-                    className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/42 px-2 py-1 text-xs font-bold text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:border-white/75 focus:bg-white/52"
+                    className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/55 px-2.5 py-1.5 text-xs font-bold text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[rgba(37,99,235,0.35)] focus:bg-white/70"
                   />
-                  <button
-                    type="button"
-                    onClick={commitAdd}
-                    className="rounded-lg p-1 text-emerald-700 transition-colors hover:bg-emerald-500/15"
-                    title="Ekle"
-                  >
-                    <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  </button>
+                </div>
+                <OptionColorPicker value={newColor} onChange={setNewColor} />
+                <div className="flex items-center justify-end gap-1.5 pt-0.5">
                   <button
                     type="button"
                     onClick={() => {
                       setAdding(false)
                       setNewName('')
                     }}
-                    className="rounded-lg bg-red-500/15 p-1 text-red-500 transition-colors hover:bg-red-500/25 hover:text-red-600"
-                    title="Vazgeç"
+                    className="inline-flex h-7 items-center rounded-lg px-2.5 text-[11px] font-bold text-red-600 transition-colors hover:bg-red-500/10"
                   >
-                    <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    Vazgeç
+                  </button>
+                  <button
+                    type="button"
+                    onClick={commitAdd}
+                    className="inline-flex h-7 items-center rounded-lg bg-[rgba(37,99,235,0.12)] px-2.5 text-[11px] font-bold text-blue-700 transition-colors hover:bg-[rgba(37,99,235,0.2)]"
+                  >
+                    Ekle
                   </button>
                 </div>
-                <OptionColorPicker value={newColor} onChange={setNewColor} />
               </div>
             ) : (
               <button
@@ -375,7 +388,7 @@ export default function EditableDropdownPill({
                   setNewColor(COLOR_PALETTE[options.length % COLOR_PALETTE.length])
                   setAdding(true)
                 }}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-black uppercase tracking-wide text-blue-600 transition-colors hover:bg-white/45"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-black uppercase tracking-wide text-blue-600 transition-colors hover:bg-[rgba(37,99,235,0.1)]"
               >
                 <Plus className="h-4 w-4" /> Ekle
               </button>
