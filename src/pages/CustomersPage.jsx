@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
+  ChevronLeft,
   Copy,
   Eye,
   Handshake,
@@ -15,7 +16,7 @@ import {
 import { Button, DataTable, Modal } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import ConfirmModal from '../components/Common/ConfirmModal'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
@@ -313,21 +314,23 @@ export default function CustomersPage({
   return (
     <AppPageShell className="w-full">
       <AppPageHeader
+        showBack={false}
         title={
           <span
-            className={`inline-flex h-[52px] min-w-[8.5rem] max-w-full items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] ${
+            className={`group flex h-[52px] min-w-[8.5rem] max-w-full items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] sm:min-w-0 ${
               listKind === 'supplier'
                 ? 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
                 : 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
             }`}
           >
-            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-[#ffffff] ring-1 ring-white/25">
-              {listKind === 'supplier' ? (
-                <Handshake className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
-              ) : (
-                <Users className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
-              )}
-            </span>
+            <Link
+              to="/"
+              className="glass-sidebar-toggle glass-sidebar-collapse app-page-back flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
+              aria-label="Başa dön"
+              title="Başa dön"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
             <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
               {pageTitle}
             </span>
@@ -339,7 +342,7 @@ export default function CustomersPage({
             type="button"
             onClick={() => navigate(createPath)}
             title={createLabel}
-            className={`group inline-flex h-[52px] min-w-[8.5rem] shrink-0 items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 ${
+            className={`group flex h-[52px] min-w-[8.5rem] shrink-0 items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0 ${
               listKind === 'supplier'
                 ? 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
                 : 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
@@ -347,9 +350,17 @@ export default function CustomersPage({
           >
             <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-[#ffffff] ring-1 ring-white/25">
               {listKind === 'supplier' ? (
-                <Handshake className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
+                <Handshake
+                  className="h-4 w-4 shrink-0 text-[#ffffff]"
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
               ) : (
-                <UserPlus className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
+                <UserPlus
+                  className="h-4 w-4 shrink-0 text-[#ffffff]"
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
               )}
             </span>
             <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
