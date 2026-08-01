@@ -92,26 +92,25 @@ function TeamAvatar({ employee, size = 'md', selected = false }) {
 
 function TeamHubNoticeBadge({ count }) {
   if (!count) return null
-  return (
-    <span className={TEAM_HUB_NOTICE_BADGE_CLASS}>
-      {count > 99 ? '99+' : count}
-    </span>
-  )
+  return <span className={TEAM_HUB_NOTICE_BADGE_CLASS}>{count > 99 ? '99+' : count}</span>
 }
 
 function ScoreRing({ score, rank }) {
-  const tone = rank === 1
-    ? 'text-amber-500'
-    : rank === 2
-      ? 'text-slate-400'
-      : rank === 3
-        ? 'text-orange-400'
-        : 'text-sky-500'
+  const tone =
+    rank === 1
+      ? 'text-amber-500'
+      : rank === 2
+        ? 'text-slate-400'
+        : rank === 3
+          ? 'text-orange-400'
+          : 'text-sky-500'
 
   return (
     <div className={`flex flex-col items-center ${tone}`}>
       <span className="text-lg font-black leading-none tabular-nums">{score}</span>
-      <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">puan</span>
+      <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+        puan
+      </span>
     </div>
   )
 }
@@ -163,7 +162,9 @@ function TeamChatMessage({ message, member, onChanged }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="truncate text-[11px] font-extrabold text-[var(--ink)]">{message.authorName}</p>
+            <p className="truncate text-[11px] font-extrabold text-[var(--ink)]">
+              {message.authorName}
+            </p>
             <p className="mt-0.5 text-[10px] font-semibold text-[var(--muted)]">
               {formatTeamHubDateTime(message.createdAt)}
               {message.updatedAt ? ' · düzenlendi' : ''}
@@ -268,11 +269,9 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
   const leaderboard = useMemo(() => buildTeamPerformanceRows(), [tick])
   const deals = useMemo(() => getTodayDealFeed(), [tick])
   const monthlyBonus = useMemo(() => getMonthlyBonusSummary(), [tick])
-  const chatMessages = useMemo(
-    () => getSortedTeamMessages(hubState.messages),
-    [hubState.messages],
-  )
-  const selectedEmployee = members.find((item) => item.id === selectedEmployeeId) || members[0] || null
+  const chatMessages = useMemo(() => getSortedTeamMessages(hubState.messages), [hubState.messages])
+  const selectedEmployee =
+    members.find((item) => item.id === selectedEmployeeId) || members[0] || null
 
   useEffect(() => {
     if (!selectedEmployeeId && members[0]?.id) {
@@ -286,11 +285,14 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
     setTick((value) => value + 1)
   }, [activeTab])
 
-  const tabBadges = useMemo(() => (
-    Object.fromEntries(TABS.map((tab) => [tab.id, getTeamHubTabBadgeCount(tab.id)]))
-  ), [tick, hubState.messages, hubState.lastReadChatAt])
+  const tabBadges = useMemo(
+    () => Object.fromEntries(TABS.map((tab) => [tab.id, getTeamHubTabBadgeCount(tab.id)])),
+    [tick, hubState.messages, hubState.lastReadChatAt],
+  )
 
-  const panelWidthClass = collapsed ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]' : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
+  const panelWidthClass = collapsed
+    ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]'
+    : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
   const panelPaddingClass = collapsed ? 'p-4 lg:px-2 lg:py-4' : 'px-3 py-4'
 
   function handleSendMessage(event) {
@@ -321,11 +323,15 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
       data-collapsed={collapsed ? 'true' : 'false'}
       className={`glass-team-hub app-sidebar fixed top-[var(--shell-gap)] bottom-[var(--shell-gap)] right-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] flex-col transition-all duration-300 lg:flex ${panelPaddingClass} ${panelWidthClass}`}
     >
-      <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-2 px-1'}`}>
+      <div
+        className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-2 px-1'}`}
+      >
         {!collapsed ? (
           <div className="flex min-w-0 items-center gap-2">
             <TeamHeaderDots />
-            <h2 className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">Ekip Merkezi</h2>
+            <h2 className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">
+              Ekip Merkezi
+            </h2>
           </div>
         ) : null}
         <button
@@ -338,7 +344,9 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
         </button>
       </div>
 
-      <nav className={`mt-2 ${collapsed ? 'flex flex-col items-center gap-1.5' : 'grid grid-cols-4 gap-1'}`}>
+      <nav
+        className={`mt-2 ${collapsed ? 'flex flex-col items-center gap-1.5' : 'grid grid-cols-4 gap-1'}`}
+      >
         {TABS.map((tab) => {
           const Icon = tab.icon
           const active = activeTab === tab.id
@@ -359,7 +367,9 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
               aria-label={tab.label}
               aria-current={active ? 'page' : undefined}
             >
-              <span className={`relative flex h-8 w-8 items-center justify-center rounded-xl shadow-sm ${tab.iconWrap}`}>
+              <span
+                className={`relative flex h-8 w-8 items-center justify-center rounded-xl shadow-sm ${tab.iconWrap}`}
+              >
                 <Icon className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
                 <TeamHubNoticeBadge count={tabBadges[tab.id]} />
               </span>
@@ -377,27 +387,37 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
                   <p className="px-2 py-6 text-center text-[12px] font-semibold text-[var(--muted)]">
                     Henüz mesaj yok. Ekiple sohbeti buradan başlatın.
                   </p>
-                ) : chatMessages.map((message) => {
-                  const member = members.find((item) => item.id === message.authorId)
-                  return (
-                    <TeamChatMessage
-                      key={message.id}
-                      message={message}
-                      member={member}
-                      onChanged={() => setTick((value) => value + 1)}
-                    />
-                  )
-                })}
+                ) : (
+                  chatMessages.map((message) => {
+                    const member = members.find((item) => item.id === message.authorId)
+                    return (
+                      <TeamChatMessage
+                        key={message.id}
+                        message={message}
+                        member={member}
+                        onChanged={() => setTick((value) => value + 1)}
+                      />
+                    )
+                  })
+                )}
               </div>
-              <form onSubmit={handleSendMessage} className="flex items-center gap-2 border-t border-white/50 p-2.5">
+              <form
+                onSubmit={handleSendMessage}
+                className="flex items-center gap-2 border-t border-white/50 p-2.5"
+              >
                 <input
                   value={messageDraft}
                   onChange={(event) => setMessageDraft(event.target.value)}
                   placeholder="Mesaj yaz..."
                   className={`${TEAM_HUB_FIELD_CLASS} min-w-0 flex-1 !rounded-full`}
                 />
-                <button type="submit" className="btn-primary !h-9 !w-9 !rounded-full !p-0" aria-label="Gönder">
-                  <Send className="h-3.5 w-3.5" />
+                <button
+                  type="submit"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:brightness-105 disabled:opacity-50"
+                  aria-label="Gönder"
+                  disabled={!messageDraft.trim()}
+                >
+                  <Send className="h-3.5 w-3.5" strokeWidth={2.25} />
                 </button>
               </form>
             </>
@@ -405,42 +425,57 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
 
           {activeTab === 'deals' ? (
             <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2.5">
-              <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">Bugünkü hareketler</p>
+              <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                Bugünkü hareketler
+              </p>
               {deals.length === 0 ? (
                 <p className="px-2 py-6 text-center text-[12px] font-semibold text-[var(--muted)]">
                   Bugün yeni teklif veya sipariş yok.
                 </p>
-              ) : deals.map((deal) => {
-                const Icon = deal.kind === 'order' ? ShoppingCart : FileText
-                return (
-                  <Link
-                    key={`${deal.kind}-${deal.id}`}
-                    to={deal.href}
-                    className="flex items-start gap-2 rounded-[14px] bg-white/65 px-2.5 py-2 transition-colors hover:bg-white/85"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/80 text-sky-600">
-                      <Icon className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <p className="truncate text-[12px] font-extrabold text-[var(--ink)]">{deal.label}</p>
-                      <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--muted)]">{deal.customer}</p>
-                      <p className="mt-0.5 text-[10px] font-bold text-orange-600">{deal.owner}</p>
-                    </span>
-                  </Link>
-                )
-              })}
+              ) : (
+                deals.map((deal) => {
+                  const Icon = deal.kind === 'order' ? ShoppingCart : FileText
+                  return (
+                    <Link
+                      key={`${deal.kind}-${deal.id}`}
+                      to={deal.href}
+                      className="flex items-start gap-2 rounded-[14px] bg-white/65 px-2.5 py-2 transition-colors hover:bg-white/85"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/80 text-sky-600">
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <p className="truncate text-[12px] font-extrabold text-[var(--ink)]">
+                          {deal.label}
+                        </p>
+                        <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--muted)]">
+                          {deal.customer}
+                        </p>
+                        <p className="mt-0.5 text-[10px] font-bold text-orange-600">{deal.owner}</p>
+                      </span>
+                    </Link>
+                  )
+                })
+              )}
             </div>
           ) : null}
 
           {activeTab === 'race' ? (
             <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2.5">
               <div className="rounded-[14px] bg-gradient-to-br from-amber-500/15 to-orange-500/10 px-3 py-2.5">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">Günün birincisi</p>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">
+                  Günün birincisi
+                </p>
                 {leaderboard[0] ? (
                   <div className="mt-2 flex items-center gap-2">
-                    <TeamAvatar employee={members.find((item) => item.id === leaderboard[0].employeeId)} size="lg" />
+                    <TeamAvatar
+                      employee={members.find((item) => item.id === leaderboard[0].employeeId)}
+                      size="lg"
+                    />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-extrabold text-[var(--ink)]">{leaderboard[0].name}</p>
+                      <p className="truncate text-sm font-extrabold text-[var(--ink)]">
+                        {leaderboard[0].name}
+                      </p>
                       <p className="text-[11px] font-semibold text-[var(--muted)]">
                         {leaderboard[0].score}/100 · +15 prim puanı
                       </p>
@@ -448,7 +483,9 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
                     <Trophy className="h-5 w-5 shrink-0 text-amber-500" />
                   </div>
                 ) : (
-                  <p className="mt-2 text-[12px] font-semibold text-[var(--muted)]">Henüz puan yok.</p>
+                  <p className="mt-2 text-[12px] font-semibold text-[var(--muted)]">
+                    Henüz puan yok.
+                  </p>
                 )}
               </div>
 
@@ -467,11 +504,16 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
                   <TeamAvatar employee={members.find((item) => item.id === row.employeeId)} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-black text-[var(--muted)]">#{row.rank}</span>
-                      <p className="truncate text-[12px] font-extrabold text-[var(--ink)]">{row.name}</p>
+                      <span className="text-[10px] font-black text-[var(--muted)]">
+                        #{row.rank}
+                      </span>
+                      <p className="truncate text-[12px] font-extrabold text-[var(--ink)]">
+                        {row.name}
+                      </p>
                     </div>
                     <p className="mt-0.5 text-[10px] font-semibold text-[var(--muted)]">
-                      {row.quotesToday.length} teklif · {row.ordersToday.length} sipariş · {row.tasksDoneToday.length} görev
+                      {row.quotesToday.length} teklif · {row.ordersToday.length} sipariş ·{' '}
+                      {row.tasksDoneToday.length} görev
                     </p>
                   </div>
                   <ScoreRing score={row.score} rank={row.rank} />
@@ -480,10 +522,15 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
 
               {monthlyBonus.length > 0 ? (
                 <div className="mt-1 rounded-[14px] border border-white/50 bg-white/45 p-2.5">
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">Ay sonu prim birikimi</p>
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                    Ay sonu prim birikimi
+                  </p>
                   <div className="space-y-1.5">
                     {monthlyBonus.map((row) => (
-                      <div key={row.employeeId} className="flex items-center justify-between gap-2 text-[11px]">
+                      <div
+                        key={row.employeeId}
+                        className="flex items-center justify-between gap-2 text-[11px]"
+                      >
                         <span className="truncate font-semibold text-[var(--ink)]">{row.name}</span>
                         <span className="shrink-0 font-extrabold text-emerald-600">
                           {row.points} puan · ≈{row.bonusTry.toLocaleString('tr-TR')}₺
@@ -497,8 +544,13 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
           ) : null}
 
           {activeTab === 'assign' ? (
-            <form onSubmit={handleAssignTask} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2.5">
-              <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">Görev atanan kişi</p>
+            <form
+              onSubmit={handleAssignTask}
+              className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2.5"
+            >
+              <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                Görev atanan kişi
+              </p>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {members.map((employee) => (
                   <button
@@ -512,14 +564,18 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
                 ))}
               </div>
               {selectedEmployee ? (
-                <p className="px-1 text-[12px] font-extrabold text-[var(--ink)]">{fullName(selectedEmployee)}</p>
+                <p className="px-1 text-[12px] font-extrabold text-[var(--ink)]">
+                  {fullName(selectedEmployee)}
+                </p>
               ) : null}
 
               <label className="space-y-1">
                 <span className="text-[11px] font-bold text-[var(--muted)]">Görev başlığı</span>
                 <input
                   value={taskForm.title}
-                  onChange={(event) => setTaskForm((current) => ({ ...current, title: event.target.value }))}
+                  onChange={(event) =>
+                    setTaskForm((current) => ({ ...current, title: event.target.value }))
+                  }
                   className={TEAM_HUB_FIELD_CLASS}
                   placeholder="Örn. Müşteri geri arama"
                   required
@@ -529,7 +585,9 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
                 <span className="text-[11px] font-bold text-[var(--muted)]">Müşteri</span>
                 <input
                   value={taskForm.customer}
-                  onChange={(event) => setTaskForm((current) => ({ ...current, customer: event.target.value }))}
+                  onChange={(event) =>
+                    setTaskForm((current) => ({ ...current, customer: event.target.value }))
+                  }
                   className={TEAM_HUB_FIELD_CLASS}
                   placeholder="Opsiyonel"
                 />
@@ -538,7 +596,9 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
                 <span className="text-[11px] font-bold text-[var(--muted)]">Açıklama</span>
                 <textarea
                   value={taskForm.description}
-                  onChange={(event) => setTaskForm((current) => ({ ...current, description: event.target.value }))}
+                  onChange={(event) =>
+                    setTaskForm((current) => ({ ...current, description: event.target.value }))
+                  }
                   className={TEAM_HUB_TEXTAREA_CLASS}
                   placeholder="Görev detayı"
                 />
@@ -548,11 +608,15 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
                   <span className="text-[11px] font-bold text-[var(--muted)]">Kategori</span>
                   <select
                     value={taskForm.category}
-                    onChange={(event) => setTaskForm((current) => ({ ...current, category: event.target.value }))}
+                    onChange={(event) =>
+                      setTaskForm((current) => ({ ...current, category: event.target.value }))
+                    }
                     className={`${TEAM_HUB_FIELD_CLASS} team-hub-select`}
                   >
                     {TASK_CATEGORIES.map((item) => (
-                      <option key={item} value={item}>{item}</option>
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
                     ))}
                   </select>
                 </label>
@@ -560,16 +624,23 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
                   <span className="text-[11px] font-bold text-[var(--muted)]">Öncelik</span>
                   <select
                     value={taskForm.priority}
-                    onChange={(event) => setTaskForm((current) => ({ ...current, priority: event.target.value }))}
+                    onChange={(event) =>
+                      setTaskForm((current) => ({ ...current, priority: event.target.value }))
+                    }
                     className={`${TEAM_HUB_FIELD_CLASS} team-hub-select`}
                   >
                     {TASK_PRIORITIES.map((item) => (
-                      <option key={item} value={item}>{item}</option>
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
                     ))}
                   </select>
                 </label>
               </div>
-              <button type="submit" className="btn-primary mt-1 inline-flex items-center justify-center gap-2 !text-[12px]">
+              <button
+                type="submit"
+                className="btn-primary mt-1 inline-flex items-center justify-center gap-2 !text-[12px]"
+              >
                 <ClipboardList className="h-3.5 w-3.5" />
                 Görevi Ata
               </button>
@@ -579,22 +650,26 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
       ) : (
         <div className="mt-3 flex flex-1 flex-col items-center gap-2">
           {members.slice(0, 4).map((employee) => {
-            const badgeCount = getEmployeeHubBadgeCount(employee, hubState.messages, hubState.lastReadChatAt)
+            const badgeCount = getEmployeeHubBadgeCount(
+              employee,
+              hubState.messages,
+              hubState.lastReadChatAt,
+            )
             return (
-            <button
-              key={employee.id}
-              type="button"
-              onClick={() => {
-                setSelectedEmployeeId(employee.id)
-                setActiveTab('assign')
-                onToggle?.()
-              }}
-              className="relative rounded-full"
-              title={fullName(employee)}
-            >
-              <TeamAvatar employee={employee} size="sm" />
-              <TeamHubNoticeBadge count={badgeCount} />
-            </button>
+              <button
+                key={employee.id}
+                type="button"
+                onClick={() => {
+                  setSelectedEmployeeId(employee.id)
+                  setActiveTab('assign')
+                  onToggle?.()
+                }}
+                className="relative rounded-full"
+                title={fullName(employee)}
+              >
+                <TeamAvatar employee={employee} size="sm" />
+                <TeamHubNoticeBadge count={badgeCount} />
+              </button>
             )
           })}
         </div>
