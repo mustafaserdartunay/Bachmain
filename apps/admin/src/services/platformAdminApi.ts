@@ -261,7 +261,10 @@ export const platformAdminApi = {
       const res = await api.get<{ rows: PlatformUserRow[] } | PlatformUserRow[]>('/v1/admin/users')
       return Array.isArray(res) ? res : (res.rows ?? [])
     } catch (err) {
-      if (isNotFoundOrUnavailable(err) || err instanceof ApiError) return MOCK_USERS
+      // Yalnızca endpoint yoksa mock; 401/403 gerçek hata olarak yüzeye çıksın
+      if (err instanceof ApiError && (err.status === 404 || err.status === 501)) {
+        return MOCK_USERS
+      }
       throw err
     }
   },
@@ -274,26 +277,37 @@ export const platformAdminApi = {
 
   /** POST /v1/admin/users/:id/force-logout */
   forceLogout: (userId: string) =>
-    api.post<ActionResult>(`/v1/admin/users/${userId}/force-logout`, {}),
+    api.post<ActionResult>(
+      `/v1/admin/users/${encodeURIComponent(userId)}/force-logout`,
+      {},
+    ),
 
   /** POST /v1/admin/users/:id/suspend */
   suspend: (userId: string, reason?: string) =>
-    api.post<ActionResult>(`/v1/admin/users/${userId}/suspend`, { reason }),
+    api.post<ActionResult>(`/v1/admin/users/${encodeURIComponent(userId)}/suspend`, {
+      reason,
+    }),
 
   /** DELETE /v1/admin/users/:id */
-  deleteUser: (userId: string) => api.delete(`/v1/admin/users/${userId}`),
+  deleteUser: (userId: string) =>
+    api.delete<ActionResult>(`/v1/admin/users/${encodeURIComponent(userId)}`),
 
   /** POST /v1/admin/users/:id/reset-password */
   resetPassword: (userId: string) =>
-    api.post<ActionResult>(`/v1/admin/users/${userId}/reset-password`, {}),
+    api.post<ActionResult>(
+      `/v1/admin/users/${encodeURIComponent(userId)}/reset-password`,
+      {},
+    ),
 
   /** POST /v1/admin/users/:id/reset-trial */
   resetTrial: (userId: string) =>
-    api.post<ActionResult>(`/v1/admin/users/${userId}/reset-trial`, {}),
+    api.post<ActionResult>(`/v1/admin/users/${encodeURIComponent(userId)}/reset-trial`, {}),
 
   /** POST /v1/admin/users/:id/upgrade-plan */
   upgradePlan: (userId: string, plan: string) =>
-    api.post<ActionResult>(`/v1/admin/users/${userId}/upgrade-plan`, { plan }),
+    api.post<ActionResult>(`/v1/admin/users/${encodeURIComponent(userId)}/upgrade-plan`, {
+      plan,
+    }),
 
   /** GET /v1/admin/audit-logs — immutable, never delete */
   listAuditLogs: async (action?: string): Promise<AuditLogResponse> => {

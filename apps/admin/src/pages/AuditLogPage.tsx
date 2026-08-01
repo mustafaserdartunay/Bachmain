@@ -15,12 +15,14 @@ import { formatDateTime } from '@/lib/utils'
 import type { TableColumn } from '@/types'
 
 const ACTION_FILTERS = [
-  { value: 'all', label: 'Tüm aksiyonlar' },
-  { value: 'user.force_logout', label: 'user.force_logout' },
-  { value: 'user.suspend', label: 'user.suspend' },
-  { value: 'user.upgrade_plan', label: 'user.upgrade_plan' },
-  { value: 'user.delete', label: 'user.delete' },
-  { value: 'auth.login_failed', label: 'auth.login_failed' },
+  { value: 'all', label: 'Tüm işlemler' },
+  { value: 'user.force_logout', label: 'Oturum kapatma' },
+  { value: 'user.suspend', label: 'Askıya alma' },
+  { value: 'user.upgrade_plan', label: 'Plan yükseltme' },
+  { value: 'user.reset_password', label: 'Şifre sıfırlama' },
+  { value: 'user.reset_trial', label: 'Deneme yenileme' },
+  { value: 'user.delete', label: 'Kullanıcı silme' },
+  { value: 'auth.login_failed', label: 'Başarısız giriş' },
 ]
 
 export function AuditLogPage() {
@@ -82,7 +84,7 @@ export function AuditLogPage() {
   if (status === 'loading') {
     return (
       <div className="space-y-6">
-        <PageHeader title="Audit Logs" subtitle="Değiştirilemez denetim kayıtları" />
+        <PageHeader title="Denetim Kayıtları" subtitle="Değiştirilemez denetim kayıtları" />
         <MetricSkeleton />
       </div>
     )
@@ -95,12 +97,12 @@ export function AuditLogPage() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <PageHeader
-        title="Audit Logs"
-        subtitle="SUPER_ADMIN — /v1/admin/audit-logs · silinemez kayıt defteri"
+        title="Denetim Kayıtları"
+        subtitle="Süper yönetici — silinemez işlem defteri"
         actions={
           <Badge variant="gold" className="gap-1.5">
             <Lock className="h-3 w-3" />
-            Immutable
+            Değiştirilemez
           </Badge>
         }
       />
@@ -111,8 +113,8 @@ export function AuditLogPage() {
           <div>
             <p className="text-sm font-semibold text-text">Bu kayıtlar asla silinmez</p>
             <p className="mt-0.5 text-xs text-text-muted">
-              Audit log append-only&apos;dır. Personel veya süper admin dahil hiç kimse satır silemez veya
-              değiştiremez. Filtreleme yalnızca görünümü daraltır.
+              Denetim kaydı yalnızca eklenir. Personel veya süper yönetici dahil hiç kimse satır
+              silemez veya değiştiremez. Filtreleme yalnızca görünümü daraltır.
             </p>
           </div>
         </div>
@@ -120,7 +122,7 @@ export function AuditLogPage() {
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-          Aksiyon filtresi
+          İşlem filtresi
         </label>
         <Select
           className="max-w-xs"

@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChevronRight, Filter, Plus, Search, X } from 'lucide-react'
+import { ChevronRight, Filter, Plus, Search, Trash2, X } from 'lucide-react'
 import { PageHeader, MetricCard } from '@/components/ui/MetricCard'
 import { DataTable } from '@/components/ui/DataTable'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { Pagination } from '@/components/ui/Pagination'
 import { Badge, statusBadgeMap } from '@/components/ui/Badge'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { usePageState } from '@/hooks/usePageState'
 import { MetricSkeleton, TableSkeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -53,6 +54,9 @@ export function MembershipsPage() {
   const [page, setPage] = useState(1)
   const [filtersOpen, setFiltersOpen] = useState(true)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
+  const [deleteTarget, setDeleteTarget] = useState<MembershipRow | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [flash, setFlash] = useState<{ ok: boolean; message: string } | null>(null)
   const pageSize = 12
 
   const fetcher = useMemo(() => () => membershipsApi.list(), [])
@@ -63,6 +67,28 @@ export function MembershipsPage() {
   const openDetail = (id: string) => {
     if (!id) return
     navigate(`/uyeler/${encodeURIComponent(id)}`)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    setFlash(null)
+    try {
+      await membershipsApi.delete(deleteTarget.id)
+      setDeleteTarget(null)
+      setFlash({
+        ok: true,
+        message: `${deleteTarget.fullName || deleteTarget.email} silindi`,
+      })
+      reload()
+    } catch (err) {
+      setFlash({
+        ok: false,
+        message: err instanceof Error ? err.message : 'Silme başarısız',
+      })
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const cities = useMemo(() => {
@@ -167,16 +193,24 @@ export function MembershipsPage() {
       key: 'id',
       label: 'İşlem',
       render: (row) => (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            openDetail(row.id)
-          }}
-        >
-          Detay / Uzat <ChevronRight className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => openDetail(row.id)}
+          >
+            Detay / Uzat <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            title="Üyeyi sil"
+            onClick={() => setDeleteTarget(row)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Sil
+          </Button>
+        </div>
       ),
     },
   ]
@@ -194,6 +228,21 @@ export function MembershipsPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Üye silinsin mi?"
+        description={
+          deleteTarget
+            ? `${deleteTarget.fullName || deleteTarget.email} hesabı kalıcı olarak silinecek. Bu işlem geri alınamaz.`
+            : undefined
+        }
+        confirmLabel="Evet"
+        cancelLabel="Hayır"
+        tone="danger"
+        busy={deleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => void confirmDelete()}
+      />
       <PageHeader
         title="Üye Hesapları"
         subtitle="Satıra veya Detay / Uzat’a tıklayın — demo ve paket süresini buradan yönetin"
@@ -214,6 +263,18 @@ export function MembershipsPage() {
           </>
         }
       />
+
+      {flash && (
+        <div
+          className={`rounded-lg border px-4 py-2 text-sm ${
+            flash.ok
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+              : 'border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300'
+          }`}
+        >
+          {flash.message}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {(data?.metrics ?? []).map((m, i) => (

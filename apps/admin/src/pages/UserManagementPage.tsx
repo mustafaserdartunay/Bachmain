@@ -25,28 +25,50 @@ import type { BadgeVariant, TableColumn } from '@/types'
 
 type BusyMap = Record<string, string | undefined>
 
+type PendingAction =
+  | { type: 'delete'; row: PlatformUserRow }
+  | { type: 'suspend'; row: PlatformUserRow }
+  | null
+
+const STATUS_TR: Record<PlatformUserRow['status'], string> = {
+  active: 'Aktif',
+  trial: 'Deneme',
+  suspended: 'Askıda',
+  expired: 'Süresi Doldu',
+}
+
+const ACTION_TR: Record<string, string> = {
+  'force-logout': 'Oturum kapatma',
+  suspend: 'Askıya alma',
+  'reset-password': 'Şifre sıfırlama',
+  'reset-trial': 'Deneme yenileme',
+  'upgrade-plan': 'Plan yükseltme',
+  delete: 'Silme',
+}
+
 export function UserManagementPage() {
   const fetcher = useMemo(() => () => platformAdminApi.listUsers(), [])
   const { status, data, reload } = usePageState({ fetcher, delay: 0 })
   const [busy, setBusy] = useState<BusyMap>({})
   const [flash, setFlash] = useState<{ ok: boolean; message: string } | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<PlatformUserRow | null>(null)
+  const [pending, setPending] = useState<PendingAction>(null)
 
   const runAction = useCallback(
     async (userId: string, actionKey: string, fn: () => Promise<unknown>) => {
       setBusy((b) => ({ ...b, [userId]: actionKey }))
       setFlash(null)
       try {
-        await fn()
-        setFlash({ ok: true, message: `${actionKey} başarıyla uygulandı` })
+        const res = (await fn()) as { message?: string; ok?: boolean } | void
+        const label = ACTION_TR[actionKey] || actionKey
+        setFlash({
+          ok: true,
+          message: (res && typeof res === 'object' && res.message) || `${label} başarıyla uygulandı`,
+        })
         reload()
       } catch (err) {
         setFlash({
           ok: false,
-          message:
-            err instanceof Error
-              ? err.message
-              : 'İşlem başarısız (endpoint henüz hazır olmayabilir)',
+          message: err instanceof Error ? err.message : 'İşlem başarısız',
         })
       } finally {
         setBusy((b) => ({ ...b, [userId]: undefined }))
@@ -111,23 +133,26 @@ export function UserManagementPage() {
         label: 'Durum',
         render: (row) => (
           <Badge variant={(statusBadgeMap[row.status] ?? 'default') as BadgeVariant}>
-            {row.status}
+            {STATUS_TR[row.status] || row.status}
           </Badge>
         ),
       },
       {
         key: 'history',
         label: 'Geçmiş',
-        render: (row) => (
-          <Link
-            to={`/musteriler/${row.companyId}`}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-bach-blue hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <History className="h-3.5 w-3.5" />
-            Login history
-          </Link>
-        ),
+        render: (row) =>
+          row.companyId ? (
+            <Link
+              to={`/musteriler/${row.companyId}`}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-bach-blue hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <History className="h-3.5 w-3.5" />
+              Giriş geçmişi
+            </Link>
+          ) : (
+            <span className="text-xs text-text-subtle">—</span>
+          ),
       },
       {
         key: 'actions',
@@ -141,71 +166,73 @@ export function UserManagementPage() {
                 variant="ghost"
                 size="sm"
                 disabled={disabled}
-                title="Force Logout"
+                title="Tüm oturumları kapat"
                 onClick={() =>
-                  runAction(row.id, 'force-logout', () => platformAdminApi.forceLogout(row.id))
+                  void runAction(row.id, 'force-logout', () => platformAdminApi.forceLogout(row.id))
                 }
               >
                 <LogOut className="h-3.5 w-3.5" />
-                {b === 'force-logout' ? '…' : 'Logout'}
+                {b === 'force-logout' ? '…' : 'Oturumu kapat'}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={disabled}
-                title="Suspend"
-                onClick={() => runAction(row.id, 'suspend', () => platformAdminApi.suspend(row.id))}
+                disabled={disabled || row.status === 'suspended'}
+                title="Hesabı askıya al"
+                onClick={() => setPending({ type: 'suspend', row })}
               >
                 <PauseCircle className="h-3.5 w-3.5" />
-                Suspend
+                Askıya al
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 disabled={disabled}
-                title="Reset Password"
+                title="Şifre sıfırlama bağlantısı gönder"
                 onClick={() =>
-                  runAction(row.id, 'reset-password', () => platformAdminApi.resetPassword(row.id))
+                  void runAction(row.id, 'reset-password', () =>
+                    platformAdminApi.resetPassword(row.id),
+                  )
                 }
               >
                 <KeyRound className="h-3.5 w-3.5" />
-                Reset PW
+                {b === 'reset-password' ? '…' : 'Şifre sıfırla'}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 disabled={disabled}
-                title="Reset Trial"
+                title="Deneme süresini 7 gün yenile"
                 onClick={() =>
-                  runAction(row.id, 'reset-trial', () => platformAdminApi.resetTrial(row.id))
+                  void runAction(row.id, 'reset-trial', () => platformAdminApi.resetTrial(row.id))
                 }
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-                Trial
+                {b === 'reset-trial' ? '…' : 'Deneme yenile'}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 disabled={disabled}
-                title="Upgrade Plan"
+                title="Planı Pro’ya yükselt"
                 onClick={() =>
-                  runAction(row.id, 'upgrade-plan', () =>
+                  void runAction(row.id, 'upgrade-plan', () =>
                     platformAdminApi.upgradePlan(row.id, 'Pro'),
                   )
                 }
               >
                 <ArrowUpCircle className="h-3.5 w-3.5" />
-                Upgrade
+                {b === 'upgrade-plan' ? '…' : 'Plan yükselt'}
               </Button>
               <Button
                 variant="danger"
                 size="sm"
                 disabled={disabled}
-                title="Delete"
-                onClick={() => setDeleteTarget(row)}
+                title="Kullanıcıyı sil"
+                onClick={() => setPending({ type: 'delete', row })}
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Delete
+                Sil
               </Button>
             </div>
           )
@@ -218,7 +245,7 @@ export function UserManagementPage() {
   if (status === 'loading') {
     return (
       <div className="space-y-6">
-        <PageHeader title="User Management" subtitle="Şirket / kullanıcı operasyonları" />
+        <PageHeader title="Kullanıcı Yönetimi" subtitle="Şirket / kullanıcı operasyonları" />
         <MetricSkeleton />
       </div>
     )
@@ -227,32 +254,72 @@ export function UserManagementPage() {
   if (status === 'error') return <ErrorState onRetry={reload} />
 
   const rows = data ?? []
+  const pendingRow = pending?.row
+  const confirmBusy =
+    !!pendingRow &&
+    ((pending?.type === 'delete' && busy[pendingRow.id] === 'delete') ||
+      (pending?.type === 'suspend' && busy[pendingRow.id] === 'suspend'))
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <ConfirmDialog
-        open={!!deleteTarget}
+        open={pending?.type === 'delete'}
         title="Kullanıcı silinsin mi?"
         description={
-          deleteTarget
-            ? `${deleteTarget.user} (${deleteTarget.email}) kalıcı olarak silinecek.`
+          pendingRow
+            ? `${pendingRow.user} (${pendingRow.email}) kalıcı olarak silinecek. Bu işlem geri alınamaz.`
             : undefined
         }
         confirmLabel="Evet"
         cancelLabel="Hayır"
         tone="danger"
-        busy={!!deleteTarget && busy[deleteTarget.id] === 'delete'}
-        onCancel={() => setDeleteTarget(null)}
+        busy={confirmBusy && pending?.type === 'delete'}
+        onCancel={() => setPending(null)}
         onConfirm={() => {
-          if (!deleteTarget) return
-          const target = deleteTarget
-          setDeleteTarget(null)
-          void runAction(target.id, 'delete', () => platformAdminApi.deleteUser(target.id))
+          if (!pendingRow || pending?.type !== 'delete') return
+          const target = pendingRow
+          void (async () => {
+            setBusy((b) => ({ ...b, [target.id]: 'delete' }))
+            setFlash(null)
+            try {
+              await platformAdminApi.deleteUser(target.id)
+              setPending(null)
+              setFlash({ ok: true, message: 'Kullanıcı silindi' })
+              reload()
+            } catch (err) {
+              setFlash({
+                ok: false,
+                message: err instanceof Error ? err.message : 'Silme başarısız',
+              })
+            } finally {
+              setBusy((b) => ({ ...b, [target.id]: undefined }))
+            }
+          })()
+        }}
+      />
+      <ConfirmDialog
+        open={pending?.type === 'suspend'}
+        title="Hesap askıya alınsın mı?"
+        description={
+          pendingRow
+            ? `${pendingRow.user} (${pendingRow.email}) giriş yapamayacak ve oturumları kapatılacak.`
+            : undefined
+        }
+        confirmLabel="Evet"
+        cancelLabel="Hayır"
+        tone="danger"
+        busy={confirmBusy && pending?.type === 'suspend'}
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          if (!pendingRow || pending?.type !== 'suspend') return
+          const target = pendingRow
+          setPending(null)
+          void runAction(target.id, 'suspend', () => platformAdminApi.suspend(target.id))
         }}
       />
       <PageHeader
-        title="User Management"
-        subtitle="SUPER_ADMIN — Force logout, suspend, reset, upgrade · /v1/admin/users"
+        title="Kullanıcı Yönetimi"
+        subtitle="Oturum kapatma, askıya alma, şifre/deneme yenileme, plan yükseltme ve silme"
         actions={
           <Button variant="secondary" size="sm" onClick={reload}>
             <RefreshCw className="h-4 w-4" /> Yenile
