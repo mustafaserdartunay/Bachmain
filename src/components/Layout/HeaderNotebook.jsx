@@ -22,6 +22,7 @@ import {
   styleFromMobileToolsHandoff,
   useMobileToolsHandoff,
 } from '../../hooks/useMobileToolsHandoff'
+import { getHeaderAgendaAnchor } from '../../utils/headerAgendaAnchor'
 
 export default function HeaderNotebook({ hideTrigger = false }) {
   const { open, toggle } = useHeaderPopover('notebook')
@@ -39,6 +40,7 @@ export default function HeaderNotebook({ hideTrigger = false }) {
     flip: false,
     // Match glass-sidebar bottom: bottom-[var(--shell-gap)]
     maxBottomInset: 'var(--shell-gap)',
+    getAnchor: hideTrigger ? getHeaderAgendaAnchor : null,
   })
 
   useEffect(() => {

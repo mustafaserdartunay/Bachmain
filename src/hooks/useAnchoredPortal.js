@@ -36,6 +36,8 @@ export function useAnchoredPortal(
     maxBottomInset = 8,
     /** When false, keep opening below even if content is tall (clips via maxHeight). */
     flip = true,
+    /** Optional external anchor resolver (used when trigger is hidden). */
+    getAnchor = null,
   } = {},
 ) {
   const anchorRef = useRef(null)
@@ -44,7 +46,7 @@ export function useAnchoredPortal(
   const [isPositioned, setIsPositioned] = useState(false)
 
   const updatePosition = useCallback(() => {
-    const anchor = anchorRef.current
+    const anchor = (typeof getAnchor === 'function' ? getAnchor() : null) || anchorRef.current
     if (!anchor) return
 
     const rect = anchor.getBoundingClientRect()
@@ -113,7 +115,7 @@ export function useAnchoredPortal(
       zIndex: DROPDOWN_Z_INDEX,
     })
     setIsPositioned(true)
-  }, [align, flip, matchWidth, maxBottomInset, offset, placement, width])
+  }, [align, flip, getAnchor, matchWidth, maxBottomInset, offset, placement, width])
 
   useLayoutEffect(() => {
     if (!isOpen) {

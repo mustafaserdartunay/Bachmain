@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import {
-  CalendarDays,
-  CheckSquare,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react'
+import { CalendarDays, CheckSquare, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   AppointmentFormModal,
   emptyAppointmentForm,
@@ -23,23 +18,22 @@ import {
   toCalendarIso,
 } from '../../utils/calendarUtils'
 import { isTaskCompleted } from '../../utils/crmProcessHelpers'
-import {
-  loadAppointments,
-  loadTasks,
-  upsertAppointment,
-  upsertTask,
-} from '../../utils/crmStore'
+import { loadAppointments, loadTasks, upsertAppointment, upsertTask } from '../../utils/crmStore'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { useHeaderPopover } from '../../hooks/useHeaderPopover'
+import {
+  consumeCalendarCreateIntent,
+  HEADER_CALENDAR_INTENT_EVENT,
+  publishCalendarCreateMode,
+} from '../../utils/headerAgendaIntent'
+import { getHeaderAgendaAnchor } from '../../utils/headerAgendaAnchor'
 
-function GlassMonthCalendar({
-  viewDate,
-  onViewDateChange,
-  selectedDate,
-  onSelectDate,
-  dayCounts,
-}) {
+function todayIso() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function GlassMonthCalendar({ viewDate, onViewDateChange, selectedDate, onSelectDate, dayCounts }) {
   const monthCells = useMemo(() => buildCalendarMonthGrid(viewDate), [viewDate])
   const today = new Date()
 
@@ -48,7 +42,9 @@ function GlassMonthCalendar({
       <div className="mb-2 flex items-center justify-between gap-1.5">
         <button
           type="button"
-          onClick={() => onViewDateChange(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
+          onClick={() =>
+            onViewDateChange(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
+          }
           className="header-calendar-nav-btn"
           aria-label="Önceki ay"
         >
@@ -59,7 +55,9 @@ function GlassMonthCalendar({
         </p>
         <button
           type="button"
-          onClick={() => onViewDateChange(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
+          onClick={() =>
+            onViewDateChange(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
+          }
           className="header-calendar-nav-btn"
           aria-label="Sonraki ay"
         >
@@ -108,12 +106,7 @@ function GlassMonthCalendar({
   )
 }
 
-function HeaderCalendarCreatePanel({
-  selectedDate,
-  createMode,
-  onCreateModeChange,
-  onClose,
-}) {
+function HeaderCalendarCreatePanel({ selectedDate, createMode, onCreateModeChange, onClose }) {
   const [taskForm, setTaskForm] = useState(null)
   const [appointmentForm, setAppointmentForm] = useState(null)
 
@@ -228,17 +221,23 @@ function HeaderCalendarCreatePanel({
   )
 }
 
-export default function HeaderCalendar() {
+export default function HeaderCalendar({ hideTrigger = false }) {
   const { open, setOpen, toggle } = useHeaderPopover('calendar')
   const [selectedDate, setSelectedDate] = useState('')
   const [createMode, setCreateMode] = useState(null)
   const [viewDate, setViewDate] = useState(() => new Date())
   const [tasks, setTasks] = useState(() => loadTasks())
   const [appointments, setAppointments] = useState(() => loadAppointments())
-  const { anchorRef, menuRef, style: menuStyle, updatePosition } = useAnchoredPortal(open, {
+  const {
+    anchorRef,
+    menuRef,
+    style: menuStyle,
+    updatePosition,
+  } = useAnchoredPortal(open, {
     align: 'center',
     matchWidth: false,
     offset: 8,
+    getAnchor: hideTrigger ? getHeaderAgendaAnchor : null,
   })
 
   useEffect(() => {
@@ -254,10 +253,42 @@ export default function HeaderCalendar() {
     if (!open) {
       setCreateMode(null)
       setSelectedDate('')
+      publishCalendarCreateMode(null)
       return
     }
+
+    const intent = consumeCalendarCreateIntent()
+    if (intent === 'task' || intent === 'appointment') {
+      const iso = todayIso()
+      setSelectedDate(iso)
+      setCreateMode(intent)
+      setViewDate(parseCalendarIso(iso) || new Date())
+      publishCalendarCreateMode(intent)
+      return
+    }
+
     setViewDate(parseCalendarIso(selectedDate) || new Date())
-  }, [open, selectedDate])
+  }, [open])
+
+  useEffect(() => {
+    function applyIntent(event) {
+      const intent = event?.detail
+      if (intent !== 'task' && intent !== 'appointment') return
+      consumeCalendarCreateIntent()
+      const iso = todayIso()
+      setSelectedDate(iso)
+      setCreateMode(intent)
+      setViewDate(parseCalendarIso(iso) || new Date())
+      publishCalendarCreateMode(intent)
+    }
+
+    window.addEventListener(HEADER_CALENDAR_INTENT_EVENT, applyIntent)
+    return () => window.removeEventListener(HEADER_CALENDAR_INTENT_EVENT, applyIntent)
+  }, [])
+
+  useEffect(() => {
+    if (open) publishCalendarCreateMode(createMode)
+  }, [open, createMode])
 
   useEffect(() => {
     if (open) {
@@ -272,9 +303,11 @@ export default function HeaderCalendar() {
 
   const upcomingCount = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10)
-    const openTasks = tasks.filter((task) => !isTaskCompleted(task))
+    const openTasks = tasks
+      .filter((task) => !isTaskCompleted(task))
       .filter((task) => (task.dateFrom || task.dueDate || '') >= today).length
-    const openAppointments = appointments.filter((apt) => apt.status !== 'İptal' && apt.status !== 'Tamamlandı')
+    const openAppointments = appointments
+      .filter((apt) => apt.status !== 'İptal' && apt.status !== 'Tamamlandı')
       .filter((apt) => (apt.dateFrom || apt.date || '') >= today).length
     return openTasks + openAppointments
   }, [tasks, appointments])
@@ -289,66 +322,96 @@ export default function HeaderCalendar() {
     setViewDate(parseCalendarIso(iso) || new Date())
   }
 
+  function handleCreateModeChange(mode) {
+    setCreateMode(mode)
+    publishCalendarCreateMode(mode)
+  }
+
   function handleClosePanel() {
     setOpen(false)
     setCreateMode(null)
     setSelectedDate('')
+    publishCalendarCreateMode(null)
   }
 
   return (
-    <div className="relative flex items-center" ref={anchorRef} onClick={(event) => event.stopPropagation()}>
-      <button
-        type="button"
-        data-header-popover-trigger="calendar"
-        onClick={handleOpen}
-        className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only relative`}
-        aria-label="Takvim"
-        title="Takvim"
-      >
-        <span className="icon-wrap">
-          <CalendarDays className="h-4 w-4 shrink-0" />
-        </span>
-        {upcomingCount > 0 && (
-          <span className="header-calendar-badge">
-            {upcomingCount > 99 ? '99+' : upcomingCount}
-          </span>
-        )}
-      </button>
-
-      {open && createPortal(
-        <div
-          ref={menuRef}
-          style={menuStyle ?? { position: 'fixed', visibility: 'hidden', pointerEvents: 'none', zIndex: 10000 }}
-          className="app-header-dropdown header-popover-panel header-calendar-dropdown overflow-hidden"
-          data-header-popover="calendar"
-          onClick={(event) => event.stopPropagation()}
+    <div
+      className={
+        hideTrigger
+          ? 'pointer-events-none fixed left-0 top-0 h-0 w-0 overflow-hidden opacity-0'
+          : 'relative flex items-center'
+      }
+      ref={anchorRef}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {!hideTrigger ? (
+        <button
+          type="button"
+          data-header-popover-trigger="calendar"
+          onClick={handleOpen}
+          className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only relative`}
+          aria-label="Takvim"
+          title="Takvim"
         >
-          <div className="header-popover-head">
-            <p className="text-sm font-extrabold text-[var(--ink)]">Takvim</p>
-          </div>
+          <span className="icon-wrap">
+            <CalendarDays className="h-4 w-4 shrink-0" />
+          </span>
+          {upcomingCount > 0 && (
+            <span className="header-calendar-badge">
+              {upcomingCount > 99 ? '99+' : upcomingCount}
+            </span>
+          )}
+        </button>
+      ) : null}
 
-          <div className="header-calendar-body">
-            <div className="header-calendar-pane header-calendar-pane--month">
-              <GlassMonthCalendar
-                viewDate={viewDate}
-                onViewDateChange={setViewDate}
-                selectedDate={selectedDate}
-                onSelectDate={handleSelectDate}
-                dayCounts={dayCounts}
-              />
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={
+              menuStyle ?? {
+                position: 'fixed',
+                visibility: 'hidden',
+                pointerEvents: 'none',
+                zIndex: 10000,
+              }
+            }
+            className="app-header-dropdown header-popover-panel header-calendar-dropdown overflow-hidden"
+            data-header-popover="calendar"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="header-popover-head">
+              <p className="text-sm font-extrabold text-[var(--ink)]">
+                {createMode === 'task'
+                  ? 'Görev Oluştur'
+                  : createMode === 'appointment'
+                    ? 'Randevu Oluştur'
+                    : 'Takvim'}
+              </p>
             </div>
-            <div className="header-calendar-pane header-calendar-pane--create">
-              <HeaderCalendarCreatePanel
-                selectedDate={selectedDate}
-                createMode={createMode}
-                onCreateModeChange={setCreateMode}
-                onClose={handleClosePanel}
-              />
+
+            <div className="header-calendar-body">
+              <div className="header-calendar-pane header-calendar-pane--month">
+                <GlassMonthCalendar
+                  viewDate={viewDate}
+                  onViewDateChange={setViewDate}
+                  selectedDate={selectedDate}
+                  onSelectDate={handleSelectDate}
+                  dayCounts={dayCounts}
+                />
+              </div>
+              <div className="header-calendar-pane header-calendar-pane--create">
+                <HeaderCalendarCreatePanel
+                  selectedDate={selectedDate}
+                  createMode={createMode}
+                  onCreateModeChange={handleCreateModeChange}
+                  onClose={handleClosePanel}
+                />
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body,
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }
