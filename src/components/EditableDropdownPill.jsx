@@ -199,10 +199,10 @@ export default function EditableDropdownPill({
 
   const optionButtonClass = isLightMenu
     ? 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold text-[var(--text-strong)]'
-    : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-[var(--ink)]'
+    : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-semibold leading-tight text-[var(--muted)]'
   const placeholderButtonClass = isLightMenu
     ? `${optionButtonClass} origin-left text-[var(--text-muted)] transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
-    : `${optionButtonClass} origin-left text-[var(--muted)] transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
+    : `${optionButtonClass} origin-left transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
 
   function renderMenu() {
     const expandedEditor = adding || editingIndex != null
