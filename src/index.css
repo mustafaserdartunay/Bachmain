@@ -1288,8 +1288,7 @@ textarea:not(.form-input)::placeholder {
   color: #dc2626 !important;
 }
 
-.customer-filter-dropdown-menu button[title='Renk seç'],
-.customer-filter-dropdown-menu .customer-filter-color-swatches button {
+.customer-filter-dropdown-menu button[title='Renk seç'] {
   color: inherit !important;
   background: transparent !important;
   font-weight: 400 !important;
@@ -1297,13 +1296,15 @@ textarea:not(.form-input)::placeholder {
   font-size: inherit !important;
 }
 
+/* Keep Tailwind bg-* fills from StageColorSwatches (same as Settings RENK rail) */
 .customer-filter-dropdown-menu .customer-filter-color-swatches button {
-  opacity: 0.75;
+  font-weight: 400 !important;
+  font-size: inherit !important;
+  color: inherit !important;
 }
 
 .customer-filter-dropdown-menu .customer-filter-color-swatches button:hover {
-  opacity: 1;
-  transform: scale(1.08) !important;
+  transform: scale(1.05);
 }
 
 .customer-filter-color-swatches {
