@@ -84,9 +84,12 @@ export function DataTable({
                 </th>
               ))}
               {getRowActions ? (
-                <th className="w-12 px-2 text-center" aria-label="İşlemler">
+                <th
+                  className="h-[var(--ds-row-h,2.75rem)] w-14 px-2 text-center align-middle"
+                  aria-label="İşlemler"
+                >
                   <span
-                    className="inline-flex h-8 w-8 items-center justify-center text-ds-muted"
+                    className="inline-flex h-[var(--ds-control-h,3rem)] w-[var(--ds-control-h,3rem)] items-center justify-center text-ds-muted"
                     title="İşlemler"
                   >
                     <MoreHorizontal className="h-5 w-5" />
@@ -132,8 +135,15 @@ export function DataTable({
                     )
                   })}
                   {getRowActions ? (
-                    <td className="px-2" onClick={(event) => event.stopPropagation()}>
-                      {actions.length ? <MoreMenu items={actions} /> : null}
+                    <td
+                      className="h-[var(--ds-row-h,2.75rem)] w-14 px-2 text-center align-middle"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {actions.length ? (
+                        <div className="inline-flex h-[var(--ds-control-h,3rem)] w-[var(--ds-control-h,3rem)] items-center justify-center">
+                          <MoreMenu items={actions} />
+                        </div>
+                      ) : null}
                     </td>
                   ) : null}
                 </tr>
