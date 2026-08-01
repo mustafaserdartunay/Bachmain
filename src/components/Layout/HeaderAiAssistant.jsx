@@ -8,7 +8,7 @@ import { useHeaderPopover } from '../../hooks/useHeaderPopover'
 import { checkVoiceApiHealth, sendVoiceChat } from '../../utils/voiceApi'
 import { buildRichVoiceContext, executeVoiceActions } from '../../utils/voiceActions'
 import { readVoiceSettings, saveVoiceSettings } from '../../utils/voiceSettings'
-import { HEADER_CONTROL_BUTTON_CLASS, HEADER_SEARCH_INPUT_CLASS } from '../../utils/themeMode'
+import { HEADER_SEARCH_INPUT_CLASS } from '../../utils/themeMode'
 
 function ChatBubble({ role, text }) {
   const isUser = role === 'user'
@@ -104,8 +104,10 @@ export default function HeaderAiAssistant() {
     recording,
     processing,
     error: micError,
+    start: startMic,
     toggle: toggleMic,
     stop: stopMic,
+    clearError: clearMicError,
   } = useVoiceRecorder({ onResult: processUserText })
 
   useEffect(() => {
@@ -175,6 +177,22 @@ export default function HeaderAiAssistant() {
       .catch(() => setApiReady(false))
   }
 
+  function handleHeaderMicClick() {
+    clearMicError()
+    setError('')
+    if (!open) {
+      setOpen(true)
+      if (micSupported) {
+        window.setTimeout(() => {
+          void startMic()
+        }, 120)
+      }
+      return
+    }
+    if (!micSupported || loading || processing || apiReady === false) return
+    toggleMic()
+  }
+
   const inputDisabled = loading || processing || apiReady === false
   const displayError = error || micError
   const statusText = recording
@@ -193,21 +211,47 @@ export default function HeaderAiAssistant() {
       ref={anchorRef}
       onClick={(event) => event.stopPropagation()}
     >
-      <button
-        type="button"
-        data-header-popover-trigger="ai-assistant"
-        onClick={toggle}
-        className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only relative ${open ? 'ring-2 ring-[rgba(139,92,246,0.28)]' : ''}`}
-        aria-label="Asistan"
-        title="Asistan"
+      <div
+        className={`header-ai-switch shrink-0 ${open ? 'is-open' : ''} ${recording ? 'is-recording' : ''} ${processing || loading ? 'is-busy' : ''}`}
+        data-state={
+          recording ? 'recording' : processing || loading ? 'busy' : open ? 'open' : 'idle'
+        }
       >
-        <span className="icon-wrap text-[#7c3aed]">
-          <Sparkles className="h-4 w-4 shrink-0" />
+        <span className="header-ai-switch-track">
+          <span
+            className={`header-ai-switch-thumb ${recording || processing ? 'is-mic' : open ? 'is-chat' : ''}`}
+            aria-hidden="true"
+          />
+          <button
+            type="button"
+            data-header-popover-trigger="ai-assistant"
+            onClick={toggle}
+            className="header-ai-switch-btn header-ai-switch-btn--chat"
+            aria-label="Asistan"
+            title="Asistan"
+            aria-pressed={open}
+          >
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} />
+          </button>
+          <button
+            type="button"
+            onClick={handleHeaderMicClick}
+            disabled={!micSupported || processing || loading}
+            className="header-ai-switch-btn header-ai-switch-btn--mic"
+            aria-label={recording ? 'Kaydı bitir' : 'Mikrofonla komut ver'}
+            title={
+              recording ? 'Kaydı bitir ve OpenAI’ye gönder' : 'Mikrofonu aç — OpenAI işlem yapsın'
+            }
+            aria-pressed={recording}
+          >
+            {recording || processing ? (
+              <MicOff className="h-3.5 w-3.5" strokeWidth={2.25} />
+            ) : (
+              <Mic className="h-3.5 w-3.5" strokeWidth={2.25} />
+            )}
+          </button>
         </span>
-        {(recording || loading) && (
-          <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-[#7c3aed]" />
-        )}
-      </button>
+      </div>
 
       {open &&
         createPortal(

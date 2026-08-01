@@ -3077,6 +3077,148 @@ html.night .trial-banner-cta:hover {
     0 0 0 3px rgba(59, 130, 246, 0.28);
 }
 
+/* AI asistan + mikrofon — appearance switch ile aynı pill track dili */
+.header-ai-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+}
+
+.header-ai-switch-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  width: 4.25rem;
+  height: 2rem;
+  padding: 0.15rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(140, 145, 165, 0.22);
+  background: rgba(140, 145, 165, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.header-ai-switch-thumb {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: calc(50% - 0.15rem);
+  height: calc(100% - 0.3rem);
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #c7b6ff 0%, #a78bfa 50%, #7c3aed 100%);
+  box-shadow:
+    0 4px 10px -4px rgba(76, 29, 149, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition:
+    transform 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    opacity 0.18s ease;
+  z-index: 0;
+  opacity: 0.42;
+}
+
+.header-ai-switch-thumb.is-chat {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.header-ai-switch-thumb.is-mic {
+  transform: translateX(100%);
+  opacity: 1;
+  background: linear-gradient(135deg, #fda4af 0%, #f43f5e 50%, #e11d48 100%);
+  box-shadow:
+    0 4px 12px -4px rgba(190, 18, 60, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.header-ai-switch.is-open:not(.is-recording):not(.is-busy) .header-ai-switch-track {
+  background: rgba(124, 58, 237, 0.12);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.header-ai-switch.is-recording .header-ai-switch-track,
+.header-ai-switch.is-busy .header-ai-switch-track {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(251, 113, 133, 0.35);
+}
+
+.header-ai-switch-btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.header-ai-switch-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.header-ai-switch.is-open:not(.is-recording):not(.is-busy) .header-ai-switch-btn--chat {
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.header-ai-switch.is-recording .header-ai-switch-btn--mic,
+.header-ai-switch.is-busy .header-ai-switch-btn--mic {
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.header-ai-switch:not(.is-open):not(.is-recording):not(.is-busy) .header-ai-switch-btn--chat {
+  color: #7c3aed;
+}
+
+.header-ai-switch:hover .header-ai-switch-track {
+  border-color: rgba(140, 145, 165, 0.38);
+}
+
+.header-ai-switch-btn:focus-visible {
+  outline: none;
+}
+
+.header-ai-switch:focus-within .header-ai-switch-track {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 3px rgba(124, 58, 237, 0.22);
+}
+
+html.night .header-ai-switch-track {
+  background: rgba(15, 23, 42, 0.45);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+html.night .header-ai-switch.is-open:not(.is-recording):not(.is-busy) .header-ai-switch-track {
+  background: rgba(124, 58, 237, 0.22);
+  border-color: rgba(167, 139, 250, 0.4);
+}
+
+html.night .header-ai-switch.is-recording .header-ai-switch-track,
+html.night .header-ai-switch.is-busy .header-ai-switch-track {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: rgba(251, 113, 133, 0.4);
+}
+
 html.night .appearance-switch-track {
   background: rgba(15, 23, 42, 0.45);
   border-color: rgba(148, 163, 184, 0.22);
