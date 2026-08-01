@@ -49,7 +49,7 @@ const actions = [
     to: () => '/musteriler/yeni',
     title: 'Yeni Müşteri',
     icon: UserPlus,
-    gradient: 'from-[#c7b6ff] via-[#a78bfa] to-[#8b5cf6]',
+    gradient: 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]',
   },
   {
     id: 'supplier',
@@ -63,7 +63,7 @@ const actions = [
     to: () => '/musteriler/faturalar?yeni=1',
     title: 'Yeni Fatura',
     icon: ReceiptText,
-    gradient: 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]',
+    gradient: 'from-[#c7b6ff] via-[#a78bfa] to-[#8b5cf6]',
   },
   {
     id: 'incoming-e-invoices',

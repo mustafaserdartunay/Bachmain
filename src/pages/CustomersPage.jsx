@@ -328,12 +328,19 @@ export default function CustomersPage({
           <button
             type="button"
             onClick={() => navigate(createPath)}
-            className="inline-flex items-center gap-1 origin-center bg-transparent p-0 text-xs font-normal leading-none text-[#2563eb] transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold"
+            title={createLabel}
+            className="group inline-flex h-[52px] min-w-[8.5rem] shrink-0 items-center gap-2.5 rounded-xl bg-gradient-to-br from-[#ffb25e] via-[#ff8a65] to-[#ff5e62] px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5"
           >
-            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-[#2563eb]">
-              <UserPlus className="h-4 w-4 shrink-0" />
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/22 text-[#ffffff] ring-1 ring-white/25">
+              {listKind === 'supplier' ? (
+                <Handshake className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
+              ) : (
+                <UserPlus className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
+              )}
             </span>
-            <span className="whitespace-nowrap">{createLabel}</span>
+            <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
+              {createLabel}
+            </span>
           </button>
         }
       />
