@@ -7,7 +7,7 @@ import {
 } from './env.js'
 import {
   OPENAI_CHAT_MODEL_PRESETS,
-  buildChatCompletionBody,
+  createOpenAiCompletion,
   resolveChatModel,
 } from './openaiModels.js'
 
@@ -98,40 +98,24 @@ export async function handleGrowthChatRequest(reqBody = {}, reqHeaders = {}) {
   const apiKey = requireOpenAiApiKey(resolveRequestApiKey(reqBody, reqHeaders))
   const selectedModel = resolveChatModel(model)
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(
-      buildChatCompletionBody({
-        model: selectedModel,
-        temperature: Number(temperature) || 0.7,
-        json: Boolean(json),
-        reasoningEffort: 'high',
-        maxCompletionTokens: 8192,
-        messages: [
-          { role: 'system', content: brandSystemAddon(brand) },
-          ...messages.filter((item) => item?.role && item?.content),
-        ],
-      }),
-    ),
+  const result = await createOpenAiCompletion({
+    apiKey,
+    model: selectedModel,
+    temperature: Number(temperature) || 0.7,
+    json: Boolean(json),
+    reasoningEffort: 'high',
+    maxCompletionTokens: 8192,
+    messages: [
+      { role: 'system', content: brandSystemAddon(brand) },
+      ...messages.filter((item) => item?.role && item?.content),
+    ],
   })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`OpenAI API hatası (${response.status}): ${errorText.slice(0, 400)}`)
-  }
-
-  const data = await response.json()
-  const content = data.choices?.[0]?.message?.content || ''
 
   return {
     ok: true,
-    content,
-    model: data.model || selectedModel,
-    usage: data.usage || null,
-    finishReason: data.choices?.[0]?.finish_reason || null,
+    content: result.content || '',
+    model: result.model || selectedModel,
+    usage: result.usage || null,
+    finishReason: result.finishReason || null,
   }
 }

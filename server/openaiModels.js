@@ -1,8 +1,8 @@
-/** Shared OpenAI model defaults — best quality package for BachMain. */
+/** Shared OpenAI model defaults — GPT-5.5 Pro via Responses API. */
 
 export const DEFAULT_OPENAI_CHAT_MODEL = 'gpt-5.5-pro'
 export const DEFAULT_OPENAI_TRANSCRIBE_MODEL = 'gpt-4o-transcribe'
-/** Quality-first reasoning for GPT-5.x (none | low | medium | high | xhigh). */
+/** Quality-first reasoning for GPT-5.x (medium | high | xhigh for Pro). */
 export const DEFAULT_OPENAI_REASONING_EFFORT = 'high'
 
 export const OPENAI_CHAT_MODEL_PRESETS = [
@@ -43,8 +43,34 @@ export function isReasoningChatModel(model = '') {
 }
 
 /**
- * Build a Chat Completions body with quality-first defaults for frontier models.
+ * GPT-5.5 Pro (and similar *-pro SKUs) only work on /v1/responses,
+ * not /v1/chat/completions.
  */
+export function usesResponsesApi(model = '') {
+  const id = String(model).toLowerCase()
+  return id === 'gpt-5.5-pro' || id.startsWith('gpt-5.5-pro-') || id.includes('gpt-5.5-pro')
+}
+
+function splitSystemMessages(messages = []) {
+  const systemParts = []
+  const input = []
+  for (const item of messages) {
+    if (!item?.role || item.content == null) continue
+    if (item.role === 'system' || item.role === 'developer') {
+      systemParts.push(String(item.content))
+      continue
+    }
+    input.push({
+      role: item.role === 'assistant' ? 'assistant' : 'user',
+      content: String(item.content),
+    })
+  }
+  return {
+    instructions: systemParts.join('\n\n').trim() || undefined,
+    input,
+  }
+}
+
 export function buildChatCompletionBody({
   model,
   messages,
@@ -74,4 +100,120 @@ export function buildChatCompletionBody({
   }
 
   return body
+}
+
+export function buildResponsesBody({
+  model,
+  messages,
+  json = false,
+  reasoningEffort,
+  maxCompletionTokens,
+} = {}) {
+  const selected = resolveChatModel(model)
+  const { instructions, input } = splitSystemMessages(messages)
+  const body = {
+    model: selected,
+    input: input.length ? input : [{ role: 'user', content: 'Yanıt üret.' }],
+    reasoning: {
+      effort: resolveReasoningEffort(reasoningEffort),
+    },
+  }
+
+  if (instructions) {
+    body.instructions = instructions
+  }
+
+  if (json) {
+    body.text = { format: { type: 'json_object' } }
+  }
+
+  if (maxCompletionTokens) {
+    body.max_output_tokens = Number(maxCompletionTokens)
+  }
+
+  return body
+}
+
+export function extractResponsesText(data) {
+  if (typeof data?.output_text === 'string' && data.output_text.trim()) {
+    return data.output_text
+  }
+
+  const parts = []
+  for (const item of data?.output || []) {
+    if (item?.type !== 'message') continue
+    for (const chunk of item.content || []) {
+      if (chunk?.type === 'output_text' || chunk?.type === 'text') {
+        parts.push(String(chunk.text || ''))
+      }
+    }
+  }
+  return parts.join('').trim()
+}
+
+/**
+ * Unified OpenAI text call:
+ * - gpt-5.5-pro → Responses API
+ * - other models → Chat Completions
+ */
+export async function createOpenAiCompletion({
+  apiKey,
+  model,
+  messages,
+  temperature,
+  json = false,
+  reasoningEffort,
+  maxCompletionTokens,
+} = {}) {
+  const selectedModel = resolveChatModel(model)
+  const useResponses = usesResponsesApi(selectedModel)
+
+  const url = useResponses
+    ? 'https://api.openai.com/v1/responses'
+    : 'https://api.openai.com/v1/chat/completions'
+
+  const body = useResponses
+    ? buildResponsesBody({
+        model: selectedModel,
+        messages,
+        json,
+        reasoningEffort,
+        maxCompletionTokens,
+      })
+    : buildChatCompletionBody({
+        model: selectedModel,
+        messages,
+        temperature,
+        json,
+        reasoningEffort,
+        maxCompletionTokens,
+      })
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`OpenAI API hatası (${response.status}): ${errorText.slice(0, 400)}`)
+  }
+
+  const data = await response.json()
+  const content = useResponses
+    ? extractResponsesText(data)
+    : String(data.choices?.[0]?.message?.content || '')
+
+  return {
+    content,
+    model: data.model || selectedModel,
+    usage: data.usage || null,
+    finishReason: useResponses ? data.status || null : data.choices?.[0]?.finish_reason || null,
+    endpoint: useResponses ? 'responses' : 'chat.completions',
+    raw: data,
+  }
 }

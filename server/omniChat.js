@@ -4,7 +4,7 @@ import {
   requireOpenAiApiKey,
   resolveRequestApiKey,
 } from './env.js'
-import { buildChatCompletionBody, resolveChatModel } from './openaiModels.js'
+import { createOpenAiCompletion, resolveChatModel } from './openaiModels.js'
 
 function guardAiRequest(reqHeaders = {}) {
   assertAiProxyAuthorized(reqHeaders)
@@ -91,42 +91,28 @@ export async function runOmniAnalyze({
 
   const systemPrompt = buildSystemPrompt({ brandVoice, companyName, learningExamples })
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${resolvedKey}`,
-    },
-    body: JSON.stringify(
-      buildChatCompletionBody({
-        model: selectedModel,
-        temperature: 0.4,
-        json: true,
-        reasoningEffort: 'high',
-        maxCompletionTokens: 4096,
-        messages: [
-          {
-            role: 'system',
-            content: `${systemPrompt}\n\nMüşteri/CRM bağlamı:\n${JSON.stringify(context, null, 2)}`,
-          },
-          ...thread,
-          {
-            role: 'user',
-            content:
-              'Yukarıdaki konuşmaya göre JSON formatında özet, duygu analizi, birincil yanıt, alternatif yanıtlar ve uygun CRM aksiyonlarını üret.',
-          },
-        ],
-      }),
-    ),
+  const result = await createOpenAiCompletion({
+    apiKey: resolvedKey,
+    model: selectedModel,
+    temperature: 0.4,
+    json: true,
+    reasoningEffort: 'high',
+    maxCompletionTokens: 4096,
+    messages: [
+      {
+        role: 'system',
+        content: `${systemPrompt}\n\nMüşteri/CRM bağlamı:\n${JSON.stringify(context, null, 2)}`,
+      },
+      ...thread,
+      {
+        role: 'user',
+        content:
+          'Yukarıdaki konuşmaya göre JSON formatında özet, duygu analizi, birincil yanıt, alternatif yanıtlar ve uygun CRM aksiyonlarını üret.',
+      },
+    ],
   })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`OpenAI API hatası (${response.status}): ${errorText.slice(0, 240)}`)
-  }
-
-  const data = await response.json()
-  const content = data.choices?.[0]?.message?.content || '{}'
+  const content = result.content || '{}'
 
   try {
     const parsed = JSON.parse(content)

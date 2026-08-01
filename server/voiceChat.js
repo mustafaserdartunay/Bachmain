@@ -4,7 +4,7 @@ import {
   requireOpenAiApiKey,
   resolveRequestApiKey,
 } from './env.js'
-import { buildChatCompletionBody, resolveChatModel } from './openaiModels.js'
+import { createOpenAiCompletion, resolveChatModel } from './openaiModels.js'
 
 function guardAiRequest(reqHeaders = {}) {
   assertAiProxyAuthorized(reqHeaders)
@@ -56,37 +56,23 @@ export async function runVoiceChat({ messages, context, apiKey, model }) {
   const resolvedKey = requireOpenAiApiKey(apiKey)
   const selectedModel = resolveChatModel(model)
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${resolvedKey}`,
-    },
-    body: JSON.stringify(
-      buildChatCompletionBody({
-        model: selectedModel,
-        temperature: 0.2,
-        json: true,
-        reasoningEffort: 'high',
-        maxCompletionTokens: 4096,
-        messages: [
-          {
-            role: 'system',
-            content: `${SYSTEM_PROMPT}\n\nUygulama bağlamı:\n${JSON.stringify(context, null, 2)}`,
-          },
-          ...messages,
-        ],
-      }),
-    ),
+  const result = await createOpenAiCompletion({
+    apiKey: resolvedKey,
+    model: selectedModel,
+    temperature: 0.2,
+    json: true,
+    reasoningEffort: 'high',
+    maxCompletionTokens: 4096,
+    messages: [
+      {
+        role: 'system',
+        content: `${SYSTEM_PROMPT}\n\nUygulama bağlamı:\n${JSON.stringify(context, null, 2)}`,
+      },
+      ...messages,
+    ],
   })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`OpenAI API hatası (${response.status}): ${errorText.slice(0, 240)}`)
-  }
-
-  const data = await response.json()
-  const content = data.choices?.[0]?.message?.content || '{}'
+  const content = result.content || '{}'
 
   try {
     const parsed = JSON.parse(content)
@@ -94,14 +80,14 @@ export async function runVoiceChat({ messages, context, apiKey, model }) {
       message: String(parsed.message || 'Tamam.'),
       actions: Array.isArray(parsed.actions) ? parsed.actions : [],
       raw: parsed,
-      model: data.model || selectedModel,
+      model: result.model || selectedModel,
     }
   } catch {
     return {
       message: content,
       actions: [],
       raw: null,
-      model: data.model || selectedModel,
+      model: result.model || selectedModel,
     }
   }
 }

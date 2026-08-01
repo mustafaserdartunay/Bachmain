@@ -1,5 +1,7 @@
 import { handleVoiceChatRequest } from '../../server/voiceChat.js'
 
+export const maxDuration = 300
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST')
