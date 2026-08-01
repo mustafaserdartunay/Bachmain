@@ -24,6 +24,13 @@ function getDefaultCashAccountPath(action) {
 
 const actions = [
   {
+    id: 'cash',
+    to: () => CASH_BASE_PATH,
+    title: 'Kasa',
+    icon: Wallet,
+    gradient: 'from-[#8ad9ff] via-[#60a5fa] to-[#3b82f6]',
+  },
+  {
     id: 'income',
     to: () => getDefaultCashAccountPath('gelir'),
     title: 'Gelir Ekle',
@@ -36,13 +43,6 @@ const actions = [
     title: 'Gider Ekle',
     icon: ArrowUpFromLine,
     gradient: 'from-[#ffb25e] via-[#ff8a65] to-[#ff5e62]',
-  },
-  {
-    id: 'cash',
-    to: () => CASH_BASE_PATH,
-    title: 'Kasa',
-    icon: Wallet,
-    gradient: 'from-[#8ad9ff] via-[#60a5fa] to-[#3b82f6]',
   },
   {
     id: 'customer',
