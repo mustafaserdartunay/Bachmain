@@ -22,7 +22,7 @@ function getDefaultCashAccountPath(action) {
   return `${CASH_BASE_PATH}/${accountId}?hareket=${action}`
 }
 
-const actions = [
+export const HEADER_QUICK_ACTIONS = [
   {
     id: 'cash',
     to: () => CASH_BASE_PATH,
@@ -74,11 +74,11 @@ const actions = [
   },
 ]
 
-function QuickActionCard({ action }) {
+export function HeaderQuickActionCard({ action }) {
   const Icon = action.icon
   return (
     <Link
-      to={action.to()}
+      to={typeof action.to === 'function' ? action.to() : action.to}
       title={action.title}
       className={`group flex h-[52px] min-w-[8.5rem] flex-1 items-center gap-2.5 rounded-xl bg-gradient-to-br ${action.gradient} px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0`}
     >
@@ -96,8 +96,8 @@ export default function HeaderCashActionsPanel() {
   return (
     <section className="app-header-banner flex min-h-[4.75rem] shrink-0 items-center px-4 py-3 sm:px-6">
       <div className="flex w-full gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-7 lg:gap-2 lg:overflow-visible">
-        {actions.map((action) => (
-          <QuickActionCard key={action.id} action={action} />
+        {HEADER_QUICK_ACTIONS.map((action) => (
+          <HeaderQuickActionCard key={action.id} action={action} />
         ))}
       </div>
     </section>
