@@ -427,6 +427,8 @@ html.space #root {
 /* Colored CTAs keep true white (logo/header quick actions, primary buttons) */
 .app-header-banner a[class*='bg-gradient'],
 .app-header-banner a[class*='bg-gradient'] *,
+.app-page-header a[class*='bg-gradient'],
+.app-page-header a[class*='bg-gradient'] *,
 .glass-team-hub [class*='bg-gradient'] svg,
 .glass-team-hub nav button span[class*='bg-gradient'] svg,
 .btn-primary,
@@ -1474,6 +1476,13 @@ html:not(.night) .app-responsive [class*='bg-white/'] {
   background: #ffffff !important;
   border-color: rgba(226, 232, 240, 0.9) !important;
   color: var(--ink) !important;
+}
+
+/* Keep translucent icon shells on gradient CTAs (do not flatten to solid white) */
+html:not(.night) .app-responsive a[class*='bg-gradient'] [class*='bg-white/'] {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
 }
 
 html:not(.night) .app-responsive .text-white {
