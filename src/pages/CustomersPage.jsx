@@ -504,7 +504,7 @@ export default function CustomersPage({
                 const display = getCustomerDisplay(customer)
                 return (
                   <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
-                    <span className="customer-name-primary truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
+                    <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
                       {display.brandShortName}
                     </span>
                     <span className="customer-name-secondary font-sans truncate text-[14px] font-normal leading-tight text-[var(--muted)]">

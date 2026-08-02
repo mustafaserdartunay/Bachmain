@@ -1482,10 +1482,12 @@ textarea:not(.form-input)::placeholder {
   font-weight: 700 !important;
 }
 
-.app-responsive .customer-list-panel table tbody td .customer-name-primary {
+.app-responsive .customer-list-panel table tbody td .customer-name-primary,
+.customers-page-type .customer-list-panel table tbody td .customer-name-primary {
   font-size: 14px !important;
-  font-weight: 400 !important;
+  font-weight: 700 !important;
   line-height: 1.25 !important;
+  letter-spacing: normal !important;
   color: var(--muted) !important;
 }
 
