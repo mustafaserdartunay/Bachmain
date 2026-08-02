@@ -1186,7 +1186,7 @@ textarea:not(.form-input)::placeholder {
   font-weight: 700 !important;
 }
 .customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-emerald-800 {
-  color: #065f46 !important;
+  color: #10b981 !important; /* aynı: customer-balance-positive / Gelir Ekle */
   font-weight: 700 !important;
 }
 
