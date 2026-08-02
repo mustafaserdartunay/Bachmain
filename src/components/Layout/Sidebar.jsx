@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { Children, useState, useEffect } from 'react'
 import {
   Gauge,
   ShoppingBag,
@@ -241,7 +241,53 @@ const subMenuButtonBase =
   'sidebar-submenu-leaf sidebar-menu-button block w-full px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-colors whitespace-nowrap'
 
 function SidebarSubMenu({ children, className = '' }) {
-  return <div className={`sidebar-submenu${className ? ` ${className}` : ''}`}>{children}</div>
+  const items = Children.toArray(children)
+  return (
+    <div
+      className={`sidebar-submenu${className ? ` ${className}` : ''}`}
+      style={{ position: 'relative', marginLeft: '1.2rem', paddingLeft: '0.85rem' }}
+    >
+      <span
+        className="sidebar-submenu-rail"
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 10,
+          bottom: 10,
+          width: 2,
+          opacity: 0.9,
+          background: 'var(--muted)',
+          borderRadius: 1,
+          pointerEvents: 'none',
+        }}
+      />
+      {items.map((child, index) => (
+        <div
+          key={child.key ?? `submenu-row-${index}`}
+          className={`sidebar-submenu-row${index === items.length - 1 ? ' is-last' : ''}`}
+          style={{ position: 'relative', minWidth: 0 }}
+        >
+          <span
+            className="sidebar-submenu-branch"
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              left: -14,
+              top: '50%',
+              width: 14,
+              height: 2,
+              opacity: 0.9,
+              background: 'var(--muted)',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+            }}
+          />
+          {child}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function SubMenuIcon({ children }) {
@@ -1103,7 +1149,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 ))}
 
               <>
-                <div className="sidebar-submenu-leaf flex items-center gap-0.5">
+                <div className="flex items-center gap-0.5">
                   <NavLink
                     to={DOCUMENT_CENTER_BASE}
                     end

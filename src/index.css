@@ -1330,16 +1330,16 @@ textarea:not(.form-input)::placeholder {
   border-color: var(--search-border) !important;
   box-shadow: none !important;
   font-size: 12px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
   color: var(--muted) !important;
 }
 
 .app-responsive .customer-list-panel .glass-pill span.truncate {
   color: var(--muted) !important;
   font-size: 12px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
 }
 
 .app-responsive .customer-list-panel table thead th {
@@ -1352,16 +1352,30 @@ textarea:not(.form-input)::placeholder {
 
 .app-responsive .customer-list-panel table tbody td {
   font-size: 12px !important;
+  line-height: 1.25 !important;
+  color: var(--muted) !important;
+}
+
+.app-responsive .customer-list-panel table tbody td .customer-name-primary {
+  font-size: 12px !important;
   font-weight: 800 !important;
-  line-height: 1 !important;
+  line-height: 1.25 !important;
+  color: var(--muted) !important;
+}
+
+.app-responsive .customer-list-panel table tbody td .customer-name-secondary {
+  font-family: Inter, system-ui, "SF Pro Display", Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
   color: var(--muted) !important;
 }
 
 .app-responsive .customer-list-panel table tbody td .text-ds-caption,
 .app-responsive .customer-list-panel table tbody td .text-ds-muted {
   font-size: 12px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
   color: var(--muted) !important;
 }
 
@@ -2277,17 +2291,16 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-/* Submenu tree: vertical rail + horizontal branches to each page label */
+/* Submenu tree: DOM rail + branches (connected, no dots) */
 .glass-sidebar .sidebar-submenu {
-  --sidebar-tree: color-mix(in srgb, var(--muted) 40%, transparent);
-  --sidebar-tree-strong: color-mix(in srgb, var(--muted) 62%, transparent);
-  --sidebar-tree-node: color-mix(in srgb, var(--bach-sky, #60a5fa) 55%, var(--sidebar-tree-strong));
+  --sidebar-tree: color-mix(in srgb, var(--muted) 85%, transparent);
+  --sidebar-tree-active: rgba(37, 99, 235, 0.85);
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
-  margin: 0.15rem 0 0.1rem 1.2rem;
-  padding: 0.05rem 0 0.1rem;
+  margin: 0.2rem 0 0.15rem 1.2rem;
+  padding: 0 0 0 0.85rem;
+  overflow: visible;
 }
 
 .glass-sidebar .sidebar-submenu--scroll {
@@ -2298,78 +2311,56 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
 }
 
 .glass-sidebar .sidebar-submenu--nested {
-  margin-left: 0.85rem;
-  margin-top: 0.2rem;
+  margin-left: 0.55rem;
+  margin-top: 0.1rem;
+}
+
+.glass-sidebar .sidebar-submenu-rail {
+  position: absolute;
+  left: 0;
+  top: 0.65rem;
+  bottom: 0.65rem;
+  width: 2px;
+  background: var(--sidebar-tree);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.glass-sidebar .sidebar-submenu-row {
+  position: relative;
+  min-width: 0;
+}
+
+.glass-sidebar .sidebar-submenu-branch {
+  position: absolute;
+  left: -0.85rem;
+  top: 50%;
+  width: 0.85rem;
+  height: 2px;
+  background: var(--sidebar-tree);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.glass-sidebar .sidebar-submenu-row:hover > .sidebar-submenu-branch,
+.glass-sidebar .sidebar-submenu-row:has(.sidebar-menu-active) > .sidebar-submenu-branch {
+  background: var(--sidebar-tree-active);
 }
 
 .glass-sidebar .sidebar-submenu-leaf {
   position: relative;
-  padding-left: 0.95rem;
+  overflow: visible !important;
 }
 
-/* Vertical segment through items; stops at last item mid-line */
-.glass-sidebar .sidebar-submenu-leaf::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 1.5px;
-  background: var(--sidebar-tree);
-  border-radius: 999px;
-  pointer-events: none;
-}
-
-.glass-sidebar .sidebar-submenu > .sidebar-submenu-leaf:first-child::before {
-  top: 0.15rem;
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--sidebar-tree) 15%, transparent),
-    var(--sidebar-tree) 32%
-  );
-}
-
-.glass-sidebar .sidebar-submenu > .sidebar-submenu-leaf:last-child::before {
-  bottom: calc(50% - 0.75px);
-}
-
-.glass-sidebar .sidebar-submenu > .sidebar-submenu-leaf:only-child::before {
-  opacity: 0;
-}
-
-/* Horizontal branch + soft junction node into the page name */
+.glass-sidebar .sidebar-submenu-leaf::before,
 .glass-sidebar .sidebar-submenu-leaf::after {
-  content: '';
-  position: absolute;
-  left: -2px;
-  top: 50%;
-  width: 0.88rem;
-  height: 6px;
-  transform: translateY(-50%);
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 3px 50%, var(--sidebar-tree-node) 1.7px, transparent 1.85px),
-    linear-gradient(var(--sidebar-tree-strong), var(--sidebar-tree-strong));
-  background-repeat: no-repeat;
-  background-size: 6px 6px, calc(100% - 5px) 1.5px;
-  background-position: left center, 5px center;
-  transition:
-    background-size 0.18s ease,
-    filter 0.18s ease;
-}
-
-.glass-sidebar .sidebar-submenu-leaf:hover::after,
-.glass-sidebar .sidebar-submenu-leaf.sidebar-menu-active::after,
-.glass-sidebar .sidebar-submenu-leaf:has(.sidebar-menu-active)::after {
-  --sidebar-tree-node: var(--bach-sky, #60a5fa);
-  --sidebar-tree-strong: color-mix(in srgb, var(--bach-sky, #60a5fa) 72%, var(--muted));
-  background-size: 6px 6px, calc(100% - 4px) 1.5px;
+  content: none !important;
+  display: none !important;
 }
 
 html.night .glass-sidebar .sidebar-submenu {
-  --sidebar-tree: rgba(148, 163, 184, 0.34);
-  --sidebar-tree-strong: rgba(186, 198, 214, 0.52);
-  --sidebar-tree-node: rgba(121, 166, 210, 0.85);
+  --sidebar-tree: color-mix(in srgb, var(--muted) 90%, transparent);
+  --sidebar-tree-active: rgba(147, 197, 253, 0.9);
 }
 
 .glass-sidebar .sidebar-menu-button,

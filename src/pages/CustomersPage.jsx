@@ -21,8 +21,6 @@ import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedAr
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import {
   HEADER_QUICK_ACTIONS,
-  HEADER_QUICK_ACTION_CHIP_FIXED_CLASS,
-  HEADER_QUICK_ACTION_CHIP_ICON_CLASS,
   HeaderQuickActionCard,
 } from '../components/Layout/HeaderCashActionsPanel'
 import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
@@ -334,16 +332,14 @@ export default function CustomersPage({
             to="/"
             aria-label="Güncel Durum"
             title="Güncel Durum"
-            className={`${HEADER_QUICK_ACTION_CHIP_FIXED_CLASS} ${
-              listKind === 'supplier'
-                ? 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
-                : 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
-            }`}
+            className="group inline-flex min-w-0 items-center gap-2 rounded-xl px-1 py-1 transition-opacity hover:opacity-80"
           >
-            <span className={HEADER_QUICK_ACTION_CHIP_ICON_CLASS}>
-              <ChevronLeft className="h-4 w-4 shrink-0 text-[#ffffff]" strokeWidth={2.25} aria-hidden />
-            </span>
-            <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
+            <ChevronLeft
+              className="h-4 w-4 shrink-0 text-[var(--ink)]"
+              strokeWidth={2.25}
+              aria-hidden
+            />
+            <span className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">
               Güncel Durum
             </span>
           </Link>
