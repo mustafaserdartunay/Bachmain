@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { MessageCircle } from 'lucide-react'
-import { getChannelUnreadCounts, getMessageCenterBadge } from '../../omnichannel/store'
+import { getChannelUnreadCounts } from '../../omnichannel/store'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { useHeaderPopover } from '../../hooks/useHeaderPopover'
@@ -62,7 +62,6 @@ function HeaderSocialIcon({ channel, count, onNavigate }) {
 export default function HeaderMessageCenter() {
   const navigate = useNavigate()
   const { open, setOpen, toggle } = useHeaderPopover('message-center')
-  const [badge, setBadge] = useState(() => getMessageCenterBadge())
   const [counts, setCounts] = useState(() => getChannelUnreadCounts())
   const {
     anchorRef,
@@ -76,7 +75,6 @@ export default function HeaderMessageCenter() {
 
   useEffect(() => {
     function refresh() {
-      setBadge(getMessageCenterBadge())
       setCounts(getChannelUnreadCounts())
     }
     refresh()
@@ -100,11 +98,6 @@ export default function HeaderMessageCenter() {
         <span className="icon-wrap">
           <MessageCircle className="h-4 w-4 shrink-0" />
         </span>
-        {badge.count > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff3b30] px-1 text-[11px] font-black text-white shadow-[0_0_10px_rgba(255,59,48,0.55)]">
-            {badge.count > 99 ? '99+' : badge.count}
-          </span>
-        )}
       </button>
 
       {open &&

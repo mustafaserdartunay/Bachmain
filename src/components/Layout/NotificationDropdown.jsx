@@ -1,27 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import {
-  Bell,
-  Calendar,
-  CheckSquare,
-  CreditCard,
-  MessageSquare,
-  StickyNote,
-} from 'lucide-react'
-import { getCrmNotifications } from '../../utils/crmStore'
-import { getB2bTicketNotifications } from '../../utils/b2bPortalStore'
+import { Bell, CreditCard } from 'lucide-react'
 import { fetchAccountNotifications } from '../../utils/platformApi'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { useHeaderPopover } from '../../hooks/useHeaderPopover'
 
 const kindIcons = {
-  task: CheckSquare,
-  appointment: Calendar,
-  note: StickyNote,
-  ticket: MessageSquare,
-  'ticket-reply': MessageSquare,
   membership: CreditCard,
   trial_extended: CreditCard,
   package_extended: CreditCard,
@@ -29,67 +15,43 @@ const kindIcons = {
   account_suspended: CreditCard,
 }
 
-const urgencyRank = { overdue: 0, now: 1, today: 2, membership: 2.5, planned: 3 }
-
 function urgencyBadge(item) {
-  if (item.kind === 'ticket') return { label: 'TICKET', className: 'bg-violet-500/20 text-violet-300' }
-  if (item.kind === 'ticket-reply') return { label: 'CEVAP', className: 'bg-emerald-500/20 text-emerald-300' }
-  if (item.kind === 'membership' || item.type === 'membership') {
-    if (item.rawKind === 'account_suspended') {
-      return { label: 'ASKI', className: 'bg-red-500/20 text-red-300' }
-    }
-    if (item.rawKind === 'account_activated') {
-      return { label: 'AKTİF', className: 'bg-emerald-500/20 text-emerald-300' }
-    }
-    return { label: 'ÜYELİK', className: 'bg-sky-500/20 text-sky-300' }
+  if (item.rawKind === 'account_suspended') {
+    return { label: 'ASKI', className: 'bg-red-500/20 text-red-300' }
   }
-  if (item.urgency === 'overdue') return { label: 'GECİKTİ', className: 'bg-red-500/20 text-red-300' }
-  if (item.urgency === 'now') return { label: 'ŞİMDİ', className: 'bg-orange-500/20 text-orange-300' }
-  if (item.urgency === 'planned') return { label: 'PLANLI', className: 'bg-slate-500/20 text-slate-300' }
-  return { label: 'BUGÜN', className: 'bg-blue-500/20 text-blue-300' }
+  if (item.rawKind === 'account_activated') {
+    return { label: 'AKTİF', className: 'bg-emerald-500/20 text-emerald-300' }
+  }
+  if (item.rawKind === 'trial_extended' || item.rawKind === 'package_extended') {
+    return { label: 'UZATMA', className: 'bg-sky-500/20 text-sky-300' }
+  }
+  return { label: 'YÖNETİCİ', className: 'bg-sky-500/20 text-sky-300' }
 }
 
-function mapMembershipNotifications(items) {
+function mapAdminNotifications(items) {
   if (!Array.isArray(items)) return []
-  return items.map((n) => ({
-    id: n.id || `membership-${n.createdAt}`,
-    kind: 'membership',
-    type: 'membership',
-    rawKind: n.kind || n.type,
-    entityId: n.id,
-    title: n.title || 'Üyelik bildirimi',
-    subtitle: n.body || '',
-    detail: n.endDate ? `Bitiş: ${n.endDate}` : '',
-    date: String(n.createdAt || '').slice(0, 10),
-    sortAt: n.sortAt || n.createdAt || '',
-    urgency: 'membership',
-    link: n.link || '/hesap/lisans',
-  }))
-}
-
-function loadLocalNotifications() {
-  const merged = [...getCrmNotifications(), ...getB2bTicketNotifications()]
-  return merged.sort((a, b) => {
-    const rankDiff = (urgencyRank[a.urgency] ?? 9) - (urgencyRank[b.urgency] ?? 9)
-    if (rankDiff !== 0) return rankDiff
-    return String(b.sortAt || b.date || '').localeCompare(String(a.sortAt || a.date || ''))
-  })
-}
-
-function mergeNotifications(localItems, membershipItems) {
-  const merged = [...membershipItems, ...localItems]
-  return merged.sort((a, b) => {
-    const rankDiff = (urgencyRank[a.urgency] ?? 9) - (urgencyRank[b.urgency] ?? 9)
-    if (rankDiff !== 0) return rankDiff
-    return String(b.sortAt || b.date || '').localeCompare(String(a.sortAt || a.date || ''))
-  })
+  return items
+    .map((n) => ({
+      id: n.id || `admin-${n.createdAt}`,
+      kind: 'membership',
+      type: 'membership',
+      rawKind: n.kind || n.type,
+      entityId: n.id,
+      title: n.title || 'Yönetici bildirimi',
+      subtitle: n.body || '',
+      detail: n.endDate ? `Bitiş: ${n.endDate}` : '',
+      date: String(n.createdAt || '').slice(0, 10),
+      sortAt: n.sortAt || n.createdAt || '',
+      urgency: 'membership',
+      link: n.link || '/hesap/lisans',
+    }))
+    .sort((a, b) => String(b.sortAt || b.date || '').localeCompare(String(a.sortAt || a.date || '')))
 }
 
 export default function NotificationDropdown() {
   const navigate = useNavigate()
   const { open, setOpen, toggle } = useHeaderPopover('notifications')
-  const [localItems, setLocalItems] = useState(() => loadLocalNotifications())
-  const [membershipItems, setMembershipItems] = useState([])
+  const [adminItems, setAdminItems] = useState([])
   const { anchorRef, menuRef, style: menuStyle } = useAnchoredPortal(open, {
     align: 'center',
     matchWidth: false,
@@ -99,60 +61,34 @@ export default function NotificationDropdown() {
 
   useEffect(() => {
     let cancelled = false
-    async function loadMembership() {
+    async function loadAdmin() {
       try {
         const rows = await fetchAccountNotifications()
-        if (!cancelled) setMembershipItems(mapMembershipNotifications(rows))
+        if (!cancelled) setAdminItems(mapAdminNotifications(rows))
       } catch {
-        if (!cancelled) setMembershipItems([])
+        if (!cancelled) setAdminItems([])
       }
     }
-    function refreshLocal() {
-      setLocalItems(loadLocalNotifications())
-    }
-    refreshLocal()
-    loadMembership()
-    window.addEventListener('bach:crm-updated', refreshLocal)
-    window.addEventListener('erlenbox:b2b-updated', refreshLocal)
-    const interval = setInterval(() => {
-      refreshLocal()
-      loadMembership()
-    }, 60000)
+    loadAdmin()
+    const interval = setInterval(loadAdmin, 60000)
     return () => {
       cancelled = true
-      window.removeEventListener('bach:crm-updated', refreshLocal)
-      window.removeEventListener('erlenbox:b2b-updated', refreshLocal)
       clearInterval(interval)
     }
   }, [])
 
-  const notifications = useMemo(
-    () => mergeNotifications(localItems, membershipItems),
-    [localItems, membershipItems],
-  )
+  const notifications = useMemo(() => adminItems, [adminItems])
   const count = notifications.length
   const preview = notifications
-  const hasTickets = useMemo(
-    () => notifications.some((item) => item.kind === 'ticket' || item.kind === 'ticket-reply'),
-    [notifications],
-  )
-  const hasMembership = useMemo(
-    () => notifications.some((item) => item.kind === 'membership'),
-    [notifications],
-  )
 
   function openItem(item) {
     setOpen(false)
-    navigate(item?.link || '/crm')
+    navigate(item?.link || '/hesap/lisans')
   }
 
   function openHub() {
     setOpen(false)
-    if (hasMembership && !hasTickets) {
-      navigate('/hesap/lisans')
-      return
-    }
-    navigate(hasTickets ? '/yonetici-kontrol' : '/crm')
+    navigate('/hesap/lisans')
   }
 
   return (
@@ -185,7 +121,7 @@ export default function NotificationDropdown() {
           <div className="border-b border-[rgba(140,145,165,0.14)] px-4 py-3">
             <p className="text-sm font-extrabold text-[var(--ink)]">Bildirimler</p>
             <p className="text-[13px] font-semibold text-[var(--muted)]">
-              Üyelik, görevler, ajanda ve B2B ticket cevapları
+              Yalnızca yöneticiden gelen üyelik ve hesap bildirimleri
             </p>
           </div>
 
@@ -194,7 +130,7 @@ export default function NotificationDropdown() {
               <div className="px-3 py-8 text-center">
                 <p className="text-sm font-bold text-[var(--ink)]">Bildirim yok</p>
                 <p className="mt-1 text-xs font-semibold text-[var(--muted)]">
-                  Açık üyelik, görev, ajanda notu veya ticket bulunmuyor.
+                  Yöneticiden yeni bildirim bulunmuyor.
                 </p>
               </div>
             ) : (
@@ -236,11 +172,7 @@ export default function NotificationDropdown() {
                 onClick={openHub}
                 className="flex w-full items-center justify-center rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wide text-[var(--purple2)] transition-colors hover:bg-white/55"
               >
-                {hasMembership && !hasTickets
-                  ? `Lisans sayfasına git (${count})`
-                  : hasTickets
-                    ? `Yönetici panele git (${count})`
-                    : `CRM merkezine git (${count})`}
+                {`Lisans sayfasına git (${count})`}
               </button>
             </div>
           )}

@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { CalendarDays, CheckSquare, StickyNote } from 'lucide-react'
-import { AGENDA_NOTE_BADGE_CLASS, countIncompleteAgendaNotes } from '../Crm/AgendaNoteBoard'
-import { loadAgendaNotes } from '../../utils/crmStore'
 import { closeAllHeaderPopovers, useHeaderPopover } from '../../hooks/useHeaderPopover'
 import { setHeaderAgendaAnchor } from '../../utils/headerAgendaAnchor'
 import {
@@ -15,15 +13,6 @@ export default function HeaderAgendaSwitch() {
   const { open: notebookOpen } = useHeaderPopover('notebook')
   const { open: calendarOpen } = useHeaderPopover('calendar')
   const createMode = useCalendarCreateMode()
-  const [noteCount, setNoteCount] = useState(() => countIncompleteAgendaNotes(loadAgendaNotes()))
-
-  useEffect(() => {
-    function refresh() {
-      setNoteCount(countIncompleteAgendaNotes(loadAgendaNotes()))
-    }
-    window.addEventListener('bach:crm-updated', refresh)
-    return () => window.removeEventListener('bach:crm-updated', refresh)
-  }, [])
 
   const active = useMemo(() => {
     if (notebookOpen) return 'notebook'
@@ -86,11 +75,6 @@ export default function HeaderAgendaSwitch() {
           aria-pressed={active === 'notebook'}
         >
           <StickyNote className="h-3.5 w-3.5" strokeWidth={2.25} />
-          {noteCount > 0 ? (
-            <span className={`${AGENDA_NOTE_BADGE_CLASS} !-right-0.5 !-top-0.5`}>
-              {noteCount > 99 ? '99+' : noteCount}
-            </span>
-          ) : null}
         </button>
         <button
           type="button"
