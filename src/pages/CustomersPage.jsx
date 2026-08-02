@@ -74,10 +74,11 @@ const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill
 const CUSTOMER_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max max-w-full'
 const CUSTOMER_LIST_MENU_CLASS = 'customers-page-menu !min-w-[18rem] w-[18rem]'
 
+/** yfb + balance tone: alacak (>) green, borç (<) red, sıfır muted */
 function balanceClass(balance) {
-  if (balance > 0) return 'text-[#10b981]'
-  if (balance < 0) return 'text-[#e11d48]'
-  return 'text-[var(--muted)]'
+  if (balance > 0) return 'customer-balance-positive'
+  if (balance < 0) return 'customer-balance-negative'
+  return 'customer-balance-zero'
 }
 
 function currentBalance(customer, movements) {
@@ -470,8 +471,8 @@ export default function CustomersPage({
         dotColor="blue"
         className="customer-list-panel w-full"
         action={
-          <span className={`app-titlecase-words shrink-0 ${CUSTOMER_CHIP_TEXT_CLASS}`}>
-            {filteredCustomers.length} kayıt
+          <span className={`shrink-0 ${CUSTOMER_CHIP_TEXT_CLASS}`}>
+            {filteredCustomers.length} Kayıt
           </span>
         }
       >
@@ -601,13 +602,15 @@ export default function CustomersPage({
             },
             {
               id: 'balance',
-              header: 'Güncel Bakiye',
+              header: 'GÜNCEL BAKİYE',
               sortable: true,
               className: 'w-[1%] whitespace-nowrap text-right',
               cell: (customer) => {
                 const balance = currentBalance(customer, movements)
                 return (
-                  <span className={`font-normal tabular-nums text-[14px] leading-tight ${balanceClass(balance)}`}>
+                  <span
+                    className={`customer-balance-amount tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceClass(balance)}`}
+                  >
                     {formatTreasuryCurrency(balance)}
                   </span>
                 )
