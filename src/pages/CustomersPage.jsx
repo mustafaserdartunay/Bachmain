@@ -490,8 +490,8 @@ export default function CustomersPage({
         <DataTable
           emptyTitle={emptyTitle}
           emptyDescription="Arama veya segment filtresini değiştirin."
-          headerClassName="h-[var(--ds-row-h,2.75rem)] px-3 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)] normal-case"
-          mobileHeaderClassName={CUSTOMER_TYPE_CLASS}
+          headerClassName={`h-[var(--ds-row-h,2.75rem)] px-3 app-titlecase-words ${CUSTOMER_TYPE_CLASS}`}
+          mobileHeaderClassName={`app-titlecase-words ${CUSTOMER_TYPE_CLASS}`}
           data={filteredCustomers}
           getRowId={(customer) => customer.id}
           onRowClick={(customer) => navigate(`/musteriler/${customer.id}`)}
