@@ -1165,24 +1165,29 @@ textarea:not(.form-input)::placeholder {
 }
 
 .customer-summary-metrics .app-page-metric .text-xl,
-.customers-page-type .text-xl {
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl {
   font-size: 14px !important;
-  font-weight: 400 !important;
+  font-weight: 700 !important;
   line-height: 1.25 !important;
+  letter-spacing: normal !important;
 }
 
-/* Customer summary metric values — dark tones (override page muted) */
+/* Customer summary metric values — yfb + dark tones */
 .customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-violet-800 {
   color: #5b21b6 !important;
+  font-weight: 700 !important;
 }
 .customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-blue-800 {
   color: #1e40af !important;
+  font-weight: 700 !important;
 }
 .customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-red-700 {
   color: #b91c1c !important;
+  font-weight: 700 !important;
 }
 .customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-emerald-800 {
   color: #065f46 !important;
+  font-weight: 700 !important;
 }
 
 /* Customers page typography: 14px / 400 / muted (shell header banner excluded) */
