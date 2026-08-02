@@ -330,23 +330,19 @@ export default function CustomersPage({
       <AppPageHeader
         showBack={false}
         title={
-          <div className="flex min-w-0 items-center gap-6 sm:gap-8">
-            <Link
-              to="/"
-              aria-label="Güncel Durum"
-              title="Güncel Durum"
-              className="customer-page-back-link group inline-flex shrink-0 items-center gap-2 rounded-xl px-1 py-1 text-[var(--muted)] transition-opacity hover:opacity-80"
-            >
-              <ChevronLeft className="customer-page-back-link-icon h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-              <span className="customer-page-back-link-label min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
-                Güncel Durum
-              </span>
-            </Link>
-            <h1 className="min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
-              {sidebarTitle}
-            </h1>
-          </div>
+          <Link
+            to="/"
+            aria-label="Güncel Durum"
+            title="Güncel Durum"
+            className="customer-page-back-link group inline-flex shrink-0 items-center gap-2 rounded-xl px-1 py-1 text-[var(--muted)] transition-opacity hover:opacity-80"
+          >
+            <ChevronLeft className="customer-page-back-link-icon h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+            <span className="customer-page-back-link-label min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+              Güncel Durum
+            </span>
+          </Link>
         }
+        centerTitle={sidebarTitle}
         titleClassName="!min-w-0 !overflow-visible"
         actions={
           <HeaderQuickActionCard

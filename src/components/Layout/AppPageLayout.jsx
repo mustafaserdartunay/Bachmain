@@ -135,7 +135,7 @@ export function AppPageHeader({
       </div>
       {hasCenterTitle && !useInlineCenter ? (
         <h1
-          className={`pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-[min(50%,20rem)] -translate-x-1/2 -translate-y-1/2 truncate text-center text-xs font-semibold uppercase tracking-wide text-[var(--muted)] ${centerTitleClassName}`.trim()}
+          className={`pointer-events-none absolute left-1/2 top-1/2 z-[5] max-w-[min(50%,20rem)] -translate-x-1/2 -translate-y-1/2 truncate text-center text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)] ${centerTitleClassName}`.trim()}
         >
           {centerTitle}
         </h1>
