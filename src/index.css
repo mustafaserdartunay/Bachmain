@@ -1203,6 +1203,23 @@ textarea:not(.form-input)::placeholder {
   color: var(--muted) !important;
 }
 
+/* Customer list table headers — yf */
+.customers-page-type .customer-list-panel table thead th,
+.customers-page-type .customer-list-panel table thead th span,
+.customers-page-type .customer-list-panel table thead th button,
+.app-responsive .customer-list-panel table thead th,
+.app-responsive .customer-list-panel table thead th span,
+.app-responsive .customer-list-panel table thead th button {
+  font-family: Inter, system-ui, "SF Pro Display", Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  color: var(--muted) !important;
+}
+
+
 
 .glass-pill {
   display: flex;

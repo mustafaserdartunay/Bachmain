@@ -24,6 +24,11 @@ function sortRows(rows, sort) {
  * columns: [{ id, header, accessorKey?, cell?, sortable?, hideOnMobile?, className? }]
  * getRowActions?: (row) => MoreMenu items
  */
+const DEFAULT_TH_CLASS =
+  'h-[var(--ds-row-h,2.75rem)] px-3 text-ds-caption font-semibold uppercase tracking-wide text-ds-muted'
+const DEFAULT_MOBILE_HEADER_CLASS =
+  'text-ds-caption font-semibold uppercase tracking-wide text-ds-muted'
+
 export function DataTable({
   columns = [],
   data = [],
@@ -33,6 +38,8 @@ export function DataTable({
   emptyDescription,
   className = '',
   onRowClick,
+  headerClassName = DEFAULT_TH_CLASS,
+  mobileHeaderClassName = DEFAULT_MOBILE_HEADER_CLASS,
 }) {
   const [sort, setSort] = useState({ key: null, dir: 'asc' })
   const rows = useMemo(() => sortRows(data, sort), [data, sort])
@@ -59,7 +66,7 @@ export function DataTable({
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className={`h-[var(--ds-row-h,2.75rem)] px-3 text-ds-caption font-semibold uppercase tracking-wide text-ds-muted ${col.className || ''}`}
+                  className={`${headerClassName} ${col.className || ''}`.trim()}
                 >
                   {col.sortable ? (
                     <button
@@ -172,7 +179,7 @@ export function DataTable({
                     const content = col.cell ? col.cell(row) : raw
                     return (
                       <div key={col.id} className="min-w-0">
-                        <p className="text-ds-caption font-semibold uppercase tracking-wide text-ds-muted">
+                        <p className={mobileHeaderClassName}>
                           {col.header}
                         </p>
                         <div className="truncate text-ds-body font-medium text-ds-ink">
