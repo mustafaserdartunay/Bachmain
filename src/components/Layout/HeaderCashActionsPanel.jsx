@@ -47,7 +47,7 @@ export const HEADER_QUICK_ACTIONS = [
   {
     id: 'customer',
     to: () => '/musteriler/yeni',
-    title: 'Yeni Müşteri',
+    title: 'Yeni Müşteri Oluştur',
     icon: UserPlus,
     gradient: 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]',
   },
@@ -82,7 +82,7 @@ export const HEADER_QUICK_ACTION_CHIP_ICON_CLASS =
   'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-transparent text-[#ffffff] ring-1 ring-[rgba(255,255,255,0.55)]'
 
 export const HEADER_QUICK_ACTION_CHIP_FIXED_CLASS =
-  `${HEADER_QUICK_ACTION_CHIP_CLASS} w-[8.5rem] shrink-0`
+  `${HEADER_QUICK_ACTION_CHIP_CLASS} w-auto shrink-0`
 
 export function HeaderQuickActionCard({ action, fixed = false, className = '' }) {
   const Icon = action.icon
