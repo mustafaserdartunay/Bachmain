@@ -447,28 +447,26 @@ export default function CustomerCreatePage() {
         <AppPageHeader
           showBack={false}
           title={
-            <>
-              <Link
-                to="/"
-                aria-label="Güncel Durum"
-                title="Güncel Durum"
-                className={`group flex h-[52px] min-w-[8.5rem] max-w-full items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0 ${
-                  isSupplierForm
-                    ? 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
-                    : 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
-                }`}
-              >
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/40 text-[#ffffff]">
-                  <ChevronLeft className="h-4 w-4 text-[#ffffff]" aria-hidden />
-                </span>
-                <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
-                  Güncel Durum
-                </span>
-              </Link>
-              <span className="truncate">{pageHeading}</span>
-            </>
+            <Link
+              to="/"
+              aria-label="Güncel Durum"
+              title="Güncel Durum"
+              className={`group flex h-[52px] min-w-[8.5rem] max-w-full items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0 ${
+                isSupplierForm
+                  ? 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
+                  : 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
+              }`}
+            >
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/40 text-[#ffffff]">
+                <ChevronLeft className="h-4 w-4 text-[#ffffff]" aria-hidden />
+              </span>
+              <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
+                Güncel Durum
+              </span>
+            </Link>
           }
-          titleClassName="!flex !min-w-0 !items-center !gap-3 !overflow-visible"
+          centerTitle={pageHeading}
+          titleClassName="!min-w-0 !overflow-visible"
           actions={
             <div
               ref={actionMenuAnchorRef}
