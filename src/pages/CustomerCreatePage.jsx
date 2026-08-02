@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import {
   Building2,
   ChevronDown,
+  ChevronLeft,
   ExternalLink,
   Facebook,
   Globe,
@@ -18,12 +19,11 @@ import {
   Save,
   Twitter,
   UserRound,
-  Users,
   WalletCards,
   X,
   Youtube,
 } from 'lucide-react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { AppPageHeader } from '../components/Layout/AppPageLayout'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import {
@@ -445,15 +445,30 @@ export default function CustomerCreatePage() {
 
       <div className="space-y-5">
         <AppPageHeader
+          showBack={false}
           title={
-            <span className="inline-flex min-w-0 items-center gap-2 text-xs font-normal uppercase leading-none text-[var(--muted)]">
-              <Users className="h-4 w-4 shrink-0" />
+            <>
+              <Link
+                to="/"
+                aria-label="Güncel Durum"
+                title="Güncel Durum"
+                className={`group flex h-[52px] min-w-[8.5rem] max-w-full items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0 ${
+                  isSupplierForm
+                    ? 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
+                    : 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
+                }`}
+              >
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/40 text-[#ffffff]">
+                  <ChevronLeft className="h-4 w-4 text-[#ffffff]" aria-hidden />
+                </span>
+                <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
+                  Güncel Durum
+                </span>
+              </Link>
               <span className="truncate">{pageHeading}</span>
-            </span>
+            </>
           }
-          titleClassName="!flex !items-center !text-xs !font-normal !uppercase !leading-none !text-[var(--muted)]"
-          onBack={() => navigate(backPath)}
-          backLabel={isSupplierForm ? 'Tedarikçilere dön' : 'Müşterilere dön'}
+          titleClassName="!flex !min-w-0 !items-center !gap-3 !overflow-visible"
           actions={
             <div
               ref={actionMenuAnchorRef}
@@ -462,40 +477,46 @@ export default function CustomerCreatePage() {
               <button
                 type="button"
                 onClick={() => navigate(backPath)}
-                className={TEXT_CANCEL_CLASS}
+                className="btn-cancel inline-flex h-[52px] items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white"
               >
-                <X className="h-3.5 w-3.5" aria-hidden="true" />
+                <X className="h-4 w-4" aria-hidden="true" />
                 <span className="whitespace-nowrap leading-none">Vazgeç</span>
               </button>
-              <button type="submit" className={TEXT_SAVE_CLASS}>
-                <Save className="h-3.5 w-3.5" aria-hidden="true" />
-                <span className="whitespace-nowrap leading-none">Kaydet</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActionMenuOpen((open) => !open)}
-                className={TEXT_SAVE_CLASS}
-                aria-label="Kaydet işlemleri"
-                aria-expanded={actionMenuOpen}
-              >
-                <ChevronDown
-                  className={`h-3.5 w-3.5 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
-                  aria-hidden="true"
-                />
-              </button>
+              <div className="btn-split inline-flex overflow-hidden">
+                <button
+                  type="submit"
+                  className="btn-primary inline-flex h-[52px] items-center justify-center gap-2 px-4 text-sm font-bold text-white"
+                >
+                  <Save className="h-4 w-4" aria-hidden="true" />
+                  <span className="whitespace-nowrap leading-none">Kaydet</span>
+                </button>
+                <span className="btn-split-divider" aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={() => setActionMenuOpen((open) => !open)}
+                  className="btn-primary inline-flex h-[52px] w-12 items-center justify-center text-white"
+                  aria-label="Kaydet işlemleri"
+                  aria-expanded={actionMenuOpen}
+                >
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
               {actionMenuOpen &&
                 actionMenuStyle &&
                 createPortal(
                   <div
                     ref={actionMenuRef}
-                    style={actionMenuStyle}
+                    style={{ ...actionMenuStyle, zIndex: 120 }}
                     className={`${DROPDOWN_MENU_PORTAL_CLASS} customer-save-action-menu w-56`}
                     onClick={(event) => event.stopPropagation()}
                   >
                     <button
                       type="button"
                       onClick={saveAndContinue}
-                      className={TEXT_SAVE_MENU_ITEM_CLASS}
+                      className="inline-flex w-full items-center justify-start gap-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold leading-none text-[var(--ink)] transition-colors hover:bg-white/55"
                     >
                       <Save className="h-3.5 w-3.5" aria-hidden="true" />
                       <span className="whitespace-nowrap leading-none">Kaydet ve devam et</span>
