@@ -157,7 +157,7 @@ export default function CustomerDeletedArchivedPanel({
           <span className={APP_LABEL_CLASS}>{title}</span>
         </span>
         <span className="flex shrink-0 items-center gap-3">
-          <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} kayıt</span>
+          <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
           <ChevronDown
             className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform ${open ? 'rotate-180' : ''}`}
           />
@@ -198,18 +198,18 @@ export default function CustomerDeletedArchivedPanel({
                       <button
                         type="button"
                         onClick={() => handleRestore(item)}
-                        className="inline-flex items-center gap-1.5 bg-transparent px-2 py-2 text-[11px] font-normal text-blue-600 transition-transform hover:-translate-y-0.5"
+                        className="customer-restore-action inline-flex items-center gap-1.5 bg-transparent px-2 py-2 text-[14px] font-normal leading-tight text-blue-600 transition-transform hover:-translate-y-0.5"
                       >
                         <RotateCcw className="h-3.5 w-3.5" /> Geri Yükle
                       </button>
                       <button
                         type="button"
                         onClick={() => setPendingPermanentDelete(item)}
-                        className="inline-flex h-8 w-8 items-center justify-center bg-transparent text-rose-600 transition-transform hover:-translate-y-0.5"
+                        className="customer-permanent-delete-action inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[transform,background-color,color] hover:scale-110 hover:bg-red-500/15 hover:text-red-600"
                         aria-label={`${item.label} kalıcı olarak sil`}
-                        title="Kalıcı olarak sil"
+                        title="Sil"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
                       </button>
                     </div>
                   </div>

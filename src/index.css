@@ -1334,24 +1334,42 @@ textarea:not(.form-input)::placeholder {
   font-weight: 400 !important;
 }
 
-.customer-filter-dropdown-menu button[title='Düzenle'] {
+.customer-filter-dropdown-menu button[title='Düzenle'],
+.customers-page-menu button[title='Düzenle'] {
   color: #2563eb !important;
 }
 
-.customer-filter-dropdown-menu button[title='Düzenle']:hover {
+.customer-filter-dropdown-menu button[title='Düzenle']:hover,
+.customers-page-menu button[title='Düzenle']:hover {
   background: rgba(37, 99, 235, 0.15) !important;
   color: #1d4ed8 !important;
   transform: scale(1.1);
 }
 
-.customer-filter-dropdown-menu button[title='Sil'] {
+.customer-filter-dropdown-menu button[title='Sil'],
+.customers-page-menu button[title='Sil'] {
   color: #ef4444 !important;
 }
 
-.customer-filter-dropdown-menu button[title='Sil']:hover {
+.customer-filter-dropdown-menu button[title='Sil']:hover,
+.customers-page-menu button[title='Sil']:hover {
   background: rgba(239, 68, 68, 0.15) !important;
   color: #dc2626 !important;
   transform: scale(1.1);
+}
+
+/* Silinen/arşiv paneli — Düzenle mavisi / Sil kırmızısı */
+.customers-page-type .customer-deleted-archived-panel .customer-restore-action,
+.customers-page-type .customer-deleted-archived-panel .customer-restore-action svg {
+  color: #2563eb !important;
+}
+.customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action,
+.customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action svg {
+  color: #ef4444 !important;
+}
+.customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
 }
 
 .customer-filter-dropdown-menu button[title='Ekle'],
