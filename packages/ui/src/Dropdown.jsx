@@ -70,27 +70,19 @@ export function Dropdown({
   )
 }
 
-export function DropdownItem({ icon: Icon, label, onClick, tone = 'default', close }) {
-  const toneClass =
-    tone === 'danger'
-      ? 'text-ds-danger'
-      : tone === 'primary'
-        ? 'text-blue-600'
-        : tone === 'success'
-          ? 'text-emerald-600'
-          : 'text-ds-ink'
+export function DropdownItem({ icon: Icon, label, onClick, tone: _tone = 'default', close }) {
   return (
     <button
       type="button"
       role="menuitem"
-      className={`flex w-full items-center gap-2 rounded-ds-md px-3 py-2 text-left text-ds-small font-semibold transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${toneClass}`}
+      className="flex w-full items-center gap-2 rounded-ds-md px-3 py-2 text-left text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)] transition-colors duration-hover hover:bg-[var(--ds-surface-muted)]"
       onClick={() => {
         onClick?.()
         close?.()
       }}
     >
-      {Icon ? <Icon className="h-4 w-4 shrink-0" /> : null}
-      <span className="truncate">{label}</span>
+      {Icon ? <Icon className="h-4 w-4 shrink-0 text-[var(--muted)]" /> : null}
+      <span className="min-w-0 truncate">{label}</span>
     </button>
   )
 }
