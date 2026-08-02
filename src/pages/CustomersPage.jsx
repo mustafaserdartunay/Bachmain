@@ -64,13 +64,15 @@ const balanceFilterOptions = [
 ]
 const CUSTOMER_FILTER_FIELD_CLASS =
   'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
-const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !text-xs !font-extrabold !leading-none !tracking-normal !text-[var(--muted)]`
-const CUSTOMER_CHIP_TEXT_CLASS = 'truncate text-xs font-extrabold leading-none text-[var(--muted)]'
+const CUSTOMER_TYPE_CLASS =
+  'min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]'
+const CUSTOMER_FILTER_LABEL_CLASS = `!mb-0 shrink-0 ${CUSTOMER_TYPE_CLASS}`
+const CUSTOMER_CHIP_TEXT_CLASS = CUSTOMER_TYPE_CLASS
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
-const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu'
+const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu customers-page-menu'
 const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill`
 const CUSTOMER_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max max-w-full'
-const CUSTOMER_LIST_MENU_CLASS = '!min-w-[18rem] w-[18rem]'
+const CUSTOMER_LIST_MENU_CLASS = 'customers-page-menu !min-w-[18rem] w-[18rem]'
 
 function balanceClass(balance) {
   if (balance > 0) return 'text-[#10b981]'
@@ -324,27 +326,27 @@ export default function CustomersPage({
       : customerSubMenus.find((item) => item.path === '/musteriler')?.label || pageTitle
 
   return (
-    <AppPageShell className="w-full">
+    <AppPageShell className="customers-page-type w-full">
       <AppPageHeader
         showBack={false}
         title={
-          <Link
-            to="/"
-            aria-label="Güncel Durum"
-            title="Güncel Durum"
-            className="group inline-flex min-w-0 items-center gap-2 rounded-xl px-1 py-1 transition-opacity hover:opacity-80"
-          >
-            <ChevronLeft
-              className="h-4 w-4 shrink-0 text-[var(--ink)]"
-              strokeWidth={2.25}
-              aria-hidden
-            />
-            <span className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">
-              Güncel Durum
-            </span>
-          </Link>
+          <div className="flex min-w-0 items-center gap-6 sm:gap-8">
+            <Link
+              to="/"
+              aria-label="Güncel Durum"
+              title="Güncel Durum"
+              className="customer-page-back-link group inline-flex shrink-0 items-center gap-2 rounded-xl px-1 py-1 text-[var(--muted)] transition-opacity hover:opacity-80"
+            >
+              <ChevronLeft className="customer-page-back-link-icon h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+              <span className="customer-page-back-link-label min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+                Güncel Durum
+              </span>
+            </Link>
+            <h1 className="min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+              {sidebarTitle}
+            </h1>
+          </div>
         }
-        centerTitle={sidebarTitle}
         titleClassName="!min-w-0 !overflow-visible"
         actions={
           <HeaderQuickActionCard
@@ -481,7 +483,7 @@ export default function CustomersPage({
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Marka veya ünvan ara..."
-            className="customer-filter-search !text-xs !font-extrabold !leading-none"
+            className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
           />
         </div>
 
@@ -494,7 +496,7 @@ export default function CustomersPage({
           columns={[
             {
               id: 'name',
-              header: columnLabel.toLocaleUpperCase('tr-TR'),
+              header: columnLabel,
               sortable: true,
               accessorKey: 'name',
               className: 'min-w-[18rem] w-[44%]',
@@ -502,10 +504,10 @@ export default function CustomersPage({
                 const display = getCustomerDisplay(customer)
                 return (
                   <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
-                    <span className="customer-name-primary truncate text-[12px] font-extrabold leading-tight text-[var(--muted)]">
+                    <span className="customer-name-primary truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
                       {display.brandShortName}
                     </span>
-                    <span className="customer-name-secondary font-sans truncate text-[12px] font-normal leading-tight text-[var(--muted)]">
+                    <span className="customer-name-secondary font-sans truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
                       {display.companyTitle}
                     </span>
                   </span>
@@ -514,7 +516,7 @@ export default function CustomersPage({
             },
             {
               id: 'type',
-              header: 'TİPİ',
+              header: 'Tipi',
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -541,7 +543,7 @@ export default function CustomersPage({
             },
             {
               id: 'representative',
-              header: 'TEMSİLCİ',
+              header: 'Temsilci',
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -573,7 +575,7 @@ export default function CustomersPage({
             },
             {
               id: 'scoring',
-              header: 'PUANTAJ',
+              header: 'Puantaj',
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -600,13 +602,13 @@ export default function CustomersPage({
             },
             {
               id: 'balance',
-              header: 'GÜNCEL BAKİYE',
+              header: 'Güncel Bakiye',
               sortable: true,
               className: 'w-[1%] whitespace-nowrap text-right',
               cell: (customer) => {
                 const balance = currentBalance(customer, movements)
                 return (
-                  <span className={`font-semibold tabular-nums ${balanceClass(balance)}`}>
+                  <span className={`font-normal tabular-nums text-[14px] leading-tight ${balanceClass(balance)}`}>
                     {formatTreasuryCurrency(balance)}
                   </span>
                 )
@@ -686,16 +688,16 @@ export default function CustomersPage({
         }
       >
         <div className="space-y-4">
-          <p className="text-sm leading-relaxed text-[var(--muted)]">
+          <p className="text-[14px] font-normal leading-tight text-[var(--muted)]">
             Müşteriniz kendisine özel bağlantıdan cari hareketlerini, teklif ve siparişlerini,
             ürünlerini ve üretim durumunu görüntüleyebilir.
           </p>
           <div className={`${APP_SURFACE_PANEL_CLASS} space-y-3 p-4`}>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+              <p className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
                 Müşteri
               </p>
-              <p className="mt-1 text-sm font-semibold text-[var(--ink)]">
+              <p className="mt-1 text-[14px] font-normal leading-tight text-[var(--ink)]">
                 {b2bDialogCustomer
                   ? getCustomerDisplay(b2bDialogCustomer).brandShortName ||
                     getCustomerDisplay(b2bDialogCustomer).companyTitle
@@ -703,21 +705,21 @@ export default function CustomersPage({
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+              <p className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
                 Davet E-postası
               </p>
-              <p className="mt-1 text-sm font-semibold text-[var(--ink)]">
+              <p className="mt-1 text-[14px] font-normal leading-tight text-[var(--ink)]">
                 {b2bDialogCustomer?.email || 'Kayıtlı e-posta bulunamadı'}
               </p>
             </div>
           </div>
           {b2bNotice ? (
-            <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-600">
+            <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-[14px] font-normal leading-tight text-emerald-600">
               {b2bNotice}
             </p>
           ) : null}
           {b2bError ? (
-            <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-600">
+            <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-[14px] font-normal leading-tight text-rose-600">
               {b2bError}
             </p>
           ) : null}

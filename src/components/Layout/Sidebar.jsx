@@ -245,7 +245,7 @@ function SidebarSubMenu({ children, className = '' }) {
   return (
     <div
       className={`sidebar-submenu${className ? ` ${className}` : ''}`}
-      style={{ position: 'relative', marginLeft: '1.2rem', paddingLeft: '0.85rem' }}
+      style={{ position: 'relative', marginLeft: '1.15rem', paddingLeft: '0.7rem' }}
     >
       <span
         className="sidebar-submenu-rail"
@@ -253,12 +253,11 @@ function SidebarSubMenu({ children, className = '' }) {
         style={{
           position: 'absolute',
           left: 0,
-          top: 10,
-          bottom: 10,
-          width: 2,
-          opacity: 0.9,
+          top: '0.7rem',
+          bottom: '0.7rem',
+          width: 1,
+          opacity: 0.38,
           background: 'var(--muted)',
-          borderRadius: 1,
           pointerEvents: 'none',
         }}
       />
@@ -273,11 +272,11 @@ function SidebarSubMenu({ children, className = '' }) {
             aria-hidden="true"
             style={{
               position: 'absolute',
-              left: -14,
+              left: -11.2,
               top: '50%',
-              width: 14,
-              height: 2,
-              opacity: 0.9,
+              width: 11.2,
+              height: 1,
+              opacity: 0.38,
               background: 'var(--muted)',
               transform: 'translateY(-50%)',
               pointerEvents: 'none',

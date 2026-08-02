@@ -95,26 +95,45 @@ export function AppPageHeader({
   showBack = true,
   titleClassName = '',
   centerTitleClassName = '',
+  centerTitleInline = false,
 }) {
   const hasCenterTitle = centerTitle != null && centerTitle !== false && centerTitle !== ''
+  const useInlineCenter = hasCenterTitle && centerTitleInline
 
   return (
     <div className="app-page-header relative z-30 flex min-h-[4.75rem] shrink-0 items-center justify-between gap-3 overflow-visible px-4 py-3 sm:px-6">
-      <div className="relative z-10 flex min-w-0 flex-1 items-center gap-3">
+      <div
+        className={`relative z-10 flex min-w-0 flex-1 items-center ${
+          useInlineCenter ? 'gap-6 sm:gap-8' : 'gap-3'
+        }`}
+      >
         {showBack ? (
           <AppPageBackButton backTo={backTo} backLabel={backLabel} onBack={onBack} />
         ) : null}
-        {hasCenterTitle ? (
+        {useInlineCenter ? (
+          <>
+            {title ? (
+              <div className={`flex shrink-0 items-center ${titleClassName}`.trim()}>{title}</div>
+            ) : null}
+            <h1
+              className={`min-w-0 truncate text-left text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)] ${centerTitleClassName}`.trim()}
+            >
+              {centerTitle}
+            </h1>
+          </>
+        ) : hasCenterTitle ? (
           title ? (
             <div className={`flex min-w-0 items-center ${titleClassName}`.trim()}>{title}</div>
           ) : null
-        ) : (
+        ) : typeof title === 'string' || typeof title === 'number' ? (
           <h1 className={`${APP_PAGE_TITLE_CLASS} truncate text-left ${titleClassName}`.trim()}>
             {title}
           </h1>
+        ) : (
+          <div className={`flex min-w-0 items-center ${titleClassName}`.trim()}>{title}</div>
         )}
       </div>
-      {hasCenterTitle ? (
+      {hasCenterTitle && !useInlineCenter ? (
         <h1
           className={`pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-[min(50%,20rem)] -translate-x-1/2 -translate-y-1/2 truncate text-center text-xs font-semibold uppercase tracking-wide text-[var(--muted)] ${centerTitleClassName}`.trim()}
         >
