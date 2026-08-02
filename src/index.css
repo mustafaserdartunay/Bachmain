@@ -1363,6 +1363,13 @@ textarea:not(.form-input)::placeholder {
 .customers-page-type .customer-deleted-archived-panel .customer-restore-action svg {
   color: #2563eb !important;
 }
+.customers-page-type .customer-deleted-archived-panel .customer-restore-action {
+  background: rgba(37, 99, 235, 0.16) !important;
+}
+.customers-page-type .customer-deleted-archived-panel .customer-restore-action:hover {
+  background: rgba(37, 99, 235, 0.22) !important;
+  color: #1d4ed8 !important;
+}
 .customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action,
 .customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action svg {
   color: #ef4444 !important;
