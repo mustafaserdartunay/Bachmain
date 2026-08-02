@@ -1461,7 +1461,7 @@ textarea:not(.form-input)::placeholder {
 .customers-page-type .customer-list-panel table tbody td .customer-balance-zero,
 .app-responsive .customer-list-panel table tbody td .customer-balance-zero {
   color: var(--muted) !important;
-  font-weight: 400 !important;
+  font-weight: 700 !important;
 }
 
 .app-responsive .customer-list-panel table tbody td .customer-name-primary {
