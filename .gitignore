@@ -38,3 +38,7 @@ apps/admin/server/data/db.json
 restore-backups/
 *.backup
 .vercel
+
+# Local Vercel CLI token (never commit)
+.env.vercel
+.vercel_token

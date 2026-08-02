@@ -21,8 +21,10 @@ Kullanıcı BachMain üzerinde özellik, düzeltme veya içerik işi bitince **a
 
 ```bash
 cd apps/landing && npm run build
-rsync -a --delete --exclude vercel.json --exclude .vercel --exclude CALISMA.md dist/ ../web/
+rsync -a --delete --exclude vercel.json --exclude .vercel --exclude CALISMA.md out/ ../web/
 ```
+
+(`out/` = Next static export; eski `dist/` yoksa kullanma.)
 
 Sonra push + `bachmain-web` deploy.
 
@@ -33,9 +35,17 @@ Sonra push + `bachmain-web` deploy.
 ```
 
 Vercel project IDs:
-- CRM: `.vercel/project.json` (kök)
-- Admin: `prj_58uYNTn8uZNfSaNF53pg5mHkosf9`
-- Web: `prj_1IxdJq7c8Kamffare0gLAskdoD9k`
+- CRM: `.vercel/project.json` (kök) → `prj_JDJO7v2dTvWBac2Gd0N7jX1ZdJjk`
+- Admin: `apps/admin/.vercel` → `prj_58uYNTn8uZNfSaNF53pg5mHkosf9`
+- Web: `apps/web/.vercel` → `prj_1IxdJq7c8Kamffare0gLAskdoD9k`
 - Org: `team_6Bs45GjLiuQAkKP5eE6fUOsf`
 
-Git takılırsa Developer klonundan (`~/Developer/Bach Crm`) senkronlayıp push et; deploy Documents/BachMain üzerinden yapılabilir.
+## Canonical workspace (güncel)
+
+```
+~/Documents/bachmain/BachMain Tüm Proje
+```
+
+macOS “Belgelerim” = `~/Documents`. Eski iCloud yolu
+(`~/Library/Mobile Documents/com~apple~CloudDocs/Bachmain/...`) ve
+`~/Developer/Bach Crm` symlink’i **artık kaynak değil** — tüm iş bu Documents klasöründe yapılır.

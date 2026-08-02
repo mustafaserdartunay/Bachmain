@@ -1,5 +1,5 @@
 import * as Checkbox from '@radix-ui/react-checkbox'
-import { Check, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, ChevronsUpDown, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TableColumn } from '@/types'
 
@@ -29,6 +29,9 @@ export function DataTable<T extends { id: string }>({
   className,
 }: DataTableProps<T>) {
   const selectable = !!onToggleSelect
+  const pageSelectedCount = rows.filter((r) => selected?.has(r.id)).length
+  const allPageSelected = rows.length > 0 && pageSelectedCount === rows.length
+  const somePageSelected = pageSelectedCount > 0 && !allPageSelected
 
   return (
     <div className={cn('overflow-x-auto rounded-xl border border-border', className)}>
@@ -38,12 +41,17 @@ export function DataTable<T extends { id: string }>({
             {selectable && (
               <th className="w-10 px-4 py-3">
                 <Checkbox.Root
-                  checked={selected?.size === rows.length && rows.length > 0}
+                  checked={allPageSelected ? true : somePageSelected ? 'indeterminate' : false}
                   onCheckedChange={onToggleSelectAll}
-                  className="flex h-4 w-4 items-center justify-center rounded border border-border bg-surface-elevated data-[state=checked]:border-bach-blue data-[state=checked]:bg-bach-blue"
+                  aria-label="Hepsini seç"
+                  className="flex h-4 w-4 items-center justify-center rounded border border-border bg-surface-elevated data-[state=checked]:border-bach-blue data-[state=checked]:bg-bach-blue data-[state=indeterminate]:border-bach-blue data-[state=indeterminate]:bg-bach-blue"
                 >
                   <Checkbox.Indicator>
-                    <Check className="h-3 w-3 text-white" />
+                    {somePageSelected && !allPageSelected ? (
+                      <Minus className="h-3 w-3 text-white" />
+                    ) : (
+                      <Check className="h-3 w-3 text-white" />
+                    )}
                   </Checkbox.Indicator>
                 </Checkbox.Root>
               </th>
@@ -93,6 +101,7 @@ export function DataTable<T extends { id: string }>({
                   <Checkbox.Root
                     checked={selected?.has(row.id)}
                     onCheckedChange={() => onToggleSelect?.(row.id)}
+                    aria-label="Satırı seç"
                     className="flex h-4 w-4 items-center justify-center rounded border border-border bg-surface-elevated data-[state=checked]:border-bach-blue data-[state=checked]:bg-bach-blue"
                   >
                     <Checkbox.Indicator>
@@ -102,8 +111,16 @@ export function DataTable<T extends { id: string }>({
                 </td>
               )}
               {columns.map((col) => (
-                <td key={col.key} className="px-4 py-3 text-text-muted">
-                  {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? '')}
+                <td
+                  key={col.key}
+                  className={cn(
+                    'px-4 py-3 text-text-muted',
+                    col.key === 'actions' && 'w-12 text-right',
+                  )}
+                >
+                  {col.render
+                    ? col.render(row)
+                    : String((row as Record<string, unknown>)[col.key] ?? '')}
                 </td>
               ))}
             </tr>

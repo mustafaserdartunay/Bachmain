@@ -1,7 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChevronRight, Filter, Plus, Search, Trash2, X } from 'lucide-react'
+import {
+  CalendarPlus,
+  Filter,
+  Package,
+  PauseCircle,
+  PlayCircle,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { PageHeader, MetricCard } from '@/components/ui/MetricCard'
 import { DataTable } from '@/components/ui/DataTable'
 import { Button } from '@/components/ui/Button'
@@ -15,7 +27,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Card } from '@/components/ui/Card'
 import { membershipsApi, type MembershipRow } from '@/services/api'
-import { formatDate } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import type { BadgeVariant, TableColumn } from '@/types'
 
 type Filters = {
@@ -27,6 +39,8 @@ type Filters = {
   dateFrom: string
   dateTo: string
 }
+
+type BulkPanel = 'demo' | 'package' | 'extend' | null
 
 const EMPTY_FILTERS: Filters = {
   source: '',
@@ -48,15 +62,127 @@ function matchesRemaining(days: number | null | undefined, bucket: string) {
   return true
 }
 
+async function runForEachId(
+  ids: string[],
+  worker: (id: string) => Promise<unknown>,
+): Promise<{ ok: number; fail: number; errors: string[] }> {
+  let ok = 0
+  let fail = 0
+  const errors: string[] = []
+  for (const id of ids) {
+    try {
+      await worker(id)
+      ok += 1
+    } catch (err) {
+      fail += 1
+      errors.push(err instanceof Error ? err.message : 'Bilinmeyen hata')
+    }
+  }
+  return { ok, fail, errors }
+}
+
+function BulkFormDialog({
+  open,
+  title,
+  description,
+  busy,
+  confirmLabel,
+  tone = 'primary',
+  onCancel,
+  onConfirm,
+  children,
+}: {
+  open: boolean
+  title: string
+  description?: string
+  busy?: boolean
+  confirmLabel: string
+  tone?: 'danger' | 'primary'
+  onCancel: () => void
+  onConfirm: () => void
+  children: ReactNode
+}) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !busy) onCancel()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, busy, onCancel])
+
+  if (!open || typeof document === 'undefined') return null
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px]"
+        aria-label="Kapat"
+        disabled={busy}
+        onClick={onCancel}
+      />
+      <div
+        className={cn(
+          'relative w-full max-w-lg overflow-hidden rounded-2xl border bg-white shadow-2xl',
+          tone === 'danger' ? 'border-rose-200' : 'border-border',
+        )}
+      >
+        <div
+          className={cn(
+            'border-b px-5 py-4',
+            tone === 'danger' ? 'border-rose-100 bg-rose-50/80' : 'border-border bg-surface',
+          )}
+        >
+          <h2 className="text-base font-bold text-text">{title}</h2>
+          {description ? (
+            <p className="mt-1 text-sm leading-relaxed text-text-muted">{description}</p>
+          ) : null}
+        </div>
+        <div className="space-y-3 px-5 py-4">{children}</div>
+        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
+          <Button variant="secondary" size="sm" disabled={busy} onClick={onCancel}>
+            Vazgeç
+          </Button>
+          <Button
+            variant={tone === 'danger' ? 'danger' : 'primary'}
+            size="sm"
+            disabled={busy}
+            onClick={onConfirm}
+          >
+            {busy ? 'İşleniyor…' : confirmLabel}
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
 export function MembershipsPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [filtersOpen, setFiltersOpen] = useState(true)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [deleteTarget, setDeleteTarget] = useState<MembershipRow | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkPanel, setBulkPanel] = useState<BulkPanel>(null)
+  const [busy, setBusy] = useState(false)
   const [flash, setFlash] = useState<{ ok: boolean; message: string } | null>(null)
+
+  const [demoDays, setDemoDays] = useState(7)
+  const [demoMode, setDemoMode] = useState<'extend' | 'convert'>('extend')
+  const [packagePlan, setPackagePlan] = useState('starter')
+  const [packageDays, setPackageDays] = useState(30)
+  const [extendDays, setExtendDays] = useState(7)
+  const [extendMode, setExtendMode] = useState<'trial' | 'active'>('trial')
+
   const pageSize = 12
 
   const fetcher = useMemo(() => () => membershipsApi.list(), [])
@@ -69,12 +195,41 @@ export function MembershipsPage() {
     navigate(`/uyeler/${encodeURIComponent(id)}`)
   }
 
+  const clearSelection = () => setSelected(new Set())
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function setFlashFromBulk(label: string, result: { ok: number; fail: number }) {
+    if (result.fail === 0) {
+      setFlash({ ok: true, message: `${result.ok} üye için ${label} tamamlandı` })
+    } else if (result.ok === 0) {
+      setFlash({ ok: false, message: `${label} başarısız (${result.fail} kayıt)` })
+    } else {
+      setFlash({
+        ok: false,
+        message: `${label}: ${result.ok} başarılı, ${result.fail} hatalı`,
+      })
+    }
+  }
+
   async function confirmDelete() {
     if (!deleteTarget) return
-    setDeleting(true)
+    setBusy(true)
     setFlash(null)
     try {
       await membershipsApi.delete(deleteTarget.id)
+      setSelected((prev) => {
+        const next = new Set(prev)
+        next.delete(deleteTarget.id)
+        return next
+      })
       setDeleteTarget(null)
       setFlash({
         ok: true,
@@ -87,7 +242,117 @@ export function MembershipsPage() {
         message: err instanceof Error ? err.message : 'Silme başarısız',
       })
     } finally {
-      setDeleting(false)
+      setBusy(false)
+    }
+  }
+
+  async function confirmBulkDelete() {
+    const ids = [...selected]
+    if (!ids.length) return
+    setBusy(true)
+    setFlash(null)
+    try {
+      const result = await runForEachId(ids, (id) => membershipsApi.delete(id))
+      setBulkDeleteOpen(false)
+      clearSelection()
+      setFlashFromBulk('toplu silme', result)
+      reload()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function confirmBulkDemo() {
+    const ids = [...selected]
+    if (!ids.length) return
+    setBusy(true)
+    setFlash(null)
+    try {
+      const result = await runForEachId(ids, (id) =>
+        demoMode === 'convert'
+          ? membershipsApi.action(id, { action: 'convert_demo', days: demoDays })
+          : membershipsApi.extend(id, {
+              days: demoDays,
+              mode: 'trial',
+              note: `toplu demo +${demoDays}`,
+            }),
+      )
+      setBulkPanel(null)
+      clearSelection()
+      setFlashFromBulk(
+        demoMode === 'convert' ? 'demo → üyelik' : `demo (+${demoDays} gün)`,
+        result,
+      )
+      reload()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function confirmBulkPackage() {
+    const ids = [...selected]
+    if (!ids.length) return
+    setBusy(true)
+    setFlash(null)
+    try {
+      const result = await runForEachId(ids, async (id) => {
+        await membershipsApi.action(id, {
+          action: 'set_plan',
+          planCode: packagePlan,
+          period: 'month',
+        })
+        await membershipsApi.extend(id, {
+          days: packageDays,
+          mode: 'active',
+          note: `toplu paket ${packagePlan} +${packageDays}`,
+        })
+      })
+      setBulkPanel(null)
+      clearSelection()
+      setFlashFromBulk(`paket (${packagePlan}, +${packageDays} gün)`, result)
+      reload()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function confirmBulkExtend() {
+    const ids = [...selected]
+    if (!ids.length) return
+    setBusy(true)
+    setFlash(null)
+    try {
+      const result = await runForEachId(ids, (id) =>
+        membershipsApi.extend(id, {
+          days: extendDays,
+          mode: extendMode,
+          note: `toplu uzatma +${extendDays}`,
+        }),
+      )
+      setBulkPanel(null)
+      clearSelection()
+      setFlashFromBulk(
+        `süre uzatma (+${extendDays} gün / ${extendMode === 'trial' ? 'demo' : 'paket'})`,
+        result,
+      )
+      reload()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function bulkStatus(action: 'activate' | 'suspend') {
+    const ids = [...selected]
+    if (!ids.length) return
+    setBusy(true)
+    setFlash(null)
+    try {
+      const result = await runForEachId(ids, (id) => membershipsApi.action(id, { action }))
+      clearSelection()
+      setFlashFromBulk(action === 'activate' ? 'aktifleştirme' : 'askıya alma', result)
+      reload()
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -131,6 +396,29 @@ export function MembershipsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
   const activeFilterCount = Object.values(filters).filter(Boolean).length
+  const selectedCount = selected.size
+  const selectedRows = useMemo(
+    () => filtered.filter((r) => selected.has(r.id)),
+    [filtered, selected],
+  )
+
+  const toggleSelectAllPage = () => {
+    const pageIds = paginated.map((r) => r.id)
+    const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id))
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (allSelected) {
+        pageIds.forEach((id) => next.delete(id))
+      } else {
+        pageIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  const selectAllFiltered = () => {
+    setSelected(new Set(filtered.map((r) => r.id)))
+  }
 
   const columns: TableColumn<MembershipRow>[] = [
     {
@@ -146,7 +434,9 @@ export function MembershipsPage() {
           <p className="font-semibold text-bach-blue group-hover:underline">
             {row.fullName || '—'}
           </p>
-          <p className="text-xs text-text-subtle">{row.role === 'demo' ? 'Demo lead' : row.role}</p>
+          <p className="text-xs text-text-subtle">
+            {row.role === 'demo' ? 'Demo lead' : row.role}
+          </p>
         </Link>
       ),
     },
@@ -190,25 +480,19 @@ export function MembershipsPage() {
       ),
     },
     {
-      key: 'id',
-      label: 'İşlem',
+      key: 'actions',
+      label: '',
       render: (row) => (
-        <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
           <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => openDetail(row.id)}
-          >
-            Detay / Uzat <ChevronRight className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-600"
             title="Üyeyi sil"
+            aria-label={`${row.fullName || row.email} sil`}
             onClick={() => setDeleteTarget(row)}
           >
-            <Trash2 className="h-3.5 w-3.5" />
-            Sil
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       ),
@@ -236,16 +520,132 @@ export function MembershipsPage() {
             ? `${deleteTarget.fullName || deleteTarget.email} hesabı kalıcı olarak silinecek. Bu işlem geri alınamaz.`
             : undefined
         }
-        confirmLabel="Evet"
+        confirmLabel="Evet, sil"
         cancelLabel="Hayır"
         tone="danger"
-        busy={deleting}
+        busy={busy}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={() => void confirmDelete()}
       />
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        title={`${selectedCount} üye silinsin mi?`}
+        description={`${selectedCount} seçili hesap kalıcı olarak silinecek. Bu işlem geri alınamaz.`}
+        confirmLabel="Evet, toplu sil"
+        cancelLabel="Hayır"
+        tone="danger"
+        busy={busy}
+        onCancel={() => setBulkDeleteOpen(false)}
+        onConfirm={() => void confirmBulkDelete()}
+      />
+
+      <BulkFormDialog
+        open={bulkPanel === 'demo'}
+        title="Toplu demo işlemi"
+        description={`${selectedCount} seçili üye için demo süresi tanımlanacak veya demo lead üyelik dönüşümü yapılacak.`}
+        confirmLabel="Uygula"
+        busy={busy}
+        onCancel={() => setBulkPanel(null)}
+        onConfirm={() => void confirmBulkDemo()}
+      >
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-muted">İşlem türü</label>
+          <Select
+            value={demoMode}
+            onChange={(e) => setDemoMode(e.target.value as 'extend' | 'convert')}
+          >
+            <option value="extend">Demo süresi ver / uzat</option>
+            <option value="convert">Demo → Üyelik dönüştür</option>
+          </Select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-muted">Gün</label>
+          <Select value={String(demoDays)} onChange={(e) => setDemoDays(Number(e.target.value))}>
+            {[3, 7, 14, 30, 60].map((d) => (
+              <option key={d} value={d}>
+                {d} gün
+              </option>
+            ))}
+          </Select>
+        </div>
+        <p className="text-xs text-text-subtle">
+          Seçililer: {selectedRows.slice(0, 3).map((r) => r.fullName || r.email).join(', ')}
+          {selectedCount > 3 ? ` +${selectedCount - 3}` : ''}
+        </p>
+      </BulkFormDialog>
+
+      <BulkFormDialog
+        open={bulkPanel === 'package'}
+        title="Toplu paket tanımla"
+        description={`${selectedCount} seçili üye için plan atanacak ve paket süresi uygulanacak.`}
+        confirmLabel="Paketi uygula"
+        busy={busy}
+        onCancel={() => setBulkPanel(null)}
+        onConfirm={() => void confirmBulkPackage()}
+      >
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-muted">Plan</label>
+          <Select value={packagePlan} onChange={(e) => setPackagePlan(e.target.value)}>
+            <option value="starter">Starter</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
+          </Select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-muted">Paket süresi</label>
+          <Select
+            value={String(packageDays)}
+            onChange={(e) => setPackageDays(Number(e.target.value))}
+          >
+            {[30, 60, 90, 180, 365].map((d) => (
+              <option key={d} value={d}>
+                {d} gün
+              </option>
+            ))}
+          </Select>
+        </div>
+      </BulkFormDialog>
+
+      <BulkFormDialog
+        open={bulkPanel === 'extend'}
+        title="Toplu süre uzat"
+        description={`${selectedCount} seçili üyenin lisans süresi uzatılacak.`}
+        confirmLabel="Süreyi uzat"
+        busy={busy}
+        onCancel={() => setBulkPanel(null)}
+        onConfirm={() => void confirmBulkExtend()}
+      >
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-text-muted">Gün</label>
+            <Select
+              value={String(extendDays)}
+              onChange={(e) => setExtendDays(Number(e.target.value))}
+            >
+              {[3, 7, 14, 30, 60, 90].map((d) => (
+                <option key={d} value={d}>
+                  {d} gün
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-text-muted">Mod</label>
+            <Select
+              value={extendMode}
+              onChange={(e) => setExtendMode(e.target.value as 'trial' | 'active')}
+            >
+              <option value="trial">Demo / Deneme</option>
+              <option value="active">Paket (aktif)</option>
+            </Select>
+          </div>
+        </div>
+      </BulkFormDialog>
+
       <PageHeader
         title="Üye Hesapları"
-        subtitle="Satıra veya Detay / Uzat’a tıklayın — demo ve paket süresini buradan yönetin"
+        subtitle="Satıra tıklayın — demo ve paket süresini buradan yönetin. Çoklu seçimle toplu işlem yapın."
         actions={
           <>
             <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((v) => !v)}>
@@ -420,17 +820,81 @@ export function MembershipsPage() {
         </Card>
       )}
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
-        <Input
-          placeholder="Ad, e-posta, firma, vergi no…"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value)
-            setPage(1)
-          }}
-          className="pl-9"
-        />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+          <Input
+            placeholder="Ad, e-posta, firma, vergi no…"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setPage(1)
+            }}
+            className="pl-9"
+          />
+        </div>
+        {selectedCount > 0 ? (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-bach-blue/25 bg-bach-blue/5 px-3 py-2">
+            <span className="text-sm font-semibold text-bach-blue">{selectedCount} seçili</span>
+            {selectedCount < filtered.length ? (
+              <Button variant="ghost" size="sm" onClick={selectAllFiltered} disabled={busy}>
+                Tümünü seç ({filtered.length})
+              </Button>
+            ) : null}
+            <Button variant="ghost" size="sm" onClick={clearSelection} disabled={busy}>
+              Seçimi temizle
+            </Button>
+            <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              onClick={() => setBulkPanel('demo')}
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Toplu demo
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              onClick={() => setBulkPanel('package')}
+            >
+              <Package className="h-3.5 w-3.5" /> Toplu paket
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              onClick={() => setBulkPanel('extend')}
+            >
+              <CalendarPlus className="h-3.5 w-3.5" /> Süre uzat
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              onClick={() => void bulkStatus('activate')}
+            >
+              <PlayCircle className="h-3.5 w-3.5" /> Aktifleştir
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              onClick={() => void bulkStatus('suspend')}
+            >
+              <PauseCircle className="h-3.5 w-3.5" /> Askıya al
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={busy}
+              onClick={() => setBulkDeleteOpen(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Toplu sil
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       {paginated.length === 0 ? (
@@ -442,11 +906,19 @@ export function MembershipsPage() {
             setFilters(EMPTY_FILTERS)
             setSearch('')
             setPage(1)
+            clearSelection()
           }}
         />
       ) : (
         <>
-          <DataTable columns={columns} rows={paginated} onRowClick={(row) => openDetail(row.id)} />
+          <DataTable
+            columns={columns}
+            rows={paginated}
+            selected={selected}
+            onToggleSelect={toggleSelect}
+            onToggleSelectAll={toggleSelectAllPage}
+            onRowClick={(row) => openDetail(row.id)}
+          />
           <Pagination
             page={page}
             totalPages={totalPages}
