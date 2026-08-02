@@ -74,15 +74,29 @@ export const HEADER_QUICK_ACTIONS = [
   },
 ]
 
-export function HeaderQuickActionCard({ action }) {
+/** Banner + page-header chip shell (52px). Banner adds flex-1; page headers use fixed. */
+export const HEADER_QUICK_ACTION_CHIP_CLASS =
+  'group flex h-[52px] min-w-[8.5rem] items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5'
+
+export const HEADER_QUICK_ACTION_CHIP_ICON_CLASS =
+  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-transparent text-[#ffffff] ring-1 ring-[rgba(255,255,255,0.55)]'
+
+export const HEADER_QUICK_ACTION_CHIP_FIXED_CLASS =
+  `${HEADER_QUICK_ACTION_CHIP_CLASS} w-[8.5rem] shrink-0`
+
+export function HeaderQuickActionCard({ action, fixed = false, className = '' }) {
   const Icon = action.icon
   return (
     <Link
       to={typeof action.to === 'function' ? action.to() : action.to}
       title={action.title}
-      className={`group flex h-[52px] min-w-[8.5rem] flex-1 items-center gap-2.5 rounded-xl bg-gradient-to-br ${action.gradient} px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0`}
+      className={`${
+        fixed
+          ? HEADER_QUICK_ACTION_CHIP_FIXED_CLASS
+          : `${HEADER_QUICK_ACTION_CHIP_CLASS} flex-1 sm:min-w-0`
+      } ${action.gradient} ${className}`.trim()}
     >
-      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-transparent text-[#ffffff] ring-1 ring-[rgba(255,255,255,0.55)]">
+      <span className={HEADER_QUICK_ACTION_CHIP_ICON_CLASS}>
         <Icon className="h-4 w-4 shrink-0 text-[#ffffff]" strokeWidth={2.25} aria-hidden />
       </span>
       <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">

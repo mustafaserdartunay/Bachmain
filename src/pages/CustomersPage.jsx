@@ -21,6 +21,8 @@ import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedAr
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import {
   HEADER_QUICK_ACTIONS,
+  HEADER_QUICK_ACTION_CHIP_FIXED_CLASS,
+  HEADER_QUICK_ACTION_CHIP_ICON_CLASS,
   HeaderQuickActionCard,
 } from '../components/Layout/HeaderCashActionsPanel'
 import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
@@ -332,14 +334,14 @@ export default function CustomersPage({
             to="/"
             aria-label="Güncel Durum"
             title="Güncel Durum"
-            className={`group flex h-[52px] min-w-[8.5rem] max-w-full items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0 ${
+            className={`${HEADER_QUICK_ACTION_CHIP_FIXED_CLASS} ${
               listKind === 'supplier'
                 ? 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
                 : 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
             }`}
           >
-            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/40 text-[#ffffff]">
-              <ChevronLeft className="h-4 w-4 text-[#ffffff]" aria-hidden />
+            <span className={HEADER_QUICK_ACTION_CHIP_ICON_CLASS}>
+              <ChevronLeft className="h-4 w-4 shrink-0 text-[#ffffff]" strokeWidth={2.25} aria-hidden />
             </span>
             <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
               Güncel Durum
@@ -350,6 +352,7 @@ export default function CustomersPage({
         titleClassName="!min-w-0 !overflow-visible"
         actions={
           <HeaderQuickActionCard
+            fixed
             action={
               HEADER_QUICK_ACTIONS.find(
                 (action) => action.id === (listKind === 'supplier' ? 'supplier' : 'customer'),
