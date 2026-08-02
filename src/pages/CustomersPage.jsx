@@ -62,7 +62,8 @@ const balanceFilterOptions = [
 ]
 const CUSTOMER_FILTER_FIELD_CLASS =
   'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
-const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !font-normal !tracking-normal !text-[var(--muted)]`
+const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !text-xs !font-extrabold !leading-none !tracking-normal !text-[var(--muted)]`
+const CUSTOMER_CHIP_TEXT_CLASS = 'truncate text-xs font-extrabold leading-none text-[var(--muted)]'
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
 const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu'
 const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill`
@@ -99,7 +100,7 @@ export default function CustomersPage({
   createLabel = 'Yeni Müşteri',
   listTitle = 'Müşteriler Listesi',
   totalLabel = 'Toplam Müşteri',
-  columnLabel = 'Müşteri',
+  columnLabel = 'Müşteriler',
   emptyTitle = 'Müşteri bulunamadı.',
   listKind = 'customer',
   createPath = '/musteriler/yeni',
@@ -320,25 +321,28 @@ export default function CustomersPage({
       <AppPageHeader
         showBack={false}
         title={
-          <Link
-            to="/"
-            aria-label="Başa dön"
-            title="Başa dön"
-            className={`group flex h-[52px] min-w-[8.5rem] max-w-full items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0 ${
-              listKind === 'supplier'
-                ? 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
-                : 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
-            }`}
-          >
-            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/40 text-[#ffffff]">
-              <ChevronLeft className="h-4 w-4 text-[#ffffff]" aria-hidden />
-            </span>
-            <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
-              {pageTitle}
-            </span>
-          </Link>
+          <>
+            <Link
+              to="/"
+              aria-label="Güncel Durum"
+              title="Güncel Durum"
+              className={`group flex h-[52px] min-w-[8.5rem] max-w-full items-center gap-2.5 rounded-xl bg-gradient-to-br px-3 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 sm:min-w-0 ${
+                listKind === 'supplier'
+                  ? 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]'
+                  : 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]'
+              }`}
+            >
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/40 text-[#ffffff]">
+                <ChevronLeft className="h-4 w-4 text-[#ffffff]" aria-hidden />
+              </span>
+              <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
+                Güncel Durum
+              </span>
+            </Link>
+            <span className="truncate">{pageTitle}</span>
+          </>
         }
-        titleClassName="!flex !min-w-0 !items-center !overflow-visible"
+        titleClassName="!flex !min-w-0 !items-center !gap-3 !overflow-visible"
         actions={
           <HeaderQuickActionCard
             action={
@@ -391,7 +395,7 @@ export default function CustomersPage({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
             </span>
-            <span className="text-xs font-normal text-[var(--muted)]">Filtre :</span>
+            <span className={CUSTOMER_CHIP_TEXT_CLASS}>Filtre :</span>
           </div>
           <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className={CUSTOMER_FILTER_FIELD_CLASS}>
@@ -463,7 +467,7 @@ export default function CustomersPage({
         dotColor="blue"
         className="customer-list-panel w-full"
         action={
-          <span className="app-titlecase-words shrink-0 text-[12px] font-semibold leading-tight text-[var(--muted)]">
+          <span className={`app-titlecase-words shrink-0 ${CUSTOMER_CHIP_TEXT_CLASS}`}>
             {filteredCustomers.length} kayıt
           </span>
         }
@@ -473,7 +477,7 @@ export default function CustomersPage({
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Marka veya ünvan ara..."
-            className="customer-filter-search"
+            className="customer-filter-search !text-xs !font-extrabold !leading-none"
           />
         </div>
 
@@ -494,10 +498,10 @@ export default function CustomersPage({
                 const display = getCustomerDisplay(customer)
                 return (
                   <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
-                    <span className="truncate text-[12px] font-bold leading-tight text-[var(--muted)]">
+                    <span className="customer-name-primary truncate text-[12px] font-extrabold leading-tight text-[var(--muted)]">
                       {display.brandShortName}
                     </span>
-                    <span className="truncate text-[12px] font-semibold leading-tight text-[var(--muted)]">
+                    <span className="customer-name-secondary font-sans truncate text-[12px] font-normal leading-tight text-[var(--muted)]">
                       {display.companyTitle}
                     </span>
                   </span>
