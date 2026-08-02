@@ -15,6 +15,7 @@ import {
   extendMembership,
   extendMembershipByAccount,
   activatePlanDirect,
+  notifyMembershipEvent,
 } from './subscriptionService.mjs'
 import {
   buildAccountRows,
@@ -432,9 +433,9 @@ async function handle(req, res, url) {
     if (method === 'POST' && membershipExtendMatch) {
       const accountId = membershipExtendMatch[1]
       try {
-        const result = await withStore((store) => {
+        const result = await withStore(async (store) => {
           seedBillingIfEmpty(store)
-          const extended = extendMembershipByAccount(store, accountId, {
+          const extended = await extendMembershipByAccount(store, accountId, {
             days: body.days ?? 7,
             mode: body.mode || 'trial',
             note: body.note || '',
@@ -457,7 +458,7 @@ async function handle(req, res, url) {
       const accountId = membershipActionMatch[1]
       const action = String(body.action || '')
       try {
-        const result = await withStore((store) => {
+        const result = await withStore(async (store) => {
           const account = (store.accounts || []).find((a) => a.id === accountId)
           if (!account) throw new Error('NOT_FOUND')
           const customer = (store.customers || []).find((c) => c.id === account.customerId)
@@ -468,6 +469,13 @@ async function handle(req, res, url) {
               customer.status = 'suspended'
               customer.subscriptionStatus = 'suspended'
             }
+            await notifyMembershipEvent(store, {
+              type: 'account_suspended',
+              accountId: account.id,
+              customerId: customer?.id || account.customerId || null,
+              endDate: customer?.licenseExpiry || account.licenseExpiry || null,
+              planName: account.plan || customer?.plan || '',
+            })
           } else if (action === 'activate') {
             account.canLogin = true
             if (account.role === 'demo_lead') account.role = 'owner'
@@ -482,6 +490,13 @@ async function handle(req, res, url) {
                 : 'trial'
               customer.subscriptionStatus = customer.status === 'trial' ? 'trialing' : 'active'
             }
+            await notifyMembershipEvent(store, {
+              type: 'account_activated',
+              accountId: account.id,
+              customerId: customer?.id || account.customerId || null,
+              endDate: customer?.licenseExpiry || account.licenseExpiry || null,
+              planName: account.plan || customer?.plan || '',
+            })
           } else if (action === 'set_plan') {
             if (!customer) throw new Error('NO_CUSTOMER')
             activatePlanDirect(
@@ -501,7 +516,10 @@ async function handle(req, res, url) {
             if (customer) {
               customer.source = 'demo_converted'
               if (!customer.licenseExpiry) {
-                extendMembership(store, customer.id, { days: body.days ?? 7, mode: 'trial' })
+                await extendMembership(store, customer.id, {
+                  days: body.days ?? 7,
+                  mode: 'trial',
+                })
               } else {
                 customer.status = 'trial'
                 customer.subscriptionStatus = 'trialing'

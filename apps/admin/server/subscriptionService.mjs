@@ -719,7 +719,11 @@ export function activatePlanDirect(store, customerId, planCode, period = 'month'
  * Staff: extend trial or paid package from admin membership panel.
  * Extends from current expiry if still in the future; otherwise from now.
  */
-export function extendMembership(store, customerId, { days = 7, mode = 'trial', note = '' } = {}) {
+export async function extendMembership(
+  store,
+  customerId,
+  { days = 7, mode = 'trial', note = '' } = {},
+) {
   const b = seedBillingIfEmpty(store)
   let customer = (store.customers || []).find((c) => c.id === customerId)
   if (!customer) {
@@ -783,7 +787,7 @@ export function extendMembership(store, customerId, { days = 7, mode = 'trial', 
 
   rebuildLicense(store, customerId, sub)
 
-  return {
+  const result = {
     customerId,
     licenseExpiry: endDate,
     status: customer.status,
@@ -792,10 +796,152 @@ export function extendMembership(store, customerId, { days = 7, mode = 'trial', 
     subscription: sub,
     snapshot: getSubscriptionSnapshot(store, customerId),
   }
+
+  await notifyMembershipEvent(store, {
+    type: asTrial ? 'trial_extended' : 'package_extended',
+    accountId: account?.id || null,
+    customerId,
+    daysAdded: addDays,
+    endDate,
+    planName: sub.planCode || customer.plan || customer.planCode || '',
+    note,
+  })
+
+  return result
+}
+
+/**
+ * Staff üye işlemi: e-posta (Resend) + store.notifications (CRM zil).
+ * type: trial_extended | package_extended | account_activated | account_suspended
+ */
+export async function notifyMembershipEvent(
+  store,
+  {
+    type,
+    accountId = null,
+    customerId = null,
+    daysAdded = null,
+    endDate = null,
+    planName = '',
+    note = '',
+  } = {},
+) {
+  const account = accountId
+    ? (store.accounts || []).find((a) => a.id === accountId)
+    : (store.accounts || []).find((a) => a.customerId === customerId)
+  const customer = customerId
+    ? (store.customers || []).find((c) => c.id === customerId)
+    : account?.customerId
+      ? (store.customers || []).find((c) => c.id === account.customerId)
+      : null
+
+  const resolvedAccountId = account?.id || accountId || null
+  const resolvedCustomerId = customer?.id || customerId || null
+  const to = account?.email || customer?.email || ''
+  const name = account?.fullName || customer?.contact || customer?.company || ''
+  const plan = planName || account?.plan || customer?.plan || customer?.planCode || ''
+
+  const copyByType = {
+    trial_extended: {
+      title: 'Deneme süreniz uzatıldı',
+      body: `Hesabınızın deneme süresi${daysAdded ? ` ${daysAdded} gün` : ''} uzatıldı.${
+        endDate ? ` Yeni bitiş tarihi: ${endDate}.` : ''
+      }`,
+      template: 'trial_extended',
+    },
+    package_extended: {
+      title: 'Paket süreniz uzatıldı',
+      body: `Paket süreniz${daysAdded ? ` ${daysAdded} gün` : ''} uzatıldı.${
+        endDate ? ` Yeni bitiş tarihi: ${endDate}.` : ''
+      }`,
+      template: 'package_extended',
+    },
+    account_activated: {
+      title: 'Hesabınız aktifleştirildi',
+      body: `Hesabınız yönetici tarafından aktifleştirildi.${
+        endDate ? ` Lisans bitiş tarihi: ${endDate}.` : ' Uygulamaya giriş yapabilirsiniz.'
+      }`,
+      template: 'account_activated',
+    },
+    account_suspended: {
+      title: 'Hesabınız askıya alındı',
+      body: 'Hesabınız yönetici tarafından askıya alındı. Giriş erişiminiz geçici olarak kapatıldı. Destek için iletişime geçebilirsiniz.',
+      template: 'account_suspended',
+    },
+  }
+  const copy = copyByType[type]
+  if (!copy) return null
+
+  if (!Array.isArray(store.notifications)) store.notifications = []
+  const notification = {
+    id: newId('ntf'),
+    title: copy.title,
+    body: copy.body,
+    type: 'membership',
+    kind: type,
+    accountId: resolvedAccountId,
+    customerId: resolvedCustomerId,
+    endDate: endDate || null,
+    daysAdded: daysAdded || null,
+    planName: plan || null,
+    note: note || null,
+    link: '/hesap/lisans',
+    createdAt: new Date().toISOString(),
+  }
+  store.notifications.unshift(notification)
+  store.notifications = store.notifications.slice(0, 2000)
+
+  const b = ensureBilling(store)
+  const logKey = `${type}:${resolvedCustomerId || resolvedAccountId}:${dayKey()}:${Date.now()}`
+  b.notificationLogs.unshift({
+    id: newId('nlog'),
+    key: logKey,
+    customerId: resolvedCustomerId,
+    accountId: resolvedAccountId,
+    type,
+    title: copy.title,
+    body: copy.body,
+    endDate: endDate || null,
+    createdAt: new Date().toISOString(),
+  })
+  b.notificationLogs = b.notificationLogs.slice(0, 2000)
+
+  let mailRow = null
+  if (to) {
+    mailRow = await sendTemplateMail(store, {
+      to,
+      template: copy.template,
+      type,
+      accountId: resolvedAccountId,
+      customerId: resolvedCustomerId,
+      data: {
+        name,
+        endDate: endDate || '—',
+        daysAdded: daysAdded ?? '—',
+        planName: plan || '—',
+        note: note || '',
+      },
+      immediate: true,
+    })
+    b.emailLogs.unshift({
+      id: mailRow?.id || newId('elog'),
+      customerId: resolvedCustomerId,
+      accountId: resolvedAccountId,
+      type,
+      to,
+      subject: copy.title,
+      body: copy.body,
+      status: mailRow?.status || (process.env.RESEND_API_KEY ? 'queued' : 'skipped_no_provider'),
+      createdAt: new Date().toISOString(),
+    })
+    b.emailLogs = b.emailLogs.slice(0, 2000)
+  }
+
+  return { notification, mail: mailRow }
 }
 
 /** Ensure account has a customer, then extend membership (admin üye paneli). */
-export function extendMembershipByAccount(
+export async function extendMembershipByAccount(
   store,
   accountId,
   { days = 7, mode = 'trial', note = '' } = {},
@@ -846,7 +992,7 @@ export function extendMembershipByAccount(
     account.customerId = customerId
   }
 
-  return extendMembership(store, account.customerId, { days, mode, note })
+  return await extendMembership(store, account.customerId, { days, mode, note })
 }
 
 export function staffMutatePlan(store, planId, patch) {

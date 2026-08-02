@@ -33,8 +33,15 @@ export async function createPlatformTicket({ subject, message, customerName, cus
   })
 }
 
+/** Staff/admin feed (all notifications). Prefer fetchAccountNotifications for CRM. */
 export async function fetchPlatformNotifications() {
   return request('notifications')
+}
+
+/** Logged-in üye hesabına özel üyelik bildirimleri (uzatma / aktif / askı). */
+export async function fetchAccountNotifications() {
+  const data = await request('auth/notifications')
+  return Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []
 }
 
 export async function fetchPlatformHealth() {

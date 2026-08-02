@@ -238,7 +238,11 @@ const menuButtonBase =
   'sidebar-menu-button sidebar-item w-full flex items-center gap-2.5 transition-colors'
 const menuLabelClass = 'sidebar-menu-label flex-1 text-left'
 const subMenuButtonBase =
-  'sidebar-menu-button block w-full px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-colors whitespace-nowrap'
+  'sidebar-submenu-leaf sidebar-menu-button block w-full px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-colors whitespace-nowrap'
+
+function SidebarSubMenu({ children, className = '' }) {
+  return <div className={`sidebar-submenu${className ? ` ${className}` : ''}`}>{children}</div>
+}
 
 function SubMenuIcon({ children }) {
   return <span className="submenu-icon-wrap shrink-0">{children}</span>
@@ -457,7 +461,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {customerOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <SidebarSubMenu>
               {visibleCustomerSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? customerSubMenuIcons[sub.icon] : null
                 return (
@@ -481,7 +485,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -510,7 +514,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {processOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <SidebarSubMenu>
               {visibleProcessSubMenus.map((sub) => (
                 <NavLink
                   key={sub.path}
@@ -523,7 +527,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   {sub.label}
                 </NavLink>
               ))}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -552,7 +556,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {expensesOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <SidebarSubMenu>
               {expensesSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? expensesSubMenuIcons[sub.icon] : null
                 return (
@@ -575,7 +579,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -604,7 +608,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {treasuryOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <SidebarSubMenu>
               {treasurySubMenus.map((sub) => {
                 const SubIcon = sub.icon ? treasurySubMenuIcons[sub.icon] : null
                 return (
@@ -628,7 +632,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -657,7 +661,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {stockOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <SidebarSubMenu>
               {stockSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? stockSubMenuIcons[sub.icon] : null
                 return (
@@ -686,7 +690,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -715,7 +719,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </button>
 
             {projectsOpen && !collapsed && (
-              <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+              <SidebarSubMenu>
                 {projectsSubMenus.map((sub) => {
                   const SubIcon = sub.icon ? projectsSubMenuIcons[sub.icon] : null
                   return (
@@ -739,7 +743,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     </NavLink>
                   )
                 })}
-              </div>
+              </SidebarSubMenu>
             )}
           </div>
         )}
@@ -771,7 +775,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {crmOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <SidebarSubMenu>
               {crmSubMenus.map((sub) => (
                 <NavLink
                   key={sub.path}
@@ -785,7 +789,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   {sub.label}
                 </NavLink>
               ))}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -842,7 +846,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {fieldSalesOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <SidebarSubMenu>
               {fieldSalesSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? fieldSalesSubMenuIcons[sub.icon] : null
                 return (
@@ -866,7 +870,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -895,7 +899,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             )}
           </button>
           {socialMediaOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 max-h-[50vh] space-y-0.5 overflow-y-auto border-l border-dark-500/50 pl-3">
+            <SidebarSubMenu className="sidebar-submenu--scroll">
               {socialMediaSubMenus.map((sub) => {
                 const SubIcon = socialMediaSubMenuIcons[sub.icon] || Sparkles
                 return (
@@ -917,7 +921,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -948,7 +952,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {hrOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <SidebarSubMenu>
               {hrSubMenus.map((sub) => {
                 const SubIcon = sub.icon ? hrSubMenuIcons[sub.icon] : null
                 return (
@@ -972,7 +976,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -1002,7 +1006,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             )}
           </button>
           {logisticsOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-dark-500/50 pl-3">
+            <SidebarSubMenu>
               {logisticsSubMenus.map((sub) => {
                 const SubIcon = logisticsSubMenuIcons[sub.icon] || ClipboardList
                 return (
@@ -1024,7 +1028,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
-            </div>
+            </SidebarSubMenu>
           )}
         </div>
 
@@ -1076,7 +1080,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
 
           {settingsOpen && !collapsed && (
-            <div className="mt-0.5 ml-3 pl-3 border-l border-dark-500/50 space-y-0.5">
+            <SidebarSubMenu>
               {filterMenuByEntitlements(settingsSubMenus, user?.entitlements)
                 .filter((sub) => {
                   if (sub.moduleCode === 'multi_company') {
@@ -1098,14 +1102,14 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 ))}
 
-              <div>
-                <div className="flex items-center gap-0.5">
+              <>
+                <div className="sidebar-submenu-leaf flex items-center gap-0.5">
                   <NavLink
                     to={DOCUMENT_CENTER_BASE}
                     end
                     onClick={handleNavigate}
                     className={({ isActive }) =>
-                      `${subMenuButtonBase} flex-1 ${
+                      `sidebar-menu-button block w-full flex-1 px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-colors whitespace-nowrap ${
                         isActive ? 'sidebar-menu-active font-medium' : ''
                       }`
                     }
@@ -1129,8 +1133,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     )}
                   </button>
                 </div>
-                {documentCenterOpen && (
-                  <div className="mt-0.5 ml-2 space-y-0.5 border-l border-dark-500/40 pl-2">
+                {documentCenterOpen ? (
+                  <SidebarSubMenu className="sidebar-submenu--nested">
                     {documentCenterChildMenus.map((child) => (
                       <NavLink
                         key={child.path}
@@ -1145,10 +1149,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                         {child.label}
                       </NavLink>
                     ))}
-                  </div>
-                )}
-              </div>
-            </div>
+                  </SidebarSubMenu>
+                ) : null}
+              </>
+            </SidebarSubMenu>
           )}
         </div>
       </nav>

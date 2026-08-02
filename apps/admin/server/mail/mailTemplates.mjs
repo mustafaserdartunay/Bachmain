@@ -294,6 +294,38 @@ export const MAIL_TEMPLATES = {
       cta: { href: `${MAIL_BRAND.appUrl()}/paketler`, label: 'Paket seç' },
     })
   },
+  trial_extended(data) {
+    return layout({
+      title: 'Deneme süreniz uzatıldı',
+      preview: data.endDate ? `Yeni bitiş: ${data.endDate}` : 'Deneme süreniz güncellendi',
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('BACHMAIN hesabınızın deneme süresi yönetici tarafından uzatıldı.')}${strongLine('Eklenen süre', `${data.daysAdded ?? '—'} gün`)}${strongLine('Yeni bitiş', data.endDate || '—')}${data.planName ? strongLine('Paket', data.planName) : ''}${p('Kesintisiz kullanmaya devam edebilirsiniz.')}`,
+      cta: { href: `${MAIL_BRAND.appUrl()}/hesap/lisans`, label: 'Lisans durumunu gör' },
+    })
+  },
+  package_extended(data) {
+    return layout({
+      title: 'Paket süreniz uzatıldı',
+      preview: data.endDate ? `Yeni bitiş: ${data.endDate}` : 'Paket süreniz güncellendi',
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('BACHMAIN paket süreniz yönetici tarafından uzatıldı.')}${strongLine('Eklenen süre', `${data.daysAdded ?? '—'} gün`)}${strongLine('Yeni bitiş', data.endDate || '—')}${data.planName ? strongLine('Paket', data.planName) : ''}${p('Hesabınız aktif şekilde kullanılmaya devam eder.')}`,
+      cta: { href: `${MAIL_BRAND.appUrl()}/hesap/lisans`, label: 'Lisans durumunu gör' },
+    })
+  },
+  account_activated(data) {
+    return layout({
+      title: 'Hesabınız aktifleştirildi',
+      preview: 'Giriş erişiminiz açıldı',
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('BACHMAIN hesabınız yönetici tarafından aktifleştirildi. Uygulamaya giriş yapabilirsiniz.')}${data.endDate ? strongLine('Lisans bitiş', data.endDate) : ''}${data.planName ? strongLine('Paket', data.planName) : ''}`,
+      cta: { href: `${MAIL_BRAND.appUrl()}/giris`, label: 'Giriş yap' },
+    })
+  },
+  account_suspended(data) {
+    return layout({
+      title: 'Hesabınız askıya alındı',
+      preview: 'Giriş erişiminiz geçici olarak kapatıldı',
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('BACHMAIN hesabınız yönetici tarafından askıya alındı. Giriş erişiminiz geçici olarak kapatıldı.')}${p('Bu işlemin bir hata olduğunu düşünüyorsanız destek ekibimizle iletişime geçin.')}${data.planName ? strongLine('Paket', data.planName) : ''}`,
+      cta: { href: `mailto:${MAIL_BRAND.supportEmail()}`, label: 'Destek ile iletişime geç' },
+    })
+  },
   email_change_request(data) {
     return layout({
       title: 'E-posta adresinizi değiştirin',

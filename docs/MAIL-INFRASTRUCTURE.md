@@ -39,7 +39,7 @@ Until verified, Resend only allows sending to the account owner email (test mode
 
 ## Templates (HTML)
 
-`welcome`, `email_verification`, `password_reset`, `password_changed`, `new_login`, `two_factor`, `subscription_purchased`, `subscription_renewed`, `package_expiring`, `package_expired`, `grace_started`, `payment_success`, `payment_failed`, `ticket_new`, `ticket_replied`, `new_message`, `campaign`, `announcement`, `invoice_created`, `trial_ending`, `test`
+`welcome`, `email_verification`, `password_reset`, `password_changed`, `new_login`, `two_factor`, `subscription_purchased`, `subscription_renewed`, `package_expiring`, `package_expired`, `grace_started`, `payment_success`, `payment_failed`, `ticket_new`, `ticket_replied`, `new_message`, `campaign`, `announcement`, `invoice_created`, `trial_ending`, `trial_extended`, `package_extended`, `account_activated`, `account_suspended`, `test`
 
 ## Admin UI
 

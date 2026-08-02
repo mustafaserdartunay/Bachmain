@@ -26,6 +26,7 @@ import {
   extendMembershipByAccount,
   activatePlanDirect,
   seedBillingIfEmpty,
+  notifyMembershipEvent,
 } from '../server/subscriptionService.mjs'
 import { startEmailChange, deleteMembershipAccount } from '../server/emailChange.mjs'
 import { handleQualityControl } from '../server/qualityControl.mjs'
@@ -91,9 +92,9 @@ async function handleMembershipMutate(req, res, body) {
 
   if (op === 'extend') {
     try {
-      const result = await withStore((store) => {
+      const result = await withStore(async (store) => {
         seedBillingIfEmpty(store)
-        const extended = extendMembershipByAccount(store, accountId, {
+        const extended = await extendMembershipByAccount(store, accountId, {
           days: body.days ?? 7,
           mode: body.mode || 'trial',
           note: body.note || '',
@@ -147,7 +148,7 @@ async function handleMembershipMutate(req, res, body) {
 
   const action = String(body.action || op)
   try {
-    const result = await withStore((store) => {
+    const result = await withStore(async (store) => {
       const account = (store.accounts || []).find((a) => a.id === accountId)
       if (!account) {
         throw Object.assign(new Error('Üye hesabı bulunamadı'), {
@@ -164,6 +165,13 @@ async function handleMembershipMutate(req, res, body) {
           customer.status = 'suspended'
           customer.subscriptionStatus = 'suspended'
         }
+        await notifyMembershipEvent(store, {
+          type: 'account_suspended',
+          accountId: account.id,
+          customerId: customer?.id || account.customerId || null,
+          endDate: customer?.licenseExpiry || account.licenseExpiry || null,
+          planName: account.plan || customer?.plan || '',
+        })
       } else if (action === 'activate') {
         account.canLogin = true
         if (account.role === 'demo_lead') account.role = 'owner'
@@ -178,6 +186,13 @@ async function handleMembershipMutate(req, res, body) {
             : 'trial'
           customer.subscriptionStatus = customer.status === 'trial' ? 'trialing' : 'active'
         }
+        await notifyMembershipEvent(store, {
+          type: 'account_activated',
+          accountId: account.id,
+          customerId: customer?.id || account.customerId || null,
+          endDate: customer?.licenseExpiry || account.licenseExpiry || null,
+          planName: account.plan || customer?.plan || '',
+        })
       } else if (action === 'set_plan') {
         if (!customer) {
           throw Object.assign(new Error('Müşteri kaydı yok'), { code: 'NO_CUSTOMER', status: 400 })
@@ -193,7 +208,7 @@ async function handleMembershipMutate(req, res, body) {
         if (customer) {
           customer.source = 'demo_converted'
           if (!customer.licenseExpiry) {
-            extendMembership(store, customer.id, { days: body.days ?? 7, mode: 'trial' })
+            await extendMembership(store, customer.id, { days: body.days ?? 7, mode: 'trial' })
           } else {
             customer.status = 'trial'
             customer.subscriptionStatus = 'trialing'
@@ -545,9 +560,9 @@ export default async function handler(req, res) {
     if (method === 'POST' && membershipExtendMatch) {
       const accountId = membershipExtendMatch[1]
       try {
-        const result = await withStore((store) => {
+        const result = await withStore(async (store) => {
           seedBillingIfEmpty(store)
-          const extended = extendMembershipByAccount(store, accountId, {
+          const extended = await extendMembershipByAccount(store, accountId, {
             days: body.days ?? 7,
             mode: body.mode || 'trial',
             note: body.note || '',
@@ -569,7 +584,7 @@ export default async function handler(req, res) {
       const accountId = membershipActionMatch[1]
       const action = String(body.action || '')
       try {
-        const result = await withStore((store) => {
+        const result = await withStore(async (store) => {
           const account = (store.accounts || []).find((a) => a.id === accountId)
           if (!account) {
             throw Object.assign(new Error('Üye hesabı bulunamadı'), {
@@ -586,6 +601,13 @@ export default async function handler(req, res) {
               customer.status = 'suspended'
               customer.subscriptionStatus = 'suspended'
             }
+            await notifyMembershipEvent(store, {
+              type: 'account_suspended',
+              accountId: account.id,
+              customerId: customer?.id || account.customerId || null,
+              endDate: customer?.licenseExpiry || account.licenseExpiry || null,
+              planName: account.plan || customer?.plan || '',
+            })
           } else if (action === 'activate') {
             account.canLogin = true
             if (account.role === 'demo_lead') account.role = 'owner'
@@ -600,6 +622,13 @@ export default async function handler(req, res) {
                 : 'trial'
               customer.subscriptionStatus = customer.status === 'trial' ? 'trialing' : 'active'
             }
+            await notifyMembershipEvent(store, {
+              type: 'account_activated',
+              accountId: account.id,
+              customerId: customer?.id || account.customerId || null,
+              endDate: customer?.licenseExpiry || account.licenseExpiry || null,
+              planName: account.plan || customer?.plan || '',
+            })
           } else if (action === 'set_plan') {
             if (!customer) {
               throw Object.assign(new Error('Müşteri kaydı yok'), {
@@ -624,7 +653,10 @@ export default async function handler(req, res) {
             if (customer) {
               customer.source = 'demo_converted'
               if (!customer.licenseExpiry) {
-                extendMembership(store, customer.id, { days: body.days ?? 7, mode: 'trial' })
+                await extendMembership(store, customer.id, {
+                  days: body.days ?? 7,
+                  mode: 'trial',
+                })
               } else {
                 customer.status = 'trial'
                 customer.subscriptionStatus = 'trialing'

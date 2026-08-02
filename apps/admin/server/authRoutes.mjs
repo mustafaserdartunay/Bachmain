@@ -228,6 +228,41 @@ export async function handleAuthApi(req, res, path, body = {}) {
     return true
   }
 
+  // Üye hesabına özel bildirimler (CRM header Bildirimler)
+  if (method === 'GET' && path === 'auth/notifications') {
+    const token = getBearerOrCookieToken(req)
+    const store = await loadStore()
+    const session = getAccountFromToken(store, token)
+    if (!session) {
+      sendJson(req, res, 401, { error: 'UNAUTHORIZED', message: 'Oturum bulunamadı' })
+      return true
+    }
+    const accountId = session.account?.id || session.user?.id || null
+    const customerId = session.account?.customerId || session.user?.customerId || null
+    const items = (store.notifications || [])
+      .filter((n) => {
+        if (!n || n.type !== 'membership') return false
+        if (accountId && n.accountId === accountId) return true
+        if (customerId && n.customerId === customerId) return true
+        return false
+      })
+      .slice(0, 50)
+      .map((n) => ({
+        id: n.id,
+        title: n.title,
+        body: n.body,
+        kind: n.kind || n.type || 'membership',
+        type: n.type || 'membership',
+        endDate: n.endDate || null,
+        daysAdded: n.daysAdded || null,
+        link: n.link || '/hesap/lisans',
+        createdAt: n.createdAt,
+        sortAt: n.createdAt,
+      }))
+    sendJson(req, res, 200, { ok: true, items })
+    return true
+  }
+
   if (method === 'GET' && path.startsWith('b2b/portal/')) {
     const token = decodeURIComponent(path.slice('b2b/portal/'.length))
     const ip =

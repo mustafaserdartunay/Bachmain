@@ -612,11 +612,11 @@ export async function handlePlatformAdminApi(req, res, path, body = {}) {
     }
 
     if (action === 'reset-trial') {
-      const result = await withStore((store) => {
+      const result = await withStore(async (store) => {
         seedBillingIfEmpty(store)
         const { account, customer } = findAccount(store, userId)
         if (account) {
-          const extended = extendMembershipByAccount(store, account.id, {
+          const extended = await extendMembershipByAccount(store, account.id, {
             days: 7,
             mode: 'trial',
             note: 'staff_reset_trial',
@@ -637,7 +637,7 @@ export async function handlePlatformAdminApi(req, res, path, body = {}) {
           }
         }
         if (customer) {
-          const extended = extendMembership(store, customer.id, {
+          const extended = await extendMembership(store, customer.id, {
             days: 7,
             mode: 'trial',
             note: 'staff_reset_trial',
