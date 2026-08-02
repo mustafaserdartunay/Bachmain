@@ -62,6 +62,9 @@ const sections = [
   },
 ]
 
+const seoKeywords =
+  'CRM, ERP, Ön Muhasebe, Muhasebe Programı, Online Muhasebe, Bulut Muhasebe, Ticari Yazılım, İşletme Yönetim Programı, İş Yönetim Sistemi, Kurumsal Yazılım, KOBİ Yazılımı, Şirket Yönetim Programı, Web Tabanlı ERP, Bulut ERP, Online ERP, ERP Yazılımı, ERP Sistemi, ERP Çözümü, ERP Programı Türkiye, CRM Yazılımı, CRM Sistemi, Online CRM, Bulut CRM, Kurumsal CRM, Satış CRM, Müşteri Yönetimi, Müşteri Takip Programı, Müşteri İlişkileri Yönetimi, Lead Yönetimi, Satış Yönetimi, Satış Takip Programı, Teklif Yönetimi, Teklif Hazırlama Programı, Teklif Takip Programı, Sipariş Yönetimi, Sipariş Takip Programı, Satın Alma Yönetimi, Satın Alma Programı, Satın Alma Takibi, Stok Takip Programı, Stok Yönetimi, Depo Yönetimi, Depo Takip Sistemi, Envanter Yönetimi, Barkod Sistemi, Ürün Yönetimi, Ürün Takibi, Üretim Yönetimi, Üretim Takip Programı, Üretim Planlama, MRP Programı, Üretim ERP, Sevkiyat Takibi, Lojistik Yönetimi, Kargo Yönetimi, İrsaliye Yönetimi, Cari Hesap Takibi, Cari Yönetimi, Cari Kart Yönetimi, Kasa Takibi, Banka Takibi, Çek Senet Takibi, Gelir Gider Takibi, Finans Yönetimi, Finans Takibi, Tahsilat Takibi, Ödeme Takibi, Nakit Akışı Yönetimi, Fatura Programı, E-Fatura, E-Arşiv, E-İrsaliye, E-Defter, E-Dönüşüm, Vergi Hesaplama, KDV Hesaplama, Maliyet Hesaplama, Ürün Maliyet Hesaplama, Karlılık Analizi, Raporlama, Finansal Raporlama, Dashboard, Yönetim Paneli, Analiz Raporları, İş Zekâsı, BI Dashboard, Görev Yönetimi, Proje Yönetimi, İş Akışı Yönetimi, Workflow, Ticket Sistemi, Destek Talep Sistemi, Servis Yönetimi, Müşteri Destek Sistemi, Çağrı Yönetimi, Randevu Yönetimi, Takvim Yönetimi, İnsan Kaynakları, İK Yazılımı, Personel Yönetimi, Personel Takip, Puantaj Sistemi, Bordro Programı, İzin Yönetimi, Performans Yönetimi, B2B Portalı, Bayi Yönetim Sistemi, Bayi Otomasyonu, Tedarikçi Yönetimi, Tedarik Zinciri Yönetimi, Tedarikçi Portalı, E-Ticaret Entegrasyonu, Pazaryeri Entegrasyonu, WhatsApp Entegrasyonu, E-Posta Entegrasyonu, SMS Entegrasyonu, Sosyal Medya Entegrasyonu, API Entegrasyonu, Yapay Zekâ Destekli CRM, Yapay Zekâ Destekli ERP, AI CRM, AI ERP, Dijital Dönüşüm, İş Otomasyonu, Süreç Yönetimi, Doküman Yönetimi, Dosya Yönetimi, Elektronik Onay Sistemi, Abonelik Yönetimi, SaaS ERP, SaaS CRM, Bulut Yazılım, Online İş Yönetimi, Mobil ERP, Mobil CRM, Çok Şubeli Yönetim, Franchise Yönetimi, Şube Yönetimi, Satış Analizi, Müşteri Analizi, Ürün Analizi, KPI Takibi, OKR Takibi, İş Performansı, Kurumsal Kaynak Planlama, Ticari Otomasyon, İş Takip Programı, Kurumsal Otomasyon, BachMain, BachMain CRM, BachMain ERP, BachMain Muhasebe, BachMain Ön Muhasebe, BachMain İş Yönetim Sistemi.'
+
 const faqs = [
   {
     q: 'BachMain nedir?',
@@ -114,10 +117,11 @@ export default function HomeSeoContent() {
             </p>
 
             <div className="home-seo-body">
-              {sections.map((item) => (
+              {sections.map((item, index) => (
                 <section key={item.title} className="home-seo-block">
                   <h3>{item.title}</h3>
                   <p>{item.body}</p>
+                  {index === sections.length - 1 ? <p>{seoKeywords}</p> : null}
                 </section>
               ))}
             </div>
