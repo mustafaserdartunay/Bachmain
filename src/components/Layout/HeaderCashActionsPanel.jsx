@@ -99,7 +99,7 @@ export function HeaderQuickActionCard({ action, fixed = false, className = '' })
       <span className={HEADER_QUICK_ACTION_CHIP_ICON_CLASS}>
         <Icon className="h-4 w-4 shrink-0 text-[#ffffff]" strokeWidth={2.25} aria-hidden />
       </span>
-      <span className="truncate text-xs font-extrabold leading-none text-[#ffffff]">
+      <span className="min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[#ffffff]">
         {action.title}
       </span>
     </Link>

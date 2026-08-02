@@ -1602,6 +1602,16 @@ html:not(.night) .app-responsive .text-gray-500 {
   text-transform: capitalize;
 }
 
+/* Header banner chip labels — yf size/weight (white for contrast on gradient) */
+.app-header-banner a span.truncate,
+.app-header-banner .group span.min-w-0.truncate {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+}
+
+
 .app-responsive .form-label {
   color: var(--muted);
   font-size: 10px;
