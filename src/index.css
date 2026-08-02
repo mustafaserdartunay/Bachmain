@@ -2099,6 +2099,9 @@ html.night .ios-cell-value .form-input::placeholder {
   color: rgba(235, 235, 245, 0.3) !important;
 }
 
+/* az — cam dropdown zemin (müşteri list/filter menü referansı) */
+.az,
+.app-dropdown-portal.az,
 .app-dropdown-portal {
   z-index: 10000;
   background: rgba(255, 255, 255, 0.38) !important;

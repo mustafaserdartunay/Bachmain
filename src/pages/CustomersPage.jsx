@@ -69,10 +69,10 @@ const CUSTOMER_TYPE_CLASS =
 const CUSTOMER_FILTER_LABEL_CLASS = `!mb-0 shrink-0 ${CUSTOMER_TYPE_CLASS}`
 const CUSTOMER_CHIP_TEXT_CLASS = CUSTOMER_TYPE_CLASS
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
-const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu customers-page-menu'
+const CUSTOMER_FILTER_MENU_CLASS = 'az customer-filter-dropdown-menu customers-page-menu'
 const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill`
 const CUSTOMER_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max max-w-full'
-const CUSTOMER_LIST_MENU_CLASS = 'customers-page-menu !min-w-[18rem] w-[18rem]'
+const CUSTOMER_LIST_MENU_CLASS = 'az customers-page-menu !min-w-[18rem] w-[18rem]'
 
 /** yfb + balance tone: alacak (>) green, borç (<) red, sıfır muted */
 function balanceClass(balance) {
