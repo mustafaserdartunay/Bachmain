@@ -342,7 +342,8 @@ export default function CustomersPage({
             </span>
           </Link>
         }
-        centerTitle={sidebarTitle}
+        centerTitle={String(sidebarTitle || '').toLocaleUpperCase('tr-TR')}
+        centerTitleClassName="uppercase"
         titleClassName="!min-w-0 !overflow-visible"
         actions={
           <HeaderQuickActionCard
@@ -364,28 +365,28 @@ export default function CustomersPage({
             title: totalLabel,
             value: scopedProfiles.length,
             icon: Users,
-            valueTone: 'text-[#8b5cf6]',
+            valueTone: 'text-violet-800',
           },
           {
             title: 'Aktif Cari',
             value: filteredCustomers.length,
             icon: CheckCircle2,
             tone: 'emerald',
-            valueTone: 'text-[#2563eb]',
+            valueTone: 'text-blue-800',
           },
           {
             title: 'Toplam Ödenecek',
             value: formatTreasuryCurrency(totalPayable),
             icon: WalletCards,
             tone: 'purple',
-            valueTone: 'red',
+            valueTone: 'text-red-700',
           },
           {
             title: 'Toplam Tahsil Edilecek',
             value: formatTreasuryCurrency(totalReceivable),
             icon: WalletCards,
             tone: 'orange',
-            valueTone: 'emerald',
+            valueTone: 'text-emerald-800',
           },
         ]}
       />
@@ -486,15 +487,15 @@ export default function CustomersPage({
         <DataTable
           emptyTitle={emptyTitle}
           emptyDescription="Arama veya segment filtresini değiştirin."
-          headerClassName={`h-[var(--ds-row-h,2.75rem)] px-3 app-titlecase-words ${CUSTOMER_TYPE_CLASS}`}
-          mobileHeaderClassName={`app-titlecase-words ${CUSTOMER_TYPE_CLASS}`}
+          headerClassName={`h-[var(--ds-row-h,2.75rem)] px-3 ${CUSTOMER_TYPE_CLASS}`}
+          mobileHeaderClassName={CUSTOMER_TYPE_CLASS}
           data={filteredCustomers}
           getRowId={(customer) => customer.id}
           onRowClick={(customer) => navigate(`/musteriler/${customer.id}`)}
           columns={[
             {
               id: 'name',
-              header: columnLabel,
+              header: String(columnLabel || '').toLocaleUpperCase('tr-TR'),
               sortable: true,
               accessorKey: 'name',
               className: 'min-w-[18rem] w-[44%]',
@@ -514,7 +515,7 @@ export default function CustomersPage({
             },
             {
               id: 'type',
-              header: 'Tipi',
+              header: 'TİPİ',
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -541,7 +542,7 @@ export default function CustomersPage({
             },
             {
               id: 'representative',
-              header: 'Temsilci',
+              header: 'TEMSİLCİ',
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -573,7 +574,7 @@ export default function CustomersPage({
             },
             {
               id: 'scoring',
-              header: 'Puantaj',
+              header: 'PUANTAJ',
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {

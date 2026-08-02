@@ -1154,7 +1154,7 @@ textarea:not(.form-input)::placeholder {
   padding: 0.75rem 1rem;
 }
 
-.customer-summary-metrics .app-page-metric p,
+.customer-summary-metrics .app-page-metric p:not(.text-xl),
 .customer-summary-metrics .app-page-metric .app-titlecase-words,
 .customer-summary-metrics .app-page-metric span {
   font-size: 14px !important;
@@ -1169,6 +1169,20 @@ textarea:not(.form-input)::placeholder {
   font-size: 14px !important;
   font-weight: 400 !important;
   line-height: 1.25 !important;
+}
+
+/* Customer summary metric values — dark tones (override page muted) */
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-violet-800 {
+  color: #5b21b6 !important;
+}
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-blue-800 {
+  color: #1e40af !important;
+}
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-red-700 {
+  color: #b91c1c !important;
+}
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-emerald-800 {
+  color: #065f46 !important;
 }
 
 /* Customers page typography: 14px / 400 / muted (shell header banner excluded) */
