@@ -323,6 +323,50 @@ export function replyB2bTicket(ticketId, message, author = 'Yönetici') {
   return tickets[index]
 }
 
+/** Header zil bildirimleri — açık ticketlar ve son cevaplar */
+export function getB2bTicketNotifications({ replyWindowMs = 7 * 24 * 60 * 60 * 1000 } = {}) {
+  const tickets = readB2bTickets()
+  const notifications = []
+  const now = Date.now()
+
+  tickets.forEach((ticket) => {
+    if (ticket.status === 'Açık') {
+      notifications.push({
+        id: `b2b-ticket-${ticket.id}`,
+        kind: 'ticket',
+        entityId: ticket.id,
+        title: ticket.customerName || 'B2B Canlı Not',
+        subtitle: ticket.message,
+        detail: 'Yanıt bekleniyor',
+        date: String(ticket.createdAt || '').slice(0, 10),
+        sortAt: ticket.createdAt || '',
+        urgency: 'now',
+        link: '/yonetici-kontrol',
+      })
+    }
+
+    ;(ticket.replies || []).forEach((reply) => {
+      const at = reply.at || ''
+      const age = at ? now - new Date(at).getTime() : Number.POSITIVE_INFINITY
+      if (!Number.isFinite(age) || age > replyWindowMs) return
+      notifications.push({
+        id: `b2b-reply-${reply.id}`,
+        kind: 'ticket-reply',
+        entityId: ticket.id,
+        title: `${reply.author || 'Yönetici'} yanıtladı`,
+        subtitle: reply.message,
+        detail: ticket.customerName || 'B2B Canlı Not',
+        date: String(at).slice(0, 10),
+        sortAt: at,
+        urgency: 'today',
+        link: '/yonetici-kontrol',
+      })
+    })
+  })
+
+  return notifications
+}
+
 export function setCustomPrice(customerId, productId, price) {
   const map = readB2bAccessMap()
   const access = map[customerId] || enableB2bAccess(customerId)
