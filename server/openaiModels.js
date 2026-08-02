@@ -71,6 +71,53 @@ function splitSystemMessages(messages = []) {
   }
 }
 
+const JSON_MODE_NUDGE = 'Respond with valid JSON only.'
+
+/** OpenAI json_object mode requires the word "json" in the request messages/input. */
+export function contentMentionsJson(value) {
+  return /json/i.test(String(value || ''))
+}
+
+/**
+ * Ensure chat-completions `messages` include the word "json" when response_format is json_object.
+ * Prefers appending to the last user message; otherwise adds a short user nudge.
+ */
+export function ensureJsonWordInChatMessages(messages = []) {
+  const list = Array.isArray(messages) ? messages.filter((item) => item?.role && item.content != null) : []
+  if (list.some((item) => contentMentionsJson(item.content))) return list
+
+  const next = list.map((item) => ({ ...item, content: String(item.content) }))
+  for (let i = next.length - 1; i >= 0; i -= 1) {
+    if (next[i].role === 'user') {
+      next[i] = { ...next[i], content: `${next[i].content}\n\n${JSON_MODE_NUDGE}` }
+      return next
+    }
+  }
+  if (next.length && (next[0].role === 'system' || next[0].role === 'developer')) {
+    next[0] = { ...next[0], content: `${next[0].content}\n\n${JSON_MODE_NUDGE}` }
+    return next
+  }
+  return [...next, { role: 'user', content: JSON_MODE_NUDGE }]
+}
+
+/**
+ * Ensure Responses API `input` includes the word "json" (instructions alone are not enough).
+ */
+export function ensureJsonWordInResponsesInput(input = []) {
+  const list = Array.isArray(input) ? input.map((item) => ({ ...item, content: String(item.content || '') })) : []
+  if (list.some((item) => contentMentionsJson(item.content))) {
+    return list.length ? list : [{ role: 'user', content: JSON_MODE_NUDGE }]
+  }
+
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    if (list[i].role === 'user') {
+      list[i] = { ...list[i], content: `${list[i].content}\n\n${JSON_MODE_NUDGE}` }
+      return list
+    }
+  }
+  return [...list, { role: 'user', content: JSON_MODE_NUDGE }]
+}
+
 export function buildChatCompletionBody({
   model,
   messages,
@@ -80,9 +127,10 @@ export function buildChatCompletionBody({
   maxCompletionTokens,
 } = {}) {
   const selected = resolveChatModel(model)
+  const resolvedMessages = json ? ensureJsonWordInChatMessages(messages) : messages
   const body = {
     model: selected,
-    messages,
+    messages: resolvedMessages,
   }
 
   if (json) {
@@ -111,16 +159,26 @@ export function buildResponsesBody({
 } = {}) {
   const selected = resolveChatModel(model)
   const { instructions, input } = splitSystemMessages(messages)
+  const resolvedInput = json
+    ? ensureJsonWordInResponsesInput(input)
+    : input.length
+      ? input
+      : [{ role: 'user', content: 'Yanıt üret.' }]
+
   const body = {
     model: selected,
-    input: input.length ? input : [{ role: 'user', content: 'Yanıt üret.' }],
+    input: resolvedInput.length ? resolvedInput : [{ role: 'user', content: JSON_MODE_NUDGE }],
     reasoning: {
       effort: resolveReasoningEffort(reasoningEffort),
     },
   }
 
   if (instructions) {
-    body.instructions = instructions
+    body.instructions = json && !contentMentionsJson(instructions)
+      ? `${instructions}\n\n${JSON_MODE_NUDGE}`
+      : instructions
+  } else if (json) {
+    body.instructions = JSON_MODE_NUDGE
   }
 
   if (json) {
