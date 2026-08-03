@@ -205,7 +205,7 @@ export default function CustomerDeletedArchivedPanel({
                       <button
                         type="button"
                         onClick={() => setPendingPermanentDelete(item)}
-                        className="customer-permanent-delete-action inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[transform,background-color,color] hover:scale-110 hover:bg-red-500/15 hover:text-red-600"
+                        className="customer-permanent-delete-action inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/15 p-1 text-red-500 transition-[transform,background-color,color] hover:scale-110 hover:bg-red-500/25 hover:text-red-600"
                         aria-label={`${item.label} kalıcı olarak sil`}
                         title="Sil"
                       >
