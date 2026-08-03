@@ -23,6 +23,7 @@ function sortRows(rows, sort) {
  *
  * columns: [{ id, header, accessorKey?, cell?, sortable?, hideOnMobile?, className? }]
  * getRowActions?: (row) => MoreMenu items
+ * framed?: bordered table chrome (default true). false = panel/inset rows, no outer frame.
  */
 const DEFAULT_TH_CLASS =
   'h-[var(--ds-row-h,2.75rem)] px-3 text-ds-caption font-semibold uppercase tracking-wide text-ds-muted'
@@ -40,6 +41,7 @@ export function DataTable({
   onRowClick,
   headerClassName = DEFAULT_TH_CLASS,
   mobileHeaderClassName = DEFAULT_MOBILE_HEADER_CLASS,
+  framed = true,
 }) {
   const [sort, setSort] = useState({ key: null, dir: 'asc' })
   const rows = useMemo(() => sortRows(data, sort), [data, sort])
@@ -56,12 +58,26 @@ export function DataTable({
     return <EmptyState title={emptyTitle} description={emptyDescription} className={className} />
   }
 
+  const desktopShellClass = framed
+    ? 'hidden overflow-x-auto rounded-ds-lg border border-ds-border md:block'
+    : 'hidden overflow-x-auto md:block'
+  const tableClass = framed
+    ? 'w-full min-w-[640px] border-collapse text-left'
+    : 'w-full min-w-[640px] border-separate border-spacing-y-2 text-left'
+  const theadClass = framed ? 'bg-[var(--ds-surface-muted)]' : 'bg-transparent'
+  const rowClass = framed
+    ? `border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${onRowClick ? 'cursor-pointer' : ''}`
+    : `app-metric-row transition-colors duration-hover ${onRowClick ? 'cursor-pointer' : ''}`
+  const mobileCardClass = framed
+    ? `rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs ${onRowClick ? 'cursor-pointer' : ''}`
+    : `glass-inset glass-inset-hover app-metric-row p-4 ${onRowClick ? 'cursor-pointer' : ''}`
+
   return (
     <div className={className}>
       {/* Desktop / tablet */}
-      <div className="hidden overflow-x-auto rounded-ds-lg border border-ds-border md:block">
-        <table className="w-full min-w-[640px] border-collapse text-left">
-          <thead className="bg-[var(--ds-surface-muted)]">
+      <div className={desktopShellClass}>
+        <table className={tableClass}>
+          <thead className={theadClass}>
             <tr>
               {columns.map((col) => (
                 <th
@@ -109,38 +125,39 @@ export function DataTable({
             {rows.map((row, index) => {
               const id = getRowId(row, index)
               const actions = getRowActions?.(row) || []
+              const cells = columns.map((col) => {
+                const raw = col.accessorKey ? row[col.accessorKey] : undefined
+                const content = col.cell ? col.cell(row) : raw
+                const text =
+                  content == null
+                    ? ''
+                    : String(
+                        typeof content === 'string' || typeof content === 'number'
+                          ? content
+                          : '',
+                      )
+                return (
+                  <td
+                    key={col.id}
+                    className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-ds-body text-ds-ink ${col.className || ''}`}
+                  >
+                    {typeof content === 'string' || typeof content === 'number' ? (
+                      <Tooltip content={text.length > 28 ? text : undefined}>
+                        <span className="block truncate">{content}</span>
+                      </Tooltip>
+                    ) : (
+                      content
+                    )}
+                  </td>
+                )
+              })
               return (
                 <tr
                   key={id}
-                  className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${onRowClick ? 'cursor-pointer' : ''}`}
+                  className={rowClass}
                   onClick={() => onRowClick?.(row)}
                 >
-                  {columns.map((col) => {
-                    const raw = col.accessorKey ? row[col.accessorKey] : undefined
-                    const content = col.cell ? col.cell(row) : raw
-                    const text =
-                      content == null
-                        ? ''
-                        : String(
-                            typeof content === 'string' || typeof content === 'number'
-                              ? content
-                              : '',
-                          )
-                    return (
-                      <td
-                        key={col.id}
-                        className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-ds-body text-ds-ink ${col.className || ''}`}
-                      >
-                        {typeof content === 'string' || typeof content === 'number' ? (
-                          <Tooltip content={text.length > 28 ? text : undefined}>
-                            <span className="block truncate">{content}</span>
-                          </Tooltip>
-                        ) : (
-                          content
-                        )}
-                      </td>
-                    )
-                  })}
+                  {cells}
                   {getRowActions ? (
                     <td
                       className="h-[var(--ds-row-h,2.75rem)] w-14 px-2 text-center align-middle"
@@ -169,7 +186,7 @@ export function DataTable({
           return (
             <article
               key={id}
-              className={`rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs ${onRowClick ? 'cursor-pointer' : ''}`}
+              className={mobileCardClass}
               onClick={() => onRowClick?.(row)}
             >
               <div className="mb-2 flex items-start justify-between gap-2">

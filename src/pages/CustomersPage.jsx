@@ -64,21 +64,18 @@ const balanceFilterOptions = [
 ]
 const CUSTOMER_FILTER_FIELD_CLASS =
   'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
-const CUSTOMER_TYPE_CLASS =
-  'min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]'
-const CUSTOMER_FILTER_LABEL_CLASS = `!mb-0 shrink-0 ${CUSTOMER_TYPE_CLASS}`
-const CUSTOMER_CHIP_TEXT_CLASS = CUSTOMER_TYPE_CLASS
+const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !text-xs !font-extrabold !leading-none !tracking-normal !text-[var(--muted)]`
+const CUSTOMER_CHIP_TEXT_CLASS = 'truncate text-xs font-extrabold leading-none text-[var(--muted)]'
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
-const CUSTOMER_FILTER_MENU_CLASS = 'az customer-filter-dropdown-menu customers-page-menu'
+const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu'
 const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill`
 const CUSTOMER_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max max-w-full'
-const CUSTOMER_LIST_MENU_CLASS = 'az customers-page-menu !min-w-[18rem] w-[18rem]'
+const CUSTOMER_LIST_MENU_CLASS = '!min-w-[18rem] w-[18rem]'
 
-/** yfb + balance tone: alacak (>) green, borç (<) red, sıfır muted */
 function balanceClass(balance) {
-  if (balance > 0) return 'customer-balance-positive'
-  if (balance < 0) return 'customer-balance-negative'
-  return 'customer-balance-zero'
+  if (balance > 0) return 'text-[#10b981]'
+  if (balance < 0) return 'text-[#e11d48]'
+  return 'text-[var(--muted)]'
 }
 
 function currentBalance(customer, movements) {
@@ -327,7 +324,7 @@ export default function CustomersPage({
       : customerSubMenus.find((item) => item.path === '/musteriler')?.label || pageTitle
 
   return (
-    <AppPageShell className="customers-page-type w-full">
+    <AppPageShell className="w-full">
       <AppPageHeader
         showBack={false}
         title={
@@ -335,16 +332,19 @@ export default function CustomersPage({
             to="/"
             aria-label="Güncel Durum"
             title="Güncel Durum"
-            className="customer-page-back-link group inline-flex shrink-0 items-center gap-2 rounded-xl px-1 py-1 text-[var(--muted)] transition-opacity hover:opacity-80"
+            className="group inline-flex min-w-0 items-center gap-2 rounded-xl px-1 py-1 transition-opacity hover:opacity-80"
           >
-            <ChevronLeft className="customer-page-back-link-icon h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-            <span className="customer-page-back-link-label min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+            <ChevronLeft
+              className="h-4 w-4 shrink-0 text-[var(--ink)]"
+              strokeWidth={2.25}
+              aria-hidden
+            />
+            <span className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">
               Güncel Durum
             </span>
           </Link>
         }
-        centerTitle={String(sidebarTitle || '').toLocaleUpperCase('tr-TR')}
-        centerTitleClassName="uppercase"
+        centerTitle={sidebarTitle}
         titleClassName="!min-w-0 !overflow-visible"
         actions={
           <HeaderQuickActionCard
@@ -366,28 +366,28 @@ export default function CustomersPage({
             title: totalLabel,
             value: scopedProfiles.length,
             icon: Users,
-            valueTone: 'text-violet-800',
+            valueTone: 'text-[#8b5cf6]',
           },
           {
             title: 'Aktif Cari',
             value: filteredCustomers.length,
             icon: CheckCircle2,
             tone: 'emerald',
-            valueTone: 'text-blue-800',
+            valueTone: 'text-[#2563eb]',
           },
           {
             title: 'Toplam Ödenecek',
             value: formatTreasuryCurrency(totalPayable),
             icon: WalletCards,
             tone: 'purple',
-            valueTone: 'text-red-700',
+            valueTone: 'red',
           },
           {
             title: 'Toplam Tahsil Edilecek',
             value: formatTreasuryCurrency(totalReceivable),
             icon: WalletCards,
             tone: 'orange',
-            valueTone: 'text-emerald-800',
+            valueTone: 'emerald',
           },
         ]}
       />
@@ -471,8 +471,8 @@ export default function CustomersPage({
         dotColor="blue"
         className="customer-list-panel w-full"
         action={
-          <span className={`shrink-0 ${CUSTOMER_CHIP_TEXT_CLASS}`}>
-            {filteredCustomers.length} Kayıt
+          <span className={`app-titlecase-words shrink-0 ${CUSTOMER_CHIP_TEXT_CLASS}`}>
+            {filteredCustomers.length} kayıt
           </span>
         }
       >
@@ -481,22 +481,21 @@ export default function CustomersPage({
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Marka veya ünvan ara..."
-            className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+            className="customer-filter-search !text-xs !font-extrabold !leading-none"
           />
         </div>
 
         <DataTable
+          framed={false}
           emptyTitle={emptyTitle}
           emptyDescription="Arama veya segment filtresini değiştirin."
-          headerClassName={`h-[var(--ds-row-h,2.75rem)] px-3 ${CUSTOMER_TYPE_CLASS}`}
-          mobileHeaderClassName={CUSTOMER_TYPE_CLASS}
           data={filteredCustomers}
           getRowId={(customer) => customer.id}
           onRowClick={(customer) => navigate(`/musteriler/${customer.id}`)}
           columns={[
             {
               id: 'name',
-              header: String(columnLabel || '').toLocaleUpperCase('tr-TR'),
+              header: columnLabel.toLocaleUpperCase('tr-TR'),
               sortable: true,
               accessorKey: 'name',
               className: 'min-w-[18rem] w-[44%]',
@@ -504,10 +503,10 @@ export default function CustomersPage({
                 const display = getCustomerDisplay(customer)
                 return (
                   <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
-                    <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                    <span className="customer-name-primary truncate text-[12px] font-extrabold leading-tight text-[var(--muted)]">
                       {display.brandShortName}
                     </span>
-                    <span className="customer-name-secondary font-sans truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
+                    <span className="customer-name-secondary font-sans truncate text-[12px] font-normal leading-tight text-[var(--muted)]">
                       {display.companyTitle}
                     </span>
                   </span>
@@ -608,9 +607,7 @@ export default function CustomersPage({
               cell: (customer) => {
                 const balance = currentBalance(customer, movements)
                 return (
-                  <span
-                    className={`customer-balance-amount tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceClass(balance)}`}
-                  >
+                  <span className={`font-semibold tabular-nums ${balanceClass(balance)}`}>
                     {formatTreasuryCurrency(balance)}
                   </span>
                 )
@@ -647,7 +644,7 @@ export default function CustomersPage({
                       id: 'portal-view',
                       label: 'B2B Panelini Gör',
                       icon: Eye,
-                      tone: 'orange',
+                      tone: 'success',
                       onClick: () =>
                         window.open(getPortalUrl(portalAccess.accessToken), '_blank', 'noreferrer'),
                     },
@@ -690,16 +687,16 @@ export default function CustomersPage({
         }
       >
         <div className="space-y-4">
-          <p className="text-[14px] font-normal leading-tight text-[var(--muted)]">
+          <p className="text-sm leading-relaxed text-[var(--muted)]">
             Müşteriniz kendisine özel bağlantıdan cari hareketlerini, teklif ve siparişlerini,
             ürünlerini ve üretim durumunu görüntüleyebilir.
           </p>
           <div className={`${APP_SURFACE_PANEL_CLASS} space-y-3 p-4`}>
             <div>
-              <p className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
                 Müşteri
               </p>
-              <p className="mt-1 text-[14px] font-normal leading-tight text-[var(--ink)]">
+              <p className="mt-1 text-sm font-semibold text-[var(--ink)]">
                 {b2bDialogCustomer
                   ? getCustomerDisplay(b2bDialogCustomer).brandShortName ||
                     getCustomerDisplay(b2bDialogCustomer).companyTitle
@@ -707,21 +704,21 @@ export default function CustomersPage({
               </p>
             </div>
             <div>
-              <p className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
                 Davet E-postası
               </p>
-              <p className="mt-1 text-[14px] font-normal leading-tight text-[var(--ink)]">
+              <p className="mt-1 text-sm font-semibold text-[var(--ink)]">
                 {b2bDialogCustomer?.email || 'Kayıtlı e-posta bulunamadı'}
               </p>
             </div>
           </div>
           {b2bNotice ? (
-            <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-[14px] font-normal leading-tight text-emerald-600">
+            <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-600">
               {b2bNotice}
             </p>
           ) : null}
           {b2bError ? (
-            <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-[14px] font-normal leading-tight text-rose-600">
+            <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-600">
               {b2bError}
             </p>
           ) : null}
