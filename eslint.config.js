@@ -60,7 +60,7 @@ export default [
     },
   },
   {
-    files: ['apps/api/src/**/*.{ts,tsx}'],
+    files: ['apps/api/src/**/*.{ts,tsx}', 'src/ai/**/*.{ts,tsx}'],
     languageOptions: {
       globals: globals.node,
     },
