@@ -198,14 +198,14 @@ export default function CustomerDeletedArchivedPanel({
                       <button
                         type="button"
                         onClick={() => handleRestore(item)}
-                        className="customer-restore-action inline-flex items-center gap-1.5 rounded-lg bg-[rgba(37,99,235,0.16)] px-2.5 py-1.5 text-[14px] font-normal leading-tight text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-[rgba(37,99,235,0.22)] hover:text-blue-700"
+                        className="customer-restore-action inline-flex items-center gap-1.5 rounded-lg bg-transparent px-2.5 py-1.5 text-[14px] font-normal leading-tight text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-[rgba(37,99,235,0.16)] hover:text-blue-700"
                       >
                         <RotateCcw className="h-3.5 w-3.5" /> Geri Yükle
                       </button>
                       <button
                         type="button"
                         onClick={() => setPendingPermanentDelete(item)}
-                        className="customer-permanent-delete-action inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/15 p-1 text-red-500 transition-[transform,background-color,color] hover:scale-110 hover:bg-red-500/25 hover:text-red-600"
+                        className="customer-permanent-delete-action inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[transform,background-color,color] hover:scale-110 hover:bg-red-500/15 hover:text-red-600"
                         aria-label={`${item.label} kalıcı olarak sil`}
                         title="Sil"
                       >
