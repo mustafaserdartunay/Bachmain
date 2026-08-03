@@ -1341,14 +1341,14 @@ textarea:not(.form-input)::placeholder {
   opacity: 1 !important;
   visibility: visible !important;
   color: #2563eb !important;
-  background: rgba(37, 99, 235, 0.16) !important;
+  background: transparent !important;
 }
 
 .customer-filter-dropdown-menu button[title='Düzenle']:hover,
 .customers-page-menu button[title='Düzenle']:hover,
 .app-dropdown-portal button.customer-option-edit-btn:hover,
 .app-dropdown-portal button[title='Düzenle']:hover {
-  background: rgba(37, 99, 235, 0.28) !important;
+  background: rgba(37, 99, 235, 0.16) !important;
   color: #1d4ed8 !important;
   transform: scale(1.1);
 }
@@ -1360,14 +1360,14 @@ textarea:not(.form-input)::placeholder {
   opacity: 1 !important;
   visibility: visible !important;
   color: #ef4444 !important;
-  background: rgba(239, 68, 68, 0.15) !important;
+  background: transparent !important;
 }
 
 .customer-filter-dropdown-menu button[title='Sil']:hover,
 .customers-page-menu button[title='Sil']:hover,
 .app-dropdown-portal button.customer-option-delete-btn:hover,
 .app-dropdown-portal button[title='Sil']:hover {
-  background: rgba(239, 68, 68, 0.28) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
   color: #dc2626 !important;
   transform: scale(1.1);
 }
@@ -1381,7 +1381,7 @@ textarea:not(.form-input)::placeholder {
   pointer-events: auto !important;
 }
 
-/* Silinen/arşiv paneli — Düzenle mavisi / Sil kırmızısı */
+/* Silinen/arşiv paneli — ikon/yazı sabit; zemin sadece hover */
 .customers-page-type .customer-deleted-archived-panel .customer-restore-action,
 .customers-page-type .customer-deleted-archived-panel .customer-restore-action svg {
   color: #2563eb !important;
@@ -1389,10 +1389,10 @@ textarea:not(.form-input)::placeholder {
 .customers-page-type .customer-deleted-archived-panel .customer-restore-action {
   opacity: 1 !important;
   visibility: visible !important;
-  background: rgba(37, 99, 235, 0.16) !important;
+  background: transparent !important;
 }
 .customers-page-type .customer-deleted-archived-panel .customer-restore-action:hover {
-  background: rgba(37, 99, 235, 0.28) !important;
+  background: rgba(37, 99, 235, 0.16) !important;
   color: #1d4ed8 !important;
   transform: scale(1.1);
 }
@@ -1403,10 +1403,10 @@ textarea:not(.form-input)::placeholder {
 .customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action {
   opacity: 1 !important;
   visibility: visible !important;
-  background: rgba(239, 68, 68, 0.15) !important;
+  background: transparent !important;
 }
 .customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action:hover {
-  background: rgba(239, 68, 68, 0.28) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
   color: #dc2626 !important;
   transform: scale(1.1);
 }
