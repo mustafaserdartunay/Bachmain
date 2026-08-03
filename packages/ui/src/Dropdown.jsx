@@ -7,11 +7,11 @@ export const DROPDOWN_PORTAL_SHELL_CLASS =
   'app-dropdown-portal glass-inset az rounded-[16px] border-0 bg-transparent p-2 shadow-none'
 
 const TONE_CLASS = {
-  danger: 'text-[#ef4444] hover:bg-red-500/15 hover:text-[#dc2626]',
-  primary: 'text-[#2563eb] hover:bg-[rgba(37,99,235,0.16)] hover:text-[#1d4ed8]',
-  success: 'text-[#10b981] hover:bg-emerald-500/15 hover:text-[#047857]',
-  orange: 'text-[#ea580c] hover:bg-[rgba(234,88,12,0.16)] hover:text-[#c2410c]',
-  default: 'text-[var(--muted)] hover:bg-white/45',
+  danger: 'text-[#ef4444] hover:scale-110 hover:bg-red-500/15 hover:text-[#dc2626]',
+  primary: 'text-[#2563eb] hover:scale-110 hover:bg-[rgba(37,99,235,0.16)] hover:text-[#1d4ed8]',
+  success: 'text-[#10b981] hover:scale-110 hover:bg-emerald-500/15 hover:text-[#047857]',
+  orange: 'text-[#ea580c] hover:scale-110 hover:bg-[rgba(234,88,12,0.16)] hover:text-[#c2410c]',
+  default: 'text-[var(--muted)] hover:scale-110 hover:bg-white/45',
 }
 
 export function Dropdown({
@@ -88,7 +88,7 @@ export function DropdownItem({ icon: Icon, label, onClick, tone = 'default', clo
     <button
       type="button"
       role="menuitem"
-      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-normal leading-[14px] tracking-normal transition-colors duration-hover ${toneClass}`}
+      className={`flex w-full origin-left items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-normal leading-[14px] tracking-normal transition-[transform,background-color,color] duration-hover ${toneClass}`}
       onClick={() => {
         onClick?.()
         close?.()
