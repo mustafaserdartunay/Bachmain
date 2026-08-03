@@ -1394,7 +1394,7 @@ textarea:not(.form-input)::placeholder {
 .customers-page-type .customer-deleted-archived-panel .customer-restore-action:hover {
   background: rgba(37, 99, 235, 0.16) !important;
   color: #1d4ed8 !important;
-  transform: scale(1.1);
+  transform: none !important;
 }
 .customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action,
 .customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action svg {
@@ -1408,7 +1408,14 @@ textarea:not(.form-input)::placeholder {
 .customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action:hover {
   background: rgba(239, 68, 68, 0.15) !important;
   color: #dc2626 !important;
-  transform: scale(1.1);
+  transform: none !important;
+}
+
+/* Silinenler paneli: satır/sütun hover belirme yok */
+.customer-deleted-archived-panel .glass-inset-hover:hover,
+.customer-deleted-archived-panel .app-metric-row:hover,
+.customer-deleted-archived-panel [class*='glass-inset']:hover {
+  transform: none !important;
 }
 
 .customer-filter-dropdown-menu button[title='Ekle'],
@@ -2720,8 +2727,7 @@ html.night .glass-sidebar .sidebar-submenu {
   transform: translateX(2px);
 }
 
-.glass-team-hub.app-sidebar,
-.customer-deleted-archived-panel {
+.glass-team-hub.app-sidebar {
   border-radius: 24px;
   background: var(--glass-bg) !important;
   backdrop-filter: blur(26px) saturate(180%);
