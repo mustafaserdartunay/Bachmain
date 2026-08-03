@@ -303,11 +303,11 @@ export default function EditableDropdownPill({
                   <span className="truncate">{option.label}</span>
                 </button>
                 {canEdit && (
-                  <span className="flex shrink-0 items-center gap-0.5 pr-1.5">
+                  <span className="customer-option-actions flex shrink-0 items-center gap-0.5 pr-1.5 opacity-100">
                     <button
                       type="button"
                       onClick={() => startEdit(index)}
-                      className="rounded-lg bg-[rgba(37,99,235,0.16)] p-1 text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-[rgba(37,99,235,0.22)] hover:text-blue-700"
+                      className="customer-option-edit-btn rounded-lg bg-[rgba(37,99,235,0.16)] p-1 text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-[rgba(37,99,235,0.22)] hover:text-blue-700"
                       title="Düzenle"
                     >
                       <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -318,7 +318,7 @@ export default function EditableDropdownPill({
                         setEditingIndex(null)
                         setConfirmIndex(index)
                       }}
-                      className="rounded-lg bg-red-500/15 p-1 text-red-500 transition-[transform,background-color,color] hover:scale-110 hover:bg-red-500/25 hover:text-red-600"
+                      className="customer-option-delete-btn rounded-lg bg-red-500/15 p-1 text-red-500 transition-[transform,background-color,color] hover:scale-110 hover:bg-red-500/25 hover:text-red-600"
                       title="Sil"
                     >
                       <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />

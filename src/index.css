@@ -1335,29 +1335,50 @@ textarea:not(.form-input)::placeholder {
 }
 
 .customer-filter-dropdown-menu button[title='Düzenle'],
-.customers-page-menu button[title='Düzenle'] {
+.customers-page-menu button[title='Düzenle'],
+.app-dropdown-portal button.customer-option-edit-btn,
+.app-dropdown-portal button[title='Düzenle'] {
+  opacity: 1 !important;
+  visibility: visible !important;
   color: #2563eb !important;
   background: rgba(37, 99, 235, 0.16) !important;
 }
 
 .customer-filter-dropdown-menu button[title='Düzenle']:hover,
-.customers-page-menu button[title='Düzenle']:hover {
-  background: rgba(37, 99, 235, 0.22) !important;
+.customers-page-menu button[title='Düzenle']:hover,
+.app-dropdown-portal button.customer-option-edit-btn:hover,
+.app-dropdown-portal button[title='Düzenle']:hover {
+  background: rgba(37, 99, 235, 0.28) !important;
   color: #1d4ed8 !important;
   transform: scale(1.1);
 }
 
 .customer-filter-dropdown-menu button[title='Sil'],
-.customers-page-menu button[title='Sil'] {
+.customers-page-menu button[title='Sil'],
+.app-dropdown-portal button.customer-option-delete-btn,
+.app-dropdown-portal button[title='Sil'] {
+  opacity: 1 !important;
+  visibility: visible !important;
   color: #ef4444 !important;
   background: rgba(239, 68, 68, 0.15) !important;
 }
 
 .customer-filter-dropdown-menu button[title='Sil']:hover,
-.customers-page-menu button[title='Sil']:hover {
-  background: rgba(239, 68, 68, 0.25) !important;
+.customers-page-menu button[title='Sil']:hover,
+.app-dropdown-portal button.customer-option-delete-btn:hover,
+.app-dropdown-portal button[title='Sil']:hover {
+  background: rgba(239, 68, 68, 0.28) !important;
   color: #dc2626 !important;
   transform: scale(1.1);
+}
+
+/* Action icon row — never hide behind group-hover */
+.app-dropdown-portal .customer-option-actions,
+.customers-page-menu .customer-option-actions,
+.customer-filter-dropdown-menu .customer-option-actions {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 /* Silinen/arşiv paneli — Düzenle mavisi / Sil kırmızısı */
@@ -1366,10 +1387,12 @@ textarea:not(.form-input)::placeholder {
   color: #2563eb !important;
 }
 .customers-page-type .customer-deleted-archived-panel .customer-restore-action {
+  opacity: 1 !important;
+  visibility: visible !important;
   background: rgba(37, 99, 235, 0.16) !important;
 }
 .customers-page-type .customer-deleted-archived-panel .customer-restore-action:hover {
-  background: rgba(37, 99, 235, 0.22) !important;
+  background: rgba(37, 99, 235, 0.28) !important;
   color: #1d4ed8 !important;
   transform: scale(1.1);
 }
@@ -1378,10 +1401,12 @@ textarea:not(.form-input)::placeholder {
   color: #ef4444 !important;
 }
 .customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action {
+  opacity: 1 !important;
+  visibility: visible !important;
   background: rgba(239, 68, 68, 0.15) !important;
 }
 .customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action:hover {
-  background: rgba(239, 68, 68, 0.25) !important;
+  background: rgba(239, 68, 68, 0.28) !important;
   color: #dc2626 !important;
   transform: scale(1.1);
 }
