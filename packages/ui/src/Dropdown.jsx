@@ -10,6 +10,7 @@ const TONE_CLASS = {
   danger: 'text-[#ef4444] hover:bg-red-500/15 hover:text-[#dc2626]',
   primary: 'text-[#2563eb] hover:bg-[rgba(37,99,235,0.16)] hover:text-[#1d4ed8]',
   success: 'text-[#10b981] hover:bg-emerald-500/15 hover:text-[#047857]',
+  orange: 'text-[#ea580c] hover:bg-[rgba(234,88,12,0.16)] hover:text-[#c2410c]',
   default: 'text-[var(--muted)] hover:bg-white/45',
 }
 

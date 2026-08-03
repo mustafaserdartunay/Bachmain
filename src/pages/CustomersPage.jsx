@@ -647,7 +647,7 @@ export default function CustomersPage({
                       id: 'portal-view',
                       label: 'B2B Panelini Gör',
                       icon: Eye,
-                      tone: 'success',
+                      tone: 'orange',
                       onClick: () =>
                         window.open(getPortalUrl(portalAccess.accessToken), '_blank', 'noreferrer'),
                     },
