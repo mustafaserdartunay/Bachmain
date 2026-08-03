@@ -2,6 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 
+/** System-wide az glass shell for portaled menus */
+export const DROPDOWN_PORTAL_SHELL_CLASS =
+  'app-dropdown-portal glass-inset az rounded-[16px] border-0 bg-transparent p-2 shadow-none'
+
+const TONE_CLASS = {
+  danger: 'text-[#ef4444] hover:bg-red-500/15 hover:text-[#dc2626]',
+  primary: 'text-[#2563eb] hover:bg-[rgba(37,99,235,0.16)] hover:text-[#1d4ed8]',
+  success: 'text-[#10b981] hover:bg-emerald-500/15 hover:text-[#047857]',
+  default: 'text-[var(--muted)] hover:bg-white/45',
+}
+
 export function Dropdown({
   trigger,
   children,
@@ -56,7 +67,7 @@ export function Dropdown({
                 minWidth: Math.max(pos.width, 180),
                 zIndex: 1000,
               }}
-              className={`rounded-ds-lg border border-ds-border bg-ds-surface p-1.5 shadow-ds-lg ${menuClassName}`}
+              className={`${DROPDOWN_PORTAL_SHELL_CLASS} ${menuClassName}`.trim()}
               role="menu"
             >
               {typeof children === 'function'
@@ -70,19 +81,22 @@ export function Dropdown({
   )
 }
 
-export function DropdownItem({ icon: Icon, label, onClick, tone: _tone = 'default', close }) {
+export function DropdownItem({ icon: Icon, label, onClick, tone = 'default', close }) {
+  const toneClass = TONE_CLASS[tone] || TONE_CLASS.default
   return (
     <button
       type="button"
       role="menuitem"
-      className="flex w-full items-center gap-2 rounded-ds-md px-3 py-2 text-left text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)] transition-colors duration-hover hover:bg-[var(--ds-surface-muted)]"
+      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-normal leading-[14px] tracking-normal transition-colors duration-hover ${toneClass}`}
       onClick={() => {
         onClick?.()
         close?.()
       }}
     >
-      {Icon ? <Icon className="h-4 w-4 shrink-0 text-[var(--muted)]" /> : null}
-      <span className="min-w-0 truncate">{label}</span>
+      {Icon ? (
+        <Icon className="h-[14px] w-[14px] shrink-0" strokeWidth={2.25} aria-hidden />
+      ) : null}
+      <span className="min-w-0 truncate leading-[14px]">{label}</span>
     </button>
   )
 }
