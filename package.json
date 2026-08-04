@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host",
     "start": "node server/index.js",
-    "deploy": "vercel --prod",
+    "deploy": "npx vercel --prod",
     "lint": "eslint src server api scripts apps/admin/src apps/admin/server apps/api/src --max-warnings 9999",
     "lint:fix": "eslint src server api scripts apps/admin/src apps/admin/server apps/api/src --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"server/**/*.js\" \"api/**/*.js\" \"apps/admin/src/**/*.{ts,tsx}\" \"apps/api/src/**/*.ts\" \"docs/**/*.md\" \"*.md\" \".github/**/*.{yml,yaml,md}\"",
