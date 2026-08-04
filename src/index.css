@@ -1416,16 +1416,17 @@ textarea:not(.form-input)::placeholder {
 .app-dropdown-portal button[data-tone],
 .customers-page-menu button[data-tone],
 .customer-filter-dropdown-menu button[data-tone] {
-  transform-origin: left center;
+  transform-origin: left center !important;
   transition:
     transform 0.15s ease,
     background-color 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease !important;
 }
 
 .app-dropdown-portal button[data-tone]:hover,
 .customers-page-menu button[data-tone]:hover,
-.customer-filter-dropdown-menu button[data-tone]:hover {
+.customer-filter-dropdown-menu button[data-tone]:hover,
+.customer-filter-dropdown-menu button[data-tone].flex.w-full:hover {
   transform: scale(1.1) !important;
 }
 
