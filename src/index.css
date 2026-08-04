@@ -1388,7 +1388,7 @@ textarea:not(.form-input)::placeholder {
 .customers-page-menu button[title='Düzenle']:hover,
 .app-dropdown-portal button.customer-option-edit-btn:hover,
 .app-dropdown-portal button[title='Düzenle']:hover {
-  background: rgba(37, 99, 235, 0.16) !important;
+  background: transparent !important;
   color: #1d4ed8 !important;
   transform: scale(1.1);
 }
@@ -1407,7 +1407,7 @@ textarea:not(.form-input)::placeholder {
 .customers-page-menu button[title='Sil']:hover,
 .app-dropdown-portal button.customer-option-delete-btn:hover,
 .app-dropdown-portal button[title='Sil']:hover {
-  background: rgba(239, 68, 68, 0.15) !important;
+  background: transparent !important;
   color: #dc2626 !important;
   transform: scale(1.1);
 }
@@ -1451,7 +1451,7 @@ textarea:not(.form-input)::placeholder {
 .customer-filter-dropdown-menu button[data-tone='primary']:hover span,
 .customer-filter-dropdown-menu button[data-tone='primary']:hover svg {
   color: #1d4ed8 !important;
-  background: rgba(37, 99, 235, 0.16) !important;
+  background: transparent !important;
 }
 
 .app-dropdown-portal button[data-tone='danger'],
