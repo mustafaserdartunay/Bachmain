@@ -1246,6 +1246,16 @@ textarea:not(.form-input)::placeholder {
   color: var(--muted) !important;
 }
 
+/* Müşteriler center title — bold */
+.customers-page-type .app-page-header h1.customer-page-center-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
+}
+
 /* Customer list table headers — yf (same as Yeni Müşteri Oluştur), uppercase */
 .customers-page-type .customer-list-panel table thead th,
 .customers-page-type .customer-list-panel table thead th span,
@@ -2218,7 +2228,9 @@ html.night .ios-cell-value .form-input::placeholder {
 /* az — cam dropdown zemin (müşteri list/filter menü referansı) */
 .az,
 .app-dropdown-portal.az,
-.app-dropdown-portal {
+.app-dropdown-portal,
+.app-dropdown-portal.bg-transparent,
+.app-dropdown-portal[class*='bg-transparent'] {
   z-index: 10000;
   background: rgba(255, 255, 255, 0.38) !important;
   border: 1px solid rgba(255, 255, 255, 0.62) !important;

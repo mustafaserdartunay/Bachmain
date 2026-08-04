@@ -4,7 +4,8 @@
 
 export const DROPDOWN_Z_INDEX = 10000
 
-export const DROPDOWN_MENU_SHELL_BASE_CLASS = 'glass-inset min-w-[210px] rounded-[16px] p-2'
+export const DROPDOWN_MENU_SHELL_BASE_CLASS =
+  'glass-inset az min-w-[210px] rounded-[16px] p-2'
 
 export const DROPDOWN_MENU_PANEL_CLASS =
   `z-50 ${DROPDOWN_MENU_SHELL_BASE_CLASS}`

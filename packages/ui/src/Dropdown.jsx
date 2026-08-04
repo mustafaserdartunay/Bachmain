@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 
-/** System-wide az glass shell for portaled menus */
+/** System-wide az glass shell for portaled menus (filter / list / MoreMenu) */
 export const DROPDOWN_PORTAL_SHELL_CLASS =
-  'app-dropdown-portal glass-inset az rounded-[16px] border-0 bg-transparent p-2 shadow-none'
+  'app-dropdown-portal glass-inset az rounded-[16px] p-2'
 
 const TONE_CLASS = {
   danger: 'text-[#ef4444] hover:bg-red-500/15 hover:text-[#dc2626]',
