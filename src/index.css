@@ -1428,6 +1428,7 @@ textarea:not(.form-input)::placeholder {
 .customer-filter-dropdown-menu button[data-tone]:hover,
 .customer-filter-dropdown-menu button[data-tone].flex.w-full:hover {
   transform: scale(1.1) !important;
+  background: transparent !important;
 }
 
 .app-dropdown-portal button[data-tone='primary'],
@@ -1475,7 +1476,7 @@ textarea:not(.form-input)::placeholder {
 .customer-filter-dropdown-menu button[data-tone='danger']:hover span,
 .customer-filter-dropdown-menu button[data-tone='danger']:hover svg {
   color: #dc2626 !important;
-  background: rgba(239, 68, 68, 0.15) !important;
+  background: transparent !important;
 }
 
 .app-dropdown-portal button[data-tone='success'],
@@ -1499,7 +1500,7 @@ textarea:not(.form-input)::placeholder {
 .customer-filter-dropdown-menu button[data-tone='success']:hover span,
 .customer-filter-dropdown-menu button[data-tone='success']:hover svg {
   color: #047857 !important;
-  background: rgba(16, 185, 129, 0.15) !important;
+  background: transparent !important;
 }
 
 .app-dropdown-portal button[data-tone='orange'],
@@ -1523,7 +1524,7 @@ textarea:not(.form-input)::placeholder {
 .customer-filter-dropdown-menu button[data-tone='orange']:hover span,
 .customer-filter-dropdown-menu button[data-tone='orange']:hover svg {
   color: #c2410c !important;
-  background: rgba(234, 88, 12, 0.16) !important;
+  background: transparent !important;
 }
 
 /* Action icon row — never hide behind group-hover */
