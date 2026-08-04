@@ -68,7 +68,7 @@ const CUSTOMER_FILTER_FIELD_CLASS =
   'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
 const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !font-normal !tracking-normal !text-[var(--muted)]`
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
-const CUSTOMER_FILTER_MENU_CLASS = 'customer-filter-dropdown-menu'
+const CUSTOMER_FILTER_MENU_CLASS = 'az customer-filter-dropdown-menu customers-page-menu'
 
 const TEXT_ACTION_CLASS =
   'inline-flex items-center justify-center gap-1.5 origin-center bg-transparent p-0 text-xs font-normal leading-none transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold [&_svg]:block [&_svg]:shrink-0'
