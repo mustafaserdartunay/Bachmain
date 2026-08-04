@@ -88,6 +88,8 @@ export function DropdownItem({ icon: Icon, label, onClick, tone = 'default', clo
     <button
       type="button"
       role="menuitem"
+      title={label}
+      data-tone={tone}
       className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-normal leading-[14px] tracking-normal transition-[background-color,color] duration-hover ${toneClass}`}
       onClick={() => {
         onClick?.()

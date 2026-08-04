@@ -1412,6 +1412,75 @@ textarea:not(.form-input)::placeholder {
   transform: scale(1.1);
 }
 
+/* Row MoreMenu tones — beat customers-page-menu muted !important */
+.app-dropdown-portal button[data-tone='primary'],
+.app-dropdown-portal button[data-tone='primary'] span,
+.app-dropdown-portal button[data-tone='primary'] svg,
+.customers-page-menu button[data-tone='primary'],
+.customers-page-menu button[data-tone='primary'] span,
+.customers-page-menu button[data-tone='primary'] svg {
+  color: #2563eb !important;
+}
+.app-dropdown-portal button[data-tone='primary']:hover,
+.app-dropdown-portal button[data-tone='primary']:hover span,
+.app-dropdown-portal button[data-tone='primary']:hover svg,
+.customers-page-menu button[data-tone='primary']:hover,
+.customers-page-menu button[data-tone='primary']:hover span,
+.customers-page-menu button[data-tone='primary']:hover svg {
+  color: #1d4ed8 !important;
+}
+
+.app-dropdown-portal button[data-tone='danger'],
+.app-dropdown-portal button[data-tone='danger'] span,
+.app-dropdown-portal button[data-tone='danger'] svg,
+.customers-page-menu button[data-tone='danger'],
+.customers-page-menu button[data-tone='danger'] span,
+.customers-page-menu button[data-tone='danger'] svg {
+  color: #ef4444 !important;
+}
+.app-dropdown-portal button[data-tone='danger']:hover,
+.app-dropdown-portal button[data-tone='danger']:hover span,
+.app-dropdown-portal button[data-tone='danger']:hover svg,
+.customers-page-menu button[data-tone='danger']:hover,
+.customers-page-menu button[data-tone='danger']:hover span,
+.customers-page-menu button[data-tone='danger']:hover svg {
+  color: #dc2626 !important;
+}
+
+.app-dropdown-portal button[data-tone='success'],
+.app-dropdown-portal button[data-tone='success'] span,
+.app-dropdown-portal button[data-tone='success'] svg,
+.customers-page-menu button[data-tone='success'],
+.customers-page-menu button[data-tone='success'] span,
+.customers-page-menu button[data-tone='success'] svg {
+  color: #10b981 !important;
+}
+.app-dropdown-portal button[data-tone='success']:hover,
+.app-dropdown-portal button[data-tone='success']:hover span,
+.app-dropdown-portal button[data-tone='success']:hover svg,
+.customers-page-menu button[data-tone='success']:hover,
+.customers-page-menu button[data-tone='success']:hover span,
+.customers-page-menu button[data-tone='success']:hover svg {
+  color: #047857 !important;
+}
+
+.app-dropdown-portal button[data-tone='orange'],
+.app-dropdown-portal button[data-tone='orange'] span,
+.app-dropdown-portal button[data-tone='orange'] svg,
+.customers-page-menu button[data-tone='orange'],
+.customers-page-menu button[data-tone='orange'] span,
+.customers-page-menu button[data-tone='orange'] svg {
+  color: #ea580c !important;
+}
+.app-dropdown-portal button[data-tone='orange']:hover,
+.app-dropdown-portal button[data-tone='orange']:hover span,
+.app-dropdown-portal button[data-tone='orange']:hover svg,
+.customers-page-menu button[data-tone='orange']:hover,
+.customers-page-menu button[data-tone='orange']:hover span,
+.customers-page-menu button[data-tone='orange']:hover svg {
+  color: #c2410c !important;
+}
+
 /* Action icon row — never hide behind group-hover */
 .app-dropdown-portal .customer-option-actions,
 .customers-page-menu .customer-option-actions,
