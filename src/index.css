@@ -1413,12 +1413,31 @@ textarea:not(.form-input)::placeholder {
 }
 
 /* Row MoreMenu tones — beat customers-page-menu muted !important */
+.app-dropdown-portal button[data-tone],
+.customers-page-menu button[data-tone],
+.customer-filter-dropdown-menu button[data-tone] {
+  transform-origin: left center;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.app-dropdown-portal button[data-tone]:hover,
+.customers-page-menu button[data-tone]:hover,
+.customer-filter-dropdown-menu button[data-tone]:hover {
+  transform: scale(1.1) !important;
+}
+
 .app-dropdown-portal button[data-tone='primary'],
 .app-dropdown-portal button[data-tone='primary'] span,
 .app-dropdown-portal button[data-tone='primary'] svg,
 .customers-page-menu button[data-tone='primary'],
 .customers-page-menu button[data-tone='primary'] span,
-.customers-page-menu button[data-tone='primary'] svg {
+.customers-page-menu button[data-tone='primary'] svg,
+.customer-filter-dropdown-menu button[data-tone='primary'],
+.customer-filter-dropdown-menu button[data-tone='primary'] span,
+.customer-filter-dropdown-menu button[data-tone='primary'] svg {
   color: #2563eb !important;
 }
 .app-dropdown-portal button[data-tone='primary']:hover,
@@ -1426,8 +1445,12 @@ textarea:not(.form-input)::placeholder {
 .app-dropdown-portal button[data-tone='primary']:hover svg,
 .customers-page-menu button[data-tone='primary']:hover,
 .customers-page-menu button[data-tone='primary']:hover span,
-.customers-page-menu button[data-tone='primary']:hover svg {
+.customers-page-menu button[data-tone='primary']:hover svg,
+.customer-filter-dropdown-menu button[data-tone='primary']:hover,
+.customer-filter-dropdown-menu button[data-tone='primary']:hover span,
+.customer-filter-dropdown-menu button[data-tone='primary']:hover svg {
   color: #1d4ed8 !important;
+  background: rgba(37, 99, 235, 0.16) !important;
 }
 
 .app-dropdown-portal button[data-tone='danger'],
@@ -1435,7 +1458,10 @@ textarea:not(.form-input)::placeholder {
 .app-dropdown-portal button[data-tone='danger'] svg,
 .customers-page-menu button[data-tone='danger'],
 .customers-page-menu button[data-tone='danger'] span,
-.customers-page-menu button[data-tone='danger'] svg {
+.customers-page-menu button[data-tone='danger'] svg,
+.customer-filter-dropdown-menu button[data-tone='danger'],
+.customer-filter-dropdown-menu button[data-tone='danger'] span,
+.customer-filter-dropdown-menu button[data-tone='danger'] svg {
   color: #ef4444 !important;
 }
 .app-dropdown-portal button[data-tone='danger']:hover,
@@ -1443,8 +1469,12 @@ textarea:not(.form-input)::placeholder {
 .app-dropdown-portal button[data-tone='danger']:hover svg,
 .customers-page-menu button[data-tone='danger']:hover,
 .customers-page-menu button[data-tone='danger']:hover span,
-.customers-page-menu button[data-tone='danger']:hover svg {
+.customers-page-menu button[data-tone='danger']:hover svg,
+.customer-filter-dropdown-menu button[data-tone='danger']:hover,
+.customer-filter-dropdown-menu button[data-tone='danger']:hover span,
+.customer-filter-dropdown-menu button[data-tone='danger']:hover svg {
   color: #dc2626 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
 }
 
 .app-dropdown-portal button[data-tone='success'],
@@ -1452,7 +1482,10 @@ textarea:not(.form-input)::placeholder {
 .app-dropdown-portal button[data-tone='success'] svg,
 .customers-page-menu button[data-tone='success'],
 .customers-page-menu button[data-tone='success'] span,
-.customers-page-menu button[data-tone='success'] svg {
+.customers-page-menu button[data-tone='success'] svg,
+.customer-filter-dropdown-menu button[data-tone='success'],
+.customer-filter-dropdown-menu button[data-tone='success'] span,
+.customer-filter-dropdown-menu button[data-tone='success'] svg {
   color: #10b981 !important;
 }
 .app-dropdown-portal button[data-tone='success']:hover,
@@ -1460,8 +1493,12 @@ textarea:not(.form-input)::placeholder {
 .app-dropdown-portal button[data-tone='success']:hover svg,
 .customers-page-menu button[data-tone='success']:hover,
 .customers-page-menu button[data-tone='success']:hover span,
-.customers-page-menu button[data-tone='success']:hover svg {
+.customers-page-menu button[data-tone='success']:hover svg,
+.customer-filter-dropdown-menu button[data-tone='success']:hover,
+.customer-filter-dropdown-menu button[data-tone='success']:hover span,
+.customer-filter-dropdown-menu button[data-tone='success']:hover svg {
   color: #047857 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
 }
 
 .app-dropdown-portal button[data-tone='orange'],
@@ -1469,7 +1506,10 @@ textarea:not(.form-input)::placeholder {
 .app-dropdown-portal button[data-tone='orange'] svg,
 .customers-page-menu button[data-tone='orange'],
 .customers-page-menu button[data-tone='orange'] span,
-.customers-page-menu button[data-tone='orange'] svg {
+.customers-page-menu button[data-tone='orange'] svg,
+.customer-filter-dropdown-menu button[data-tone='orange'],
+.customer-filter-dropdown-menu button[data-tone='orange'] span,
+.customer-filter-dropdown-menu button[data-tone='orange'] svg {
   color: #ea580c !important;
 }
 .app-dropdown-portal button[data-tone='orange']:hover,
@@ -1477,8 +1517,12 @@ textarea:not(.form-input)::placeholder {
 .app-dropdown-portal button[data-tone='orange']:hover svg,
 .customers-page-menu button[data-tone='orange']:hover,
 .customers-page-menu button[data-tone='orange']:hover span,
-.customers-page-menu button[data-tone='orange']:hover svg {
+.customers-page-menu button[data-tone='orange']:hover svg,
+.customer-filter-dropdown-menu button[data-tone='orange']:hover,
+.customer-filter-dropdown-menu button[data-tone='orange']:hover span,
+.customer-filter-dropdown-menu button[data-tone='orange']:hover svg {
   color: #c2410c !important;
+  background: rgba(234, 88, 12, 0.16) !important;
 }
 
 /* Action icon row — never hide behind group-hover */

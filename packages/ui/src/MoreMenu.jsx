@@ -10,7 +10,7 @@ export function MoreMenu({
   items = [],
   align = 'end',
   className = '',
-  menuClassName = 'az customers-page-menu',
+  menuClassName = 'az customer-filter-dropdown-menu customers-page-menu',
   'aria-label': ariaLabel = 'Diğer işlemler',
 }) {
   return (
