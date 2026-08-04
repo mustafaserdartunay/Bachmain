@@ -11,7 +11,7 @@ import {
  */
 
 export function AppPageShell({ children, className = '' }) {
-  return <div className={`space-y-5 ${className}`.trim()}>{children}</div>
+  return <div className={`page-type-shell customers-page-type space-y-5 ${className}`.trim()}>{children}</div>
 }
 
 const APP_PAGE_BACK_BUTTON_CLASS =
@@ -96,7 +96,15 @@ export function AppPageHeader({
   titleClassName = '',
   centerTitleClassName = '',
 }) {
-  const hasCenterTitle = centerTitle != null && centerTitle !== false && centerTitle !== ''
+  const hasExplicitCenter =
+    centerTitle != null && centerTitle !== false && String(centerTitle).trim() !== ''
+  const resolvedCenterTitle = hasExplicitCenter
+    ? centerTitle
+    : typeof title === 'string' && title.trim()
+      ? String(title).toLocaleUpperCase('tr-TR')
+      : null
+  const hasCenterTitle = Boolean(resolvedCenterTitle)
+  const leftTitleNode = typeof title === 'string' ? null : title
 
   return (
     <div className="app-page-header relative z-30 flex min-h-[4.75rem] shrink-0 items-center justify-between gap-3 overflow-visible px-4 py-3 sm:px-6">
@@ -104,21 +112,20 @@ export function AppPageHeader({
         {showBack ? (
           <AppPageBackButton backTo={backTo} backLabel={backLabel} onBack={onBack} />
         ) : null}
-        {hasCenterTitle ? (
-          title ? (
-            <div className={`flex min-w-0 items-center ${titleClassName}`.trim()}>{title}</div>
-          ) : null
-        ) : (
+        {leftTitleNode ? (
+          <div className={`flex min-w-0 items-center ${titleClassName}`.trim()}>{leftTitleNode}</div>
+        ) : null}
+        {!hasCenterTitle && typeof title === 'string' ? (
           <h1 className={`${APP_PAGE_TITLE_CLASS} truncate text-left ${titleClassName}`.trim()}>
             {title}
           </h1>
-        )}
+        ) : null}
       </div>
       {hasCenterTitle ? (
         <h1
-          className={`pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-[min(50%,20rem)] -translate-x-1/2 -translate-y-1/2 truncate text-center text-xs font-semibold uppercase tracking-wide text-[var(--muted)] ${centerTitleClassName}`.trim()}
+          className={`customer-page-center-title pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-[min(50%,20rem)] -translate-x-1/2 -translate-y-1/2 truncate text-center text-[14px] font-bold uppercase leading-tight tracking-normal text-[var(--muted)] ${centerTitleClassName}`.trim()}
         >
-          {centerTitle}
+          {resolvedCenterTitle}
         </h1>
       ) : null}
       {actions ? (

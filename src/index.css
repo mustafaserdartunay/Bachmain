@@ -433,6 +433,14 @@ html.space #root {
   color: var(--muted) !important;
 }
 
+/* yfb — yazı fontu bold: 14px / 700 */
+.yfb {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+}
+
 /* yf on colored CTA (keep white) */
 .yf.yf-on-color,
 .header-quick-action-label.yf-on-color {
@@ -1217,7 +1225,9 @@ textarea:not(.form-input)::placeholder {
   font-weight: 700 !important;
 }
 
-/* Customers page typography: 14px / 400 / muted (shell header banner excluded) */
+/* Customers page typography: 14px / 400 / muted (shell header banner excluded)
+   Also applied system-wide via AppPageShell → .page-type-shell */
+.page-type-shell,
 .customers-page-type,
 .customers-page-menu {
   --customers-type-size: 14px;
@@ -1225,12 +1235,18 @@ textarea:not(.form-input)::placeholder {
   --customers-type-leading: 1.25;
 }
 
+.page-type-shell :where(h1, h2, h3, p, span, button, a, th, td, label, input, select, textarea),
 .customers-page-type :where(h1, h2, h3, p, span, button, a, th, td, label, input, select, textarea),
 .customers-page-menu :where(button, span, p, input, label, a),
+.page-type-shell .customer-page-back-link,
+.page-type-shell .customer-page-back-link-label,
 .customers-page-type .customer-page-back-link,
 .customers-page-type .customer-page-back-link-label,
+.page-type-shell .customer-summary-metrics .app-titlecase-words,
 .customers-page-type .customer-summary-metrics .app-titlecase-words,
+.page-type-shell .customer-filter-panel :where(p, span, button, input),
 .customers-page-type .customer-filter-panel :where(p, span, button, input),
+.page-type-shell .customer-list-panel :where(h2, span, button, th, td, input),
 .customers-page-type .customer-list-panel :where(h2, span, button, th, td, input) {
   font-size: var(--customers-type-size) !important;
   font-weight: var(--customers-type-weight) !important;
@@ -1246,7 +1262,8 @@ textarea:not(.form-input)::placeholder {
   color: var(--muted) !important;
 }
 
-/* Müşteriler center title — bold */
+/* Müşteriler / sistem merkez başlık — bold */
+.page-type-shell .app-page-header h1.customer-page-center-title,
 .customers-page-type .app-page-header h1.customer-page-center-title {
   font-size: 14px !important;
   font-weight: 700 !important;
@@ -1257,9 +1274,13 @@ textarea:not(.form-input)::placeholder {
 }
 
 /* Customer list table headers — yf (same as Yeni Müşteri Oluştur), uppercase */
+.page-type-shell .customer-list-panel table thead th,
+.page-type-shell .customer-list-panel table thead th span,
+.page-type-shell .customer-list-panel table thead th button,
 .customers-page-type .customer-list-panel table thead th,
 .customers-page-type .customer-list-panel table thead th span,
 .customers-page-type .customer-list-panel table thead th button,
+.page-type-shell table thead th,
 .app-responsive .customer-list-panel table thead th,
 .app-responsive .customer-list-panel table thead th span,
 .app-responsive .customer-list-panel table thead th button {

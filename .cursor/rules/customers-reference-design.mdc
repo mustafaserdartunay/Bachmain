@@ -1,0 +1,73 @@
+---
+description: Müşteriler sayfası — tüm BachMain ekranları için kanonik tasarım referansı
+alwaysApply: true
+---
+
+# Müşteriler Referans Tasarımı (kanonik)
+
+Kaynak sayfa: `src/pages/CustomersPage.jsx`  
+Shell class: `page-type-shell` (eski alias: `customers-page-type`)  
+Tokenlar: `src/utils/dashboardDesign.js` (`PAGE_*`, `YF_*`, `YFB_*`)
+
+Yeni veya yenilenen her CRM ekranı bu dili kullanır. Ayrı tipografi, opak menü
+veya farklı tablo başlığı uydurma.
+
+## Tipografi
+
+| Kısayol | Kullanım | Değer |
+|--------|----------|--------|
+| **yf** | Etiket, filtre, menü metni, tablo başlığı | Inter 14px / 400 / leading-tight / `var(--muted)` |
+| **yfb** | Özet değer, bakiye, merkez sayfa başlığı | 14px / **700** / leading-tight |
+| CTA gradient | “Yeni Müşteri Oluştur” | yf ölçek + `#ffffff` (`YF_TEXT_ON_COLOR_CLASS`) |
+
+Tablo başlıkları: yf + **uppercase**.  
+Merkez başlık: yfb + uppercase (`.customer-page-center-title` / `PAGE_CENTER_TITLE_CLASS`).
+
+## Açılır menü — **az**
+
+Tüm portaled menüler (filtre, liste pill, satır MoreMenu):
+
+```txt
+app-dropdown-portal glass-inset az … customers-page-menu
+```
+
+veya `PAGE_FILTER_MENU_CLASS` / `PAGE_ROW_MENU_CLASS` / `DROPDOWN_PORTAL_SHELL_CLASS`.
+
+| Token | Değer |
+|-------|--------|
+| Background | `rgba(255, 255, 255, 0.38)` |
+| Border | `1px solid rgba(255, 255, 255, 0.62)` |
+| Radius | 16px |
+| Blur | `blur(16px) saturate(160%)` |
+| Shadow | `inset 0 1px 0 rgba(255, 255, 255, 0.48)` |
+
+`bg-transparent` / opak `bg-ds-surface` menü kabuğu kullanma.
+
+Satır menü tonları: Düzenle mavi, Sil kırmızı, B2B yeşil, B2B Gör turuncu.
+Hover: `scale(1.1)`, **arka plan yok** (şeffaf).
+
+## Sayfa iskeleti
+
+1. `AppPageShell` → otomatik `page-type-shell`
+2. `AppPageHeader` (geri link + merkez başlık + aksiyonlar)
+3. `SummaryMetrics` + `PAGE_SUMMARY_METRICS_CLASS` (varsa)
+4. Filtre paneli: `PAGE_FILTER_PANEL_CLASS` + `PAGE_FILTER_*`
+5. Liste: `AppPagePanel` + `DataTable` (`PAGE_TABLE_HEADER_CLASS`)
+
+## Zemin paneli
+
+Yalnızca `APP_SURFACE_PANEL_CLASS` / `FormSectionPanel` / glass panel.
+Yeni beyaz kart / gölgeli kutu icat etme.
+
+## Buton / navigasyon
+
+- Her CTA gerçek rotaya gitsin (`App.jsx` Route ile uyumlu).
+- Oluştur: HeaderQuickAction / mavi gradient CTA.
+- Kaydet / Vazgeç: mevcut `btn-primary` / `btn-cancel` kuralları.
+- Satır Düzenle → ilgili detay rotası; Sil → onay.
+
+## Yasak
+
+- `text-xs font-extrabold` / `font-black` sayfa başlığı veya tablo başlığı
+- Opak dropdown shell (`bg-[var(--surface-raised)]`) liste/filtre menülerinde
+- Sayfaya özel tipografi ölçeği (14px yf/yfb dışında)

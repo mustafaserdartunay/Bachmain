@@ -23,8 +23,18 @@ import {
   HEADER_QUICK_ACTIONS,
   HeaderQuickActionCard,
 } from '../components/Layout/HeaderCashActionsPanel'
-import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
-import { APP_FILTER_LABEL_CLASS, APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
+import {
+  APP_SURFACE_PANEL_CLASS,
+  PAGE_FILTER_FIELD_CLASS,
+  PAGE_FILTER_LABEL_CLASS,
+  PAGE_FILTER_MENU_CLASS,
+  PAGE_FILTER_PILL_CLASS,
+  PAGE_LIST_MENU_CLASS,
+  PAGE_LIST_PILL_CLASS,
+  PAGE_LIST_PILL_WRAPPER_CLASS,
+  PAGE_TABLE_HEADER_CLASS,
+  YF_TEXT_CLASS,
+} from '../utils/dashboardDesign'
 import { deleteCustomer, getCustomerProfiles } from '../data/customerProfiles'
 import { appendActivity } from '../utils/customerActivity'
 import {
@@ -62,21 +72,16 @@ const balanceFilterOptions = [
   { label: 'Borç', color: 'bg-red-500' },
   { label: 'Sıfır', color: 'bg-orange-500' },
 ]
-const CUSTOMER_FILTER_FIELD_CLASS =
-  'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
-const CUSTOMER_TYPE_CLASS =
-  'min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]'
-/** yf same as "Yeni Müşteri Oluştur", uppercase for table headers */
-const CUSTOMER_TABLE_HEADER_CLASS =
-  'h-[var(--ds-row-h,2.75rem)] px-3 min-w-0 truncate !text-[14px] !font-normal !leading-tight !tracking-normal uppercase !text-[var(--muted)]'
-const CUSTOMER_FILTER_LABEL_CLASS = `!mb-0 shrink-0 ${CUSTOMER_TYPE_CLASS}`
-const CUSTOMER_CHIP_TEXT_CLASS = CUSTOMER_TYPE_CLASS
-const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
-const CUSTOMER_FILTER_MENU_CLASS = 'az customer-filter-dropdown-menu customers-page-menu'
-const CUSTOMER_LIST_PILL_CLASS = `${LIST_PILL_CLASS} customer-list-dropdown-pill`
-const CUSTOMER_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max max-w-full'
-const CUSTOMER_LIST_MENU_CLASS =
-  'az customer-filter-dropdown-menu customers-page-menu !min-w-[18rem] w-[18rem]'
+const CUSTOMER_FILTER_FIELD_CLASS = PAGE_FILTER_FIELD_CLASS
+const CUSTOMER_TYPE_CLASS = YF_TEXT_CLASS
+const CUSTOMER_TABLE_HEADER_CLASS = PAGE_TABLE_HEADER_CLASS
+const CUSTOMER_FILTER_LABEL_CLASS = PAGE_FILTER_LABEL_CLASS
+const CUSTOMER_CHIP_TEXT_CLASS = YF_TEXT_CLASS
+const CUSTOMER_FILTER_PILL_CLASS = PAGE_FILTER_PILL_CLASS
+const CUSTOMER_FILTER_MENU_CLASS = PAGE_FILTER_MENU_CLASS
+const CUSTOMER_LIST_PILL_CLASS = PAGE_LIST_PILL_CLASS
+const CUSTOMER_LIST_PILL_WRAPPER_CLASS = PAGE_LIST_PILL_WRAPPER_CLASS
+const CUSTOMER_LIST_MENU_CLASS = PAGE_LIST_MENU_CLASS
 
 /** yfb + balance tone: alacak (>) green, borç (<) red, sıfır muted */
 function balanceClass(balance) {
