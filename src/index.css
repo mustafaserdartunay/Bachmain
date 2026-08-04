@@ -424,6 +424,21 @@ html.space #root {
   color: var(--text-strong) !important;
 }
 
+/* yf — yazı fontu: 14px / 400 / muted */
+.yf {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  color: var(--muted) !important;
+}
+
+/* yf on colored CTA (keep white) */
+.yf.yf-on-color,
+.header-quick-action-label.yf-on-color {
+  color: #ffffff !important;
+}
+
 /* Colored CTAs keep true white (logo/header quick actions, primary buttons) */
 .app-header-banner a[class*='bg-gradient'],
 .app-header-banner a[class*='bg-gradient'] *,
@@ -436,6 +451,17 @@ html.space #root {
 .btn-success,
 .btn-success * {
   color: #ffffff !important;
+}
+
+/* Header quick action label — yf scale/weight (white kept by rule above) */
+.app-header-banner a[class*='bg-gradient'] .header-quick-action-label,
+.app-page-header a[class*='bg-gradient'] .header-quick-action-label,
+.app-header-banner a[class*='bg-gradient'] .yf-on-color,
+.app-page-header a[class*='bg-gradient'] .yf-on-color {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
 }
 
 [class*='text-gray-400'] {
@@ -1154,11 +1180,94 @@ textarea:not(.form-input)::placeholder {
   padding: 0.75rem 1rem;
 }
 
-.customer-summary-metrics .app-page-metric p,
-.customer-summary-metrics .app-page-metric .app-titlecase-words {
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1;
+.customer-summary-metrics .app-page-metric p:not(.text-xl),
+.customer-summary-metrics .app-page-metric .app-titlecase-words,
+.customer-summary-metrics .app-page-metric .yf,
+.customer-summary-metrics .app-page-metric span {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  color: var(--muted) !important;
+}
+
+.customer-summary-metrics .app-page-metric .text-xl,
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+}
+
+/* Customer summary metric values — yfb + dark tones */
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-violet-800 {
+  color: #5b21b6 !important;
+  font-weight: 700 !important;
+}
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-blue-800 {
+  color: #1e40af !important;
+  font-weight: 700 !important;
+}
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-red-700 {
+  color: #b91c1c !important;
+  font-weight: 700 !important;
+}
+.customers-page-type .customer-summary-metrics .app-page-metric p.text-xl.text-emerald-800 {
+  color: #10b981 !important; /* aynı: customer-balance-positive / Gelir Ekle */
+  font-weight: 700 !important;
+}
+
+/* Customers page typography: 14px / 400 / muted (shell header banner excluded) */
+.customers-page-type,
+.customers-page-menu {
+  --customers-type-size: 14px;
+  --customers-type-weight: 400;
+  --customers-type-leading: 1.25;
+}
+
+.customers-page-type :where(h1, h2, h3, p, span, button, a, th, td, label, input, select, textarea),
+.customers-page-menu :where(button, span, p, input, label, a),
+.customers-page-type .customer-page-back-link,
+.customers-page-type .customer-page-back-link-label,
+.customers-page-type .customer-summary-metrics .app-titlecase-words,
+.customers-page-type .customer-filter-panel :where(p, span, button, input),
+.customers-page-type .customer-list-panel :where(h2, span, button, th, td, input) {
+  font-size: var(--customers-type-size) !important;
+  font-weight: var(--customers-type-weight) !important;
+  line-height: var(--customers-type-leading) !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  color: var(--muted) !important;
+}
+
+.customers-page-type .customer-page-back-link-icon,
+.customers-page-type .customer-page-back-link svg,
+.customers-page-type .customer-summary-metrics svg {
+  color: var(--muted) !important;
+}
+
+/* Customer list table headers — yf (same as Yeni Müşteri Oluştur), uppercase */
+.customers-page-type .customer-list-panel table thead th,
+.customers-page-type .customer-list-panel table thead th span,
+.customers-page-type .customer-list-panel table thead th button,
+.app-responsive .customer-list-panel table thead th,
+.app-responsive .customer-list-panel table thead th span,
+.app-responsive .customer-list-panel table thead th button {
+  font-family:
+    Inter,
+    system-ui,
+    'SF Pro Display',
+    Geist,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
 }
 
 .glass-pill {
@@ -1196,7 +1305,8 @@ textarea:not(.form-input)::placeholder {
   border-color: var(--ds-border-strong, rgba(148, 163, 184, 0.28));
 }
 
-.app-responsive .customer-filter-field .customer-filter-pill {
+.app-responsive .customer-filter-field .customer-filter-pill,
+.app-responsive .customer-filter-field .customer-filter-pill span {
   height: 100%;
   min-height: 0;
   border: 0 !important;
@@ -1205,9 +1315,10 @@ textarea:not(.form-input)::placeholder {
   padding: 0;
   box-shadow: none !important;
   color: var(--muted) !important;
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
 }
 
 .app-responsive .customer-filter-field .customer-filter-pill:hover {
@@ -1236,41 +1347,105 @@ textarea:not(.form-input)::placeholder {
 }
 
 .customer-filter-dropdown-menu button {
-  font-size: 0.75rem !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
   color: var(--muted) !important;
 }
 
 .customer-filter-dropdown-menu button.flex.w-full:hover {
   background: transparent !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   transform: scale(1.03);
   transform-origin: left center;
 }
 
 .customer-filter-dropdown-menu button.flex.w-full:hover span.truncate {
-  font-weight: 700 !important;
+  font-weight: 400 !important;
 }
 
-.customer-filter-dropdown-menu button[title='Düzenle'] {
+.customer-filter-dropdown-menu button[title='Düzenle'],
+.customers-page-menu button[title='Düzenle'],
+.app-dropdown-portal button.customer-option-edit-btn,
+.app-dropdown-portal button[title='Düzenle'] {
+  opacity: 1 !important;
+  visibility: visible !important;
   color: #2563eb !important;
+  background: transparent !important;
 }
 
-.customer-filter-dropdown-menu button[title='Düzenle']:hover {
-  background: rgba(37, 99, 235, 0.15) !important;
+.customer-filter-dropdown-menu button[title='Düzenle']:hover,
+.customers-page-menu button[title='Düzenle']:hover,
+.app-dropdown-portal button.customer-option-edit-btn:hover,
+.app-dropdown-portal button[title='Düzenle']:hover {
+  background: rgba(37, 99, 235, 0.16) !important;
   color: #1d4ed8 !important;
   transform: scale(1.1);
 }
 
-.customer-filter-dropdown-menu button[title='Sil'] {
+.customer-filter-dropdown-menu button[title='Sil'],
+.customers-page-menu button[title='Sil'],
+.app-dropdown-portal button.customer-option-delete-btn,
+.app-dropdown-portal button[title='Sil'] {
+  opacity: 1 !important;
+  visibility: visible !important;
   color: #ef4444 !important;
+  background: transparent !important;
 }
 
-.customer-filter-dropdown-menu button[title='Sil']:hover {
+.customer-filter-dropdown-menu button[title='Sil']:hover,
+.customers-page-menu button[title='Sil']:hover,
+.app-dropdown-portal button.customer-option-delete-btn:hover,
+.app-dropdown-portal button[title='Sil']:hover {
   background: rgba(239, 68, 68, 0.15) !important;
   color: #dc2626 !important;
   transform: scale(1.1);
+}
+
+/* Action icon row — never hide behind group-hover */
+.app-dropdown-portal .customer-option-actions,
+.customers-page-menu .customer-option-actions,
+.customer-filter-dropdown-menu .customer-option-actions {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Silinen/arşiv paneli — ikon/yazı sabit; zemin sadece hover */
+.customers-page-type .customer-deleted-archived-panel .customer-restore-action,
+.customers-page-type .customer-deleted-archived-panel .customer-restore-action svg {
+  color: #2563eb !important;
+}
+.customers-page-type .customer-deleted-archived-panel .customer-restore-action {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: transparent !important;
+}
+.customers-page-type .customer-deleted-archived-panel .customer-restore-action:hover {
+  background: rgba(37, 99, 235, 0.16) !important;
+  color: #1d4ed8 !important;
+  transform: none !important;
+}
+.customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action,
+.customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action svg {
+  color: #ef4444 !important;
+}
+.customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: transparent !important;
+}
+.customers-page-type .customer-deleted-archived-panel .customer-permanent-delete-action:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
+  transform: none !important;
+}
+
+/* Silinenler paneli: satır/sütun hover belirme yok */
+.customer-deleted-archived-panel .glass-inset-hover:hover,
+.customer-deleted-archived-panel .app-metric-row:hover,
+.customer-deleted-archived-panel [class*='glass-inset']:hover {
+  transform: none !important;
 }
 
 .customer-filter-dropdown-menu button[title='Ekle'],
@@ -1320,16 +1495,16 @@ textarea:not(.form-input)::placeholder {
 
 .customer-filter-dropdown-menu button span.truncate {
   color: var(--muted) !important;
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
 }
 
 .app-responsive .customer-list-panel .glass-pill {
   background: transparent !important;
   border-color: var(--search-border) !important;
   box-shadow: none !important;
-  font-size: 12px !important;
+  font-size: 14px !important;
   font-weight: 400 !important;
   line-height: 1.25 !important;
   color: var(--muted) !important;
@@ -1337,65 +1512,80 @@ textarea:not(.form-input)::placeholder {
 
 .app-responsive .customer-list-panel .glass-pill span.truncate {
   color: var(--muted) !important;
-  font-size: 12px !important;
+  font-size: 14px !important;
   font-weight: 400 !important;
   line-height: 1.25 !important;
 }
 
-.app-responsive .customer-list-panel table thead th {
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
-  letter-spacing: normal !important;
-  color: var(--muted) !important;
-  background: transparent !important;
-  border: 0 !important;
-}
-
-/* Satırlar: silinenler paneli metric-row / glass-inset zemini */
-.app-responsive .customer-list-panel table tbody tr.app-metric-row > td {
-  background: rgba(255, 255, 255, 0.38) !important;
-  border: 1px solid rgba(255, 255, 255, 0.62) !important;
-  border-left: 0 !important;
-  border-right: 0 !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
-  font-size: 12px !important;
+.app-responsive .customer-list-panel table thead th,
+.app-responsive .customer-list-panel table thead th span,
+.app-responsive .customer-list-panel table thead th button {
+  font-family:
+    Inter,
+    system-ui,
+    'SF Pro Display',
+    Geist,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
   line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase !important;
   color: var(--muted) !important;
-  vertical-align: middle;
-}
-
-.app-responsive .customer-list-panel table tbody tr.app-metric-row > td:first-child {
-  border-left: 1px solid rgba(255, 255, 255, 0.62) !important;
-  border-radius: 16px 0 0 16px;
-}
-
-.app-responsive .customer-list-panel table tbody tr.app-metric-row > td:last-child {
-  border-right: 1px solid rgba(255, 255, 255, 0.62) !important;
-  border-radius: 0 16px 16px 0;
-}
-
-.app-responsive .customer-list-panel table tbody tr.app-metric-row:hover > td {
-  background: rgba(255, 255, 255, 0.52) !important;
-  border-color: rgba(255, 255, 255, 0.78) !important;
 }
 
 .app-responsive .customer-list-panel table tbody td {
-  font-size: 12px !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
   line-height: 1.25 !important;
   color: var(--muted) !important;
 }
 
-.app-responsive .customer-list-panel table tbody td .customer-name-primary {
-  font-size: 12px !important;
-  font-weight: 800 !important;
+/* Güncel bakiye — yfb (14/700) + Gelir yeşili / E-Fatura kırmızısı */
+.customers-page-type .customer-list-panel table tbody td .customer-balance-amount,
+.app-responsive .customer-list-panel table tbody td .customer-balance-amount {
+  font-size: 14px !important;
+  font-weight: 700 !important;
   line-height: 1.25 !important;
+  letter-spacing: normal !important;
+}
+.customers-page-type .customer-list-panel table tbody td .customer-balance-positive,
+.app-responsive .customer-list-panel table tbody td .customer-balance-positive {
+  color: #10b981 !important;
+}
+.customers-page-type .customer-list-panel table tbody td .customer-balance-negative,
+.app-responsive .customer-list-panel table tbody td .customer-balance-negative {
+  color: #e11d48 !important;
+}
+.customers-page-type .customer-list-panel table tbody td .customer-balance-zero,
+.app-responsive .customer-list-panel table tbody td .customer-balance-zero {
+  color: var(--muted) !important;
+  font-weight: 700 !important;
+}
+
+.app-responsive .customer-list-panel table tbody td .customer-name-primary,
+.customers-page-type .customer-list-panel table tbody td .customer-name-primary {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
   color: var(--muted) !important;
 }
 
 .app-responsive .customer-list-panel table tbody td .customer-name-secondary {
-  font-family: Inter, system-ui, "SF Pro Display", Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-  font-size: 12px !important;
+  font-family:
+    Inter,
+    system-ui,
+    'SF Pro Display',
+    Geist,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif !important;
+  font-size: 14px !important;
   font-weight: 400 !important;
   line-height: 1.25 !important;
   color: var(--muted) !important;
@@ -1403,18 +1593,21 @@ textarea:not(.form-input)::placeholder {
 
 .app-responsive .customer-list-panel table tbody td .text-ds-caption,
 .app-responsive .customer-list-panel table tbody td .text-ds-muted {
-  font-size: 12px !important;
+  font-size: 14px !important;
   font-weight: 400 !important;
   line-height: 1.25 !important;
   color: var(--muted) !important;
 }
 
 .app-responsive .customer-list-panel h2,
+.app-responsive .customer-list-panel h2 *,
 .app-responsive .customer-deleted-archived-panel .app-titlecase-words {
   color: var(--muted) !important;
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
 }
 
 .app-responsive .customer-list-panel .customer-list-dropdown-pill {
@@ -1427,6 +1620,11 @@ textarea:not(.form-input)::placeholder {
   background: transparent !important;
   box-shadow: none !important;
   transition: none !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  color: var(--muted) !important;
 }
 
 .app-responsive input.customer-filter-search.search-pill.app-search-field:hover,
@@ -1573,6 +1771,15 @@ html:not(.night) .app-responsive .text-gray-500 {
 
 .app-titlecase-words {
   text-transform: capitalize;
+}
+
+/* Header banner chip labels — yf size/weight (white for contrast on gradient) */
+.app-header-banner a span.truncate,
+.app-header-banner .group span.min-w-0.truncate {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
 }
 
 .app-responsive .form-label {
@@ -2008,6 +2215,9 @@ html.night .ios-cell-value .form-input::placeholder {
   color: rgba(235, 235, 245, 0.3) !important;
 }
 
+/* az — cam dropdown zemin (müşteri list/filter menü referansı) */
+.az,
+.app-dropdown-portal.az,
 .app-dropdown-portal {
   z-index: 10000;
   background: rgba(255, 255, 255, 0.38) !important;
@@ -2321,15 +2531,15 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-/* Submenu tree: DOM rail + branches (connected, no dots) */
+/* Submenu tree: thin connected L/T lines (no dots) */
 .glass-sidebar .sidebar-submenu {
-  --sidebar-tree: color-mix(in srgb, var(--muted) 85%, transparent);
-  --sidebar-tree-active: rgba(37, 99, 235, 0.85);
+  --sidebar-tree: color-mix(in srgb, var(--muted) 38%, transparent);
+  --sidebar-tree-active: color-mix(in srgb, var(--bach-sky, #60a5fa) 55%, transparent);
   position: relative;
   display: flex;
   flex-direction: column;
-  margin: 0.2rem 0 0.15rem 1.2rem;
-  padding: 0 0 0 0.85rem;
+  margin: 0.15rem 0 0.1rem 1.15rem;
+  padding: 0 0 0 0.7rem;
   overflow: visible;
 }
 
@@ -2341,18 +2551,17 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
 }
 
 .glass-sidebar .sidebar-submenu--nested {
-  margin-left: 0.55rem;
-  margin-top: 0.1rem;
+  margin-left: 0.5rem;
+  margin-top: 0.05rem;
 }
 
 .glass-sidebar .sidebar-submenu-rail {
   position: absolute;
   left: 0;
-  top: 0.65rem;
-  bottom: 0.65rem;
-  width: 2px;
+  top: 0.7rem;
+  bottom: 0.7rem;
+  width: 1px;
   background: var(--sidebar-tree);
-  border-radius: 1px;
   pointer-events: none;
 }
 
@@ -2363,13 +2572,14 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
 
 .glass-sidebar .sidebar-submenu-branch {
   position: absolute;
-  left: -0.85rem;
+  left: -0.7rem;
   top: 50%;
-  width: 0.85rem;
-  height: 2px;
+  width: 0.7rem;
+  height: 1px;
   background: var(--sidebar-tree);
   transform: translateY(-50%);
   pointer-events: none;
+  transition: background-color 0.15s ease;
 }
 
 .glass-sidebar .sidebar-submenu-row:hover > .sidebar-submenu-branch,
@@ -2389,8 +2599,8 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
 }
 
 html.night .glass-sidebar .sidebar-submenu {
-  --sidebar-tree: color-mix(in srgb, var(--muted) 90%, transparent);
-  --sidebar-tree-active: rgba(147, 197, 253, 0.9);
+  --sidebar-tree: color-mix(in srgb, var(--muted) 42%, transparent);
+  --sidebar-tree-active: color-mix(in srgb, var(--bach-sky, #79a6d2) 60%, transparent);
 }
 
 .glass-sidebar .sidebar-menu-button,
@@ -2562,8 +2772,7 @@ html.night .glass-sidebar .sidebar-submenu {
   transform: translateX(2px);
 }
 
-.glass-team-hub.app-sidebar,
-.customer-deleted-archived-panel {
+.glass-team-hub.app-sidebar {
   border-radius: 24px;
   background: var(--glass-bg) !important;
   backdrop-filter: blur(26px) saturate(180%);
@@ -4687,18 +4896,6 @@ html.night .app-responsive .cash-sidebar-form .bg-white {
 
 html.night .glass-inset-hover:hover,
 html.night .app-metric-row:hover {
-  background: rgba(18, 30, 54, 0.72) !important;
-  border-color: rgba(148, 163, 184, 0.2) !important;
-}
-
-html.night .app-responsive .customer-list-panel table tbody tr.app-metric-row > td {
-  background: rgba(12, 20, 38, 0.58) !important;
-  border-color: rgba(148, 163, 184, 0.14) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-  color: var(--ink) !important;
-}
-
-html.night .app-responsive .customer-list-panel table tbody tr.app-metric-row:hover > td {
   background: rgba(18, 30, 54, 0.72) !important;
   border-color: rgba(148, 163, 184, 0.2) !important;
 }

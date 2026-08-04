@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { getTreasuryAccounts } from '../../utils/treasuryStore'
+import { YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesign'
 
 function getDefaultCashAccountPath(action) {
   const accounts = getTreasuryAccounts()
@@ -81,8 +82,7 @@ export const HEADER_QUICK_ACTION_CHIP_CLASS =
 export const HEADER_QUICK_ACTION_CHIP_ICON_CLASS =
   'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-transparent text-[#ffffff] ring-1 ring-[rgba(255,255,255,0.55)]'
 
-export const HEADER_QUICK_ACTION_CHIP_FIXED_CLASS =
-  `${HEADER_QUICK_ACTION_CHIP_CLASS} w-auto shrink-0`
+export const HEADER_QUICK_ACTION_CHIP_FIXED_CLASS = `${HEADER_QUICK_ACTION_CHIP_CLASS} w-auto shrink-0`
 
 export function HeaderQuickActionCard({ action, fixed = false, className = '' }) {
   const Icon = action.icon
@@ -99,9 +99,7 @@ export function HeaderQuickActionCard({ action, fixed = false, className = '' })
       <span className={HEADER_QUICK_ACTION_CHIP_ICON_CLASS}>
         <Icon className="h-4 w-4 shrink-0 text-[#ffffff]" strokeWidth={2.25} aria-hidden />
       </span>
-      <span className="min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[#ffffff]">
-        {action.title}
-      </span>
+      <span className={YF_TEXT_ON_COLOR_CLASS}>{action.title}</span>
     </Link>
   )
 }
