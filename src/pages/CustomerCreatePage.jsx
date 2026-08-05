@@ -500,22 +500,32 @@ export default function CustomerCreatePage() {
    */
   async function assertNoStrongDuplicates(payload) {
     if (editingCustomer?.id) return true
-    const primary = resolvePrimaryContact(contactRows)
-    const { matches } = await checkCustomerDuplicates(
-      {
-        name: payload.companyTitle || payload.shortBrandName,
-        email: primary.email || payload.email,
-        phone: primary.phone || payload.phone,
-        taxNo: payload.taxNumber,
-      },
-      { excludeId: editingCustomer?.id },
-    )
+    let matches = []
+    try {
+      const primary = resolvePrimaryContact(contactRows)
+      const result = await checkCustomerDuplicates(
+        {
+          name: payload.companyTitle || payload.shortBrandName,
+          email: primary.email || payload.email,
+          phone: primary.phone || payload.phone,
+          taxNo: payload.taxNumber,
+        },
+        { excludeId: editingCustomer?.id },
+      )
+      matches = result?.matches || []
+    } catch (error) {
+      // Çift kayıt kontrolü yardımcı bir adım: başarısızsa kaydetmeyi engellemez.
+      console.warn('Çift kayıt kontrolü yapılamadı', error)
+      return true
+    }
     const strong = matches.filter((m) => m.score >= 0.7)
     if (!strong.length) return true
     const summary = strong
       .slice(0, 5)
       .map((m) => `${m.name || m.id} (%${Math.round(m.score * 100)})`)
       .join(' · ')
+    // Onay kullanıcıda: buton "Kaydediliyor…" durumunda beklemesin.
+    setSaving(false)
     return new Promise((resolve) => {
       duplicateResolveRef.current = resolve
       setDuplicatePrompt(summary)
@@ -542,10 +552,15 @@ export default function CustomerCreatePage() {
       return false
     }
     setFormNotice(null)
+    // Geri bildirim ilk adımda görünür: sonraki adımlar beklerse buton sessiz kalmaz.
+    setSaving(true)
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
-    if (!(await assertNoStrongDuplicates(payload))) return false
+    if (!(await assertNoStrongDuplicates(payload))) {
+      setSaving(false)
+      return false
+    }
 
     setSaving(true)
     try {
@@ -577,12 +592,24 @@ export default function CustomerCreatePage() {
     return true
   }
 
+  /** saveForm'un beklenmedik hatası butonu sessizce ölü bırakmasın. */
+  async function runSave(form) {
+    try {
+      return await saveForm(form)
+    } catch (error) {
+      console.error('Müşteri kaydedilemedi', error)
+      setSaving(false)
+      setFormNotice('Kayıt tamamlanamadı. Bilgileri kontrol edip yeniden deneyin.')
+      return false
+    }
+  }
+
   async function collectAndSave(event) {
     event?.preventDefault()
     if (saving) return
     // currentTarget await sonrası boşalır; formu şimdi yakala.
     const form = event.currentTarget
-    if (!(await saveForm(form))) return
+    if (!(await runSave(form))) return
     // "Kaydediliyor…" görünür kalsın, sonra müşteriler listesine dön.
     saveTimer.current = setTimeout(() => navigate(backPath), SAVE_FEEDBACK_MS)
   }
@@ -591,7 +618,7 @@ export default function CustomerCreatePage() {
     if (saving) return
     const form = document.getElementById('customer-edit-form')
     if (!form) return
-    if (!(await saveForm(form))) return
+    if (!(await runSave(form))) return
     const nextSearch = isSupplierForm ? '?kind=supplier' : ''
     if (formRouteKey !== nextSearch.replace('?', '')) {
       navigate(`/musteriler/yeni${nextSearch}`, { replace: true })

@@ -8,7 +8,9 @@ const SAVE_LABEL_RE =
   /\b(kaydet|save|listeyi kaydet|projeyi kaydet|gideri kaydet|irsaliyeyi kaydet|transferi kaydet|depoyu kaydet|profili kaydet)\b/i
 
 function isAuthPath() {
-  return /^\/(giris|kayit|sifremi-unuttum|sifre-sifirla|eposta-dogrula)(\/|$)/.test(window.location.pathname)
+  return /^\/(giris|kayit|sifremi-unuttum|sifre-sifirla|eposta-dogrula)(\/|$)/.test(
+    window.location.pathname,
+  )
 }
 
 function isSearchField(el) {
@@ -67,16 +69,26 @@ export function installFormSubmitGuard() {
     allowByShortcut = false
   }
 
+  /**
+   * İzin bayrağı submit'e kadar yaşamalı. Tıklamanın varsayılan davranışı (form
+   * gönderimi) microtask kuyruğundan sonra çalıştığı için queueMicrotask ile
+   * sıfırlamak bayrağı submit'ten önce silip kaydetmeyi sessizce iptal ediyordu.
+   * Makrotask, gönderim tamamlandıktan sonra çalışır.
+   */
+  const scheduleReset = () => {
+    setTimeout(resetFlags, 0)
+  }
+
   const onPointerDown = (event) => {
     if (event.button != null && event.button !== 0) return
-    if (isSaveControl(event.target)) allowByPointer = true
+    allowByPointer = isSaveControl(event.target)
   }
 
   const onClickCapture = (event) => {
     if (isAuthPath()) return
     if (!isSaveControl(event.target)) return
     if (allowByPointer || allowByShortcut) {
-      queueMicrotask(resetFlags)
+      scheduleReset()
       return
     }
     event.preventDefault()
@@ -87,7 +99,7 @@ export function installFormSubmitGuard() {
     if (isAuthPath()) return
 
     if (allowByPointer || allowByShortcut) {
-      queueMicrotask(resetFlags)
+      scheduleReset()
       return
     }
 
@@ -121,7 +133,7 @@ export function installFormSubmitGuard() {
       if (!(control instanceof HTMLElement) || control.disabled) return
       allowByShortcut = true
       control.click()
-      queueMicrotask(resetFlags)
+      scheduleReset()
       return
     }
 

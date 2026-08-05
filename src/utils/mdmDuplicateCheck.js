@@ -103,16 +103,23 @@ export function findLocalCustomerDuplicates(input, { excludeId } = {}) {
     .slice(0, 20)
 }
 
-/** Best-effort: API first, fall back to local. Never throws. */
+/** Sunucu yanıt vermezse kaydetme akışı beklemede kalmasın. */
+const DUPLICATE_LOOKUP_TIMEOUT_MS = 3000
+
+/** Best-effort: API first, fall back to local. Never throws, never hangs. */
 export async function checkCustomerDuplicates(input, opts = {}) {
   const local = findLocalCustomerDuplicates(input, opts)
   const { token } = getStoredSession?.() || {}
   if (!API_BASE || !token) return { matches: local, source: 'local' }
 
+  const abort = typeof AbortController === 'undefined' ? null : new AbortController()
+  const timer = abort ? setTimeout(() => abort.abort(), DUPLICATE_LOOKUP_TIMEOUT_MS) : null
+
   try {
     const res = await fetch(`${String(API_BASE).replace(/\/$/, '')}/v1/mdm/duplicates`, {
       method: 'POST',
       credentials: 'include',
+      signal: abort?.signal,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -139,5 +146,7 @@ export async function checkCustomerDuplicates(input, opts = {}) {
     }
   } catch {
     return { matches: local, source: 'local' }
+  } finally {
+    if (timer) clearTimeout(timer)
   }
 }
