@@ -48,6 +48,15 @@ export const KALEM_BUTTON_CLASS =
 /** kalem ikon boyutu — Pencil için: className={KALEM_ICON_CLASS} strokeWidth={2.25} */
 export const KALEM_ICON_CLASS = 'h-3.5 w-3.5'
 
+/**
+ * sp — Geri Yükle metin aksiyonu (silinenler paneli satır aksiyonu).
+ * Kalem ile aynı mavi hover dokusu; ikon + etiket yan yana.
+ */
+export const GERI_YUKLE_BUTTON_CLASS =
+  'customer-restore-action inline-flex items-center gap-1.5 rounded-lg bg-transparent px-2.5 py-1.5 text-[14px] font-normal leading-tight text-blue-600 transition-[background-color,color] hover:bg-[rgba(37,99,235,0.16)] hover:text-blue-700'
+
+export const GERI_YUKLE_ICON_CLASS = 'h-3.5 w-3.5'
+
 /** Teklifler sayfası çöp kutusu — danger ton */
 export const TEKLIFLER_COP_KUTUSU_BUTTON_CLASS =
   'border border-[color-mix(in_srgb,var(--ds-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--ds-danger)_10%,transparent)] p-2 text-ds-danger transition-colors hover:bg-[color-mix(in_srgb,var(--ds-danger)_16%,transparent)]'

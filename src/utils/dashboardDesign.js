@@ -74,6 +74,23 @@ export const PAGE_LIST_PILL_WRAPPER_CLASS = 'relative inline-flex min-w-0 w-max 
 export const PAGE_BALANCE_AMOUNT_CLASS =
   'customer-balance-amount tabular-nums text-[14px] font-bold leading-tight tracking-normal'
 
+/* ——— sp — silinenler paneli (CustomerDeletedArchivedPanel) ——— */
+export const SP_PANEL_SHELL_CLASS =
+  'card customer-deleted-archived-panel overflow-hidden p-0 w-full'
+export const SP_HEADER_BUTTON_CLASS =
+  'flex min-h-[4.75rem] w-full items-center justify-between gap-3 bg-transparent px-4 py-3 text-left'
+export const SP_BODY_CLASS = 'border-t border-[var(--glass-border)] bg-transparent px-4 py-3'
+export const SP_EMPTY_CLASS =
+  'bg-transparent px-4 py-8 text-center text-[12px] font-normal text-[var(--muted)]'
+export const SP_ROW_LIST_CLASS = 'space-y-2'
+export const SP_ROW_CLASS = `${APP_METRIC_ROW_CLASS} flex-col !items-stretch gap-3 sm:flex-row sm:!items-center`
+export const SP_ROW_TITLE_CLASS = 'text-[12px] font-semibold leading-tight text-[var(--ink)]'
+export const SP_ROW_META_CLASS = `${APP_SUBLABEL_CLASS} mt-1`
+export const SP_ROW_DETAILS_CLASS =
+  'mt-1 text-[11px] font-normal leading-relaxed text-[var(--muted)]'
+export const SP_ROW_ACTIONS_CLASS = 'flex shrink-0 items-center justify-end gap-1'
+export const SP_CHEVRON_CLASS = 'h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform'
+
 export const APP_OMNI_COLUMN_CLASS = 'glass flex min-h-0 flex-col overflow-hidden rounded-[20px]'
 export const APP_OMNI_SECTION_CLASS = 'glass-inset rounded-[16px] p-3'
 export const APP_OMNI_CHIP_CLASS =

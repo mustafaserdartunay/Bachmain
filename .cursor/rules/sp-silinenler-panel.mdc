@@ -1,0 +1,114 @@
+---
+description: "sp / silinenler panel — açılır silinen/arşiv paneli kısayolu"
+alwaysApply: true
+---
+
+# sp — silinenler paneli (kısayol)
+
+Kullanıcı **sp**, **silinenler panel** veya “silinenler paneli yap / uygula”
+dediğinde, aşağıdaki **açılır cam paneli** kur. Kendi başına `section` + Tailwind
+ile yeniden yazma; mümkünse **`CustomerDeletedArchivedPanel`** bileşenini kullan
+veya aşağıdaki token’ları birebir kopyala.
+
+## Kaynak (referans)
+
+Müşteriler sayfası altı: “Silinenler ve Arşivlenenler”
+(`CustomerDeletedArchivedPanel` → `.customer-deleted-archived-panel`).
+
+## Kabuk
+
+| Özellik | Değer |
+|-----|-----|
+| Element | `section.card` |
+| Class | `SP_PANEL_SHELL_CLASS` = `card customer-deleted-archived-panel overflow-hidden p-0 w-full` |
+| Radius / cam | `.card` — 26px, `var(--glass-bg)`, blur 26px |
+| Padding | **`p-0`** — dolgu header/body içinde |
+
+`customer-deleted-archived-panel` kancası zorunlu: satır hover scale’ini kapatan
+CSS kuralları buna bağlı (`src/index.css`).
+
+## Kapalı başlık (toggle)
+
+| Özellik | Değer |
+|-----|-----|
+| Yükseklik | **min 4.75rem (76px)** — bp / header banner ile aynı |
+| Class | `SP_HEADER_BUTTON_CLASS` |
+| Sol | rose ping nokta (`RedPingDot`) + başlık etiketi **yf** (`APP_LABEL_CLASS`) |
+| Sağ | `{n} Kayıt` (yf) + `ChevronDown` 14px muted; açıkken `rotate-180` |
+
+Varsayılan kapalı (`open = false`). Başlık tıklanınca body açılır.
+
+## Açık gövde
+
+| Bölüm | Class / içerik |
+|-----|-----|
+| Body | `SP_BODY_CLASS` — üst kenar `border-[var(--glass-border)]`, `px-4 py-3` |
+| Boş | `SP_EMPTY_CLASS` — 12px / 400 / muted, ortalanmış |
+| Liste | `SP_ROW_LIST_CLASS` = `space-y-2` |
+
+## Satır
+
+| Slot | Değer |
+|-----|-----|
+| Kabuk | `SP_ROW_CLASS` = `APP_METRIC_ROW_CLASS` + `flex-col … sm:flex-row` |
+| Sol nokta | Aynı rose ping (`bg-rose-500` ping + `bg-rose-600` nokta), **1.5×1.5** |
+| Başlık | `SP_ROW_TITLE_CLASS` — **12px / 600 / ink** |
+| Meta | `SP_ROW_META_CLASS` — **yf**: `Silindi · dd.mm.yyyy hh:mm:ss` veya `Arşivlendi · …` |
+| Detay | `SP_ROW_DETAILS_CLASS` — 11px muted, ` · ` ile birleşik |
+| Aksiyonlar | `SP_ROW_ACTIONS_CLASS` — **Geri Yükle** + **çk** |
+
+Satır hover’da büyüme/kayma **yok** (`transform: none` — panel CSS).
+
+## Satır aksiyonları
+
+| Aksiyon | Token |
+|-----|-----|
+| Geri Yükle | `GERI_YUKLE_BUTTON_CLASS` — mavi metin + `RotateCcw` 14px; hover `rgba(37,99,235,0.16)` |
+| Kalıcı sil | **çk** (`COP_KUTUSU_BUTTON_CLASS`) — `customer-permanent-delete-action` kancası ekle |
+
+Kalıcı silme onayı: `ConfirmModal` (veya standart silme onayı akışı).
+
+## JSX örneği (bileşen)
+
+```jsx
+import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
+
+<CustomerDeletedArchivedPanel
+  title="Silinenler ve Arşivlenenler"
+  listKind={listKind}
+  className="customer-deleted-archived-panel w-full"
+  onRestored={handleRestore}
+  emptyMessage="Silinen veya arşivlenen kayıt yok."
+/>
+```
+
+## JSX örneği (token’larla kabuk)
+
+```jsx
+import {
+  APP_LABEL_CLASS,
+  SP_BODY_CLASS,
+  SP_HEADER_BUTTON_CLASS,
+  SP_PANEL_SHELL_CLASS,
+  SP_ROW_CLASS,
+  SP_ROW_ACTIONS_CLASS,
+  SP_ROW_LIST_CLASS,
+  SP_ROW_META_CLASS,
+  SP_ROW_TITLE_CLASS,
+} from '../utils/dashboardDesign'
+import {
+  COP_KUTUSU_BUTTON_CLASS,
+  COP_KUTUSU_ICON_CLASS,
+  GERI_YUKLE_BUTTON_CLASS,
+  GERI_YUKLE_ICON_CLASS,
+} from '../utils/buttonStyles'
+```
+
+## Kurallar
+
+- Panel her zaman `AppPageShell` / liste sayfasının **altında** (son çocuk) olur.
+- Başlık satırı bp ile aynı **76px** min yükseklik — farklı ölçü uydurma.
+- Silme ikonu **çk**; Geri Yükle ayrı token (`GERI_YUKLE_*`), kalem değil.
+- Rose ping noktası kırmızı çöp kutusundan ayrı: durum göstergesi, aksiyon değil.
+- Başka “silinenler” UI’ı (liste satırı, modal) bu kabuğu taklit etmez; **sp** dendiğinde
+  bu açılır panel kurulur.

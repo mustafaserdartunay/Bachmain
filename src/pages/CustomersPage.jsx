@@ -749,7 +749,6 @@ export default function CustomersPage({
       <CustomerDeletedArchivedPanel
         title="Silinenler ve Arşivlenenler"
         listKind={listKind}
-        className="customer-deleted-archived-panel w-full"
         onRestored={handleRestoreDeletedOrArchived}
         emptyMessage={
           listKind === 'supplier'

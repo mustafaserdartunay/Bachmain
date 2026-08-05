@@ -15,10 +15,24 @@ import {
 } from '../../utils/customerMeta'
 import {
   APP_LABEL_CLASS,
-  APP_METRIC_ROW_CLASS,
-  APP_SUBLABEL_CLASS,
+  SP_BODY_CLASS,
+  SP_CHEVRON_CLASS,
+  SP_EMPTY_CLASS,
+  SP_HEADER_BUTTON_CLASS,
+  SP_PANEL_SHELL_CLASS,
+  SP_ROW_ACTIONS_CLASS,
+  SP_ROW_CLASS,
+  SP_ROW_DETAILS_CLASS,
+  SP_ROW_LIST_CLASS,
+  SP_ROW_META_CLASS,
+  SP_ROW_TITLE_CLASS,
 } from '../../utils/dashboardDesign'
-import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
+import {
+  COP_KUTUSU_BUTTON_CLASS,
+  COP_KUTUSU_ICON_CLASS,
+  GERI_YUKLE_BUTTON_CLASS,
+  GERI_YUKLE_ICON_CLASS,
+} from '../../utils/buttonStyles'
 import ConfirmModal from './ConfirmModal'
 
 function formatWhen(value) {
@@ -146,13 +160,11 @@ export default function CustomerDeletedArchivedPanel({
   }
 
   return (
-    <section
-      className={`card customer-deleted-archived-panel overflow-hidden p-0 ${className}`.trim()}
-    >
+    <section className={`${SP_PANEL_SHELL_CLASS} ${className}`.trim()}>
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex min-h-[4.75rem] w-full items-center justify-between gap-3 bg-transparent px-4 py-3 text-left"
+        className={SP_HEADER_BUTTON_CLASS}
       >
         <span className="flex min-w-0 items-center gap-2">
           <RedPingDot />
@@ -160,49 +172,38 @@ export default function CustomerDeletedArchivedPanel({
         </span>
         <span className="flex shrink-0 items-center gap-3">
           <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
-          <ChevronDown
-            className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform ${open ? 'rotate-180' : ''}`}
-          />
+          <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
         </span>
       </button>
 
       {open ? (
-        <div className="border-t border-[var(--glass-border)] bg-transparent px-4 py-3">
+        <div className={SP_BODY_CLASS}>
           {entries.length === 0 ? (
-            <div className="bg-transparent px-4 py-8 text-center text-[12px] font-normal text-[var(--muted)]">
-              {emptyMessage}
-            </div>
+            <div className={SP_EMPTY_CLASS}>{emptyMessage}</div>
           ) : (
-            <div className="space-y-2">
+            <div className={SP_ROW_LIST_CLASS}>
               {entries.map((item) => {
                 const isArchived = item.kind === 'archived'
                 const details = customerDetails(item.record)
                 return (
-                  <div
-                    key={item.id}
-                    className={`${APP_METRIC_ROW_CLASS} flex-col !items-stretch gap-3 sm:flex-row sm:!items-center`}
-                  >
+                  <div key={item.id} className={SP_ROW_CLASS}>
                     <RedPingDot />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold leading-tight text-[var(--ink)]">
-                        {item.label}
-                      </p>
-                      <p className={`${APP_SUBLABEL_CLASS} mt-1`}>
+                      <p className={SP_ROW_TITLE_CLASS}>{item.label}</p>
+                      <p className={SP_ROW_META_CLASS}>
                         {isArchived ? 'Arşivlendi' : 'Silindi'} · {formatWhen(item.at)}
                       </p>
                       {details.length ? (
-                        <p className="mt-1 text-[11px] font-normal leading-relaxed text-[var(--muted)]">
-                          {details.join(' · ')}
-                        </p>
+                        <p className={SP_ROW_DETAILS_CLASS}>{details.join(' · ')}</p>
                       ) : null}
                     </div>
-                    <div className="flex shrink-0 items-center justify-end gap-1">
+                    <div className={SP_ROW_ACTIONS_CLASS}>
                       <button
                         type="button"
                         onClick={() => handleRestore(item)}
-                        className="customer-restore-action inline-flex items-center gap-1.5 rounded-lg bg-transparent px-2.5 py-1.5 text-[14px] font-normal leading-tight text-blue-600 transition-[background-color,color] hover:bg-[rgba(37,99,235,0.16)] hover:text-blue-700"
+                        className={GERI_YUKLE_BUTTON_CLASS}
                       >
-                        <RotateCcw className="h-3.5 w-3.5" /> Geri Yükle
+                        <RotateCcw className={GERI_YUKLE_ICON_CLASS} /> Geri Yükle
                       </button>
                       <button
                         type="button"
