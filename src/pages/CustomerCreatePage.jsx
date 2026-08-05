@@ -41,6 +41,7 @@ import {
   HEADER_ACTION_CTA_SHELL_CLASS,
   HEADER_ACTION_GRADIENTS,
 } from '../components/Layout/HeaderCashActionsPanel'
+import ConfirmModal from '../components/Common/ConfirmModal'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import {
   FormFieldCompact,
@@ -298,6 +299,9 @@ export default function CustomerCreatePage() {
   const [deleteDialog, setDeleteDialog] = useState(null)
   const [successVisible, setSuccessVisible] = useState(false)
   const [saving, setSaving] = useState(false)
+  /** Kaydetmeyi engelleyen durumların sayfa içi bildirimi (tarayıcı diyaloğu değil). */
+  const [formNotice, setFormNotice] = useState(null)
+  const [duplicatePrompt, setDuplicatePrompt] = useState(null)
   const [formEpoch, setFormEpoch] = useState(0)
   const [meta, setMeta] = useState(() =>
     incomingDraft?.category
@@ -308,6 +312,8 @@ export default function CustomerCreatePage() {
   const [activeMenu, setActiveMenu] = useState(null)
   const successTimer = useRef(null)
   const saveTimer = useRef(null)
+  /** Çift kayıt onayının sonucunu kaydetme akışına geri veren çözümleyici. */
+  const duplicateResolveRef = useRef(null)
   /** "Kaydet ve devam et" sonrası imleci ilk alana taşımak için işaret. */
   const focusFirstFieldRef = useRef(false)
 
@@ -365,6 +371,7 @@ export default function CustomerCreatePage() {
 
   function updateMetaField(field, value) {
     setMeta((current) => ({ ...current, [field]: value }))
+    if (field === 'type' && String(value || '').trim()) setFormNotice(null)
   }
 
   function persistMeta(customerId) {
@@ -487,6 +494,10 @@ export default function CustomerCreatePage() {
     ])
   }
 
+  /**
+   * Olası çift kayıtları sayfa içi onay kutusuyla sorar. Tarayıcı diyaloglarını
+   * engelleyen ayarlar kaydetmeyi sessizce iptal edemesin diye window.confirm yok.
+   */
   async function assertNoStrongDuplicates(payload) {
     if (editingCustomer?.id) return true
     const primary = resolvePrimaryContact(contactRows)
@@ -501,13 +512,21 @@ export default function CustomerCreatePage() {
     )
     const strong = matches.filter((m) => m.score >= 0.7)
     if (!strong.length) return true
-    const lines = strong
+    const summary = strong
       .slice(0, 5)
-      .map((m) => `• ${m.name || m.id} (%${Math.round(m.score * 100)} · ${m.reasons.join(', ')})`)
-      .join('\n')
-    return window.confirm(
-      `MDM: Olası çift kayıt bulundu.\n\n${lines}\n\nYine de kaydetmek istiyor musunuz?`,
-    )
+      .map((m) => `${m.name || m.id} (%${Math.round(m.score * 100)})`)
+      .join(' · ')
+    return new Promise((resolve) => {
+      duplicateResolveRef.current = resolve
+      setDuplicatePrompt(summary)
+    })
+  }
+
+  function resolveDuplicatePrompt(confirmed) {
+    const resolve = duplicateResolveRef.current
+    duplicateResolveRef.current = null
+    setDuplicatePrompt(null)
+    resolve?.(confirmed)
   }
 
   /**
@@ -516,29 +535,40 @@ export default function CustomerCreatePage() {
    */
   async function saveForm(form) {
     if (!String(meta.type || '').trim()) {
-      window.alert('Kaydetmeden önce Tipi alanını seçin.')
+      setFormNotice('Kaydetmeden önce Tipi alanını seçin.')
+      document
+        .querySelector('#customer-edit-form .customer-form-primary-panel')
+        ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
       return false
     }
+    setFormNotice(null)
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
     if (!(await assertNoStrongDuplicates(payload))) return false
 
     setSaving(true)
-    saveDraft(payload)
-    const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
-    persistMeta(savedProfile.id)
-    syncOpeningBalance(payload)
-    publishDomainEvent(
-      editingCustomer?.id ? 'trigger.customer.updated' : 'trigger.customer.created',
-      {
-        customerId: savedProfile.id,
-        name: savedProfile.name || payload.name || payload.firmaAdi,
-      },
-      { source: 'CustomerCreatePage' },
-    )
+    try {
+      saveDraft(payload)
+      const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
+      persistMeta(savedProfile.id)
+      syncOpeningBalance(payload)
+      publishDomainEvent(
+        editingCustomer?.id ? 'trigger.customer.updated' : 'trigger.customer.created',
+        {
+          customerId: savedProfile.id,
+          name: savedProfile.name || payload.name || payload.firmaAdi,
+        },
+        { source: 'CustomerCreatePage' },
+      )
+      flushWorkspaceNow()
+    } catch (error) {
+      console.error('Müşteri kaydedilemedi', error)
+      setSaving(false)
+      setFormNotice('Kayıt tamamlanamadı. Bilgileri kontrol edip yeniden deneyin.')
+      return false
+    }
     showSavedMessage()
-    flushWorkspaceNow()
     form.reset()
     setAddressRows(initialAddressRows(null, null))
     setContactRows(initialContactRows(null, null))
@@ -600,6 +630,16 @@ export default function CustomerCreatePage() {
         </div>
       )}
 
+      <ConfirmModal
+        open={Boolean(duplicatePrompt)}
+        title="Olası çift kayıt"
+        description={`Bu bilgilerle eşleşen kayıtlar bulundu: ${duplicatePrompt || ''}. Yine de kaydetmek istiyor musunuz?`}
+        confirmLabel="Yine de kaydet"
+        cancelLabel="Vazgeç"
+        onConfirm={() => resolveDuplicatePrompt(true)}
+        onCancel={() => resolveDuplicatePrompt(false)}
+      />
+
       <div className="space-y-5">
         <AppPageHeader
           showBack={false}
@@ -616,6 +656,15 @@ export default function CustomerCreatePage() {
             </div>
           }
         />
+
+        {formNotice ? (
+          <p
+            role="alert"
+            className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-[14px] font-normal leading-tight tracking-normal text-rose-600"
+          >
+            {formNotice}
+          </p>
+        ) : null}
 
         <div className="space-y-5">
           <FormSectionPanel
