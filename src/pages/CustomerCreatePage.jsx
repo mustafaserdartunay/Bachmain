@@ -82,6 +82,103 @@ const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !f
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
 const CUSTOMER_FILTER_MENU_CLASS = 'az customer-filter-dropdown-menu customers-page-menu'
 
+/** Kırmızı Vazgeç CTA — başlık ve alt panelde aynı. */
+function CancelCta({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.danger}`}
+    >
+      <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+        <X className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+      </span>
+      <span className={YF_TEXT_ON_COLOR_CLASS}>Vazgeç</span>
+    </button>
+  )
+}
+
+/** Yeşil split CTA: Kaydet + açılır "Kaydet ve devam et". Başlık ve alt panelde aynı. */
+function SaveSplitAction({ onSaveAndContinue }) {
+  const [open, setOpen] = useState(false)
+  const { anchorRef, menuRef, style } = useAnchoredPortal(open, {
+    align: 'right',
+    width: 224,
+    matchWidth: false,
+  })
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    function closeMenu(event) {
+      if (anchorRef.current?.contains(event.target)) return
+      if (menuRef.current?.contains(event.target)) return
+      setOpen(false)
+    }
+
+    document.addEventListener('click', closeMenu)
+    return () => document.removeEventListener('click', closeMenu)
+  }, [anchorRef, menuRef, open])
+
+  return (
+    <div ref={anchorRef} className="relative inline-flex items-center">
+      <div
+        className={`${HEADER_ACTION_CTA_SHELL_CLASS} overflow-hidden ${HEADER_ACTION_GRADIENTS.success}`}
+      >
+        <button
+          type="submit"
+          className="inline-flex h-full items-center gap-2.5 bg-transparent px-3"
+        >
+          <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+            <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+          </span>
+          <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet</span>
+        </button>
+        <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          className="inline-flex h-full w-12 items-center justify-center bg-transparent"
+          aria-label="Kaydet işlemleri"
+          aria-expanded={open}
+        >
+          <ChevronDown
+            className={`${HEADER_ACTION_CTA_ICON_CLASS} transition-transform ${
+              open ? 'rotate-180' : ''
+            }`}
+            aria-hidden="true"
+          />
+        </button>
+      </div>
+      {open &&
+        style &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{ ...style, zIndex: 120 }}
+            className={`${DROPDOWN_MENU_PORTAL_CLASS} customer-save-action-menu w-56`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                onSaveAndContinue()
+              }}
+              className={`${HEADER_ACTION_CTA_CLASS} w-full ${HEADER_ACTION_GRADIENTS.success}`}
+            >
+              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+              </span>
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet ve devam et</span>
+            </button>
+          </div>,
+          document.body,
+        )}
+    </div>
+  )
+}
+
 function emptyMeta(defaultType = '') {
   return { type: defaultType, representative: '', scoring: '', category: '' }
 }
@@ -142,7 +239,6 @@ export default function CustomerCreatePage() {
       ? 'Yeni Tedarikçi'
       : 'Yeni Müşteri'
   const incomingDraft = !editingCustomer ? location.state?.customerDraft : null
-  const [actionMenuOpen, setActionMenuOpen] = useState(false)
   const [openingEnabled, setOpeningEnabled] = useState(false)
   const [addressRows, setAddressRows] = useState([{ id: 0 }])
   const [contactRows, setContactRows] = useState(() =>
@@ -161,21 +257,11 @@ export default function CustomerCreatePage() {
   const successTimer = useRef(null)
   /** "Kaydet ve devam et" sonrası imleci ilk alana taşımak için işaret. */
   const focusFirstFieldRef = useRef(false)
-  const {
-    anchorRef: actionMenuAnchorRef,
-    menuRef: actionMenuRef,
-    style: actionMenuStyle,
-  } = useAnchoredPortal(actionMenuOpen, {
-    align: 'right',
-    width: 224,
-    matchWidth: false,
-  })
 
   useEffect(() => {
     setAddressRows([{ id: 0 }])
     setContactRows(initialContactRows(editingCustomer, incomingDraft))
     setOpeningEnabled(false)
-    setActionMenuOpen(false)
     setDeleteDialog(null)
     setMeta(
       incomingDraft?.category
@@ -202,20 +288,6 @@ export default function CustomerCreatePage() {
     document.addEventListener('click', closeActiveMenu)
     return () => document.removeEventListener('click', closeActiveMenu)
   }, [activeMenu])
-
-  useEffect(() => {
-    if (!actionMenuOpen) return undefined
-
-    function closeActionMenu(event) {
-      const target = event.target
-      if (actionMenuAnchorRef.current?.contains(target)) return
-      if (actionMenuRef.current?.contains(target)) return
-      setActionMenuOpen(false)
-    }
-
-    document.addEventListener('mousedown', closeActionMenu)
-    return () => document.removeEventListener('mousedown', closeActionMenu)
-  }, [actionMenuOpen, actionMenuAnchorRef, actionMenuRef])
 
   function updateOptionList(field, nextOptions) {
     setOptionLists((current) => ({ ...current, [field]: nextOptions }))
@@ -400,16 +472,12 @@ export default function CustomerCreatePage() {
     if (!form) return
     if (!String(meta.type || '').trim()) {
       window.alert('Kaydetmeden önce Tipi alanını seçin.')
-      setActionMenuOpen(false)
       return
     }
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
-    if (!(await assertNoStrongDuplicates(payload))) {
-      setActionMenuOpen(false)
-      return
-    }
+    if (!(await assertNoStrongDuplicates(payload))) return
     saveDraft(payload)
     const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
     persistMeta(savedProfile.id)
@@ -422,7 +490,6 @@ export default function CustomerCreatePage() {
       },
       { source: 'CustomerCreatePage' },
     )
-    setActionMenuOpen(false)
     showSavedMessage()
     flushWorkspaceNow()
     // Sayfada kal, formu boşalt ve imleci ilk alana taşı.
@@ -475,74 +542,9 @@ export default function CustomerCreatePage() {
           centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
           titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
-            <div
-              ref={actionMenuAnchorRef}
-              className="relative flex items-center gap-2.5 bg-transparent"
-            >
-              <button
-                type="button"
-                onClick={() => navigate(backPath)}
-                className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.danger}`}
-              >
-                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                  <X className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-                </span>
-                <span className={YF_TEXT_ON_COLOR_CLASS}>Vazgeç</span>
-              </button>
-              <div
-                className={`${HEADER_ACTION_CTA_SHELL_CLASS} overflow-hidden ${HEADER_ACTION_GRADIENTS.success}`}
-              >
-                <button
-                  type="submit"
-                  className="inline-flex h-full items-center gap-2.5 bg-transparent px-3"
-                >
-                  <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                    <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-                  </span>
-                  <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet</span>
-                </button>
-                <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
-                <button
-                  type="button"
-                  onClick={() => setActionMenuOpen((open) => !open)}
-                  className="inline-flex h-full w-12 items-center justify-center bg-transparent"
-                  aria-label="Kaydet işlemleri"
-                  aria-expanded={actionMenuOpen}
-                >
-                  <ChevronDown
-                    className={`${HEADER_ACTION_CTA_ICON_CLASS} transition-transform ${
-                      actionMenuOpen ? 'rotate-180' : ''
-                    }`}
-                    aria-hidden="true"
-                  />
-                </button>
-              </div>
-              {actionMenuOpen &&
-                actionMenuStyle &&
-                createPortal(
-                  <div
-                    ref={actionMenuRef}
-                    style={{ ...actionMenuStyle, zIndex: 120 }}
-                    className={`${DROPDOWN_MENU_PORTAL_CLASS} customer-save-action-menu w-56`}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      onClick={saveAndContinue}
-                      className={`${HEADER_ACTION_CTA_CLASS} w-full ${HEADER_ACTION_GRADIENTS.success}`}
-                    >
-                      <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                        <Save
-                          className={HEADER_ACTION_CTA_ICON_CLASS}
-                          strokeWidth={2.25}
-                          aria-hidden
-                        />
-                      </span>
-                      <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet ve devam et</span>
-                    </button>
-                  </div>,
-                  document.body,
-                )}
+            <div className="relative flex items-center gap-2.5 bg-transparent">
+              <CancelCta onClick={() => navigate(backPath)} />
+              <SaveSplitAction onSaveAndContinue={saveAndContinue} />
             </div>
           }
         />
@@ -785,25 +787,8 @@ export default function CustomerCreatePage() {
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
-          <button
-            type="button"
-            onClick={() => navigate(backPath)}
-            className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.danger}`}
-          >
-            <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-              <X className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-            </span>
-            <span className={YF_TEXT_ON_COLOR_CLASS}>Vazgeç</span>
-          </button>
-          <button
-            type="submit"
-            className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.success}`}
-          >
-            <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-              <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-            </span>
-            <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet</span>
-          </button>
+          <CancelCta onClick={() => navigate(backPath)} />
+          <SaveSplitAction onSaveAndContinue={saveAndContinue} />
         </div>
       </section>
     </form>
