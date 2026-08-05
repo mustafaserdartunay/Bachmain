@@ -24,7 +24,19 @@ import {
 } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { AppPageBackLink, AppPageHeader } from '../components/Layout/AppPageLayout'
-import { PAGE_CENTER_TITLE_CLASS, PAGE_HEADER_TITLE_SLOT_CLASS } from '../utils/dashboardDesign'
+import {
+  PAGE_CENTER_TITLE_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
+  YF_TEXT_ON_COLOR_CLASS,
+} from '../utils/dashboardDesign'
+import {
+  HEADER_ACTION_CTA_CLASS,
+  HEADER_ACTION_CTA_DIVIDER_CLASS,
+  HEADER_ACTION_CTA_ICON_CLASS,
+  HEADER_ACTION_CTA_ICON_WRAP_CLASS,
+  HEADER_ACTION_CTA_SHELL_CLASS,
+  HEADER_ACTION_GRADIENTS,
+} from '../components/Layout/HeaderCashActionsPanel'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import {
   FormFieldCompact,
@@ -458,29 +470,37 @@ export default function CustomerCreatePage() {
               <button
                 type="button"
                 onClick={() => navigate(backPath)}
-                className="btn-cancel inline-flex h-[52px] items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white"
+                className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.danger}`}
               >
-                <X className="h-4 w-4" aria-hidden="true" />
-                <span className="whitespace-nowrap leading-none">Vazgeç</span>
+                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                  <X className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                </span>
+                <span className={YF_TEXT_ON_COLOR_CLASS}>Vazgeç</span>
               </button>
-              <div className="btn-split inline-flex overflow-hidden">
+              <div
+                className={`${HEADER_ACTION_CTA_SHELL_CLASS} overflow-hidden ${HEADER_ACTION_GRADIENTS.success}`}
+              >
                 <button
                   type="submit"
-                  className="btn-primary inline-flex h-[52px] items-center justify-center gap-2 px-4 text-sm font-bold text-white"
+                  className="inline-flex h-full items-center gap-2.5 bg-transparent px-3"
                 >
-                  <Save className="h-4 w-4" aria-hidden="true" />
-                  <span className="whitespace-nowrap leading-none">Kaydet</span>
+                  <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                    <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                  </span>
+                  <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet</span>
                 </button>
-                <span className="btn-split-divider" aria-hidden="true" />
+                <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
                 <button
                   type="button"
                   onClick={() => setActionMenuOpen((open) => !open)}
-                  className="btn-primary inline-flex h-[52px] w-12 items-center justify-center text-white"
+                  className="inline-flex h-full w-12 items-center justify-center bg-transparent"
                   aria-label="Kaydet işlemleri"
                   aria-expanded={actionMenuOpen}
                 >
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
+                    className={`${HEADER_ACTION_CTA_ICON_CLASS} transition-transform ${
+                      actionMenuOpen ? 'rotate-180' : ''
+                    }`}
                     aria-hidden="true"
                   />
                 </button>
@@ -497,10 +517,16 @@ export default function CustomerCreatePage() {
                     <button
                       type="button"
                       onClick={saveAndContinue}
-                      className="inline-flex w-full items-center justify-start gap-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold leading-none text-[var(--ink)] transition-colors hover:bg-white/55"
+                      className={`${HEADER_ACTION_CTA_CLASS} w-full ${HEADER_ACTION_GRADIENTS.success}`}
                     >
-                      <Save className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span className="whitespace-nowrap leading-none">Kaydet ve devam et</span>
+                      <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                        <Save
+                          className={HEADER_ACTION_CTA_ICON_CLASS}
+                          strokeWidth={2.25}
+                          aria-hidden
+                        />
+                      </span>
+                      <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet ve devam et</span>
                     </button>
                   </div>,
                   document.body,

@@ -1356,7 +1356,7 @@ textarea:not(.form-input)::placeholder {
   background: transparent !important;
 }
 
-.customer-save-action-menu button {
+.customer-save-action-menu button:not(.header-action-cta) {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
@@ -1369,7 +1369,7 @@ textarea:not(.form-input)::placeholder {
   flex-shrink: 0;
 }
 
-.customer-save-action-menu button:hover {
+.customer-save-action-menu button:not(.header-action-cta):hover {
   background: transparent !important;
 }
 
@@ -6630,6 +6630,22 @@ html .app-dropdown-portal button.cop-kutusu-btn svg,
 html .customers-page-menu button.cop-kutusu-btn svg,
 html .customer-filter-dropdown-menu button.cop-kutusu-btn svg {
   color: currentColor !important;
+}
+
+/* --- Renkli header/form CTA (header-action-cta) --- */
+/* Gradient zemin ve beyaz metin, menü/portal içi nötrleştirme kurallarına rağmen korunur. */
+html .header-action-cta,
+html .app-dropdown-portal .header-action-cta,
+html .customer-save-action-menu button.header-action-cta,
+html .customer-save-action-menu button.header-action-cta:hover {
+  background-color: transparent !important;
+  text-transform: none !important;
+}
+
+html .header-action-cta :where(span, svg, p),
+html .app-dropdown-portal .header-action-cta :where(span, svg, p),
+html .customer-save-action-menu button.header-action-cta :where(span, svg, p) {
+  color: #ffffff !important;
 }
 
 /* --- kalem: standart düzenleme ikon butonu (çk'nın mavi eşi) --- */
