@@ -31,8 +31,11 @@ Müşteriler sayfası → Silinenler / Arşiv paneli satır aksiyonu
 ## Class
 
 ```txt
-inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600
+cop-kutusu-btn inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600
 ```
+
+`cop-kutusu-btn` kancası zorunlu: menü içindeki `button[title='Sil']` kuralları
+(`!important` + `scale(1.1)`) aksi halde hover dokusunu ezer. CSS: `src/index.css`.
 
 Paylaşılan sabit: `COP_KUTUSU_BUTTON_CLASS` + `COP_KUTUSU_ICON_CLASS`
 (`src/utils/buttonStyles.js`). Yeni yerlerde class'ı elle yazmak yerine sabiti içe aktar.
@@ -56,8 +59,9 @@ import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../../utils/butt
 
 ## Kurallar
 
-- Buton **her zaman görünür**; hover ile belirme (`opacity-0`) kullanma.
-- Satır hover'ında büyüme/kayma yok (`transform: none`).
+- Butonun kendisi asla saklanmaz (`opacity-0` verme). Satır aksiyonlarını hover'da
+  gösteren mevcut kapsayıcılar (ör. `EditableDropdownPill` seçenek satırı) korunur.
+- Hover'da büyüme/kayma yok (`transform: none`) — sadece renk ve zemin değişir.
 - Silme akışı onay gerektiriyorsa onay katmanı **DeleteConfirmPopover** standardıdır
   (kırmızı gradient, minimal, portal ile en üstte) — `ListDeleteConfirmPanel.jsx`.
 - Kenarlıklı/dolgulu danger buton gereken eski yerler `TEKLIFLER_COP_KUTUSU_BUTTON_CLASS`

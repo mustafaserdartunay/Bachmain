@@ -6,6 +6,7 @@ import { dropdownMenuShellClass } from './Common/DropdownMenu'
 import StageColorSwatches from './DocumentEditor/StageColorSwatches'
 import { stageColors } from './DocumentEditor/stageColors'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
+import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../utils/buttonStyles'
 import { OPTION_COLOR_PALETTE } from '../utils/customerMeta'
 
 const DEFAULT_BUTTON_CLASS =
@@ -170,7 +171,7 @@ export default function EditableDropdownPill({
     ? hasSelection
       ? 'text-[var(--text-strong)]'
       : 'text-[var(--text-muted)]'
-    : 'text-xs font-extrabold leading-none text-[var(--muted)]'
+    : 'text-[12px] font-normal leading-tight text-[var(--muted)]'
   const lightMenuShell =
     'z-30 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1.5 shadow-[var(--shadow)]'
   const menuPositionClass =
@@ -197,10 +198,10 @@ export default function EditableDropdownPill({
 
   const optionButtonClass = isLightMenu
     ? 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold text-[var(--text-strong)]'
-    : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-extrabold leading-none text-[var(--muted)]'
+    : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-normal leading-tight text-[var(--muted)]'
   const placeholderButtonClass = isLightMenu
-    ? `${optionButtonClass} origin-left text-[var(--text-muted)] transition-transform hover:scale-[1.03] hover:bg-transparent`
-    : `${optionButtonClass} origin-left transition-transform hover:scale-[1.03] hover:bg-transparent`
+    ? `${optionButtonClass} origin-left text-[var(--text-muted)] transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
+    : `${optionButtonClass} origin-left transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
 
   function renderMenu() {
     const expandedEditor = adding || editingIndex != null
@@ -297,17 +298,17 @@ export default function EditableDropdownPill({
                     onChange(option.label)
                     setActiveMenu(null)
                   }}
-                  className={`${optionButtonClass} origin-left transition-transform hover:scale-[1.03] hover:bg-transparent`}
+                  className={`${optionButtonClass} origin-left transition-[transform,font-weight,background-color] hover:scale-[1.03] hover:font-bold hover:bg-transparent`}
                 >
                   <OptionLeading option={option} isLightMenu={isLightMenu} />
                   <span className="truncate">{option.label}</span>
                 </button>
                 {canEdit && (
-                  <span className="customer-option-actions flex shrink-0 items-center gap-0.5 pr-1.5 opacity-100">
+                  <span className="flex shrink-0 items-center gap-0.5 pr-1.5 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       type="button"
                       onClick={() => startEdit(index)}
-                      className="customer-option-edit-btn rounded-lg bg-transparent p-1 text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-[rgba(37,99,235,0.16)] hover:text-blue-700"
+                      className="rounded-lg p-1 text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-[rgba(37,99,235,0.16)] hover:text-blue-700"
                       title="Düzenle"
                     >
                       <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -318,10 +319,10 @@ export default function EditableDropdownPill({
                         setEditingIndex(null)
                         setConfirmIndex(index)
                       }}
-                      className="customer-option-delete-btn rounded-lg bg-transparent p-1 text-red-500 transition-[transform,background-color,color] hover:scale-110 hover:bg-red-500/15 hover:text-red-600"
+                      className={COP_KUTUSU_BUTTON_CLASS}
                       title="Sil"
                     >
-                      <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                      <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
                     </button>
                   </span>
                 )}

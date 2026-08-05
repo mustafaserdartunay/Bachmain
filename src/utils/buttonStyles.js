@@ -33,7 +33,7 @@ export const DUZENLEME_KALEMI_BUTTON_CLASS = `${URETIM_ARTI_BUTTON_CLASS} p-2`
  * Kenarlıksız, saydam zemin; hover'da yumuşak kırmızı doku.
  */
 export const COP_KUTUSU_BUTTON_CLASS =
-  'inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600'
+  'cop-kutusu-btn inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600'
 
 /** çk ikon boyutu — Trash2 için: className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} */
 export const COP_KUTUSU_ICON_CLASS = 'h-3.5 w-3.5'

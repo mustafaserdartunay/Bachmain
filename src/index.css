@@ -6603,6 +6603,35 @@ html.night .bach-doc-canvas-wrap {
   }
 }
 
+/* --- çk: standart çöp kutusu ikon butonu --- */
+/* Menü içi button[title='Sil'] kurallarını geçer: hover'da kırmızı doku, transform yok. */
+html button.cop-kutusu-btn,
+html .app-dropdown-portal button.cop-kutusu-btn,
+html .customers-page-menu button.cop-kutusu-btn,
+html .customer-filter-dropdown-menu button.cop-kutusu-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: transparent !important;
+  color: #ef4444 !important;
+  transform: none !important;
+}
+
+html button.cop-kutusu-btn:hover,
+html .app-dropdown-portal button.cop-kutusu-btn:hover,
+html .customers-page-menu button.cop-kutusu-btn:hover,
+html .customer-filter-dropdown-menu button.cop-kutusu-btn:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
+  transform: none !important;
+}
+
+html button.cop-kutusu-btn svg,
+html .app-dropdown-portal button.cop-kutusu-btn svg,
+html .customers-page-menu button.cop-kutusu-btn svg,
+html .customer-filter-dropdown-menu button.cop-kutusu-btn svg {
+  color: currentColor !important;
+}
+
 /* --- Standart silme onayı (DeleteConfirmPopover) --- */
 /* Kırmızı gradient zemin, minimal ölçüler ve tüm katmanların üstünde konum. */
 .delete-confirm-portal {
