@@ -82,13 +82,6 @@ const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !f
 const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
 const CUSTOMER_FILTER_MENU_CLASS = 'az customer-filter-dropdown-menu customers-page-menu'
 
-const TEXT_ACTION_CLASS =
-  'inline-flex items-center justify-center gap-1.5 origin-center bg-transparent p-0 text-xs font-normal leading-none transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold [&_svg]:block [&_svg]:shrink-0'
-const TEXT_CANCEL_CLASS = `${TEXT_ACTION_CLASS} text-[#e11d48]`
-const TEXT_SAVE_CLASS = `${TEXT_ACTION_CLASS} text-[#2563eb]`
-const TEXT_SAVE_MENU_ITEM_CLASS =
-  'inline-flex w-full items-center justify-start gap-1.5 origin-left rounded-xl px-3 py-2.5 text-left text-xs font-normal leading-none text-[#2563eb] transition-[transform,font-weight] duration-hover hover:scale-[1.06] hover:font-semibold hover:bg-transparent [&_svg]:block [&_svg]:shrink-0'
-
 function emptyMeta(defaultType = '') {
   return { type: defaultType, representative: '', scoring: '', category: '' }
 }
@@ -166,6 +159,8 @@ export default function CustomerCreatePage() {
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const successTimer = useRef(null)
+  /** "Kaydet ve devam et" sonrası imleci ilk alana taşımak için işaret. */
+  const focusFirstFieldRef = useRef(false)
   const {
     anchorRef: actionMenuAnchorRef,
     menuRef: actionMenuRef,
@@ -188,6 +183,14 @@ export default function CustomerCreatePage() {
         : readMetaFor(editingCustomer?.id, ''),
     )
   }, [defaultPartyType, editingCustomer?.id, formRouteKey, incomingDraft])
+
+  useEffect(() => {
+    if (!focusFirstFieldRef.current) return
+    focusFirstFieldRef.current = false
+    document
+      .querySelector('#customer-edit-form input[name="shortBrandName"]')
+      ?.focus({ preventScroll: false })
+  }, [formEpoch])
 
   useEffect(() => {
     if (!activeMenu) return undefined
@@ -389,7 +392,7 @@ export default function CustomerCreatePage() {
     setMeta(emptyMeta())
     showSavedMessage()
     flushWorkspaceNow()
-    setTimeout(() => navigate(-1), 900)
+    setTimeout(() => navigate(backPath), 900)
   }
 
   async function saveAndContinue() {
@@ -422,10 +425,17 @@ export default function CustomerCreatePage() {
     setActionMenuOpen(false)
     showSavedMessage()
     flushWorkspaceNow()
-    const nextParams = new URLSearchParams()
-    if (isSupplierForm) nextParams.set('kind', 'supplier')
-    nextParams.set('edit', savedProfile.id)
-    navigate(`/musteriler/yeni?${nextParams.toString()}`, { replace: true })
+    // Sayfada kal, formu boşalt ve imleci ilk alana taşı.
+    form.reset()
+    setAddressRows([{ id: 0 }])
+    setContactRows(initialContactRows(null, null))
+    setOpeningEnabled(false)
+    setMeta(emptyMeta())
+    focusFirstFieldRef.current = true
+    const nextSearch = isSupplierForm ? '?kind=supplier' : ''
+    if (formRouteKey !== nextSearch.replace('?', '')) {
+      navigate(`/musteriler/yeni${nextSearch}`, { replace: true })
+    }
     setFormEpoch((epoch) => epoch + 1)
   }
 
@@ -458,7 +468,9 @@ export default function CustomerCreatePage() {
       <div className="space-y-5">
         <AppPageHeader
           showBack={false}
-          title={<AppPageBackLink />}
+          title={
+            <AppPageBackLink to={backPath} label={isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'} />
+          }
           centerTitle={String(pageHeading || '').toLocaleUpperCase('tr-TR')}
           centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
           titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
@@ -773,13 +785,24 @@ export default function CustomerCreatePage() {
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
-          <button type="button" onClick={() => navigate(-1)} className={TEXT_CANCEL_CLASS}>
-            <X className="h-3.5 w-3.5" aria-hidden="true" />
-            <span className="whitespace-nowrap leading-none">Vazgeç</span>
+          <button
+            type="button"
+            onClick={() => navigate(backPath)}
+            className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.danger}`}
+          >
+            <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+              <X className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+            </span>
+            <span className={YF_TEXT_ON_COLOR_CLASS}>Vazgeç</span>
           </button>
-          <button type="submit" className={TEXT_SAVE_CLASS}>
-            <Save className="h-3.5 w-3.5" aria-hidden="true" />
-            <span className="whitespace-nowrap leading-none">Kaydet</span>
+          <button
+            type="submit"
+            className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.success}`}
+          >
+            <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+              <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+            </span>
+            <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet</span>
           </button>
         </div>
       </section>
