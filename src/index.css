@@ -6602,3 +6602,64 @@ html.night .bach-doc-canvas-wrap {
     max-height: 240px;
   }
 }
+
+/* --- Standart silme onayı (DeleteConfirmPopover) --- */
+/* Kırmızı gradient zemin, minimal ölçüler ve tüm katmanların üstünde konum. */
+.delete-confirm-portal {
+  z-index: 12000 !important;
+}
+
+html .delete-confirm-panel,
+html.night .delete-confirm-panel,
+html .app-responsive .delete-confirm-panel,
+html .app-dropdown-portal .delete-confirm-panel {
+  background-image: linear-gradient(to bottom right, #fda4af, #f43f5e, #e11d48) !important;
+  background-color: #f43f5e !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+html .delete-confirm-panel :where(p, span, button, svg),
+html.night .delete-confirm-panel :where(p, span, button, svg),
+html .app-responsive .delete-confirm-panel :where(p, span, button, svg),
+html .app-dropdown-portal .delete-confirm-panel :where(p, span, button, svg) {
+  color: #ffffff !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+html .delete-confirm-panel .delete-confirm-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+html .delete-confirm-panel .delete-confirm-desc {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html .delete-confirm-panel .delete-confirm-yes,
+html .delete-confirm-panel .delete-confirm-no {
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+html .delete-confirm-panel .delete-confirm-yes,
+html.night .delete-confirm-panel .delete-confirm-yes,
+html .app-responsive .delete-confirm-panel .delete-confirm-yes,
+html .app-dropdown-portal .delete-confirm-panel .delete-confirm-yes {
+  background: #ffffff !important;
+  color: #e11d48 !important;
+  font-weight: 700 !important;
+}
+
+html .delete-confirm-panel .delete-confirm-no,
+html.night .delete-confirm-panel .delete-confirm-no,
+html .app-responsive .delete-confirm-panel .delete-confirm-no,
+html .app-dropdown-portal .delete-confirm-panel .delete-confirm-no {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  font-weight: 600 !important;
+}

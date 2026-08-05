@@ -1,5 +1,11 @@
+import { useCallback, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Check, Trash2 } from 'lucide-react'
-import { DUZENLEME_KALEMI_BUTTON_CLASS, TEKLIFLER_COP_KUTUSU_BUTTON_CLASS } from '../../utils/buttonStyles'
+import {
+  DUZENLEME_KALEMI_BUTTON_CLASS,
+  TEKLIFLER_COP_KUTUSU_BUTTON_CLASS,
+} from '../../utils/buttonStyles'
+import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 
 export const DELETE_TRASH_BUTTON_CLASS = `rounded-lg ${TEKLIFLER_COP_KUTUSU_BUTTON_CLASS}`
 
@@ -7,31 +13,61 @@ export const EDIT_PENCIL_BUTTON_CLASS = DUZENLEME_KALEMI_BUTTON_CLASS
 
 export const DELETE_TRASH_BUTTON_HIDDEN_CLASS = 'pointer-events-none invisible'
 
-export const DELETE_CONFIRM_POPOVER_PANEL_CLASS =
-  'flex flex-wrap items-center gap-2 rounded-2xl border border-red-500/35 bg-dark-900 p-2 shadow-2xl ring-1 ring-red-500/15'
+/** Standart silme onayı: kırmızı gradient (Gelen E-Faturalar CTA tonu), minimal ölçüler. */
+export const DELETE_CONFIRM_PANEL_CLASS =
+  'delete-confirm-panel flex items-center gap-2 rounded-xl border border-white/35 bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2 py-1.5 shadow-[0_10px_24px_-14px_rgba(30,35,60,0.65)] ring-1 ring-white/20'
 
-export const DELETE_CONFIRM_POPOVER_WARM_PANEL_CLASS =
-  'flex flex-wrap items-center gap-2 rounded-2xl border border-white/35 bg-gradient-to-br from-amber-400 to-orange-500 p-2 shadow-2xl ring-1 ring-amber-300/25'
+/** Popover her zaman en üstte: portal + dropdown katmanının üstünde z-index. */
+export const DELETE_CONFIRM_Z_INDEX = 12000
 
+export const DELETE_CONFIRM_POPOVER_WIDTH = 288
+
+/** Geriye dönük uyumluluk — tüm varyantlar tek standart tasarıma bağlandı. */
+export const DELETE_CONFIRM_POPOVER_PANEL_CLASS = DELETE_CONFIRM_PANEL_CLASS
+export const DELETE_CONFIRM_POPOVER_WARM_PANEL_CLASS = DELETE_CONFIRM_PANEL_CLASS
 export const DELETE_CONFIRM_POPOVER_ANCHOR_CLASS = 'absolute right-0 top-12 z-40'
 
-const DELETE_CONFIRM_VARIANTS = {
-  dark: {
-    panel: DELETE_CONFIRM_POPOVER_PANEL_CLASS,
-    icon: 'bg-red-500/15 text-red-300',
-    title: 'text-white',
-    description: 'text-gray-500',
-    confirm: 'bg-red-500 text-white hover:bg-red-400',
-    cancel: 'border-dark-500/60 bg-dark-700 text-gray-200 hover:bg-dark-600',
-  },
-  warm: {
-    panel: DELETE_CONFIRM_POPOVER_WARM_PANEL_CLASS,
-    icon: 'bg-white/25 text-white',
-    title: 'text-white',
-    description: 'text-white/85',
-    confirm: 'bg-white text-orange-600 hover:bg-white/90',
-    cancel: 'border-white/40 bg-white/15 text-white hover:bg-white/25',
-  },
+const CONFIRM_BUTTON_CLASS =
+  'delete-confirm-yes inline-flex h-6 shrink-0 items-center gap-1 rounded-lg bg-white px-2 text-[12px] font-bold leading-none text-[#e11d48] transition-transform hover:scale-105'
+
+const CANCEL_BUTTON_CLASS =
+  'delete-confirm-no inline-flex h-6 shrink-0 items-center rounded-lg border border-white/45 bg-white/15 px-2 text-[12px] font-semibold leading-none text-white transition-transform hover:scale-105'
+
+function DeleteConfirmPanel({
+  title,
+  description,
+  confirmLabel,
+  cancelLabel,
+  onConfirm,
+  onCancel,
+  className = '',
+}) {
+  return (
+    <div
+      className={`${DELETE_CONFIRM_PANEL_CLASS} ${className}`.trim()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <Trash2 className="h-3.5 w-3.5 shrink-0 text-white" />
+      <div className="min-w-0 flex-1">
+        <p className="delete-confirm-title break-words text-[13px] font-bold leading-tight text-white">
+          {title}
+        </p>
+        {description ? (
+          <p className="delete-confirm-desc break-words text-[11px] font-normal leading-tight text-white/85">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        <button type="button" onClick={onConfirm} className={CONFIRM_BUTTON_CLASS}>
+          {confirmLabel}
+        </button>
+        <button type="button" onClick={onCancel} className={CANCEL_BUTTON_CLASS}>
+          {cancelLabel}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export function DeleteConfirmPopover({
@@ -41,40 +77,86 @@ export function DeleteConfirmPopover({
   cancelLabel = 'Vazgeç',
   onConfirm,
   onCancel,
-  variant = 'dark',
   className = '',
+  align = 'right',
+  placement = 'below',
+  inline,
 }) {
-  const styles = DELETE_CONFIRM_VARIANTS[variant] || DELETE_CONFIRM_VARIANTS.dark
+  const holderRef = useRef(null)
+  // Konumlandırma sınıfı verilmişse popover, verilmemişse akış içi (inline) render edilir.
+  const isInline = inline ?? !/\b(absolute|fixed)\b/.test(className)
+
+  // Tetikleyicinin bulunduğu kapsayıcıya hizalanır; ölçülemeyen kapsayıcıda üst seviyeye çıkar.
+  const getAnchor = useCallback(() => {
+    let node = holderRef.current?.parentElement || null
+    while (node?.parentElement && node.getBoundingClientRect().width === 0) {
+      node = node.parentElement
+    }
+    return node
+  }, [])
+
+  const { menuRef, style } = useAnchoredPortal(!isInline, {
+    matchWidth: false,
+    width: DELETE_CONFIRM_POPOVER_WIDTH,
+    align,
+    placement,
+    offset: 6,
+    getAnchor,
+  })
+
+  useEffect(() => {
+    if (isInline || typeof onCancel !== 'function') return undefined
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onCancel()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isInline, onCancel])
+
+  const panel = (
+    <DeleteConfirmPanel
+      title={title}
+      description={description}
+      confirmLabel={confirmLabel}
+      cancelLabel={cancelLabel}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+    />
+  )
+
+  if (isInline) {
+    return (
+      <div className={`w-full ${className}`.trim()} onClick={(event) => event.stopPropagation()}>
+        {panel}
+      </div>
+    )
+  }
 
   return (
-    <div
-      className={`${styles.panel} ${className}`}
-      onClick={(event) => event.stopPropagation()}
-    >
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${styles.icon}`}>
-        <Trash2 className="h-4 w-4" />
-      </div>
-      <div className="min-w-[8rem] flex-1">
-        <p className={`break-words text-xs font-black leading-tight ${styles.title}`}>{title}</p>
-        <p className={`mt-0.5 break-words text-[12px] font-medium leading-tight ${styles.description}`}>{description}</p>
-      </div>
-      <div className="ml-auto flex shrink-0 items-center gap-1.5">
-        <button
-          type="button"
-          onClick={onConfirm}
-          className={`rounded-lg px-2.5 py-1.5 text-[12px] font-black transition-colors ${styles.confirm}`}
-        >
-          {confirmLabel}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className={`rounded-lg border px-2.5 py-1.5 text-[12px] font-bold transition-colors ${styles.cancel}`}
-        >
-          {cancelLabel}
-        </button>
-      </div>
-    </div>
+    <>
+      <span ref={holderRef} className="hidden" aria-hidden />
+      {typeof document === 'undefined'
+        ? null
+        : createPortal(
+            <div
+              ref={menuRef}
+              className="delete-confirm-portal"
+              style={{
+                position: 'fixed',
+                top: '0px',
+                left: '0px',
+                visibility: 'hidden',
+                pointerEvents: 'none',
+                ...(style || {}),
+                zIndex: DELETE_CONFIRM_Z_INDEX,
+              }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              {panel}
+            </div>,
+            document.body,
+          )}
+    </>
   )
 }
 
@@ -152,7 +234,11 @@ export function ListInlineActionConfirm({
       className={`min-w-[118px] rounded-xl border p-1 shadow-lg shadow-black/30 ring-1 ${styles.panel} ${className}`}
       onClick={(event) => event.stopPropagation()}
     >
-      <p className={`mb-1 px-0.5 text-center text-[11px] font-black leading-tight ${styles.message}`}>{message}</p>
+      <p
+        className={`mb-1 px-0.5 text-center text-[11px] font-black leading-tight ${styles.message}`}
+      >
+        {message}
+      </p>
       <div className="grid grid-cols-2 gap-1">
         <button
           type="button"
@@ -161,11 +247,7 @@ export function ListInlineActionConfirm({
         >
           <Check className="h-3 w-3 shrink-0" /> Evet
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn-cancel px-3 text-[11px] font-bold"
-        >
+        <button type="button" onClick={onCancel} className="btn-cancel px-3 text-[11px] font-bold">
           Vazgeç
         </button>
       </div>
@@ -209,10 +291,21 @@ export function ListInlineDeleteConfirmPopover({
   )
 }
 
-export function ListInlineActionConfirmPopover({ message, onConfirm, onCancel, tone = 'red', className = '' }) {
+export function ListInlineActionConfirmPopover({
+  message,
+  onConfirm,
+  onCancel,
+  tone = 'red',
+  className = '',
+}) {
   return (
     <div className={`absolute right-0 top-1/2 z-20 -translate-y-1/2 ${className}`}>
-      <ListInlineActionConfirm message={message} onConfirm={onConfirm} onCancel={onCancel} tone={tone} />
+      <ListInlineActionConfirm
+        message={message}
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+        tone={tone}
+      />
     </div>
   )
 }
