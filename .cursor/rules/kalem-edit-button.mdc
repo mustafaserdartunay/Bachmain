@@ -1,0 +1,68 @@
+---
+description: "kalem / kl — standart düzenleme ikon butonu kısayolu (çk'nın mavi eşi)"
+alwaysApply: true
+---
+
+# kalem — düzenleme ikonu (kısayol)
+
+Kullanıcı **kalem**, **kl** veya “kalem yap / kalem oluştur” dediğinde, aşağıdaki
+düzenleme ikon butonunu **birebir** kur. Başka boyut, kenarlık veya mavi ton uydurma.
+
+**çk ile kardeş:** ölçü, radius, dolgu, geçiş ve hover davranışı **çk ile aynıdır**;
+tek fark renk ailesi (kırmızı → mavi). İkisi yan yana kullanıldığında aynı boyutta durur.
+
+## Kaynak (referans)
+
+`EditableDropdownPill` seçenek satırı aksiyonları — kalem + çöp kutusu ikili.
+
+## Görsel token
+
+| Özellik | Değer |
+|-----|-----|
+| Kutu | **32 × 32 px** (`h-8 w-8`), `inline-flex items-center justify-center` |
+| Radius | **8px** (`rounded-lg`) |
+| Padding | `p-1` |
+| Zemin | **saydam** (`bg-transparent`) — kenarlık **yok** |
+| İkon rengi | `text-blue-600` (**#2563eb**) |
+| Hover zemin | `rgba(37, 99, 235, 0.16)` |
+| Hover renk | `hover:text-blue-700` (**#1d4ed8**) |
+| Geçiş | `transition-[background-color,color]` — **scale / transform yok** |
+| İkon | `Pencil`, `h-3.5 w-3.5` (14px), `strokeWidth={2.25}` |
+| Erişilebilirlik | `title="Düzenle"` |
+
+## Class
+
+```txt
+kalem-btn inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-blue-600 transition-[background-color,color] hover:bg-[rgba(37,99,235,0.16)] hover:text-blue-700
+```
+
+`kalem-btn` kancası zorunlu: menü içindeki `button[title='Düzenle']` kuralları
+(`!important` + `scale(1.1)`) aksi halde hover dokusunu ezer. CSS: `src/index.css`.
+
+Paylaşılan sabit: `KALEM_BUTTON_CLASS` + `KALEM_ICON_CLASS` (`src/utils/buttonStyles.js`).
+Yeni yerlerde class'ı elle yazmak yerine sabiti içe aktar.
+
+## JSX örneği
+
+```jsx
+import { Pencil } from 'lucide-react'
+import { KALEM_BUTTON_CLASS, KALEM_ICON_CLASS } from '../utils/buttonStyles'
+
+<button
+  type="button"
+  onClick={() => startEdit(index)}
+  className={KALEM_BUTTON_CLASS}
+  title="Düzenle"
+>
+  <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
+</button>
+```
+
+## Kurallar
+
+- Butonun kendisi asla saklanmaz (`opacity-0` verme). Satır aksiyonlarını hover'da
+  gösteren mevcut kapsayıcılar korunur.
+- Hover'da büyüme/kayma yok (`transform: none`) — sadece renk ve zemin değişir.
+- Kalem ile çöp kutusu aynı satırdaysa ikisi de bu ölçüde olur: **kalem + çk**.
+- Kenarlıklı/dolgulu mavi buton gereken eski yerler `DUZENLEME_KALEMI_BUTTON_CLASS`
+  kullanmaya devam eder; **kalem** dendiğinde bu değil, yukarıdaki saydam varyant kurulur.

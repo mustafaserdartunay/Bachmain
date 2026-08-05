@@ -6,7 +6,12 @@ import { dropdownMenuShellClass } from './Common/DropdownMenu'
 import StageColorSwatches from './DocumentEditor/StageColorSwatches'
 import { stageColors } from './DocumentEditor/stageColors'
 import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
-import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../utils/buttonStyles'
+import {
+  COP_KUTUSU_BUTTON_CLASS,
+  COP_KUTUSU_ICON_CLASS,
+  KALEM_BUTTON_CLASS,
+  KALEM_ICON_CLASS,
+} from '../utils/buttonStyles'
 import { OPTION_COLOR_PALETTE } from '../utils/customerMeta'
 
 const DEFAULT_BUTTON_CLASS =
@@ -308,10 +313,10 @@ export default function EditableDropdownPill({
                     <button
                       type="button"
                       onClick={() => startEdit(index)}
-                      className="rounded-lg p-1 text-blue-600 transition-[transform,background-color,color] hover:scale-110 hover:bg-[rgba(37,99,235,0.16)] hover:text-blue-700"
+                      className={KALEM_BUTTON_CLASS}
                       title="Düzenle"
                     >
-                      <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
+                      <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
                     </button>
                     <button
                       type="button"

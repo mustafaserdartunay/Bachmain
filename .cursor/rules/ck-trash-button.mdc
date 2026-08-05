@@ -66,3 +66,5 @@ import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../../utils/butt
   (kırmızı gradient, minimal, portal ile en üstte) — `ListDeleteConfirmPanel.jsx`.
 - Kenarlıklı/dolgulu danger buton gereken eski yerler `TEKLIFLER_COP_KUTUSU_BUTTON_CLASS`
   kullanmaya devam eder; **çk** dendiğinde bu değil, yukarıdaki saydam varyant kurulur.
+- Mavi eşi **kalem** (`kalem-edit-button.mdc`): aynı ölçü ve davranış, mavi ton.
+  Aynı satırda kalem + çk birlikte kullanılır.

@@ -38,6 +38,16 @@ export const COP_KUTUSU_BUTTON_CLASS =
 /** çk ikon boyutu — Trash2 için: className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} */
 export const COP_KUTUSU_ICON_CLASS = 'h-3.5 w-3.5'
 
+/**
+ * kalem — standart düzenleme ikon butonu. çk ile aynı ölçü/davranış, mavi ton.
+ * Kenarlıksız, saydam zemin; hover'da yumuşak mavi doku, transform yok.
+ */
+export const KALEM_BUTTON_CLASS =
+  'kalem-btn inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-blue-600 transition-[background-color,color] hover:bg-[rgba(37,99,235,0.16)] hover:text-blue-700'
+
+/** kalem ikon boyutu — Pencil için: className={KALEM_ICON_CLASS} strokeWidth={2.25} */
+export const KALEM_ICON_CLASS = 'h-3.5 w-3.5'
+
 /** Teklifler sayfası çöp kutusu — danger ton */
 export const TEKLIFLER_COP_KUTUSU_BUTTON_CLASS =
   'border border-[color-mix(in_srgb,var(--ds-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--ds-danger)_10%,transparent)] p-2 text-ds-danger transition-colors hover:bg-[color-mix(in_srgb,var(--ds-danger)_16%,transparent)]'

@@ -6632,6 +6632,34 @@ html .customer-filter-dropdown-menu button.cop-kutusu-btn svg {
   color: currentColor !important;
 }
 
+/* --- kalem: standart düzenleme ikon butonu (çk'nın mavi eşi) --- */
+html button.kalem-btn,
+html .app-dropdown-portal button.kalem-btn,
+html .customers-page-menu button.kalem-btn,
+html .customer-filter-dropdown-menu button.kalem-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: transparent !important;
+  color: #2563eb !important;
+  transform: none !important;
+}
+
+html button.kalem-btn:hover,
+html .app-dropdown-portal button.kalem-btn:hover,
+html .customers-page-menu button.kalem-btn:hover,
+html .customer-filter-dropdown-menu button.kalem-btn:hover {
+  background: rgba(37, 99, 235, 0.16) !important;
+  color: #1d4ed8 !important;
+  transform: none !important;
+}
+
+html button.kalem-btn svg,
+html .app-dropdown-portal button.kalem-btn svg,
+html .customers-page-menu button.kalem-btn svg,
+html .customer-filter-dropdown-menu button.kalem-btn svg {
+  color: currentColor !important;
+}
+
 /* --- Standart silme onayı (DeleteConfirmPopover) --- */
 /* Kırmızı gradient zemin, minimal ölçüler ve tüm katmanların üstünde konum. */
 .delete-confirm-portal {
