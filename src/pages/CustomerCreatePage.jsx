@@ -993,17 +993,20 @@ function ContactLinkInput({ name, defaultValue = '', placeholder, platform = 'we
         spellCheck={false}
         className="form-input min-w-0 flex-1 !h-8 !min-h-8 !py-1"
       />
-      {href && (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="icon-btn flex h-8 w-8 shrink-0 items-center justify-center !rounded-lg text-[var(--muted)]"
-          title="Sayfaya git"
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
-      )}
+      {/* Slot her zaman ayrılır: bağlantı ikonu belirince satır büyümez, kaymaz. */}
+      <span className="contact-link-action flex h-8 w-8 shrink-0 items-center justify-center">
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="contact-link-button flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+            title="Sayfaya git"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        ) : null}
+      </span>
     </div>
   )
 }

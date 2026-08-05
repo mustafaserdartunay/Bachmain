@@ -2113,6 +2113,16 @@ html:not(.night) .app-responsive .text-gray-500 {
   max-width: none;
 }
 
+/* Satır sonundaki bağlantı ikonu girdi yüksekliğini aşmasın: metin yazarken
+   satır aşağı doğru büyümez, alttaki alanlar kaymaz. */
+.form-field-stack-aligned > .app-form-row .contact-link-action,
+.form-field-stack-aligned > .app-form-row .contact-link-button {
+  height: 2rem;
+  width: 2rem;
+  min-height: 0;
+  flex: none;
+}
+
 .form-field-stack-aligned > .app-form-row .form-input,
 .form-field-stack-aligned > .app-form-row input.form-input {
   width: 100%;
