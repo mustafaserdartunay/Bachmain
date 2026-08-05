@@ -9,6 +9,7 @@ import {
   Hash,
   Instagram,
   Landmark,
+  Loader2,
   Mail,
   MapPin,
   Music2,
@@ -99,7 +100,7 @@ function CancelCta({ onClick }) {
 }
 
 /** Yeşil split CTA: Kaydet + açılır "Kaydet ve devam et". Başlık ve alt panelde aynı. */
-function SaveSplitAction({ onSaveAndContinue }) {
+function SaveSplitAction({ onSaveAndContinue, saving = false }) {
   const [open, setOpen] = useState(false)
   const { anchorRef, menuRef, style } = useAnchoredPortal(open, {
     align: 'right',
@@ -120,6 +121,10 @@ function SaveSplitAction({ onSaveAndContinue }) {
     return () => document.removeEventListener('click', closeMenu)
   }, [anchorRef, menuRef, open])
 
+  useEffect(() => {
+    if (saving) setOpen(false)
+  }, [saving])
+
   return (
     <div ref={anchorRef} className="relative inline-flex items-center">
       <div
@@ -127,16 +132,27 @@ function SaveSplitAction({ onSaveAndContinue }) {
       >
         <button
           type="submit"
+          disabled={saving}
+          aria-busy={saving}
           className="inline-flex h-full items-center gap-2.5 bg-transparent px-3"
         >
           <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-            <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+            {saving ? (
+              <Loader2
+                className={`${HEADER_ACTION_CTA_ICON_CLASS} animate-spin`}
+                strokeWidth={2.25}
+                aria-hidden
+              />
+            ) : (
+              <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+            )}
           </span>
-          <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet</span>
+          <span className={YF_TEXT_ON_COLOR_CLASS}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</span>
         </button>
         <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
         <button
           type="button"
+          disabled={saving}
           onClick={() => setOpen((current) => !current)}
           className="inline-flex h-full w-12 items-center justify-center bg-transparent"
           aria-label="Kaydet işlemleri"
@@ -246,6 +262,7 @@ export default function CustomerCreatePage() {
   )
   const [deleteDialog, setDeleteDialog] = useState(null)
   const [successVisible, setSuccessVisible] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [formEpoch, setFormEpoch] = useState(0)
   const [meta, setMeta] = useState(() =>
     incomingDraft?.category
@@ -437,14 +454,18 @@ export default function CustomerCreatePage() {
 
   async function collectAndSave(event) {
     event?.preventDefault()
+    if (saving) return
     if (!String(meta.type || '').trim()) {
       window.alert('Kaydetmeden önce Tipi alanını seçin.')
       return
     }
-    const formData = new FormData(event.currentTarget)
+    // currentTarget await sonrası boşalır; formu şimdi yakala.
+    const form = event.currentTarget
+    const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
     if (!(await assertNoStrongDuplicates(payload))) return
+    setSaving(true)
     saveDraft(payload)
     const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
     persistMeta(savedProfile.id)
@@ -457,17 +478,19 @@ export default function CustomerCreatePage() {
       },
       { source: 'CustomerCreatePage' },
     )
-    event.currentTarget.reset()
+    form.reset()
     setAddressRows([{ id: 0 }])
     setContactRows(initialContactRows(null, null))
     setOpeningEnabled(false)
     setMeta(emptyMeta())
     showSavedMessage()
     flushWorkspaceNow()
+    // "Kaydediliyor…" görünür kalsın, sonra müşteriler listesine dön.
     setTimeout(() => navigate(backPath), 900)
   }
 
   async function saveAndContinue() {
+    if (saving) return
     const form = document.getElementById('customer-edit-form')
     if (!form) return
     if (!String(meta.type || '').trim()) {
@@ -478,6 +501,7 @@ export default function CustomerCreatePage() {
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
     if (!(await assertNoStrongDuplicates(payload))) return
+    setSaving(true)
     saveDraft(payload)
     const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
     persistMeta(savedProfile.id)
@@ -504,6 +528,7 @@ export default function CustomerCreatePage() {
       navigate(`/musteriler/yeni${nextSearch}`, { replace: true })
     }
     setFormEpoch((epoch) => epoch + 1)
+    setSaving(false)
   }
 
   function confirmTwoStepDelete(label, onConfirm, key) {
@@ -544,7 +569,7 @@ export default function CustomerCreatePage() {
           actions={
             <div className="relative flex items-center gap-2.5 bg-transparent">
               <CancelCta onClick={() => navigate(backPath)} />
-              <SaveSplitAction onSaveAndContinue={saveAndContinue} />
+              <SaveSplitAction onSaveAndContinue={saveAndContinue} saving={saving} />
             </div>
           }
         />
@@ -788,7 +813,7 @@ export default function CustomerCreatePage() {
         </div>
         <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
           <CancelCta onClick={() => navigate(backPath)} />
-          <SaveSplitAction onSaveAndContinue={saveAndContinue} />
+          <SaveSplitAction onSaveAndContinue={saveAndContinue} saving={saving} />
         </div>
       </section>
     </form>
@@ -931,6 +956,48 @@ function ContactLinkInput({ name, defaultValue = '', placeholder, platform = 'we
   )
 }
 
+/** Cümle düzeni: yalnızca ilk harf büyük, kalanı küçük (Türkçe kurallı). */
+function toSentenceCase(raw) {
+  const text = String(raw ?? '')
+  const first = text.search(/\p{L}/u)
+  if (first < 0) return text.toLocaleLowerCase('tr-TR')
+  return (
+    text.slice(0, first) +
+    text.charAt(first).toLocaleUpperCase('tr-TR') +
+    text.slice(first + 1).toLocaleLowerCase('tr-TR')
+  )
+}
+
+/**
+ * Yazarken cümle düzenine çeviren metin alanı. Dönüşüm uzunluğu değiştirmediği
+ * için imleç konumu korunur — aksi halde her tuşta sonuna atlar.
+ */
+function SentenceCaseInput({ name, defaultValue = '', className = '' }) {
+  const inputRef = useRef(null)
+  const caretRef = useRef(null)
+  const [value, setValue] = useState(() => toSentenceCase(defaultValue))
+
+  useEffect(() => {
+    const caret = caretRef.current
+    if (caret == null || !inputRef.current) return
+    caretRef.current = null
+    inputRef.current.setSelectionRange(caret, caret)
+  }, [value])
+
+  return (
+    <input
+      ref={inputRef}
+      name={name}
+      value={value}
+      onChange={(event) => {
+        caretRef.current = event.target.selectionStart
+        setValue(toSentenceCase(event.target.value))
+      }}
+      className={className}
+    />
+  )
+}
+
 function ContactLine({
   id,
   defaultTitle = '',
@@ -956,15 +1023,15 @@ function ContactLine({
       <div className={FORM_FIELD_RULED_STACK_CLASS}>
         <FormFieldCompact icon={Hash} label="Başlık:">
           {lockedTitle ? (
-            <div className="flex min-h-8 items-center text-[12px] font-semibold uppercase tracking-wide text-[var(--ink)]">
+            <div className="flex min-h-8 items-center text-[12px] font-semibold tracking-wide text-[var(--ink)]">
               {defaultTitle}
               <input type="hidden" name={`contactTitle-${id}`} value={defaultTitle} />
             </div>
           ) : (
-            <input
+            <SentenceCaseInput
               name={`contactTitle-${id}`}
               defaultValue={defaultTitle}
-              className="form-input !h-8 !min-h-8 !py-1 text-[12px] font-semibold uppercase tracking-wide"
+              className="form-input !h-8 !min-h-8 !py-1 text-[12px] font-semibold tracking-wide"
             />
           )}
         </FormFieldCompact>
