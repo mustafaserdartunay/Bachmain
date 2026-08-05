@@ -14,9 +14,11 @@ import {
   MapPin,
   Music2,
   Phone,
+  PhoneCall,
   Pin,
   Plus,
   Save,
+  Smartphone,
   Twitter,
   UserRound,
   WalletCards,
@@ -733,6 +735,8 @@ export default function CustomerCreatePage() {
                   lockedTitle={row.locked}
                   defaultValue={row.defaultName || ''}
                   phoneDefault={row.defaultPhone || ''}
+                  gsmDefault={row.defaultGsm || ''}
+                  orderLineDefault={row.defaultOrderLine || ''}
                   emailDefault={row.defaultEmail || ''}
                   websiteDefault={row.defaultWebsite || ''}
                   instagramDefault={row.defaultInstagram || ''}
@@ -1004,6 +1008,8 @@ function ContactLine({
   lockedTitle = false,
   defaultValue = '',
   phoneDefault = '',
+  gsmDefault = '',
+  orderLineDefault = '',
   emailDefault = '',
   websiteDefault = '',
   instagramDefault = '',
@@ -1046,6 +1052,20 @@ function ContactLine({
           <input
             name={`contactPhone-${id}`}
             defaultValue={phoneDefault}
+            className="form-input !h-8 !min-h-8 !py-1"
+          />
+        </FormFieldCompact>
+        <FormFieldCompact icon={Smartphone} label="Gsm:" as="label">
+          <input
+            name={`contactGsm-${id}`}
+            defaultValue={gsmDefault}
+            className="form-input !h-8 !min-h-8 !py-1"
+          />
+        </FormFieldCompact>
+        <FormFieldCompact icon={PhoneCall} label="Sipariş hattı:" as="label">
+          <input
+            name={`contactOrderLine-${id}`}
+            defaultValue={orderLineDefault}
             className="form-input !h-8 !min-h-8 !py-1"
           />
         </FormFieldCompact>

@@ -56,17 +56,19 @@ export function resolveContactLinkHref(value = '', { platform = 'web', instagram
 
 function contactHasContent(row = {}) {
   return Boolean(
-    row.name
-    || row.phone
-    || row.email
-    || row.website
-    || row.instagram
-    || row.facebook
-    || row.youtube
-    || row.x
-    || row.pinterest
-    || row.tiktok
-    || row.title,
+    row.name ||
+    row.phone ||
+    row.gsm ||
+    row.orderLine ||
+    row.email ||
+    row.website ||
+    row.instagram ||
+    row.facebook ||
+    row.youtube ||
+    row.x ||
+    row.pinterest ||
+    row.tiktok ||
+    row.title,
   )
 }
 
@@ -76,6 +78,8 @@ function normalizeContactRow(row = {}) {
     title: String(row.title || '').trim(),
     name: String(row.name || '').trim(),
     phone: String(row.phone || '').trim(),
+    gsm: String(row.gsm || '').trim(),
+    orderLine: String(row.orderLine || row.siparisHatti || '').trim(),
     email: String(row.email || '').trim(),
     website: String(row.website || '').trim(),
     instagram: String(row.instagram || '').trim(),
@@ -89,20 +93,24 @@ function normalizeContactRow(row = {}) {
 
 export function parseContactsFromFormPayload(payload, contactRows = []) {
   return contactRows
-    .map((row) => normalizeContactRow({
-      id: row.id,
-      title: payload[`contactTitle-${row.id}`] || row.title || '',
-      name: payload[`contactName-${row.id}`] || '',
-      phone: payload[`contactPhone-${row.id}`] || '',
-      email: payload[`contactEmail-${row.id}`] || '',
-      website: payload[`contactWebsite-${row.id}`] || '',
-      instagram: payload[`contactInstagram-${row.id}`] || '',
-      facebook: payload[`contactFacebook-${row.id}`] || '',
-      youtube: payload[`contactYoutube-${row.id}`] || '',
-      x: payload[`contactX-${row.id}`] || '',
-      pinterest: payload[`contactPinterest-${row.id}`] || '',
-      tiktok: payload[`contactTiktok-${row.id}`] || '',
-    }))
+    .map((row) =>
+      normalizeContactRow({
+        id: row.id,
+        title: payload[`contactTitle-${row.id}`] || row.title || '',
+        name: payload[`contactName-${row.id}`] || '',
+        phone: payload[`contactPhone-${row.id}`] || '',
+        gsm: payload[`contactGsm-${row.id}`] || '',
+        orderLine: payload[`contactOrderLine-${row.id}`] || '',
+        email: payload[`contactEmail-${row.id}`] || '',
+        website: payload[`contactWebsite-${row.id}`] || '',
+        instagram: payload[`contactInstagram-${row.id}`] || '',
+        facebook: payload[`contactFacebook-${row.id}`] || '',
+        youtube: payload[`contactYoutube-${row.id}`] || '',
+        x: payload[`contactX-${row.id}`] || '',
+        pinterest: payload[`contactPinterest-${row.id}`] || '',
+        tiktok: payload[`contactTiktok-${row.id}`] || '',
+      }),
+    )
     .filter((row) => contactHasContent(row))
 }
 
@@ -111,7 +119,9 @@ export function initialContactRowsFromCustomer(customer) {
     return [blankContactRow('contact-1')]
   }
 
-  const savedContacts = Array.isArray(customer.contacts) ? customer.contacts.map(normalizeContactRow) : []
+  const savedContacts = Array.isArray(customer.contacts)
+    ? customer.contacts.map(normalizeContactRow)
+    : []
   const filledSaved = savedContacts.filter((row) => contactHasContent(row))
 
   if (filledSaved.length) {
@@ -121,6 +131,8 @@ export function initialContactRowsFromCustomer(customer) {
       locked: false,
       defaultName: row.name,
       defaultPhone: row.phone,
+      defaultGsm: row.gsm,
+      defaultOrderLine: row.orderLine,
       defaultEmail: row.email,
       defaultWebsite: row.website,
       defaultInstagram: row.instagram,
@@ -133,13 +145,17 @@ export function initialContactRowsFromCustomer(customer) {
   }
 
   if (customer.contact || customer.phone || customer.email || customer.website) {
-    return [{
-      ...blankContactRow('contact-1'),
-      defaultName: customer.contact || '',
-      defaultPhone: customer.phone || '',
-      defaultEmail: customer.email || '',
-      defaultWebsite: customer.website || '',
-    }]
+    return [
+      {
+        ...blankContactRow('contact-1'),
+        defaultName: customer.contact || '',
+        defaultPhone: customer.phone || '',
+        defaultGsm: customer.gsm || '',
+        defaultOrderLine: customer.orderLine || '',
+        defaultEmail: customer.email || '',
+        defaultWebsite: customer.website || '',
+      },
+    ]
   }
 
   return [blankContactRow('contact-1')]
@@ -155,8 +171,9 @@ function pickContactByPriority(contacts, priorityIds) {
 
 export function resolvePrimaryContact(contacts = [], fallback = {}) {
   const normalized = contacts.map(normalizeContactRow)
-  const primary = pickContactByPriority(normalized, ['authorized', 'owner', 'other'])
-    || normalizeContactRow({
+  const primary =
+    pickContactByPriority(normalized, ['authorized', 'owner', 'other']) ||
+    normalizeContactRow({
       name: fallback.contact || '',
       phone: fallback.phone || '',
       email: fallback.email || '',
@@ -177,9 +194,10 @@ export function resolveCustomerContactInfo(customer) {
     return { contactName: '', phone: '', email: '', website: '', contacts: [] }
   }
 
-  const contacts = Array.isArray(customer.contacts) && customer.contacts.length
-    ? customer.contacts.map(normalizeContactRow)
-    : []
+  const contacts =
+    Array.isArray(customer.contacts) && customer.contacts.length
+      ? customer.contacts.map(normalizeContactRow)
+      : []
 
   return resolvePrimaryContact(contacts, customer)
 }
