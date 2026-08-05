@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import {
   Building2,
   ChevronDown,
-  ChevronLeft,
   ExternalLink,
   Facebook,
   Globe,
@@ -23,8 +22,9 @@ import {
   X,
   Youtube,
 } from 'lucide-react'
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { AppPageHeader } from '../components/Layout/AppPageLayout'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { AppPageBackLink, AppPageHeader } from '../components/Layout/AppPageLayout'
+import { PAGE_CENTER_TITLE_CLASS, PAGE_HEADER_TITLE_SLOT_CLASS } from '../utils/dashboardDesign'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import {
   FormFieldCompact,
@@ -446,25 +446,10 @@ export default function CustomerCreatePage() {
       <div className="space-y-5">
         <AppPageHeader
           showBack={false}
-          title={
-            <Link
-              to="/"
-              aria-label="Güncel Durum"
-              title="Güncel Durum"
-              className="group inline-flex min-w-0 items-center gap-2 rounded-xl px-1 py-1 transition-opacity hover:opacity-80"
-            >
-              <ChevronLeft
-                className="h-4 w-4 shrink-0 text-[var(--ink)]"
-                strokeWidth={2.25}
-                aria-hidden
-              />
-              <span className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">
-                Güncel Durum
-              </span>
-            </Link>
-          }
-          centerTitle={pageHeading}
-          titleClassName="!min-w-0 !overflow-visible"
+          title={<AppPageBackLink />}
+          centerTitle={String(pageHeading || '').toLocaleUpperCase('tr-TR')}
+          centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+          titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
             <div
               ref={actionMenuAnchorRef}
