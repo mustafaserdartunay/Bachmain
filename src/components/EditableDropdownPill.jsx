@@ -19,22 +19,31 @@ const DEFAULT_BUTTON_CLASS =
 
 const COLOR_PALETTE = OPTION_COLOR_PALETTE?.length ? OPTION_COLOR_PALETTE : stageColors
 
+/**
+ * Seçenek/seçili değer başındaki yuvarlak renk noktası veya ikon kutusu.
+ * `dropdown-option-dot` / `dropdown-option-icon` kancaları zorunlu: pill içindeki
+ * `span { background: transparent !important }` kuralları aksi halde noktayı siler.
+ */
 function OptionLeading({ option, empty = false, isLightMenu = false }) {
   if (empty) {
-    return <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-gray-500" />
+    return <span className="dropdown-option-dot h-2.5 w-2.5 shrink-0 rounded-full bg-gray-500" />
   }
   if (option?.icon) {
     const Icon = option.icon
     const shellClass = isLightMenu ? 'bg-[var(--surface-muted)]' : 'bg-white/40'
     return (
       <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${shellClass} ${option.iconTone || 'text-[var(--muted)]'}`}
+        className={`dropdown-option-icon flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${shellClass} ${option.iconTone || 'text-[var(--muted)]'}`}
       >
         <Icon className="h-3.5 w-3.5" />
       </span>
     )
   }
-  return <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${option?.color || 'bg-gray-500'}`} />
+  return (
+    <span
+      className={`dropdown-option-dot h-2.5 w-2.5 shrink-0 rounded-full ${option?.color || 'bg-gray-500'}`}
+    />
+  )
 }
 
 function OptionColorPicker({ value, onChange }) {
