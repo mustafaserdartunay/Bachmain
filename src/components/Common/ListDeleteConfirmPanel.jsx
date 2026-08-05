@@ -13,9 +13,12 @@ export const EDIT_PENCIL_BUTTON_CLASS = DUZENLEME_KALEMI_BUTTON_CLASS
 
 export const DELETE_TRASH_BUTTON_HIDDEN_CLASS = 'pointer-events-none invisible'
 
-/** Standart silme onayı: kırmızı gradient (Gelen E-Faturalar CTA tonu), minimal ölçüler. */
+/**
+ * Standart silme onayı: kırmızı gradient (Gelen E-Faturalar CTA tonu), minimal ölçüler.
+ * Metin üstte, aksiyonlar altta: dar kabuklarda da satırlar birbirine girmez.
+ */
 export const DELETE_CONFIRM_PANEL_CLASS =
-  'delete-confirm-panel flex items-center gap-2 rounded-xl border border-white/35 bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2 py-1.5 shadow-[0_10px_24px_-14px_rgba(30,35,60,0.65)] ring-1 ring-white/20'
+  'delete-confirm-panel flex w-full flex-col gap-2 rounded-xl border border-white/35 bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-2 shadow-[0_10px_24px_-14px_rgba(30,35,60,0.65)] ring-1 ring-white/20'
 
 /** Popover her zaman en üstte: portal + dropdown katmanının üstünde z-index. */
 export const DELETE_CONFIRM_Z_INDEX = 12000
@@ -47,18 +50,20 @@ function DeleteConfirmPanel({
       className={`${DELETE_CONFIRM_PANEL_CLASS} ${className}`.trim()}
       onClick={(event) => event.stopPropagation()}
     >
-      <Trash2 className="h-3.5 w-3.5 shrink-0 text-white" />
-      <div className="min-w-0 flex-1">
-        <p className="delete-confirm-title break-words text-[13px] font-bold leading-tight text-white">
-          {title}
-        </p>
-        {description ? (
-          <p className="delete-confirm-desc break-words text-[11px] font-normal leading-tight text-white/85">
-            {description}
+      <div className="flex items-start gap-2">
+        <Trash2 className="mt-px h-3.5 w-3.5 shrink-0 text-white" />
+        <div className="min-w-0 flex-1">
+          <p className="delete-confirm-title break-words text-[13px] font-bold leading-tight text-white">
+            {title}
           </p>
-        ) : null}
+          {description ? (
+            <p className="delete-confirm-desc break-words text-[11px] font-normal leading-tight text-white/85">
+              {description}
+            </p>
+          ) : null}
+        </div>
       </div>
-      <div className="ml-auto flex shrink-0 items-center gap-1">
+      <div className="flex items-center justify-end gap-1.5">
         <button type="button" onClick={onConfirm} className={CONFIRM_BUTTON_CLASS}>
           {confirmLabel}
         </button>

@@ -253,17 +253,7 @@ export default function EditableDropdownPill({
           )}
 
           {visibleOptions.map(({ option, index }) =>
-            confirmIndex === index ? (
-              <DeleteConfirmPopover
-                key={`confirm-${option.label}`}
-                title={`"${option.label}" silinsin mi?`}
-                description="Bu işlem geri alınamaz."
-                confirmLabel="Evet, Sil"
-                onConfirm={() => removeOption(index)}
-                onCancel={() => setConfirmIndex(null)}
-                className="w-full"
-              />
-            ) : editingIndex === index ? (
+            editingIndex === index ? (
               <div key={`edit-${index}`} className="space-y-1.5 rounded-xl bg-white/35 px-2 py-1.5">
                 <div className="flex items-center gap-1.5">
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${draftColor}`} />
@@ -305,7 +295,7 @@ export default function EditableDropdownPill({
                 <OptionColorPicker value={draftColor} onChange={setDraftColor} />
               </div>
             ) : (
-              <div key={option.label} className="group flex items-center gap-1 rounded-xl">
+              <div key={option.label} className="group relative flex items-center gap-1 rounded-xl">
                 <button
                   type="button"
                   onClick={() => {
@@ -340,6 +330,16 @@ export default function EditableDropdownPill({
                     </button>
                   </span>
                 )}
+                {confirmIndex === index ? (
+                  <DeleteConfirmPopover
+                    inline={false}
+                    title={`"${option.label}" silinsin mi?`}
+                    description="Bu işlem geri alınamaz."
+                    confirmLabel="Evet, Sil"
+                    onConfirm={() => removeOption(index)}
+                    onCancel={() => setConfirmIndex(null)}
+                  />
+                ) : null}
               </div>
             ),
           )}
