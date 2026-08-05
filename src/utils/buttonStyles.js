@@ -27,6 +27,17 @@ export const URETIM_ARTI_BUTTON_CLASS =
 /** Düzenleme kalemi — üretim artı butonu ile aynı mavi ton */
 export const DUZENLEME_KALEMI_BUTTON_CLASS = `${URETIM_ARTI_BUTTON_CLASS} p-2`
 
+/**
+ * çk — standart çöp kutusu (silme) ikon butonu.
+ * Kaynak: Müşteriler > Silinenler paneli (`customer-permanent-delete-action`).
+ * Kenarlıksız, saydam zemin; hover'da yumuşak kırmızı doku.
+ */
+export const COP_KUTUSU_BUTTON_CLASS =
+  'inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600'
+
+/** çk ikon boyutu — Trash2 için: className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} */
+export const COP_KUTUSU_ICON_CLASS = 'h-3.5 w-3.5'
+
 /** Teklifler sayfası çöp kutusu — danger ton */
 export const TEKLIFLER_COP_KUTUSU_BUTTON_CLASS =
   'border border-[color-mix(in_srgb,var(--ds-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--ds-danger)_10%,transparent)] p-2 text-ds-danger transition-colors hover:bg-[color-mix(in_srgb,var(--ds-danger)_16%,transparent)]'

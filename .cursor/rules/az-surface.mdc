@@ -1,0 +1,50 @@
+---
+description: "az — cam dropdown / menü arka zemin kısayolu"
+alwaysApply: true
+---
+
+# az — arka zemin (kısayol)
+
+Kullanıcı **az** dediğinde, seçili veya ilgili açılır menü / dropdown panelinde
+aşağıdaki **cam (glass)** arka zemini kullan. Başka opak beyaz veya `bg-ds-surface`
+uydurma.
+
+**Sistem kuralı:** Tüm `app-dropdown-portal` / MoreMenu / Dropdown menüleri bu zemini kullanır
+(`packages/ui` → `DROPDOWN_PORTAL_SHELL_CLASS`).
+
+## Kaynak (referans)
+
+Müşteriler sayfası satır menüsü — örn. Puantaj: “Seçiniz / Kötü / Normal / İyi …”
+(`customers-page-menu` + `app-dropdown-portal` + `glass-inset`).
+
+## Görsel token
+
+| Özellik | Değer |
+|--------|--------|
+| Background | `rgba(255, 255, 255, 0.38)` |
+| Border | `1px solid rgba(255, 255, 255, 0.62)` |
+| Radius | **16px** |
+| Blur | `blur(16px) saturate(160%)` |
+| Shadow | `inset 0 1px 0 rgba(255, 255, 255, 0.48)` |
+
+## Class
+
+```txt
+az
+```
+
+veya mevcut kabuk:
+
+```txt
+app-dropdown-portal glass-inset az
+```
+
+CSS: `.az` / `.app-dropdown-portal` in `src/index.css` (aynı cam formül).
+
+## Tailwind / JSX örneği
+
+```txt
+app-dropdown-portal glass-inset az min-w-[210px] rounded-[16px] p-2
+```
+
+Müşteri list menü sabiti: `CUSTOMER_LIST_MENU_CLASS` (`az customers-page-menu …`).

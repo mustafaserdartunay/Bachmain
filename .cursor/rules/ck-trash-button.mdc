@@ -1,0 +1,64 @@
+---
+description: "çk / çöp kutusu — standart silme ikon butonu kısayolu"
+alwaysApply: true
+---
+
+# çk — çöp kutusu (kısayol)
+
+Kullanıcı **çk**, **çöp kutusu** veya “çöp kutusu oluştur” dediğinde, aşağıdaki
+silme ikon butonunu **birebir** kur. Başka boyut, kenarlık, dolgu veya ton uydurma.
+
+## Kaynak (referans)
+
+Müşteriler sayfası → Silinenler / Arşiv paneli satır aksiyonu
+(`CustomerDeletedArchivedPanel` → `.customer-permanent-delete-action`).
+
+## Görsel token
+
+| Özellik | Değer |
+|-----|-----|
+| Kutu | **32 × 32 px** (`h-8 w-8`), `inline-flex items-center justify-center` |
+| Radius | **8px** (`rounded-lg`) |
+| Padding | `p-1` |
+| Zemin | **saydam** (`bg-transparent`) — kenarlık **yok** |
+| İkon rengi | `text-red-500` (**#ef4444**) |
+| Hover zemin | `hover:bg-red-500/15` (**rgba(239, 68, 68, 0.15)**) |
+| Hover renk | `hover:text-red-600` (**#dc2626**) |
+| Geçiş | `transition-[background-color,color]` — **scale / transform yok** |
+| İkon | `Trash2`, `h-3.5 w-3.5` (14px), `strokeWidth={2.25}` |
+| Erişilebilirlik | `title="Sil"` + `aria-label="<öğe> kalıcı olarak sil"` |
+
+## Class
+
+```txt
+inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600
+```
+
+Paylaşılan sabit: `COP_KUTUSU_BUTTON_CLASS` + `COP_KUTUSU_ICON_CLASS`
+(`src/utils/buttonStyles.js`). Yeni yerlerde class'ı elle yazmak yerine sabiti içe aktar.
+
+## JSX örneği
+
+```jsx
+import { Trash2 } from 'lucide-react'
+import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
+
+<button
+  type="button"
+  onClick={() => setPendingDelete(item)}
+  className={COP_KUTUSU_BUTTON_CLASS}
+  aria-label={`${item.label} kalıcı olarak sil`}
+  title="Sil"
+>
+  <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+</button>
+```
+
+## Kurallar
+
+- Buton **her zaman görünür**; hover ile belirme (`opacity-0`) kullanma.
+- Satır hover'ında büyüme/kayma yok (`transform: none`).
+- Silme akışı onay gerektiriyorsa onay katmanı **DeleteConfirmPopover** standardıdır
+  (kırmızı gradient, minimal, portal ile en üstte) — `ListDeleteConfirmPanel.jsx`.
+- Kenarlıklı/dolgulu danger buton gereken eski yerler `TEKLIFLER_COP_KUTUSU_BUTTON_CLASS`
+  kullanmaya devam eder; **çk** dendiğinde bu değil, yukarıdaki saydam varyant kurulur.

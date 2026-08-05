@@ -1,0 +1,41 @@
+---
+description: "yfb typography shortcut — bold yf (14px / 700)"
+alwaysApply: true
+---
+
+# yfb — yazı fontu bold (kısayol)
+
+Kullanıcı **yfb** dediğinde: **yf** ile aynı ölçek/renk varsayılanı, ağırlık **bold (700)**.
+
+## Özellikler
+
+| Özellik | Değer |
+|--------|--------|
+| Font | Inter (`font-sans` / body mirası) |
+| Boyut | **14px** |
+| Ağırlık | **700** (`font-bold`) |
+| Satır yüksekliği | **1.25** (`leading-tight`) |
+| Letter-spacing | **normal** |
+| Renk | Bağlama göre (aksi belirtilmezse `var(--muted)`) |
+
+## Tailwind / class örneği
+
+```txt
+min-w-0 truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]
+```
+
+## CSS override (gerekirse)
+
+```css
+font-size: 14px !important;
+font-weight: 700 !important;
+line-height: 1.25 !important;
+letter-spacing: normal !important;
+```
+
+## İlişki
+
+- **yf** = 14px / 400 / muted  
+- **yfb** = 14px / 700 (renk ayrı belirtilir)
+
+Kaynak örnek: Müşteriler listesi “Güncel Bakiye” (alacak `#10b981`, borç `#e11d48`).

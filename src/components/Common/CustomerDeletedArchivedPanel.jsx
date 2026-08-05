@@ -18,6 +18,7 @@ import {
   APP_METRIC_ROW_CLASS,
   APP_SUBLABEL_CLASS,
 } from '../../utils/dashboardDesign'
+import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
 import ConfirmModal from './ConfirmModal'
 
 function formatWhen(value) {
@@ -145,7 +146,9 @@ export default function CustomerDeletedArchivedPanel({
   }
 
   return (
-    <section className={`card customer-deleted-archived-panel overflow-hidden p-0 ${className}`.trim()}>
+    <section
+      className={`card customer-deleted-archived-panel overflow-hidden p-0 ${className}`.trim()}
+    >
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
@@ -204,11 +207,11 @@ export default function CustomerDeletedArchivedPanel({
                       <button
                         type="button"
                         onClick={() => setPendingPermanentDelete(item)}
-                        className="customer-permanent-delete-action inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600"
+                        className={`customer-permanent-delete-action ${COP_KUTUSU_BUTTON_CLASS}`}
                         aria-label={`${item.label} kalıcı olarak sil`}
                         title="Sil"
                       >
-                        <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                        <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
                       </button>
                     </div>
                   </div>

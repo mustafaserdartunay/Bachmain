@@ -1,0 +1,41 @@
+---
+description: "yf typography shortcut — when user says yf, use this text style"
+alwaysApply: true
+---
+
+# yf — yazı fontu (kısayol)
+
+Kullanıcı **yf** dediğinde (veya “yf font”, “yf ile yaz” vb.), UI metinlerinde aşağıdaki yazı stilini kullan. Başka font/ölçek uydurma.
+
+## Özellikler
+
+| Özellik | Değer |
+|--------|--------|
+| Font | Inter (`font-sans` / body mirası) |
+| Boyut | **14px** |
+| Ağırlık | **400** (`font-normal`) |
+| Satır yüksekliği | **1.25** (`leading-tight`) |
+| Letter-spacing | **normal** |
+| Renk | **`var(--muted)`** |
+| Text transform | **capitalize** (`.app-titlecase-words` varsa) |
+| Diğer | `truncate`, `min-w-0` gerektiğinde |
+
+## Tailwind / class örneği
+
+```txt
+min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]
+```
+
+Başlık benzeri etiketlerde ekle: `app-titlecase-words`
+
+## CSS override (gerekirse)
+
+```css
+font-size: 14px !important;
+font-weight: 400 !important;
+line-height: 1.25 !important;
+letter-spacing: normal !important;
+color: var(--muted) !important;
+```
+
+Kaynak örnek: Müşteriler sayfası özet metrik etiketi (“Aktif Cari”) — customers-page-type / customer-summary-metrics.
