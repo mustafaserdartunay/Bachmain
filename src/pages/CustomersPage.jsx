@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
-  ChevronLeft,
   Copy,
   Eye,
   Handshake,
@@ -15,20 +14,27 @@ import {
 import { Button, DataTable, Modal } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import ConfirmModal from '../components/Common/ConfirmModal'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
-import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
+import {
+  AppPageBackLink,
+  AppPageHeader,
+  AppPagePanel,
+  AppPageShell,
+} from '../components/Layout/AppPageLayout'
 import {
   HEADER_QUICK_ACTIONS,
   HeaderQuickActionCard,
 } from '../components/Layout/HeaderCashActionsPanel'
 import {
   APP_SURFACE_PANEL_CLASS,
+  PAGE_CENTER_TITLE_CLASS,
   PAGE_FILTER_FIELD_CLASS,
   PAGE_FILTER_LABEL_CLASS,
   PAGE_FILTER_MENU_CLASS,
   PAGE_FILTER_PILL_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
   PAGE_LIST_MENU_CLASS,
   PAGE_LIST_PILL_CLASS,
   PAGE_LIST_PILL_WRAPPER_CLASS,
@@ -339,22 +345,10 @@ export default function CustomersPage({
     <AppPageShell className="customers-page-type w-full">
       <AppPageHeader
         showBack={false}
-        title={
-          <Link
-            to="/"
-            aria-label="Güncel Durum"
-            title="Güncel Durum"
-            className="customer-page-back-link group inline-flex shrink-0 items-center gap-2 rounded-xl px-1 py-1 text-[var(--muted)] transition-opacity hover:opacity-80"
-          >
-            <ChevronLeft className="customer-page-back-link-icon h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-            <span className="customer-page-back-link-label min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
-              Güncel Durum
-            </span>
-          </Link>
-        }
+        title={<AppPageBackLink />}
         centerTitle={String(sidebarTitle || '').toLocaleUpperCase('tr-TR')}
-        centerTitleClassName="customer-page-center-title uppercase font-bold"
-        titleClassName="!min-w-0 !overflow-visible"
+        centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+        titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
         actions={
           <HeaderQuickActionCard
             fixed

@@ -4,6 +4,9 @@ import {
   APP_PAGE_TITLE_CLASS,
   APP_PANEL_TITLE_CLASS,
   APP_DOT_COLORS,
+  PAGE_HEADER_BACK_LABEL_CLASS,
+  PAGE_HEADER_BACK_LINK_CLASS,
+  PAGE_HEADER_SHELL_CLASS,
 } from '../../utils/dashboardDesign'
 
 /**
@@ -11,7 +14,11 @@ import {
  */
 
 export function AppPageShell({ children, className = '' }) {
-  return <div className={`page-type-shell customers-page-type space-y-5 ${className}`.trim()}>{children}</div>
+  return (
+    <div className={`page-type-shell customers-page-type space-y-5 ${className}`.trim()}>
+      {children}
+    </div>
+  )
 }
 
 const APP_PAGE_BACK_BUTTON_CLASS =
@@ -63,11 +70,30 @@ function AppPageBackButton({ backTo = '/', backLabel = 'Başa dön', onBack }) {
   )
 }
 
+/**
+ * başlık panel sol slotu — kanonik "Güncel Durum" geri linki.
+ * AppPageHeader'a `title` olarak verilir (`showBack={false}` ile birlikte).
+ */
+export function AppPageBackLink({ to = '/', label = 'Güncel Durum' }) {
+  return (
+    <Link to={to} aria-label={label} title={label} className={PAGE_HEADER_BACK_LINK_CLASS}>
+      <ChevronLeft
+        className="customer-page-back-link-icon h-4 w-4 shrink-0"
+        strokeWidth={2}
+        aria-hidden
+      />
+      <span className={PAGE_HEADER_BACK_LABEL_CLASS}>{label}</span>
+    </Link>
+  )
+}
+
 export function AppPanelDot({ color = 'blue' }) {
   const palette = APP_DOT_COLORS[color] || APP_DOT_COLORS.blue
   return (
     <span className="relative flex h-1.5 w-1.5 shrink-0">
-      <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${palette.ping}`} />
+      <span
+        className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${palette.ping}`}
+      />
       <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${palette.dot}`} />
     </span>
   )
@@ -107,13 +133,15 @@ export function AppPageHeader({
   const leftTitleNode = typeof title === 'string' ? null : title
 
   return (
-    <div className="app-page-header relative z-30 flex min-h-[4.75rem] shrink-0 items-center justify-between gap-3 overflow-visible px-4 py-3 sm:px-6">
+    <div className={PAGE_HEADER_SHELL_CLASS}>
       <div className="relative z-10 flex min-w-0 flex-1 items-center gap-3">
         {showBack ? (
           <AppPageBackButton backTo={backTo} backLabel={backLabel} onBack={onBack} />
         ) : null}
         {leftTitleNode ? (
-          <div className={`flex min-w-0 items-center ${titleClassName}`.trim()}>{leftTitleNode}</div>
+          <div className={`flex min-w-0 items-center ${titleClassName}`.trim()}>
+            {leftTitleNode}
+          </div>
         ) : null}
         {!hasCenterTitle && typeof title === 'string' ? (
           <h1 className={`${APP_PAGE_TITLE_CLASS} truncate text-left ${titleClassName}`.trim()}>
@@ -157,13 +185,11 @@ export function AppPagePanel({
         />
       ) : null}
       {description ? (
-        <p className="app-titlecase-words mb-2.5 text-[12px] font-semibold leading-tight text-[var(--muted)]">{description}</p>
+        <p className="app-titlecase-words mb-2.5 text-[12px] font-semibold leading-tight text-[var(--muted)]">
+          {description}
+        </p>
       ) : null}
-      {fill ? (
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-      ) : (
-        children
-      )}
+      {fill ? <div className="flex min-h-0 flex-1 flex-col">{children}</div> : children}
     </section>
   )
 }

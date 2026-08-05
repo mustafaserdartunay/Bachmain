@@ -1,0 +1,78 @@
+---
+description: "başlık panel / bp — cam sayfa başlığı (AppPageHeader) kısayolu"
+alwaysApply: true
+---
+
+# başlık panel — sayfa başlığı (kısayol)
+
+Kullanıcı **başlık panel**, **bp** veya “başlık panel yap / uygula” dediğinde, sayfanın
+üstüne aşağıdaki **cam başlık panelini** kur. Kendi başına `div` + Tailwind ile
+yeniden yazma; **`AppPageHeader`** bileşenini kullan.
+
+## Kaynak (referans)
+
+Müşteriler sayfası başlığı: sol “Güncel Durum” geri linki · orta **MÜŞTERİLER** ·
+sağ “Yeni Müşteri Oluştur” CTA (`AppPageHeader` + `.app-page-header`).
+
+## Kabuk (cam yüzey)
+
+| Özellik | Değer |
+|-----|-----|
+| Yükseklik | **min 4.75rem (76px)** — `.app-header-banner` şeridi ile aynı |
+| Radius | **26px** |
+| Background | `var(--glass-bg)` |
+| Border | `1px solid var(--glass-border)` |
+| Blur | `blur(26px) saturate(180%)` |
+| Shadow | `0 10px 36px -14px rgba(30,35,60,0.18)` + `inset 0 1px 0 rgba(255,255,255,0.6)` |
+| Dolgu | `px-4 py-3 sm:px-6` |
+| Dizilim | `flex items-center justify-between gap-3`, `overflow-visible`, `z-30` |
+
+Class: `PAGE_HEADER_SHELL_CLASS` — CSS: `.app-page-header` (`src/index.css`).
+`overflow-visible` + `z-30` zorunlu; aksi halde başlıktaki dropdown/CTA menüleri kırpılır.
+
+## Üç slot
+
+| Slot | İçerik | Notlar |
+|-----|-----|-----|
+| **Sol** | `AppPageBackLink` (ChevronLeft 16px + “Güncel Durum”, yf 14/400 muted) | `z-10`, `flex-1 min-w-0`; `showBack={false}` ile birlikte `title` olarak verilir |
+| **Orta** | `centerTitle` — **14px / 700 / uppercase / muted** | `absolute left-1/2 top-1/2 -translate-*`, `pointer-events-none`, `z-0`, `max-w-[min(50%,20rem)]`, `truncate` |
+| **Sağ** | `actions` — renkli gradient CTA (`HeaderQuickActionCard`) | `z-40`, `shrink-0 justify-end gap-2`, `overflow-visible` |
+
+- Merkez başlık **mutlak konumludur**: sol/sağ slot ne kadar genişlerse genişlesin
+  tam ortada kalır. Akış içine alma.
+- Merkez başlık daima **Türkçe büyük harf**: `String(x).toLocaleUpperCase('tr-TR')`.
+- `title` string verilirse merkez başlık otomatik üretilir; JSX verilirse sol slota geçer.
+
+## JSX örneği
+
+```jsx
+import {
+  AppPageBackLink,
+  AppPageHeader,
+  AppPageShell,
+} from '../components/Layout/AppPageLayout'
+import {
+  PAGE_CENTER_TITLE_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
+} from '../utils/dashboardDesign'
+
+<AppPageShell className="customers-page-type w-full">
+  <AppPageHeader
+    showBack={false}
+    title={<AppPageBackLink />}
+    centerTitle={String(pageTitle).toLocaleUpperCase('tr-TR')}
+    centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+    titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+    actions={<HeaderQuickActionCard fixed action={action} />}
+  />
+  {/* ... */}
+</AppPageShell>
+```
+
+## Kurallar
+
+- Panel her zaman `AppPageShell` (`page-type-shell`) içinde ilk çocuk olur.
+- Sağdaki CTA renkli gradient kalır; etiketi `yf` ölçeğinde **beyaz** (`yf-on-color`).
+- Başlık paneline ekstra kenarlık, gölge veya opak beyaz zemin ekleme — cam kabuk yeterli.
+- Geri linki hedefi farklıysa `AppPageBackLink to="/..." label="..."` ile ver;
+  ikon/tipografi değişmez.
