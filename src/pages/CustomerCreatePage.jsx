@@ -30,6 +30,7 @@ import { AppPageBackLink, AppPageHeader } from '../components/Layout/AppPageLayo
 import {
   PAGE_CENTER_TITLE_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
+  YF_TEXT_CLASS,
   YF_TEXT_ON_COLOR_CLASS,
 } from '../utils/dashboardDesign'
 import {
@@ -747,7 +748,7 @@ export default function CustomerCreatePage() {
             <button
               type="button"
               onClick={() => setAddressRows((rows) => [...rows, { id: Date.now() }])}
-              className="btn-ghost mt-2 inline-flex items-center gap-2 !px-3 !py-1.5 text-[12px] font-bold"
+              className={`btn-ghost mt-2 inline-flex items-center gap-2 !px-3 !py-1.5 ${YF_TEXT_CLASS}`}
             >
               <Plus className="h-3.5 w-3.5" /> Yeni Adres Ekle
             </button>
@@ -790,7 +791,7 @@ export default function CustomerCreatePage() {
             <button
               type="button"
               onClick={() => setContactRows((rows) => [...rows, createNextContactRow()])}
-              className="btn-ghost mt-2 inline-flex items-center gap-2 !px-3 !py-1.5 text-[12px] font-bold"
+              className={`btn-ghost mt-2 inline-flex items-center gap-2 !px-3 !py-1.5 ${YF_TEXT_CLASS}`}
             >
               <Plus className="h-3.5 w-3.5" /> İletişim Ekle
             </button>
@@ -813,7 +814,7 @@ export default function CustomerCreatePage() {
                 defaultValue={editingCustomer?.currencyRate || ''}
               />
               <FormFieldCompact icon={WalletCards} label="Açılış Bakiyesi:">
-                <label className="flex min-h-8 items-center gap-3 text-[12px] font-semibold text-[var(--ink)]">
+                <label className="flex min-h-8 items-center gap-3 text-[14px] font-normal leading-tight tracking-normal text-[var(--ink)]">
                   <input
                     name="hasOpeningBalance"
                     type="checkbox"
@@ -844,7 +845,7 @@ export default function CustomerCreatePage() {
       <section
         className={`${APP_SURFACE_PANEL_CLASS} flex h-[4.625rem] items-center justify-between px-5`}
       >
-        <div className="flex min-w-0 items-center gap-3 text-xs font-normal text-[var(--muted)]">
+        <div className="flex min-w-0 items-center gap-3 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
           <UserRound className="h-4 w-4 shrink-0" />
           <span className="truncate">
             Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.
@@ -865,7 +866,6 @@ function FieldLine({
   name,
   defaultValue = '',
   type = 'text',
-  large = false,
   disabled = false,
 }) {
   return (
@@ -875,7 +875,7 @@ function FieldLine({
         type={type}
         defaultValue={defaultValue}
         disabled={disabled}
-        className={`form-input !h-8 !min-h-8 !py-1 ${large ? 'text-base font-extrabold uppercase tracking-wide' : ''} ${disabled ? 'opacity-60' : ''}`}
+        className={`form-input !h-8 !min-h-8 !py-1 ${disabled ? 'opacity-60' : ''}`}
       />
     </FormFieldCompact>
   )
@@ -1080,7 +1080,7 @@ function ContactLine({
       <div className={FORM_FIELD_RULED_STACK_CLASS}>
         <FormFieldCompact icon={Hash} label="Başlık:">
           {lockedTitle ? (
-            <div className="flex min-h-8 items-center text-[12px] font-semibold tracking-wide text-[var(--ink)]">
+            <div className="flex min-h-8 items-center text-[14px] font-normal leading-tight tracking-normal text-[var(--ink)]">
               {defaultTitle}
               <input type="hidden" name={`contactTitle-${id}`} value={defaultTitle} />
             </div>
@@ -1088,7 +1088,7 @@ function ContactLine({
             <SentenceCaseInput
               name={`contactTitle-${id}`}
               defaultValue={defaultTitle}
-              className="form-input !h-8 !min-h-8 !py-1 text-[12px] font-semibold tracking-wide"
+              className="form-input !h-8 !min-h-8 !py-1"
             />
           )}
         </FormFieldCompact>

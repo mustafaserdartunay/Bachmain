@@ -622,12 +622,17 @@ textarea:not(.form-input)::placeholder {
   box-shadow: none !important;
 }
 
+/* Form tipografisi: panel başlığı, etiket ve yazılan metin — hepsi yf ölçeğinde
+   (14px / 400 / 1.25), başlıktaki "Müşteriler" geri linkiyle aynı. */
 #customer-edit-form .app-form-row > span,
 #customer-edit-form .app-surface-panel h3,
 #customer-edit-form .glass-pill,
-#customer-edit-form .form-input {
-  font-size: 12px !important;
+#customer-edit-form .form-input,
+#customer-edit-form .form-input option,
+#customer-edit-form .app-form-row label {
+  font-size: 14px !important;
   font-weight: 400 !important;
+  line-height: 1.25 !important;
   letter-spacing: normal !important;
 }
 
