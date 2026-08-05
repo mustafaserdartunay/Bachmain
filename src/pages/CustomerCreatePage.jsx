@@ -228,6 +228,34 @@ function initialContactRows(customer, draft) {
   return initialContactRowsFromCustomer(customer)
 }
 
+/** Kayıtlı adresleri satırlara açar; hiç yoksa taslak/müşteri verisiyle tek satır kurar. */
+function initialAddressRows(customer, draft) {
+  const saved = Array.isArray(customer?.addresses) ? customer.addresses : []
+  if (saved.length) {
+    return saved.map((row, index) => ({
+      id: row.id ?? index,
+      defaultTitle: row.title || '',
+      defaultAddress: row.address || '',
+      defaultLocation: [row.city, row.district].filter(Boolean).join(' / '),
+      defaultMapsUrl: row.mapsUrl || '',
+    }))
+  }
+  return [
+    {
+      id: 0,
+      defaultTitle: customer ? 'Merkez Adres' : '',
+      defaultAddress: draft?.address || customer?.address || '',
+      defaultLocation: draft
+        ? [draft.city, draft.district].filter(Boolean).join(' / ')
+        : customer?.city || '',
+      defaultMapsUrl: draft?.mapsUrl || customer?.googleMapsUrl || '',
+    },
+  ]
+}
+
+/** Kaydetme geri bildiriminin ("Kaydediliyor…") görünür kaldığı en kısa süre. */
+const SAVE_FEEDBACK_MS = 700
+
 function formatDateTime() {
   return new Date().toLocaleString('tr-TR', {
     day: '2-digit',
@@ -257,8 +285,12 @@ export default function CustomerCreatePage() {
       ? 'Yeni Tedarikçi'
       : 'Yeni Müşteri'
   const incomingDraft = !editingCustomer ? location.state?.customerDraft : null
-  const [openingEnabled, setOpeningEnabled] = useState(false)
-  const [addressRows, setAddressRows] = useState([{ id: 0 }])
+  const [openingEnabled, setOpeningEnabled] = useState(() =>
+    Boolean(editingCustomer?.hasOpeningBalance),
+  )
+  const [addressRows, setAddressRows] = useState(() =>
+    initialAddressRows(editingCustomer, incomingDraft),
+  )
   const [contactRows, setContactRows] = useState(() =>
     initialContactRows(editingCustomer, incomingDraft),
   )
@@ -274,13 +306,22 @@ export default function CustomerCreatePage() {
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const successTimer = useRef(null)
+  const saveTimer = useRef(null)
   /** "Kaydet ve devam et" sonrası imleci ilk alana taşımak için işaret. */
   const focusFirstFieldRef = useRef(false)
 
+  useEffect(
+    () => () => {
+      if (successTimer.current) clearTimeout(successTimer.current)
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+    },
+    [],
+  )
+
   useEffect(() => {
-    setAddressRows([{ id: 0 }])
+    setAddressRows(initialAddressRows(editingCustomer, incomingDraft))
     setContactRows(initialContactRows(editingCustomer, incomingDraft))
-    setOpeningEnabled(false)
+    setOpeningEnabled(Boolean(editingCustomer?.hasOpeningBalance))
     setDeleteDialog(null)
     setMeta(
       incomingDraft?.category
@@ -363,10 +404,23 @@ export default function CustomerCreatePage() {
     )
   }
 
+  /** Formdaki her adres satırını toplar; ilk satır kartın birincil adresi olur. */
+  function parseAddresses(payload) {
+    return addressRows
+      .map((row) => ({
+        id: String(row.id),
+        title: payload[`addressTitle-${row.id}`] || '',
+        address: payload[`address-${row.id}`] || '',
+        city: payload[`city-${row.id}`] || '',
+        district: payload[`district-${row.id}`] || '',
+        mapsUrl: payload[`mapsUrl-${row.id}`] || '',
+      }))
+      .filter((row) => row.title || row.address || row.city || row.district || row.mapsUrl)
+  }
+
   function buildCustomerProfile(payload, rows = contactRows) {
-    const addressId = addressRows[0]?.id ?? 0
-    const city = payload[`city-${addressId}`] || ''
-    const district = payload[`district-${addressId}`] || ''
+    const addresses = parseAddresses(payload)
+    const primaryAddress = addresses[0] || {}
     const companyTitle =
       payload.companyTitle || editingCustomer?.company || payload.shortBrandName || ''
     const shortBrandName = payload.shortBrandName || getCustomerDisplay(companyTitle).brandShortName
@@ -381,20 +435,21 @@ export default function CustomerCreatePage() {
       email: primary.email,
       phone: primary.phone,
       contacts,
-      city: [city, district].filter(Boolean).join(' / '),
-      address:
-        payload[`address-${addressId}`] || incomingDraft?.address || editingCustomer?.address || '',
+      addresses,
+      addressTitle: primaryAddress.title || '',
+      city: [primaryAddress.city, primaryAddress.district].filter(Boolean).join(' / '),
+      address: primaryAddress.address || incomingDraft?.address || editingCustomer?.address || '',
       lat: incomingDraft?.lat ?? editingCustomer?.lat ?? null,
       lng: incomingDraft?.lng ?? editingCustomer?.lng ?? null,
       website: primary.website || incomingDraft?.website || editingCustomer?.website || '',
       googleMapsUrl:
-        payload[`mapsUrl-${addressId}`] ||
-        incomingDraft?.mapsUrl ||
-        editingCustomer?.googleMapsUrl ||
-        '',
+        primaryAddress.mapsUrl || incomingDraft?.mapsUrl || editingCustomer?.googleMapsUrl || '',
       googlePlaceId: incomingDraft?.placeId || editingCustomer?.googlePlaceId || '',
       taxOffice: payload.taxOffice || editingCustomer?.taxOffice || '',
       taxNumber: payload.taxNumber || editingCustomer?.taxNumber || '',
+      priceList: payload.priceList || editingCustomer?.priceList || '',
+      currencyRate: payload.currencyRate || editingCustomer?.currencyRate || '',
+      hasOpeningBalance: Boolean(payload.hasOpeningBalance),
       balance: payload.hasOpeningBalance
         ? Number(payload.openingBalanceAmount || 0)
         : Number(editingCustomer?.balance || 0),
@@ -454,19 +509,20 @@ export default function CustomerCreatePage() {
     )
   }
 
-  async function collectAndSave(event) {
-    event?.preventDefault()
-    if (saving) return
+  /**
+   * Her iki kaydet akışının paylaştığı rutin: doğrula, formun tamamını kalıcı hale
+   * getir, alanları boşalt. Kaydedip kaydetmediğini döndürür.
+   */
+  async function saveForm(form) {
     if (!String(meta.type || '').trim()) {
       window.alert('Kaydetmeden önce Tipi alanını seçin.')
-      return
+      return false
     }
-    // currentTarget await sonrası boşalır; formu şimdi yakala.
-    const form = event.currentTarget
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
-    if (!(await assertNoStrongDuplicates(payload))) return
+    if (!(await assertNoStrongDuplicates(payload))) return false
+
     setSaving(true)
     saveDraft(payload)
     const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
@@ -480,57 +536,41 @@ export default function CustomerCreatePage() {
       },
       { source: 'CustomerCreatePage' },
     )
+    showSavedMessage()
+    flushWorkspaceNow()
     form.reset()
-    setAddressRows([{ id: 0 }])
+    setAddressRows(initialAddressRows(null, null))
     setContactRows(initialContactRows(null, null))
     setOpeningEnabled(false)
     setMeta(emptyMeta())
-    showSavedMessage()
-    flushWorkspaceNow()
+    return true
+  }
+
+  async function collectAndSave(event) {
+    event?.preventDefault()
+    if (saving) return
+    // currentTarget await sonrası boşalır; formu şimdi yakala.
+    const form = event.currentTarget
+    if (!(await saveForm(form))) return
     // "Kaydediliyor…" görünür kalsın, sonra müşteriler listesine dön.
-    setTimeout(() => navigate(backPath), 900)
+    saveTimer.current = setTimeout(() => navigate(backPath), SAVE_FEEDBACK_MS)
   }
 
   async function saveAndContinue() {
     if (saving) return
     const form = document.getElementById('customer-edit-form')
     if (!form) return
-    if (!String(meta.type || '').trim()) {
-      window.alert('Kaydetmeden önce Tipi alanını seçin.')
-      return
-    }
-    const formData = new FormData(form)
-    const payload = Object.fromEntries(formData.entries())
-    payload.hasOpeningBalance = formData.has('hasOpeningBalance')
-    if (!(await assertNoStrongDuplicates(payload))) return
-    setSaving(true)
-    saveDraft(payload)
-    const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
-    persistMeta(savedProfile.id)
-    syncOpeningBalance(payload)
-    publishDomainEvent(
-      editingCustomer?.id ? 'trigger.customer.updated' : 'trigger.customer.created',
-      {
-        customerId: savedProfile.id,
-        name: savedProfile.name || payload.name || payload.firmaAdi,
-      },
-      { source: 'CustomerCreatePage' },
-    )
-    showSavedMessage()
-    flushWorkspaceNow()
-    // Sayfada kal, formu boşalt ve imleci ilk alana taşı.
-    form.reset()
-    setAddressRows([{ id: 0 }])
-    setContactRows(initialContactRows(null, null))
-    setOpeningEnabled(false)
-    setMeta(emptyMeta())
-    focusFirstFieldRef.current = true
+    if (!(await saveForm(form))) return
     const nextSearch = isSupplierForm ? '?kind=supplier' : ''
     if (formRouteKey !== nextSearch.replace('?', '')) {
       navigate(`/musteriler/yeni${nextSearch}`, { replace: true })
     }
-    setFormEpoch((epoch) => epoch + 1)
-    setSaving(false)
+    // Sayfada kal: geri bildirim görünsün, sonra formu yenile ve imleci ilk alana taşı.
+    saveTimer.current = setTimeout(() => {
+      focusFirstFieldRef.current = true
+      setFormEpoch((epoch) => epoch + 1)
+      setSaving(false)
+    }, SAVE_FEEDBACK_MS)
   }
 
   function confirmTwoStepDelete(label, onConfirm, key) {
@@ -682,26 +722,14 @@ export default function CustomerCreatePage() {
 
           <FormSectionPanel compact icon={MapPin} title="Adres Bilgileri" dotColor="emerald">
             <div className="space-y-2">
-              {addressRows.map((row, index) => (
+              {addressRows.map((row) => (
                 <AddressLine
                   key={row.id}
                   id={row.id}
-                  defaultTitle={index === 0 && editingCustomer ? 'Merkez Adres' : ''}
-                  defaultAddress={
-                    index === 0 ? incomingDraft?.address || editingCustomer?.address || '' : ''
-                  }
-                  defaultLocation={
-                    index === 0
-                      ? incomingDraft
-                        ? [incomingDraft.city, incomingDraft.district].filter(Boolean).join(' / ')
-                        : editingCustomer?.city || ''
-                      : ''
-                  }
-                  defaultMapsUrl={
-                    index === 0
-                      ? incomingDraft?.mapsUrl || editingCustomer?.googleMapsUrl || ''
-                      : ''
-                  }
+                  defaultTitle={row.defaultTitle || ''}
+                  defaultAddress={row.defaultAddress || ''}
+                  defaultLocation={row.defaultLocation || ''}
+                  defaultMapsUrl={row.defaultMapsUrl || ''}
                   canDelete={addressRows.length > 1}
                   deleteState={deleteDialog?.key === `address-${row.id}` ? deleteDialog : null}
                   onDelete={() =>
@@ -775,12 +803,14 @@ export default function CustomerCreatePage() {
                 label="Fiyat Listesi:"
                 name="priceList"
                 options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']}
+                defaultValue={editingCustomer?.priceList || ''}
               />
               <SelectLine
                 icon={WalletCards}
                 label="Döviz Kuru:"
                 name="currencyRate"
                 options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']}
+                defaultValue={editingCustomer?.currencyRate || ''}
               />
               <FormFieldCompact icon={WalletCards} label="Açılış Bakiyesi:">
                 <label className="flex min-h-8 items-center gap-3 text-[12px] font-semibold text-[var(--ink)]">
@@ -799,6 +829,11 @@ export default function CustomerCreatePage() {
                 label="Açılış Tutarı:"
                 name="openingBalanceAmount"
                 type="number"
+                defaultValue={
+                  editingCustomer?.hasOpeningBalance && editingCustomer?.balance
+                    ? String(editingCustomer.balance)
+                    : ''
+                }
                 disabled={!openingEnabled}
               />
             </div>
@@ -919,10 +954,10 @@ function AddressLine({
   )
 }
 
-function SelectLine({ icon: Icon, label, name, options }) {
+function SelectLine({ icon: Icon, label, name, options, defaultValue = '' }) {
   return (
     <FormFieldCompact icon={Icon} label={label} as="label">
-      <select name={name} defaultValue="" className="form-input !h-8 !min-h-8 !py-1">
+      <select name={name} defaultValue={defaultValue} className="form-input !h-8 !min-h-8 !py-1">
         <option value="">Seçiniz</option>
         {options.map((option) => (
           <option key={option}>{option}</option>
@@ -932,8 +967,18 @@ function SelectLine({ icon: Icon, label, name, options }) {
   )
 }
 
+/** Adres ve kullanıcı adları küçük harfle başlar; ilk harfi büyütmeyi engeller. */
+function toLeadingLowerCase(raw) {
+  const text = String(raw ?? '')
+  const first = text.search(/\p{L}/u)
+  if (first < 0) return text
+  return (
+    text.slice(0, first) + text.charAt(first).toLocaleLowerCase('tr-TR') + text.slice(first + 1)
+  )
+}
+
 function ContactLinkInput({ name, defaultValue = '', placeholder, platform = 'web' }) {
-  const [value, setValue] = useState(defaultValue)
+  const [value, setValue] = useState(() => toLeadingLowerCase(defaultValue))
   const href = resolveContactLinkHref(value, { platform })
 
   return (
@@ -941,8 +986,11 @@ function ContactLinkInput({ name, defaultValue = '', placeholder, platform = 'we
       <input
         name={name}
         value={value}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(event) => setValue(toLeadingLowerCase(event.target.value))}
         placeholder={placeholder}
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         className="form-input min-w-0 flex-1 !h-8 !min-h-8 !py-1"
       />
       {href && (
