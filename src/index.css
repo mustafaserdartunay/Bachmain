@@ -1888,9 +1888,12 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   color: var(--muted) !important;
 }
 
-/* Müşteri detay — sağ kolon: uzun içerikte alta kadar kaydırılabilir sticky */
+/* Müşteri detay — sağ kolon: sticky + iç kaydırma (alt zemin görünene kadar) */
 .customer-detail-actions-panel {
   --customer-actions-sticky-pad: calc(var(--shell-gap, 1.25rem) + 0.5rem);
+  --customer-actions-sticky-bottom: calc(
+    var(--shell-gap, 1.25rem) + env(safe-area-inset-bottom, 0px)
+  );
   scrollbar-width: thin;
   scrollbar-color: rgba(140, 145, 165, 0.45) transparent;
 }
@@ -1907,12 +1910,15 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 @media (min-width: 1280px) {
   .customer-detail-actions-panel {
     position: sticky;
-    /* Panel viewport’tan uzunsa top negatif olur → sayfa kayınca alt kenar görünür */
-    top: max(
-      var(--customer-actions-sticky-pad),
-      calc(100dvh - 100% - var(--customer-actions-sticky-pad))
-    );
+    top: var(--customer-actions-sticky-pad);
     align-self: start;
+    max-height: calc(
+      100dvh - var(--customer-actions-sticky-pad) - var(--customer-actions-sticky-bottom)
+    );
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.125rem;
+    padding-bottom: 0.25rem;
   }
 }
 
@@ -1922,15 +1928,15 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   height: 2.875rem;
   min-height: 2.875rem;
   align-items: center;
-  /* Tipografi optik merkez: biraz aşağı */
-  padding-top: 0.125rem;
+  /* Tipografi optik merkez: biraz daha aşağı */
+  padding-top: 0.35rem;
   padding-bottom: 0;
 }
 
 .customer-detail-ledger-panel .customer-ledger-row-header {
   height: 2.875rem;
   min-height: 2.875rem;
-  padding-top: 0.125rem;
+  padding-top: 0.35rem;
   padding-bottom: 0;
 }
 
