@@ -22,12 +22,14 @@ import {
   AppPageHeader,
   AppPagePanel,
   AppPageShell,
+  AppPanelDot,
 } from '../components/Layout/AppPageLayout'
 import {
   HEADER_QUICK_ACTIONS,
   HeaderQuickActionCard,
 } from '../components/Layout/HeaderCashActionsPanel'
 import {
+  APP_PANEL_TITLE_CLASS,
   APP_SURFACE_PANEL_CLASS,
   PAGE_CENTER_TITLE_CLASS,
   PAGE_FILTER_FIELD_CLASS,
@@ -469,23 +471,23 @@ export default function CustomersPage({
         </div>
       </AppPagePanel>
 
-      <AppPagePanel
-        title={listTitle}
-        dotColor="blue"
-        className="customer-list-panel w-full"
-        action={
+      <AppPagePanel className="customer-list-panel w-full">
+        <div className="mb-4 flex min-w-0 items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2">
+            <AppPanelDot color="blue" />
+            <h2 className={APP_PANEL_TITLE_CLASS}>{listTitle}</h2>
+          </div>
+          <div className="min-w-0 flex-1">
+            <SearchInput
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Marka veya ünvan ara..."
+              className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+            />
+          </div>
           <span className={`shrink-0 ${CUSTOMER_CHIP_TEXT_CLASS}`}>
             {filteredCustomers.length} Kayıt
           </span>
-        }
-      >
-        <div className="mb-4">
-          <SearchInput
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Marka veya ünvan ara..."
-            className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
-          />
         </div>
 
         <DataTable
