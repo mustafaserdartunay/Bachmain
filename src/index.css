@@ -1888,12 +1888,37 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   color: var(--muted) !important;
 }
 
-/* Müşteri detay — sağ kolon: sticky + iç kaydırma (alt zemin görünene kadar) */
-.customer-detail-actions-panel {
-  --customer-actions-sticky-pad: calc(var(--shell-gap, 1.25rem) + 0.5rem);
+/* Müşteri detay — sticky tavan = .app-page-header alt kenarı (sayfa üstü değil) */
+.customer-detail-page {
+  --customer-detail-page-header-h: 4.75rem;
+  --customer-detail-stack-gap: 1.25rem; /* space-y-5 */
+  /* Ana üst banner sticky altında sayfa başlığı */
+  --customer-detail-page-header-sticky-top: calc(
+    var(--shell-gap, 1.25rem) + var(--ds-header-h, 4.5rem)
+  );
+  /* Sağ kolon sticky: sayfa başlığının altı + shell gap */
+  --customer-actions-sticky-pad: calc(
+    var(--customer-detail-page-header-sticky-top) + var(--customer-detail-page-header-h) +
+      var(--customer-detail-stack-gap)
+  );
   --customer-actions-sticky-bottom: calc(
     var(--shell-gap, 1.25rem) + env(safe-area-inset-bottom, 0px)
   );
+}
+
+@media (min-width: 1280px) {
+  .customer-detail-page > .app-page-header {
+    position: sticky;
+    top: var(--customer-detail-page-header-sticky-top);
+    z-index: 35;
+    background: var(--glass-bg);
+    backdrop-filter: blur(26px) saturate(180%);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+  }
+}
+
+/* Müşteri detay — sağ kolon: sticky + iç kaydırma (alt zemin görünene kadar) */
+.customer-detail-actions-panel {
   scrollbar-width: thin;
   scrollbar-color: rgba(140, 145, 165, 0.45) transparent;
 }
@@ -1908,11 +1933,11 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 }
 
 @media (min-width: 1280px) {
-  .customer-detail-actions-panel {
+  .customer-detail-page .customer-detail-actions-panel {
     position: sticky;
     top: var(--customer-actions-sticky-pad);
     align-self: start;
-    /* Viewport içinde kalsın; scroll ile son kartın alt zemini görünsün */
+    /* Viewport: sayfa başlığı altından alt shell boşluğuna */
     max-height: calc(
       100dvh - var(--customer-actions-sticky-pad) - var(--customer-actions-sticky-bottom)
     );
@@ -1922,6 +1947,13 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
     padding-right: 0.125rem;
     padding-bottom: 1.25rem;
     scroll-padding-bottom: 1.25rem;
+  }
+
+  /* Ledger paneli sağ kolon yüksekliğine kadar uzar; satırlar footer üstüne kadar dolar */
+  .customer-detail-page .customer-detail-ledger-panel {
+    min-height: calc(
+      100dvh - var(--customer-actions-sticky-pad) - var(--customer-actions-sticky-bottom)
+    );
   }
 }
 
@@ -1941,22 +1973,52 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   white-space: normal !important;
 }
 
+.customer-detail-ledger-panel .customer-ledger-rows {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Başlık satırı ile footer arasında dikey merkez */
+  justify-content: safe center;
+  overflow-y: auto;
+}
+
+/* Satır kabuğu — metinler hücre içinde dikey ortalı */
 .customer-detail-ledger-panel .divide-y > [role='button'],
 .customer-detail-ledger-panel .customer-ledger-row {
   box-sizing: border-box;
-  height: 3.5rem;
-  min-height: 3.5rem;
+  flex: 0 0 auto;
+  height: 4.75rem;
+  min-height: 4.75rem;
+  align-items: center !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.customer-detail-ledger-panel .customer-ledger-row > * {
+  display: flex;
   align-items: center;
-  /* Tipografi optik merkez */
-  padding-top: 0.2rem;
-  padding-bottom: 0;
+  align-self: center;
+  min-height: 100%;
+  line-height: 1.25 !important;
+}
+
+.customer-detail-ledger-panel .customer-ledger-row > .text-right,
+.customer-detail-ledger-panel .customer-ledger-row > .customer-balance-amount {
+  justify-content: flex-end;
 }
 
 .customer-detail-ledger-panel .customer-ledger-row-header {
-  height: 3.5rem;
-  min-height: 3.5rem;
-  padding-top: 0.2rem;
-  padding-bottom: 0;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  height: 4.75rem;
+  min-height: 4.75rem;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.customer-detail-ledger-panel .customer-ledger-footer {
+  margin-top: 0;
 }
 
 /* Güncel bakiye — yfb (14/700) + Gelir yeşili / E-Fatura kırmızısı */
