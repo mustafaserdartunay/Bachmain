@@ -279,6 +279,12 @@ export default function CustomerCreatePage() {
   const isSupplierForm = searchParams.get('kind') === 'supplier'
   const defaultPartyType = isSupplierForm ? SUPPLIER_TYPE_LABEL : 'Müşteri'
   const backPath = isSupplierForm ? '/suppliers' : '/musteriler'
+  /** Düzenlemeden vazgeçince müşteri/tedarikçi detayına; yeni kayıtta listeye dön. */
+  const cancelPath = editingCustomer?.id
+    ? isSupplierForm
+      ? `/suppliers/${editingCustomer.id}`
+      : `/musteriler/${editingCustomer.id}`
+    : backPath
   const pageHeading = editingCustomer
     ? isSupplierForm
       ? 'Tedarikçi Düzenle'
@@ -678,7 +684,7 @@ export default function CustomerCreatePage() {
           titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
             <div className="relative flex items-center gap-2.5 bg-transparent">
-              <CancelCta onClick={() => navigate(backPath)} />
+              <CancelCta onClick={() => navigate(cancelPath)} />
               <SaveSplitAction onSaveAndContinue={saveAndContinue} saving={saving} />
             </div>
           }
@@ -928,7 +934,7 @@ export default function CustomerCreatePage() {
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
-          <CancelCta onClick={() => navigate(backPath)} />
+          <CancelCta onClick={() => navigate(cancelPath)} />
           <SaveSplitAction onSaveAndContinue={saveAndContinue} saving={saving} />
         </div>
       </section>
