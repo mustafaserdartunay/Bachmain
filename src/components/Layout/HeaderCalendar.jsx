@@ -33,18 +33,33 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10)
 }
 
+function selectionHint(selectedDateFrom, selectedDateTo) {
+  if (!selectedDateFrom) return 'Başlangıç tarihini seçin'
+  if (!selectedDateTo) return 'Bitiş tarihini seçin · aynı güne tıklayınca tek gün olur'
+  if (selectedDateTo === selectedDateFrom) return 'Tek gün seçildi · yeni aralık için tekrar tıklayın'
+  return 'Aralık seçildi · yeni aralık için tekrar tıklayın'
+}
+
 function GlassMonthCalendar({
   viewDate,
   onViewDateChange,
   selectedDateFrom = '',
   selectedDateTo = '',
   onSelectDate,
+  onClearSelection,
+  includeTime = false,
+  timeFrom = '',
+  timeTo = '',
+  onIncludeTimeChange,
+  onTimeFromChange,
+  onTimeToChange,
   dayCounts,
 }) {
   const monthCells = useMemo(() => buildCalendarMonthGrid(viewDate), [viewDate])
   const today = new Date()
   const rangeStart = selectedDateFrom || ''
   const rangeEnd = selectedDateTo || selectedDateFrom || ''
+  const pickingEnd = Boolean(selectedDateFrom && !selectedDateTo)
 
   return (
     <div className="header-calendar-month">
@@ -75,8 +90,37 @@ function GlassMonthCalendar({
       </div>
 
       <p className="mb-1.5 text-[12px] font-normal leading-tight text-[var(--muted)]">
-        Başlangıç ve bitiş için iki tarih seçin
+        {selectionHint(selectedDateFrom, selectedDateTo)}
       </p>
+
+      {selectedDateFrom ? (
+        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          <span className="header-calendar-range-chip is-start">
+            <span className="header-calendar-range-chip-label">Başlangıç</span>
+            <span className="header-calendar-range-chip-value">
+              {formatCalendarDayLabel(selectedDateFrom)}
+              {includeTime && timeFrom ? ` · ${timeFrom}` : ''}
+            </span>
+          </span>
+          <span className={`header-calendar-range-chip ${selectedDateTo ? 'is-end' : 'is-pending'}`}>
+            <span className="header-calendar-range-chip-label">Bitiş</span>
+            <span className="header-calendar-range-chip-value">
+              {selectedDateTo
+                ? `${formatCalendarDayLabel(selectedDateTo)}${includeTime && timeTo ? ` · ${timeTo}` : ''}`
+                : 'Seçin…'}
+            </span>
+          </span>
+          {onClearSelection ? (
+            <button
+              type="button"
+              onClick={onClearSelection}
+              className="header-calendar-range-clear"
+            >
+              Temizle
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mb-0.5 grid grid-cols-7 gap-0.5">
         {CALENDAR_WEEKDAYS.map((day) => (
@@ -95,11 +139,11 @@ function GlassMonthCalendar({
           const iso = toCalendarIso(day)
           const markers = dayCounts.get(iso)
           const isStart = rangeStart === iso
-          const isEnd = rangeEnd === iso
+          const isEnd = Boolean(selectedDateTo) && rangeEnd === iso
           const isSelected = isStart || isEnd
           const inRange =
             rangeStart &&
-            rangeEnd &&
+            selectedDateTo &&
             rangeStart !== rangeEnd &&
             iso >= rangeStart &&
             iso <= rangeEnd
@@ -110,7 +154,7 @@ function GlassMonthCalendar({
               key={iso}
               type="button"
               onClick={() => onSelectDate(iso)}
-              className={`header-calendar-day ${isSelected ? 'is-selected' : ''} ${inRange ? 'is-in-range' : ''} ${isToday ? 'is-today' : ''}`}
+              className={`header-calendar-day ${isSelected ? 'is-selected' : ''} ${inRange ? 'is-in-range' : ''} ${isToday ? 'is-today' : ''} ${pickingEnd && !isSelected ? 'is-picking-end' : ''}`}
             >
               <span>{day.getDate()}</span>
               {markers ? (
@@ -123,6 +167,40 @@ function GlassMonthCalendar({
           )
         })}
       </div>
+
+      <div className="header-calendar-time-block">
+        <label className="header-calendar-time-toggle">
+          <input
+            type="checkbox"
+            checked={includeTime}
+            onChange={(event) => onIncludeTimeChange?.(event.target.checked)}
+          />
+          <span>Saat aralığı ekle</span>
+        </label>
+
+        {includeTime ? (
+          <div className="header-calendar-time-fields">
+            <label className="header-calendar-time-field">
+              <span>Başlangıç</span>
+              <input
+                type="time"
+                value={timeFrom}
+                onChange={(event) => onTimeFromChange?.(event.target.value)}
+                className="form-input header-calendar-time-input"
+              />
+            </label>
+            <label className="header-calendar-time-field">
+              <span>Bitiş</span>
+              <input
+                type="time"
+                value={timeTo}
+                onChange={(event) => onTimeToChange?.(event.target.value)}
+                className="form-input header-calendar-time-input"
+              />
+            </label>
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -130,6 +208,9 @@ function GlassMonthCalendar({
 function HeaderCalendarCreatePanel({
   selectedDateFrom,
   selectedDateTo,
+  includeTime = false,
+  timeFrom = '',
+  timeTo = '',
   createMode,
   onCreateModeChange,
   onClose,
@@ -144,12 +225,16 @@ function HeaderCalendarCreatePanel({
       return
     }
     const dateTo = selectedDateTo || selectedDateFrom
+    const nextTimeFrom = includeTime ? timeFrom || '09:00' : ''
+    const nextTimeTo = includeTime ? timeTo || timeFrom || '10:00' : ''
     setTaskForm({
       ...emptyTaskForm(),
       dueDate: selectedDateFrom,
       dateFrom: selectedDateFrom,
       dateTo,
-      includeTime: false,
+      includeTime,
+      timeFrom: nextTimeFrom,
+      timeTo: nextTimeTo,
     })
     setAppointmentForm({
       ...emptyAppointmentForm(),
@@ -157,12 +242,12 @@ function HeaderCalendarCreatePanel({
       dateFrom: selectedDateFrom,
       dateTo,
       includeTime: true,
-      timeFrom: '10:00',
-      timeTo: '11:00',
-      startTime: '10:00',
-      endTime: '11:00',
+      timeFrom: includeTime ? timeFrom || '10:00' : '10:00',
+      timeTo: includeTime ? timeTo || timeFrom || '11:00' : '11:00',
+      startTime: includeTime ? timeFrom || '10:00' : '10:00',
+      endTime: includeTime ? timeTo || timeFrom || '11:00' : '11:00',
     })
-  }, [selectedDateFrom, selectedDateTo])
+  }, [selectedDateFrom, selectedDateTo, includeTime, timeFrom, timeTo])
 
   if (!selectedDateFrom) {
     return (
@@ -180,6 +265,9 @@ function HeaderCalendarCreatePanel({
       dateFrom: form.dateFrom || selectedDateFrom,
       dateTo: form.dateTo || selectedDateTo || selectedDateFrom,
       dueDate: form.dateFrom || form.dueDate || selectedDateFrom,
+      includeTime: Boolean(form.includeTime),
+      timeFrom: form.includeTime ? form.timeFrom || '' : '',
+      timeTo: form.includeTime ? form.timeTo || '' : '',
     })
     onClose()
   }
@@ -201,6 +289,7 @@ function HeaderCalendarCreatePanel({
     return (
       <div className="header-calendar-form-shell">
         <TaskFormModal
+          key={`task-${selectedDateFrom}-${selectedDateTo}-${includeTime}-${timeFrom}-${timeTo}`}
           initial={taskForm}
           onClose={() => onCreateModeChange(null)}
           onSubmit={handleTaskSubmit}
@@ -215,6 +304,7 @@ function HeaderCalendarCreatePanel({
     return (
       <div className="header-calendar-form-shell">
         <AppointmentFormModal
+          key={`apt-${selectedDateFrom}-${selectedDateTo}-${includeTime}-${timeFrom}-${timeTo}`}
           initial={appointmentForm}
           onClose={() => onCreateModeChange(null)}
           onSubmit={handleAppointmentSubmit}
@@ -227,8 +317,8 @@ function HeaderCalendarCreatePanel({
 
   const rangeLabel =
     selectedDateTo && selectedDateTo !== selectedDateFrom
-      ? `${formatCalendarDayLabel(selectedDateFrom)} – ${formatCalendarDayLabel(selectedDateTo)}`
-      : formatCalendarDayLabel(selectedDateFrom)
+      ? `${formatCalendarDayLabel(selectedDateFrom)}${includeTime && timeFrom ? ` ${timeFrom}` : ''} – ${formatCalendarDayLabel(selectedDateTo)}${includeTime && timeTo ? ` ${timeTo}` : ''}`
+      : `${formatCalendarDayLabel(selectedDateFrom)}${includeTime && timeFrom ? ` ${timeFrom}` : ''}`
 
   return (
     <div className="header-calendar-create-panel">
@@ -267,6 +357,9 @@ export default function HeaderCalendar({ hideTrigger = false }) {
   const { open, setOpen, toggle } = useHeaderPopover('calendar')
   const [selectedDateFrom, setSelectedDateFrom] = useState('')
   const [selectedDateTo, setSelectedDateTo] = useState('')
+  const [includeTime, setIncludeTime] = useState(false)
+  const [timeFrom, setTimeFrom] = useState('09:00')
+  const [timeTo, setTimeTo] = useState('10:00')
   const [createMode, setCreateMode] = useState(null)
   const [viewDate, setViewDate] = useState(() => new Date())
   const [tasks, setTasks] = useState(() => loadTasks())
@@ -297,6 +390,9 @@ export default function HeaderCalendar({ hideTrigger = false }) {
       setCreateMode(null)
       setSelectedDateFrom('')
       setSelectedDateTo('')
+      setIncludeTime(false)
+      setTimeFrom('09:00')
+      setTimeTo('10:00')
       publishCalendarCreateMode(null)
       return
     }
@@ -381,6 +477,20 @@ export default function HeaderCalendar({ hideTrigger = false }) {
     setSelectedDateTo(iso)
   }
 
+  function handleClearSelection() {
+    setCreateMode(null)
+    setSelectedDateFrom('')
+    setSelectedDateTo('')
+    publishCalendarCreateMode(null)
+  }
+
+  function handleIncludeTimeChange(checked) {
+    setIncludeTime(checked)
+    if (!checked) return
+    setTimeFrom((current) => current || '09:00')
+    setTimeTo((current) => current || '10:00')
+  }
+
   function handleCreateModeChange(mode) {
     setCreateMode(mode)
     publishCalendarCreateMode(mode)
@@ -391,6 +501,9 @@ export default function HeaderCalendar({ hideTrigger = false }) {
     setCreateMode(null)
     setSelectedDateFrom('')
     setSelectedDateTo('')
+    setIncludeTime(false)
+    setTimeFrom('09:00')
+    setTimeTo('10:00')
     publishCalendarCreateMode(null)
   }
 
@@ -458,6 +571,13 @@ export default function HeaderCalendar({ hideTrigger = false }) {
                   selectedDateFrom={selectedDateFrom}
                   selectedDateTo={selectedDateTo}
                   onSelectDate={handleSelectDate}
+                  onClearSelection={handleClearSelection}
+                  includeTime={includeTime}
+                  timeFrom={timeFrom}
+                  timeTo={timeTo}
+                  onIncludeTimeChange={handleIncludeTimeChange}
+                  onTimeFromChange={setTimeFrom}
+                  onTimeToChange={setTimeTo}
                   dayCounts={dayCounts}
                 />
               </div>
@@ -465,6 +585,9 @@ export default function HeaderCalendar({ hideTrigger = false }) {
                 <HeaderCalendarCreatePanel
                   selectedDateFrom={selectedDateFrom}
                   selectedDateTo={selectedDateTo}
+                  includeTime={includeTime}
+                  timeFrom={timeFrom}
+                  timeTo={timeTo}
                   createMode={createMode}
                   onCreateModeChange={handleCreateModeChange}
                   onClose={handleClosePanel}

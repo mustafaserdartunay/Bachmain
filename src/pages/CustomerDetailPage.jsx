@@ -554,46 +554,109 @@ export default function CustomerDetailPage() {
         </div>
       ) : null}
 
-      <AppPagePanel className="customer-detail-actions-panel w-full overflow-visible">
-        <div className="grid gap-4 xl:grid-cols-2">
-          <section className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setCollectionOpen((open) => !open)
-                  setPaymentOpen(false)
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
+        <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-[16rem] flex-1">
+              <p className={`mb-1.5 ${DETAIL_CELL_CLASS}`}>Başlangıç / Bitiş Tarihi</p>
+              <DateRangePicker
+                dateFrom={ledgerDateFrom}
+                dateTo={ledgerDateTo}
+                includeTime={false}
+                showTimeInLabel={false}
+                dateLabelFormat="numeric"
+                onChange={(value) => {
+                  setLedgerDateFrom(value.dateFrom || '')
+                  setLedgerDateTo(value.dateTo || '')
                 }}
-                className={`${TAHSILAT_BTN} !w-auto min-w-[10rem] flex-1`}
-              >
-                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                  <CheckCircle2 className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
-                </span>
-                <span className={YF_TEXT_ON_COLOR_CLASS}>Tahsilat Ekle</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setPaymentOpen((open) => !open)
-                  setCollectionOpen(false)
-                }}
-                className={`${ODEME_BTN} !w-auto min-w-[10rem] flex-1`}
-              >
-                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                  <Upload className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
-                </span>
-                <span className={YF_TEXT_ON_COLOR_CLASS}>Ödeme Ekle</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDownloadStatementPdf}
-                className={`${HEADER_ACTION_CTA_CLASS} !w-auto min-w-[10rem] flex-1 justify-center ${HEADER_ACTION_GRADIENTS.violet}`}
-              >
-                <span className={YF_TEXT_ON_COLOR_CLASS}>Ekstre Gönder</span>
-              </button>
+              />
             </div>
+            <p className={`shrink-0 ${DETAIL_CELL_CLASS}`}>
+              {filteredStatementRows.length} Kayıt
+            </p>
+          </div>
+
+          <div
+            className={`${STATEMENT_GRID_CLASS} border-b border-[var(--glass-border)] px-1 py-2 ${DETAIL_TABLE_HEADER_CLASS}`}
+          >
+            <span>{'İşlem Türü'.toLocaleUpperCase('tr-TR')}</span>
+            <span>{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
+            <span>{'Açıklama'.toLocaleUpperCase('tr-TR')}</span>
+            <span>{'İşlem Tarihi'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="text-right">{'Meblağ'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="text-right">{'Bakiye'.toLocaleUpperCase('tr-TR')}</span>
+          </div>
+
+          <div className="divide-y divide-[var(--glass-border)]">
+            {filteredStatementRows.length === 0 ? (
+              <p className="px-1 py-8 text-center text-[12px] font-normal text-[var(--muted)]">
+                Hareket kaydı yok.
+              </p>
+            ) : (
+              filteredStatementRows.map((row) => (
+                <div
+                  key={row.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/musteriler/${customer.id}/hareket/${row.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter')
+                      navigate(`/musteriler/${customer.id}/hareket/${row.id}`)
+                  }}
+                  className={`${STATEMENT_GRID_CLASS} cursor-pointer px-1 py-2.5 transition-colors hover:bg-white/25`}
+                >
+                  <span className={`${DETAIL_CELL_CLASS} !font-bold text-[var(--ink)]`}>
+                    {row.type}
+                  </span>
+                  <span className={`${DETAIL_CELL_CLASS} truncate`}>{row.accountName}</span>
+                  <span className={`${DETAIL_CELL_CLASS} truncate`}>{row.description}</span>
+                  <span className={DETAIL_CELL_CLASS}>{row.date}</span>
+                  <span
+                    className={`customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal ${getCustomerStatementAmountTone(row)}`}
+                  >
+                    {formatCustomerStatementAmount(row)}
+                  </span>
+                  <span
+                    className={`customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceTone(row.balance)}`}
+                  >
+                    {formatTreasuryCurrency(row.balance)}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
+            <p className={DETAIL_CELL_CLASS}>
+              {filteredStatementRows.length
+                ? `${filteredStatementRows.length} kayıttan 1-${filteredStatementRows.length} arası gösteriliyor.`
+                : 'Kayıt yok.'}
+            </p>
+            <button
+              type="button"
+              onClick={handleDownloadStatementPdf}
+              className={`${HEADER_ACTION_CTA_CLASS} !h-10 ${HEADER_ACTION_GRADIENTS.violet}`}
+            >
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Dışarı Aktar</span>
+            </button>
+          </div>
+        </AppPagePanel>
+
+        <aside className="customer-detail-actions-panel space-y-4">
+          <section className="card space-y-3">
+            <button
+              type="button"
+              onClick={() => {
+                setCollectionOpen((open) => !open)
+                setPaymentOpen(false)
+              }}
+              className={TAHSILAT_BTN}
+            >
+              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                <CheckCircle2 className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
+              </span>
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Tahsilat Ekle</span>
+            </button>
 
             {collectionOpen && (
               <CustomerMovementForm
@@ -616,6 +679,20 @@ export default function CustomerDetailPage() {
               />
             )}
 
+            <button
+              type="button"
+              onClick={() => {
+                setPaymentOpen((open) => !open)
+                setCollectionOpen(false)
+              }}
+              className={ODEME_BTN}
+            >
+              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                <Upload className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
+              </span>
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Ödeme Ekle</span>
+            </button>
+
             {paymentOpen && (
               <CustomerMovementForm
                 variant="odeme"
@@ -637,10 +714,12 @@ export default function CustomerDetailPage() {
               />
             )}
 
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className="space-y-2">
               <div className="glass-inset rounded-xl px-3 py-2.5">
                 <p className={DETAIL_CELL_CLASS}>Kalan Bakiye</p>
-                <p className="customer-balance-amount customer-balance-positive mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
+                <p
+                  className={`customer-balance-amount mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceTone(currentBalance)}`}
+                >
                   {formatTreasuryCurrency(currentBalance)}
                 </p>
               </div>
@@ -657,9 +736,17 @@ export default function CustomerDetailPage() {
                 </p>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={handleDownloadStatementPdf}
+              className={`${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.violet}`}
+            >
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Ekstre Gönder</span>
+            </button>
           </section>
 
-          <section className="space-y-4 rounded-[16px] border border-[var(--glass-border)] bg-[rgba(255,255,255,0.06)] px-3 py-3">
+          <section className="card space-y-5">
             <button
               type="button"
               onClick={() => setCustomerScreenOpen((open) => !open)}
@@ -859,95 +946,8 @@ export default function CustomerDetailPage() {
               </>
             )}
           </section>
-        </div>
-      </AppPagePanel>
-
-      <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
-          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-            <div className="min-w-[16rem] flex-1">
-              <p className={`mb-1.5 ${DETAIL_CELL_CLASS}`}>Başlangıç / Bitiş Tarihi</p>
-              <DateRangePicker
-                dateFrom={ledgerDateFrom}
-                dateTo={ledgerDateTo}
-                includeTime={false}
-                showTimeInLabel={false}
-                dateLabelFormat="numeric"
-                onChange={(value) => {
-                  setLedgerDateFrom(value.dateFrom || '')
-                  setLedgerDateTo(value.dateTo || '')
-                }}
-              />
-            </div>
-            <p className={`shrink-0 ${DETAIL_CELL_CLASS}`}>
-              {filteredStatementRows.length} Kayıt
-            </p>
-          </div>
-
-          <div
-            className={`${STATEMENT_GRID_CLASS} border-b border-[var(--glass-border)] px-1 py-2 ${DETAIL_TABLE_HEADER_CLASS}`}
-          >
-            <span>{'İşlem Türü'.toLocaleUpperCase('tr-TR')}</span>
-            <span>{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
-            <span>{'Açıklama'.toLocaleUpperCase('tr-TR')}</span>
-            <span>{'İşlem Tarihi'.toLocaleUpperCase('tr-TR')}</span>
-            <span className="text-right">{'Meblağ'.toLocaleUpperCase('tr-TR')}</span>
-            <span className="text-right">{'Bakiye'.toLocaleUpperCase('tr-TR')}</span>
-          </div>
-
-          <div className="divide-y divide-[var(--glass-border)]">
-            {filteredStatementRows.length === 0 ? (
-              <p className="px-1 py-8 text-center text-[12px] font-normal text-[var(--muted)]">
-                Hareket kaydı yok.
-              </p>
-            ) : (
-              filteredStatementRows.map((row) => (
-                <div
-                  key={row.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate(`/musteriler/${customer.id}/hareket/${row.id}`)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter')
-                      navigate(`/musteriler/${customer.id}/hareket/${row.id}`)
-                  }}
-                  className={`${STATEMENT_GRID_CLASS} cursor-pointer px-1 py-2.5 transition-colors hover:bg-white/25`}
-                >
-                  <span className={`${DETAIL_CELL_CLASS} !font-bold text-[var(--ink)]`}>
-                    {row.type}
-                  </span>
-                  <span className={`${DETAIL_CELL_CLASS} truncate`}>{row.accountName}</span>
-                  <span className={`${DETAIL_CELL_CLASS} truncate`}>{row.description}</span>
-                  <span className={DETAIL_CELL_CLASS}>{row.date}</span>
-                  <span
-                    className={`customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal ${getCustomerStatementAmountTone(row)}`}
-                  >
-                    {formatCustomerStatementAmount(row)}
-                  </span>
-                  <span
-                    className={`customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceTone(row.balance)}`}
-                  >
-                    {formatTreasuryCurrency(row.balance)}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
-            <p className={DETAIL_CELL_CLASS}>
-              {filteredStatementRows.length
-                ? `${filteredStatementRows.length} kayıttan 1-${filteredStatementRows.length} arası gösteriliyor.`
-                : 'Kayıt yok.'}
-            </p>
-            <button
-              type="button"
-              onClick={handleDownloadStatementPdf}
-              className={`${HEADER_ACTION_CTA_CLASS} !h-10 ${HEADER_ACTION_GRADIENTS.violet}`}
-            >
-              <span className={YF_TEXT_ON_COLOR_CLASS}>Dışarı Aktar</span>
-            </button>
-          </div>
-      </AppPagePanel>
+        </aside>
+      </div>
 
       <CustomerStockPanel customer={customer} />
 

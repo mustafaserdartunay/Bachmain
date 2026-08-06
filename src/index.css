@@ -897,8 +897,11 @@ textarea:not(.form-input)::placeholder {
 }
 
 .header-calendar-pane--month {
+  display: flex;
+  flex-direction: column;
   border-right: 1px solid rgba(140, 145, 165, 0.12);
   padding: 0.625rem 0.75rem;
+  overflow: hidden;
 }
 
 .header-calendar-pane--create {
@@ -910,7 +913,132 @@ textarea:not(.form-input)::placeholder {
 }
 
 .header-calendar-month {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
   min-width: 0;
+}
+
+.header-calendar-range-chip {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.0625rem;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(140, 145, 165, 0.18);
+  background: rgba(255, 255, 255, 0.38);
+  padding: 0.3125rem 0.5rem;
+}
+
+.header-calendar-range-chip.is-start {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.header-calendar-range-chip.is-end {
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.header-calendar-range-chip.is-pending {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+.header-calendar-range-chip-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.header-calendar-range-chip-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.header-calendar-range-clear {
+  margin-left: auto;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e11d48;
+  transition: background-color 0.18s ease;
+}
+
+.header-calendar-range-clear:hover {
+  background: rgba(225, 29, 72, 0.1);
+}
+
+.header-calendar-day.is-picking-end:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.header-calendar-time-block {
+  margin-top: auto;
+  border-top: 1px solid rgba(140, 145, 165, 0.14);
+  padding-top: 0.625rem;
+}
+
+.header-calendar-time-toggle {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+.header-calendar-time-toggle input {
+  height: 0.875rem;
+  width: 0.875rem;
+  accent-color: #10b981;
+}
+
+.header-calendar-time-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.header-calendar-time-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.header-calendar-time-field > span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.header-calendar-time-input {
+  min-height: 2.25rem !important;
+  height: 2.25rem !important;
+  border-radius: 0.75rem !important;
+  padding-top: 0.375rem !important;
+  padding-bottom: 0.375rem !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--ink) !important;
 }
 
 .header-calendar-nav-btn {
@@ -1150,6 +1278,8 @@ textarea:not(.form-input)::placeholder {
 
 .header-calendar-form-shell .btn-cancel,
 .header-calendar-form-shell button[type='submit'] {
+  height: 3.25rem !important;
+  min-height: 3.25rem !important;
   font-size: 14px !important;
   font-weight: 400 !important;
   line-height: 1.25 !important;

@@ -23,10 +23,10 @@ import { YF_TEXT_CLASS, YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesi
 const FIELD_LABEL = `mb-1.5 block ${YF_TEXT_CLASS}`
 
 const HEADER_POPOVER_BTN_CANCEL =
-  `btn-cancel !h-9 !min-h-9 min-w-[5.5rem] px-4 ${YF_TEXT_CLASS}`
+  `btn-cancel !h-[3.25rem] !min-h-[3.25rem] min-w-[5.5rem] px-4 ${YF_TEXT_CLASS}`
 
 const HEADER_POPOVER_BTN_SUBMIT =
-  `inline-flex h-9 min-w-[5.5rem] items-center justify-center rounded-xl bg-gradient-to-br from-[#7cf2c6] via-[#34d399] to-[#10b981] px-4 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 ${YF_TEXT_ON_COLOR_CLASS}`
+  `inline-flex h-[3.25rem] min-h-[3.25rem] min-w-[5.5rem] items-center justify-center rounded-xl bg-gradient-to-br from-[#7cf2c6] via-[#34d399] to-[#10b981] px-4 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 ${YF_TEXT_ON_COLOR_CLASS}`
 
 const HEADER_POPOVER_ICON_BTN =
   'inline-flex shrink-0 items-center justify-center p-0 text-[#f43f5e] transition-colors hover:text-[#e11d48]'
