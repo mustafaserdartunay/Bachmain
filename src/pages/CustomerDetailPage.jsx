@@ -104,7 +104,7 @@ const DETAIL_TABLE_HEADER_CLASS =
 const DETAIL_CELL_CLASS = YF_TEXT_CLASS
 const DETAIL_ACTIONS_MENU_CLASS = PAGE_FILTER_MENU_CLASS
 const STATEMENT_GRID_CLASS =
-  'customer-ledger-row grid grid-cols-[7.75rem_7.75rem_minmax(0,1.4fr)_9rem_6.75rem_6.75rem] items-center gap-2 px-1'
+  'customer-ledger-row grid grid-cols-[9rem_7.75rem_7.75rem_minmax(0,1.4fr)_6.75rem_6.75rem] items-center gap-2 px-1'
 const STATEMENT_ROW_CLASS = `${STATEMENT_GRID_CLASS}`
 
 const editActionItems = [
@@ -535,10 +535,10 @@ export default function CustomerDetailPage() {
           <div
             className={`${STATEMENT_ROW_CLASS} border-b border-[var(--glass-border)] ${DETAIL_TABLE_HEADER_CLASS}`}
           >
-            <span className="min-w-0 truncate">{'İşlem Türü'.toLocaleUpperCase('tr-TR')}</span>
-            <span className="min-w-0 truncate">{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
-            <span className="min-w-0 truncate">{'Açıklama'.toLocaleUpperCase('tr-TR')}</span>
             <span className="min-w-0 truncate">{'İşlem Tarihi'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate">{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate">{'İşlem Türü'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate">{'Açıklama'.toLocaleUpperCase('tr-TR')}</span>
             <span className="min-w-0 truncate text-right">{'Meblağ'.toLocaleUpperCase('tr-TR')}</span>
             <span className="min-w-0 truncate text-right">{'Bakiye'.toLocaleUpperCase('tr-TR')}</span>
           </div>
@@ -561,12 +561,12 @@ export default function CustomerDetailPage() {
                   }}
                   className={`${STATEMENT_ROW_CLASS} cursor-pointer`}
                 >
+                  <span className={DETAIL_CELL_CLASS}>{row.date}</span>
+                  <span className={`${DETAIL_CELL_CLASS} truncate`}>{row.accountName}</span>
                   <span className={`${DETAIL_CELL_CLASS} !font-bold text-[var(--ink)]`}>
                     {row.type}
                   </span>
-                  <span className={`${DETAIL_CELL_CLASS} truncate`}>{row.accountName}</span>
                   <span className={`${DETAIL_CELL_CLASS} truncate`}>{row.description}</span>
-                  <span className={DETAIL_CELL_CLASS}>{row.date}</span>
                   <span
                     className={`customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal ${getCustomerStatementAmountTone(row)}`}
                   >

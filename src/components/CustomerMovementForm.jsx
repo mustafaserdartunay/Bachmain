@@ -10,11 +10,10 @@ import {
 
 const FIELD_SHELL_CLASS = 'space-y-1.5'
 const LABEL_CLASS = YF_TEXT_CLASS
-const HINT_CLASS = YF_TEXT_CLASS
 const METHOD_IDLE_CLASS =
-  'rounded-xl border border-[var(--glass-border)] bg-white/25 px-2 py-2.5 text-left transition-colors hover:bg-white/40'
+  'flex w-full items-center gap-2.5 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2.5 text-left transition-[background-color,border-color,color] hover:bg-white/45'
 const METHOD_ACTIVE_CLASS =
-  'rounded-xl border border-[rgba(37,99,235,0.28)] bg-[rgba(37,99,235,0.08)] px-2 py-2.5 text-left'
+  'flex w-full items-center gap-2.5 rounded-xl border border-[rgba(37,99,235,0.32)] bg-[rgba(37,99,235,0.12)] px-3 py-2.5 text-left transition-[background-color,border-color,color]'
 
 export default function CustomerMovementForm({
   variant,
@@ -33,15 +32,8 @@ export default function CustomerMovementForm({
   title,
   subtitle,
   submitLabel,
-  preserveTimeHint = false,
 }) {
   const isPayment = variant === 'odeme'
-  const resolvedTitle = title || (isPayment ? 'Ödeme Menüsü' : 'Tahsilat Menüsü')
-  const resolvedSubtitle =
-    subtitle ||
-    (isPayment
-      ? 'İşlem tipini, kasa/banka yerini ve tutarı seçin.'
-      : 'Önce işlem tipini, sonra kasa/banka yerini ve tutarı seçin.')
   const amountLabel = isPayment ? 'Ödeme Tutarı' : 'Tahsilat Tutarı'
   const resolvedSubmitLabel = submitLabel || (isPayment ? 'Ödeme Ekle' : 'Tahsilat Ekle')
   const submitGradient = isPayment
@@ -71,14 +63,16 @@ export default function CustomerMovementForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-3 rounded-2xl border border-[var(--glass-border)] bg-white/30 p-3"
+      className="space-y-3 rounded-[16px] border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)]"
     >
-      <div>
-        <p className={`${LABEL_CLASS} !font-bold`}>{resolvedTitle}</p>
-        <p className={`mt-1 ${HINT_CLASS}`}>{resolvedSubtitle}</p>
-      </div>
+      {title || subtitle ? (
+        <div>
+          {title ? <p className={`${LABEL_CLASS} !font-bold`}>{title}</p> : null}
+          {subtitle ? <p className={`mt-1 ${LABEL_CLASS}`}>{subtitle}</p> : null}
+        </div>
+      ) : null}
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="flex flex-col gap-2">
         {methodTiles.map(({ method, icon: Icon }) => {
           const active = form.method === method
           return (
@@ -88,11 +82,20 @@ export default function CustomerMovementForm({
               onClick={() => onUpdate('method', method)}
               className={active ? METHOD_ACTIVE_CLASS : METHOD_IDLE_CLASS}
             >
-              <Icon
-                className={`mb-1.5 h-4 w-4 ${active ? 'text-blue-600' : 'text-[var(--muted)]'}`}
-                strokeWidth={2.25}
-              />
-              <span className={LABEL_CLASS}>{method}</span>
+              <span
+                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                  active
+                    ? 'bg-[rgba(37,99,235,0.16)] text-blue-600'
+                    : 'bg-white/35 text-[var(--muted)]'
+                }`}
+              >
+                <Icon className="h-4 w-4" strokeWidth={2.25} />
+              </span>
+              <span
+                className={`${LABEL_CLASS} ${active ? '!font-bold !text-blue-700' : ''}`}
+              >
+                {method}
+              </span>
             </button>
           )
         })}
@@ -101,7 +104,7 @@ export default function CustomerMovementForm({
       {form.method === 'Çek' ? (
         <div className="space-y-2 rounded-xl border border-[var(--glass-border)] bg-white/25 p-2.5">
           <p className={`${LABEL_CLASS} !font-bold`}>Çek Bilgileri</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             <input
               value={form.chequeNo}
               onChange={(event) => onUpdate('chequeNo', event.target.value)}
@@ -126,7 +129,7 @@ export default function CustomerMovementForm({
               placeholder="Şube"
               className="form-input !h-8 !min-h-8 !py-1"
             />
-            <label className="col-span-2 flex flex-col gap-1">
+            <label className="flex flex-col gap-1">
               <span className={LABEL_CLASS}>Vade Tarihi</span>
               <input
                 value={form.chequeDueDate}
@@ -160,7 +163,7 @@ export default function CustomerMovementForm({
           value={form.amount}
           onChange={(event) => onUpdate('amount', event.target.value)}
           type="number"
-          className="form-input !h-8 !min-h-8 !py-1"
+          className="form-input !h-9 !min-h-9 !py-1"
         />
       </div>
 
@@ -170,11 +173,8 @@ export default function CustomerMovementForm({
           value={form.transactionDate}
           onChange={(event) => onUpdate('transactionDate', event.target.value)}
           type="date"
-          className="form-input !h-8 !min-h-8 !py-1"
+          className="form-input !h-9 !min-h-9 !py-1"
         />
-        <p className={HINT_CLASS}>
-          {preserveTimeHint ? 'Mevcut saat korunur.' : 'Saat otomatik olarak kaydedilir.'}
-        </p>
       </div>
 
       <div className={FIELD_SHELL_CLASS}>
@@ -182,11 +182,11 @@ export default function CustomerMovementForm({
         <textarea
           value={form.description}
           onChange={(event) => onUpdate('description', event.target.value)}
-          className="form-input min-h-[64px] resize-none !py-2"
+          className="form-input min-h-[72px] resize-none !py-2"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 pt-0.5">
         <button
           type="button"
           onClick={onCancel}
