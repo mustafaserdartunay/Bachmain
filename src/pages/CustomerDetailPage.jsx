@@ -105,6 +105,7 @@ import {
   patchMovementForm,
 } from '../utils/customerMovementForm'
 import CustomerStockPanel from '../components/Customers/CustomerStockPanel'
+import { Dropdown, DropdownItem } from '@bachmain/ui'
 
 const TAHSILAT_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.success}`
 const ODEME_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.expense}`
@@ -114,27 +115,33 @@ const DETAIL_FILTER_PILL_CLASS = PAGE_FILTER_PILL_CLASS
 const DETAIL_FILTER_MENU_CLASS = PAGE_FILTER_MENU_CLASS
 const DETAIL_TABLE_HEADER_CLASS = PAGE_TABLE_HEADER_CLASS
 const DETAIL_CELL_CLASS = YF_TEXT_CLASS
-const DETAIL_MENU_CLASS =
-  'app-dropdown-portal glass-inset az min-w-[210px] rounded-[16px] p-2 customers-page-menu w-80'
-const DETAIL_MENU_ITEM_CLASS =
-  'flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[14px] font-normal leading-tight tracking-normal transition-[transform,font-weight,color] hover:scale-[1.03] hover:font-bold hover:bg-transparent'
+const DETAIL_ACTIONS_MENU_CLASS = 'az customer-filter-dropdown-menu customers-page-menu'
 const STATEMENT_GRID_CLASS =
   'grid grid-cols-[7.5rem_7.5rem_minmax(0,1fr)_7rem_6.5rem_6.5rem] items-center gap-2'
 
-const editActionGroups = [
-  [
-    { label: 'Satış Faturası Oluştur', icon: FileText, docType: 'satis-faturasi' },
-    { label: 'Alış Fiş / Faturası Oluştur', icon: FileText, docType: 'alis-faturasi' },
-    { label: 'İhracat Faturası Oluştur', icon: FileText, docType: 'ihracat-faturasi' },
-  ],
-  [
-    { label: 'Ödeme Ekle', icon: Upload, action: 'collection' },
-    { label: 'Virman Yap', icon: ArrowRightLeft, docType: 'virman' },
-  ],
-  [
-    { label: 'Arşivle', icon: Archive, action: 'archive' },
-    { label: 'Sil', icon: Trash2, danger: true, action: 'delete' },
-  ],
+const editActionItems = [
+  {
+    label: 'Satış Faturası Oluştur',
+    icon: FileText,
+    tone: 'primary',
+    docType: 'satis-faturasi',
+  },
+  {
+    label: 'Alış Fiş / Faturası Oluştur',
+    icon: FileText,
+    tone: 'primary',
+    docType: 'alis-faturasi',
+  },
+  {
+    label: 'İhracat Faturası Oluştur',
+    icon: FileText,
+    tone: 'primary',
+    docType: 'ihracat-faturasi',
+  },
+  { label: 'Ödeme Ekle', icon: Upload, tone: 'success', action: 'collection' },
+  { label: 'Virman Yap', icon: ArrowRightLeft, tone: 'primary', docType: 'virman' },
+  { label: 'Arşivle', icon: Archive, tone: 'orange', action: 'archive' },
+  { label: 'Sil', icon: Trash2, tone: 'danger', action: 'delete' },
 ]
 function balanceTone(balance) {
   if (balance > 0) return 'customer-balance-positive'
@@ -474,15 +481,6 @@ export default function CustomerDetailPage() {
             className="relative flex items-center gap-2.5 bg-transparent"
             onClick={(event) => event.stopPropagation()}
           >
-            <Link
-              to={`/musteri-deneyimi?tab=360&customerId=${encodeURIComponent(customer.id)}`}
-              className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.amber}`}
-            >
-              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                <Users className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-              </span>
-              <span className={YF_TEXT_ON_COLOR_CLASS}>CXC 360</span>
-            </Link>
             <div
               className={`relative inline-flex overflow-hidden ${HEADER_ACTION_CTA_SHELL_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}
             >
@@ -496,70 +494,50 @@ export default function CustomerDetailPage() {
                 <span className={YF_TEXT_ON_COLOR_CLASS}>Düzenle</span>
               </Link>
               <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
-              <button
-                type="button"
-                onClick={() => setActiveMenu(activeMenu === 'edit-actions' ? null : 'edit-actions')}
-                className="inline-flex h-full w-12 items-center justify-center bg-transparent"
-                aria-label="Düzenle işlemleri"
-                aria-expanded={activeMenu === 'edit-actions'}
-              >
-                <ChevronDown
-                  className={`${HEADER_ACTION_CTA_ICON_CLASS} transition-transform ${
-                    activeMenu === 'edit-actions' ? 'rotate-180' : ''
-                  }`}
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
-            {activeMenu === 'edit-actions' ? (
-              <div
-                className={`${DETAIL_MENU_CLASS} absolute right-0 top-[calc(100%+0.4rem)] z-[120]`}
-              >
-                {editActionGroups.map((group, groupIndex) => (
-                  <div
-                    key={groupIndex}
-                    className={groupIndex > 0 ? 'mt-1 border-t border-white/40 pt-1' : ''}
+              <Dropdown
+                align="end"
+                className="h-full"
+                menuClassName={DETAIL_ACTIONS_MENU_CLASS}
+                trigger={
+                  <button
+                    type="button"
+                    className="inline-flex h-full w-12 items-center justify-center bg-transparent"
+                    aria-label="Düzenle işlemleri"
                   >
-                    {group.map(({ label, icon: Icon, action, docType, danger }) => (
-                      <button
-                        key={label}
-                        type="button"
-                        onClick={() => {
-                          if (docType) {
-                            setActiveMenu(null)
-                            navigate(`/musteriler/${customer.id}/belge/${docType}`)
-                            return
-                          }
-                          if (action === 'collection') {
-                            setCollectionOpen(true)
-                            setActiveMenu(null)
-                            return
-                          }
-                          if (action === 'archive') {
-                            handleArchive()
-                            return
-                          }
-                          if (action === 'delete') {
-                            setActiveMenu(null)
-                            setPendingDelete(true)
-                            return
-                          }
-                          setActiveMenu(null)
-                        }}
-                        className={`${DETAIL_MENU_ITEM_CLASS} ${
-                          danger
-                            ? 'text-red-500 hover:text-red-600'
-                            : 'text-[var(--muted)] hover:text-[var(--ink)]'
-                        }`}
-                      >
-                        <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
-                        <span className="truncate">{label}</span>
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            ) : null}
+                    <ChevronDown className={HEADER_ACTION_CTA_ICON_CLASS} aria-hidden="true" />
+                  </button>
+                }
+              >
+                {({ close }) =>
+                  editActionItems.map((item) => (
+                    <DropdownItem
+                      key={item.label}
+                      icon={item.icon}
+                      label={item.label}
+                      tone={item.tone}
+                      close={close}
+                      onClick={() => {
+                        if (item.docType) {
+                          navigate(`/musteriler/${customer.id}/belge/${item.docType}`)
+                          return
+                        }
+                        if (item.action === 'collection') {
+                          setCollectionOpen(true)
+                          return
+                        }
+                        if (item.action === 'archive') {
+                          handleArchive()
+                          return
+                        }
+                        if (item.action === 'delete') {
+                          setPendingDelete(true)
+                        }
+                      }}
+                    />
+                  ))
+                }
+              </Dropdown>
+            </div>
           </div>
         }
       />
