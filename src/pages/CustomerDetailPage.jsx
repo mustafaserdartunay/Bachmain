@@ -101,11 +101,12 @@ import { Dropdown, DropdownItem } from '@bachmain/ui'
 const TAHSILAT_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.success}`
 const ODEME_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.expense}`
 const DETAIL_TABLE_HEADER_CLASS =
-  'h-[var(--ds-row-h,2.75rem)] min-w-0 truncate !text-[14px] !font-normal !leading-tight !tracking-normal uppercase !text-[var(--muted)]'
+  'h-[var(--ds-row-h,2.75rem)] min-w-0 !text-[14px] !font-normal !leading-tight !tracking-normal uppercase !text-[var(--muted)]'
 const DETAIL_CELL_CLASS = YF_TEXT_CLASS
 const DETAIL_ACTIONS_MENU_CLASS = PAGE_FILTER_MENU_CLASS
 const STATEMENT_GRID_CLASS =
   'grid grid-cols-[7.75rem_7.75rem_minmax(0,1.4fr)_9rem_6.75rem_6.75rem] items-center gap-2 px-1'
+const STATEMENT_ROW_CLASS = `${STATEMENT_GRID_CLASS} h-[var(--ds-row-h,2.75rem)] min-h-[var(--ds-row-h,2.75rem)]`
 
 const editActionItems = [
   {
@@ -579,14 +580,14 @@ export default function CustomerDetailPage() {
           </div>
 
           <div
-            className={`${STATEMENT_GRID_CLASS} border-b border-[var(--glass-border)] px-1 py-2 ${DETAIL_TABLE_HEADER_CLASS}`}
+            className={`${STATEMENT_ROW_CLASS} border-b border-[var(--glass-border)] ${DETAIL_TABLE_HEADER_CLASS}`}
           >
-            <span>{'İşlem Türü'.toLocaleUpperCase('tr-TR')}</span>
-            <span>{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
-            <span>{'Açıklama'.toLocaleUpperCase('tr-TR')}</span>
-            <span>{'İşlem Tarihi'.toLocaleUpperCase('tr-TR')}</span>
-            <span className="text-right">{'Meblağ'.toLocaleUpperCase('tr-TR')}</span>
-            <span className="text-right">{'Bakiye'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate">{'İşlem Türü'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate">{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate">{'Açıklama'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate">{'İşlem Tarihi'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate text-right">{'Meblağ'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate text-right">{'Bakiye'.toLocaleUpperCase('tr-TR')}</span>
           </div>
 
           <div className="divide-y divide-[var(--glass-border)]">
@@ -605,7 +606,7 @@ export default function CustomerDetailPage() {
                     if (event.key === 'Enter')
                       navigate(`/musteriler/${customer.id}/hareket/${row.id}`)
                   }}
-                  className={`${STATEMENT_GRID_CLASS} cursor-pointer px-1 py-2.5 transition-colors`}
+                  className={`${STATEMENT_ROW_CLASS} cursor-pointer`}
                 >
                   <span className={`${DETAIL_CELL_CLASS} !font-bold text-[var(--ink)]`}>
                     {row.type}
@@ -644,7 +645,7 @@ export default function CustomerDetailPage() {
           </div>
         </AppPagePanel>
 
-        <aside className="customer-detail-actions-panel space-y-4">
+        <aside className="customer-detail-actions-panel space-y-4 xl:sticky xl:top-[calc(var(--shell-gap,1rem)+0.5rem)] xl:max-h-[calc(100dvh-var(--shell-gap,1rem)*2-4.5rem)] xl:overflow-y-auto xl:overscroll-contain xl:pr-0.5">
           <section className="card space-y-3">
             <button
               type="button"

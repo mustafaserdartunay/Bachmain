@@ -1888,6 +1888,25 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   color: var(--muted) !important;
 }
 
+/* Müşteri detay — sağ kolon bağımsız kaydırma */
+.customer-detail-actions-panel {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 145, 165, 0.45) transparent;
+}
+
+.customer-detail-actions-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.customer-detail-actions-panel::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(140, 145, 165, 0.4);
+}
+
+.customer-detail-ledger-panel .divide-y > [role='button'] {
+  box-sizing: border-box;
+}
+
 /* Güncel bakiye — yfb (14/700) + Gelir yeşili / E-Fatura kırmızısı */
 .customers-page-type .customer-list-panel table tbody td .customer-balance-amount,
 .app-responsive .customer-list-panel table tbody td .customer-balance-amount,
