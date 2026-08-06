@@ -3,9 +3,12 @@ import { resolvePrimaryContact } from '../utils/customerContacts'
 import {
   getDeletedRecord,
   getDeletedRecords,
+  getPurgedRecords,
   permanentlyDeleteRecord,
   restoreDeletedRecord,
   softDeleteRecord,
+  vaultPurgedRecord,
+  adminRestorePurgedRecord,
 } from '../utils/deletedRecordsStore'
 import { filterByOrgScope, getActiveOrgScope, withOrgScope } from '../utils/orgScope'
 
@@ -138,11 +141,35 @@ export function restoreDeletedCustomer(customer) {
 
 export function permanentlyDeleteCustomer(customerId) {
   if (!customerId) return false
+
+  const deletedEntry = getDeletedRecord(DELETED_COLLECTION, customerId)
+  const archived = readArchivedMap()
+  const archivedEntry = archived[customerId]
+  const record =
+    deletedEntry?.record ||
+    archivedEntry?.customer ||
+    readCreatedCustomers().find((item) => item.id === customerId) ||
+    null
+
+  // Soft-delete kasasında yoksa (yalnızca arşiv / aktif) yine yönetim kasasına yaz.
+  if (record && !deletedEntry) {
+    vaultPurgedRecord(
+      DELETED_COLLECTION,
+      {
+        record,
+        deletedAt: archivedEntry?.archivedAt || null,
+        entityLabel:
+          getCustomerDisplay(record).brandShortName || record.company || record.id || customerId,
+      },
+      { sourceKind: archivedEntry ? 'archived' : 'active' },
+    )
+  }
+
   writeCreatedCustomers(readCreatedCustomers().filter((item) => item.id !== customerId))
 
-  const archived = readArchivedMap()
   delete archived[customerId]
   writeArchivedMap(archived)
+  // Soft-delete varsa buradan kasaya taşınır.
   permanentlyDeleteRecord(DELETED_COLLECTION, customerId)
 
   try {
@@ -162,6 +189,18 @@ export function permanentlyDeleteCustomer(customerId) {
 
   window.dispatchEvent(new CustomEvent('bach:customers-updated'))
   return true
+}
+
+/** Teknik destek: kullanıcıya kalıcı silinmiş görünen kaydı silinenler listesine geri koyar. */
+export function adminRestorePurgedCustomer(customerId) {
+  if (!customerId) return null
+  const entry = adminRestorePurgedRecord(DELETED_COLLECTION, customerId)
+  window.dispatchEvent(new CustomEvent('bach:customers-updated'))
+  return entry
+}
+
+export function listPurgedCustomers() {
+  return getPurgedRecords(DELETED_COLLECTION)
 }
 
 export function deleteCustomer(customerId) {

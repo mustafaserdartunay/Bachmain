@@ -86,6 +86,7 @@ export const WORKSPACE_STORAGE_KEYS = [
   'erlenbox-user-profile',
   'erlenbox-tenant-registry',
   'erlenbox-deleted-records',
+  'erlenbox-purged-records',
   'erlenbox-projects',
   'erlenbox-activity-archive-log',
   'erlenbox-doc-templates',

@@ -1274,11 +1274,18 @@ textarea:not(.form-input)::placeholder {
 }
 
 /* Toplu sil CTA — panel yf rengi ezmesin; yazı + ikon beyaz kalsın */
-.page-type-shell .customer-list-panel button.customer-bulk-delete-action,
-.customers-page-type .customer-list-panel button.customer-bulk-delete-action,
-.page-type-shell .customer-list-panel button.customer-bulk-delete-action svg,
-.customers-page-type .customer-list-panel button.customer-bulk-delete-action svg {
+html body .page-type-shell .customer-list-panel button.customer-bulk-delete-action,
+html body .customers-page-type .customer-list-panel button.customer-bulk-delete-action,
+html body .app-responsive .customer-list-panel button.customer-bulk-delete-action,
+html body .page-type-shell .customer-list-panel button.customer-bulk-delete-action *,
+html body .customers-page-type .customer-list-panel button.customer-bulk-delete-action *,
+html body .app-responsive .customer-list-panel button.customer-bulk-delete-action *,
+html body .customer-deleted-archived-panel button.customer-bulk-delete-action,
+html body .customer-deleted-archived-panel button.customer-bulk-delete-action * {
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
   font-weight: 700 !important;
 }
 

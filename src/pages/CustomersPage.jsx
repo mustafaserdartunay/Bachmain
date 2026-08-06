@@ -542,10 +542,18 @@ export default function CustomersPage({
                 type="button"
                 disabled={selectedIds.length === 0}
                 onClick={() => setPendingBulkDelete(true)}
-                className="customer-bulk-delete-action inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-1.5 text-[14px] font-bold leading-tight tracking-normal text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+                className="customer-bulk-delete-action inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-1.5 text-[14px] font-bold leading-tight tracking-normal transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
               >
-                <Trash2 className="h-3.5 w-3.5 text-white" strokeWidth={2.25} aria-hidden />
-                Seçilenleri Sil
+                <Trash2
+                  className="h-3.5 w-3.5 shrink-0"
+                  strokeWidth={2.25}
+                  aria-hidden
+                  style={{ color: '#ffffff', stroke: '#ffffff' }}
+                />
+                <span style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
+                  Seçilenleri Sil
+                </span>
               </button>
             </div>
           </div>
