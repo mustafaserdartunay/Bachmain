@@ -65,7 +65,6 @@ import {
   PAGE_CENTER_TITLE_CLASS,
   PAGE_FILTER_MENU_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
-  PAGE_TABLE_HEADER_CLASS,
   YF_TEXT_CLASS,
   YF_TEXT_ON_COLOR_CLASS,
 } from '../utils/dashboardDesign'
@@ -101,11 +100,12 @@ import { Dropdown, DropdownItem } from '@bachmain/ui'
 
 const TAHSILAT_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.success}`
 const ODEME_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.expense}`
-const DETAIL_TABLE_HEADER_CLASS = PAGE_TABLE_HEADER_CLASS
+const DETAIL_TABLE_HEADER_CLASS =
+  'h-[var(--ds-row-h,2.75rem)] min-w-0 truncate !text-[14px] !font-normal !leading-tight !tracking-normal uppercase !text-[var(--muted)]'
 const DETAIL_CELL_CLASS = YF_TEXT_CLASS
 const DETAIL_ACTIONS_MENU_CLASS = PAGE_FILTER_MENU_CLASS
 const STATEMENT_GRID_CLASS =
-  'grid grid-cols-[7.5rem_7.5rem_minmax(0,1fr)_7rem_6.5rem_6.5rem] items-center gap-2'
+  'grid grid-cols-[7.75rem_7.75rem_minmax(0,1.4fr)_9rem_6.75rem_6.75rem] items-center gap-2 px-1'
 
 const editActionItems = [
   {
@@ -554,26 +554,28 @@ export default function CustomerDetailPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_268px]">
         <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
-          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-            <div className="min-w-[16rem] flex-1">
-              <p className={`mb-1.5 ${DETAIL_CELL_CLASS}`}>Başlangıç / Bitiş Tarihi</p>
-              <DateRangePicker
-                dateFrom={ledgerDateFrom}
-                dateTo={ledgerDateTo}
-                includeTime={false}
-                showTimeInLabel={false}
-                dateLabelFormat="numeric"
-                onChange={(value) => {
-                  setLedgerDateFrom(value.dateFrom || '')
-                  setLedgerDateTo(value.dateTo || '')
-                }}
-              />
+          <div className="mb-3">
+            <p className={`mb-1.5 ${DETAIL_CELL_CLASS}`}>Başlangıç / Bitiş Tarihi</p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-[16rem] flex-1">
+                <DateRangePicker
+                  dateFrom={ledgerDateFrom}
+                  dateTo={ledgerDateTo}
+                  includeTime={false}
+                  showTimeInLabel={false}
+                  dateLabelFormat="numeric"
+                  onChange={(value) => {
+                    setLedgerDateFrom(value.dateFrom || '')
+                    setLedgerDateTo(value.dateTo || '')
+                  }}
+                />
+              </div>
+              <p className={`shrink-0 ${DETAIL_CELL_CLASS}`}>
+                {filteredStatementRows.length} Kayıt
+              </p>
             </div>
-            <p className={`shrink-0 ${DETAIL_CELL_CLASS}`}>
-              {filteredStatementRows.length} Kayıt
-            </p>
           </div>
 
           <div
@@ -603,7 +605,7 @@ export default function CustomerDetailPage() {
                     if (event.key === 'Enter')
                       navigate(`/musteriler/${customer.id}/hareket/${row.id}`)
                   }}
-                  className={`${STATEMENT_GRID_CLASS} cursor-pointer px-1 py-2.5 transition-colors hover:bg-white/25`}
+                  className={`${STATEMENT_GRID_CLASS} cursor-pointer px-1 py-2.5 transition-colors`}
                 >
                   <span className={`${DETAIL_CELL_CLASS} !font-bold text-[var(--ink)]`}>
                     {row.type}

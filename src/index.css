@@ -1592,39 +1592,40 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   font-weight: 400 !important;
 }
 
-.customer-filter-dropdown-menu button[title='Düzenle'],
-.customers-page-menu button[title='Düzenle'],
+/* Icon-only edit/delete — do not match full-width menu rows (use :not([data-tone])) */
+.customer-filter-dropdown-menu button[title='Düzenle']:not([data-tone]),
+.customers-page-menu button[title='Düzenle']:not([data-tone]),
 .app-dropdown-portal button.customer-option-edit-btn,
-.app-dropdown-portal button[title='Düzenle'] {
+.app-dropdown-portal button[title='Düzenle']:not([data-tone]) {
   opacity: 1 !important;
   visibility: visible !important;
   color: #2563eb !important;
   background: transparent !important;
 }
 
-.customer-filter-dropdown-menu button[title='Düzenle']:hover,
-.customers-page-menu button[title='Düzenle']:hover,
+.customer-filter-dropdown-menu button[title='Düzenle']:not([data-tone]):hover,
+.customers-page-menu button[title='Düzenle']:not([data-tone]):hover,
 .app-dropdown-portal button.customer-option-edit-btn:hover,
-.app-dropdown-portal button[title='Düzenle']:hover {
+.app-dropdown-portal button[title='Düzenle']:not([data-tone]):hover {
   background: transparent !important;
   color: #1d4ed8 !important;
   transform: scale(1.1);
 }
 
-.customer-filter-dropdown-menu button[title='Sil'],
-.customers-page-menu button[title='Sil'],
+.customer-filter-dropdown-menu button[title='Sil']:not([data-tone]),
+.customers-page-menu button[title='Sil']:not([data-tone]),
 .app-dropdown-portal button.customer-option-delete-btn,
-.app-dropdown-portal button[title='Sil'] {
+.app-dropdown-portal button[title='Sil']:not([data-tone]) {
   opacity: 1 !important;
   visibility: visible !important;
   color: #ef4444 !important;
   background: transparent !important;
 }
 
-.customer-filter-dropdown-menu button[title='Sil']:hover,
-.customers-page-menu button[title='Sil']:hover,
+.customer-filter-dropdown-menu button[title='Sil']:not([data-tone]):hover,
+.customers-page-menu button[title='Sil']:not([data-tone]):hover,
 .app-dropdown-portal button.customer-option-delete-btn:hover,
-.app-dropdown-portal button[title='Sil']:hover {
+.app-dropdown-portal button[title='Sil']:not([data-tone]):hover {
   background: transparent !important;
   color: #dc2626 !important;
   transform: scale(1.1);
