@@ -141,6 +141,9 @@ export default function CustomersPage({
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDeleteCustomerId, setPendingDeleteCustomerId] = useState(null)
+  const [bulkSelectMode, setBulkSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
   const [b2bDialogCustomer, setB2bDialogCustomer] = useState(null)
   const [b2bBusy, setB2bBusy] = useState(false)
   const [b2bNotice, setB2bNotice] = useState('')
@@ -331,6 +334,36 @@ export default function CustomersPage({
     setCustomerProfiles(getCustomerProfiles())
   }
 
+  function exitBulkSelectMode() {
+    setBulkSelectMode(false)
+    setSelectedIds([])
+    setPendingBulkDelete(false)
+  }
+
+  function toggleBulkSelect(id) {
+    const key = String(id)
+    setSelectedIds((current) =>
+      current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
+    )
+  }
+
+  function toggleBulkSelectAll(visibleIds = []) {
+    const keys = visibleIds.map(String)
+    setSelectedIds((current) => {
+      const allSelected = keys.length > 0 && keys.every((id) => current.includes(id))
+      if (allSelected) return current.filter((id) => !keys.includes(id))
+      const merged = new Set(current)
+      keys.forEach((id) => merged.add(id))
+      return [...merged]
+    })
+  }
+
+  function handleBulkDeleteCustomers() {
+    selectedIds.forEach((id) => deleteCustomer(id))
+    exitBulkSelectMode()
+    setCustomerProfiles(getCustomerProfiles())
+  }
+
   function handleRestoreDeletedOrArchived(record, item) {
     const label = getCustomerDisplay(record).brandShortName || record.company || 'Kayıt'
     const from = item?.kind === 'archived' ? 'arşivden' : 'silinenlerden'
@@ -490,6 +523,34 @@ export default function CustomersPage({
           </span>
         </div>
 
+        {bulkSelectMode ? (
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+            <p className={YF_TEXT_CLASS}>
+              {selectedIds.length > 0
+                ? `${selectedIds.length} kayıt seçildi`
+                : 'Silmek istediğiniz kayıtları seçin'}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={exitBulkSelectMode}
+                className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 transition-colors hover:bg-black/5`}
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                disabled={selectedIds.length === 0}
+                onClick={() => setPendingBulkDelete(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-1.5 text-[14px] font-bold leading-tight tracking-normal text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
+                Seçilenleri Sil
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <DataTable
           emptyTitle={emptyTitle}
           emptyDescription="Arama veya segment filtresini değiştirin."
@@ -498,7 +559,48 @@ export default function CustomersPage({
           data={filteredCustomers}
           defaultSort={{ key: 'balance', dir: 'desc' }}
           getRowId={(customer) => customer.id}
-          onRowClick={(customer) => navigate(`/musteriler/${customer.id}`)}
+          onRowClick={
+            bulkSelectMode ? undefined : (customer) => navigate(`/musteriler/${customer.id}`)
+          }
+          selectionEnabled={bulkSelectMode}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleBulkSelect}
+          onToggleSelectAll={toggleBulkSelectAll}
+          headerActions={
+            bulkSelectMode
+              ? [
+                  {
+                    id: 'bulk-delete-confirm',
+                    label:
+                      selectedIds.length > 0
+                        ? `Seçilenleri Sil (${selectedIds.length})`
+                        : 'Seçilenleri Sil',
+                    icon: Trash2,
+                    tone: 'danger',
+                    onClick: () => {
+                      if (selectedIds.length > 0) setPendingBulkDelete(true)
+                    },
+                  },
+                  {
+                    id: 'bulk-delete-cancel',
+                    label: 'İptal',
+                    onClick: exitBulkSelectMode,
+                  },
+                ]
+              : [
+                  {
+                    id: 'bulk-delete',
+                    label: 'Toplu Silme',
+                    icon: Trash2,
+                    tone: 'danger',
+                    onClick: () => {
+                      setBulkSelectMode(true)
+                      setSelectedIds([])
+                      setPendingBulkDelete(false)
+                    },
+                  },
+                ]
+          }
           columns={[
             {
               id: 'name',
@@ -629,44 +731,52 @@ export default function CustomersPage({
               },
             },
           ]}
-          getRowActions={(customer) => {
-            const portalAccess = b2bMap[customer.id]
-            return [
-              {
-                id: 'edit',
-                label: 'Düzenle',
-                icon: Pencil,
-                tone: 'primary',
-                onClick: () => navigate(`/musteriler/${customer.id}`),
-              },
-              {
-                id: 'delete',
-                label: 'Sil',
-                icon: Trash2,
-                tone: 'danger',
-                onClick: () => setPendingDeleteCustomerId(customer.id),
-              },
-              {
-                id: portalAccess?.enabled ? 'invite' : 'grant',
-                label: portalAccess?.enabled ? 'B2B Daveti / Link' : 'B2B İzin Ver',
-                icon: portalAccess?.enabled ? Mail : Link2,
-                tone: 'success',
-                onClick: () => openB2bDialog(customer),
-              },
-              ...(portalAccess?.enabled
-                ? [
+          getRowActions={
+            bulkSelectMode
+              ? undefined
+              : (customer) => {
+                  const portalAccess = b2bMap[customer.id]
+                  return [
                     {
-                      id: 'portal-view',
-                      label: 'B2B Panelini Gör',
-                      icon: Eye,
-                      tone: 'orange',
-                      onClick: () =>
-                        window.open(getPortalUrl(portalAccess.accessToken), '_blank', 'noreferrer'),
+                      id: 'edit',
+                      label: 'Düzenle',
+                      icon: Pencil,
+                      tone: 'primary',
+                      onClick: () => navigate(`/musteriler/${customer.id}`),
                     },
+                    {
+                      id: 'delete',
+                      label: 'Sil',
+                      icon: Trash2,
+                      tone: 'danger',
+                      onClick: () => setPendingDeleteCustomerId(customer.id),
+                    },
+                    {
+                      id: portalAccess?.enabled ? 'invite' : 'grant',
+                      label: portalAccess?.enabled ? 'B2B Daveti / Link' : 'B2B İzin Ver',
+                      icon: portalAccess?.enabled ? Mail : Link2,
+                      tone: 'success',
+                      onClick: () => openB2bDialog(customer),
+                    },
+                    ...(portalAccess?.enabled
+                      ? [
+                          {
+                            id: 'portal-view',
+                            label: 'B2B Panelini Gör',
+                            icon: Eye,
+                            tone: 'orange',
+                            onClick: () =>
+                              window.open(
+                                getPortalUrl(portalAccess.accessToken),
+                                '_blank',
+                                'noreferrer',
+                              ),
+                          },
+                        ]
+                      : []),
                   ]
-                : []),
-            ]
-          }}
+                }
+          }
         />
       </AppPagePanel>
 
@@ -741,7 +851,7 @@ export default function CustomersPage({
       </Modal>
 
       <DeleteConfirmOverlay
-        open={Boolean(pendingDeleteCustomerId)}
+        open={Boolean(pendingDeleteCustomerId) && !pendingBulkDelete}
         title="Müşteri silinsin mi?"
         description="Kayıt silinenler alanına taşınacak."
         confirmLabel="Evet, Sil"
@@ -754,6 +864,16 @@ export default function CustomersPage({
           if (customer) handleDeleteCustomer(customer)
           else setPendingDeleteCustomerId(null)
         }}
+      />
+
+      <DeleteConfirmOverlay
+        open={pendingBulkDelete && selectedIds.length > 0}
+        title={`${selectedIds.length} kayıt silinsin mi?`}
+        description="Seçilen kayıtlar silinenler alanına taşınacak."
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
+        onCancel={() => setPendingBulkDelete(false)}
+        onConfirm={handleBulkDeleteCustomers}
       />
 
       <CustomerDeletedArchivedPanel

@@ -29,17 +29,43 @@ function sortRows(rows, sort, columns = []) {
  *
  * columns: [{ id, header, accessorKey?, cell?, sortable?, getSortValue?, hideOnMobile?, className? }]
  * getRowActions?: (row) => MoreMenu items
+ * headerActions?: MoreMenu items for the İşlemler header (⋯)
+ * selectionEnabled / selectedIds / onToggleSelect / onToggleSelectAll — optional bulk select
  */
 const DEFAULT_TH_CLASS =
   'h-[var(--ds-row-h,2.75rem)] px-3 min-w-0 truncate !text-[14px] !font-normal !leading-tight !tracking-normal uppercase !text-[var(--muted)]'
 const DEFAULT_MOBILE_HEADER_CLASS =
   'min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal uppercase text-[var(--muted)]'
 
+const SELECT_CELL_CLASS =
+  'h-[var(--ds-row-h,2.75rem)] w-12 px-2 text-center align-middle'
+
+function SelectionCheckbox({ checked, indeterminate = false, onChange, 'aria-label': ariaLabel }) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      ref={(node) => {
+        if (node) node.indeterminate = Boolean(indeterminate)
+      }}
+      onChange={onChange}
+      onClick={(event) => event.stopPropagation()}
+      aria-label={ariaLabel}
+      className="h-4 w-4 cursor-pointer rounded border-ds-border text-ds-ink accent-[var(--ds-ink,#1e2338)]"
+    />
+  )
+}
+
 export function DataTable({
   columns = [],
   data = [],
   getRowId = (row, index) => row.id ?? index,
   getRowActions,
+  headerActions,
+  selectionEnabled = false,
+  selectedIds = [],
+  onToggleSelect,
+  onToggleSelectAll,
   emptyTitle = 'Kayıt bulunamadı',
   emptyDescription,
   className = '',
@@ -54,6 +80,12 @@ export function DataTable({
     dir: defaultSort?.dir === 'desc' ? 'desc' : 'asc',
   }))
   const rows = useMemo(() => sortRows(data, sort, columns), [columns, data, sort])
+  const selectedSet = useMemo(() => new Set(selectedIds.map(String)), [selectedIds])
+  const rowIds = useMemo(() => rows.map((row, index) => String(getRowId(row, index))), [rows, getRowId])
+  const selectedVisibleCount = rowIds.filter((id) => selectedSet.has(id)).length
+  const allVisibleSelected = rows.length > 0 && selectedVisibleCount === rows.length
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+  const showActionsColumn = Boolean(getRowActions || (headerActions && headerActions.length))
 
   function toggleSort(key) {
     setSort((current) => {
@@ -73,6 +105,16 @@ export function DataTable({
         <table className="w-full min-w-[640px] border-collapse text-left">
           <thead className="bg-[var(--ds-surface-muted)]">
             <tr>
+              {selectionEnabled ? (
+                <th className={SELECT_CELL_CLASS} aria-label="Seç">
+                  <SelectionCheckbox
+                    checked={allVisibleSelected}
+                    indeterminate={someVisibleSelected}
+                    aria-label="Tümünü seç"
+                    onChange={() => onToggleSelectAll?.(rowIds)}
+                  />
+                </th>
+              ) : null}
               {columns.map((col) => (
                 <th
                   key={col.id}
@@ -100,17 +142,23 @@ export function DataTable({
                   )}
                 </th>
               ))}
-              {getRowActions ? (
+              {showActionsColumn ? (
                 <th
                   className="h-[var(--ds-row-h,2.75rem)] w-14 px-2 text-center align-middle"
                   aria-label="İşlemler"
                 >
-                  <span
-                    className="inline-flex h-[var(--ds-control-h,3rem)] w-[var(--ds-control-h,3rem)] items-center justify-center text-ds-muted"
-                    title="İşlemler"
-                  >
-                    <MoreHorizontal className="h-5 w-5" />
-                  </span>
+                  {headerActions?.length ? (
+                    <div className="inline-flex h-[var(--ds-control-h,3rem)] w-[var(--ds-control-h,3rem)] items-center justify-center">
+                      <MoreMenu items={headerActions} aria-label="Toplu işlemler" />
+                    </div>
+                  ) : (
+                    <span
+                      className="inline-flex h-[var(--ds-control-h,3rem)] w-[var(--ds-control-h,3rem)] items-center justify-center text-ds-muted"
+                      title="İşlemler"
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                    </span>
+                  )}
                 </th>
               ) : null}
             </tr>
@@ -118,13 +166,30 @@ export function DataTable({
           <tbody>
             {rows.map((row, index) => {
               const id = getRowId(row, index)
+              const idKey = String(id)
               const actions = getRowActions?.(row) || []
+              const isSelected = selectedSet.has(idKey)
               return (
                 <tr
-                  key={id}
-                  className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${onRowClick ? 'cursor-pointer' : ''}`}
-                  onClick={() => onRowClick?.(row)}
+                  key={idKey}
+                  className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${onRowClick && !selectionEnabled ? 'cursor-pointer' : ''} ${isSelected ? 'bg-[var(--ds-surface-muted)]' : ''}`}
+                  onClick={() => {
+                    if (selectionEnabled) {
+                      onToggleSelect?.(idKey)
+                      return
+                    }
+                    onRowClick?.(row)
+                  }}
                 >
+                  {selectionEnabled ? (
+                    <td className={SELECT_CELL_CLASS} onClick={(event) => event.stopPropagation()}>
+                      <SelectionCheckbox
+                        checked={isSelected}
+                        aria-label="Satırı seç"
+                        onChange={() => onToggleSelect?.(idKey)}
+                      />
+                    </td>
+                  ) : null}
                   {columns.map((col) => {
                     const raw = col.accessorKey ? row[col.accessorKey] : undefined
                     const content = col.cell ? col.cell(row) : raw
@@ -151,7 +216,7 @@ export function DataTable({
                       </td>
                     )
                   })}
-                  {getRowActions ? (
+                  {showActionsColumn ? (
                     <td
                       className="h-[var(--ds-row-h,2.75rem)] w-14 px-2 text-center align-middle"
                       onClick={(event) => event.stopPropagation()}
@@ -174,32 +239,49 @@ export function DataTable({
       <div className="space-y-3 md:hidden">
         {rows.map((row, index) => {
           const id = getRowId(row, index)
+          const idKey = String(id)
           const actions = getRowActions?.(row) || []
           const visibleCols = columns.filter((col) => !col.hideOnMobile)
+          const isSelected = selectedSet.has(idKey)
           return (
             <article
-              key={id}
-              className={`rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs ${onRowClick ? 'cursor-pointer' : ''}`}
-              onClick={() => onRowClick?.(row)}
+              key={idKey}
+              className={`rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs ${onRowClick && !selectionEnabled ? 'cursor-pointer' : ''} ${isSelected ? 'ring-1 ring-[var(--ds-ink,#1e2338)]/20' : ''}`}
+              onClick={() => {
+                if (selectionEnabled) {
+                  onToggleSelect?.(idKey)
+                  return
+                }
+                onRowClick?.(row)
+              }}
             >
               <div className="mb-2 flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1 space-y-2">
-                  {visibleCols.map((col) => {
-                    const raw = col.accessorKey ? row[col.accessorKey] : undefined
-                    const content = col.cell ? col.cell(row) : raw
-                    return (
-                      <div key={col.id} className="min-w-0">
-                        <p className={mobileHeaderClassName}>
-                          {col.header}
-                        </p>
-                        <div className="truncate text-ds-body font-medium text-ds-ink">
-                          {content ?? '—'}
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  {selectionEnabled ? (
+                    <div className="pt-1" onClick={(event) => event.stopPropagation()}>
+                      <SelectionCheckbox
+                        checked={isSelected}
+                        aria-label="Satırı seç"
+                        onChange={() => onToggleSelect?.(idKey)}
+                      />
+                    </div>
+                  ) : null}
+                  <div className="min-w-0 flex-1 space-y-2">
+                    {visibleCols.map((col) => {
+                      const raw = col.accessorKey ? row[col.accessorKey] : undefined
+                      const content = col.cell ? col.cell(row) : raw
+                      return (
+                        <div key={col.id} className="min-w-0">
+                          <p className={mobileHeaderClassName}>{col.header}</p>
+                          <div className="truncate text-ds-body font-medium text-ds-ink">
+                            {content ?? '—'}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
                 </div>
-                {actions.length ? (
+                {actions.length && !selectionEnabled ? (
                   <div onClick={(event) => event.stopPropagation()}>
                     <MoreMenu items={actions} />
                   </div>
