@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Building2,
+  Check,
   ChevronDown,
   ExternalLink,
   Facebook,
@@ -29,7 +30,6 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { AppPageBackLink, AppPageHeader } from '../components/Layout/AppPageLayout'
 import {
   PAGE_CENTER_TITLE_CLASS,
-  PAGE_HEADER_SHELL_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
   YF_TEXT_CLASS,
   YF_TEXT_ON_COLOR_CLASS,
@@ -105,13 +105,21 @@ function CancelCta({ onClick }) {
 }
 
 /** Yeşil split CTA: Kaydet + açılır "Kaydet ve devam et". Başlık ve alt panelde aynı. */
-function SaveSplitAction({ onSaveAndContinue, saving = false }) {
+function SaveSplitAction({ onSaveAndContinue, savePhase = 'idle' }) {
   const [open, setOpen] = useState(false)
+  const busy = savePhase !== 'idle'
   const { anchorRef, menuRef, style } = useAnchoredPortal(open, {
     align: 'right',
     width: 224,
     matchWidth: false,
   })
+
+  const label =
+    savePhase === 'saving'
+      ? 'Kaydediliyor…'
+      : savePhase === 'saved'
+        ? 'Kaydedildi'
+        : 'Kaydet'
 
   useEffect(() => {
     if (!open) return undefined
@@ -127,8 +135,8 @@ function SaveSplitAction({ onSaveAndContinue, saving = false }) {
   }, [anchorRef, menuRef, open])
 
   useEffect(() => {
-    if (saving) setOpen(false)
-  }, [saving])
+    if (busy) setOpen(false)
+  }, [busy])
 
   return (
     <div ref={anchorRef} className="relative inline-flex items-center">
@@ -137,27 +145,34 @@ function SaveSplitAction({ onSaveAndContinue, saving = false }) {
       >
         <button
           type="submit"
-          disabled={saving}
-          aria-busy={saving}
+          disabled={busy}
+          aria-busy={savePhase === 'saving'}
           className="inline-flex h-full items-center gap-2.5 bg-transparent px-3"
         >
           <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-            {saving ? (
+            {savePhase === 'saving' ? (
               <Loader2
                 className={`${HEADER_ACTION_CTA_ICON_CLASS} animate-spin`}
                 strokeWidth={2.25}
                 aria-hidden
               />
+            ) : savePhase === 'saved' ? (
+              <Check className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
             ) : (
               <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
             )}
           </span>
-          <span className={YF_TEXT_ON_COLOR_CLASS}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</span>
+          <span
+            key={label}
+            className={`${YF_TEXT_ON_COLOR_CLASS} min-w-[7.5rem] animate-[saveLabelIn_280ms_ease-out]`}
+          >
+            {label}
+          </span>
         </button>
         <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
         <button
           type="button"
-          disabled={saving}
+          disabled={busy}
           onClick={() => setOpen((current) => !current)}
           className="inline-flex h-full w-12 items-center justify-center bg-transparent"
           aria-label="Kaydet işlemleri"
@@ -256,8 +271,16 @@ function initialAddressRows(customer, draft) {
   ]
 }
 
-/** Kaydetme geri bildiriminin ("Kaydedildi") başlık panelinde kaldığı süre. */
-const SAVE_FEEDBACK_MS = 2000
+/** Kaydet butonunda her fazın (Kaydediliyor… → Kaydedildi) görünür kalma süresi. */
+const SAVE_PHASE_MS = 1000
+
+function waitMs(ms, timerRef) {
+  return new Promise((resolve) => {
+    if (timerRef?.current) clearTimeout(timerRef.current)
+    const id = setTimeout(resolve, ms)
+    if (timerRef) timerRef.current = id
+  })
+}
 
 function formatDateTime() {
   return new Date().toLocaleString('tr-TR', {
@@ -304,8 +327,8 @@ export default function CustomerCreatePage() {
     initialContactRows(editingCustomer, incomingDraft),
   )
   const [deleteDialog, setDeleteDialog] = useState(null)
-  const [successVisible, setSuccessVisible] = useState(false)
-  const [saving, setSaving] = useState(false)
+  /** idle | saving | saved — Kaydet CTA metin fazları */
+  const [savePhase, setSavePhase] = useState('idle')
   /** Kaydetmeyi engelleyen durumların sayfa içi bildirimi (tarayıcı diyaloğu değil). */
   const [formNotice, setFormNotice] = useState(null)
   const [duplicatePrompt, setDuplicatePrompt] = useState(null)
@@ -317,7 +340,6 @@ export default function CustomerCreatePage() {
   )
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
-  const successTimer = useRef(null)
   const saveTimer = useRef(null)
   /** Çift kayıt onayının sonucunu kaydetme akışına geri veren çözümleyici. */
   const duplicateResolveRef = useRef(null)
@@ -326,7 +348,6 @@ export default function CustomerCreatePage() {
 
   useEffect(
     () => () => {
-      if (successTimer.current) clearTimeout(successTimer.current)
       if (saveTimer.current) clearTimeout(saveTimer.current)
     },
     [],
@@ -396,12 +417,6 @@ export default function CustomerCreatePage() {
     }
     localStorage.setItem(CUSTOMER_META_KEY, JSON.stringify(next))
     notifyCustomerMetaUpdated({ customerId, field: 'type' })
-  }
-
-  function showSavedMessage() {
-    if (successTimer.current) clearTimeout(successTimer.current)
-    setSuccessVisible(true)
-    successTimer.current = setTimeout(() => setSuccessVisible(false), SAVE_FEEDBACK_MS)
   }
 
   function saveDraft(payload) {
@@ -532,7 +547,7 @@ export default function CustomerCreatePage() {
       .map((m) => `${m.name || m.id} (%${Math.round(m.score * 100)})`)
       .join(' · ')
     // Onay kullanıcıda: buton "Kaydediliyor…" durumunda beklemesin.
-    setSaving(false)
+    setSavePhase('idle')
     return new Promise((resolve) => {
       duplicateResolveRef.current = resolve
       setDuplicatePrompt(summary)
@@ -560,16 +575,16 @@ export default function CustomerCreatePage() {
     }
     setFormNotice(null)
     // Geri bildirim ilk adımda görünür: sonraki adımlar beklerse buton sessiz kalmaz.
-    setSaving(true)
+    setSavePhase('saving')
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
     payload.hasOpeningBalance = formData.has('hasOpeningBalance')
     if (!(await assertNoStrongDuplicates(payload))) {
-      setSaving(false)
+      setSavePhase('idle')
       return false
     }
 
-    setSaving(true)
+    setSavePhase('saving')
     try {
       saveDraft(payload)
       const savedProfile = saveCustomerProfile(buildCustomerProfile(payload, contactRows))
@@ -586,11 +601,10 @@ export default function CustomerCreatePage() {
       flushWorkspaceNow()
     } catch (error) {
       console.error('Müşteri kaydedilemedi', error)
-      setSaving(false)
+      setSavePhase('idle')
       setFormNotice('Kayıt tamamlanamadı. Bilgileri kontrol edip yeniden deneyin.')
       return false
     }
-    showSavedMessage()
     form.reset()
     setAddressRows(initialAddressRows(null, null))
     setContactRows(initialContactRows(null, null))
@@ -605,37 +619,45 @@ export default function CustomerCreatePage() {
       return await saveForm(form)
     } catch (error) {
       console.error('Müşteri kaydedilemedi', error)
-      setSaving(false)
+      setSavePhase('idle')
       setFormNotice('Kayıt tamamlanamadı. Bilgileri kontrol edip yeniden deneyin.')
       return false
     }
   }
 
+  /** Kaydediliyor… en az 1 sn, ardından Kaydedildi 1 sn — kullanıcı geçişi görsün. */
+  async function playSaveButtonPhases(startedAt) {
+    const remainingSaving = Math.max(0, SAVE_PHASE_MS - (Date.now() - startedAt))
+    if (remainingSaving > 0) await waitMs(remainingSaving, saveTimer)
+    setSavePhase('saved')
+    await waitMs(SAVE_PHASE_MS, saveTimer)
+  }
+
   async function collectAndSave(event) {
     event?.preventDefault()
-    if (saving) return
+    if (savePhase !== 'idle') return
     // currentTarget await sonrası boşalır; formu şimdi yakala.
     const form = event.currentTarget
+    const startedAt = Date.now()
     if (!(await runSave(form))) return
-    // "Kaydediliyor…" görünür kalsın, sonra müşteriler listesine dön.
-    saveTimer.current = setTimeout(() => navigate(backPath), SAVE_FEEDBACK_MS)
+    await playSaveButtonPhases(startedAt)
+    navigate(backPath)
   }
 
   async function saveAndContinue() {
-    if (saving) return
+    if (savePhase !== 'idle') return
     const form = document.getElementById('customer-edit-form')
     if (!form) return
+    const startedAt = Date.now()
     if (!(await runSave(form))) return
     const nextSearch = isSupplierForm ? '?kind=supplier' : ''
     if (formRouteKey !== nextSearch.replace('?', '')) {
       navigate(`/musteriler/yeni${nextSearch}`, { replace: true })
     }
-    // Sayfada kal: geri bildirim görünsün, sonra formu yenile ve imleci ilk alana taşı.
-    saveTimer.current = setTimeout(() => {
-      focusFirstFieldRef.current = true
-      setFormEpoch((epoch) => epoch + 1)
-      setSaving(false)
-    }, SAVE_FEEDBACK_MS)
+    await playSaveButtonPhases(startedAt)
+    focusFirstFieldRef.current = true
+    setFormEpoch((epoch) => epoch + 1)
+    setSavePhase('idle')
   }
 
   function confirmTwoStepDelete(label, onConfirm, key) {
@@ -669,33 +691,21 @@ export default function CustomerCreatePage() {
       />
 
       <div className="space-y-5">
-        {successVisible ? (
-          <div
-            role="status"
-            aria-live="polite"
-            className={`${PAGE_HEADER_SHELL_CLASS} app-page-header-saved`}
-          >
-            <p className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 text-center text-[22px] font-bold uppercase leading-none tracking-normal text-white">
-              {String('Kaydedildi').toLocaleUpperCase('tr-TR')}
-            </p>
-          </div>
-        ) : (
-          <AppPageHeader
-            showBack={false}
-            title={
-              <AppPageBackLink to={backPath} label={isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'} />
-            }
-            centerTitle={String(pageHeading || '').toLocaleUpperCase('tr-TR')}
-            centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
-            titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
-            actions={
-              <div className="relative flex items-center gap-2.5 bg-transparent">
-                <CancelCta onClick={() => navigate(cancelPath)} />
-                <SaveSplitAction onSaveAndContinue={saveAndContinue} saving={saving} />
-              </div>
-            }
-          />
-        )}
+        <AppPageHeader
+          showBack={false}
+          title={
+            <AppPageBackLink to={backPath} label={isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'} />
+          }
+          centerTitle={String(pageHeading || '').toLocaleUpperCase('tr-TR')}
+          centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+          titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+          actions={
+            <div className="relative flex items-center gap-2.5 bg-transparent">
+              <CancelCta onClick={() => navigate(cancelPath)} />
+              <SaveSplitAction onSaveAndContinue={saveAndContinue} savePhase={savePhase} />
+            </div>
+          }
+        />
 
         {formNotice ? (
           <p
@@ -942,7 +952,7 @@ export default function CustomerCreatePage() {
         </div>
         <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
           <CancelCta onClick={() => navigate(cancelPath)} />
-          <SaveSplitAction onSaveAndContinue={saveAndContinue} saving={saving} />
+          <SaveSplitAction onSaveAndContinue={saveAndContinue} savePhase={savePhase} />
         </div>
       </section>
     </form>
