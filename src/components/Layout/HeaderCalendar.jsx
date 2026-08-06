@@ -33,9 +33,18 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function GlassMonthCalendar({ viewDate, onViewDateChange, selectedDate, onSelectDate, dayCounts }) {
+function GlassMonthCalendar({
+  viewDate,
+  onViewDateChange,
+  selectedDateFrom = '',
+  selectedDateTo = '',
+  onSelectDate,
+  dayCounts,
+}) {
   const monthCells = useMemo(() => buildCalendarMonthGrid(viewDate), [viewDate])
   const today = new Date()
+  const rangeStart = selectedDateFrom || ''
+  const rangeEnd = selectedDateTo || selectedDateFrom || ''
 
   return (
     <div className="header-calendar-month">
@@ -50,7 +59,7 @@ function GlassMonthCalendar({ viewDate, onViewDateChange, selectedDate, onSelect
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </button>
-        <p className="text-xs font-extrabold text-[var(--ink)]">
+        <p className="text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
           {CALENDAR_MONTHS[viewDate.getMonth()]} {viewDate.getFullYear()}
         </p>
         <button
@@ -64,6 +73,10 @@ function GlassMonthCalendar({ viewDate, onViewDateChange, selectedDate, onSelect
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>
+
+      <p className="mb-1.5 text-[12px] font-normal leading-tight text-[var(--muted)]">
+        Başlangıç ve bitiş için iki tarih seçin
+      </p>
 
       <div className="mb-0.5 grid grid-cols-7 gap-0.5">
         {CALENDAR_WEEKDAYS.map((day) => (
@@ -81,7 +94,15 @@ function GlassMonthCalendar({ viewDate, onViewDateChange, selectedDate, onSelect
 
           const iso = toCalendarIso(day)
           const markers = dayCounts.get(iso)
-          const isSelected = selectedDate === iso
+          const isStart = rangeStart === iso
+          const isEnd = rangeEnd === iso
+          const isSelected = isStart || isEnd
+          const inRange =
+            rangeStart &&
+            rangeEnd &&
+            rangeStart !== rangeEnd &&
+            iso >= rangeStart &&
+            iso <= rangeEnd
           const isToday = sameCalendarDay(day, today)
 
           return (
@@ -89,7 +110,7 @@ function GlassMonthCalendar({ viewDate, onViewDateChange, selectedDate, onSelect
               key={iso}
               type="button"
               onClick={() => onSelectDate(iso)}
-              className={`header-calendar-day ${isSelected ? 'is-selected' : ''} ${isToday ? 'is-today' : ''}`}
+              className={`header-calendar-day ${isSelected ? 'is-selected' : ''} ${inRange ? 'is-in-range' : ''} ${isToday ? 'is-today' : ''}`}
             >
               <span>{day.getDate()}</span>
               {markers ? (
@@ -106,40 +127,49 @@ function GlassMonthCalendar({ viewDate, onViewDateChange, selectedDate, onSelect
   )
 }
 
-function HeaderCalendarCreatePanel({ selectedDate, createMode, onCreateModeChange, onClose }) {
+function HeaderCalendarCreatePanel({
+  selectedDateFrom,
+  selectedDateTo,
+  createMode,
+  onCreateModeChange,
+  onClose,
+}) {
   const [taskForm, setTaskForm] = useState(null)
   const [appointmentForm, setAppointmentForm] = useState(null)
 
   useEffect(() => {
-    if (!selectedDate) {
+    if (!selectedDateFrom) {
       setTaskForm(null)
       setAppointmentForm(null)
       return
     }
+    const dateTo = selectedDateTo || selectedDateFrom
     setTaskForm({
       ...emptyTaskForm(),
-      dueDate: selectedDate,
-      dateFrom: selectedDate,
-      dateTo: selectedDate,
+      dueDate: selectedDateFrom,
+      dateFrom: selectedDateFrom,
+      dateTo,
       includeTime: false,
     })
     setAppointmentForm({
       ...emptyAppointmentForm(),
-      date: selectedDate,
-      dateFrom: selectedDate,
-      dateTo: selectedDate,
+      date: selectedDateFrom,
+      dateFrom: selectedDateFrom,
+      dateTo,
       includeTime: true,
       timeFrom: '10:00',
       timeTo: '11:00',
       startTime: '10:00',
       endTime: '11:00',
     })
-  }, [selectedDate])
+  }, [selectedDateFrom, selectedDateTo])
 
-  if (!selectedDate) {
+  if (!selectedDateFrom) {
     return (
       <div className="header-calendar-create-empty">
-        <p className="text-xs font-semibold text-[var(--muted)]">Tarih seçin</p>
+        <p className="text-[14px] font-normal leading-tight text-[var(--muted)]">
+          Başlangıç tarihini seçin
+        </p>
       </div>
     )
   }
@@ -147,18 +177,20 @@ function HeaderCalendarCreatePanel({ selectedDate, createMode, onCreateModeChang
   function handleTaskSubmit(form) {
     upsertTask({
       ...form,
-      dueDate: form.dateFrom || form.dueDate || selectedDate,
+      dateFrom: form.dateFrom || selectedDateFrom,
+      dateTo: form.dateTo || selectedDateTo || selectedDateFrom,
+      dueDate: form.dateFrom || form.dueDate || selectedDateFrom,
     })
     onClose()
   }
 
   function handleAppointmentSubmit(form) {
-    const dateFrom = form.dateFrom || form.date || selectedDate
+    const dateFrom = form.dateFrom || form.date || selectedDateFrom
     upsertAppointment({
       ...form,
       date: dateFrom,
       dateFrom,
-      dateTo: form.dateTo || '',
+      dateTo: form.dateTo || selectedDateTo || '',
       startTime: form.includeTime ? form.timeFrom || form.startTime || '' : '',
       endTime: form.includeTime ? form.timeTo || form.endTime || '' : '',
     })
@@ -193,11 +225,21 @@ function HeaderCalendarCreatePanel({ selectedDate, createMode, onCreateModeChang
     )
   }
 
+  const rangeLabel =
+    selectedDateTo && selectedDateTo !== selectedDateFrom
+      ? `${formatCalendarDayLabel(selectedDateFrom)} – ${formatCalendarDayLabel(selectedDateTo)}`
+      : formatCalendarDayLabel(selectedDateFrom)
+
   return (
     <div className="header-calendar-create-panel">
-      <p className="text-xs font-extrabold capitalize text-[var(--ink)]">
-        {formatCalendarDayLabel(selectedDate)}
+      <p className="text-[14px] font-bold capitalize leading-tight tracking-normal text-[var(--muted)]">
+        {rangeLabel}
       </p>
+      {!selectedDateTo || selectedDateTo === selectedDateFrom ? (
+        <p className="mt-1 text-[12px] font-normal text-[var(--muted)]">
+          İsterseniz bitiş tarihi için ikinci bir gün seçin
+        </p>
+      ) : null}
 
       <div className="mt-2 space-y-1.5">
         <button
@@ -223,7 +265,8 @@ function HeaderCalendarCreatePanel({ selectedDate, createMode, onCreateModeChang
 
 export default function HeaderCalendar({ hideTrigger = false }) {
   const { open, setOpen, toggle } = useHeaderPopover('calendar')
-  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedDateFrom, setSelectedDateFrom] = useState('')
+  const [selectedDateTo, setSelectedDateTo] = useState('')
   const [createMode, setCreateMode] = useState(null)
   const [viewDate, setViewDate] = useState(() => new Date())
   const [tasks, setTasks] = useState(() => loadTasks())
@@ -252,7 +295,8 @@ export default function HeaderCalendar({ hideTrigger = false }) {
   useEffect(() => {
     if (!open) {
       setCreateMode(null)
-      setSelectedDate('')
+      setSelectedDateFrom('')
+      setSelectedDateTo('')
       publishCalendarCreateMode(null)
       return
     }
@@ -260,14 +304,15 @@ export default function HeaderCalendar({ hideTrigger = false }) {
     const intent = consumeCalendarCreateIntent()
     if (intent === 'task' || intent === 'appointment') {
       const iso = todayIso()
-      setSelectedDate(iso)
+      setSelectedDateFrom(iso)
+      setSelectedDateTo(iso)
       setCreateMode(intent)
       setViewDate(parseCalendarIso(iso) || new Date())
       publishCalendarCreateMode(intent)
       return
     }
 
-    setViewDate(parseCalendarIso(selectedDate) || new Date())
+    setViewDate(parseCalendarIso(selectedDateFrom) || new Date())
   }, [open])
 
   useEffect(() => {
@@ -276,7 +321,8 @@ export default function HeaderCalendar({ hideTrigger = false }) {
       if (intent !== 'task' && intent !== 'appointment') return
       consumeCalendarCreateIntent()
       const iso = todayIso()
-      setSelectedDate(iso)
+      setSelectedDateFrom(iso)
+      setSelectedDateTo(iso)
       setCreateMode(intent)
       setViewDate(parseCalendarIso(iso) || new Date())
       publishCalendarCreateMode(intent)
@@ -294,7 +340,7 @@ export default function HeaderCalendar({ hideTrigger = false }) {
     if (open) {
       requestAnimationFrame(() => updatePosition?.())
     }
-  }, [open, selectedDate, createMode, updatePosition])
+  }, [open, selectedDateFrom, selectedDateTo, createMode, updatePosition])
 
   const dayCounts = useMemo(
     () => collectCalendarDayCounts(tasks, appointments),
@@ -317,9 +363,22 @@ export default function HeaderCalendar({ hideTrigger = false }) {
   }
 
   function handleSelectDate(iso) {
-    setSelectedDate(iso)
     setCreateMode(null)
     setViewDate(parseCalendarIso(iso) || new Date())
+
+    if (!selectedDateFrom || (selectedDateFrom && selectedDateTo)) {
+      setSelectedDateFrom(iso)
+      setSelectedDateTo('')
+      return
+    }
+
+    if (iso < selectedDateFrom) {
+      setSelectedDateTo(selectedDateFrom)
+      setSelectedDateFrom(iso)
+      return
+    }
+
+    setSelectedDateTo(iso)
   }
 
   function handleCreateModeChange(mode) {
@@ -330,7 +389,8 @@ export default function HeaderCalendar({ hideTrigger = false }) {
   function handleClosePanel() {
     setOpen(false)
     setCreateMode(null)
-    setSelectedDate('')
+    setSelectedDateFrom('')
+    setSelectedDateTo('')
     publishCalendarCreateMode(null)
   }
 
@@ -381,7 +441,7 @@ export default function HeaderCalendar({ hideTrigger = false }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="header-popover-head">
-              <p className="text-sm font-extrabold text-[var(--ink)]">
+              <p className="text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
                 {createMode === 'task'
                   ? 'Görev Oluştur'
                   : createMode === 'appointment'
@@ -395,14 +455,16 @@ export default function HeaderCalendar({ hideTrigger = false }) {
                 <GlassMonthCalendar
                   viewDate={viewDate}
                   onViewDateChange={setViewDate}
-                  selectedDate={selectedDate}
+                  selectedDateFrom={selectedDateFrom}
+                  selectedDateTo={selectedDateTo}
                   onSelectDate={handleSelectDate}
                   dayCounts={dayCounts}
                 />
               </div>
               <div className="header-calendar-pane header-calendar-pane--create">
                 <HeaderCalendarCreatePanel
-                  selectedDate={selectedDate}
+                  selectedDateFrom={selectedDateFrom}
+                  selectedDateTo={selectedDateTo}
                   createMode={createMode}
                   onCreateModeChange={handleCreateModeChange}
                   onClose={handleClosePanel}

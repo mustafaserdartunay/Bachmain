@@ -3,8 +3,9 @@ import { findCustomerProfileByReference, getCustomerProfiles } from '../../data/
 import { getCustomerDisplay } from '../../utils/customerDisplay'
 import { resolveCustomerContactInfo } from '../../utils/customerContacts'
 import { resolveCustomerRepresentative } from '../../utils/customerMeta'
+import { YF_TEXT_CLASS } from '../../utils/dashboardDesign'
 
-const FIELD_LABEL = 'mb-1.5 block text-[12px] font-black uppercase tracking-wider text-gray-500'
+const FIELD_LABEL = `mb-1.5 block ${YF_TEXT_CLASS}`
 
 function customerSearchTexts(customer) {
   const display = getCustomerDisplay(customer)
@@ -111,7 +112,7 @@ export default function CrmCustomerSearchField({ label = 'Müşteri', value, onC
           setIsOpen(true)
         }}
         placeholder={placeholder}
-        className="form-input text-sm"
+        className="form-input text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]"
         autoComplete="off"
       />
       {isOpen && (

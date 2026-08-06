@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
+import {
+  COP_KUTUSU_BUTTON_CLASS,
+  COP_KUTUSU_ICON_CLASS,
+  KALEM_BUTTON_CLASS,
+  KALEM_ICON_CLASS,
+} from '../../utils/buttonStyles'
 
 export function getAgendaNoteStamp() {
   const now = new Date()
@@ -60,11 +66,11 @@ const AGENDA_NOTE_DELETE_BTN_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-fle
 
 const AGENDA_NOTE_SAVE_BTN_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[12px] font-semibold leading-none text-[#10b981] transition-all disabled:cursor-not-allowed disabled:opacity-50`
 
-const NOTE_ACTION_EDIT_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-[#2563eb] transition-all`
-
-const NOTE_ACTION_COMPLETE_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-teal-600 transition-all`
-
-const NOTE_ACTION_DELETE_CLASS = `${AGENDA_NOTE_ACTION_BTN_CLASS} inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-[#e11d48] transition-all`
+/** Müşteriler kalem/çk ile aynı ölçü; tamamla için yeşil kardeş */
+const NOTE_ACTION_EDIT_CLASS = KALEM_BUTTON_CLASS
+const NOTE_ACTION_DELETE_CLASS = COP_KUTUSU_BUTTON_CLASS
+const NOTE_ACTION_COMPLETE_CLASS =
+  'inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent p-1 text-emerald-600 transition-[background-color,color] hover:bg-emerald-500/15 hover:text-emerald-700'
 
 const AGENDA_NOTE_CONFIRM_POPOVER_CLASS =
   'absolute right-0 top-[calc(100%+0.35rem)] z-40 w-[min(18rem,calc(100vw-2rem))]'
@@ -227,7 +233,7 @@ export function AgendaNoteItem({
               className={NOTE_ACTION_EDIT_CLASS}
               title="Düzenle"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
             </button>
             <button
               type="button"
@@ -239,7 +245,7 @@ export function AgendaNoteItem({
               className={NOTE_ACTION_COMPLETE_CLASS}
               title={isCompleted ? 'Tamamlandı' : 'Tamamla'}
             >
-              <Check className="h-3.5 w-3.5" />
+              <Check className={KALEM_ICON_CLASS} strokeWidth={2.25} />
             </button>
             <div className="relative">
               <button
@@ -251,8 +257,9 @@ export function AgendaNoteItem({
                 }}
                 className={NOTE_ACTION_DELETE_CLASS}
                 title="Sil"
+                aria-label="Notu kalıcı olarak sil"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
               </button>
               {pendingDelete ? (
                 <DeleteConfirmPopover

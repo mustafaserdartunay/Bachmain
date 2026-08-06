@@ -70,6 +70,8 @@ export function DataTable({
   emptyDescription,
   className = '',
   onRowClick,
+  onRowMouseEnter,
+  onRowMouseLeave,
   headerClassName = DEFAULT_TH_CLASS,
   mobileHeaderClassName = DEFAULT_MOBILE_HEADER_CLASS,
   /** İlk açılış / yeni oturum sıralaması — örn. { key: 'balance', dir: 'desc' } */
@@ -120,26 +122,38 @@ export function DataTable({
                   key={col.id}
                   className={`${headerClassName} ${col.className || ''}`.trim()}
                 >
-                  {col.sortable ? (
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 hover:text-ds-ink"
-                      onClick={() => toggleSort(col.accessorKey || col.id)}
-                    >
-                      <span className="truncate">{col.header}</span>
-                      {sort.key === (col.accessorKey || col.id) ? (
-                        sort.dir === 'asc' ? (
-                          <ArrowUp className="h-3.5 w-3.5" />
+                  <div className="inline-flex max-w-full items-center gap-1">
+                    {col.sortable ? (
+                      <button
+                        type="button"
+                        className="inline-flex min-w-0 items-center gap-1 hover:text-ds-ink"
+                        onClick={() => toggleSort(col.accessorKey || col.id)}
+                      >
+                        <span className="truncate">{col.header}</span>
+                        {sort.key === (col.accessorKey || col.id) ? (
+                          sort.dir === 'asc' ? (
+                            <ArrowUp className="h-3.5 w-3.5 shrink-0" />
+                          ) : (
+                            <ArrowDown className="h-3.5 w-3.5 shrink-0" />
+                          )
                         ) : (
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        )
-                      ) : (
-                        <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
-                      )}
-                    </button>
-                  ) : (
-                    <span className="truncate">{col.header}</span>
-                  )}
+                          <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" />
+                        )}
+                      </button>
+                    ) : (
+                      <span className="truncate">{col.header}</span>
+                    )}
+                    {col.headerAccessory ? (
+                      <span
+                        className="inline-flex shrink-0"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        {typeof col.headerAccessory === 'function'
+                          ? col.headerAccessory({})
+                          : col.headerAccessory}
+                      </span>
+                    ) : null}
+                  </div>
                 </th>
               ))}
               {showActionsColumn ? (
@@ -173,6 +187,8 @@ export function DataTable({
                 <tr
                   key={idKey}
                   className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${onRowClick && !selectionEnabled ? 'cursor-pointer' : ''} ${isSelected ? 'bg-[var(--ds-surface-muted)]' : ''}`}
+                  onMouseEnter={() => onRowMouseEnter?.(row)}
+                  onMouseLeave={() => onRowMouseLeave?.(row)}
                   onClick={() => {
                     if (selectionEnabled) {
                       onToggleSelect?.(idKey)
@@ -247,6 +263,8 @@ export function DataTable({
             <article
               key={idKey}
               className={`rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs ${onRowClick && !selectionEnabled ? 'cursor-pointer' : ''} ${isSelected ? 'ring-1 ring-[var(--ds-ink,#1e2338)]/20' : ''}`}
+              onMouseEnter={() => onRowMouseEnter?.(row)}
+              onMouseLeave={() => onRowMouseLeave?.(row)}
               onClick={() => {
                 if (selectionEnabled) {
                   onToggleSelect?.(idKey)
@@ -272,7 +290,19 @@ export function DataTable({
                       const content = col.cell ? col.cell(row) : raw
                       return (
                         <div key={col.id} className="min-w-0">
-                          <p className={mobileHeaderClassName}>{col.header}</p>
+                          <div className="mb-0.5 flex items-center gap-1">
+                            <p className={`min-w-0 flex-1 ${mobileHeaderClassName}`}>{col.header}</p>
+                            {col.headerAccessory ? (
+                              <span
+                                className="inline-flex shrink-0"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {typeof col.headerAccessory === 'function'
+                                  ? col.headerAccessory({ row })
+                                  : col.headerAccessory}
+                              </span>
+                            ) : null}
+                          </div>
                           <div className="truncate text-ds-body font-medium text-ds-ink">
                             {content ?? '—'}
                           </div>

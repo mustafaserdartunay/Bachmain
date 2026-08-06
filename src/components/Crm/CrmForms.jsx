@@ -17,24 +17,29 @@ import {
 } from '../../utils/crmProcessHelpers'
 import { resolveCustomerRepresentative, readOptionLists } from '../../utils/customerMeta'
 import { BTN_PRIMARY } from '../../utils/buttonStyles'
+import { YF_TEXT_CLASS, YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesign'
 
-const FIELD_LABEL = 'mb-1.5 block text-[12px] font-black uppercase tracking-wider text-gray-500'
+/** Müşteriler sayfası yf ile aynı etiket */
+const FIELD_LABEL = `mb-1.5 block ${YF_TEXT_CLASS}`
 
 const HEADER_POPOVER_BTN_CANCEL =
-  'btn-cancel !h-9 !min-h-9 min-w-[5.5rem] px-4 text-[12px] font-bold'
+  `btn-cancel !h-9 !min-h-9 min-w-[5.5rem] px-4 ${YF_TEXT_CLASS}`
 
 const HEADER_POPOVER_BTN_SUBMIT =
-  'inline-flex h-9 min-w-[5.5rem] items-center justify-center rounded-xl bg-gradient-to-br from-[#7cf2c6] via-[#34d399] to-[#10b981] px-4 text-[12px] font-bold text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5'
+  `inline-flex h-9 min-w-[5.5rem] items-center justify-center rounded-xl bg-gradient-to-br from-[#7cf2c6] via-[#34d399] to-[#10b981] px-4 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 ${YF_TEXT_ON_COLOR_CLASS}`
 
 const HEADER_POPOVER_ICON_BTN =
   'inline-flex shrink-0 items-center justify-center p-0 text-[#f43f5e] transition-colors hover:text-[#e11d48]'
+
+const HEADER_POPOVER_TITLE_CLASS =
+  'min-w-0 truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]'
 
 function Modal({ title, onClose, children, wide, large, fullPage, panelClassName = '', compact = false }) {
   if (fullPage) {
     return (
       <div className={`flex h-full flex-col ${compact ? 'min-h-0' : 'min-h-[520px]'}`}>
         <div className={`flex shrink-0 items-center justify-between border-b border-dark-500/45 ${compact ? 'px-4 py-2.5' : 'px-5 py-3.5'}`}>
-          <h2 className={compact ? 'text-xs font-extrabold text-white' : 'text-base font-bold text-white'}>{title}</h2>
+          <h2 className={compact ? HEADER_POPOVER_TITLE_CLASS : 'text-base font-bold text-white'}>{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -197,16 +202,19 @@ export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false, co
           value={form.title}
           onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
           placeholder="Örn. Teklif revizyonu gönder"
-          className="form-input text-sm"
+          className="form-input text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]"
           required
         />
       </div>
 
-      <div className={`grid ${gridGap} sm:grid-cols-2`}>
+      <div>
         <CrmCustomerSearchField
           value={form.customer}
           onChange={handleCustomerChange}
         />
+      </div>
+
+      <div>
         <DropdownField
           label="Müşteri temsilcisi"
           value={form.assignee}
@@ -224,20 +232,20 @@ export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false, co
 
       <div className={`grid ${gridGap} grid-cols-3`}>
         <DropdownField
-          label="Öncelik"
-          value={form.priority}
-          onChange={(value) => setForm((current) => ({ ...current, priority: value }))}
-          options={priorityOptions}
-          openKey="task-priority"
-          activeMenu={activeMenu}
-          setActiveMenu={setActiveMenu}
-        />
-        <DropdownField
           label="Durum"
           value={form.status}
           onChange={(value) => setForm((current) => ({ ...current, status: value }))}
           options={statusOptions}
           openKey="task-status"
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+        />
+        <DropdownField
+          label="Öncelik"
+          value={form.priority}
+          onChange={(value) => setForm((current) => ({ ...current, priority: value }))}
+          options={priorityOptions}
+          openKey="task-priority"
           activeMenu={activeMenu}
           setActiveMenu={setActiveMenu}
         />
@@ -258,21 +266,23 @@ export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false, co
         />
       </div>
 
-      <div>
-        <label className={FIELD_LABEL}>Başlangıç / Bitiş Tarihi</label>
-        <DateRangePicker
-          dateFrom={form.dateFrom || form.dueDate || ''}
-          dateTo={form.dateTo || ''}
-          timeFrom={form.timeFrom || ''}
-          timeTo={form.timeTo || ''}
-          includeTime={Boolean(form.includeTime)}
-          onChange={(value) => setForm((current) => ({
-            ...current,
-            ...value,
-            dueDate: value.dateFrom || current.dueDate,
-          }))}
-        />
-      </div>
+      {!compact ? (
+        <div>
+          <label className={FIELD_LABEL}>Başlangıç / Bitiş Tarihi</label>
+          <DateRangePicker
+            dateFrom={form.dateFrom || form.dueDate || ''}
+            dateTo={form.dateTo || ''}
+            timeFrom={form.timeFrom || ''}
+            timeTo={form.timeTo || ''}
+            includeTime={Boolean(form.includeTime)}
+            onChange={(value) => setForm((current) => ({
+              ...current,
+              ...value,
+              dueDate: value.dateFrom || current.dueDate,
+            }))}
+          />
+        </div>
+      ) : null}
 
       <div>
         <label className={FIELD_LABEL}>Detaylı Açıklama</label>
@@ -280,8 +290,8 @@ export function TaskFormModal({ initial, onClose, onSubmit, fullPage = false, co
           value={form.description}
           onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
           placeholder="Görev kapsamı, beklenen çıktı ve notlar..."
-          className={`form-input resize-none text-sm ${compact ? 'min-h-16' : 'min-h-28'}`}
-          rows={compact ? 2 : undefined}
+          className={`form-input resize-none ${compact ? 'min-h-28 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]' : 'min-h-28 text-sm'}`}
+          rows={compact ? 4 : undefined}
         />
       </div>
     </>

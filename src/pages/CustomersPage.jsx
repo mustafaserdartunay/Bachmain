@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Calendar,
   CheckCircle2,
@@ -22,6 +22,11 @@ import {
 import { Button, DataTable, Modal } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
 import { DeleteConfirmOverlay } from '../components/Common/ListDeleteConfirmPanel'
+import {
+  CustomerColumnVoiceMic,
+  CustomerVoiceStatusBar,
+  useCustomerListVoice,
+} from '../components/Customers/CustomerListVoiceMic'
 import { useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
@@ -57,7 +62,11 @@ import {
   formatTreasuryCurrency,
   getCustomerLedgerBalance,
   getTreasuryMovements,
+  createCustomerCollection,
+  createCustomerPayment,
 } from '../utils/treasuryStore'
+import { emptyCollectionForm, formatCollectionDate } from '../utils/customerMovementForm'
+import { appendActivity } from '../utils/customerActivity'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
   CUSTOMER_META_KEY,
@@ -143,7 +152,7 @@ export default function CustomersPage({
     scoring: 'Tümü',
     balance: 'Tümü',
   })
-  const [movements] = useState(() => getTreasuryMovements())
+  const [movements, setMovements] = useState(() => getTreasuryMovements())
   const [customerProfiles, setCustomerProfiles] = useState(() => getCustomerProfiles())
   const [customerSettings, setCustomerSettings] = useState(readCustomerMeta)
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
@@ -156,6 +165,8 @@ export default function CustomersPage({
   const [b2bBusy, setB2bBusy] = useState(false)
   const [b2bNotice, setB2bNotice] = useState('')
   const [b2bError, setB2bError] = useState('')
+  const hoveredCustomerRef = useRef(null)
+  const filteredCustomersRef = useRef([])
   const [b2bMap, setB2bMap] = useState(() => {
     const map = {}
     getCustomerProfiles().forEach((customer) => {
@@ -242,6 +253,92 @@ export default function CustomersPage({
       )
     })
   }, [scopedProfiles, customerSettings, filters, movements, searchQuery])
+
+  filteredCustomersRef.current = filteredCustomers
+
+  const resolveVoiceCustomer = useCallback(() => {
+    if (hoveredCustomerRef.current) return hoveredCustomerRef.current
+    const rows = filteredCustomersRef.current
+    if (rows.length === 1) return rows[0]
+    return null
+  }, [])
+
+  const handleVoiceCommand = useCallback(
+    async ({ customer, parsed }) => {
+      const amount = Number(parsed.amount)
+      const method = parsed.method || 'Nakit'
+      const description =
+        parsed.description
+        || (parsed.action === 'payment'
+          ? `${customer.company} ödemesi`
+          : `${customer.company} tahsilatı`)
+      const formBase = emptyCollectionForm([], readOptionLists())
+
+      if (parsed.action === 'payment') {
+        createCustomerPayment({
+          ...formBase,
+          customerName: customer.company,
+          amount,
+          method,
+          date: formatCollectionDate(new Date()),
+          description,
+        })
+      } else {
+        createCustomerCollection({
+          ...formBase,
+          customerName: customer.company,
+          amount,
+          method,
+          date: formatCollectionDate(new Date()),
+          description,
+        })
+      }
+
+      appendActivity(
+        customer.id,
+        parsed.action === 'payment' ? 'Ödeme' : 'Tahsilat',
+        `Sesli · ${method} · ${formatTreasuryCurrency(amount)} · ${description}`,
+      )
+
+      setMovements(getTreasuryMovements())
+
+      navigate(`/musteriler/${customer.id}`, {
+        state: {
+          voiceNotice:
+            parsed.action === 'payment'
+              ? `Sesli ödeme kaydedildi: ${formatTreasuryCurrency(amount)} · ${description}`
+              : `Sesli tahsilat kaydedildi: ${formatTreasuryCurrency(amount)} · ${description}`,
+        },
+      })
+    },
+    [navigate],
+  )
+
+  const voice = useCustomerListVoice({
+    resolveCustomer: resolveVoiceCustomer,
+    onCommand: handleVoiceCommand,
+  })
+
+  const renderColumnVoiceMic = useCallback(
+    (columnId, row) => (
+      <CustomerColumnVoiceMic
+        columnId={columnId}
+        active={voice.activeColumnId === columnId}
+        listening={voice.listening && voice.activeColumnId === columnId}
+        processing={voice.processing}
+        onStart={(id) => {
+          if (row) {
+            hoveredCustomerRef.current = row
+            voice.startForCustomer(row, id)
+            return
+          }
+          voice.startFromHeader(id)
+        }}
+        title="Sesli cari işlem (mikrofon)"
+      />
+    ),
+    [voice.activeColumnId, voice.listening, voice.processing, voice.startForCustomer, voice.startFromHeader],
+  )
 
   const totalReceivable = scopedProfiles.reduce(
     (sum, customer) => Math.max(currentBalance(customer, movements), 0) + sum,
@@ -531,6 +628,17 @@ export default function CustomersPage({
           </span>
         </div>
 
+        <CustomerVoiceStatusBar
+          customerLabel={voice.activeCustomerLabel}
+          listening={voice.listening}
+          processing={voice.processing}
+          interim={voice.interim}
+          transcript={voice.transcript}
+          message={voice.message}
+          error={voice.error}
+          onStop={voice.stop}
+        />
+
         {bulkSelectMode ? (
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
             <p className={YF_TEXT_CLASS}>
@@ -575,6 +683,12 @@ export default function CustomersPage({
           data={filteredCustomers}
           defaultSort={{ key: 'balance', dir: 'desc' }}
           getRowId={(customer) => customer.id}
+          onRowMouseEnter={(customer) => {
+            hoveredCustomerRef.current = customer
+          }}
+          onRowMouseLeave={() => {
+            /* keep last hovered for header mic */
+          }}
           onRowClick={
             bulkSelectMode ? undefined : (customer) => navigate(`/musteriler/${customer.id}`)
           }
@@ -621,6 +735,7 @@ export default function CustomersPage({
             {
               id: 'name',
               header: String(columnLabel || '').toLocaleUpperCase('tr-TR'),
+              headerAccessory: (ctx) => renderColumnVoiceMic('name', ctx?.row),
               sortable: true,
               accessorKey: 'name',
               getSortValue: (customer) => {
@@ -645,6 +760,7 @@ export default function CustomersPage({
             {
               id: 'type',
               header: 'TİPİ',
+              headerAccessory: (ctx) => renderColumnVoiceMic('type', ctx?.row),
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -672,6 +788,7 @@ export default function CustomersPage({
             {
               id: 'representative',
               header: 'TEMSİLCİ',
+              headerAccessory: (ctx) => renderColumnVoiceMic('representative', ctx?.row),
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -704,6 +821,7 @@ export default function CustomersPage({
             {
               id: 'scoring',
               header: 'PUANTAJ',
+              headerAccessory: (ctx) => renderColumnVoiceMic('scoring', ctx?.row),
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -731,6 +849,7 @@ export default function CustomersPage({
             {
               id: 'balance',
               header: 'GÜNCEL BAKİYE',
+              headerAccessory: (ctx) => renderColumnVoiceMic('balance', ctx?.row),
               sortable: true,
               accessorKey: 'balance',
               getSortValue: (customer) => currentBalance(customer, movements),

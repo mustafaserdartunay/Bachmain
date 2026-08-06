@@ -976,6 +976,11 @@ textarea:not(.form-input)::placeholder {
   color: #0f5132;
 }
 
+.header-calendar-day.is-in-range:not(.is-selected) {
+  border-color: rgba(52, 211, 153, 0.22);
+  background: rgba(52, 211, 153, 0.08);
+}
+
 .header-calendar-day-dots {
   display: inline-flex;
   align-items: center;
@@ -1084,24 +1089,29 @@ textarea:not(.form-input)::placeholder {
 }
 
 .header-calendar-form-shell h2 {
-  color: var(--ink) !important;
-  font-size: 0.875rem;
-  font-weight: 800;
+  color: var(--muted) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
 }
 
 .header-calendar-form-shell label {
   display: block;
   margin-bottom: 0.375rem !important;
-  font-size: 13px !important;
-  line-height: 1.2 !important;
-  letter-spacing: -0.01em !important;
-  font-weight: 600 !important;
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  font-weight: 400 !important;
   text-transform: none !important;
   color: var(--muted) !important;
 }
 
 .header-calendar-form-shell .text-gray-500 {
   color: var(--muted) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
 }
 
 .header-calendar-form-shell .form-input,
@@ -1112,11 +1122,14 @@ textarea:not(.form-input)::placeholder {
   height: 2.25rem !important;
   border-color: rgba(140, 145, 165, 0.22) !important;
   background: rgba(255, 255, 255, 0.42) !important;
-  color: var(--ink) !important;
+  color: var(--muted) !important;
   border-radius: 0.75rem !important;
   padding-top: 0.4375rem !important;
   padding-bottom: 0.4375rem !important;
-  font-size: 12px !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
 }
 
 .header-calendar-form-shell .glass-pill {
@@ -1125,10 +1138,22 @@ textarea:not(.form-input)::placeholder {
 }
 
 .header-calendar-form-shell textarea.form-input {
-  min-height: 4rem !important;
+  min-height: 7rem !important;
   height: auto !important;
   padding-top: 0.5rem !important;
   padding-bottom: 0.5rem !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  color: var(--muted) !important;
+}
+
+.header-calendar-form-shell .btn-cancel,
+.header-calendar-form-shell button[type='submit'] {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
 }
 
 .header-calendar-form-shell button.flex.h-9 span.text-gray-500,
@@ -1734,22 +1759,54 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 
 /* Güncel bakiye — yfb (14/700) + Gelir yeşili / E-Fatura kırmızısı */
 .customers-page-type .customer-list-panel table tbody td .customer-balance-amount,
-.app-responsive .customer-list-panel table tbody td .customer-balance-amount {
+.app-responsive .customer-list-panel table tbody td .customer-balance-amount,
+.customers-page-type .customer-detail-ledger-panel .customer-balance-amount,
+.customers-page-type .customer-detail-actions-panel .customer-balance-amount,
+.customers-page-type aside .customer-balance-amount,
+.app-responsive .customer-detail-ledger-panel .customer-balance-amount,
+.app-responsive .customer-detail-actions-panel .customer-balance-amount,
+.app-responsive aside .customer-balance-amount {
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1.25 !important;
   letter-spacing: normal !important;
 }
 .customers-page-type .customer-list-panel table tbody td .customer-balance-positive,
-.app-responsive .customer-list-panel table tbody td .customer-balance-positive {
+.app-responsive .customer-list-panel table tbody td .customer-balance-positive,
+.customers-page-type .customer-detail-ledger-panel .customer-balance-positive,
+.customers-page-type .customer-detail-actions-panel .customer-balance-positive,
+.customers-page-type aside .customer-balance-positive,
+.app-responsive .customer-detail-ledger-panel .customer-balance-positive,
+.app-responsive .customer-detail-actions-panel .customer-balance-positive,
+.app-responsive aside .customer-balance-positive {
   color: #10b981 !important;
 }
 .customers-page-type .customer-list-panel table tbody td .customer-balance-negative,
-.app-responsive .customer-list-panel table tbody td .customer-balance-negative {
+.app-responsive .customer-list-panel table tbody td .customer-balance-negative,
+.customers-page-type .customer-detail-ledger-panel .customer-balance-negative,
+.customers-page-type .customer-detail-actions-panel .customer-balance-negative,
+.customers-page-type aside .customer-balance-negative,
+.app-responsive .customer-detail-ledger-panel .customer-balance-negative,
+.app-responsive .customer-detail-actions-panel .customer-balance-negative,
+.app-responsive aside .customer-balance-negative {
   color: #e11d48 !important;
 }
+.customers-page-type aside .customer-balance-blue,
+.app-responsive aside .customer-balance-blue,
+.customers-page-type .customer-detail-actions-panel .customer-balance-blue,
+.app-responsive .customer-detail-actions-panel .customer-balance-blue,
+.customers-page-type .customer-detail-ledger-panel .customer-balance-blue,
+.app-responsive .customer-detail-ledger-panel .customer-balance-blue {
+  color: #2563eb !important;
+}
 .customers-page-type .customer-list-panel table tbody td .customer-balance-zero,
-.app-responsive .customer-list-panel table tbody td .customer-balance-zero {
+.app-responsive .customer-list-panel table tbody td .customer-balance-zero,
+.customers-page-type .customer-detail-ledger-panel .customer-balance-zero,
+.customers-page-type .customer-detail-actions-panel .customer-balance-zero,
+.customers-page-type aside .customer-balance-zero,
+.app-responsive .customer-detail-ledger-panel .customer-balance-zero,
+.app-responsive .customer-detail-actions-panel .customer-balance-zero,
+.app-responsive aside .customer-balance-zero {
   color: var(--muted) !important;
   font-weight: 700 !important;
 }

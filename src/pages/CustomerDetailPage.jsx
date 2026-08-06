@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'
 import {
   Archive,
@@ -42,13 +42,9 @@ import {
 } from '../utils/treasuryStore'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
-  CUSTOMER_META_KEY,
-  notifyCustomerMetaUpdated,
-  readCustomerMeta,
   readOptionLists,
   saveOptionList,
 } from '../utils/customerMeta'
-import EditableDropdownPill from '../components/EditableDropdownPill'
 import { DeleteConfirmOverlay } from '../components/Common/ListDeleteConfirmPanel'
 import CustomerMovementForm from '../components/CustomerMovementForm'
 import {
@@ -56,7 +52,6 @@ import {
   AppPageHeader,
   AppPagePanel,
   AppPageShell,
-  AppPanelDot,
 } from '../components/Layout/AppPageLayout'
 import {
   HEADER_ACTION_CTA_CLASS,
@@ -67,12 +62,8 @@ import {
   HEADER_ACTION_GRADIENTS,
 } from '../components/Layout/HeaderCashActionsPanel'
 import {
-  APP_PANEL_TITLE_CLASS,
   PAGE_CENTER_TITLE_CLASS,
-  PAGE_FILTER_FIELD_CLASS,
-  PAGE_FILTER_LABEL_CLASS,
   PAGE_FILTER_MENU_CLASS,
-  PAGE_FILTER_PILL_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
   PAGE_TABLE_HEADER_CLASS,
   YF_TEXT_CLASS,
@@ -105,14 +96,11 @@ import {
   patchMovementForm,
 } from '../utils/customerMovementForm'
 import CustomerStockPanel from '../components/Customers/CustomerStockPanel'
+import DateRangePicker from '../components/Common/DateRangePicker'
 import { Dropdown, DropdownItem } from '@bachmain/ui'
 
 const TAHSILAT_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.success}`
 const ODEME_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.expense}`
-const DETAIL_FILTER_FIELD_CLASS = PAGE_FILTER_FIELD_CLASS
-const DETAIL_FILTER_LABEL_CLASS = PAGE_FILTER_LABEL_CLASS
-const DETAIL_FILTER_PILL_CLASS = PAGE_FILTER_PILL_CLASS
-const DETAIL_FILTER_MENU_CLASS = PAGE_FILTER_MENU_CLASS
 const DETAIL_TABLE_HEADER_CLASS = PAGE_TABLE_HEADER_CLASS
 const DETAIL_CELL_CLASS = YF_TEXT_CLASS
 const DETAIL_ACTIONS_MENU_CLASS = PAGE_FILTER_MENU_CLASS
@@ -172,16 +160,33 @@ export default function CustomerDetailPage() {
   const [linkCopied, setLinkCopied] = useState(false)
   const companySettings = readCompanySettings()
   const [customerScreenOpen, setCustomerScreenOpen] = useState(true)
-  const [customerMeta, setCustomerMeta] = useState(readCustomerMeta)
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activity, setActivity] = useState(() => readActivity(customer.id))
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(false)
+  const [voiceNotice, setVoiceNotice] = useState('')
+  const [ledgerDateFrom, setLedgerDateFrom] = useState('')
+  const [ledgerDateTo, setLedgerDateTo] = useState('')
 
   useEffect(() => {
     setCustomer(findCustomerProfile(customerId))
     setMovements(getTreasuryMovements())
   }, [customerId, location.key])
+
+  const voiceAppliedKeyRef = useRef('')
+
+  useEffect(() => {
+    const notice = location.state?.voiceNotice
+    if (!notice) return undefined
+    const key = `${customerId}|${notice}`
+    if (voiceAppliedKeyRef.current === key) return undefined
+    voiceAppliedKeyRef.current = key
+    setVoiceNotice(notice)
+    setMovements(getTreasuryMovements())
+    setActivity(readActivity(customerId))
+    navigate(location.pathname, { replace: true, state: {} })
+    return undefined
+  }, [customerId, location.pathname, location.state, navigate])
 
   useEffect(() => {
     setActivity(readActivity(customer.id))
@@ -262,12 +267,6 @@ export default function CustomerDetailPage() {
     navigate('/musteriler')
   }
 
-  const selectedMeta = customerMeta[customer.id] || {}
-  const selectedCustomerType = selectedMeta.type || ''
-  const selectedRepresentative = selectedMeta.representative || ''
-  const selectedScoring = selectedMeta.scoring || ''
-  const selectedCategory = selectedMeta.category || ''
-
   const customerCollections = useMemo(
     () => getCustomerCollections(customer.company, movements),
     [customer.company, movements],
@@ -333,7 +332,7 @@ export default function CustomerDetailPage() {
   })
 
   const statementRows = [
-    ...movementStatementRows.reverse(),
+    ...[...movementStatementRows].reverse(),
     {
       id: 'opening',
       date: customer.openingBalanceDate || '01.06.2026',
@@ -346,6 +345,28 @@ export default function CustomerDetailPage() {
       balance: openingBalance,
     },
   ]
+
+  const filteredStatementRows = (() => {
+    if (!ledgerDateFrom && !ledgerDateTo) return statementRows
+
+    function toSortable(value) {
+      const raw = String(value || '').trim()
+      if (!raw) return ''
+      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10)
+      const match = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})/)
+      if (match) return `${match[3]}-${match[2]}-${match[1]}`
+      return raw
+    }
+
+    const from = ledgerDateFrom || '0000-01-01'
+    const to = ledgerDateTo || ledgerDateFrom || '9999-12-31'
+
+    return statementRows.filter((row) => {
+      const key = toSortable(row.date)
+      if (!key) return true
+      return key >= from && key <= to
+    })
+  })()
 
   const movementAccounts = useMemo(
     () => movementAccountOptions(accounts, optionLists),
@@ -391,28 +412,6 @@ export default function CustomerDetailPage() {
     navigator.clipboard.writeText(getPortalUrl(b2bAccess.accessToken))
     setLinkCopied(true)
     setTimeout(() => setLinkCopied(false), 1600)
-  }
-
-  function updateMeta(field, value) {
-    setCustomerMeta((current) => {
-      const next = {
-        ...current,
-        [customer.id]: {
-          ...(current[customer.id] || {}),
-          [field]: value,
-        },
-      }
-      localStorage.setItem(CUSTOMER_META_KEY, JSON.stringify(next))
-      notifyCustomerMetaUpdated({ customerId: customer.id, field })
-      return next
-    })
-    const labels = {
-      type: 'Tipi',
-      representative: 'Temsilci',
-      scoring: 'Puantaj',
-      category: 'Kategori',
-    }
-    logActivity('Güncelleme', `${labels[field] || field}: ${value || 'Seçiniz'}`)
   }
 
   function handleDownloadStatementPdf() {
@@ -542,109 +541,366 @@ export default function CustomerDetailPage() {
         }
       />
 
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
-        <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
-          <div className="mb-4 flex min-w-0 items-center gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <AppPanelDot color="blue" />
-              <div className="min-w-0">
-                <h2 className={`${APP_PANEL_TITLE_CLASS} !font-bold`}>
-                  {customerDisplay.brandShortName}
-                </h2>
-                <p className={`mt-0.5 ${DETAIL_CELL_CLASS}`}>
-                  {[customerDisplay.companyTitle, customer.city].filter(Boolean).join(' · ')}
+      {voiceNotice ? (
+        <div className="flex items-center justify-between gap-3 rounded-[16px] border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+          <p className={`${YF_TEXT_CLASS} !text-emerald-700`}>{voiceNotice}</p>
+          <button
+            type="button"
+            className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 hover:bg-emerald-500/10`}
+            onClick={() => setVoiceNotice('')}
+          >
+            Kapat
+          </button>
+        </div>
+      ) : null}
+
+      <AppPagePanel className="customer-detail-actions-panel w-full overflow-visible">
+        <div className="grid gap-4 xl:grid-cols-2">
+          <section className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCollectionOpen((open) => !open)
+                  setPaymentOpen(false)
+                }}
+                className={`${TAHSILAT_BTN} !w-auto min-w-[10rem] flex-1`}
+              >
+                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                  <CheckCircle2 className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
+                </span>
+                <span className={YF_TEXT_ON_COLOR_CLASS}>Tahsilat Ekle</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentOpen((open) => !open)
+                  setCollectionOpen(false)
+                }}
+                className={`${ODEME_BTN} !w-auto min-w-[10rem] flex-1`}
+              >
+                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                  <Upload className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
+                </span>
+                <span className={YF_TEXT_ON_COLOR_CLASS}>Ödeme Ekle</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDownloadStatementPdf}
+                className={`${HEADER_ACTION_CTA_CLASS} !w-auto min-w-[10rem] flex-1 justify-center ${HEADER_ACTION_GRADIENTS.violet}`}
+              >
+                <span className={YF_TEXT_ON_COLOR_CLASS}>Ekstre Gönder</span>
+              </button>
+            </div>
+
+            {collectionOpen && (
+              <CustomerMovementForm
+                variant="tahsilat"
+                form={collectionForm}
+                onUpdate={updateCollection}
+                onSubmit={submitCollection}
+                onCancel={() => {
+                  setCollectionForm(emptyCollectionForm(accounts, optionLists))
+                  setCollectionOpen(false)
+                }}
+                cashAccountOptions={movementAccounts.cash}
+                bankAccountOptions={movementAccounts.bank}
+                chequeAccountOptions={movementAccounts.cheque}
+                onCashOptionsChange={(next) => updateOptionList('cashAccount', next)}
+                onBankOptionsChange={(next) => updateOptionList('bankAccount', next)}
+                onChequeOptionsChange={(next) => updateOptionList('chequeAccount', next)}
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+              />
+            )}
+
+            {paymentOpen && (
+              <CustomerMovementForm
+                variant="odeme"
+                form={paymentForm}
+                onUpdate={updatePayment}
+                onSubmit={submitPayment}
+                onCancel={() => {
+                  setPaymentForm(emptyCollectionForm(accounts, optionLists))
+                  setPaymentOpen(false)
+                }}
+                cashAccountOptions={movementAccounts.cash}
+                bankAccountOptions={movementAccounts.bank}
+                chequeAccountOptions={movementAccounts.cheque}
+                onCashOptionsChange={(next) => updateOptionList('cashAccount', next)}
+                onBankOptionsChange={(next) => updateOptionList('bankAccount', next)}
+                onChequeOptionsChange={(next) => updateOptionList('chequeAccount', next)}
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+              />
+            )}
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div className="glass-inset rounded-xl px-3 py-2.5">
+                <p className={DETAIL_CELL_CLASS}>Kalan Bakiye</p>
+                <p className="customer-balance-amount customer-balance-positive mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
+                  {formatTreasuryCurrency(currentBalance)}
+                </p>
+              </div>
+              <div className="glass-inset rounded-xl px-3 py-2.5">
+                <p className={DETAIL_CELL_CLASS}>Gecikmiş Tahsilat</p>
+                <p className="customer-balance-amount customer-balance-negative mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
+                  {formatTreasuryCurrency(overdueCollection)}
+                </p>
+              </div>
+              <div className="glass-inset rounded-xl px-3 py-2.5">
+                <p className={DETAIL_CELL_CLASS}>Toplam Tahsilat</p>
+                <p className="customer-balance-amount customer-balance-blue mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
+                  {formatTreasuryCurrency(collectedTotal)}
                 </p>
               </div>
             </div>
-            <span className={`shrink-0 ${DETAIL_CELL_CLASS}`}>{statementRows.length} Kayıt</span>
-          </div>
+          </section>
 
-          <div className="mb-4 flex w-full flex-col gap-2 lg:flex-row lg:items-center">
-            <div className="flex shrink-0 items-center gap-2 px-1">
-              <span className="relative flex h-1.5 w-1.5 shrink-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
-              </span>
-              <span className={DETAIL_CELL_CLASS}>Filtre :</span>
+          <section className="space-y-4 rounded-[16px] border border-[var(--glass-border)] bg-[rgba(255,255,255,0.06)] px-3 py-3">
+            <button
+              type="button"
+              onClick={() => setCustomerScreenOpen((open) => !open)}
+              className="flex w-full items-center justify-between text-left"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--muted)]">
+                  <Monitor className="h-5 w-5" />
+                </span>
+                <h2 className={`${DETAIL_CELL_CLASS} !font-bold !text-[var(--ink)]`}>
+                  Müşteri Ekranı Ayarları
+                </h2>
+              </div>
+              <ChevronRight
+                className={`h-4 w-4 text-[var(--muted)] transition-transform ${customerScreenOpen ? '-rotate-90' : 'rotate-90'}`}
+              />
+            </button>
+
+            {customerScreenOpen && (
+              <>
+                <div className="flex gap-3 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
+                  <p className={`${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
+                    Müşteri ekranı ayarlarınızı buradan yapabilirsiniz. Değişiklikler anında
+                    kaydedilir.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="flex gap-3">
+                    <input
+                      type="checkbox"
+                      checked={portalSettings.paymentReminder}
+                      onChange={(e) => updatePortalSettings({ paymentReminder: e.target.checked })}
+                      className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
+                    />
+                    <span>
+                      <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>
+                        Ödeme Hatırlat
+                      </span>
+                      <span className={`mt-1 block ${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
+                        Müşterinize ait faturalarınızın ödemeleri, ödeme tarihinde e-posta ile
+                        hatırlatılacaktır.
+                      </span>
+                    </span>
+                  </label>
+
+                  <label className="flex gap-3">
+                    <input
+                      type="checkbox"
+                      checked={portalSettings.onlineCollection}
+                      onChange={(e) => updatePortalSettings({ onlineCollection: e.target.checked })}
+                      className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
+                    />
+                    <span>
+                      <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>
+                        Online Tahsilat
+                      </span>
+                      <span className={`mt-1 block ${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
+                        Kredi kartı ile tahsilat özelliği hazırla.
+                      </span>
+                    </span>
+                  </label>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <List className="h-4 w-4 text-[var(--muted)]" />
+                      <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>
+                        IBAN Numaralarınız
+                      </p>
+                    </div>
+                    <p className={`pl-7 ${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
+                      Paylaşabileceğiniz IBAN numarası olan hesaplarınız
+                    </p>
+                    <div className="space-y-2 pl-7">
+                      {companySettings.bankAccounts.map((account) => (
+                        <label
+                          key={account.id}
+                          className={`flex items-center gap-2 ${DETAIL_CELL_CLASS}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={portalSettings.sharedIbanIds?.includes(account.id)}
+                            onChange={(e) => {
+                              const ids = new Set(portalSettings.sharedIbanIds || [])
+                              if (e.target.checked) ids.add(account.id)
+                              else ids.delete(account.id)
+                              updatePortalSettings({ sharedIbanIds: [...ids] })
+                            }}
+                            className="h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
+                          />
+                          {account.bankName} · {account.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Users className="h-4 w-4 text-[var(--muted)]" />
+                      <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>
+                        Erişimi Olan Kişiler
+                      </p>
+                    </div>
+                    {(portalSettings.accessEmails || []).map((email) => (
+                      <div
+                        key={email}
+                        className="flex items-center justify-between rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2"
+                      >
+                        <span className={`${DETAIL_CELL_CLASS} !font-bold`}>{email}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updatePortalSettings({
+                              accessEmails: portalSettings.accessEmails.filter(
+                                (item) => item !== email,
+                              ),
+                            })
+                          }
+                          className="text-[var(--muted)] hover:text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <input
+                      type="email"
+                      placeholder="E-posta ekle..."
+                      className="form-input"
+                      data-no-autocap
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter') return
+                        event.preventDefault()
+                        const value = event.currentTarget.value.trim()
+                        if (!value) return
+                        const emails = new Set(portalSettings.accessEmails || [])
+                        emails.add(value)
+                        updatePortalSettings({ accessEmails: [...emails] })
+                        event.currentTarget.value = ''
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4">
+                  <div className="flex items-center gap-2">
+                    <Link2 className="h-4 w-4 text-blue-600" />
+                    <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase !text-blue-600`}>
+                      B2B Müşteri Paneli
+                    </p>
+                  </div>
+                  <p className={`${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
+                    Müşterinize özel panel linki ile cari hareketler, ürünler, sipariş ve üretim
+                    takibini paylaşın.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={toggleB2bAccess}
+                    className={`rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${
+                      b2bAccess?.enabled
+                        ? 'border border-red-500/30 bg-red-500/10 text-red-600 hover:bg-red-500/20'
+                        : 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20'
+                    }`}
+                  >
+                    {b2bAccess?.enabled ? 'B2B Erişimini Kapat' : 'B2B Erişimi Ver'}
+                  </button>
+                  {b2bAccess?.enabled && b2bAccess.accessToken && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                        <p className={`min-w-0 flex-1 truncate ${DETAIL_CELL_CLASS}`}>
+                          {getPortalUrl(b2bAccess.accessToken)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={copyPortalLink}
+                          className="shrink-0 text-[var(--muted)] hover:text-[var(--ink)]"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </button>
+                        <a
+                          href={getPortalUrl(b2bAccess.accessToken)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="shrink-0 text-[var(--muted)] hover:text-[var(--ink)]"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </div>
+                      {linkCopied && (
+                        <p className={`${DETAIL_CELL_CLASS} !font-bold !text-emerald-600`}>
+                          Link kopyalandı
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </section>
+        </div>
+      </AppPagePanel>
+
+      <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-[16rem] flex-1">
+              <p className={`mb-1.5 ${DETAIL_CELL_CLASS}`}>Başlangıç / Bitiş Tarihi</p>
+              <DateRangePicker
+                dateFrom={ledgerDateFrom}
+                dateTo={ledgerDateTo}
+                includeTime={false}
+                showTimeInLabel={false}
+                dateLabelFormat="numeric"
+                onChange={(value) => {
+                  setLedgerDateFrom(value.dateFrom || '')
+                  setLedgerDateTo(value.dateTo || '')
+                }}
+              />
             </div>
-            <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className={DETAIL_FILTER_FIELD_CLASS}>
-                <p className={DETAIL_FILTER_LABEL_CLASS}>Tipi :</p>
-                <EditableDropdownPill
-                  value={selectedCustomerType}
-                  options={optionLists.type}
-                  onOptionsChange={(next) => updateOptionList('type', next)}
-                  buttonClassName={DETAIL_FILTER_PILL_CLASS}
-                  menuClassName={DETAIL_FILTER_MENU_CLASS}
-                  openKey="customer-type"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateMeta('type', value)}
-                />
-              </div>
-              <div className={DETAIL_FILTER_FIELD_CLASS}>
-                <p className={DETAIL_FILTER_LABEL_CLASS}>Temsilci :</p>
-                <EditableDropdownPill
-                  value={selectedRepresentative}
-                  options={optionLists.representative}
-                  onOptionsChange={(next) => updateOptionList('representative', next)}
-                  buttonClassName={DETAIL_FILTER_PILL_CLASS}
-                  menuClassName={DETAIL_FILTER_MENU_CLASS}
-                  openKey="customer-representative"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateMeta('representative', value)}
-                />
-              </div>
-              <div className={DETAIL_FILTER_FIELD_CLASS}>
-                <p className={DETAIL_FILTER_LABEL_CLASS}>Puantaj :</p>
-                <EditableDropdownPill
-                  value={selectedScoring}
-                  options={optionLists.scoring}
-                  onOptionsChange={(next) => updateOptionList('scoring', next)}
-                  buttonClassName={DETAIL_FILTER_PILL_CLASS}
-                  menuClassName={DETAIL_FILTER_MENU_CLASS}
-                  openKey="customer-scoring"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateMeta('scoring', value)}
-                />
-              </div>
-              <div className={DETAIL_FILTER_FIELD_CLASS}>
-                <p className={DETAIL_FILTER_LABEL_CLASS}>Kategori :</p>
-                <EditableDropdownPill
-                  value={selectedCategory}
-                  options={optionLists.category}
-                  onOptionsChange={(next) => updateOptionList('category', next)}
-                  buttonClassName={DETAIL_FILTER_PILL_CLASS}
-                  menuClassName={DETAIL_FILTER_MENU_CLASS}
-                  openKey="customer-category"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateMeta('category', value)}
-                />
-              </div>
-            </div>
+            <p className={`shrink-0 ${DETAIL_CELL_CLASS}`}>
+              {filteredStatementRows.length} Kayıt
+            </p>
           </div>
 
           <div
             className={`${STATEMENT_GRID_CLASS} border-b border-[var(--glass-border)] px-1 py-2 ${DETAIL_TABLE_HEADER_CLASS}`}
           >
-            <span>İşlem Türü</span>
-            <span>İşlem Yeri</span>
-            <span>Açıklama</span>
-            <span>İşlem Tarihi</span>
-            <span className="text-right">Meblağ</span>
-            <span className="text-right">Bakiye</span>
+            <span>{'İşlem Türü'.toLocaleUpperCase('tr-TR')}</span>
+            <span>{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
+            <span>{'Açıklama'.toLocaleUpperCase('tr-TR')}</span>
+            <span>{'İşlem Tarihi'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="text-right">{'Meblağ'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="text-right">{'Bakiye'.toLocaleUpperCase('tr-TR')}</span>
           </div>
 
           <div className="divide-y divide-[var(--glass-border)]">
-            {statementRows.length === 0 ? (
+            {filteredStatementRows.length === 0 ? (
               <p className="px-1 py-8 text-center text-[12px] font-normal text-[var(--muted)]">
                 Hareket kaydı yok.
               </p>
             ) : (
-              statementRows.map((row) => (
+              filteredStatementRows.map((row) => (
                 <div
                   key={row.id}
                   role="button"
@@ -679,8 +935,8 @@ export default function CustomerDetailPage() {
 
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
             <p className={DETAIL_CELL_CLASS}>
-              {statementRows.length
-                ? `${statementRows.length} kayıttan 1-${statementRows.length} arası gösteriliyor.`
+              {filteredStatementRows.length
+                ? `${filteredStatementRows.length} kayıttan 1-${filteredStatementRows.length} arası gösteriliyor.`
                 : 'Kayıt yok.'}
             </p>
             <button
@@ -691,309 +947,7 @@ export default function CustomerDetailPage() {
               <span className={YF_TEXT_ON_COLOR_CLASS}>Dışarı Aktar</span>
             </button>
           </div>
-        </AppPagePanel>
-
-        <aside className="space-y-4">
-          <section className="card space-y-3">
-            <button
-              type="button"
-              onClick={() => {
-                setCollectionOpen((open) => !open)
-                setPaymentOpen(false)
-              }}
-              className={TAHSILAT_BTN}
-            >
-              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                <CheckCircle2 className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
-              </span>
-              <span className={YF_TEXT_ON_COLOR_CLASS}>Tahsilat Ekle</span>
-            </button>
-
-            {collectionOpen && (
-              <CustomerMovementForm
-                variant="tahsilat"
-                form={collectionForm}
-                onUpdate={updateCollection}
-                onSubmit={submitCollection}
-                onCancel={() => {
-                  setCollectionForm(emptyCollectionForm(accounts, optionLists))
-                  setCollectionOpen(false)
-                }}
-                cashAccountOptions={movementAccounts.cash}
-                bankAccountOptions={movementAccounts.bank}
-                chequeAccountOptions={movementAccounts.cheque}
-                onCashOptionsChange={(next) => updateOptionList('cashAccount', next)}
-                onBankOptionsChange={(next) => updateOptionList('bankAccount', next)}
-                onChequeOptionsChange={(next) => updateOptionList('chequeAccount', next)}
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-              />
-            )}
-
-            <button
-              type="button"
-              onClick={() => {
-                setPaymentOpen((open) => !open)
-                setCollectionOpen(false)
-              }}
-              className={ODEME_BTN}
-            >
-              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                <Upload className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
-              </span>
-              <span className={YF_TEXT_ON_COLOR_CLASS}>Ödeme Ekle</span>
-            </button>
-
-            {paymentOpen && (
-              <CustomerMovementForm
-                variant="odeme"
-                form={paymentForm}
-                onUpdate={updatePayment}
-                onSubmit={submitPayment}
-                onCancel={() => {
-                  setPaymentForm(emptyCollectionForm(accounts, optionLists))
-                  setPaymentOpen(false)
-                }}
-                cashAccountOptions={movementAccounts.cash}
-                bankAccountOptions={movementAccounts.bank}
-                chequeAccountOptions={movementAccounts.cheque}
-                onCashOptionsChange={(next) => updateOptionList('cashAccount', next)}
-                onBankOptionsChange={(next) => updateOptionList('bankAccount', next)}
-                onChequeOptionsChange={(next) => updateOptionList('chequeAccount', next)}
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-              />
-            )}
-
-            <div className="space-y-2">
-              <div className="glass-inset rounded-xl px-3 py-2.5">
-                <p className={DETAIL_CELL_CLASS}>Kalan Bakiye</p>
-                <p
-                  className={`mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceTone(currentBalance)}`}
-                >
-                  {formatTreasuryCurrency(currentBalance)}
-                </p>
-              </div>
-              <div className="glass-inset rounded-xl px-3 py-2.5">
-                <p className={DETAIL_CELL_CLASS}>Gecikmiş Tahsilat</p>
-                <p className="customer-balance-negative mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
-                  {formatTreasuryCurrency(overdueCollection)}
-                </p>
-              </div>
-              <div className="glass-inset rounded-xl px-3 py-2.5">
-                <p className={DETAIL_CELL_CLASS}>Toplam Tahsilat</p>
-                <p className="customer-balance-positive mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
-                  {formatTreasuryCurrency(collectedTotal)}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleDownloadStatementPdf}
-              className={`${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.violet}`}
-            >
-              <span className={YF_TEXT_ON_COLOR_CLASS}>Ekstre Gönder</span>
-            </button>
-          </section>
-
-          <section className="card space-y-5 bg-dark-800/80">
-            <button
-              type="button"
-              onClick={() => setCustomerScreenOpen((open) => !open)}
-              className="flex w-full items-center justify-between text-left"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-500/50 bg-dark-700/70 text-gray-400">
-                  <Monitor className="h-5 w-5" />
-                </span>
-                <h2 className="text-base font-black text-white">Müşteri Ekranı Ayarları</h2>
-              </div>
-              <ChevronRight
-                className={`h-4 w-4 text-gray-500 transition-transform ${customerScreenOpen ? '-rotate-90' : 'rotate-90'}`}
-              />
-            </button>
-
-            {customerScreenOpen && (
-              <>
-                <div className="flex gap-3 rounded-2xl border border-dark-500/35 bg-dark-700/30 p-3">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                  <p className="text-xs font-semibold leading-5 text-gray-400">
-                    Müşteri ekranı ayarlarınızı buradan yapabilirsiniz. Değişiklikler anında
-                    kaydedilir.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="flex gap-3">
-                    <input
-                      type="checkbox"
-                      checked={portalSettings.paymentReminder}
-                      onChange={(e) => updatePortalSettings({ paymentReminder: e.target.checked })}
-                      className="mt-1 h-4 w-4 shrink-0 rounded border-dark-500 bg-dark-700 accent-blue-500"
-                    />
-                    <span>
-                      <span className="block text-xs font-black uppercase tracking-wide text-gray-300">
-                        Ödeme Hatırlat
-                      </span>
-                      <span className="mt-1 block text-xs font-semibold leading-5 text-gray-500">
-                        Müşterinize ait faturalarınızın ödemeleri, ödeme tarihinde e-posta ile
-                        hatırlatılacaktır.
-                      </span>
-                    </span>
-                  </label>
-
-                  <label className="flex gap-3">
-                    <input
-                      type="checkbox"
-                      checked={portalSettings.onlineCollection}
-                      onChange={(e) => updatePortalSettings({ onlineCollection: e.target.checked })}
-                      className="mt-1 h-4 w-4 shrink-0 rounded border-dark-500 bg-dark-700 accent-blue-500"
-                    />
-                    <span>
-                      <span className="block text-xs font-black uppercase tracking-wide text-gray-300">
-                        Online Tahsilat
-                      </span>
-                      <span className="mt-1 block text-xs font-semibold leading-5 text-gray-500">
-                        Kredi kartı ile tahsilat özelliği hazırla.
-                      </span>
-                    </span>
-                  </label>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <List className="h-4 w-4 text-gray-500" />
-                      <p className="text-xs font-black uppercase tracking-wide text-gray-300">
-                        IBAN Numaralarınız
-                      </p>
-                    </div>
-                    <p className="pl-7 text-xs font-semibold leading-5 text-gray-500">
-                      Paylaşabileceğiniz IBAN numarası olan hesaplarınız
-                    </p>
-                    <div className="space-y-2 pl-7">
-                      {companySettings.bankAccounts.map((account) => (
-                        <label
-                          key={account.id}
-                          className="flex items-center gap-2 text-xs font-semibold text-gray-400"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={portalSettings.sharedIbanIds?.includes(account.id)}
-                            onChange={(e) => {
-                              const ids = new Set(portalSettings.sharedIbanIds || [])
-                              if (e.target.checked) ids.add(account.id)
-                              else ids.delete(account.id)
-                              updatePortalSettings({ sharedIbanIds: [...ids] })
-                            }}
-                            className="h-4 w-4 shrink-0 rounded border-dark-500 bg-dark-700 accent-blue-500"
-                          />
-                          {account.bankName} · {account.label}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Users className="h-4 w-4 text-gray-500" />
-                      <p className="text-xs font-black uppercase tracking-wide text-gray-300">
-                        Erişimi Olan Kişiler
-                      </p>
-                    </div>
-                    {(portalSettings.accessEmails || []).map((email) => (
-                      <div
-                        key={email}
-                        className="flex items-center justify-between rounded-full border border-dark-500/35 bg-dark-700/60 px-3 py-2 text-xs font-bold text-gray-300"
-                      >
-                        <span>{email}</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updatePortalSettings({
-                              accessEmails: portalSettings.accessEmails.filter(
-                                (item) => item !== email,
-                              ),
-                            })
-                          }
-                          className="text-gray-500 hover:text-red-300"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                    <input
-                      type="email"
-                      placeholder="E-posta ekle..."
-                      className="form-input"
-                      data-no-autocap
-                      onKeyDown={(event) => {
-                        if (event.key !== 'Enter') return
-                        event.preventDefault()
-                        const value = event.currentTarget.value.trim()
-                        if (!value) return
-                        const emails = new Set(portalSettings.accessEmails || [])
-                        emails.add(value)
-                        updatePortalSettings({ accessEmails: [...emails] })
-                        event.currentTarget.value = ''
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Link2 className="h-4 w-4 text-blue-300" />
-                    <p className="text-xs font-black uppercase tracking-wide text-blue-300">
-                      B2B Müşteri Paneli
-                    </p>
-                  </div>
-                  <p className="text-xs font-semibold leading-5 text-gray-400">
-                    Müşterinize özel panel linki ile cari hareketler, ürünler, sipariş ve üretim
-                    takibini paylaşın.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={toggleB2bAccess}
-                    className={`rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wide transition-colors ${
-                      b2bAccess?.enabled
-                        ? 'border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20'
-                        : 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
-                    }`}
-                  >
-                    {b2bAccess?.enabled ? 'B2B Erişimini Kapat' : 'B2B Erişimi Ver'}
-                  </button>
-                  {b2bAccess?.enabled && b2bAccess.accessToken && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 rounded-xl border border-dark-500/45 bg-dark-800/80 px-3 py-2">
-                        <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-400">
-                          {getPortalUrl(b2bAccess.accessToken)}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={copyPortalLink}
-                          className="shrink-0 text-gray-400 hover:text-white"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </button>
-                        <a
-                          href={getPortalUrl(b2bAccess.accessToken)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="shrink-0 text-gray-400 hover:text-white"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </div>
-                      {linkCopied && (
-                        <p className="text-[13px] font-bold text-emerald-300">Link kopyalandı</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </section>
-        </aside>
-      </div>
+      </AppPagePanel>
 
       <CustomerStockPanel customer={customer} />
 
