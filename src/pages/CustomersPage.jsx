@@ -496,6 +496,7 @@ export default function CustomersPage({
           headerClassName={CUSTOMER_TABLE_HEADER_CLASS}
           mobileHeaderClassName={CUSTOMER_TABLE_HEADER_CLASS}
           data={filteredCustomers}
+          defaultSort={{ key: 'balance', dir: 'desc' }}
           getRowId={(customer) => customer.id}
           onRowClick={(customer) => navigate(`/musteriler/${customer.id}`)}
           columns={[

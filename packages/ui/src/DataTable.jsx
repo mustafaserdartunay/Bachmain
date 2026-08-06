@@ -46,8 +46,13 @@ export function DataTable({
   onRowClick,
   headerClassName = DEFAULT_TH_CLASS,
   mobileHeaderClassName = DEFAULT_MOBILE_HEADER_CLASS,
+  /** İlk açılış / yeni oturum sıralaması — örn. { key: 'balance', dir: 'desc' } */
+  defaultSort = { key: null, dir: 'asc' },
 }) {
-  const [sort, setSort] = useState({ key: null, dir: 'asc' })
+  const [sort, setSort] = useState(() => ({
+    key: defaultSort?.key ?? null,
+    dir: defaultSort?.dir === 'desc' ? 'desc' : 'asc',
+  }))
   const rows = useMemo(() => sortRows(data, sort, columns), [columns, data, sort])
 
   function toggleSort(key) {
