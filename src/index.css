@@ -1273,6 +1273,15 @@ textarea:not(.form-input)::placeholder {
   color: var(--muted) !important;
 }
 
+/* Toplu sil CTA — panel yf rengi ezmesin; yazı + ikon beyaz kalsın */
+.page-type-shell .customer-list-panel button.customer-bulk-delete-action,
+.customers-page-type .customer-list-panel button.customer-bulk-delete-action,
+.page-type-shell .customer-list-panel button.customer-bulk-delete-action svg,
+.customers-page-type .customer-list-panel button.customer-bulk-delete-action svg {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
 .customers-page-type .customer-page-back-link-icon,
 .customers-page-type .customer-page-back-link svg,
 .customers-page-type .customer-summary-metrics svg {
