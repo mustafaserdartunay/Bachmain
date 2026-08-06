@@ -1,4 +1,4 @@
-import { useNavigate, Navigate, useParams } from 'react-router-dom'
+import { useNavigate, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   AppointmentFormModal,
   emptyAppointmentForm,
@@ -17,6 +17,8 @@ import {
   upsertAppointment,
   upsertTask,
 } from '../utils/crmStore'
+import { findCustomerProfile } from '../data/customerProfiles'
+import { getCustomerDisplay } from '../utils/customerDisplay'
 
 const CREATE_CONFIG = {
   task: {
@@ -54,9 +56,24 @@ const CREATE_CONFIG = {
   },
 }
 
+function customerPrefill(type, customerId) {
+  if (!customerId) return {}
+  const customer = findCustomerProfile(customerId)
+  if (!customer) return {}
+  const display = getCustomerDisplay(customer)
+  const label =
+    display.companyTitle || display.brandShortName || customer.company || customer.name || ''
+  if (!label) return {}
+  if (type === 'note') {
+    return { title: label }
+  }
+  return { customer: label }
+}
+
 export default function CrmCreatePage({ type }) {
   const navigate = useNavigate()
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
   const config = CREATE_CONFIG[type]
 
   if (!config) return <Navigate to="/crm" replace />
@@ -64,7 +81,12 @@ export default function CrmCreatePage({ type }) {
   const FormComponent = config.Form
   const listPath = config.listPath || '/crm'
   const editRecord = id ? config.load().find((item) => item.id === id) : null
-  const initialForm = editRecord ? config.normalize(editRecord) : config.initial()
+  const initialForm = editRecord
+    ? config.normalize(editRecord)
+    : {
+        ...config.initial(),
+        ...customerPrefill(type, searchParams.get('customerId')),
+      }
 
   if (id && !editRecord) return <Navigate to={listPath} replace />
 

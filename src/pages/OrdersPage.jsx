@@ -51,7 +51,7 @@ import ProcessPanelModule from '../components/DocumentEditor/ProcessPanelModule'
 import { stageColors, getStageColumnSurfaceClasses } from '../components/DocumentEditor/stageColors'
 import RepresentativeEditor from '../components/DocumentEditor/RepresentativeEditor'
 import { formatTL } from '../utils/productPricing'
-import { getListCustomerDisplay } from '../data/customerProfiles'
+import { getListCustomerDisplay, findCustomerProfile } from '../data/customerProfiles'
 import { getCatalogProducts } from '../utils/productCatalog'
 import {
   cancelOrderFromQuote,
@@ -433,8 +433,13 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (searchParams.get('yeni') !== '1') return
+    const customerId = searchParams.get('customerId')
+    const customer = customerId ? findCustomerProfile(customerId) : null
     const freshOrders = loadOrders()
-    const next = createOrderDraft(freshOrders)
+    const next = {
+      ...createOrderDraft(freshOrders),
+      ...customerToDocumentPatch(customer),
+    }
     setOrders(freshOrders)
     setDraftOrder(next)
     setSelectedId(next.id)

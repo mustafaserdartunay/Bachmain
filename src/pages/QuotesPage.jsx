@@ -50,7 +50,7 @@ import {
 import EditableDropdownPill from '../components/EditableDropdownPill'
 import { defaultQuoteStages, initialQuotes } from '../data/quotesData'
 import { customers as customerData } from '../data/mockData'
-import { getListCustomerDisplay } from '../data/customerProfiles'
+import { getListCustomerDisplay, findCustomerProfile } from '../data/customerProfiles'
 import { vatRates } from '../data/productsData'
 import { getCatalogProducts } from '../utils/productCatalog'
 import { createOrderFromQuote, loadOrders, updateOrder } from '../utils/ordersStore'
@@ -1616,8 +1616,13 @@ export default function QuotesPage() {
 
   useEffect(() => {
     if (searchParams.get('yeni') !== '1') return
+    const customerId = searchParams.get('customerId')
+    const customer = customerId ? findCustomerProfile(customerId) : null
     const freshQuotes = loadQuotes()
-    const next = createQuoteDraft(freshQuotes)
+    const next = {
+      ...createQuoteDraft(freshQuotes),
+      ...customerToDocumentPatch(customer),
+    }
     setQuotes(freshQuotes)
     setDraftQuote(next)
     setSelectedId(next.id)

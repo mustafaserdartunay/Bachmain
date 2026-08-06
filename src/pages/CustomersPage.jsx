@@ -1,13 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  Calendar,
   CheckCircle2,
+  CheckSquare,
+  ClipboardList,
   Copy,
   Eye,
+  FileText,
   Handshake,
+  Inbox,
   Link2,
   Mail,
+  NotebookPen,
   Pencil,
+  ScrollText,
   Trash2,
+  Truck,
   Users,
   WalletCards,
 } from 'lucide-react'
@@ -744,20 +752,85 @@ export default function CustomersPage({
               ? undefined
               : (customer) => {
                   const portalAccess = b2bMap[customer.id]
+                  const id = customer.id
                   return [
                     {
                       id: 'edit',
                       label: 'Düzenle',
                       icon: Pencil,
                       tone: 'primary',
-                      onClick: () => navigate(`/musteriler/${customer.id}`),
+                      onClick: () => navigate(`/musteriler/${id}`),
+                    },
+                    {
+                      id: 'new-invoice',
+                      label: 'Yeni fatura kes',
+                      icon: FileText,
+                      tone: 'primary',
+                      onClick: () => navigate(`/musteriler/${id}/belge/satis-faturasi`),
+                    },
+                    {
+                      id: 'incoming-invoice',
+                      label: 'Gelen fatura',
+                      icon: Inbox,
+                      tone: 'primary',
+                      onClick: () => navigate(`/musteriler/${id}/belge/alis-faturasi`),
+                    },
+                    {
+                      id: 'new-quote',
+                      label: 'Yeni teklif oluştur',
+                      icon: ScrollText,
+                      tone: 'primary',
+                      onClick: () =>
+                        navigate(`/teklifler?yeni=1&customerId=${encodeURIComponent(id)}`),
+                    },
+                    {
+                      id: 'new-order',
+                      label: 'Yeni sipariş oluştur',
+                      icon: ClipboardList,
+                      tone: 'primary',
+                      onClick: () =>
+                        navigate(`/siparisler?yeni=1&customerId=${encodeURIComponent(id)}`),
+                    },
+                    {
+                      id: 'new-note',
+                      label: 'Yeni not oluştur',
+                      icon: NotebookPen,
+                      tone: 'primary',
+                      onClick: () =>
+                        navigate(`/crm/not-yeni?customerId=${encodeURIComponent(id)}`),
+                    },
+                    {
+                      id: 'new-task',
+                      label: 'Yeni görev oluştur',
+                      icon: CheckSquare,
+                      tone: 'primary',
+                      onClick: () =>
+                        navigate(`/crm/gorev-yeni?customerId=${encodeURIComponent(id)}`),
+                    },
+                    {
+                      id: 'new-appointment',
+                      label: 'Yeni randevu oluştur',
+                      icon: Calendar,
+                      tone: 'primary',
+                      onClick: () =>
+                        navigate(`/crm/randevu-yeni?customerId=${encodeURIComponent(id)}`),
+                    },
+                    {
+                      id: 'new-shipment',
+                      label: 'Yeni sevkiyat oluştur',
+                      icon: Truck,
+                      tone: 'primary',
+                      onClick: () =>
+                        navigate(
+                          `/lojistik/yukleme-plani?customerId=${encodeURIComponent(id)}`,
+                        ),
                     },
                     {
                       id: 'delete',
                       label: 'Sil',
                       icon: Trash2,
                       tone: 'danger',
-                      onClick: () => setPendingDeleteCustomerId(customer.id),
+                      onClick: () => setPendingDeleteCustomerId(id),
                     },
                     {
                       id: portalAccess?.enabled ? 'invite' : 'grant',

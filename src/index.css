@@ -1252,6 +1252,12 @@ textarea:not(.form-input)::placeholder {
   --customers-type-leading: 1.25;
 }
 
+/* Uzun satır menüleri kaydırılabilir olsun */
+.app-dropdown-portal.customers-page-menu {
+  max-height: min(70vh, 28rem);
+  overflow-y: auto;
+}
+
 .page-type-shell :where(h1, h2, h3, p, span, button, a, th, td, label, input, select, textarea),
 .customers-page-type :where(h1, h2, h3, p, span, button, a, th, td, label, input, select, textarea),
 .customers-page-menu :where(button, span, p, input, label, a),
