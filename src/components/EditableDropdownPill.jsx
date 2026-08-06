@@ -12,6 +12,7 @@ import {
   KALEM_BUTTON_CLASS,
   KALEM_ICON_CLASS,
 } from '../utils/buttonStyles'
+import { PAGE_FILTER_MENU_CLASS } from '../utils/dashboardDesign'
 import { OPTION_COLOR_PALETTE } from '../utils/customerMeta'
 
 const DEFAULT_BUTTON_CLASS =
@@ -68,7 +69,7 @@ export default function EditableDropdownPill({
   disabled = false,
   buttonClassName = DEFAULT_BUTTON_CLASS,
   wrapperClassName = 'relative min-w-0 w-full',
-  menuClassName = '',
+  menuClassName = PAGE_FILTER_MENU_CLASS,
   menuVariant = 'dark',
   menuMatchWidth = true,
   menuInline = false,
@@ -185,7 +186,7 @@ export default function EditableDropdownPill({
     ? hasSelection
       ? 'text-[var(--text-strong)]'
       : 'text-[var(--text-muted)]'
-    : 'text-[12px] font-normal leading-tight text-[var(--muted)]'
+    : 'text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]'
   const lightMenuShell =
     'z-30 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1.5 shadow-[var(--shadow)]'
   const menuPositionClass =
@@ -212,7 +213,7 @@ export default function EditableDropdownPill({
 
   const optionButtonClass = isLightMenu
     ? 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold text-[var(--text-strong)]'
-    : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-normal leading-tight text-[var(--muted)]'
+    : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]'
   const placeholderButtonClass = isLightMenu
     ? `${optionButtonClass} origin-left text-[var(--text-muted)] transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
     : `${optionButtonClass} origin-left transition-[transform,font-weight] hover:scale-[1.03] hover:font-bold hover:bg-transparent`
@@ -344,7 +345,9 @@ export default function EditableDropdownPill({
             ),
           )}
           {visibleOptions.length === 0 && (
-            <p className="px-3 py-2 text-xs font-bold text-[var(--muted)]">Sonuç bulunamadı.</p>
+            <p className="px-3 py-2 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+              Sonuç bulunamadı.
+            </p>
           )}
         </div>
 
@@ -401,7 +404,7 @@ export default function EditableDropdownPill({
                   setNewColor(COLOR_PALETTE[options.length % COLOR_PALETTE.length])
                   setAdding(true)
                 }}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-semibold leading-tight text-blue-600 transition-colors hover:bg-[rgba(37,99,235,0.1)]"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-semibold leading-tight tracking-normal text-blue-600 transition-colors hover:bg-[rgba(37,99,235,0.1)]"
               >
                 <Plus className="h-4 w-4" /> Ekle
               </button>
