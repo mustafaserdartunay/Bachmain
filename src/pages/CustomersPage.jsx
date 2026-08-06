@@ -504,6 +504,10 @@ export default function CustomersPage({
               header: String(columnLabel || '').toLocaleUpperCase('tr-TR'),
               sortable: true,
               accessorKey: 'name',
+              getSortValue: (customer) => {
+                const display = getCustomerDisplay(customer)
+                return display.brandShortName || display.companyTitle || customer.name || ''
+              },
               className: 'min-w-[18rem] w-[44%]',
               cell: (customer) => {
                 const display = getCustomerDisplay(customer)
@@ -609,6 +613,8 @@ export default function CustomersPage({
               id: 'balance',
               header: 'GÜNCEL BAKİYE',
               sortable: true,
+              accessorKey: 'balance',
+              getSortValue: (customer) => currentBalance(customer, movements),
               className: 'w-[1%] whitespace-nowrap text-right',
               cell: (customer) => {
                 const balance = currentBalance(customer, movements)

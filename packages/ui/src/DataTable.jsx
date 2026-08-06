@@ -4,24 +4,30 @@ import { MoreMenu } from './MoreMenu'
 import { EmptyState } from './States'
 import { Tooltip } from './Tooltip'
 
-function sortRows(rows, sort) {
+function getSortValue(row, sort, columns = []) {
+  const col = columns.find((column) => (column.accessorKey || column.id) === sort.key)
+  if (typeof col?.getSortValue === 'function') return col.getSortValue(row)
+  return row[sort.key]
+}
+
+function sortRows(rows, sort, columns = []) {
   if (!sort?.key) return rows
   const dir = sort.dir === 'desc' ? -1 : 1
   return [...rows].sort((a, b) => {
-    const av = a[sort.key]
-    const bv = b[sort.key]
+    const av = getSortValue(a, sort, columns)
+    const bv = getSortValue(b, sort, columns)
     if (av == null && bv == null) return 0
     if (av == null) return 1
     if (bv == null) return -1
     if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir
-    return String(av).localeCompare(String(bv), 'tr') * dir
+    return String(av).localeCompare(String(bv), 'tr', { sensitivity: 'base' }) * dir
   })
 }
 
 /**
  * Adaptive DataTable — desktop grid, mobile cards, MoreMenu actions.
  *
- * columns: [{ id, header, accessorKey?, cell?, sortable?, hideOnMobile?, className? }]
+ * columns: [{ id, header, accessorKey?, cell?, sortable?, getSortValue?, hideOnMobile?, className? }]
  * getRowActions?: (row) => MoreMenu items
  */
 const DEFAULT_TH_CLASS =
@@ -42,13 +48,12 @@ export function DataTable({
   mobileHeaderClassName = DEFAULT_MOBILE_HEADER_CLASS,
 }) {
   const [sort, setSort] = useState({ key: null, dir: 'asc' })
-  const rows = useMemo(() => sortRows(data, sort), [data, sort])
+  const rows = useMemo(() => sortRows(data, sort, columns), [columns, data, sort])
 
   function toggleSort(key) {
     setSort((current) => {
       if (current.key !== key) return { key, dir: 'asc' }
-      if (current.dir === 'asc') return { key, dir: 'desc' }
-      return { key: null, dir: 'asc' }
+      return { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
     })
   }
 
