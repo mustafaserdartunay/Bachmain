@@ -29,6 +29,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { AppPageBackLink, AppPageHeader } from '../components/Layout/AppPageLayout'
 import {
   PAGE_CENTER_TITLE_CLASS,
+  PAGE_HEADER_SHELL_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
   YF_TEXT_CLASS,
   YF_TEXT_ON_COLOR_CLASS,
@@ -255,8 +256,8 @@ function initialAddressRows(customer, draft) {
   ]
 }
 
-/** Kaydetme geri bildiriminin ("Kaydediliyor…") görünür kaldığı en kısa süre. */
-const SAVE_FEEDBACK_MS = 700
+/** Kaydetme geri bildiriminin ("Kaydedildi") başlık panelinde kaldığı süre. */
+const SAVE_FEEDBACK_MS = 1000
 
 function formatDateTime() {
   return new Date().toLocaleString('tr-TR', {
@@ -400,7 +401,7 @@ export default function CustomerCreatePage() {
   function showSavedMessage() {
     if (successTimer.current) clearTimeout(successTimer.current)
     setSuccessVisible(true)
-    successTimer.current = setTimeout(() => setSuccessVisible(false), 2000)
+    successTimer.current = setTimeout(() => setSuccessVisible(false), SAVE_FEEDBACK_MS)
   }
 
   function saveDraft(payload) {
@@ -657,12 +658,6 @@ export default function CustomerCreatePage() {
       onSubmit={collectAndSave}
       className="space-y-5"
     >
-      {successVisible && (
-        <div className="fixed right-6 top-20 z-[80] rounded-2xl border border-emerald-500/30 bg-emerald-500/15 px-5 py-3 text-sm font-black text-emerald-300 shadow-2xl shadow-emerald-950/20">
-          Düzenlemeler kaydedildi
-        </div>
-      )}
-
       <ConfirmModal
         open={Boolean(duplicatePrompt)}
         title="Olası çift kayıt"
@@ -674,21 +669,33 @@ export default function CustomerCreatePage() {
       />
 
       <div className="space-y-5">
-        <AppPageHeader
-          showBack={false}
-          title={
-            <AppPageBackLink to={backPath} label={isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'} />
-          }
-          centerTitle={String(pageHeading || '').toLocaleUpperCase('tr-TR')}
-          centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
-          titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
-          actions={
-            <div className="relative flex items-center gap-2.5 bg-transparent">
-              <CancelCta onClick={() => navigate(cancelPath)} />
-              <SaveSplitAction onSaveAndContinue={saveAndContinue} saving={saving} />
-            </div>
-          }
-        />
+        {successVisible ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`${PAGE_HEADER_SHELL_CLASS} app-page-header-saved justify-center`}
+          >
+            <p className="pointer-events-none text-center text-[14px] font-bold leading-tight tracking-normal text-white">
+              Kaydedildi
+            </p>
+          </div>
+        ) : (
+          <AppPageHeader
+            showBack={false}
+            title={
+              <AppPageBackLink to={backPath} label={isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'} />
+            }
+            centerTitle={String(pageHeading || '').toLocaleUpperCase('tr-TR')}
+            centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+            titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+            actions={
+              <div className="relative flex items-center gap-2.5 bg-transparent">
+                <CancelCta onClick={() => navigate(cancelPath)} />
+                <SaveSplitAction onSaveAndContinue={saveAndContinue} saving={saving} />
+              </div>
+            }
+          />
+        )}
 
         {formNotice ? (
           <p

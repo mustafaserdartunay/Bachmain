@@ -759,6 +759,15 @@ textarea:not(.form-input)::placeholder {
   color: var(--ink);
 }
 
+/* Kaydet sonrası 1 sn flash — Kaydet CTA ile aynı yeşil gradient */
+.app-page-header.app-page-header-saved {
+  background-image: linear-gradient(to bottom right, #7cf2c6, #34d399, #10b981) !important;
+  background-color: #10b981 !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 20px -12px rgba(30, 35, 60, 0.55) !important;
+  color: #ffffff !important;
+}
+
 .app-page-back:hover {
   transform: translateX(-2px);
 }
