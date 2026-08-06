@@ -670,24 +670,26 @@ export default function CustomerDetailPage() {
               />
             )}
 
-            <div className="space-y-2">
-              <div className="glass-inset rounded-xl px-3 py-2.5 text-right">
-                <p className={DETAIL_CELL_CLASS}>Kalan Bakiye</p>
+            <div className="divide-y divide-[var(--glass-border)] border-t border-[var(--glass-border)] pt-1">
+              <div className="flex items-center justify-between gap-2 py-2.5">
+                <p className={`${DETAIL_CELL_CLASS} uppercase`}>Gecikmiş Tahsilat</p>
+                <p className="customer-balance-amount customer-balance-negative shrink-0 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
+                  {formatTreasuryCurrency(overdueCollection)}
+                </p>
+              </div>
+              <div className="flex items-center justify-between gap-2 py-2.5">
+                <p className={`${DETAIL_CELL_CLASS} uppercase`}>Kalan Bakiye</p>
                 <p
-                  className={`customer-balance-amount mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceTone(currentBalance)}`}
+                  className={`customer-balance-amount shrink-0 tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceTone(currentBalance)}`}
                 >
                   {formatTreasuryCurrency(currentBalance)}
                 </p>
               </div>
-              <div className="glass-inset rounded-xl px-3 py-2.5 text-right">
-                <p className={DETAIL_CELL_CLASS}>Gecikmiş Tahsilat</p>
-                <p className="customer-balance-amount customer-balance-negative mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
-                  {formatTreasuryCurrency(overdueCollection)}
+              <div className="flex items-center justify-between gap-2 py-2.5">
+                <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase !text-[var(--ink)]`}>
+                  Toplam Tahsilat
                 </p>
-              </div>
-              <div className="glass-inset rounded-xl px-3 py-2.5 text-right">
-                <p className={DETAIL_CELL_CLASS}>Toplam Tahsilat</p>
-                <p className="customer-balance-amount customer-balance-blue mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
+                <p className="customer-balance-amount customer-balance-blue shrink-0 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
                   {formatTreasuryCurrency(collectedTotal)}
                 </p>
               </div>
