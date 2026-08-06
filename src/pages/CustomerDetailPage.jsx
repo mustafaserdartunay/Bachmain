@@ -530,13 +530,10 @@ export default function CustomerDetailPage() {
         </div>
       ) : null}
 
-      <div className="customer-detail-main-grid grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_268px]">
-        <AppPagePanel
-          fill
-          className="customer-detail-ledger-panel flex h-full min-h-0 w-full flex-col overflow-visible"
-        >
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_268px]">
+        <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
           <div
-            className={`${STATEMENT_ROW_CLASS} shrink-0 border-b border-[var(--glass-border)] ${DETAIL_TABLE_HEADER_CLASS}`}
+            className={`${STATEMENT_ROW_CLASS} border-b border-[var(--glass-border)] ${DETAIL_TABLE_HEADER_CLASS}`}
           >
             <span className="min-w-0 truncate">{'İşlem Türü'.toLocaleUpperCase('tr-TR')}</span>
             <span className="min-w-0 truncate">{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
@@ -546,7 +543,7 @@ export default function CustomerDetailPage() {
             <span className="min-w-0 truncate text-right">{'Bakiye'.toLocaleUpperCase('tr-TR')}</span>
           </div>
 
-          <div className="customer-ledger-rows flex min-h-0 flex-1 flex-col justify-center divide-y divide-[var(--glass-border)]">
+          <div className="divide-y divide-[var(--glass-border)]">
             {statementRows.length === 0 ? (
               <p className="px-1 py-8 text-center text-[12px] font-normal text-[var(--muted)]">
                 Hareket kaydı yok.
@@ -585,7 +582,7 @@ export default function CustomerDetailPage() {
             )}
           </div>
 
-          <div className="customer-ledger-footer mt-0 flex shrink-0 items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
             <p className={DETAIL_CELL_CLASS}>
               {statementRows.length
                 ? `${statementRows.length} kayıttan 1-${statementRows.length} arası gösteriliyor.`
