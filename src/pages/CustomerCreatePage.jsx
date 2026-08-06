@@ -257,7 +257,7 @@ function initialAddressRows(customer, draft) {
 }
 
 /** Kaydetme geri bildiriminin ("Kaydedildi") başlık panelinde kaldığı süre. */
-const SAVE_FEEDBACK_MS = 1000
+const SAVE_FEEDBACK_MS = 2000
 
 function formatDateTime() {
   return new Date().toLocaleString('tr-TR', {
@@ -673,10 +673,10 @@ export default function CustomerCreatePage() {
           <div
             role="status"
             aria-live="polite"
-            className={`${PAGE_HEADER_SHELL_CLASS} app-page-header-saved justify-center`}
+            className={`${PAGE_HEADER_SHELL_CLASS} app-page-header-saved`}
           >
-            <p className="pointer-events-none text-center text-[14px] font-bold leading-tight tracking-normal text-white">
-              Kaydedildi
+            <p className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 text-center text-[22px] font-bold uppercase leading-none tracking-normal text-white">
+              {String('Kaydedildi').toLocaleUpperCase('tr-TR')}
             </p>
           </div>
         ) : (

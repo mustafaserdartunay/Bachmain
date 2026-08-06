@@ -759,13 +759,22 @@ textarea:not(.form-input)::placeholder {
   color: var(--ink);
 }
 
-/* Kaydet sonrası 1 sn flash — Kaydet CTA ile aynı yeşil gradient */
+/* Kaydet sonrası 2 sn flash — Kaydet CTA ile aynı yeşil gradient */
 .app-page-header.app-page-header-saved {
   background-image: linear-gradient(to bottom right, #7cf2c6, #34d399, #10b981) !important;
   background-color: #10b981 !important;
   border-color: transparent !important;
   box-shadow: 0 8px 20px -12px rgba(30, 35, 60, 0.55) !important;
   color: #ffffff !important;
+}
+
+.app-page-header.app-page-header-saved > p {
+  color: #ffffff !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase;
 }
 
 .app-page-back:hover {
