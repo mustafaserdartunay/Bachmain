@@ -75,6 +75,58 @@ function DeleteConfirmPanel({
   )
 }
 
+/**
+ * Sayfa / modal seviyesinde silme onayı: portal ile en üstte, üst-orta konumda.
+ * ConfirmModal yerine bu kullanılır (kırmızı gradient, minimal ölçüler).
+ */
+export function DeleteConfirmOverlay({
+  open = true,
+  title = 'Silinsin mi?',
+  description = 'Bu satır kaldırılacak.',
+  confirmLabel = 'Evet',
+  cancelLabel = 'Vazgeç',
+  onConfirm,
+  onCancel,
+}) {
+  useEffect(() => {
+    if (!open || typeof onCancel !== 'function') return undefined
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onCancel()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open, onCancel])
+
+  if (!open || typeof document === 'undefined') return null
+
+  return createPortal(
+    <div
+      className="delete-confirm-overlay delete-confirm-portal fixed inset-0 flex items-start justify-center px-4 pt-[min(18vh,7.5rem)]"
+      style={{ zIndex: DELETE_CONFIRM_Z_INDEX }}
+      role="presentation"
+      onClick={onCancel}
+    >
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={title}
+        className="w-full max-w-[min(100%,20rem)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <DeleteConfirmPanel
+          title={title}
+          description={description}
+          confirmLabel={confirmLabel}
+          cancelLabel={cancelLabel}
+          onConfirm={onConfirm}
+          onCancel={onCancel}
+        />
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
 export function DeleteConfirmPopover({
   title = 'Silinsin mi?',
   description = 'Bu satır kaldırılacak.',

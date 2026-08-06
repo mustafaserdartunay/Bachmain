@@ -33,7 +33,7 @@ import {
   GERI_YUKLE_BUTTON_CLASS,
   GERI_YUKLE_ICON_CLASS,
 } from '../../utils/buttonStyles'
-import ConfirmModal from './ConfirmModal'
+import { DeleteConfirmOverlay } from './ListDeleteConfirmPanel'
 
 function formatWhen(value) {
   if (!value) return '—'
@@ -223,12 +223,12 @@ export default function CustomerDeletedArchivedPanel({
         </div>
       ) : null}
 
-      <ConfirmModal
+      <DeleteConfirmOverlay
         open={Boolean(pendingPermanentDelete)}
         title="Kayıt kalıcı olarak silinsin mi?"
         description={`${pendingPermanentDelete?.label || 'Bu kayıt'} tüm detaylarıyla kalıcı olarak silinecek. Bu işlem geri alınamaz.`}
         confirmLabel="Evet, Sil"
-        cancelLabel="Hayır"
+        cancelLabel="Vazgeç"
         onCancel={() => setPendingPermanentDelete(null)}
         onConfirm={() => handlePermanentDelete(pendingPermanentDelete)}
       />

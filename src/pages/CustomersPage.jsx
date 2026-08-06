@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Button, DataTable, Modal } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
-import ConfirmModal from '../components/Common/ConfirmModal'
+import { DeleteConfirmOverlay } from '../components/Common/ListDeleteConfirmPanel'
 import { useNavigate } from 'react-router-dom'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import CustomerDeletedArchivedPanel from '../components/Common/CustomerDeletedArchivedPanel'
@@ -731,11 +731,12 @@ export default function CustomersPage({
         </div>
       </Modal>
 
-      <ConfirmModal
+      <DeleteConfirmOverlay
         open={Boolean(pendingDeleteCustomerId)}
         title="Müşteri silinsin mi?"
         description="Kayıt silinenler alanına taşınacak."
-        confirmLabel="Sil"
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
         onCancel={() => setPendingDeleteCustomerId(null)}
         onConfirm={() => {
           const customer = customerProfiles.find(
