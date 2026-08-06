@@ -66,7 +66,6 @@ import {
   createCustomerPayment,
 } from '../utils/treasuryStore'
 import { emptyCollectionForm, formatCollectionDate } from '../utils/customerMovementForm'
-import { appendActivity } from '../utils/customerActivity'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import {
   CUSTOMER_META_KEY,
