@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'
 import {
   Archive,
-  ArrowLeft,
   ArrowRightLeft,
   CalendarDays,
   CheckCircle2,
@@ -21,6 +20,7 @@ import {
   ListChecks,
   MessageCircle,
   Monitor,
+  Pencil,
   Phone,
   Trash2,
   Upload,
@@ -49,7 +49,35 @@ import {
   saveOptionList,
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
+import { DeleteConfirmOverlay } from '../components/Common/ListDeleteConfirmPanel'
 import CustomerMovementForm from '../components/CustomerMovementForm'
+import {
+  AppPageBackLink,
+  AppPageHeader,
+  AppPagePanel,
+  AppPageShell,
+  AppPanelDot,
+} from '../components/Layout/AppPageLayout'
+import {
+  HEADER_ACTION_CTA_CLASS,
+  HEADER_ACTION_CTA_DIVIDER_CLASS,
+  HEADER_ACTION_CTA_ICON_CLASS,
+  HEADER_ACTION_CTA_ICON_WRAP_CLASS,
+  HEADER_ACTION_CTA_SHELL_CLASS,
+  HEADER_ACTION_GRADIENTS,
+} from '../components/Layout/HeaderCashActionsPanel'
+import {
+  APP_PANEL_TITLE_CLASS,
+  PAGE_CENTER_TITLE_CLASS,
+  PAGE_FILTER_FIELD_CLASS,
+  PAGE_FILTER_LABEL_CLASS,
+  PAGE_FILTER_MENU_CLASS,
+  PAGE_FILTER_PILL_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
+  PAGE_TABLE_HEADER_CLASS,
+  YF_TEXT_CLASS,
+  YF_TEXT_ON_COLOR_CLASS,
+} from '../utils/dashboardDesign'
 import {
   ACTIVITY_USER,
   appendActivity,
@@ -78,10 +106,20 @@ import {
 } from '../utils/customerMovementForm'
 import CustomerStockPanel from '../components/Customers/CustomerStockPanel'
 
-const ACTION_BTN =
-  'flex w-full items-center justify-center gap-2 rounded-xl border border-dark-500/50 bg-gradient-to-b from-dark-700/95 to-dark-800 px-3 py-3 text-sm font-black text-gray-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all hover:border-dark-400/70 hover:text-white'
-const TAHSILAT_BTN = `${ACTION_BTN} hover:border-emerald-500/25 hover:shadow-[0_0_0_1px_rgba(16,185,129,0.12)]`
-const ODEME_BTN = `${ACTION_BTN} hover:border-teal-700/30 hover:shadow-[0_0_0_1px_rgba(45,120,130,0.15)]`
+const TAHSILAT_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.success}`
+const ODEME_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.expense}`
+const DETAIL_FILTER_FIELD_CLASS = PAGE_FILTER_FIELD_CLASS
+const DETAIL_FILTER_LABEL_CLASS = PAGE_FILTER_LABEL_CLASS
+const DETAIL_FILTER_PILL_CLASS = PAGE_FILTER_PILL_CLASS
+const DETAIL_FILTER_MENU_CLASS = PAGE_FILTER_MENU_CLASS
+const DETAIL_TABLE_HEADER_CLASS = PAGE_TABLE_HEADER_CLASS
+const DETAIL_CELL_CLASS = YF_TEXT_CLASS
+const DETAIL_MENU_CLASS =
+  'app-dropdown-portal glass-inset az min-w-[210px] rounded-[16px] p-2 customers-page-menu w-80'
+const DETAIL_MENU_ITEM_CLASS =
+  'flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[14px] font-normal leading-tight tracking-normal transition-[transform,font-weight,color] hover:scale-[1.03] hover:font-bold hover:bg-transparent'
+const STATEMENT_GRID_CLASS =
+  'grid grid-cols-[7.5rem_7.5rem_minmax(0,1fr)_7rem_6.5rem_6.5rem] items-center gap-2'
 
 const editActionGroups = [
   [
@@ -99,9 +137,9 @@ const editActionGroups = [
   ],
 ]
 function balanceTone(balance) {
-  if (balance < 0) return 'text-red-300'
-  if (balance > 0) return 'text-emerald-300'
-  return 'text-orange-300'
+  if (balance > 0) return 'customer-balance-positive'
+  if (balance < 0) return 'customer-balance-negative'
+  return 'customer-balance-zero'
 }
 
 export default function CustomerDetailPage() {
@@ -424,204 +462,196 @@ export default function CustomerDetailPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <Link
-          to="/musteriler"
-          className="absolute left-5 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Müşteriler
-        </Link>
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-            Müşteri Detayı
-          </h1>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-[minmax(0,1fr)_310px] items-start gap-4">
-        <section className="card overflow-visible p-0">
-          <div className="flex items-center justify-between border-b border-dark-500/45 px-5 py-4">
-            <div className="flex min-w-0 items-center gap-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-dark-500/45 bg-dark-700/55 text-lg font-black text-gray-300">
-                {customerDisplay.brandShortName.slice(0, 1)}
-              </div>
-              <div className="min-w-0">
-                <h2 className="truncate text-lg font-black uppercase tracking-wide text-white">
-                  {customerDisplay.brandShortName}
-                </h2>
-                <p className="mt-1 text-xs font-semibold text-gray-500">
-                  {customerDisplay.companyTitle} · {customer.city}
-                </p>
-              </div>
-            </div>
+    <AppPageShell className="customers-page-type w-full space-y-5">
+      <AppPageHeader
+        showBack={false}
+        title={<AppPageBackLink to="/musteriler" label="Müşteriler" />}
+        centerTitle={String('Müşteri Detayı').toLocaleUpperCase('tr-TR')}
+        centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+        titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+        actions={
+          <div
+            className="relative flex items-center gap-2.5 bg-transparent"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Link
+              to={`/musteri-deneyimi?tab=360&customerId=${encodeURIComponent(customer.id)}`}
+              className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.amber}`}
+            >
+              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                <Users className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+              </span>
+              <span className={YF_TEXT_ON_COLOR_CLASS}>CXC 360</span>
+            </Link>
             <div
-              className="relative flex items-center"
-              onClick={(event) => event.stopPropagation()}
+              className={`relative inline-flex overflow-hidden ${HEADER_ACTION_CTA_SHELL_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}
             >
               <Link
-                to={`/musteri-deneyimi?tab=360&customerId=${encodeURIComponent(customer.id)}`}
-                className="mr-2 flex h-10 items-center rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-[10px] font-black uppercase tracking-wide text-blue-200 transition-colors hover:bg-dark-700 hover:text-white"
-              >
-                CXC 360
-              </Link>
-              <Link
                 to={`/musteriler/yeni?edit=${customer.id}`}
-                className="flex h-10 items-center rounded-l-xl border border-dark-500/50 bg-dark-700/70 px-4 text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+                className="inline-flex h-full items-center gap-2.5 bg-transparent px-3"
               >
-                Düzenle
+                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                  <Pencil className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                </span>
+                <span className={YF_TEXT_ON_COLOR_CLASS}>Düzenle</span>
               </Link>
+              <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
               <button
                 type="button"
                 onClick={() => setActiveMenu(activeMenu === 'edit-actions' ? null : 'edit-actions')}
-                className="flex h-10 w-12 items-center justify-center rounded-r-xl border border-l-0 border-dark-500/50 bg-dark-700/70 text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
+                className="inline-flex h-full w-12 items-center justify-center bg-transparent"
                 aria-label="Düzenle işlemleri"
+                aria-expanded={activeMenu === 'edit-actions'}
               >
-                <ChevronRight
-                  className={`h-5 w-5 transition-transform ${activeMenu === 'edit-actions' ? '-rotate-90' : 'rotate-90'}`}
+                <ChevronDown
+                  className={`${HEADER_ACTION_CTA_ICON_CLASS} transition-transform ${
+                    activeMenu === 'edit-actions' ? 'rotate-180' : ''
+                  }`}
+                  aria-hidden="true"
                 />
               </button>
-              {activeMenu === 'edit-actions' && (
-                <div className="app-dropdown-portal glass-inset absolute right-0 top-12 w-80 overflow-hidden rounded-[16px]">
-                  {pendingDelete ? (
-                    <div className="p-4">
-                      <div className="flex items-start gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-red-300">
-                          <Trash2 className="h-4 w-4" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-black text-white">Müşteri silinsin mi?</p>
-                          <p className="mt-0.5 text-[13px] font-medium text-gray-500">
-                            Bu kayıt silinenlere taşınır; istediğiniz zaman geri yükleyebilirsiniz.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-4 flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setPendingDelete(false)}
-                          className="btn-cancel px-3 text-xs"
-                        >
-                          Vazgeç
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleDelete}
-                          className="rounded-xl bg-red-500 px-3 py-2 text-xs font-black text-white transition-colors hover:bg-red-400"
-                        >
-                          Evet, Sil
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    editActionGroups.map((group, groupIndex) => (
-                      <div
-                        key={groupIndex}
-                        className={`${groupIndex > 0 ? 'border-t border-dark-500/55' : ''} p-2`}
+            </div>
+            {activeMenu === 'edit-actions' ? (
+              <div
+                className={`${DETAIL_MENU_CLASS} absolute right-0 top-[calc(100%+0.4rem)] z-[120]`}
+              >
+                {editActionGroups.map((group, groupIndex) => (
+                  <div
+                    key={groupIndex}
+                    className={groupIndex > 0 ? 'mt-1 border-t border-white/40 pt-1' : ''}
+                  >
+                    {group.map(({ label, icon: Icon, action, docType, danger }) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => {
+                          if (docType) {
+                            setActiveMenu(null)
+                            navigate(`/musteriler/${customer.id}/belge/${docType}`)
+                            return
+                          }
+                          if (action === 'collection') {
+                            setCollectionOpen(true)
+                            setActiveMenu(null)
+                            return
+                          }
+                          if (action === 'archive') {
+                            handleArchive()
+                            return
+                          }
+                          if (action === 'delete') {
+                            setActiveMenu(null)
+                            setPendingDelete(true)
+                            return
+                          }
+                          setActiveMenu(null)
+                        }}
+                        className={`${DETAIL_MENU_ITEM_CLASS} ${
+                          danger
+                            ? 'text-red-500 hover:text-red-600'
+                            : 'text-[var(--muted)] hover:text-[var(--ink)]'
+                        }`}
                       >
-                        {group.map(({ label, icon: Icon, action, docType, danger }) => (
-                          <button
-                            key={label}
-                            type="button"
-                            onClick={() => {
-                              if (docType) {
-                                setActiveMenu(null)
-                                navigate(`/musteriler/${customer.id}/belge/${docType}`)
-                                return
-                              }
-                              if (action === 'collection') {
-                                setCollectionOpen(true)
-                                setActiveMenu(null)
-                                return
-                              }
-                              if (action === 'archive') {
-                                handleArchive()
-                                return
-                              }
-                              if (action === 'delete') {
-                                setPendingDelete(true)
-                                return
-                              }
-                              setActiveMenu(null)
-                            }}
-                            className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black uppercase tracking-wide transition-colors ${
-                              danger
-                                ? 'text-red-300 hover:bg-red-500/10 hover:text-red-200'
-                                : 'text-gray-300 hover:bg-blue-500/10 hover:text-white'
-                            }`}
-                          >
-                            <Icon className="h-4 w-4 shrink-0" />
-                            <span>{label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
+                        <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+                        <span className="truncate">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        }
+      />
+
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
+        <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
+          <div className="mb-4 flex min-w-0 items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <AppPanelDot color="blue" />
+              <div className="min-w-0">
+                <h2 className={`${APP_PANEL_TITLE_CLASS} !font-bold`}>
+                  {customerDisplay.brandShortName}
+                </h2>
+                <p className={`mt-0.5 ${DETAIL_CELL_CLASS}`}>
+                  {[customerDisplay.companyTitle, customer.city].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+            </div>
+            <span className={`shrink-0 ${DETAIL_CELL_CLASS}`}>{statementRows.length} Kayıt</span>
+          </div>
+
+          <div className="mb-4 flex w-full flex-col gap-2 lg:flex-row lg:items-center">
+            <div className="flex shrink-0 items-center gap-2 px-1">
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
+              </span>
+              <span className={DETAIL_CELL_CLASS}>Filtre :</span>
+            </div>
+            <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className={DETAIL_FILTER_FIELD_CLASS}>
+                <p className={DETAIL_FILTER_LABEL_CLASS}>Tipi :</p>
+                <EditableDropdownPill
+                  value={selectedCustomerType}
+                  options={optionLists.type}
+                  onOptionsChange={(next) => updateOptionList('type', next)}
+                  buttonClassName={DETAIL_FILTER_PILL_CLASS}
+                  menuClassName={DETAIL_FILTER_MENU_CLASS}
+                  openKey="customer-type"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  onChange={(value) => updateMeta('type', value)}
+                />
+              </div>
+              <div className={DETAIL_FILTER_FIELD_CLASS}>
+                <p className={DETAIL_FILTER_LABEL_CLASS}>Temsilci :</p>
+                <EditableDropdownPill
+                  value={selectedRepresentative}
+                  options={optionLists.representative}
+                  onOptionsChange={(next) => updateOptionList('representative', next)}
+                  buttonClassName={DETAIL_FILTER_PILL_CLASS}
+                  menuClassName={DETAIL_FILTER_MENU_CLASS}
+                  openKey="customer-representative"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  onChange={(value) => updateMeta('representative', value)}
+                />
+              </div>
+              <div className={DETAIL_FILTER_FIELD_CLASS}>
+                <p className={DETAIL_FILTER_LABEL_CLASS}>Puantaj :</p>
+                <EditableDropdownPill
+                  value={selectedScoring}
+                  options={optionLists.scoring}
+                  onOptionsChange={(next) => updateOptionList('scoring', next)}
+                  buttonClassName={DETAIL_FILTER_PILL_CLASS}
+                  menuClassName={DETAIL_FILTER_MENU_CLASS}
+                  openKey="customer-scoring"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  onChange={(value) => updateMeta('scoring', value)}
+                />
+              </div>
+              <div className={DETAIL_FILTER_FIELD_CLASS}>
+                <p className={DETAIL_FILTER_LABEL_CLASS}>Kategori :</p>
+                <EditableDropdownPill
+                  value={selectedCategory}
+                  options={optionLists.category}
+                  onOptionsChange={(next) => updateOptionList('category', next)}
+                  buttonClassName={DETAIL_FILTER_PILL_CLASS}
+                  menuClassName={DETAIL_FILTER_MENU_CLASS}
+                  openKey="customer-category"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  onChange={(value) => updateMeta('category', value)}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-[144px_144px_160px_160px] gap-3 border-b border-dark-500/45 px-5 py-3">
-            <div>
-              <p className="mb-2 text-[13px] font-black uppercase tracking-wider text-gray-500">
-                Tipi
-              </p>
-              <EditableDropdownPill
-                value={selectedCustomerType}
-                options={optionLists.type}
-                onOptionsChange={(next) => updateOptionList('type', next)}
-                openKey="customer-type"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateMeta('type', value)}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-[13px] font-black uppercase tracking-wider text-gray-500">
-                Müşteri temsilcisi
-              </p>
-              <EditableDropdownPill
-                value={selectedRepresentative}
-                options={optionLists.representative}
-                onOptionsChange={(next) => updateOptionList('representative', next)}
-                openKey="customer-representative"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateMeta('representative', value)}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-[13px] font-black uppercase tracking-wider text-gray-500">
-                Puantaj
-              </p>
-              <EditableDropdownPill
-                value={selectedScoring}
-                options={optionLists.scoring}
-                onOptionsChange={(next) => updateOptionList('scoring', next)}
-                openKey="customer-scoring"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateMeta('scoring', value)}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-[13px] font-black uppercase tracking-wider text-gray-500">
-                Kategori
-              </p>
-              <EditableDropdownPill
-                value={selectedCategory}
-                options={optionLists.category}
-                onOptionsChange={(next) => updateOptionList('category', next)}
-                openKey="customer-category"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                onChange={(value) => updateMeta('category', value)}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-[130px_130px_minmax(0,1fr)_120px_110px_110px] border-b border-dark-500/45 px-5 py-3 text-[13px] font-black uppercase tracking-wider text-gray-500">
+          <div
+            className={`${STATEMENT_GRID_CLASS} border-b border-[var(--glass-border)] px-1 py-2 ${DETAIL_TABLE_HEADER_CLASS}`}
+          >
             <span>İşlem Türü</span>
             <span>İşlem Yeri</span>
             <span>Açıklama</span>
@@ -630,49 +660,60 @@ export default function CustomerDetailPage() {
             <span className="text-right">Bakiye</span>
           </div>
 
-          <div className="divide-y divide-dark-500/35">
-            {statementRows.map((row) => (
-              <div
-                key={row.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => navigate(`/musteriler/${customer.id}/hareket/${row.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter')
-                    navigate(`/musteriler/${customer.id}/hareket/${row.id}`)
-                }}
-                className="grid cursor-pointer grid-cols-[130px_130px_minmax(0,1fr)_120px_110px_110px] items-center px-5 py-4 text-sm transition-colors hover:bg-dark-700/40"
-              >
-                <span className="font-bold text-gray-300">{row.type}</span>
-                <span className="truncate text-xs font-semibold text-gray-500">
-                  {row.accountName}
-                </span>
-                <span className="truncate text-xs font-semibold text-gray-500">
-                  {row.description}
-                </span>
-                <span className="text-xs font-bold text-gray-500">{row.date}</span>
-                <span className={`text-right font-black ${getCustomerStatementAmountTone(row)}`}>
-                  {formatCustomerStatementAmount(row)}
-                </span>
-                <span className={`text-right font-black ${balanceTone(row.balance)}`}>
-                  {formatTreasuryCurrency(row.balance)}
-                </span>
-              </div>
-            ))}
+          <div className="divide-y divide-[var(--glass-border)]">
+            {statementRows.length === 0 ? (
+              <p className="px-1 py-8 text-center text-[12px] font-normal text-[var(--muted)]">
+                Hareket kaydı yok.
+              </p>
+            ) : (
+              statementRows.map((row) => (
+                <div
+                  key={row.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/musteriler/${customer.id}/hareket/${row.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter')
+                      navigate(`/musteriler/${customer.id}/hareket/${row.id}`)
+                  }}
+                  className={`${STATEMENT_GRID_CLASS} cursor-pointer px-1 py-2.5 transition-colors hover:bg-white/25`}
+                >
+                  <span className={`${DETAIL_CELL_CLASS} !font-bold text-[var(--ink)]`}>
+                    {row.type}
+                  </span>
+                  <span className={`${DETAIL_CELL_CLASS} truncate`}>{row.accountName}</span>
+                  <span className={`${DETAIL_CELL_CLASS} truncate`}>{row.description}</span>
+                  <span className={DETAIL_CELL_CLASS}>{row.date}</span>
+                  <span
+                    className={`customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal ${getCustomerStatementAmountTone(row)}`}
+                  >
+                    {formatCustomerStatementAmount(row)}
+                  </span>
+                  <span
+                    className={`customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceTone(row.balance)}`}
+                  >
+                    {formatTreasuryCurrency(row.balance)}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
 
-          <div className="flex items-center justify-between border-t border-dark-500/45 px-5 py-4">
-            <p className="text-xs font-semibold text-gray-500">
-              {statementRows.length} kayıttan 1-{statementRows.length} arası gösteriliyor.
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
+            <p className={DETAIL_CELL_CLASS}>
+              {statementRows.length
+                ? `${statementRows.length} kayıttan 1-${statementRows.length} arası gösteriliyor.`
+                : 'Kayıt yok.'}
             </p>
             <button
+              type="button"
               onClick={handleDownloadStatementPdf}
-              className="rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-black text-gray-300 hover:text-white"
+              className={`${HEADER_ACTION_CTA_CLASS} !h-10 ${HEADER_ACTION_GRADIENTS.violet}`}
             >
-              Dışarı Aktar
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Dışarı Aktar</span>
             </button>
           </div>
-        </section>
+        </AppPagePanel>
 
         <aside className="space-y-4">
           <section className="card space-y-3">
@@ -684,7 +725,10 @@ export default function CustomerDetailPage() {
               }}
               className={TAHSILAT_BTN}
             >
-              <CheckCircle2 className="h-4 w-4" /> Tahsilat Ekle
+              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                <CheckCircle2 className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
+              </span>
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Tahsilat Ekle</span>
             </button>
 
             {collectionOpen && (
@@ -716,7 +760,10 @@ export default function CustomerDetailPage() {
               }}
               className={ODEME_BTN}
             >
-              <Upload className="h-4 w-4" /> Ödeme Ekle
+              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                <Upload className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
+              </span>
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Ödeme Ekle</span>
             </button>
 
             {paymentOpen && (
@@ -741,36 +788,33 @@ export default function CustomerDetailPage() {
             )}
 
             <div className="space-y-2">
-              <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3">
-                <p className="text-[12px] font-black uppercase tracking-wider text-emerald-300">
-                  Kalan Bakiye
-                </p>
-                <p className={`mt-1 text-sm font-black ${balanceTone(currentBalance)}`}>
+              <div className="glass-inset rounded-xl px-3 py-2.5">
+                <p className={DETAIL_CELL_CLASS}>Kalan Bakiye</p>
+                <p
+                  className={`mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceTone(currentBalance)}`}
+                >
                   {formatTreasuryCurrency(currentBalance)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-red-500/25 bg-red-500/10 p-3">
-                <p className="text-[12px] font-black uppercase tracking-wider text-red-300">
-                  Gecikmiş Tahsilat
-                </p>
-                <p className="mt-1 text-sm font-black text-red-300">
+              <div className="glass-inset rounded-xl px-3 py-2.5">
+                <p className={DETAIL_CELL_CLASS}>Gecikmiş Tahsilat</p>
+                <p className="customer-balance-negative mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
                   {formatTreasuryCurrency(overdueCollection)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-3">
-                <p className="text-[12px] font-black uppercase tracking-wider text-blue-300">
-                  Toplam Tahsilat
-                </p>
-                <p className="mt-1 text-sm font-black text-blue-300">
+              <div className="glass-inset rounded-xl px-3 py-2.5">
+                <p className={DETAIL_CELL_CLASS}>Toplam Tahsilat</p>
+                <p className="customer-balance-positive mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal">
                   {formatTreasuryCurrency(collectedTotal)}
                 </p>
               </div>
             </div>
             <button
+              type="button"
               onClick={handleDownloadStatementPdf}
-              className="w-full rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-3 text-sm font-black text-gray-300 hover:text-white"
+              className={`${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.violet}`}
             >
-              Ekstre Gönder
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Ekstre Gönder</span>
             </button>
           </section>
 
@@ -978,7 +1022,17 @@ export default function CustomerDetailPage() {
       <EngagementPanels customer={customer} />
 
       <ActivityHistoryPanel activity={activity} />
-    </div>
+
+      <DeleteConfirmOverlay
+        open={pendingDelete}
+        title="Müşteri silinsin mi?"
+        description="Kayıt silinenler alanına taşınacak."
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
+        onCancel={() => setPendingDelete(false)}
+        onConfirm={handleDelete}
+      />
+    </AppPageShell>
   )
 }
 
