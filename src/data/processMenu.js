@@ -5,6 +5,7 @@ export const processSubMenus = [
   // Shelved from sidebar (not deleted) — restore: set hidden:false
   { label: 'Manufacturing Center', path: '/mes', hidden: true },
   { label: 'Depo', path: '/depo' },
+  { label: 'Sevkiyat', path: '/sevkiyat' },
   { label: 'Teslim Edilenler', path: '/teslim-edilenler' },
   { label: 'Workflow Engine', path: '/otomasyon', hidden: true },
   { label: 'AI Operating System', path: '/aios', hidden: true },

@@ -13,6 +13,7 @@ import {
   Send,
   ShoppingCart,
   Trash2,
+  Truck,
   UserRound,
   WalletCards,
 } from 'lucide-react'
@@ -24,6 +25,7 @@ import {
   hydrateB2bPortalSnapshot,
   readB2bOrders,
   readB2bQuotes,
+  readB2bShipments,
   readB2bTickets,
 } from '../../utils/b2bPortalStore'
 import { fetchB2bPortalSnapshot } from '../../utils/platformAuth'
@@ -32,6 +34,7 @@ import {
   readCustomerProductionTracking,
 } from '../../utils/customerPortalProduction'
 import CustomerPortalProductionView from '../../components/Portal/CustomerPortalProductionView'
+import CustomerPortalSevkiyatView from '../../components/Portal/CustomerPortalSevkiyatView'
 import { readCustomerPortalSettings } from '../../utils/customerPortalSettings'
 import { readCompanySettings } from '../../utils/companySettings'
 import {
@@ -67,6 +70,7 @@ const TABS = [
   { id: 'cart', label: 'Sepet', icon: ShoppingCart },
   { id: 'quotes', label: 'Teklif & Sipariş', icon: FileText },
   { id: 'production', label: 'Üretim', icon: Factory },
+  { id: 'sevkiyat', label: 'Sevkiyat', icon: Truck },
   { id: 'notes', label: 'Canlı Not', icon: MessageSquare },
   { id: 'profile', label: 'Profil', icon: UserRound },
 ]
@@ -97,6 +101,7 @@ export default function CustomerPortalPage() {
   const [orders, setOrders] = useState([])
   const [quotes, setQuotes] = useState([])
   const [productionJobs, setProductionJobs] = useState([])
+  const [shipments, setShipments] = useState([])
   const [tickets, setTickets] = useState([])
   const [catalog, setCatalog] = useState(() => getCatalogProducts().map(stripCostFields))
   const [cart, setCart] = useState(() => readCart(token))
@@ -126,6 +131,7 @@ export default function CustomerPortalPage() {
       setOrders(readB2bOrders(customer.id))
       setQuotes(readB2bQuotes(customer.id))
       setProductionJobs(readCustomerProductionTracking(customer))
+      setShipments(readB2bShipments(customer.id))
       setTickets(readB2bTickets(customer.id))
       refreshCatalog()
     },
@@ -176,6 +182,7 @@ export default function CustomerPortalPage() {
     window.addEventListener('erlenbox:b2b-updated', sync)
     window.addEventListener('erlenbox:treasury-updated', sync)
     window.addEventListener('bach:production-updated', sync)
+    window.addEventListener('bach:sevkiyat-updated', sync)
     window.addEventListener('storage', sync)
     window.addEventListener('focus', refreshCatalog)
     return () => {
@@ -183,6 +190,7 @@ export default function CustomerPortalPage() {
       window.removeEventListener('erlenbox:b2b-updated', sync)
       window.removeEventListener('erlenbox:treasury-updated', sync)
       window.removeEventListener('bach:production-updated', sync)
+      window.removeEventListener('bach:sevkiyat-updated', sync)
       window.removeEventListener('storage', sync)
       window.removeEventListener('focus', refreshCatalog)
     }
@@ -411,7 +419,7 @@ export default function CustomerPortalPage() {
 
         <main className="space-y-4">
           {tab === 'dashboard' && (
-            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               {[
                 [
                   'Açık Sipariş',
@@ -420,6 +428,13 @@ export default function CustomerPortalPage() {
                 ],
                 ['Sepet', cartCount, 'text-cyan-300'],
                 ['Üretimde', countActiveProductionJobs(productionJobs), 'text-amber-300'],
+                [
+                  'Sevkiyat',
+                  shipments.filter((s) =>
+                    ['planned', 'in_transit'].includes(s.status),
+                  ).length,
+                  'text-sky-300',
+                ],
                 ['Canlı Not', tickets.length, 'text-emerald-300'],
               ].map(([label, value, tone]) => (
                 <div key={label} className="card">
@@ -796,6 +811,13 @@ export default function CustomerPortalPage() {
           )}
 
           {tab === 'production' && <CustomerPortalProductionView jobs={productionJobs} />}
+
+          {tab === 'sevkiyat' && (
+            <CustomerPortalSevkiyatView
+              trips={shipments}
+              customerId={session?.customer?.id}
+            />
+          )}
 
           {tab === 'notes' && (
             <section className="space-y-4">

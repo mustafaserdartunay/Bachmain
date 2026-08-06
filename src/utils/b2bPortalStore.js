@@ -8,12 +8,14 @@ import { loadProductionJobs } from './productionStore'
 import { loadWorkflowStages } from './workflowStages'
 import { readCompanySettings } from './companySettings'
 import { readCustomerPortalSettings } from './customerPortalSettings'
+import { getTripsForCustomer } from './sevkiyatStore'
 
 const ACCESS_KEY = 'erlenbox-b2b-access'
 const ORDERS_KEY = 'erlenbox-b2b-orders'
 const QUOTES_KEY = 'erlenbox-b2b-quotes'
 const TICKETS_KEY = 'erlenbox-b2b-tickets'
 const PRODUCTION_KEY = 'erlenbox-b2b-production'
+const SHIPMENTS_KEY = 'erlenbox-b2b-shipments'
 
 export const PRODUCTION_STEPS = [
   'Tasarım Onayı',
@@ -197,6 +199,7 @@ export function buildB2bPortalSnapshot(customerId) {
     b2bQuotes: readB2bQuotes(customerId),
     b2bTickets: readB2bTickets(customerId),
     b2bProduction: readB2bProduction(customerId),
+    b2bShipments: getTripsForCustomer(customerId),
     orders: loadOrders().filter((record) => recordBelongsToCustomer(record, customer)),
     quotes: loadQuotes().filter((record) => recordBelongsToCustomer(record, customer)),
     production: loadProductionJobs().filter((record) => recordBelongsToCustomer(record, customer)),
@@ -216,6 +219,7 @@ export function hydrateB2bPortalSnapshot(snapshot) {
   write(QUOTES_KEY, snapshot.b2bQuotes || [])
   write(TICKETS_KEY, snapshot.b2bTickets || [])
   write(PRODUCTION_KEY, snapshot.b2bProduction || [])
+  write(SHIPMENTS_KEY, snapshot.b2bShipments || [])
   write('erlenbox-orders', snapshot.orders || [])
   write('erlenbox-quotes', snapshot.quotes || [])
   write('erlenbox-production', snapshot.production || [])
@@ -276,6 +280,19 @@ export function createB2bOrder({
 
 export function readB2bProduction(customerId) {
   return readJson(PRODUCTION_KEY, []).filter((item) => item.customerId === customerId)
+}
+
+/** Portal sevkiyatları — snapshot veya canlı store. */
+export function readB2bShipments(customerId) {
+  const remote = typeof sessionStorage !== 'undefined'
+    ? sessionStorage.getItem('bach-b2b-remote-snapshot')
+    : null
+  if (remote) {
+    return readJson(SHIPMENTS_KEY, []).filter((trip) =>
+      (trip.stops || []).some((stop) => String(stop.customerId) === String(customerId)),
+    )
+  }
+  return getTripsForCustomer(customerId)
 }
 
 export function getProductionOverallProgress(item) {

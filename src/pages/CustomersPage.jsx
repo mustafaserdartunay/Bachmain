@@ -128,7 +128,7 @@ async function copyText(value) {
 export default function CustomersPage({
   pageTitle = 'Müşteriler',
   createLabel = 'Yeni Müşteri Oluştur',
-  listTitle = 'Müşteriler Listesi',
+  listTitle = 'Müşteriler Listesi :',
   totalLabel = 'Toplam Müşteri',
   columnLabel = 'Müşteriler',
   emptyTitle = 'Müşteri bulunamadı.',

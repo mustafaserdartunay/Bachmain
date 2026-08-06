@@ -71,6 +71,7 @@ const QuotesPage = lazyPage(() => import('./pages/QuotesPage'))
 const OrdersPage = lazyPage(() => import('./pages/OrdersPage'))
 const ProductionPage = lazyPage(() => import('./pages/ProductionPage'))
 const DepoPageLazy = lazyPage(() => import('./pages/process/DepoPage'))
+const SevkiyatPageLazy = lazyPage(() => import('./pages/process/SevkiyatPage'))
 const WorkflowDesignerPage = lazyPage(() => import('./pages/WorkflowDesignerPage'))
 const TruckLoadCalculatorPage = lazyPage(() => import('./components/Logistics/TruckLoadCalculator'))
 const LogisticsDashboardPage = lazyPage(() =>
@@ -163,6 +164,7 @@ import SalesRepresentativesPage from './pages/fieldSales/SalesRepresentativesPag
 import SalesRepReportsPage from './pages/fieldSales/SalesRepReportsPage'
 import CourierTrackingPage from './pages/CourierTrackingPage'
 import CustomerCourierTrackingPage from './pages/portal/CustomerCourierTrackingPage'
+import SevkiyatTrackingPage from './pages/portal/SevkiyatTrackingPage'
 import SectoralSettingsPage from './pages/SectoralSettingsPage'
 import SectoralCategorySettingsPage from './pages/SectoralCategorySettingsPage'
 import GuncelDurumSettingsPage from './pages/GuncelDurumSettingsPage'
@@ -247,6 +249,7 @@ export default function App() {
             />
             <Route path="/portal/:token" element={<CustomerPortalPage />} />
             <Route path="/kurye-takip/:trackingToken" element={<CustomerCourierTrackingPage />} />
+            <Route path="/sevkiyat-takip/:token" element={<SevkiyatTrackingPage />} />
             <Route
               path="*"
               element={
@@ -468,6 +471,22 @@ export default function App() {
                         element={
                           <PageSuspense>
                             <DepoPageLazy />
+                          </PageSuspense>
+                        }
+                      />
+                      <Route
+                        path="/sevkiyat"
+                        element={
+                          <PageSuspense>
+                            <SevkiyatPageLazy />
+                          </PageSuspense>
+                        }
+                      />
+                      <Route
+                        path="/sevkiyat/:id"
+                        element={
+                          <PageSuspense>
+                            <SevkiyatPageLazy />
                           </PageSuspense>
                         }
                       />
