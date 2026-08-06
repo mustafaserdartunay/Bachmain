@@ -1912,31 +1912,50 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
     position: sticky;
     top: var(--customer-actions-sticky-pad);
     align-self: start;
+    /* Viewport içinde kalsın; scroll ile son kartın alt zemini görünsün */
     max-height: calc(
       100dvh - var(--customer-actions-sticky-pad) - var(--customer-actions-sticky-bottom)
     );
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 0.125rem;
-    padding-bottom: 0.25rem;
+    padding-bottom: 1.25rem;
+    scroll-padding-bottom: 1.25rem;
   }
+}
+
+/* Müşteri Ekranı Ayarları — dar kolonda satır kaydır, taşma yok */
+.customer-screen-settings-card :where(h2, p, span, label, a) {
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.customer-screen-settings-card .truncate {
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
 }
 
 .customer-detail-ledger-panel .divide-y > [role='button'],
 .customer-detail-ledger-panel .customer-ledger-row {
   box-sizing: border-box;
-  height: 2.875rem;
-  min-height: 2.875rem;
+  height: 3.5rem;
+  min-height: 3.5rem;
   align-items: center;
-  /* Tipografi optik merkez: biraz daha aşağı */
-  padding-top: 0.35rem;
+  /* Tipografi optik merkez */
+  padding-top: 0.2rem;
   padding-bottom: 0;
 }
 
 .customer-detail-ledger-panel .customer-ledger-row-header {
-  height: 2.875rem;
-  min-height: 2.875rem;
-  padding-top: 0.35rem;
+  height: 3.5rem;
+  min-height: 3.5rem;
+  padding-top: 0.2rem;
   padding-bottom: 0;
 }
 

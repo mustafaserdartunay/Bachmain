@@ -95,7 +95,6 @@ import {
   patchMovementForm,
 } from '../utils/customerMovementForm'
 import CustomerStockPanel from '../components/Customers/CustomerStockPanel'
-import DateRangePicker from '../components/Common/DateRangePicker'
 import { Dropdown, DropdownItem } from '@bachmain/ui'
 
 const TAHSILAT_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.success}`
@@ -166,8 +165,6 @@ export default function CustomerDetailPage() {
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(false)
   const [voiceNotice, setVoiceNotice] = useState('')
-  const [ledgerDateFrom, setLedgerDateFrom] = useState('')
-  const [ledgerDateTo, setLedgerDateTo] = useState('')
 
   useEffect(() => {
     setCustomer(findCustomerProfile(customerId))
@@ -346,28 +343,6 @@ export default function CustomerDetailPage() {
       balance: openingBalance,
     },
   ]
-
-  const filteredStatementRows = (() => {
-    if (!ledgerDateFrom && !ledgerDateTo) return statementRows
-
-    function toSortable(value) {
-      const raw = String(value || '').trim()
-      if (!raw) return ''
-      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10)
-      const match = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})/)
-      if (match) return `${match[3]}-${match[2]}-${match[1]}`
-      return raw
-    }
-
-    const from = ledgerDateFrom || '0000-01-01'
-    const to = ledgerDateTo || ledgerDateFrom || '9999-12-31'
-
-    return statementRows.filter((row) => {
-      const key = toSortable(row.date)
-      if (!key) return true
-      return key >= from && key <= to
-    })
-  })()
 
   const movementAccounts = useMemo(
     () => movementAccountOptions(accounts, optionLists),
@@ -557,28 +532,6 @@ export default function CustomerDetailPage() {
 
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_268px]">
         <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
-          <div className="mb-3">
-            <p className={`mb-1.5 ${DETAIL_CELL_CLASS}`}>Başlangıç / Bitiş Tarihi</p>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="min-w-[16rem] flex-1">
-                <DateRangePicker
-                  dateFrom={ledgerDateFrom}
-                  dateTo={ledgerDateTo}
-                  includeTime={false}
-                  showTimeInLabel={false}
-                  dateLabelFormat="numeric"
-                  onChange={(value) => {
-                    setLedgerDateFrom(value.dateFrom || '')
-                    setLedgerDateTo(value.dateTo || '')
-                  }}
-                />
-              </div>
-              <p className={`shrink-0 ${DETAIL_CELL_CLASS}`}>
-                {filteredStatementRows.length} Kayıt
-              </p>
-            </div>
-          </div>
-
           <div
             className={`${STATEMENT_ROW_CLASS} border-b border-[var(--glass-border)] ${DETAIL_TABLE_HEADER_CLASS}`}
           >
@@ -591,12 +544,12 @@ export default function CustomerDetailPage() {
           </div>
 
           <div className="divide-y divide-[var(--glass-border)]">
-            {filteredStatementRows.length === 0 ? (
+            {statementRows.length === 0 ? (
               <p className="px-1 py-8 text-center text-[12px] font-normal text-[var(--muted)]">
                 Hareket kaydı yok.
               </p>
             ) : (
-              filteredStatementRows.map((row) => (
+              statementRows.map((row) => (
                 <div
                   key={row.id}
                   role="button"
@@ -631,8 +584,8 @@ export default function CustomerDetailPage() {
 
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
             <p className={DETAIL_CELL_CLASS}>
-              {filteredStatementRows.length
-                ? `${filteredStatementRows.length} kayıttan 1-${filteredStatementRows.length} arası gösteriliyor.`
+              {statementRows.length
+                ? `${statementRows.length} kayıttan 1-${statementRows.length} arası gösteriliyor.`
                 : 'Kayıt yok.'}
             </p>
             <button
@@ -749,14 +702,14 @@ export default function CustomerDetailPage() {
             </button>
           </section>
 
-          <section className="card space-y-5">
+          <section className="card customer-screen-settings-card min-w-0 space-y-5 overflow-hidden">
             <button
               type="button"
               onClick={() => setCustomerScreenOpen((open) => !open)}
-              className="flex w-full items-center justify-between text-left"
+              className="flex w-full min-w-0 items-center justify-between gap-2 text-left"
             >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--muted)]">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--muted)]">
                   <Monitor className="h-5 w-5" />
                 </span>
                 <h2 className={`${DETAIL_CELL_CLASS} !font-bold !text-[var(--ink)]`}>
@@ -764,13 +717,13 @@ export default function CustomerDetailPage() {
                 </h2>
               </div>
               <ChevronRight
-                className={`h-4 w-4 text-[var(--muted)] transition-transform ${customerScreenOpen ? '-rotate-90' : 'rotate-90'}`}
+                className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform ${customerScreenOpen ? '-rotate-90' : 'rotate-90'}`}
               />
             </button>
 
             {customerScreenOpen && (
               <>
-                <div className="flex gap-3 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3">
+                <div className="flex min-w-0 gap-3 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3">
                   <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
                   <p className={`${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
                     Müşteri ekranı ayarlarınızı buradan yapabilirsiniz. Değişiklikler anında
@@ -778,15 +731,15 @@ export default function CustomerDetailPage() {
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  <label className="flex gap-3">
+                <div className="min-w-0 space-y-4">
+                  <label className="flex min-w-0 gap-3">
                     <input
                       type="checkbox"
                       checked={portalSettings.paymentReminder}
                       onChange={(e) => updatePortalSettings({ paymentReminder: e.target.checked })}
                       className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
                     />
-                    <span>
+                    <span className="min-w-0 flex-1">
                       <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>
                         Ödeme Hatırlat
                       </span>
@@ -797,14 +750,14 @@ export default function CustomerDetailPage() {
                     </span>
                   </label>
 
-                  <label className="flex gap-3">
+                  <label className="flex min-w-0 gap-3">
                     <input
                       type="checkbox"
                       checked={portalSettings.onlineCollection}
                       onChange={(e) => updatePortalSettings({ onlineCollection: e.target.checked })}
                       className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
                     />
-                    <span>
+                    <span className="min-w-0 flex-1">
                       <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>
                         Online Tahsilat
                       </span>
@@ -814,9 +767,9 @@ export default function CustomerDetailPage() {
                     </span>
                   </label>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <List className="h-4 w-4 text-[var(--muted)]" />
+                  <div className="min-w-0 space-y-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <List className="h-4 w-4 shrink-0 text-[var(--muted)]" />
                       <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>
                         IBAN Numaralarınız
                       </p>
@@ -828,7 +781,7 @@ export default function CustomerDetailPage() {
                       {companySettings.bankAccounts.map((account) => (
                         <label
                           key={account.id}
-                          className={`flex items-center gap-2 ${DETAIL_CELL_CLASS}`}
+                          className={`flex min-w-0 items-start gap-2 ${DETAIL_CELL_CLASS}`}
                         >
                           <input
                             type="checkbox"
@@ -839,17 +792,19 @@ export default function CustomerDetailPage() {
                               else ids.delete(account.id)
                               updatePortalSettings({ sharedIbanIds: [...ids] })
                             }}
-                            className="h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
                           />
-                          {account.bankName} · {account.label}
+                          <span className="min-w-0 flex-1">
+                            {account.bankName} · {account.label}
+                          </span>
                         </label>
                       ))}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Users className="h-4 w-4 text-[var(--muted)]" />
+                  <div className="min-w-0 space-y-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Users className="h-4 w-4 shrink-0 text-[var(--muted)]" />
                       <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>
                         Erişimi Olan Kişiler
                       </p>
@@ -857,9 +812,11 @@ export default function CustomerDetailPage() {
                     {(portalSettings.accessEmails || []).map((email) => (
                       <div
                         key={email}
-                        className="flex items-center justify-between rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2"
+                        className="flex min-w-0 items-center justify-between gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2"
                       >
-                        <span className={`${DETAIL_CELL_CLASS} !font-bold`}>{email}</span>
+                        <span className={`${DETAIL_CELL_CLASS} min-w-0 flex-1 !font-bold break-all`}>
+                          {email}
+                        </span>
                         <button
                           type="button"
                           onClick={() =>
@@ -869,7 +826,7 @@ export default function CustomerDetailPage() {
                               ),
                             })
                           }
-                          className="text-[var(--muted)] hover:text-red-500"
+                          className="shrink-0 text-[var(--muted)] hover:text-red-500"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -894,9 +851,9 @@ export default function CustomerDetailPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4">
-                  <div className="flex items-center gap-2">
-                    <Link2 className="h-4 w-4 text-blue-600" />
+                <div className="min-w-0 space-y-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Link2 className="h-4 w-4 shrink-0 text-blue-600" />
                     <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase !text-blue-600`}>
                       B2B Müşteri Paneli
                     </p>
@@ -908,7 +865,7 @@ export default function CustomerDetailPage() {
                   <button
                     type="button"
                     onClick={toggleB2bAccess}
-                    className={`rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${
+                    className={`w-full rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${
                       b2bAccess?.enabled
                         ? 'border border-red-500/30 bg-red-500/10 text-red-600 hover:bg-red-500/20'
                         : 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20'
@@ -917,9 +874,9 @@ export default function CustomerDetailPage() {
                     {b2bAccess?.enabled ? 'B2B Erişimini Kapat' : 'B2B Erişimi Ver'}
                   </button>
                   {b2bAccess?.enabled && b2bAccess.accessToken && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
-                        <p className={`min-w-0 flex-1 truncate ${DETAIL_CELL_CLASS}`}>
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex min-w-0 items-start gap-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                        <p className={`min-w-0 flex-1 break-all ${DETAIL_CELL_CLASS}`}>
                           {getPortalUrl(b2bAccess.accessToken)}
                         </p>
                         <button
