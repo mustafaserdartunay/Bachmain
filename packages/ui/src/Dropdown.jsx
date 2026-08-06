@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 
@@ -24,7 +24,7 @@ export function Dropdown({
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
   const menuRef = useRef(null)
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0, maxHeight: undefined })
 
   useEffect(() => {
     if (!open) return undefined
@@ -43,15 +43,46 @@ export function Dropdown({
     }
   }, [open])
 
-  useEffect(() => {
-    if (!open || !rootRef.current) return
-    const rect = rootRef.current.getBoundingClientRect()
-    setPos({
-      top: rect.bottom + 6,
-      left: align === 'end' ? rect.right : rect.left,
-      width: rect.width,
-    })
-  }, [open, align])
+  useLayoutEffect(() => {
+    if (!open || !rootRef.current) return undefined
+
+    function place() {
+      const triggerEl = rootRef.current
+      const menuEl = menuRef.current
+      if (!triggerEl || !menuEl) return
+
+      const rect = triggerEl.getBoundingClientRect()
+      const gap = 6
+      const viewportPad = 8
+      const bottomLimit = window.innerHeight - viewportPad
+      const menuHeight = menuEl.offsetHeight || 280
+
+      let top = rect.bottom + gap
+      const opensUp =
+        top + menuHeight > bottomLimit && rect.top - menuHeight - gap > viewportPad
+      if (opensUp) {
+        top = Math.max(viewportPad, rect.top - menuHeight - gap)
+      }
+
+      const maxHeight = Math.max(120, bottomLimit - top)
+      setPos({
+        top,
+        left: align === 'end' ? rect.right : rect.left,
+        width: rect.width,
+        maxHeight,
+      })
+    }
+
+    place()
+    const raf = requestAnimationFrame(place)
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', place, true)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', place)
+      window.removeEventListener('scroll', place, true)
+    }
+  }, [open, align, children])
 
   return (
     <div ref={rootRef} className={`relative inline-flex ${className}`}>
@@ -66,6 +97,8 @@ export function Dropdown({
                 left: align === 'end' ? undefined : pos.left,
                 right: align === 'end' ? window.innerWidth - pos.left : undefined,
                 minWidth: Math.max(pos.width, 210),
+                maxHeight: pos.maxHeight,
+                overflowY: 'auto',
                 zIndex: 10000,
               }}
               className={`${DROPDOWN_PORTAL_SHELL_CLASS} ${menuClassName}`.trim()}
