@@ -21,7 +21,7 @@ Müşteriler sayfası satır menüsü — örn. Puantaj: “Seçiniz / Kötü / 
 
 | Özellik | Değer |
 |--------|--------|
-| Background | `rgba(255, 255, 255, 0.38)` |
+| Background | `rgba(255, 255, 255, 0.72)` |
 | Border | `1px solid rgba(255, 255, 255, 0.62)` |
 | Radius | **16px** |
 | Blur | `blur(16px) saturate(160%)` |

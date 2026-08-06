@@ -115,7 +115,7 @@ const DETAIL_FILTER_PILL_CLASS = PAGE_FILTER_PILL_CLASS
 const DETAIL_FILTER_MENU_CLASS = PAGE_FILTER_MENU_CLASS
 const DETAIL_TABLE_HEADER_CLASS = PAGE_TABLE_HEADER_CLASS
 const DETAIL_CELL_CLASS = YF_TEXT_CLASS
-const DETAIL_ACTIONS_MENU_CLASS = 'az customer-filter-dropdown-menu customers-page-menu'
+const DETAIL_ACTIONS_MENU_CLASS = PAGE_FILTER_MENU_CLASS
 const STATEMENT_GRID_CLASS =
   'grid grid-cols-[7.5rem_7.5rem_minmax(0,1fr)_7rem_6.5rem_6.5rem] items-center gap-2'
 

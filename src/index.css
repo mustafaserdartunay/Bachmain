@@ -2380,13 +2380,15 @@ html.night .ios-cell-value .form-input::placeholder {
 }
 
 /* az — cam dropdown zemin (müşteri list/filter menü referansı) */
+/* Opaklık, renkli CTA üzerinde açılınca da Tipi menüsü gibi açık cam kalsın diye
+   arka plan renginin sızmasını keser; filter/list menüleriyle aynı formül. */
 .az,
 .app-dropdown-portal.az,
 .app-dropdown-portal,
 .app-dropdown-portal.bg-transparent,
 .app-dropdown-portal[class*='bg-transparent'] {
   z-index: 10000;
-  background: rgba(255, 255, 255, 0.38) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
   border: 1px solid rgba(255, 255, 255, 0.62) !important;
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);

@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 
-/** System-wide az glass shell for portaled menus (filter / list / MoreMenu) */
+/** System-wide az glass shell — EditableDropdownPill / filter menus ile aynı kabuk */
 export const DROPDOWN_PORTAL_SHELL_CLASS =
-  'app-dropdown-portal glass-inset az rounded-[16px] p-2'
+  'app-dropdown-portal glass-inset az min-w-[210px] rounded-[16px] p-2'
 
 const TONE_CLASS = {
   danger: 'text-[#ef4444] hover:bg-transparent hover:text-[#dc2626]',
@@ -65,8 +65,8 @@ export function Dropdown({
                 top: pos.top,
                 left: align === 'end' ? undefined : pos.left,
                 right: align === 'end' ? window.innerWidth - pos.left : undefined,
-                minWidth: Math.max(pos.width, 180),
-                zIndex: 1000,
+                minWidth: Math.max(pos.width, 210),
+                zIndex: 10000,
               }}
               className={`${DROPDOWN_PORTAL_SHELL_CLASS} ${menuClassName}`.trim()}
               role="menu"
