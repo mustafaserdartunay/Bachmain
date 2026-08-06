@@ -1,10 +1,10 @@
 import { MoreHorizontal } from 'lucide-react'
-import { Dropdown, DropdownItem } from './Dropdown'
+import { Dropdown, DropdownItem, DropdownSeparator } from './Dropdown'
 import { Button } from './Button'
 
 /**
  * Row overflow menu — Sil / Düzenle / Yazdır / Excel / PDF / …
- * @param {{ items: Array<{ id?: string, label: string, icon?: any, onClick?: Function, tone?: string }> }} props
+ * @param {{ items: Array<{ id?: string, label?: string, icon?: any, onClick?: Function, tone?: string, type?: 'separator' }> }} props
  */
 export function MoreMenu({
   items = [],
@@ -30,16 +30,20 @@ export function MoreMenu({
       }
     >
       {({ close }) =>
-        items.map((item) => (
-          <DropdownItem
-            key={item.id || item.label}
-            icon={item.icon}
-            label={item.label}
-            tone={item.tone}
-            onClick={item.onClick}
-            close={close}
-          />
-        ))
+        items.map((item, index) =>
+          item.type === 'separator' ? (
+            <DropdownSeparator key={item.id || `sep-${index}`} />
+          ) : (
+            <DropdownItem
+              key={item.id || item.label}
+              icon={item.icon}
+              label={item.label}
+              tone={item.tone}
+              onClick={item.onClick}
+              close={close}
+            />
+          ),
+        )
       }
     </Dropdown>
   )

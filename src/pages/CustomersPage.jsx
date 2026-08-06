@@ -762,6 +762,28 @@ export default function CustomersPage({
                       onClick: () => navigate(`/musteriler/${id}`),
                     },
                     {
+                      id: 'delete',
+                      label: 'Sil',
+                      icon: Trash2,
+                      tone: 'danger',
+                      onClick: () => setPendingDeleteCustomerId(id),
+                    },
+                    {
+                      id: 'b2b-grant',
+                      label: 'B2B İzin Ver',
+                      icon: Link2,
+                      tone: 'success',
+                      onClick: () => openB2bDialog(customer),
+                    },
+                    {
+                      id: 'b2b-link',
+                      label: 'B2B link oluştur',
+                      icon: Mail,
+                      tone: 'success',
+                      onClick: () => openB2bDialog(customer),
+                    },
+                    { id: 'create-sep', type: 'separator' },
+                    {
                       id: 'new-invoice',
                       label: 'Yeni fatura kes',
                       icon: FileText,
@@ -825,36 +847,6 @@ export default function CustomersPage({
                           `/lojistik/yukleme-plani?customerId=${encodeURIComponent(id)}`,
                         ),
                     },
-                    {
-                      id: 'delete',
-                      label: 'Sil',
-                      icon: Trash2,
-                      tone: 'danger',
-                      onClick: () => setPendingDeleteCustomerId(id),
-                    },
-                    {
-                      id: portalAccess?.enabled ? 'invite' : 'grant',
-                      label: portalAccess?.enabled ? 'B2B Daveti / Link' : 'B2B İzin Ver',
-                      icon: portalAccess?.enabled ? Mail : Link2,
-                      tone: 'success',
-                      onClick: () => openB2bDialog(customer),
-                    },
-                    ...(portalAccess?.enabled
-                      ? [
-                          {
-                            id: 'portal-view',
-                            label: 'B2B Panelini Gör',
-                            icon: Eye,
-                            tone: 'orange',
-                            onClick: () =>
-                              window.open(
-                                getPortalUrl(portalAccess.accessToken),
-                                '_blank',
-                                'noreferrer',
-                              ),
-                          },
-                        ]
-                      : []),
                   ]
                 }
           }

@@ -137,6 +137,16 @@ export function DropdownItem({ icon: Icon, label, onClick, tone = 'default', clo
   )
 }
 
+export function DropdownSeparator() {
+  return (
+    <div
+      role="separator"
+      aria-hidden="true"
+      className="my-1.5 h-px w-full bg-[rgba(30,35,60,0.12)]"
+    />
+  )
+}
+
 export function DropdownTriggerButton({ label = 'Menü', className = '' }) {
   return (
     <button
