@@ -1888,8 +1888,9 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   color: var(--muted) !important;
 }
 
-/* Müşteri detay — sağ kolon bağımsız kaydırma */
+/* Müşteri detay — sağ kolon: uzun içerikte alta kadar kaydırılabilir sticky */
 .customer-detail-actions-panel {
+  --customer-actions-sticky-pad: calc(var(--shell-gap, 1.25rem) + 0.5rem);
   scrollbar-width: thin;
   scrollbar-color: rgba(140, 145, 165, 0.45) transparent;
 }
@@ -1903,8 +1904,34 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   background: rgba(140, 145, 165, 0.4);
 }
 
-.customer-detail-ledger-panel .divide-y > [role='button'] {
+@media (min-width: 1280px) {
+  .customer-detail-actions-panel {
+    position: sticky;
+    /* Panel viewport’tan uzunsa top negatif olur → sayfa kayınca alt kenar görünür */
+    top: max(
+      var(--customer-actions-sticky-pad),
+      calc(100dvh - 100% - var(--customer-actions-sticky-pad))
+    );
+    align-self: start;
+  }
+}
+
+.customer-detail-ledger-panel .divide-y > [role='button'],
+.customer-detail-ledger-panel .customer-ledger-row {
   box-sizing: border-box;
+  height: 2.875rem;
+  min-height: 2.875rem;
+  align-items: center;
+  /* Tipografi optik merkez: biraz aşağı */
+  padding-top: 0.125rem;
+  padding-bottom: 0;
+}
+
+.customer-detail-ledger-panel .customer-ledger-row-header {
+  height: 2.875rem;
+  min-height: 2.875rem;
+  padding-top: 0.125rem;
+  padding-bottom: 0;
 }
 
 /* Güncel bakiye — yfb (14/700) + Gelir yeşili / E-Fatura kırmızısı */
