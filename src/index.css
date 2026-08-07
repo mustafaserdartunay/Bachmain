@@ -2031,29 +2031,8 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   letter-spacing: normal !important;
 }
 
-.customers-page-type .customer-movement-detail-page .customer-balance-amount,
-.app-responsive .customer-movement-detail-page .customer-balance-amount {
-  color: var(--ink) !important;
-}
-
-.customers-page-type .customer-movement-detail-page .customer-movement-amount-hero,
-.app-responsive .customer-movement-detail-page .customer-movement-amount-hero {
-  font-size: 28px !important;
-  font-weight: 700 !important;
-  line-height: 1 !important;
-  letter-spacing: normal !important;
-  color: var(--ink) !important;
-}
-
 .customers-page-type .customer-movement-detail-page .customer-balance-positive,
-.app-responsive .customer-movement-detail-page .customer-balance-positive {
-  color: #10b981 !important;
-}
-
-.customers-page-type .customer-movement-detail-page .customer-balance-negative,
-.app-responsive .customer-movement-detail-page .customer-balance-negative {
-  color: #e11d48 !important;
-}
+.app-responsive .customer-movement-detail-page .customer-balance-positive,
 .customers-page-type .customer-list-panel table tbody td .customer-balance-positive,
 .app-responsive .customer-list-panel table tbody td .customer-balance-positive,
 .customers-page-type .customer-detail-ledger-panel .customer-balance-positive,
@@ -2064,6 +2043,8 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 .app-responsive aside .customer-balance-positive {
   color: #10b981 !important;
 }
+.customers-page-type .customer-movement-detail-page .customer-balance-negative,
+.app-responsive .customer-movement-detail-page .customer-balance-negative,
 .customers-page-type .customer-list-panel table tbody td .customer-balance-negative,
 .app-responsive .customer-list-panel table tbody td .customer-balance-negative,
 .customers-page-type .customer-detail-ledger-panel .customer-balance-negative,
@@ -2084,6 +2065,8 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 .app-responsive .customer-movement-detail-page .customer-balance-blue {
   color: #2563eb !important;
 }
+.customers-page-type .customer-movement-detail-page .customer-balance-zero,
+.app-responsive .customer-movement-detail-page .customer-balance-zero,
 .customers-page-type .customer-list-panel table tbody td .customer-balance-zero,
 .app-responsive .customer-list-panel table tbody td .customer-balance-zero,
 .customers-page-type .customer-detail-ledger-panel .customer-balance-zero,

@@ -44,6 +44,7 @@ import {
 } from '../utils/customerMovementForm'
 import { readOptionLists, saveOptionList } from '../utils/customerMeta'
 import {
+  PAGE_BALANCE_AMOUNT_CLASS,
   PAGE_CENTER_TITLE_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
   YF_TEXT_CLASS,
@@ -54,12 +55,28 @@ import {
   deleteTreasuryMovement,
   formatCustomerStatementAmount,
   formatTreasuryCurrency,
+  getCustomerStatementAmountSign,
   getTreasuryAccounts,
   getTreasuryMovementById,
   resolveTreasuryAccountForMovement,
   syncCustomerOpeningBalanceMovement,
   updateTreasuryMovement,
 } from '../utils/treasuryStore'
+
+/** yfb + balance tone: alacak (>) green, borç (<) red, sıfır muted */
+function balanceTone(balance) {
+  if (balance > 0) return 'customer-balance-positive'
+  if (balance < 0) return 'customer-balance-negative'
+  return 'customer-balance-zero'
+}
+
+function statementSignedAmount(row) {
+  const amount = Number(row?.amount) || 0
+  const sign = getCustomerStatementAmountSign(row)
+  if (sign === '+') return amount
+  if (sign === '-') return -amount
+  return amount
+}
 
 const LABEL_CLASS = `${YF_TEXT_CLASS} uppercase`
 const VALUE_CLASS =
@@ -383,15 +400,16 @@ export default function CustomerMovementDetailPage() {
   const amountDisplay = isOpening
     ? formatTreasuryCurrency(customer.balance || 0)
     : formatCustomerStatementAmount(movement)
-  const amountToneClass = isOpening
-    ? 'customer-balance-blue'
-    : isPayment
-      ? 'customer-balance-negative'
-      : 'customer-balance-positive'
+  const amountSigned = isOpening
+    ? Number(customer.balance) || 0
+    : statementSignedAmount(movement)
+  const amountToneClass = balanceTone(amountSigned)
   const description = isOpening
     ? customer.openingBalanceDescription || `${customer.company} cari açılış bakiyesi`
     : movement.description || '—'
-  const remainingBalance = formatTreasuryCurrency(Number(customer.balance) || 0)
+  const remainingSigned = Number(customer.balance) || 0
+  const remainingBalance = formatTreasuryCurrency(remainingSigned)
+  const remainingToneClass = balanceTone(remainingSigned)
 
   const chequeRows =
     !isOpening && movement?.method === 'Çek'
@@ -573,9 +591,7 @@ export default function CustomerMovementDetailPage() {
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-y border-[var(--glass-border)] py-5">
               <p className={LABEL_CLASS}>{resolvedAmountLabel}</p>
-              <p
-                className={`customer-balance-amount customer-movement-amount-hero tabular-nums ${amountToneClass}`}
-              >
+              <p className={`${PAGE_BALANCE_AMOUNT_CLASS} ${amountToneClass}`}>
                 {amountDisplay}
               </p>
             </div>
@@ -603,10 +619,14 @@ export default function CustomerMovementDetailPage() {
                         <p className={VALUE_CLASS}>{row.title}</p>
                       </div>
                       <p className={VALUE_CLASS}>{row.status}</p>
-                      <p className="customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--ink)]">
+                      <p
+                        className={`${PAGE_BALANCE_AMOUNT_CLASS} text-right ${amountToneClass}`}
+                      >
                         {row.total}
                       </p>
-                      <p className="customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--ink)]">
+                      <p
+                        className={`${PAGE_BALANCE_AMOUNT_CLASS} text-right ${amountToneClass}`}
+                      >
                         {row.applied}
                       </p>
                     </div>
@@ -615,7 +635,7 @@ export default function CustomerMovementDetailPage() {
               )}
               <div className="mt-2 flex items-center justify-end gap-6 border-t border-[var(--glass-border)] pt-3">
                 <span className={LABEL_CLASS}>Kalan</span>
-                <span className="customer-balance-amount tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--ink)]">
+                <span className={`${PAGE_BALANCE_AMOUNT_CLASS} ${remainingToneClass}`}>
                   {remainingBalance}
                 </span>
               </div>

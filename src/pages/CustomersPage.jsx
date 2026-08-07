@@ -522,7 +522,7 @@ export default function CustomersPage({
             value: formatTreasuryCurrency(totalPayable),
             icon: WalletCards,
             tone: 'purple',
-            valueTone: 'text-red-700',
+            valueTone: 'text-[#e11d48]',
           },
           {
             title: 'Toplam Tahsil Edilecek',
