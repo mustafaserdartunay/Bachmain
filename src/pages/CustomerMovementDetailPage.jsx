@@ -49,10 +49,10 @@ import {
   YF_TEXT_CLASS,
   YF_TEXT_ON_COLOR_CLASS,
 } from '../utils/dashboardDesign'
+import { downloadMovementReceiptPdf } from '../utils/movementReceiptPdf'
 import {
   deleteTreasuryMovement,
   formatCustomerStatementAmount,
-  getCustomerStatementAmountTone,
   formatTreasuryCurrency,
   getTreasuryAccounts,
   getTreasuryMovementById,
@@ -68,8 +68,6 @@ const FIELD_ROW_CLASS = 'grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-
 const INPUT_CLASS = 'form-input !h-9 !min-h-9 !w-full !py-1 !text-[13px]'
 const META_ROW_CLASS =
   'grid grid-cols-[minmax(0,11rem)_minmax(0,1fr)] items-center gap-3 border-b border-[var(--glass-border)] py-3.5 last:border-b-0'
-const OUTLINE_BTN_CLASS =
-  'inline-flex h-[52px] items-center justify-center gap-2 rounded-xl border border-[var(--glass-border)] bg-transparent px-3 transition-colors hover:bg-white/40'
 
 function movementTypeLabel(movement) {
   if (!movement) return '—'
@@ -350,10 +348,6 @@ export default function CustomerMovementDetailPage() {
     navigate(`/musteriler/${customer.id}`)
   }
 
-  function handlePrint() {
-    window.print()
-  }
-
   if (!isValidMovement) {
     return (
       <AppPageShell className="customers-page-type w-full space-y-5">
@@ -390,8 +384,10 @@ export default function CustomerMovementDetailPage() {
     ? formatTreasuryCurrency(customer.balance || 0)
     : formatCustomerStatementAmount(movement)
   const amountToneClass = isOpening
-    ? 'text-[var(--ink)]'
-    : getCustomerStatementAmountTone(movement)
+    ? 'customer-balance-blue'
+    : isPayment
+      ? 'customer-balance-negative'
+      : 'customer-balance-positive'
   const description = isOpening
     ? customer.openingBalanceDescription || `${customer.company} cari açılış bakiyesi`
     : movement.description || '—'
@@ -428,8 +424,27 @@ export default function CustomerMovementDetailPage() {
         ]
       : []
 
+  function handlePrint() {
+    downloadMovementReceiptPdf({
+      kind: isOpening ? 'opening' : isPayment ? 'odeme' : 'tahsilat',
+      customer,
+      customerDisplay,
+      movement: isOpening ? { id: `opening-${customer.id}` } : movement,
+      title: resolvedCardTitle,
+      amountLabel: resolvedAmountLabel,
+      amountDisplay,
+      transactionDate,
+      accountName,
+      statusLabel,
+      description,
+      remainingBalance,
+      chequeRows,
+      relatedRows,
+    })
+  }
+
   return (
-    <AppPageShell className="customers-page-type customer-movement-detail-page w-full space-y-5">
+    <AppPageShell className="customers-page-type customer-movement-detail-page flex w-full flex-col space-y-5">
       <AppPageHeader
         showBack={false}
         title={
@@ -440,7 +455,7 @@ export default function CustomerMovementDetailPage() {
         titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
       />
 
-      <AppPagePanel className="customer-movement-detail-card w-full overflow-visible print:shadow-none">
+      <AppPagePanel className="customer-movement-detail-card flex min-h-0 w-full flex-1 flex-col overflow-visible print:shadow-none">
         {isEditing ? (
           isOpening ? (
             <OpeningBalanceForm
@@ -500,22 +515,27 @@ export default function CustomerMovementDetailPage() {
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className={OUTLINE_BTN_CLASS}
+                    className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}
                     title="Düzenle"
                   >
-                    <Pencil className="h-4 w-4 text-blue-600" strokeWidth={2.25} />
-                    <span className={`${YF_TEXT_CLASS} uppercase`}>Düzenle</span>
+                    <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                      <Pencil className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
+                    </span>
+                    <span className={YF_TEXT_ON_COLOR_CLASS}>Düzenle</span>
                   </button>
                 ) : null}
                 {!isInvoice ? (
                   <button
                     type="button"
                     onClick={() => setPendingDelete(true)}
-                    className={OUTLINE_BTN_CLASS}
+                    className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.danger}`}
                     title="Sil"
+                    aria-label="Hareketi sil"
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" strokeWidth={2.25} />
-                    <span className={`${YF_TEXT_CLASS} uppercase`}>Sil</span>
+                    <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                      <Trash2 className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
+                    </span>
+                    <span className={YF_TEXT_ON_COLOR_CLASS}>Sil</span>
                   </button>
                 ) : null}
               </div>
@@ -554,7 +574,7 @@ export default function CustomerMovementDetailPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-y border-[var(--glass-border)] py-5">
               <p className={LABEL_CLASS}>{resolvedAmountLabel}</p>
               <p
-                className={`customer-balance-amount tabular-nums text-[28px] font-bold leading-none tracking-normal ${amountToneClass}`}
+                className={`customer-balance-amount customer-movement-amount-hero tabular-nums ${amountToneClass}`}
               >
                 {amountDisplay}
               </p>
