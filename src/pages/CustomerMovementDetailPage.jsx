@@ -55,6 +55,7 @@ import {
   deleteTreasuryMovement,
   formatCustomerStatementAmount,
   formatTreasuryCurrency,
+  getCustomerLedgerBalance,
   getCustomerStatementAmountTone,
   getTreasuryAccounts,
   getTreasuryMovementById,
@@ -399,7 +400,7 @@ export default function CustomerMovementDetailPage() {
   const description = isOpening
     ? customer.openingBalanceDescription || `${customer.company} cari açılış bakiyesi`
     : movement.description || '—'
-  const remainingSigned = Number(customer.balance) || 0
+  const remainingSigned = getCustomerLedgerBalance(customer)
   const remainingBalance = formatTreasuryCurrency(remainingSigned)
   const remainingToneClass = balanceTone(remainingSigned)
 
