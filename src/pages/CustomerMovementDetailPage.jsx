@@ -504,7 +504,7 @@ export default function CustomerMovementDetailPage() {
                 <button
                   type="button"
                   onClick={handlePrint}
-                  className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.cash}`}
+                  className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.success}`}
                 >
                   <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
                     <Printer className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
