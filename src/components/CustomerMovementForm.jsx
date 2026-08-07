@@ -232,7 +232,7 @@ export default function CustomerMovementForm({
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
               onChange={(value) => onUpdate('accountName', value)}
-              buttonClassName={`${PAGE_FILTER_PILL_CLASS} !h-10 !min-h-10 w-full !justify-between`}
+              buttonClassName={`${PAGE_FILTER_PILL_CLASS} customer-movement-account-pill !h-10 !min-h-10 w-full !justify-between`}
               menuClassName={PAGE_FILTER_MENU_CLASS}
             />
           </div>

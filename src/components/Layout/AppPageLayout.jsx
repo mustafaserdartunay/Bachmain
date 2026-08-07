@@ -74,15 +74,41 @@ function AppPageBackButton({ backTo = '/', backLabel = 'Başa dön', onBack }) {
  * başlık panel sol slotu — kanonik "Güncel Durum" geri linki.
  * AppPageHeader'a `title` olarak verilir (`showBack={false}` ile birlikte).
  */
-export function AppPageBackLink({ to = '/', label = 'Güncel Durum' }) {
-  return (
-    <Link to={to} aria-label={label} title={label} className={PAGE_HEADER_BACK_LINK_CLASS}>
+export function AppPageBackLink({ to = '/', label = 'Güncel Durum', onClick }) {
+  const content = (
+    <>
       <ChevronLeft
         className="customer-page-back-link-icon h-4 w-4 shrink-0"
         strokeWidth={2}
         aria-hidden
       />
       <span className={PAGE_HEADER_BACK_LABEL_CLASS}>{label}</span>
+    </>
+  )
+
+  if (typeof onClick === 'function' && (to === null || to === undefined || to === false)) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        title={label}
+        className={PAGE_HEADER_BACK_LINK_CLASS}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <Link
+      to={to || '/'}
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={PAGE_HEADER_BACK_LINK_CLASS}
+    >
+      {content}
     </Link>
   )
 }

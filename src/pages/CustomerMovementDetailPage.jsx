@@ -461,14 +461,27 @@ export default function CustomerMovementDetailPage() {
     })
   }
 
+  function exitEditing() {
+    if (isOpening) setForm(openingBalanceToForm(customer))
+    else if (movement) setForm(movementToForm(movement))
+    setIsEditing(false)
+    setActiveMenu(null)
+  }
+
   return (
     <AppPageShell className="customers-page-type customer-movement-detail-page flex w-full flex-col space-y-5">
       <AppPageHeader
         showBack={false}
         title={
-          <AppPageBackLink to={`/musteriler/${customer.id}`} label="Müşteri Detayı" />
+          isEditing ? (
+            <AppPageBackLink to={null} label="Cari Hareket Detayı" onClick={exitEditing} />
+          ) : (
+            <AppPageBackLink to={`/musteriler/${customer.id}`} label="Müşteri Detayı" />
+          )
         }
-        centerTitle={String('Cari Hareket Detayı').toLocaleUpperCase('tr-TR')}
+        centerTitle={String(isEditing ? 'Düzenleme' : 'Cari Hareket Detayı').toLocaleUpperCase(
+          'tr-TR',
+        )}
         centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
         titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
       />
@@ -480,10 +493,7 @@ export default function CustomerMovementDetailPage() {
               form={form}
               onUpdate={updateForm}
               onSubmit={handleOpeningSave}
-              onCancel={() => {
-                setForm(openingBalanceToForm(customer))
-                setIsEditing(false)
-              }}
+              onCancel={exitEditing}
             />
           ) : (
             <CustomerMovementForm
@@ -492,10 +502,7 @@ export default function CustomerMovementDetailPage() {
               form={form}
               onUpdate={updateForm}
               onSubmit={handleMovementSave}
-              onCancel={() => {
-                setForm(movementToForm(movement))
-                setIsEditing(false)
-              }}
+              onCancel={exitEditing}
               cashAccountOptions={movementAccounts.cash}
               bankAccountOptions={movementAccounts.bank}
               chequeAccountOptions={movementAccounts.cheque}
