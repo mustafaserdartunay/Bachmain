@@ -14,7 +14,7 @@ import {
 import { DataTable } from '@bachmain/ui'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
-import { DeleteConfirmOverlay } from '../../components/Common/ListDeleteConfirmPanel'
+import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from '../../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../../components/EditableDropdownPill'
 import SevkiyatMap from '../../components/Sevkiyat/SevkiyatMap'
 import {
@@ -141,6 +141,7 @@ export default function SevkiyatPage() {
   const [filters, setFilters] = useState({ status: 'Tümü', vehicleType: 'Tümü' })
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [mapsUrl, setMapsUrl] = useState(null)
   const [copied, setCopied] = useState(false)
   const [draft, setDraft] = useState(() => {
@@ -873,7 +874,10 @@ export default function SevkiyatPage() {
               label: 'Sil',
               icon: Trash2,
               tone: 'danger',
-              onClick: () => setPendingDeleteId(trip.id),
+              onClick: (event) => {
+                setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+                setPendingDeleteId(trip.id)
+              },
             },
           ]}
         />
@@ -881,12 +885,19 @@ export default function SevkiyatPage() {
 
       <DeleteConfirmOverlay
         open={Boolean(pendingDeleteId)}
+        anchorRect={deleteConfirmAnchor}
         title="Sevkiyat silinsin mi?"
         description="Sevkiyat kaydı listeden kaldırılacak."
         confirmLabel="Evet, Sil"
         cancelLabel="Vazgeç"
-        onCancel={() => setPendingDeleteId(null)}
-        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setPendingDeleteId(null)
+          setDeleteConfirmAnchor(null)
+        }}
+        onConfirm={() => {
+          handleDeleteConfirm()
+          setDeleteConfirmAnchor(null)
+        }}
       />
     </AppPageShell>
   )

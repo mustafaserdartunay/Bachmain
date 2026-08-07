@@ -38,6 +38,7 @@ import {
   listRecommendationsLocal,
   setPersonaLocal,
 } from '../commandCenter/localStore'
+import { runOmniSearch } from '../utils/omniSearch'
 
 function money(n) {
   return new Intl.NumberFormat('tr-TR', {
@@ -230,56 +231,10 @@ export default function AiCommandCenterPage() {
   )
   const chat = useMemo(() => listChatLocal(), [tick])
 
-  const searchHits = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (q.length < 2) return []
-    const hits = []
-    for (const c of live.customers.slice(0, 200)) {
-      const name = c.name || c.firmaAdi || c.unvan || ''
-      const phone = c.phone || c.telefon || ''
-      const email = c.email || ''
-      if (name.toLowerCase().includes(q) || phone.includes(q) || email.toLowerCase().includes(q)) {
-        hits.push({
-          type: 'Müşteri',
-          label: name || phone || email,
-          to: `/musteriler/${c.id}`,
-        })
-      }
-      if (hits.length >= 8) break
-    }
-    for (const o of live.ordersList.slice(0, 100)) {
-      const label = o.orderNo || o.id || 'Sipariş'
-      if (
-        String(label).toLowerCase().includes(q) ||
-        String(o.customerName || '')
-          .toLowerCase()
-          .includes(q)
-      ) {
-        hits.push({ type: 'Sipariş', label: String(label), to: '/siparisler' })
-      }
-      if (hits.length >= 12) break
-    }
-    for (const quote of live.quotesList.slice(0, 80)) {
-      const label = quote.quoteNo || quote.id || 'Teklif'
-      if (String(label).toLowerCase().includes(q)) {
-        hits.push({ type: 'Teklif', label: String(label), to: '/teklifler' })
-      }
-      if (hits.length >= 14) break
-    }
-    const staticHints = [
-      { type: 'Modül', label: 'Workflow', to: '/otomasyon', keys: ['workflow', 'otomasyon'] },
-      { type: 'Modül', label: 'AI Agent / AIOS', to: '/aios', keys: ['agent', 'aios', 'ai'] },
-      { type: 'Modül', label: 'Belge', to: '/belge-merkezi', keys: ['belge', 'document', 'pdf'] },
-      { type: 'Modül', label: 'Depo', to: '/stok/depolar', keys: ['depo', 'warehouse'] },
-      { type: 'Modül', label: 'Personel', to: '/ik', keys: ['personel', 'ik', 'hr'] },
-    ]
-    for (const h of staticHints) {
-      if (h.keys.some((k) => q.includes(k) || k.includes(q))) {
-        hits.push({ type: h.type, label: h.label, to: h.to })
-      }
-    }
-    return hits.slice(0, 12)
-  }, [search, live])
+  const searchHits = useMemo(
+    () => runOmniSearch(search, { minLength: 1, limit: 12 }),
+    [search],
+  )
 
   const name = firstName(user?.fullName)
   const showExecutive = persona === 'ceo' || persona === 'finance'

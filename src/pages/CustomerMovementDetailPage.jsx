@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowDownToLine,
@@ -74,8 +74,8 @@ function balanceTone(balance) {
 const LABEL_CLASS = `${YF_TEXT_CLASS} uppercase`
 const VALUE_CLASS =
   'min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--ink)]'
-const FIELD_ROW_CLASS = 'grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-2'
-const INPUT_CLASS = 'form-input !h-9 !min-h-9 !w-full !py-1 !text-[13px]'
+const INPUT_CLASS =
+  'form-input !h-10 !min-h-10 !w-full !rounded-xl !py-2 !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--ink)]'
 const META_ROW_CLASS =
   'grid grid-cols-[minmax(0,11rem)_minmax(0,1fr)] items-center gap-3 border-b border-[var(--glass-border)] py-3.5 last:border-b-0'
 
@@ -103,15 +103,17 @@ function amountLabel({ isOpening, isPayment, isInvoice }) {
 
 function OpeningBalanceForm({ form, onUpdate, onSubmit, onCancel }) {
   return (
-    <form
-      onSubmit={onSubmit}
-      className="overflow-hidden rounded-[16px] border border-[var(--glass-border)] bg-[var(--glass-bg)] shadow-[inset_0_1px_0_rgba(255,255,255,0.48)]"
-    >
-      <div className="border-b border-[var(--glass-border)] px-3 py-2.5">
-        <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>Açılış Bakiyesi Düzenle</p>
+    <form onSubmit={onSubmit} className="flex w-full flex-col gap-5">
+      <div className="flex items-center gap-3 border-b border-[var(--glass-border)] pb-4">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--glass-border)] bg-white/35 text-blue-600">
+          <Wallet className="h-5 w-5" strokeWidth={2.25} />
+        </span>
+        <p className="min-w-0 truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--ink)] sm:text-[16px]">
+          Açılış Bakiyesi Düzenle
+        </p>
       </div>
-      <div className="space-y-3 px-3 py-3">
-        <div className={FIELD_ROW_CLASS}>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex min-w-0 flex-col gap-1.5">
           <label className={LABEL_CLASS} htmlFor="opening-amount">
             Tutar <span className="text-rose-500">*</span>
           </label>
@@ -121,14 +123,15 @@ function OpeningBalanceForm({ form, onUpdate, onSubmit, onCancel }) {
               value={form.amount}
               onChange={(event) => onUpdate('amount', event.target.value)}
               type="number"
-              className={`${INPUT_CLASS} !pr-7`}
+              inputMode="decimal"
+              className={`${INPUT_CLASS} !pr-8 tabular-nums`}
             />
-            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[13px] text-[var(--muted)]">
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] font-normal text-[var(--muted)]">
               ₺
             </span>
           </div>
         </div>
-        <div className={FIELD_ROW_CLASS}>
+        <div className="flex min-w-0 flex-col gap-1.5">
           <label className={LABEL_CLASS} htmlFor="opening-date">
             Tarih <span className="text-rose-500">*</span>
           </label>
@@ -140,7 +143,7 @@ function OpeningBalanceForm({ form, onUpdate, onSubmit, onCancel }) {
             className={INPUT_CLASS}
           />
         </div>
-        <div className={FIELD_ROW_CLASS}>
+        <div className="flex min-w-0 flex-col gap-1.5 sm:col-span-2 lg:col-span-1">
           <label className={LABEL_CLASS} htmlFor="opening-desc">
             Açıklama
           </label>
@@ -149,24 +152,25 @@ function OpeningBalanceForm({ form, onUpdate, onSubmit, onCancel }) {
             value={form.description}
             onChange={(event) => onUpdate('description', event.target.value)}
             type="text"
+            placeholder="Opsiyonel açıklama"
             className={INPUT_CLASS}
           />
         </div>
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="inline-flex h-9 items-center justify-center rounded-xl border border-[var(--glass-border)] bg-transparent px-2 transition-colors hover:bg-white/35"
-          >
-            <span className={`${YF_TEXT_CLASS} uppercase`}>Vazgeç</span>
-          </button>
-          <button
-            type="submit"
-            className={`${HEADER_ACTION_CTA_CLASS} !h-9 w-full justify-center ${HEADER_ACTION_GRADIENTS.primary}`}
-          >
-            <span className={`${YF_TEXT_ON_COLOR_CLASS} uppercase`}>Kaydet</span>
-          </button>
-        </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--glass-border)] pt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="inline-flex h-[52px] min-w-[8rem] items-center justify-center rounded-xl border border-[var(--glass-border)] bg-white/25 px-4 transition-colors hover:bg-white/45"
+        >
+          <span className={`${YF_TEXT_CLASS} uppercase`}>Vazgeç</span>
+        </button>
+        <button
+          type="submit"
+          className={`${HEADER_ACTION_CTA_CLASS} min-w-[10rem] justify-center ${HEADER_ACTION_GRADIENTS.primary}`}
+        >
+          <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet</span>
+        </button>
       </div>
     </form>
   )
@@ -194,6 +198,7 @@ export default function CustomerMovementDetailPage() {
   const [movement, setMovement] = useState(() => (isOpening ? null : getTreasuryMovementById(movementId)))
   const [isEditing, setIsEditing] = useState(false)
   const [pendingDelete, setPendingDelete] = useState(false)
+  const deleteButtonRef = useRef(null)
   const [form, setForm] = useState(() =>
     isOpening ? openingBalanceToForm(customer) : movementToForm(movement),
   )
@@ -483,6 +488,7 @@ export default function CustomerMovementDetailPage() {
           ) : (
             <CustomerMovementForm
               variant={variant}
+              layout="page"
               form={form}
               onUpdate={updateForm}
               onSubmit={handleMovementSave}
@@ -539,6 +545,7 @@ export default function CustomerMovementDetailPage() {
                 ) : null}
                 {!isInvoice ? (
                   <button
+                    ref={deleteButtonRef}
                     type="button"
                     onClick={() => setPendingDelete(true)}
                     className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.danger}`}
@@ -641,6 +648,7 @@ export default function CustomerMovementDetailPage() {
 
       <DeleteConfirmOverlay
         open={pendingDelete}
+        anchorRef={deleteButtonRef}
         title="Hareket silinsin mi?"
         description="Bu işlem geri alınamaz."
         confirmLabel="Evet, Sil"

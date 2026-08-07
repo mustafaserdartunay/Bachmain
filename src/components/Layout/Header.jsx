@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search,
   ChevronDown,
   Menu,
   Megaphone,
@@ -18,7 +17,7 @@ import {
 import { ensureUserProfile, readUserProfile } from '../../utils/userProfile'
 import { readCompanySettings } from '../../utils/companySettings'
 import { useAuth } from '../../auth/AuthContext'
-import { HEADER_CONTROL_BUTTON_CLASS, HEADER_SEARCH_INPUT_CLASS } from '../../utils/themeMode'
+import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { isLocalDevHost, redirectToMarketingLogin } from '../../utils/marketingLogin'
 import NotificationDropdown from './NotificationDropdown'
 import AppearanceToggle from './AppearanceToggle'
@@ -27,6 +26,7 @@ import HeaderNotebook from './HeaderNotebook'
 import HeaderCalendar from './HeaderCalendar'
 import HeaderAgendaSwitch from './HeaderAgendaSwitch'
 import HeaderAiAssistant from './HeaderAiAssistant'
+import HeaderOmniSearch from './HeaderOmniSearch'
 import OrgSwitcher from './OrgSwitcher'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { HeaderPopoverProvider, useHeaderPopover } from '../../hooks/useHeaderPopover'
@@ -234,10 +234,7 @@ function HeaderBar({ onMenuClick }) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <div className="relative min-w-0 flex-1 sm:max-w-[18rem] lg:max-w-[22rem]">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
-          <input type="text" placeholder="Ara..." className={HEADER_SEARCH_INPUT_CLASS} />
-        </div>
+        <HeaderOmniSearch />
         {!compactHeader ? (
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             <OrgSwitcher />

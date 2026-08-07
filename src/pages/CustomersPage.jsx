@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { Button, DataTable, Modal } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
-import { DeleteConfirmOverlay } from '../components/Common/ListDeleteConfirmPanel'
+import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from '../components/Common/ListDeleteConfirmPanel'
 import {
   CustomerColumnVoiceMic,
   CustomerVoiceStatusBar,
@@ -157,9 +157,11 @@ export default function CustomersPage({
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDeleteCustomerId, setPendingDeleteCustomerId] = useState(null)
+  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const bulkDeleteButtonRef = useRef(null)
   const [b2bDialogCustomer, setB2bDialogCustomer] = useState(null)
   const [b2bBusy, setB2bBusy] = useState(false)
   const [b2bNotice, setB2bNotice] = useState('')
@@ -654,6 +656,7 @@ export default function CustomersPage({
                 İptal
               </button>
               <button
+                ref={bulkDeleteButtonRef}
                 type="button"
                 disabled={selectedIds.length === 0}
                 onClick={() => setPendingBulkDelete(true)}
@@ -884,7 +887,10 @@ export default function CustomersPage({
                       label: 'Sil',
                       icon: Trash2,
                       tone: 'danger',
-                      onClick: () => setPendingDeleteCustomerId(id),
+                      onClick: (event) => {
+                        setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+                        setPendingDeleteCustomerId(id)
+                      },
                     },
                     {
                       id: 'b2b-grant',
@@ -1043,22 +1049,28 @@ export default function CustomersPage({
 
       <DeleteConfirmOverlay
         open={Boolean(pendingDeleteCustomerId) && !pendingBulkDelete}
+        anchorRect={deleteConfirmAnchor}
         title="Müşteri silinsin mi?"
         description="Kayıt silinenler alanına taşınacak."
         confirmLabel="Evet, Sil"
         cancelLabel="Vazgeç"
-        onCancel={() => setPendingDeleteCustomerId(null)}
+        onCancel={() => {
+          setPendingDeleteCustomerId(null)
+          setDeleteConfirmAnchor(null)
+        }}
         onConfirm={() => {
           const customer = customerProfiles.find(
             (profile) => profile.id === pendingDeleteCustomerId,
           )
           if (customer) handleDeleteCustomer(customer)
           else setPendingDeleteCustomerId(null)
+          setDeleteConfirmAnchor(null)
         }}
       />
 
       <DeleteConfirmOverlay
         open={pendingBulkDelete && selectedIds.length > 0}
+        anchorRef={bulkDeleteButtonRef}
         title={`${selectedIds.length} kayıt silinsin mi?`}
         description="Seçilen kayıtlar silinenler alanına taşınacak."
         confirmLabel="Evet, Sil"

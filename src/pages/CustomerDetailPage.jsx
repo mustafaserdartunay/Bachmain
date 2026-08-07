@@ -164,6 +164,7 @@ export default function CustomerDetailPage() {
   const [activity, setActivity] = useState(() => readActivity(customer.id))
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(false)
+  const deleteAnchorRef = useRef(null)
   const [voiceNotice, setVoiceNotice] = useState('')
 
   useEffect(() => {
@@ -453,6 +454,7 @@ export default function CustomerDetailPage() {
         titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
         actions={
           <div
+            ref={deleteAnchorRef}
             className="relative flex items-center gap-2.5 bg-transparent"
             onClick={(event) => event.stopPropagation()}
           >
@@ -919,6 +921,7 @@ export default function CustomerDetailPage() {
 
       <DeleteConfirmOverlay
         open={pendingDelete}
+        anchorRef={deleteAnchorRef}
         title="Müşteri silinsin mi?"
         description="Kayıt silinenler alanına taşınacak."
         confirmLabel="Evet, Sil"

@@ -76,8 +76,9 @@ function DeleteConfirmPanel({
 }
 
 /**
- * Sayfa / modal seviyesinde silme onayı: portal ile en üstte, üst-orta konumda.
+ * Sayfa / modal seviyesinde silme onayı: tetikleyicinin altında, portal ile en üstte.
  * ConfirmModal yerine bu kullanılır (kırmızı gradient, minimal ölçüler).
+ * `anchorRef` veya `anchorRect` ile Sil butonunun altına hizalanır (ortalanmış tam ekran overlay değil).
  */
 export function DeleteConfirmOverlay({
   open = true,
@@ -87,44 +88,130 @@ export function DeleteConfirmOverlay({
   cancelLabel = 'Vazgeç',
   onConfirm,
   onCancel,
+  anchorRef = null,
+  anchorRect = null,
+  align = 'right',
+  placement = 'below',
 }) {
+  const frozenRectRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) {
+      frozenRectRef.current = null
+      return
+    }
+    if (anchorRect) {
+      frozenRectRef.current = anchorRect
+      return
+    }
+    const live = anchorRef?.current
+    if (live?.getBoundingClientRect) {
+      frozenRectRef.current = live.getBoundingClientRect()
+    }
+  }, [open, anchorRef, anchorRect])
+
+  const getAnchor = useCallback(() => {
+    if (anchorRef?.current) return anchorRef.current
+    return null
+  }, [anchorRef])
+
+  const { menuRef, style } = useAnchoredPortal(Boolean(open), {
+    matchWidth: false,
+    width: DELETE_CONFIRM_POPOVER_WIDTH,
+    align,
+    placement,
+    offset: 6,
+    getAnchor,
+  })
+
+  const fallbackStyle = (() => {
+    if (!open || typeof window === 'undefined') return null
+    if (anchorRef?.current) return null
+    const rect = anchorRect || frozenRectRef.current
+    if (!rect) return null
+    const width = DELETE_CONFIRM_POPOVER_WIDTH
+    const top = placement === 'above' ? Math.max(8, rect.top - 6) : rect.bottom + 6
+    const left =
+      align === 'right'
+        ? Math.max(8, rect.right - width)
+        : Math.max(8, Math.min(rect.left, window.innerWidth - width - 8))
+    return {
+      position: 'fixed',
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${width}px`,
+      visibility: 'visible',
+      pointerEvents: 'auto',
+      zIndex: DELETE_CONFIRM_Z_INDEX,
+    }
+  })()
+
   useEffect(() => {
     if (!open || typeof onCancel !== 'function') return undefined
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') onCancel()
     }
+    const handlePointer = (event) => {
+      if (menuRef.current?.contains(event.target)) return
+      if (anchorRef?.current?.contains?.(event.target)) return
+      onCancel()
+    }
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, onCancel])
+    document.addEventListener('mousedown', handlePointer)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('mousedown', handlePointer)
+    }
+  }, [open, onCancel, anchorRef, menuRef])
 
   if (!open || typeof document === 'undefined') return null
 
+  const positionedStyle = style?.visibility === 'visible' ? style : fallbackStyle || style
+
   return createPortal(
     <div
-      className="delete-confirm-overlay delete-confirm-portal fixed inset-0 flex items-start justify-center px-4 pt-[min(18vh,7.5rem)]"
-      style={{ zIndex: DELETE_CONFIRM_Z_INDEX }}
-      role="presentation"
-      onClick={onCancel}
+      ref={menuRef}
+      className="delete-confirm-portal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-label={title}
+      style={{
+        position: 'fixed',
+        top: '0px',
+        left: '0px',
+        visibility: 'hidden',
+        pointerEvents: 'none',
+        ...(positionedStyle || {}),
+        zIndex: DELETE_CONFIRM_Z_INDEX,
+      }}
+      onClick={(event) => event.stopPropagation()}
     >
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-label={title}
-        className="w-full max-w-[min(100%,20rem)]"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <DeleteConfirmPanel
-          title={title}
-          description={description}
-          confirmLabel={confirmLabel}
-          cancelLabel={cancelLabel}
-          onConfirm={onConfirm}
-          onCancel={onCancel}
-        />
-      </div>
+      <DeleteConfirmPanel
+        title={title}
+        description={description}
+        confirmLabel={confirmLabel}
+        cancelLabel={cancelLabel}
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+      />
     </div>,
     document.body,
   )
+}
+
+/** Sil tıklamasından onay paneli için konum snapshot'ı alır. */
+export function captureDeleteConfirmAnchor(eventOrElement) {
+  const el = eventOrElement?.currentTarget || eventOrElement?.target || eventOrElement
+  if (!el?.getBoundingClientRect) return null
+  const rect = el.getBoundingClientRect()
+  return {
+    top: rect.top,
+    right: rect.right,
+    bottom: rect.bottom,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+  }
 }
 
 export function DeleteConfirmPopover({

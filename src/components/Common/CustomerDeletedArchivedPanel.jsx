@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, RotateCcw, Trash2 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { DELETED_RECORDS_EVENT, getDeletedRecords } from '../../utils/deletedRecordsStore'
@@ -35,7 +35,7 @@ import {
   GERI_YUKLE_BUTTON_CLASS,
   GERI_YUKLE_ICON_CLASS,
 } from '../../utils/buttonStyles'
-import { DeleteConfirmOverlay } from './ListDeleteConfirmPanel'
+import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from './ListDeleteConfirmPanel'
 
 function formatWhen(value) {
   if (!value) return '—'
@@ -94,9 +94,11 @@ export default function CustomerDeletedArchivedPanel({
   const [open, setOpen] = useState(false)
   const [version, setVersion] = useState(0)
   const [pendingPermanentDelete, setPendingPermanentDelete] = useState(null)
+  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const bulkDeleteButtonRef = useRef(null)
 
   useEffect(() => {
     function refresh() {
@@ -209,8 +211,11 @@ export default function CustomerDeletedArchivedPanel({
               : 'Seçilenleri Sil',
           icon: Trash2,
           tone: 'danger',
-          onClick: () => {
-            if (selectedIds.length > 0) setPendingBulkDelete(true)
+          onClick: (event) => {
+            if (selectedIds.length > 0) {
+              setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+              setPendingBulkDelete(true)
+            }
           },
         },
         {
@@ -283,6 +288,7 @@ export default function CustomerDeletedArchivedPanel({
                       İptal
                     </button>
                     <button
+                      ref={bulkDeleteButtonRef}
                       type="button"
                       disabled={selectedIds.length === 0}
                       onClick={() => setPendingBulkDelete(true)}
@@ -362,7 +368,10 @@ export default function CustomerDeletedArchivedPanel({
                           </button>
                           <button
                             type="button"
-                            onClick={() => setPendingPermanentDelete(item)}
+                            onClick={(event) => {
+                              setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+                              setPendingPermanentDelete(item)
+                            }}
                             className={`customer-permanent-delete-action ${COP_KUTUSU_BUTTON_CLASS}`}
                             aria-label={`${item.label} kalıcı olarak sil`}
                             title="Sil"
@@ -382,22 +391,37 @@ export default function CustomerDeletedArchivedPanel({
 
       <DeleteConfirmOverlay
         open={Boolean(pendingPermanentDelete) && !pendingBulkDelete}
+        anchorRect={deleteConfirmAnchor}
         title="Kayıt kalıcı olarak silinsin mi?"
         description={`${pendingPermanentDelete?.label || 'Bu kayıt'} silinenler alanından kaldırılacak. Kullanıcı tarafından geri getirilemez.`}
         confirmLabel="Evet, Sil"
         cancelLabel="Vazgeç"
-        onCancel={() => setPendingPermanentDelete(null)}
-        onConfirm={() => handlePermanentDelete(pendingPermanentDelete)}
+        onCancel={() => {
+          setPendingPermanentDelete(null)
+          setDeleteConfirmAnchor(null)
+        }}
+        onConfirm={() => {
+          handlePermanentDelete(pendingPermanentDelete)
+          setDeleteConfirmAnchor(null)
+        }}
       />
 
       <DeleteConfirmOverlay
         open={pendingBulkDelete && selectedIds.length > 0}
+        anchorRef={bulkDeleteButtonRef}
+        anchorRect={deleteConfirmAnchor}
         title={`${selectedIds.length} kayıt kalıcı olarak silinsin mi?`}
         description={`${PERMANENT_DELETE_WARNING} Bu işlem kullanıcı tarafında geri alınamaz.`}
         confirmLabel="Evet, Sil"
         cancelLabel="Vazgeç"
-        onCancel={() => setPendingBulkDelete(false)}
-        onConfirm={handleBulkPermanentDelete}
+        onCancel={() => {
+          setPendingBulkDelete(false)
+          setDeleteConfirmAnchor(null)
+        }}
+        onConfirm={() => {
+          handleBulkPermanentDelete()
+          setDeleteConfirmAnchor(null)
+        }}
       />
     </section>
   )
