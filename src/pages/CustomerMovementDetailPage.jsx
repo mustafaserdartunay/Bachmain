@@ -55,7 +55,7 @@ import {
   deleteTreasuryMovement,
   formatCustomerStatementAmount,
   formatTreasuryCurrency,
-  getCustomerStatementAmountSign,
+  getCustomerStatementAmountTone,
   getTreasuryAccounts,
   getTreasuryMovementById,
   resolveTreasuryAccountForMovement,
@@ -63,19 +63,11 @@ import {
   updateTreasuryMovement,
 } from '../utils/treasuryStore'
 
-/** yfb + balance tone: alacak (>) green, borç (<) red, sıfır muted */
+/** Kalan — yfb + bakiye tonu: alacak yeşil, borç kırmızı, sıfır muted */
 function balanceTone(balance) {
   if (balance > 0) return 'customer-balance-positive'
   if (balance < 0) return 'customer-balance-negative'
   return 'customer-balance-zero'
-}
-
-function statementSignedAmount(row) {
-  const amount = Number(row?.amount) || 0
-  const sign = getCustomerStatementAmountSign(row)
-  if (sign === '+') return amount
-  if (sign === '-') return -amount
-  return amount
 }
 
 const LABEL_CLASS = `${YF_TEXT_CLASS} uppercase`
@@ -400,10 +392,10 @@ export default function CustomerMovementDetailPage() {
   const amountDisplay = isOpening
     ? formatTreasuryCurrency(customer.balance || 0)
     : formatCustomerStatementAmount(movement)
-  const amountSigned = isOpening
-    ? Number(customer.balance) || 0
-    : statementSignedAmount(movement)
-  const amountToneClass = balanceTone(amountSigned)
+  /** Meblağ / Toplam / İşlenen — müşteri ekstresi Meblağ sütunu ile aynı ton */
+  const amountToneClass = isOpening
+    ? getCustomerStatementAmountTone({ isOpening: true })
+    : getCustomerStatementAmountTone(movement)
   const description = isOpening
     ? customer.openingBalanceDescription || `${customer.company} cari açılış bakiyesi`
     : movement.description || '—'
