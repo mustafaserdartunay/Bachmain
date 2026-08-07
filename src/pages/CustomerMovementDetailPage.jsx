@@ -1,7 +1,32 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Building2,
+  CalendarDays,
+  CircleDot,
+  FileText,
+  Landmark,
+  Pencil,
+  Printer,
+  Trash2,
+  Wallet,
+} from 'lucide-react'
 import CustomerMovementForm from '../components/CustomerMovementForm'
+import { DeleteConfirmOverlay } from '../components/Common/ListDeleteConfirmPanel'
+import {
+  AppPageBackLink,
+  AppPageHeader,
+  AppPagePanel,
+  AppPageShell,
+} from '../components/Layout/AppPageLayout'
+import {
+  HEADER_ACTION_CTA_CLASS,
+  HEADER_ACTION_CTA_ICON_CLASS,
+  HEADER_ACTION_CTA_ICON_WRAP_CLASS,
+  HEADER_ACTION_GRADIENTS,
+} from '../components/Layout/HeaderCashActionsPanel'
 import {
   deleteCustomerOpeningBalance,
   findCustomerProfile,
@@ -19,6 +44,12 @@ import {
 } from '../utils/customerMovementForm'
 import { readOptionLists, saveOptionList } from '../utils/customerMeta'
 import {
+  PAGE_CENTER_TITLE_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
+  YF_TEXT_CLASS,
+  YF_TEXT_ON_COLOR_CLASS,
+} from '../utils/dashboardDesign'
+import {
   deleteTreasuryMovement,
   formatCustomerStatementAmount,
   getCustomerStatementAmountTone,
@@ -30,57 +61,118 @@ import {
   updateTreasuryMovement,
 } from '../utils/treasuryStore'
 
+const LABEL_CLASS = `${YF_TEXT_CLASS} uppercase`
+const VALUE_CLASS =
+  'min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--ink)]'
+const FIELD_ROW_CLASS = 'grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-2'
+const INPUT_CLASS = 'form-input !h-9 !min-h-9 !w-full !py-1 !text-[13px]'
+const META_ROW_CLASS =
+  'grid grid-cols-[minmax(0,11rem)_minmax(0,1fr)] items-center gap-3 border-b border-[var(--glass-border)] py-3.5 last:border-b-0'
+const OUTLINE_BTN_CLASS =
+  'inline-flex h-[52px] items-center justify-center gap-2 rounded-xl border border-[var(--glass-border)] bg-transparent px-3 transition-colors hover:bg-white/40'
+
 function movementTypeLabel(movement) {
+  if (!movement) return '—'
   if (movement.type === 'Satış Faturası') return 'Satış Faturası'
   const isPayment = movement.type === 'Müşteri Ödemesi'
   const baseType = isPayment ? 'Ödeme' : 'Tahsilat'
   return movement.method === 'Çek' ? `Çek ${baseType}` : `${movement.method} ${baseType}`
 }
 
-function amountClass(movement, isOpening = false) {
-  if (isOpening) return 'text-orange-300'
-  return getCustomerStatementAmountTone(movement)
+function cardTitle({ isOpening, isPayment, isInvoice }) {
+  if (isOpening) return 'Açılış Bakiyesi'
+  if (isInvoice) return 'Satış Faturası'
+  if (isPayment) return 'Müşteriye Ödeme'
+  return 'Müşteriden Tahsilat'
+}
+
+function amountLabel({ isOpening, isPayment, isInvoice }) {
+  if (isOpening) return 'Açılış Bakiyesi'
+  if (isInvoice) return 'Fatura Tutarı'
+  if (isPayment) return 'Ödenen Meblağ'
+  return 'Tahsil Edilen Meblağ'
 }
 
 function OpeningBalanceForm({ form, onUpdate, onSubmit, onCancel }) {
   return (
-    <form onSubmit={onSubmit} className="space-y-3 rounded-3xl border border-orange-500/20 bg-gradient-to-br from-dark-700/60 to-dark-800/90 p-4 shadow-inner">
-      <div>
-        <p className="text-[12px] font-black uppercase tracking-[0.2em] text-orange-300">Açılış Bakiyesi Düzenle</p>
-        <p className="mt-1 text-xs font-semibold text-gray-500">Müşterinin cari açılış bakiyesini güncelleyin.</p>
+    <form
+      onSubmit={onSubmit}
+      className="overflow-hidden rounded-[16px] border border-[var(--glass-border)] bg-[var(--glass-bg)] shadow-[inset_0_1px_0_rgba(255,255,255,0.48)]"
+    >
+      <div className="border-b border-[var(--glass-border)] px-3 py-2.5">
+        <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>Açılış Bakiyesi Düzenle</p>
       </div>
-      <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">Açılış Tutarı</label>
-        <input value={form.amount} onChange={(event) => onUpdate('amount', event.target.value)} type="number" className="form-input" />
-      </div>
-      <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">İşlem Tarihi</label>
-        <input value={form.transactionDate} onChange={(event) => onUpdate('transactionDate', event.target.value)} type="date" className="form-input" />
-      </div>
-      <div className="rounded-2xl border border-dark-500/45 bg-dark-700/30 p-3">
-        <label className="mb-2 block text-[12px] font-black uppercase tracking-wider text-gray-500">Açıklama</label>
-        <textarea
-          value={form.description}
-          onChange={(event) => onUpdate('description', event.target.value)}
-          className="form-input min-h-[76px] resize-none"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn-cancel flex w-full items-center justify-center px-3 text-sm font-black"
-        >
-          Vazgeç
-        </button>
-        <button
-          type="submit"
-          className="flex w-full items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/15 px-3 py-2.5 text-sm font-black text-orange-200 transition-colors hover:bg-orange-500/25"
-        >
-          Kaydet
-        </button>
+      <div className="space-y-3 px-3 py-3">
+        <div className={FIELD_ROW_CLASS}>
+          <label className={LABEL_CLASS} htmlFor="opening-amount">
+            Tutar <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative min-w-0">
+            <input
+              id="opening-amount"
+              value={form.amount}
+              onChange={(event) => onUpdate('amount', event.target.value)}
+              type="number"
+              className={`${INPUT_CLASS} !pr-7`}
+            />
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[13px] text-[var(--muted)]">
+              ₺
+            </span>
+          </div>
+        </div>
+        <div className={FIELD_ROW_CLASS}>
+          <label className={LABEL_CLASS} htmlFor="opening-date">
+            Tarih <span className="text-rose-500">*</span>
+          </label>
+          <input
+            id="opening-date"
+            value={form.transactionDate}
+            onChange={(event) => onUpdate('transactionDate', event.target.value)}
+            type="date"
+            className={INPUT_CLASS}
+          />
+        </div>
+        <div className={FIELD_ROW_CLASS}>
+          <label className={LABEL_CLASS} htmlFor="opening-desc">
+            Açıklama
+          </label>
+          <input
+            id="opening-desc"
+            value={form.description}
+            onChange={(event) => onUpdate('description', event.target.value)}
+            type="text"
+            className={INPUT_CLASS}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex h-9 items-center justify-center rounded-xl border border-[var(--glass-border)] bg-transparent px-2 transition-colors hover:bg-white/35"
+          >
+            <span className={`${YF_TEXT_CLASS} uppercase`}>Vazgeç</span>
+          </button>
+          <button
+            type="submit"
+            className={`${HEADER_ACTION_CTA_CLASS} !h-9 w-full justify-center ${HEADER_ACTION_GRADIENTS.primary}`}
+          >
+            <span className={`${YF_TEXT_ON_COLOR_CLASS} uppercase`}>Kaydet</span>
+          </button>
+        </div>
       </div>
     </form>
+  )
+}
+
+function MetaRow({ icon: Icon, label, children }) {
+  return (
+    <div className={META_ROW_CLASS}>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <Icon className="h-4 w-4 shrink-0 text-[var(--muted)]" strokeWidth={2.25} />
+        <span className={LABEL_CLASS}>{label}</span>
+      </div>
+      <div className="min-w-0">{children}</div>
+    </div>
   )
 }
 
@@ -94,9 +186,9 @@ export default function CustomerMovementDetailPage() {
   const [movement, setMovement] = useState(() => (isOpening ? null : getTreasuryMovementById(movementId)))
   const [isEditing, setIsEditing] = useState(false)
   const [pendingDelete, setPendingDelete] = useState(false)
-  const [form, setForm] = useState(() => (
-    isOpening ? openingBalanceToForm(customer) : movementToForm(movement)
-  ))
+  const [form, setForm] = useState(() =>
+    isOpening ? openingBalanceToForm(customer) : movementToForm(movement),
+  )
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
 
@@ -115,20 +207,26 @@ export default function CustomerMovementDetailPage() {
 
   useEffect(() => {
     if (!activeMenu) return undefined
-
     function closeActiveMenu() {
       setActiveMenu(null)
     }
-
     document.addEventListener('click', closeActiveMenu)
     return () => document.removeEventListener('click', closeActiveMenu)
   }, [activeMenu])
 
-  const isValidMovement = isOpening || (movement && movement.customerName === customer.company)
+  const isValidMovement =
+    Boolean(customer) && (isOpening || (movement && movement.customerName === customer.company))
   const isInvoice = !isOpening && movement?.type === 'Satış Faturası'
   const isPayment = !isOpening && movement?.type === 'Müşteri Ödemesi'
   const variant = isPayment ? 'odeme' : 'tahsilat'
-  const headerLabel = isOpening ? 'Açılış Bakiyesi' : movementTypeLabel(movement)
+  const TitleIcon = isPayment ? ArrowUpFromLine : isOpening ? Wallet : ArrowDownToLine
+  const resolvedCardTitle = cardTitle({ isOpening, isPayment, isInvoice })
+  const resolvedAmountLabel = amountLabel({ isOpening, isPayment, isInvoice })
+  const printLabel = isPayment
+    ? 'Ödeme Makbuzunu Yazdır'
+    : isOpening
+      ? 'Açılış Belgesini Yazdır'
+      : 'Tahsilat Makbuzunu Yazdır'
 
   function updateOptionList(field, nextOptions) {
     setOptionLists((current) => ({ ...current, [field]: nextOptions }))
@@ -252,109 +350,97 @@ export default function CustomerMovementDetailPage() {
     navigate(`/musteriler/${customer.id}`)
   }
 
+  function handlePrint() {
+    window.print()
+  }
+
   if (!isValidMovement) {
     return (
-      <div className="space-y-5">
-        <section className="card p-6 text-center text-sm font-semibold text-gray-400">
-          Hareket bulunamadı.
-          <Link to={`/musteriler/${customer.id}`} className="ml-2 text-blue-300 hover:underline">
-            Müşteri detayına dön
-          </Link>
-        </section>
-      </div>
+      <AppPageShell className="customers-page-type w-full space-y-5">
+        <AppPageHeader
+          showBack={false}
+          title={<AppPageBackLink to="/musteriler" label="Müşteriler" />}
+          centerTitle={String('Cari Hareket Detayı').toLocaleUpperCase('tr-TR')}
+          centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+          titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+        />
+        <AppPagePanel className="w-full">
+          <p className={`${YF_TEXT_CLASS} text-center`}>
+            Hareket bulunamadı.{' '}
+            <Link
+              to={customerId ? `/musteriler/${customerId}` : '/musteriler'}
+              className="text-blue-600 hover:underline"
+            >
+              Geri dön
+            </Link>
+          </p>
+        </AppPagePanel>
+      </AppPageShell>
     )
   }
 
-  const detailRows = isOpening
-    ? [
-      ['İşlem Türü', 'Açılış Bakiyesi'],
-      ['İşlem Tarihi', customer.openingBalanceDate || '01.06.2026'],
-      ['Tutar', formatTreasuryCurrency(customer.balance || 0)],
-      ['Açıklama', customer.openingBalanceDescription || `${customer.company} cari açılış bakiyesi`],
-    ]
-    : isInvoice
+  const customerName =
+    customerDisplay.company || customerDisplay.brandShortName || customer.company || '—'
+  const transactionDate = isOpening
+    ? customer.openingBalanceDate || '—'
+    : movement.date || '—'
+  const accountName = isOpening ? '—' : movement.accountName || '—'
+  const statusLabel = isOpening ? 'Açılış' : movement.status || 'İşlendi'
+  const amountDisplay = isOpening
+    ? formatTreasuryCurrency(customer.balance || 0)
+    : formatCustomerStatementAmount(movement)
+  const amountToneClass = isOpening
+    ? 'text-[var(--ink)]'
+    : getCustomerStatementAmountTone(movement)
+  const description = isOpening
+    ? customer.openingBalanceDescription || `${customer.company} cari açılış bakiyesi`
+    : movement.description || '—'
+  const remainingBalance = formatTreasuryCurrency(Number(customer.balance) || 0)
+
+  const chequeRows =
+    !isOpening && movement?.method === 'Çek'
       ? [
-        ['İşlem Türü', 'Satış Faturası'],
-        ['Fatura No', movement.docNo || '—'],
-        ['İşlem Tarihi', movement.date || '—'],
-        ['Vade Tarihi', movement.dueDate || '—'],
-        ['Durum', movement.status || 'İşlendi'],
-        ['Tutar', formatCustomerStatementAmount(movement)],
-        ['Açıklama', movement.description || '—'],
+          ['Çek No', movement.chequeNo],
+          ['Çek Sahibi', movement.chequeOwner],
+          ['Banka', movement.chequeBank],
+          ['Şube', movement.chequeBranch],
+          ['Vade', movement.chequeDueDate],
+        ].filter(([, value]) => value)
+      : []
+
+  const relatedRows = isInvoice
+    ? [
+        {
+          title: movement.docNo || 'Satış Faturası',
+          status: movement.status || 'İşlendi',
+          total: formatCustomerStatementAmount(movement),
+          applied: formatCustomerStatementAmount(movement),
+        },
       ]
-      : [
-        ['İşlem Türü', movementTypeLabel(movement)],
-        ['İşlem Yeri', movement.accountName || '—'],
-        ['İşlem Tarihi', movement.date || '—'],
-        ['Durum', movement.status || 'İşlendi'],
-        ['Tutar', formatCustomerStatementAmount(movement)],
-        ['Açıklama', movement.description || '—'],
-      ]
+    : description && description !== '—'
+      ? [
+          {
+            title: description,
+            status: statusLabel,
+            total: amountDisplay,
+            applied: amountDisplay,
+          },
+        ]
+      : []
 
   return (
-    <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <Link
-          to={`/musteriler/${customer.id}`}
-          className="absolute left-5 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-dark-700 hover:text-white"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Müşteri Detayı
-        </Link>
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-            {isOpening ? 'Açılış Bakiyesi Detayı' : 'Cari Hareket Detayı'}
-          </h1>
-          <p className="mt-1 text-xs font-semibold text-gray-500">
-            {customerDisplay.brandShortName} · {headerLabel}
-          </p>
-        </div>
-        {!isEditing && !isInvoice && (
-          <div className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-blue-500/25 bg-blue-500/10 px-4 text-xs font-black uppercase tracking-wide text-blue-300 transition-colors hover:bg-blue-500/20"
-            >
-              <Pencil className="h-3.5 w-3.5" /> Düzenle
-            </button>
-            {pendingDelete ? (
-              <div className="flex items-center gap-2 rounded-2xl border border-red-500/35 bg-dark-900 px-3 py-2 shadow-2xl ring-1 ring-red-500/15">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-500/15 text-red-300">
-                  <Trash2 className="h-4 w-4" />
-                </div>
-                <div className="text-left">
-                  <p className="whitespace-nowrap text-xs font-black text-white">Silinsin mi?</p>
-                  <p className="whitespace-nowrap text-[12px] font-medium text-gray-500">Bu işlem geri alınamaz.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="rounded-xl bg-red-500 px-3 py-2 text-xs font-black text-white hover:bg-red-400"
-                >
-                  Evet
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPendingDelete(false)}
-                  className="btn-cancel px-3 text-xs"
-                >
-                  Vazgeç
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setPendingDelete(true)}
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-4 text-xs font-black uppercase tracking-wide text-red-300 transition-colors hover:bg-red-500/20"
-              >
-                <Trash2 className="h-3.5 w-3.5" /> Sil
-              </button>
-            )}
-          </div>
-        )}
-      </section>
+    <AppPageShell className="customers-page-type customer-movement-detail-page w-full space-y-5">
+      <AppPageHeader
+        showBack={false}
+        title={
+          <AppPageBackLink to={`/musteriler/${customer.id}`} label="Müşteri Detayı" />
+        }
+        centerTitle={String('Cari Hareket Detayı').toLocaleUpperCase('tr-TR')}
+        centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+        titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+      />
 
-      <section className="card p-5">
+      <AppPagePanel className="customer-movement-detail-card w-full overflow-visible print:shadow-none">
         {isEditing ? (
           isOpening ? (
             <OpeningBalanceForm
@@ -385,38 +471,148 @@ export default function CustomerMovementDetailPage() {
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
               title="Hareket Düzenle"
-              subtitle="İşlem bilgilerini güncelleyin. Değişiklikler cari hareket kaydına yansır."
               submitLabel="Kaydet"
-              preserveTimeHint
             />
           )
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {detailRows.map(([label, value]) => (
-              <div key={label} className="rounded-2xl border border-dark-500/40 bg-dark-800/70 px-4 py-3">
-                <p className="text-[12px] font-black uppercase tracking-wider text-gray-500">{label}</p>
-                <p className={`mt-1 text-sm font-bold ${label === 'Tutar' ? amountClass(movement, isOpening) : 'text-white'}`}>{value}</p>
+          <div className="space-y-0">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--glass-border)] pb-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--glass-border)] bg-white/35 text-blue-600">
+                  <TitleIcon className="h-5 w-5" strokeWidth={2.25} />
+                </span>
+                <h2 className="min-w-0 truncate text-[18px] font-bold leading-tight tracking-normal text-[var(--ink)]">
+                  {resolvedCardTitle}
+                </h2>
               </div>
-            ))}
-            {!isOpening && movement.method === 'Çek' && (
-              <>
-                {[
-                  ['Çek No', movement.chequeNo],
-                  ['Çek Sahibi', movement.chequeOwner],
-                  ['Banka', movement.chequeBank],
-                  ['Şube', movement.chequeBranch],
-                  ['Vade Tarihi', movement.chequeDueDate],
-                ].filter(([, value]) => value).map(([label, value]) => (
-                  <div key={label} className="rounded-2xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
-                    <p className="text-[12px] font-black uppercase tracking-wider text-purple-300">{label}</p>
-                    <p className="mt-1 text-sm font-bold text-white">{value}</p>
+              <div className="flex flex-wrap items-center gap-2 print:hidden">
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.cash}`}
+                >
+                  <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                    <Printer className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
+                  </span>
+                  <span className={YF_TEXT_ON_COLOR_CLASS}>{printLabel}</span>
+                </button>
+                {!isInvoice ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                    className={OUTLINE_BTN_CLASS}
+                    title="Düzenle"
+                  >
+                    <Pencil className="h-4 w-4 text-blue-600" strokeWidth={2.25} />
+                    <span className={`${YF_TEXT_CLASS} uppercase`}>Düzenle</span>
+                  </button>
+                ) : null}
+                {!isInvoice ? (
+                  <button
+                    type="button"
+                    onClick={() => setPendingDelete(true)}
+                    className={OUTLINE_BTN_CLASS}
+                    title="Sil"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" strokeWidth={2.25} />
+                    <span className={`${YF_TEXT_CLASS} uppercase`}>Sil</span>
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="pt-1">
+              <MetaRow icon={Building2} label="Müşteri">
+                <p className={VALUE_CLASS}>{customerName}</p>
+              </MetaRow>
+              <MetaRow icon={CalendarDays} label="İşlem Tarihi">
+                <p className={VALUE_CLASS}>{transactionDate}</p>
+              </MetaRow>
+              {!isOpening ? (
+                <MetaRow icon={Landmark} label="İşlendiği Hesap">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Landmark className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" strokeWidth={2.25} />
+                    <p className={VALUE_CLASS}>{accountName}</p>
                   </div>
-                ))}
-              </>
-            )}
+                </MetaRow>
+              ) : null}
+              <MetaRow icon={FileText} label="İşlem Türü">
+                <p className={VALUE_CLASS}>
+                  {isOpening ? 'Açılış Bakiyesi' : movementTypeLabel(movement)}
+                </p>
+              </MetaRow>
+              <MetaRow icon={CircleDot} label="Durum">
+                <p className={VALUE_CLASS}>{statusLabel}</p>
+              </MetaRow>
+              {chequeRows.map(([label, value]) => (
+                <MetaRow key={label} icon={Wallet} label={label}>
+                  <p className={VALUE_CLASS}>{value}</p>
+                </MetaRow>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 border-y border-[var(--glass-border)] py-5">
+              <p className={LABEL_CLASS}>{resolvedAmountLabel}</p>
+              <p
+                className={`customer-balance-amount tabular-nums text-[28px] font-bold leading-none tracking-normal ${amountToneClass}`}
+              >
+                {amountDisplay}
+              </p>
+            </div>
+
+            <div className="pt-4">
+              <div className="mb-2 grid grid-cols-[minmax(0,1.6fr)_7rem_7.5rem_7.5rem] items-center gap-2 px-1">
+                <span className={LABEL_CLASS}>
+                  {isInvoice ? 'İşlendiği Faturalar' : 'İlgili Kayıt'}
+                </span>
+                <span className={LABEL_CLASS}>Durumu</span>
+                <span className={`${LABEL_CLASS} text-right`}>Toplam</span>
+                <span className={`${LABEL_CLASS} text-right`}>İşlenen</span>
+              </div>
+              {relatedRows.length === 0 ? (
+                <p className={`${YF_TEXT_CLASS} px-1 py-4`}>İlgili kayıt yok.</p>
+              ) : (
+                <div className="divide-y divide-[var(--glass-border)] border-t border-[var(--glass-border)]">
+                  {relatedRows.map((row) => (
+                    <div
+                      key={`${row.title}-${row.status}`}
+                      className="grid grid-cols-[minmax(0,1.6fr)_7rem_7.5rem_7.5rem] items-center gap-2 px-1 py-3"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <CircleDot className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" strokeWidth={2.25} />
+                        <p className={VALUE_CLASS}>{row.title}</p>
+                      </div>
+                      <p className={VALUE_CLASS}>{row.status}</p>
+                      <p className="customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--ink)]">
+                        {row.total}
+                      </p>
+                      <p className="customer-balance-amount text-right tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--ink)]">
+                        {row.applied}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-2 flex items-center justify-end gap-6 border-t border-[var(--glass-border)] pt-3">
+                <span className={LABEL_CLASS}>Kalan</span>
+                <span className="customer-balance-amount tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--ink)]">
+                  {remainingBalance}
+                </span>
+              </div>
+            </div>
           </div>
         )}
-      </section>
-    </div>
+      </AppPagePanel>
+
+      <DeleteConfirmOverlay
+        open={pendingDelete}
+        title="Hareket silinsin mi?"
+        description="Bu işlem geri alınamaz."
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
+        onCancel={() => setPendingDelete(false)}
+        onConfirm={handleDelete}
+      />
+    </AppPageShell>
   )
 }

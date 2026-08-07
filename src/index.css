@@ -1972,6 +1972,18 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   padding-bottom: 0 !important;
 }
 
+@media print {
+  .customer-movement-detail-page .app-page-header,
+  .customer-movement-detail-page .print\:hidden {
+    display: none !important;
+  }
+
+  .customer-movement-detail-card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
 /* Güncel bakiye — yfb (14/700) + Gelir yeşili / E-Fatura kırmızısı */
 .customers-page-type .customer-list-panel table tbody td .customer-balance-amount,
 .app-responsive .customer-list-panel table tbody td .customer-balance-amount,

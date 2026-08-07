@@ -530,7 +530,7 @@ export default function CustomerDetailPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_268px]">
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
         <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
           <div
             className={`${STATEMENT_ROW_CLASS} border-b border-[var(--glass-border)] ${DETAIL_TABLE_HEADER_CLASS}`}
