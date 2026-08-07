@@ -393,10 +393,12 @@ export default function CustomerMovementDetailPage() {
   const amountDisplay = isOpening
     ? formatTreasuryCurrency(customer.balance || 0)
     : formatCustomerStatementAmount(movement)
-  /** Meblağ / Toplam / İşlenen — müşteri ekstresi Meblağ sütunu ile aynı ton */
-  const amountToneClass = isOpening
-    ? getCustomerStatementAmountTone({ isOpening: true })
-    : getCustomerStatementAmountTone(movement)
+  /** Meblağ / Toplam / İşlenen — ödeme kırmızı; diğerleri ekstre Meblağ tonu */
+  const amountToneClass = isPayment
+    ? 'customer-balance-negative'
+    : isOpening
+      ? getCustomerStatementAmountTone({ isOpening: true })
+      : getCustomerStatementAmountTone(movement)
   const description = isOpening
     ? customer.openingBalanceDescription || `${customer.company} cari açılış bakiyesi`
     : movement.description || '—'
