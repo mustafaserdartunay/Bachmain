@@ -3075,15 +3075,16 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-/* Submenu tree: thin connected L/T lines (no dots) */
+/* Submenu tree: 1px L/T lines — stem stops at last row midpoint */
 .glass-sidebar .sidebar-submenu {
-  --sidebar-tree: color-mix(in srgb, var(--muted) 38%, transparent);
-  --sidebar-tree-active: color-mix(in srgb, var(--bach-sky, #60a5fa) 55%, transparent);
+  --sidebar-tree: color-mix(in srgb, var(--muted) 32%, transparent);
+  --sidebar-tree-active: color-mix(in srgb, var(--bach-sky, #60a5fa) 50%, transparent);
+  --sidebar-tree-gutter: 0.75rem;
   position: relative;
   display: flex;
   flex-direction: column;
-  margin: 0.15rem 0 0.1rem 1.15rem;
-  padding: 0 0 0 0.7rem;
+  margin: 0.12rem 0 0.08rem 1.1rem;
+  padding: 0 0 0 var(--sidebar-tree-gutter);
   overflow: visible;
 }
 
@@ -3095,18 +3096,8 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
 }
 
 .glass-sidebar .sidebar-submenu--nested {
-  margin-left: 0.5rem;
+  margin-left: 0.45rem;
   margin-top: 0.05rem;
-}
-
-.glass-sidebar .sidebar-submenu-rail {
-  position: absolute;
-  left: 0;
-  top: 0.7rem;
-  bottom: 0.7rem;
-  width: 1px;
-  background: var(--sidebar-tree);
-  pointer-events: none;
 }
 
 .glass-sidebar .sidebar-submenu-row {
@@ -3114,11 +3105,41 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
   min-width: 0;
 }
 
-.glass-sidebar .sidebar-submenu-branch {
+/* Vertical stem */
+.glass-sidebar .sidebar-submenu-row::before {
+  content: '';
   position: absolute;
-  left: -0.7rem;
+  left: calc(var(--sidebar-tree-gutter) * -1);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--sidebar-tree);
+  pointer-events: none;
+}
+
+/* First row: stem starts at the branch (no stub above) */
+.glass-sidebar .sidebar-submenu-row:first-child::before {
   top: 50%;
-  width: 0.7rem;
+}
+
+/* Last row: stem ends at the branch — no dangling line below */
+.glass-sidebar .sidebar-submenu-row.is-last::before {
+  bottom: 50%;
+}
+
+/* Single row: only the elbow horizontal is enough */
+.glass-sidebar .sidebar-submenu-row:first-child.is-last::before {
+  content: none;
+  display: none;
+}
+
+/* Horizontal branch to the label */
+.glass-sidebar .sidebar-submenu-row::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--sidebar-tree-gutter) * -1);
+  top: 50%;
+  width: var(--sidebar-tree-gutter);
   height: 1px;
   background: var(--sidebar-tree);
   transform: translateY(-50%);
@@ -3126,8 +3147,13 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
   transition: background-color 0.15s ease;
 }
 
-.glass-sidebar .sidebar-submenu-row:hover > .sidebar-submenu-branch,
-.glass-sidebar .sidebar-submenu-row:has(.sidebar-menu-active) > .sidebar-submenu-branch {
+.glass-sidebar .sidebar-submenu-row:hover::after,
+.glass-sidebar .sidebar-submenu-row:has(.sidebar-menu-active)::after {
+  background: var(--sidebar-tree-active);
+}
+
+.glass-sidebar .sidebar-submenu-row:hover::before,
+.glass-sidebar .sidebar-submenu-row:has(.sidebar-menu-active)::before {
   background: var(--sidebar-tree-active);
 }
 
@@ -3143,8 +3169,8 @@ html.night .glass-sidebar .sidebar-menu-group.is-open {
 }
 
 html.night .glass-sidebar .sidebar-submenu {
-  --sidebar-tree: color-mix(in srgb, var(--muted) 42%, transparent);
-  --sidebar-tree-active: color-mix(in srgb, var(--bach-sky, #79a6d2) 60%, transparent);
+  --sidebar-tree: color-mix(in srgb, var(--muted) 36%, transparent);
+  --sidebar-tree-active: color-mix(in srgb, var(--bach-sky, #79a6d2) 55%, transparent);
 }
 
 .glass-sidebar .sidebar-menu-button,
