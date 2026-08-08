@@ -27,6 +27,7 @@ export const ROUTE_MODULE_MAP = {
   '/mesajlar': 'whatsapp',
   '/whatsapp': 'whatsapp',
   '/pos': 'pos',
+  '/shopping': 'pos',
   '/b2b': 'b2b',
   '/saha-satis': 'field_sales',
   '/kurye': 'courier',

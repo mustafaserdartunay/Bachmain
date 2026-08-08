@@ -116,9 +116,15 @@ const projectsMenuGate = {
   moduleCode: 'crm',
 }
 
+const posMenuItem = {
+  icon: ShoppingBag,
+  label: 'POS',
+  path: '/shopping',
+  moduleCode: 'pos',
+}
+
 const baseMenuItems = [
   { icon: Truck, label: 'Kurye Takip', path: '/kurye-takip', moduleCode: 'courier' },
-  { icon: ShoppingBag, label: 'Pos', path: '/shopping', moduleCode: 'pos' },
   { icon: Landmark, label: 'Finans', path: '/finans', moduleCode: 'finance' },
   { icon: Receipt, label: 'E-Fatura', path: '/finans?tab=einvoice', moduleCode: 'einvoice' },
   { icon: BarChart3, label: 'Analytics', path: '/analitik', moduleCode: 'reporting' },
@@ -245,7 +251,7 @@ function SidebarSubMenu({ children, className = '' }) {
   return (
     <div
       className={`sidebar-submenu${className ? ` ${className}` : ''}`}
-      style={{ position: 'relative', marginLeft: '1.15rem', paddingLeft: '0.7rem' }}
+      style={{ position: 'relative', marginLeft: '1.2rem', paddingLeft: '0.85rem' }}
     >
       <span
         className="sidebar-submenu-rail"
@@ -253,11 +259,12 @@ function SidebarSubMenu({ children, className = '' }) {
         style={{
           position: 'absolute',
           left: 0,
-          top: '0.7rem',
-          bottom: '0.7rem',
-          width: 1,
-          opacity: 0.38,
+          top: 10,
+          bottom: 10,
+          width: 2,
+          opacity: 0.9,
           background: 'var(--muted)',
+          borderRadius: 1,
           pointerEvents: 'none',
         }}
       />
@@ -272,11 +279,11 @@ function SidebarSubMenu({ children, className = '' }) {
             aria-hidden="true"
             style={{
               position: 'absolute',
-              left: -11.2,
+              left: -14,
               top: '50%',
-              width: 11.2,
-              height: 1,
-              opacity: 0.38,
+              width: 14,
+              height: 2,
+              opacity: 0.9,
               background: 'var(--muted)',
               transform: 'translateY(-50%)',
               pointerEvents: 'none',
@@ -405,6 +412,9 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
   const menuItems = filterMenuByEntitlements(baseMenuItems, user?.entitlements)
   const showProjects = filterMenuByEntitlements([projectsMenuGate], user?.entitlements).length > 0
+  const showPos = filterMenuByEntitlements([posMenuItem], user?.entitlements).length > 0
+  const isPosActive =
+    location.pathname === '/shopping' || location.pathname.startsWith('/shopping/')
   const isMessageCenterActive =
     location.pathname === '/mesajlar' || location.pathname.startsWith('/mesajlar/')
   const brandLabel = company.companyName || 'Bach'
@@ -792,6 +802,21 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             )}
           </div>
         )}
+
+        {showPos ? (
+          <NavLink
+            to={posMenuItem.path}
+            onClick={handleNavigate}
+            className={`${menuButtonBase} relative ${collapsed ? 'justify-center' : ''} ${
+              isPosActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <ShoppingBag className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed ? <span className={menuLabelClass}>POS</span> : null}
+          </NavLink>
+        ) : null}
 
         <SidebarSection label="CRM" collapsed={collapsed} />
 
