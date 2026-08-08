@@ -49,31 +49,6 @@ import {
   LayoutDashboard,
   PackageCheck,
   Sparkles,
-  Share2,
-  BookOpen,
-  Search,
-  Megaphone,
-  Clapperboard,
-  Instagram,
-  PlugZap,
-  Mail,
-  PanelsTopLeft,
-  Binoculars,
-  KeyRound,
-  Palette,
-  Image,
-  Frame,
-  Camera,
-  Film,
-  Bot,
-  Network,
-  Activity,
-  Puzzle,
-  Workflow,
-  Target,
-  GitBranch,
-  UserPlus,
-  FileBarChart,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -87,11 +62,6 @@ import {
   FIELD_SALES_HOME_PATH,
 } from '../../data/fieldSalesMenu'
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
-import {
-  socialMediaSubMenus,
-  isSocialMediaRoute,
-  SOCIAL_MEDIA_HOME_PATH,
-} from '../../data/socialMediaMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { visibleProcessSubMenus, isProcessRoute } from '../../data/processMenu'
 import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
@@ -123,16 +93,12 @@ const posMenuItem = {
   moduleCode: 'pos',
 }
 
-const baseMenuItems = [
-  { icon: Truck, label: 'Kurye Takip', path: '/kurye-takip', moduleCode: 'courier' },
-  { icon: Landmark, label: 'Finans', path: '/finans', moduleCode: 'finance' },
-  { icon: Receipt, label: 'E-Fatura', path: '/finans?tab=einvoice', moduleCode: 'einvoice' },
-  { icon: BarChart3, label: 'Analytics', path: '/analitik', moduleCode: 'reporting' },
-  { icon: Bot, label: 'AIOS', path: '/aios', moduleCode: 'ai_growth' },
-  { icon: Network, label: 'AI Org', path: '/ai-organizasyon', moduleCode: 'ai_growth' },
-  { icon: Activity, label: 'Otonom', path: '/ai-otonom', moduleCode: 'ai_growth' },
-  { icon: Puzzle, label: 'App Builder', path: '/ai-uygulama', moduleCode: 'ai_growth' },
-]
+const courierMenuItem = {
+  icon: Truck,
+  label: 'Kurye Takip',
+  path: '/kurye-takip',
+  moduleCode: 'courier',
+}
 
 const customerSubMenuIcons = {
   users: Users,
@@ -203,41 +169,6 @@ const hrSubMenuIcons = {
   'check-square': CheckSquare,
   map: MapPinned,
   smartphone: Smartphone,
-  settings: Settings,
-}
-const socialMediaSubMenuIcons = {
-  instagram: Instagram,
-  plug: PlugZap,
-  clock: Clock,
-  'check-square': CheckSquare,
-  'layout-dashboard': LayoutDashboard,
-  sparkles: Sparkles,
-  'share-2': Share2,
-  'book-open': BookOpen,
-  search: Search,
-  megaphone: Megaphone,
-  clapperboard: Clapperboard,
-  mail: Mail,
-  'message-circle': MessageCircle,
-  smartphone: Smartphone,
-  target: Target,
-  'panels-top-left': PanelsTopLeft,
-  'git-branch': GitBranch,
-  'user-plus': UserPlus,
-  users: Users,
-  binoculars: Binoculars,
-  'trending-up': TrendingUp,
-  'key-round': KeyRound,
-  palette: Palette,
-  image: Image,
-  frame: Frame,
-  camera: Camera,
-  film: Film,
-  bot: Bot,
-  network: Network,
-  workflow: Workflow,
-  'bar-chart-3': BarChart3,
-  'file-bar-chart': FileBarChart,
   settings: Settings,
 }
 const menuButtonBase =
@@ -327,7 +258,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isFieldSalesRouteActive = isFieldSalesRoute(location.pathname)
   const isLogisticsRouteActive = isLogisticsRoute(location.pathname)
   const isHrRouteActive = isHrRoute(location.pathname)
-  const isSocialMediaRouteActive = isSocialMediaRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
   const isProjectsRouteActive = isProjectsRoute(location.pathname)
@@ -341,7 +271,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     if (isProjectsRouteActive) return 'projects'
     if (isFieldSalesRouteActive) return 'fieldSales'
     if (isCrmRouteActive) return 'crm'
-    if (isSocialMediaRouteActive) return 'socialMedia'
     if (isHrRouteActive) return 'hr'
     if (isLogisticsRouteActive) return 'logistics'
     if (isSettingsRoute) return 'settings'
@@ -361,7 +290,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const fieldSalesOpen = openMenuId === 'fieldSales'
   const logisticsOpen = openMenuId === 'logistics'
   const hrOpen = openMenuId === 'hr'
-  const socialMediaOpen = openMenuId === 'socialMedia'
   const crmOpen = openMenuId === 'crm'
   const settingsOpen = openMenuId === 'settings'
 
@@ -381,7 +309,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     isProjectsRouteActive,
     isFieldSalesRouteActive,
     isCrmRouteActive,
-    isSocialMediaRouteActive,
     isHrRouteActive,
     isLogisticsRouteActive,
     isSettingsRoute,
@@ -410,11 +337,14 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     }
   }, [])
 
-  const menuItems = filterMenuByEntitlements(baseMenuItems, user?.entitlements)
+  const menuItems = filterMenuByEntitlements([courierMenuItem], user?.entitlements)
   const showProjects = filterMenuByEntitlements([projectsMenuGate], user?.entitlements).length > 0
   const showPos = filterMenuByEntitlements([posMenuItem], user?.entitlements).length > 0
+  const showCourier = menuItems.length > 0
   const isPosActive =
     location.pathname === '/shopping' || location.pathname.startsWith('/shopping/')
+  const isCourierActive =
+    location.pathname === '/kurye-takip' || location.pathname.startsWith('/kurye-takip/')
   const isMessageCenterActive =
     location.pathname === '/mesajlar' || location.pathname.startsWith('/mesajlar/')
   const brandLabel = company.companyName || 'Bach'
@@ -944,57 +874,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        <SidebarSection label="AI GROWTH" collapsed={collapsed} />
-
-        <div className={`sidebar-menu-group ${socialMediaOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('socialMedia')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isSocialMediaRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <Sparkles className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Social Media Center</span>
-                {socialMediaOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
-            )}
-          </button>
-          {socialMediaOpen && !collapsed && (
-            <SidebarSubMenu className="sidebar-submenu--scroll">
-              {socialMediaSubMenus.map((sub) => {
-                const SubIcon = socialMediaSubMenuIcons[sub.icon] || Sparkles
-                return (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    end={sub.path === SOCIAL_MEDIA_HOME_PATH}
-                    onClick={handleNavigate}
-                    className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
-                    }
-                  >
-                    <SubMenuIcon>
-                      <SubIcon className="h-3.5 w-3.5" />
-                    </SubMenuIcon>
-                    {sub.label}
-                  </NavLink>
-                )
-              })}
-            </SidebarSubMenu>
-          )}
-        </div>
-
         <SidebarSection label="İK" collapsed={collapsed} />
 
         {/* İnsan Kaynakları / PDKS */}
@@ -1066,7 +945,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </MenuIcon>
             {!collapsed && (
               <>
-                <span className={menuLabelClass}>Lojistik</span>
+                <span className={menuLabelClass}>Sevkiyat</span>
                 {logisticsOpen ? (
                   <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                 ) : (
@@ -1102,28 +981,22 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {menuItems.map((item) => (
+        {showCourier ? (
           <NavLink
-            key={item.path}
-            to={item.path}
-            onClick={() => {
-              handleNavigate()
-              if (item.openProductsList) {
-                window.dispatchEvent(new CustomEvent('erlenbox:open-products-list'))
-              }
-            }}
-            className={({ isActive }) =>
-              `${menuButtonBase} relative ${collapsed ? 'justify-center' : ''} ${
-                isActive ? 'sidebar-menu-active font-medium' : ''
-              }`
-            }
+            to={courierMenuItem.path}
+            onClick={handleNavigate}
+            className={`${menuButtonBase} relative ${collapsed ? 'justify-center' : ''} ${
+              isCourierActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
           >
             <MenuIcon collapsed={collapsed}>
-              <item.icon className="w-4 h-4 shrink-0" />
+              <Truck className="w-4 h-4 shrink-0" />
             </MenuIcon>
-            {!collapsed && <span className={menuLabelClass}>{item.label}</span>}
+            {!collapsed ? <span className={menuLabelClass}>Kurye Takip</span> : null}
           </NavLink>
-        ))}
+        ) : null}
+
+        <SidebarSection label="AYARLAR" collapsed={collapsed} />
 
         {/* Ayarlar */}
         <div className={`sidebar-menu-group ${settingsOpen ? 'is-open' : ''}`}>
