@@ -26,12 +26,12 @@ export async function checkVoiceApiHealth() {
   }
 }
 
-export async function sendVoiceChat({ messages, context }) {
+export async function sendVoiceChat({ messages, context, model } = {}) {
   const base = getVoiceApiBaseUrl()
   const response = await fetch(`${base}/api/voice/chat`, {
     method: 'POST',
     headers: buildVoiceHeaders(),
-    body: JSON.stringify(buildVoicePayload({ messages, context })),
+    body: JSON.stringify(buildVoicePayload({ messages, context, model })),
   })
 
   const data = await response.json().catch(() => ({}))

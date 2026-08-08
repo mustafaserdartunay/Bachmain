@@ -2,8 +2,17 @@ import { saveCustomerProfile, getCustomerProfiles } from '../data/customerProfil
 import { getCatalogProducts } from './productCatalog'
 import { emptyProduct } from '../data/productsData'
 import { createVoiceQuote } from './quotesStore'
-import { readCustomerMeta, getCustomerMetaSelection } from './customerMeta'
+import { readCustomerMeta, getCustomerMetaSelection, readOptionLists } from './customerMeta'
 import { loadAgendaNotes, loadAppointments, loadTasks, upsertAgendaNote, upsertAppointment, upsertTask } from './crmStore'
+import {
+  createCustomerCollection,
+  createCustomerPayment,
+  getCustomerLedgerBalance,
+  formatTreasuryCurrency,
+} from './treasuryStore'
+import { emptyCollectionForm, formatCollectionDate } from './customerMovementForm'
+import { appendActivity } from './customerActivity'
+import { getCustomerDisplay } from './customerDisplay'
 
 const PRODUCT_STORAGE_KEY = 'erlenbox-products'
 
@@ -13,6 +22,47 @@ function saveProductToCatalog(product) {
   localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(next))
   window.dispatchEvent(new CustomEvent('erlenbox:products-updated'))
   return product
+}
+
+function resolveCustomerFromPayload(payload = {}, activeCustomer = null) {
+  if (activeCustomer?.id && (!payload.customerId || payload.customerId === activeCustomer.id)) {
+    return activeCustomer
+  }
+  if (payload.customerId) {
+    return getCustomerProfiles().find((row) => row.id === payload.customerId) || activeCustomer
+  }
+  const name = String(payload.customerName || payload.customer || payload.company || '').trim().toLocaleLowerCase('tr-TR')
+  if (!name) return activeCustomer
+  return (
+    getCustomerProfiles().find((row) => {
+      const display = getCustomerDisplay(row)
+      return [row.company, row.companyTitle, display.brandShortName, display.companyTitle]
+        .filter(Boolean)
+        .some((value) => String(value).toLocaleLowerCase('tr-TR').includes(name))
+    }) || activeCustomer
+  )
+}
+
+export async function buildCustomerVoiceContext(customer, pathname = '/musteriler') {
+  if (!customer) return buildRichVoiceContext(pathname)
+  const display = getCustomerDisplay(customer)
+  const balance = getCustomerLedgerBalance(customer)
+  return {
+    currentPath: pathname,
+    mode: 'customer_row_voice',
+    activeCustomer: {
+      id: customer.id,
+      company: customer.company,
+      companyTitle: customer.companyTitle || display.companyTitle || customer.company,
+      brandShortName: display.brandShortName || '',
+      contact: customer.contact || '',
+      balance,
+      balanceLabel: formatTreasuryCurrency(balance),
+    },
+    timestamp: new Date().toISOString(),
+    instructions:
+      'Kullanıcı bu cari satırının mikrofonundan konuşuyor. Tüm tahsilat/ödeme/CRM işlemlerini yalnızca activeCustomer için uygula.',
+  }
 }
 
 export async function buildRichVoiceContext(pathname) {
@@ -201,6 +251,60 @@ export async function executeVoiceActions(actions, navigate) {
           color: payload.color || 'Mavi',
         })
         logs.push('Not defterine eklendi')
+        continue
+      }
+
+      if (type === 'create_customer_collection' || type === 'create_customer_payment') {
+        const customer = resolveCustomerFromPayload(payload)
+        if (!customer) {
+          logs.push('Cari bulunamadı — tahsilat/ödeme atlandı')
+          continue
+        }
+        const amount = Number(payload.amount)
+        if (!Number.isFinite(amount) || amount <= 0) {
+          logs.push('Geçersiz tutar — tahsilat/ödeme atlandı')
+          continue
+        }
+        const method = payload.method || 'Nakit'
+        const description =
+          payload.description
+          || (type === 'create_customer_payment'
+            ? `${customer.company} ödemesi`
+            : `${customer.company} tahsilatı`)
+        const formBase = emptyCollectionForm([], readOptionLists())
+        const movement = {
+          ...formBase,
+          customerName: customer.company,
+          amount,
+          method,
+          date: formatCollectionDate(new Date()),
+          description,
+        }
+        if (type === 'create_customer_payment') {
+          createCustomerPayment(movement)
+          appendActivity(
+            customer.id,
+            'Ödeme',
+            `Sesli · ${method} · ${formatTreasuryCurrency(amount)} · ${description}`,
+          )
+          logs.push(`Ödeme: ${formatTreasuryCurrency(amount)} · ${customer.company}`)
+        } else {
+          createCustomerCollection(movement)
+          appendActivity(
+            customer.id,
+            'Tahsilat',
+            `Sesli · ${method} · ${formatTreasuryCurrency(amount)} · ${description}`,
+          )
+          logs.push(`Tahsilat: ${formatTreasuryCurrency(amount)} · ${customer.company}`)
+        }
+        navigate(`/musteriler/${customer.id}`, {
+          state: {
+            voiceNotice:
+              type === 'create_customer_payment'
+                ? `Sesli ödeme kaydedildi: ${formatTreasuryCurrency(amount)} · ${description}`
+                : `Sesli tahsilat kaydedildi: ${formatTreasuryCurrency(amount)} · ${description}`,
+          },
+        })
         continue
       }
 

@@ -6,6 +6,7 @@ import useSpeechSynthesis from '../../hooks/useSpeechSynthesis'
 import { checkVoiceApiHealth, sendVoiceChat } from '../../utils/voiceApi'
 import { buildRichVoiceContext, executeVoiceActions } from '../../utils/voiceActions'
 import { readVoiceSettings } from '../../utils/voiceSettings'
+import { resolveAiTaskModel } from '../../utils/aiModelRouter'
 
 function ChatBubble({ role, text }) {
   const isUser = role === 'user'
@@ -59,7 +60,11 @@ export default function VoiceAssistant() {
         .slice(-12)
         .map((item) => ({ role: item.role, content: item.content }))
 
-      const result = await sendVoiceChat({ messages: history, context })
+      const result = await sendVoiceChat({
+        messages: history,
+        context,
+        model: resolveAiTaskModel('crm'),
+      })
       const reply = result.message || 'Tamam.'
       setMessages((current) => [...current, { role: 'assistant', content: reply }])
 

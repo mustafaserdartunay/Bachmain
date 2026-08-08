@@ -306,6 +306,9 @@ export default function CustomersPage({
 
   const voice = useCustomerListVoice({
     onCommand: handleVoiceCommand,
+    onSettled: () => {
+      setMovements(getTreasuryMovements())
+    },
   })
 
   const renderRowVoiceMic = useCallback(
@@ -315,18 +318,18 @@ export default function CustomersPage({
         <CustomerColumnVoiceMic
           customerId={customer.id}
           active={isActive}
-          listening={voice.listening && isActive}
+          listening={voice.recording && isActive}
           processing={voice.processing && isActive}
           onStart={() => {
             voice.startForCustomer(customer)
           }}
-          title="Sesli cari işlem (mikrofon)"
+          title="Sesli cari işlem — bas, konuş, bitir (OpenAI + Luna)"
         />
       )
     },
     [
       voice.activeCustomerId,
-      voice.listening,
+      voice.recording,
       voice.processing,
       voice.startForCustomer,
     ],
@@ -623,6 +626,7 @@ export default function CustomersPage({
         <CustomerVoiceStatusBar
           customerLabel={voice.activeCustomerLabel}
           listening={voice.listening}
+          recording={voice.recording}
           processing={voice.processing}
           interim={voice.interim}
           transcript={voice.transcript}

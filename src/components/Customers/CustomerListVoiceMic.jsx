@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Mic, MicOff, Loader2 } from 'lucide-react'
-import useSpeechRecognition from '../../hooks/useSpeechRecognition'
+import useVoiceRecorder from '../../hooks/useVoiceRecorder'
 import { parseCustomerVoiceCommand } from '../../utils/parseCustomerVoiceCommand'
+import { sendVoiceChat } from '../../utils/voiceApi'
+import { resolveAiTaskModel } from '../../utils/aiModelRouter'
+import {
+  buildCustomerVoiceContext,
+  executeVoiceActions,
+} from '../../utils/voiceActions'
 import { YF_TEXT_CLASS } from '../../utils/dashboardDesign'
 
 const MIC_IDLE_CLASS =
@@ -11,7 +18,7 @@ const MIC_LIVE_CLASS =
   'customer-voice-mic inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 text-rose-600 transition-[background-color,color]'
 
 /**
- * Row mic at the start of the cari name — listens for that customer only.
+ * Row mic at the start of the cari name — OpenAI Whisper + Luna CRM.
  */
 export function CustomerColumnVoiceMic({
   customerId,
@@ -29,7 +36,7 @@ export function CustomerColumnVoiceMic({
       className={listening || active ? MIC_LIVE_CLASS : MIC_IDLE_CLASS}
       title={title}
       aria-label={title}
-      disabled={disabled || processing}
+      disabled={disabled || (processing && !active)}
       onClick={(event) => {
         event.preventDefault()
         event.stopPropagation()
@@ -50,6 +57,7 @@ export function CustomerColumnVoiceMic({
 export function CustomerVoiceStatusBar({
   customerLabel,
   listening,
+  recording,
   processing,
   interim,
   transcript,
@@ -68,14 +76,14 @@ export function CustomerVoiceStatusBar({
       aria-live="polite"
     >
       <span
-        className={`relative flex h-2.5 w-2.5 shrink-0 ${listening ? '' : 'opacity-40'}`}
+        className={`relative flex h-2.5 w-2.5 shrink-0 ${listening || recording ? '' : 'opacity-40'}`}
       >
-        {listening ? (
+        {listening || recording ? (
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
         ) : null}
         <span
           className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
-            error ? 'bg-rose-500' : listening ? 'bg-rose-500' : 'bg-emerald-500'
+            error ? 'bg-rose-500' : listening || recording ? 'bg-rose-500' : 'bg-emerald-500'
           }`}
         />
       </span>
@@ -83,9 +91,9 @@ export function CustomerVoiceStatusBar({
         {error
           || message
           || (processing
-            ? 'Komut işleniyor…'
-            : listening
-              ? `${customerLabel || 'Müşteri'} · Dinleniyor — örn. “beş bin lira tahsilat yap, ön ödeme alındı”`
+            ? 'OpenAI · ses yazıya çevriliyor / Luna komutu işliyor…'
+            : recording
+              ? `${customerLabel || 'Müşteri'} · Kaydediliyor — bitince mikrofona tekrar basın (örn. “beş bin lira tahsilat yap, ön ödeme alındı”)`
               : '')}
         {(interim || transcript) && !error ? (
           <span className="mt-0.5 block truncate text-[12px] text-[var(--ink)]">
@@ -93,13 +101,13 @@ export function CustomerVoiceStatusBar({
           </span>
         ) : null}
       </p>
-      {listening ? (
+      {recording ? (
         <button
           type="button"
           onClick={onStop}
           className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 hover:bg-rose-500/10 hover:text-rose-600`}
         >
-          Durdur
+          Bitir
         </button>
       ) : null}
     </div>
@@ -107,84 +115,103 @@ export function CustomerVoiceStatusBar({
 }
 
 /**
- * Manages speech session scoped to a customer row.
+ * Manages OpenAI voice session scoped to a customer row.
+ * STT: existing OpenAI transcribe · CRM intent: Luna.
  */
-export function useCustomerListVoice({ onCommand }) {
+export function useCustomerListVoice({ onCommand, onSettled } = {}) {
+  const navigate = useNavigate()
   const customerRef = useRef(null)
-  const settleTimerRef = useRef(null)
   const handledRef = useRef(false)
-  const speechStopRef = useRef(null)
   const [activeCustomerId, setActiveCustomerId] = useState(null)
-  const [processing, setProcessing] = useState(false)
+  const [aiProcessing, setAiProcessing] = useState(false)
   const [message, setMessage] = useState('')
   const [sessionError, setSessionError] = useState('')
   const [activeCustomerLabel, setActiveCustomerLabel] = useState('')
+  const [transcript, setTranscript] = useState('')
 
-  const handleFinal = useCallback(
-    async (text) => {
-      if (handledRef.current || processing) return
-      const customer = customerRef.current
-      if (!customer) {
-        setSessionError('Sesli işlem için önce satır mikrofonuna basın.')
-        return
-      }
-
+  const runLocalCommand = useCallback(
+    async (customer, text) => {
       const parsed = parseCustomerVoiceCommand(text)
-      if (!parsed.ok) {
-        setSessionError(parsed.error || 'Komut anlaşılamadı.')
-        return
-      }
+      if (!parsed.ok) return false
 
-      handledRef.current = true
-      setProcessing(true)
-      setSessionError('')
       setMessage(
         parsed.action === 'payment'
           ? `Ödeme hazırlanıyor · ${parsed.amount} ₺`
           : `Tahsilat hazırlanıyor · ${parsed.amount} ₺`,
       )
+      await onCommand?.({ customer, parsed, transcript: text })
+      setMessage(
+        parsed.action === 'payment'
+          ? `Ödeme uygulandı · ${parsed.amount} ₺`
+          : `Tahsilat uygulandı · ${parsed.amount} ₺`,
+      )
+      return true
+    },
+    [onCommand],
+  )
+
+  const runLunaCommand = useCallback(
+    async (customer, text) => {
+      setMessage('Luna · CRM komutu çözülüyor…')
+      const context = await buildCustomerVoiceContext(customer, '/musteriler')
+      const result = await sendVoiceChat({
+        messages: [{ role: 'user', content: text }],
+        context,
+        model: resolveAiTaskModel('crm'),
+      })
+
+      const actions = Array.isArray(result.actions) ? result.actions : []
+      if (!actions.length) {
+        setSessionError(result.message || 'Komut anlaşılamadı. Örn: “beş bin lira tahsilat yap”.')
+        return
+      }
+
+      const logs = await executeVoiceActions(actions, navigate)
+      setMessage(result.message || logs[0] || 'İşlem tamamlandı.')
+      onSettled?.({ customer, actions, logs, reply: result.message })
+    },
+    [navigate, onSettled],
+  )
+
+  const handleTranscript = useCallback(
+    async (text) => {
+      const clean = String(text || '').trim()
+      const customer = customerRef.current
+      if (!clean || !customer || handledRef.current) return
+
+      handledRef.current = true
+      setAiProcessing(true)
+      setSessionError('')
+      setTranscript(clean)
+      setMessage(`Algılandı: “${clean}”`)
 
       try {
-        await onCommand?.({ customer, parsed, transcript: text })
-        setMessage(
-          parsed.action === 'payment'
-            ? `Ödeme uygulandı · ${parsed.amount} ₺`
-            : `Tahsilat uygulandı · ${parsed.amount} ₺`,
-        )
-        speechStopRef.current?.()
+        const localOk = await runLocalCommand(customer, clean)
+        if (!localOk) {
+          await runLunaCommand(customer, clean)
+        }
       } catch (error) {
         handledRef.current = false
-        setSessionError(error?.message || 'İşlem başarısız.')
+        setSessionError(error?.message || 'Sesli işlem başarısız.')
       } finally {
-        setProcessing(false)
+        setAiProcessing(false)
         setActiveCustomerId(null)
       }
     },
-    [onCommand, processing],
+    [runLocalCommand, runLunaCommand],
   )
 
-  const speech = useSpeechRecognition({
-    lang: 'tr-TR',
-    continuous: true,
-    onResult: (text) => {
-      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current)
-      settleTimerRef.current = window.setTimeout(() => {
-        settleTimerRef.current = null
-        handleFinal(text)
-      }, 700)
-    },
+  const recorder = useVoiceRecorder({
+    onResult: handleTranscript,
+    maxDurationMs: 45000,
   })
 
-  speechStopRef.current = speech.stop
-
   const stop = useCallback(() => {
-    if (settleTimerRef.current) {
-      window.clearTimeout(settleTimerRef.current)
-      settleTimerRef.current = null
+    recorder.stop()
+    if (!recorder.processing && !aiProcessing) {
+      setActiveCustomerId(null)
     }
-    speech.stop()
-    setActiveCustomerId(null)
-  }, [speech])
+  }, [aiProcessing, recorder])
 
   const startForCustomer = useCallback(
     (customer) => {
@@ -192,12 +219,19 @@ export function useCustomerListVoice({ onCommand }) {
         setSessionError('Sesli işlem için müşteri satırı gerekli.')
         return
       }
-      if (speech.listening && customerRef.current?.id === customer.id) {
-        stop()
+
+      const sameRow = customerRef.current?.id === customer.id
+      if (recorder.recording && sameRow) {
+        recorder.stop()
         return
       }
-      if (!speech.supported) {
-        setSessionError('Bu tarayıcıda konuşma tanıma yok. Chrome ile deneyin.')
+
+      if (recorder.recording) {
+        recorder.stop()
+      }
+
+      if (!recorder.supported) {
+        setSessionError('Bu tarayıcıda mikrofon kaydı yok. Chrome ile deneyin.')
         return
       }
 
@@ -209,47 +243,25 @@ export function useCustomerListVoice({ onCommand }) {
       setActiveCustomerId(customer.id)
       setSessionError('')
       setMessage('')
-      speech.clearError?.()
-      speech.start()
+      setTranscript('')
+      recorder.clearError?.()
+      recorder.start()
     },
-    [speech, stop],
+    [recorder],
   )
 
   useEffect(() => {
-    if (!speech.listening || handledRef.current) return undefined
-    const timer = window.setTimeout(() => {
-      if (!handledRef.current && speech.transcript) {
-        handleFinal(speech.transcript)
-      } else if (!handledRef.current) {
-        stop()
-        setSessionError('Süre doldu. Tekrar mikrofonu deneyin.')
-      }
-    }, 12000)
-    return () => window.clearTimeout(timer)
-  }, [handleFinal, speech.listening, speech.transcript, stop])
-
-  useEffect(() => {
-    if (handledRef.current && !processing) {
-      speech.stop()
-    }
-  }, [processing, speech])
-
-  useEffect(
-    () => () => {
-      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current)
-      speech.stop()
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  )
+    if (recorder.error) setSessionError(recorder.error)
+  }, [recorder.error])
 
   return {
-    supported: speech.supported,
-    listening: speech.listening,
-    processing,
-    interim: speech.interimTranscript,
-    transcript: speech.transcript,
-    error: sessionError || speech.error,
+    supported: recorder.supported,
+    listening: recorder.listening || aiProcessing,
+    recording: recorder.recording,
+    processing: recorder.processing || aiProcessing,
+    interim: '',
+    transcript,
+    error: sessionError,
     message,
     activeCustomerId,
     activeCustomerLabel,
