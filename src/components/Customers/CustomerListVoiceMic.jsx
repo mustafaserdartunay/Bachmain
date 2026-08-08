@@ -11,21 +11,21 @@ const MIC_LIVE_CLASS =
   'customer-voice-mic inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 text-rose-600 transition-[background-color,color]'
 
 /**
- * Column-header mic: starts listening immediately for the active (hovered/selected) customer.
+ * Row mic at the start of the cari name — listens for that customer only.
  */
 export function CustomerColumnVoiceMic({
-  columnId,
+  customerId,
   active = false,
   listening = false,
   processing = false,
   disabled = false,
   onStart,
-  title = 'Sesli işlem',
+  title = 'Sesli cari işlem (mikrofon)',
 }) {
   return (
     <button
       type="button"
-      data-column-voice={columnId}
+      data-row-voice={customerId || undefined}
       className={listening || active ? MIC_LIVE_CLASS : MIC_IDLE_CLASS}
       title={title}
       aria-label={title}
@@ -33,10 +33,10 @@ export function CustomerColumnVoiceMic({
       onClick={(event) => {
         event.preventDefault()
         event.stopPropagation()
-        onStart?.(columnId)
+        onStart?.(customerId)
       }}
     >
-      {processing ? (
+      {processing && active ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2.25} />
       ) : listening ? (
         <MicOff className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -109,12 +109,12 @@ export function CustomerVoiceStatusBar({
 /**
  * Manages speech session scoped to a customer row.
  */
-export function useCustomerListVoice({ resolveCustomer, onCommand }) {
+export function useCustomerListVoice({ onCommand }) {
   const customerRef = useRef(null)
   const settleTimerRef = useRef(null)
   const handledRef = useRef(false)
   const speechStopRef = useRef(null)
-  const [activeColumnId, setActiveColumnId] = useState(null)
+  const [activeCustomerId, setActiveCustomerId] = useState(null)
   const [processing, setProcessing] = useState(false)
   const [message, setMessage] = useState('')
   const [sessionError, setSessionError] = useState('')
@@ -125,7 +125,7 @@ export function useCustomerListVoice({ resolveCustomer, onCommand }) {
       if (handledRef.current || processing) return
       const customer = customerRef.current
       if (!customer) {
-        setSessionError('Önce bir müşteri satırının üzerine gelin veya satırı seçin.')
+        setSessionError('Sesli işlem için önce satır mikrofonuna basın.')
         return
       }
 
@@ -157,7 +157,7 @@ export function useCustomerListVoice({ resolveCustomer, onCommand }) {
         setSessionError(error?.message || 'İşlem başarısız.')
       } finally {
         setProcessing(false)
-        setActiveColumnId(null)
+        setActiveCustomerId(null)
       }
     },
     [onCommand, processing],
@@ -183,13 +183,17 @@ export function useCustomerListVoice({ resolveCustomer, onCommand }) {
       settleTimerRef.current = null
     }
     speech.stop()
-    setActiveColumnId(null)
+    setActiveCustomerId(null)
   }, [speech])
 
   const startForCustomer = useCallback(
-    (customer, columnId = 'name') => {
+    (customer) => {
       if (!customer) {
         setSessionError('Sesli işlem için müşteri satırı gerekli.')
+        return
+      }
+      if (speech.listening && customerRef.current?.id === customer.id) {
+        stop()
         return
       }
       if (!speech.supported) {
@@ -202,25 +206,13 @@ export function useCustomerListVoice({ resolveCustomer, onCommand }) {
       setActiveCustomerLabel(
         customer.company || customer.companyTitle || customer.name || 'Müşteri',
       )
-      setActiveColumnId(columnId)
+      setActiveCustomerId(customer.id)
       setSessionError('')
       setMessage('')
       speech.clearError?.()
       speech.start()
     },
-    [speech],
-  )
-
-  const startFromHeader = useCallback(
-    (columnId) => {
-      if (speech.listening) {
-        stop()
-        return
-      }
-      const customer = resolveCustomer?.()
-      startForCustomer(customer, columnId)
-    },
-    [resolveCustomer, speech.listening, startForCustomer, stop],
+    [speech, stop],
   )
 
   useEffect(() => {
@@ -259,9 +251,8 @@ export function useCustomerListVoice({ resolveCustomer, onCommand }) {
     transcript: speech.transcript,
     error: sessionError || speech.error,
     message,
-    activeColumnId,
+    activeCustomerId,
     activeCustomerLabel,
-    startFromHeader,
     startForCustomer,
     stop,
     setSessionError,

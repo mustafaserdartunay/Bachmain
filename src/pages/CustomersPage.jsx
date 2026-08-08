@@ -166,8 +166,6 @@ export default function CustomersPage({
   const [b2bBusy, setB2bBusy] = useState(false)
   const [b2bNotice, setB2bNotice] = useState('')
   const [b2bError, setB2bError] = useState('')
-  const hoveredCustomerRef = useRef(null)
-  const filteredCustomersRef = useRef([])
   const [b2bMap, setB2bMap] = useState(() => {
     const map = {}
     getCustomerProfiles().forEach((customer) => {
@@ -255,15 +253,6 @@ export default function CustomersPage({
     })
   }, [scopedProfiles, customerSettings, filters, movements, searchQuery])
 
-  filteredCustomersRef.current = filteredCustomers
-
-  const resolveVoiceCustomer = useCallback(() => {
-    if (hoveredCustomerRef.current) return hoveredCustomerRef.current
-    const rows = filteredCustomersRef.current
-    if (rows.length === 1) return rows[0]
-    return null
-  }, [])
-
   const handleVoiceCommand = useCallback(
     async ({ customer, parsed }) => {
       const amount = Number(parsed.amount)
@@ -316,29 +305,31 @@ export default function CustomersPage({
   )
 
   const voice = useCustomerListVoice({
-    resolveCustomer: resolveVoiceCustomer,
     onCommand: handleVoiceCommand,
   })
 
-  const renderColumnVoiceMic = useCallback(
-    (columnId, row) => (
-      <CustomerColumnVoiceMic
-        columnId={columnId}
-        active={voice.activeColumnId === columnId}
-        listening={voice.listening && voice.activeColumnId === columnId}
-        processing={voice.processing}
-        onStart={(id) => {
-          if (row) {
-            hoveredCustomerRef.current = row
-            voice.startForCustomer(row, id)
-            return
-          }
-          voice.startFromHeader(id)
-        }}
-        title="Sesli cari işlem (mikrofon)"
-      />
-    ),
-    [voice.activeColumnId, voice.listening, voice.processing, voice.startForCustomer, voice.startFromHeader],
+  const renderRowVoiceMic = useCallback(
+    (customer) => {
+      const isActive = voice.activeCustomerId === customer.id
+      return (
+        <CustomerColumnVoiceMic
+          customerId={customer.id}
+          active={isActive}
+          listening={voice.listening && isActive}
+          processing={voice.processing && isActive}
+          onStart={() => {
+            voice.startForCustomer(customer)
+          }}
+          title="Sesli cari işlem (mikrofon)"
+        />
+      )
+    },
+    [
+      voice.activeCustomerId,
+      voice.listening,
+      voice.processing,
+      voice.startForCustomer,
+    ],
   )
 
   const totalReceivable = scopedProfiles.reduce(
@@ -685,12 +676,6 @@ export default function CustomersPage({
           data={filteredCustomers}
           defaultSort={{ key: 'balance', dir: 'desc' }}
           getRowId={(customer) => customer.id}
-          onRowMouseEnter={(customer) => {
-            hoveredCustomerRef.current = customer
-          }}
-          onRowMouseLeave={() => {
-            /* keep last hovered for header mic */
-          }}
           onRowClick={
             bulkSelectMode ? undefined : (customer) => navigate(`/musteriler/${customer.id}`)
           }
@@ -737,7 +722,6 @@ export default function CustomersPage({
             {
               id: 'name',
               header: String(columnLabel || '').toLocaleUpperCase('tr-TR'),
-              headerAccessory: (ctx) => renderColumnVoiceMic('name', ctx?.row),
               sortable: true,
               accessorKey: 'name',
               getSortValue: (customer) => {
@@ -748,12 +732,20 @@ export default function CustomersPage({
               cell: (customer) => {
                 const display = getCustomerDisplay(customer)
                 return (
-                  <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
-                    <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
-                      {display.brandShortName}
+                  <span className="flex min-w-0 items-start gap-1.5 py-0.5">
+                    <span
+                      className="mt-0.5 inline-flex shrink-0"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {renderRowVoiceMic(customer)}
                     </span>
-                    <span className="customer-name-secondary font-sans truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
-                      {display.companyTitle}
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                        {display.brandShortName}
+                      </span>
+                      <span className="customer-name-secondary font-sans truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
+                        {display.companyTitle}
+                      </span>
                     </span>
                   </span>
                 )
@@ -762,7 +754,6 @@ export default function CustomersPage({
             {
               id: 'type',
               header: 'TİPİ',
-              headerAccessory: (ctx) => renderColumnVoiceMic('type', ctx?.row),
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -790,7 +781,6 @@ export default function CustomersPage({
             {
               id: 'representative',
               header: 'TEMSİLCİ',
-              headerAccessory: (ctx) => renderColumnVoiceMic('representative', ctx?.row),
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -823,7 +813,6 @@ export default function CustomersPage({
             {
               id: 'scoring',
               header: 'PUANTAJ',
-              headerAccessory: (ctx) => renderColumnVoiceMic('scoring', ctx?.row),
               className: 'w-[7.25rem]',
               hideOnMobile: true,
               cell: (customer) => {
@@ -851,7 +840,6 @@ export default function CustomersPage({
             {
               id: 'balance',
               header: 'GÜNCEL BAKİYE',
-              headerAccessory: (ctx) => renderColumnVoiceMic('balance', ctx?.row),
               sortable: true,
               accessorKey: 'balance',
               getSortValue: (customer) => currentBalance(customer, movements),
