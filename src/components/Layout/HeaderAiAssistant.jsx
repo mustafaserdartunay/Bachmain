@@ -9,6 +9,9 @@ import { checkVoiceApiHealth, sendVoiceChat } from '../../utils/voiceApi'
 import { buildRichVoiceContext, executeVoiceActions } from '../../utils/voiceActions'
 import { readVoiceSettings, saveVoiceSettings } from '../../utils/voiceSettings'
 import { HEADER_SEARCH_INPUT_CLASS } from '../../utils/themeMode'
+import BachAiListeningBadge from '../Ai/BachAiListeningBadge'
+import { useBachWakeWord } from '../../ai/v2/useBachWakeWord'
+import { bindForegroundSessionGuard } from '../../ai/v2/iosBridge'
 
 function ChatBubble({ role, text }) {
   const isUser = role === 'user'
@@ -54,6 +57,7 @@ export default function HeaderAiAssistant() {
   const [loading, setLoading] = useState(false)
   const [apiReady, setApiReady] = useState(null)
   const [error, setError] = useState('')
+  const [handsFree, setHandsFree] = useState(false)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
   const loadingRef = useRef(false)
@@ -110,9 +114,16 @@ export default function HeaderAiAssistant() {
     clearError: clearMicError,
   } = useVoiceRecorder({ onResult: processUserText })
 
+  const { listeningBadge } = useBachWakeWord({
+    enabled: handsFree && open,
+  })
+
+  useEffect(() => bindForegroundSessionGuard(() => setHandsFree(false)), [])
+
   useEffect(() => {
     if (!open) {
       stopMic()
+      setHandsFree(false)
       return undefined
     }
 
@@ -273,6 +284,18 @@ export default function HeaderAiAssistant() {
               <div className="min-w-0">
                 <p className="text-sm font-extrabold text-[var(--ink)]">AI Asistan</p>
                 <p className="mt-0.5 text-[11px] font-semibold text-[var(--muted)]">{statusText}</p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                  <BachAiListeningBadge active={listeningBadge || recording} />
+                  <label className="inline-flex cursor-pointer items-center gap-1.5 text-[11px] font-semibold text-[var(--muted)]">
+                    <input
+                      type="checkbox"
+                      className="rounded border-[var(--muted)]"
+                      checked={handsFree}
+                      onChange={(e) => setHandsFree(e.target.checked)}
+                    />
+                    Hands-free (ön plan)
+                  </label>
+                </div>
               </div>
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[rgba(124,58,237,0.1)] text-[#7c3aed]">
                 <Sparkles className="h-4 w-4" />

@@ -17,6 +17,10 @@ import {
   handleGrowthModelsRequest,
 } from './growthAi.js'
 import { resolveChatModel, resolveTranscribeModel } from './openaiModels.js'
+import { handleIntentRequest, handleToolCallRequest } from './ai/actionEngine.js'
+import { handleRealtimeSessionRequest } from './ai/realtimeSession.js'
+import { mapAiUserError } from './ai/userErrors.js'
+import { AI_CONFIG, VOICE_CONFIG, WAKE_WORD_CONFIG } from './ai/config.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -48,7 +52,7 @@ function guardAi(req) {
 
 function sendAiError(res, error) {
   const status = Number(error.statusCode || error.status || 500)
-  res.status(status).json({ error: error.message || 'AI hatası' })
+  res.status(status).json({ error: mapAiUserError(error, error.message || 'AI hatası') })
 }
 
 app.get('/api/voice/health', (_req, res) => {
@@ -122,6 +126,51 @@ app.post('/api/growth/chat', async (req, res) => {
   try {
     guardAi(req)
     res.json(await handleGrowthChatRequest(req.body, req.headers))
+  } catch (error) {
+    sendAiError(res, error)
+  }
+})
+
+/** Bach AI V2 — Intent + Action Engine (parallel to /api/voice/*). */
+app.get('/api/ai/v2/health', (_req, res) => {
+  res.json({
+    ok: true,
+    version: AI_CONFIG.version,
+    models: AI_CONFIG.models,
+    voice: {
+      finalSilenceTimeoutMs: VOICE_CONFIG.finalSilenceTimeoutMs,
+      sessionTimeoutMs: VOICE_CONFIG.sessionTimeoutMs,
+    },
+    wake: {
+      commandSilenceTimeoutMs: WAKE_WORD_CONFIG.commandSilenceTimeoutMs,
+      phrases: WAKE_WORD_CONFIG.phrases,
+    },
+    hasApiKey: Boolean(getOpenAiApiKey()),
+  })
+})
+
+app.post('/api/ai/v2/intent', async (req, res) => {
+  try {
+    guardAi(req)
+    res.json(await handleIntentRequest(req.body, req.headers))
+  } catch (error) {
+    sendAiError(res, error)
+  }
+})
+
+app.post('/api/ai/v2/tool', async (req, res) => {
+  try {
+    guardAi(req)
+    res.json(await handleToolCallRequest(req.body, req.headers))
+  } catch (error) {
+    sendAiError(res, error)
+  }
+})
+
+app.post('/api/ai/realtime/session', async (req, res) => {
+  try {
+    guardAi(req)
+    res.json(await handleRealtimeSessionRequest(req.body, req.headers))
   } catch (error) {
     sendAiError(res, error)
   }

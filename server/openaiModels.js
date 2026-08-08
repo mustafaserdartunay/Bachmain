@@ -1,20 +1,19 @@
 /** Shared OpenAI model defaults — GPT-5.5 Pro via Responses API. */
 
+import { AI_MODEL_TIERS_V2, resolveTierModel as resolveV2Tier } from './ai/config.js'
+
 export const DEFAULT_OPENAI_CHAT_MODEL = 'gpt-5.5-pro'
 export const DEFAULT_OPENAI_TRANSCRIBE_MODEL = 'gpt-4o-transcribe'
 /** Quality-first reasoning for GPT-5.x (medium | high | xhigh for Pro). */
 export const DEFAULT_OPENAI_REASONING_EFFORT = 'high'
 
-/** Product tiers → concrete OpenAI model IDs (env overrides welcome). */
+/** Product tiers → concrete OpenAI model IDs (env overrides via server/ai/config.js). */
 export const AI_MODEL_TIERS = {
-  luna: process.env.OPENAI_MODEL_LUNA || process.env.OPENAI_MODEL || 'gpt-5.5',
-  terra: process.env.OPENAI_MODEL_TERRA || 'gpt-5.5-pro',
-  sol: process.env.OPENAI_MODEL_SOL || 'gpt-5.5-pro',
+  luna: AI_MODEL_TIERS_V2.luna,
+  terra: AI_MODEL_TIERS_V2.terra,
+  sol: AI_MODEL_TIERS_V2.sol,
   /** Voice STT/TTS slot — OpenAI transcribe until Gemini Live is wired. */
-  'gemini-live':
-    process.env.GEMINI_LIVE_MODEL
-    || process.env.OPENAI_WHISPER_MODEL
-    || DEFAULT_OPENAI_TRANSCRIBE_MODEL,
+  'gemini-live': AI_MODEL_TIERS_V2['gemini-live'],
 }
 
 export const OPENAI_CHAT_MODEL_PRESETS = [
@@ -35,8 +34,7 @@ export function resolveChatModel(override) {
   // Gemini Live is the voice slot; chat requests fall back to Luna.
   if (key === 'gemini-live') return String(AI_MODEL_TIERS.luna).trim()
   if (AI_MODEL_TIERS[key]) return String(AI_MODEL_TIERS[key]).trim()
-  if (key === 'gpt-5.6-luna' || key === 'gpt-5.6') return String(AI_MODEL_TIERS.luna).trim()
-  return raw
+  return resolveV2Tier(raw)
 }
 
 export function resolveTranscribeModel(override) {
