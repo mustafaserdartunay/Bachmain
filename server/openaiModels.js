@@ -146,6 +146,26 @@ export function buildResponsesBody({
 
   if (json) {
     body.text = { format: { type: 'json_object' } }
+    // Responses API rejects json_object unless input (not instructions) mentions "json".
+    const inputHasJson = body.input.some((item) => /json/i.test(String(item?.content || '')))
+    if (!inputHasJson) {
+      let lastUserIdx = -1
+      for (let i = body.input.length - 1; i >= 0; i -= 1) {
+        if (body.input[i]?.role === 'user') {
+          lastUserIdx = i
+          break
+        }
+      }
+      if (lastUserIdx >= 0) {
+        const prev = String(body.input[lastUserIdx].content || '')
+        body.input[lastUserIdx] = {
+          ...body.input[lastUserIdx],
+          content: `${prev}\n\nReturn a JSON object.`,
+        }
+      } else {
+        body.input.push({ role: 'user', content: 'Return a JSON object.' })
+      }
+    }
   }
 
   if (maxCompletionTokens) {
