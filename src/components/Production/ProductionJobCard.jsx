@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { ArchiveRestore, ChevronDown, ChevronRight, Package, Trash2 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
+import { HEADER_ACTION_GRADIENTS } from '../Layout/HeaderCashActionsPanel'
 import ProductionProcessDotRail from './ProductionProcessDotRail'
+import ProductionProcessStageBar from './ProductionProcessStageBar'
 import ProductionStageMiniCards from './ProductionStageMiniCards'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
 import ProductionPartialDeliveryTable from './ProductionPartialDeliveryTable'
@@ -36,18 +38,40 @@ function formatShortDate(value) {
 
 function resolveStatusBadge(job, metrics) {
   const status = String(job.status || '')
-  if (/iptal/i.test(status)) return { label: 'İPTAL', className: 'bg-red-50 text-red-600' }
-  if (status === 'Bekliyor') return { label: 'BEKLEMEDE', className: 'bg-slate-100 text-slate-600' }
+  if (/iptal/i.test(status)) {
+    return {
+      label: 'İPTAL',
+      gradient: HEADER_ACTION_GRADIENTS.danger,
+    }
+  }
+  if (status === 'Bekliyor') {
+    return {
+      label: 'BEKLEMEDE',
+      gradient: 'from-slate-300 via-slate-400 to-slate-500',
+    }
+  }
   if (status === 'Tamamlandı') {
-    return { label: 'TAMAMLANDI', className: 'bg-emerald-50 text-emerald-600' }
+    return {
+      label: 'TAMAMLANDI',
+      gradient: HEADER_ACTION_GRADIENTS.success,
+    }
   }
   if (metrics.linesWithPartialDelivery > 0 || /kısmi/i.test(status)) {
-    return { label: 'ÜRETİM DEVAM EDİYOR', className: 'bg-blue-50 text-blue-600' }
+    return {
+      label: 'ÜRETİM DEVAM EDİYOR',
+      gradient: HEADER_ACTION_GRADIENTS.primary,
+    }
   }
   if (status === 'Devam Ediyor') {
-    return { label: 'ÜRETİM DEVAM EDİYOR', className: 'bg-blue-50 text-blue-600' }
+    return {
+      label: 'ÜRETİM DEVAM EDİYOR',
+      gradient: HEADER_ACTION_GRADIENTS.cash,
+    }
   }
-  return { label: 'ÜRETİM DEVAM EDİYOR', className: 'bg-blue-50 text-blue-600' }
+  return {
+    label: 'ÜRETİM DEVAM EDİYOR',
+    gradient: HEADER_ACTION_GRADIENTS.cash,
+  }
 }
 
 function buildStepsForLine(line, productionStages) {
@@ -65,6 +89,17 @@ function buildStepsForLine(line, productionStages) {
     }))
   }
   return []
+}
+
+function MetricChip({ label, value }) {
+  return (
+    <div className="rounded-lg bg-black/[0.04] px-2 py-1 dark:bg-white/10">
+      <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted,#94A3B8)]">
+        {label}
+      </p>
+      <p className="text-[13px] font-black tabular-nums text-[var(--ink,#0F172A)]">{value}</p>
+    </div>
+  )
 }
 
 export default function ProductionJobCard({
@@ -131,9 +166,20 @@ export default function ProductionJobCard({
     window.dispatchEvent(new CustomEvent('bach:production-updated'))
   }
 
+  function handleStageClick(stageId) {
+    if (!activeLine || !primaryRow) return
+    lineItemActions?.handleQuantityRowStageChange(activeLine, primaryRow.id, stageId)
+  }
+
+  function handlePhotosChange(photos) {
+    if (!activeLine) return
+    lineItemActions?.handleStagePhotosChange(activeLine, photos)
+  }
+
   return (
-    <article className="overflow-hidden rounded-[18px] border border-[var(--border,#E2E8F0)] bg-white/90 shadow-[0_6px_20px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(15,23,42,0.07)] dark:bg-white/5">
-      <div className="grid grid-cols-1 items-center gap-3 px-4 py-3.5 lg:grid-cols-[minmax(200px,1.15fr)_150px_minmax(240px,1.5fr)_150px_130px_88px]">
+    <article className="overflow-hidden rounded-[20px] border border-[var(--border,#E2E8F0)] bg-white/95 shadow-[0_6px_20px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_14px_36px_rgba(15,23,42,0.08)] dark:bg-white/5">
+      {/* Top meta row */}
+      <div className="flex flex-col gap-3 px-4 py-3.5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-start gap-2.5">
           <input
             type="checkbox"
@@ -146,7 +192,7 @@ export default function ProductionJobCard({
             <p className="text-[13px] font-black tabular-nums text-[var(--bach-navy,#1E3A8A)]">
               {job.id}
             </p>
-            <p className="truncate text-[13px] font-bold text-[var(--ink,#0F172A)]">
+            <p className="truncate text-[14px] font-bold text-[var(--ink,#0F172A)]">
               {customerDisplay.brandShortName || job.customer || 'Müşteri yok'}
             </p>
             <p className="truncate text-[12px] font-medium text-[var(--muted,#64748B)]">
@@ -161,114 +207,99 @@ export default function ProductionJobCard({
         <button
           type="button"
           onClick={onToggleExpand}
-          className="flex items-center gap-2 text-left"
+          className="flex items-center gap-3 text-left"
         >
           <ProductionProgressRing percent={progressPct} />
-          <div className="text-[11px] font-semibold leading-relaxed text-[var(--muted,#64748B)]">
-            <p>
-              Üretilecek:{' '}
-              <span className="font-bold text-[var(--ink,#0F172A)]">
-                {formatQty(metrics.ordered)}
-              </span>
-            </p>
-            <p>
-              Üretilen:{' '}
-              <span className="font-bold text-[var(--ink,#0F172A)]">
-                {formatQty(metrics.produced)}
-              </span>
-            </p>
-            <p>
-              Teslim:{' '}
-              <span className="font-bold text-[var(--ink,#0F172A)]">
-                {formatQty(metrics.delivered)}
-              </span>
-            </p>
-            <p>
-              Kalan:{' '}
-              <span className="font-bold text-[var(--ink,#0F172A)]">
-                {formatQty(metrics.remaining)}
-              </span>
-            </p>
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+            <MetricChip label="Üretilecek" value={formatQty(metrics.ordered)} />
+            <MetricChip label="Üretilen" value={formatQty(metrics.produced)} />
+            <MetricChip label="Teslim" value={formatQty(metrics.delivered)} />
+            <MetricChip label="Kalan" value={formatQty(metrics.remaining)} />
           </div>
         </button>
 
-        <div className="min-w-0">
-          <ProductionProcessDotRail
-            steps={processSteps}
-            readOnly={activeLine?.productionClosed === true}
-            onStageClick={(stageId) => {
-              if (!activeLine || !primaryRow) return
-              lineItemActions?.handleQuantityRowStageChange(activeLine, primaryRow.id, stageId)
-            }}
-          />
-        </div>
-
-        <div>
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${badge.className}`}
+            className={`inline-flex rounded-xl bg-gradient-to-br px-3 py-1.5 text-[10px] font-black tracking-wide text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] ${badge.gradient}`}
           >
             {badge.label}
           </span>
-        </div>
-
-        <div>
           {hasPartial ? (
-            <div className="space-y-0.5">
-              <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-600">
-                Kısmi Teslimat
-              </span>
-              <p className="text-[12px] font-bold tabular-nums text-[var(--ink,#0F172A)]">
-                {formatQty(metrics.delivered)} / {formatQty(metrics.ordered)}
-              </p>
-            </div>
+            <span
+              className={`inline-flex rounded-xl bg-gradient-to-br px-3 py-1.5 text-[10px] font-black text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] ${HEADER_ACTION_GRADIENTS.success}`}
+            >
+              Kısmi · {formatQty(metrics.delivered)}/{formatQty(metrics.ordered)}
+            </span>
           ) : (
-            <span className="inline-flex rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-black text-slate-500">
+            <span
+              className={`inline-flex rounded-xl bg-gradient-to-br px-3 py-1.5 text-[10px] font-black text-white/95 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] ${HEADER_ACTION_GRADIENTS.amber}`}
+            >
               Teslimat Yok
             </span>
           )}
-        </div>
 
-        <div
-          className="flex items-center justify-end gap-1.5"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            onClick={onToggleExpand}
-            className={`rounded-lg border p-2 transition hover:scale-105 ${
-              expanded
-                ? 'border-blue-200 bg-blue-50 text-blue-600'
-                : 'border-[var(--border,#E2E8F0)] bg-white text-[var(--muted,#64748B)]'
-            }`}
-            aria-expanded={expanded}
+          <div
+            className="ml-auto flex items-center gap-1.5 lg:ml-0"
+            onClick={(event) => event.stopPropagation()}
           >
-            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </button>
-          <MoreMenu
-            items={[
-              { id: 'cancel', label: 'Vazgeç', icon: ArchiveRestore, onClick: onCancelProduction },
-              { id: 'depo', label: 'Depoya gönder', icon: Package, onClick: onSendToDepo },
-              {
-                id: 'delete',
-                label: 'Sil',
-                icon: Trash2,
-                tone: 'danger',
-                onClick: onRequestDelete,
-              },
-            ]}
-          />
-          {pendingDelete ? (
-            <DeleteTrashButton
-              pending
-              onClick={onRequestDelete}
-              onConfirm={onConfirmDelete}
-              onCancel={onCancelDelete}
-              title="Üretim kaydı silinsin mi?"
-              description="Bu işlem geri alınamaz."
-              popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              className={`rounded-xl border p-2 transition hover:scale-105 ${
+                expanded
+                  ? 'border-blue-200 bg-blue-50 text-blue-600'
+                  : 'border-[var(--border,#E2E8F0)] bg-white text-[var(--muted,#64748B)]'
+              }`}
+              aria-expanded={expanded}
+            >
+              {expanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
+            <MoreMenu
+              items={[
+                {
+                  id: 'cancel',
+                  label: 'Vazgeç',
+                  icon: ArchiveRestore,
+                  onClick: onCancelProduction,
+                },
+                { id: 'depo', label: 'Depoya gönder', icon: Package, onClick: onSendToDepo },
+                {
+                  id: 'delete',
+                  label: 'Sil',
+                  icon: Trash2,
+                  tone: 'danger',
+                  onClick: onRequestDelete,
+                },
+              ]}
             />
-          ) : null}
+            {pendingDelete ? (
+              <DeleteTrashButton
+                pending
+                onClick={onRequestDelete}
+                onConfirm={onConfirmDelete}
+                onCancel={onCancelDelete}
+                title="Üretim kaydı silinsin mi?"
+                description="Bu işlem geri alınamaz."
+                popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
+              />
+            ) : null}
+          </div>
         </div>
+      </div>
+
+      {/* Full-width process + photo strip */}
+      <div className="border-t border-[var(--border,#E2E8F0)] bg-[linear-gradient(180deg,rgba(248,250,252,0.85),rgba(255,255,255,0.4))] px-3 py-3 dark:bg-none">
+        <ProductionProcessStageBar
+          steps={processSteps}
+          stagePhotos={activeLine?.stagePhotos || []}
+          readOnly={activeLine?.productionClosed === true}
+          onStageClick={handleStageClick}
+          onPhotosChange={handlePhotosChange}
+        />
       </div>
 
       {lineItems.length > 1 ? (
@@ -348,14 +379,8 @@ export default function ProductionJobCard({
             readOnly={activeLine?.productionClosed === true}
             jobId={job.id}
             lineItemId={activeLine?.id || ''}
-            onStageClick={(stageId) => {
-              if (!activeLine || !primaryRow) return
-              lineItemActions?.handleQuantityRowStageChange(activeLine, primaryRow.id, stageId)
-            }}
-            onPhotosChange={(photos) => {
-              if (!activeLine) return
-              lineItemActions?.handleStagePhotosChange(activeLine, photos)
-            }}
+            onStageClick={handleStageClick}
+            onPhotosChange={handlePhotosChange}
             onStageNote={handleStageNote}
           />
 

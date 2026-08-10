@@ -344,13 +344,10 @@ export default function ProductionPage() {
             setActiveMenu={setActiveMenu}
           />
 
-          <div className="hidden rounded-[18px] border border-dark-500/40 bg-dark-900/40 px-4 py-2.5 text-[11px] font-black uppercase tracking-wide text-gray-500 lg:grid lg:grid-cols-[minmax(200px,1.15fr)_150px_minmax(240px,1.5fr)_150px_130px_88px] lg:gap-3">
-            <span>Ürün / Sipariş</span>
+          <div className="hidden rounded-[18px] border border-dark-500/40 bg-dark-900/40 px-4 py-2.5 text-[11px] font-black uppercase tracking-wide text-gray-500 lg:flex lg:items-center lg:justify-between lg:gap-4">
+            <span className="min-w-[200px]">Ürün / Sipariş</span>
             <span>Adet / Teslimat</span>
-            <span>Süreç İlerlemesi</span>
-            <span>Durum</span>
-            <span>Teslimat</span>
-            <span className="text-right">İşlemler</span>
+            <span className="text-right">Durum · Teslimat · İşlemler</span>
           </div>
 
           <div className="mt-3 space-y-3">
