@@ -238,7 +238,13 @@ export default function EditableDropdownPill({
             autoFocus
           />
         )}
-        <div className={menuMaxHeight ? `${menuMaxHeight} overflow-y-auto pr-1` : ''}>
+        <div
+          className={
+            menuMaxHeight
+              ? `${menuMaxHeight} overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`
+              : ''
+          }
+        >
           {includePlaceholderOption && (
             <button
               type="button"

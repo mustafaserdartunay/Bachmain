@@ -1407,10 +1407,30 @@ textarea:not(.form-input)::placeholder {
   --customers-type-leading: 1.25;
 }
 
-/* Uzun satır menüleri kaydırılabilir olsun */
+/* Uzun menüler viewport’a sığmazsa kaydırılabilir; scrollbar hiç görünmesin */
+.app-dropdown-portal,
 .app-dropdown-portal.customers-page-menu {
   max-height: min(70vh, 28rem);
+  overflow-x: hidden !important;
   overflow-y: auto;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.app-dropdown-portal::-webkit-scrollbar,
+.app-dropdown-portal.customers-page-menu::-webkit-scrollbar,
+.app-dropdown-portal *::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+
+/* İçerik sığıyorsa overflow/max-height kilidini kaldır — alt sürükleme çubuğu çıkmasın */
+.app-dropdown-portal[data-scroll='false'],
+.app-dropdown-portal.customers-page-menu[data-scroll='false'] {
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .page-type-shell :where(h1, h2, h3, p, span, button, a, th, td, label, input, select, textarea),
@@ -1888,39 +1908,48 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   color: var(--muted) !important;
 }
 
-/* Müşteri detay — sağ kolon: sticky + iç kaydırma (alt zemin görünene kadar) */
+/* Müşteri detay — sol ledger ile sağ ayarlar alt zemini hizalı */
+.customer-detail-main-grid {
+  align-items: stretch;
+}
+
 .customer-detail-actions-panel {
   --customer-actions-sticky-pad: calc(var(--shell-gap, 1.25rem) + 0.5rem);
   --customer-actions-sticky-bottom: calc(
     var(--shell-gap, 1.25rem) + env(safe-area-inset-bottom, 0px)
   );
-  scrollbar-width: thin;
-  scrollbar-color: rgba(140, 145, 165, 0.45) transparent;
-}
-
-.customer-detail-actions-panel::-webkit-scrollbar {
-  width: 6px;
-}
-
-.customer-detail-actions-panel::-webkit-scrollbar-thumb {
-  border-radius: 9999px;
-  background: rgba(140, 145, 165, 0.4);
 }
 
 @media (min-width: 1280px) {
+  .customer-detail-ledger-panel.card,
+  .customer-detail-ledger-panel {
+    height: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .customer-detail-ledger-panel .customer-ledger-body {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
   .customer-detail-actions-panel {
-    position: sticky;
-    top: var(--customer-actions-sticky-pad);
-    align-self: start;
-    max-height: calc(
-      100dvh - var(--customer-actions-sticky-pad) - var(--customer-actions-sticky-bottom)
-    );
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding-right: 0.125rem;
-    padding-bottom: 1.25rem;
-    scroll-padding-bottom: 1.25rem;
+    position: relative;
+    top: auto;
+    align-self: stretch;
+    height: 100%;
+    max-height: none;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    padding-right: 0;
+    padding-bottom: 0;
+  }
+
+  .customer-detail-actions-panel .customer-screen-settings-card {
+    flex: 1 1 auto;
+    min-height: 0;
   }
 }
 
@@ -1938,6 +1967,25 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   overflow: visible !important;
   text-overflow: unset !important;
   white-space: normal !important;
+}
+
+.customer-screen-settings-card.card {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+  width: 100%;
+}
+
+.page-type-shell .customer-screen-settings-card .customer-screen-settings-title,
+.customers-page-type .customer-screen-settings-card .customer-screen-settings-title,
+.customer-screen-settings-card .customer-screen-settings-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase !important;
+  color: var(--ink) !important;
 }
 
 /* Ledger satırları — doğal yükseklik, metin dikey ortalı */

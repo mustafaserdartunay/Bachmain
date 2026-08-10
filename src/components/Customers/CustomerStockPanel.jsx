@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calculator, Package, Truck } from 'lucide-react'
+import { Calculator, ChevronDown, Package, Truck } from 'lucide-react'
 import { loadDepoItems } from '../../utils/depoStore'
 import { resolveStockScope } from '../../utils/stockScope'
 import {
@@ -144,6 +144,7 @@ const PACK_LABEL = {
 
 export default function CustomerStockPanel({ customer }) {
   const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [notice, setNotice] = useState('')
 
@@ -222,121 +223,145 @@ export default function CustomerStockPanel({ customer }) {
   }
 
   return (
-    <section className="card customer-stock-panel space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>Müşteri Stoğu</h2>
-          <p className={`mt-1 ${YF_TEXT_CLASS} !text-[12px]`}>
-            Depodaki müşteri stoğu · raf / bölüm · barkod
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleLoadCalc}
-            className={`${HEADER_ACTION_CTA_CLASS} !h-10 !min-h-10 ${HEADER_ACTION_GRADIENTS.violet}`}
-          >
-            <Calculator className="h-3.5 w-3.5" />
-            <span className={YF_TEXT_ON_COLOR_CLASS}>Yük Hesapla</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleShipOut}
-            className={`${HEADER_ACTION_CTA_CLASS} !h-10 !min-h-10 ${HEADER_ACTION_GRADIENTS.success}`}
-          >
-            <Truck className="h-3.5 w-3.5" />
-            <span className={YF_TEXT_ON_COLOR_CLASS}>Sevkiyata Çıkar</span>
-          </button>
-        </div>
-      </div>
+    <section className="card customer-stock-panel overflow-hidden p-0">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-dark-700/30"
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 text-emerald-300">
+            <Package className="h-4 w-4" aria-hidden />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-black uppercase tracking-wide text-gray-200">
+              Müşteri Stoğu
+            </span>
+            <span className="mt-0.5 block text-xs font-semibold text-gray-500">
+              Depodaki müşteri stoğu · raf / bölüm · barkod
+            </span>
+          </span>
+          <span className="rounded-lg bg-dark-700/70 px-2 py-0.5 text-[13px] font-black text-gray-400">
+            {items.length}
+          </span>
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
+          aria-hidden
+        />
+      </button>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {[
-          ['Toplam stok', `${totalQty}`],
-          ['Kalem', `${items.length}`],
-          ['Depo stok değeri', formatMoney(totalValue)],
-          ['Seçili', `${selectedItems.length || 0}`],
-        ].map(([label, value]) => (
-          <div key={label} className="glass-inset rounded-xl px-3 py-2.5">
-            <p className={YF_TEXT_CLASS}>{label}</p>
-            <p className="mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--ink)]">
-              {value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {notice ? (
-        <p className={`${YF_TEXT_CLASS} !text-emerald-700`}>{notice}</p>
-      ) : null}
-
-      {!items.length ? (
-        <p className={`flex items-center gap-2 ${YF_TEXT_CLASS}`}>
-          <Package className="h-4 w-4 shrink-0" />
-          Bu müşteriye bağlı depo stoğu yok.
-        </p>
-      ) : (
-        <div className="space-y-2">
-          <label className={`flex items-center gap-2 ${YF_TEXT_CLASS}`}>
-            <input
-              type="checkbox"
-              checked={selectedIds.size === items.length && items.length > 0}
-              onChange={toggleAll}
-              className="h-4 w-4 rounded border-ds-border accent-blue-500"
-            />
-            Tümünü seç
-          </label>
-
-          {items.map((row) => (
-            <div
-              key={row.id}
-              className="flex flex-col gap-3 rounded-xl border border-[var(--glass-border)] bg-[rgba(255,255,255,0.08)] px-3 py-3 sm:flex-row sm:items-start sm:justify-between"
+      {open ? (
+        <div className="space-y-4 border-t border-dark-500/40 p-5">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={handleLoadCalc}
+              className={`${HEADER_ACTION_CTA_CLASS} !h-10 !min-h-10 ${HEADER_ACTION_GRADIENTS.violet}`}
             >
-              <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(row.id)}
-                  onChange={() => toggleItem(row.id)}
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
-                />
-                <span className="min-w-0">
-                  <span className={`block ${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
-                    {row.product || row.productCode || 'Stok kalemi'}
-                  </span>
-                  <span className={`mt-1 block ${YF_TEXT_CLASS} !text-[12px]`}>
-                    {row.productCode || '—'} · {PACK_LABEL[row.packaging] || 'Adet'} ·{' '}
-                    {row.location.detail}
-                  </span>
-                  {row.barcodes.length ? (
-                    <span className="mt-2 flex flex-wrap gap-1.5">
-                      {row.barcodes.map((code) => (
-                        <span
-                          key={code}
-                          className="rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2 py-0.5 font-mono text-[11px] font-semibold text-[var(--ink)]"
-                        >
-                          {code}
-                        </span>
-                      ))}
-                    </span>
-                  ) : null}
-                </span>
-              </label>
+              <Calculator className="h-3.5 w-3.5" />
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Yük Hesapla</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleShipOut}
+              className={`${HEADER_ACTION_CTA_CLASS} !h-10 !min-h-10 ${HEADER_ACTION_GRADIENTS.success}`}
+            >
+              <Truck className="h-3.5 w-3.5" />
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Sevkiyata Çıkar</span>
+            </button>
+          </div>
 
-              <div className="flex shrink-0 flex-col items-end gap-1 sm:pl-3">
-                <p className="tabular-nums text-[14px] font-bold leading-tight text-[var(--ink)]">
-                  {row.quantity} adet
-                </p>
-                <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
-                  {formatMoney(row.stockValue)}
-                </p>
-                <p className={`${YF_TEXT_CLASS} !text-[12px]`}>
-                  {row.location.label} {row.location.row}/{row.location.no}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              ['Toplam stok', `${totalQty}`],
+              ['Kalem', `${items.length}`],
+              ['Depo stok değeri', formatMoney(totalValue)],
+              ['Seçili', `${selectedItems.length || 0}`],
+            ].map(([label, value]) => (
+              <div key={label} className="glass-inset rounded-xl px-3 py-2.5">
+                <p className={YF_TEXT_CLASS}>{label}</p>
+                <p className="mt-1 tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--ink)]">
+                  {value}
                 </p>
               </div>
+            ))}
+          </div>
+
+          {notice ? (
+            <p className={`${YF_TEXT_CLASS} !text-emerald-700`}>{notice}</p>
+          ) : null}
+
+          {!items.length ? (
+            <p className={`flex items-center gap-2 ${YF_TEXT_CLASS}`}>
+              <Package className="h-4 w-4 shrink-0" />
+              Bu müşteriye bağlı depo stoğu yok.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              <label className={`flex items-center gap-2 ${YF_TEXT_CLASS}`}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === items.length && items.length > 0}
+                  onChange={toggleAll}
+                  className="h-4 w-4 rounded border-ds-border accent-blue-500"
+                />
+                Tümünü seç
+              </label>
+
+              {items.map((row) => (
+                <div
+                  key={row.id}
+                  className="flex flex-col gap-3 rounded-xl border border-[var(--glass-border)] bg-[rgba(255,255,255,0.08)] px-3 py-3 sm:flex-row sm:items-start sm:justify-between"
+                >
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(row.id)}
+                      onChange={() => toggleItem(row.id)}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
+                    />
+                    <span className="min-w-0">
+                      <span className={`block ${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                        {row.product || row.productCode || 'Stok kalemi'}
+                      </span>
+                      <span className={`mt-1 block ${YF_TEXT_CLASS} !text-[12px]`}>
+                        {row.productCode || '—'} · {PACK_LABEL[row.packaging] || 'Adet'} ·{' '}
+                        {row.location.detail}
+                      </span>
+                      {row.barcodes.length ? (
+                        <span className="mt-2 flex flex-wrap gap-1.5">
+                          {row.barcodes.map((code) => (
+                            <span
+                              key={code}
+                              className="rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2 py-0.5 font-mono text-[11px] font-semibold text-[var(--ink)]"
+                            >
+                              {code}
+                            </span>
+                          ))}
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+
+                  <div className="flex shrink-0 flex-col items-end gap-1 sm:pl-3">
+                    <p className="tabular-nums text-[14px] font-bold leading-tight text-[var(--ink)]">
+                      {row.quantity} adet
+                    </p>
+                    <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                      {formatMoney(row.stockValue)}
+                    </p>
+                    <p className={`${YF_TEXT_CLASS} !text-[12px]`}>
+                      {row.location.label} {row.location.row}/{row.location.no}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      )}
+      ) : null}
     </section>
   )
 }

@@ -6,7 +6,6 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronDown,
-  ChevronRight,
   Clock,
   Copy,
   ExternalLink,
@@ -159,7 +158,6 @@ export default function CustomerDetailPage() {
   const [b2bAccess, setB2bAccess] = useState(() => getB2bAccess(customer.id))
   const [linkCopied, setLinkCopied] = useState(false)
   const companySettings = readCompanySettings()
-  const [customerScreenOpen, setCustomerScreenOpen] = useState(false)
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activity, setActivity] = useState(() => readActivity(customer.id))
   const [activeMenu, setActiveMenu] = useState(null)
@@ -532,10 +530,10 @@ export default function CustomerDetailPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
-        <AppPagePanel className="customer-detail-ledger-panel w-full overflow-visible">
+      <div className="customer-detail-main-grid grid grid-cols-1 items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
+        <AppPagePanel className="customer-detail-ledger-panel flex h-full w-full flex-col overflow-visible">
           <div
-            className={`${STATEMENT_ROW_CLASS} border-b border-[var(--glass-border)] ${DETAIL_TABLE_HEADER_CLASS}`}
+            className={`${STATEMENT_ROW_CLASS} shrink-0 border-b border-[var(--glass-border)] ${DETAIL_TABLE_HEADER_CLASS}`}
           >
             <span className="min-w-0 truncate">{'İşlem Tarihi'.toLocaleUpperCase('tr-TR')}</span>
             <span className="min-w-0 truncate">{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
@@ -545,7 +543,7 @@ export default function CustomerDetailPage() {
             <span className="min-w-0 truncate text-right">{'Bakiye'.toLocaleUpperCase('tr-TR')}</span>
           </div>
 
-          <div className="divide-y divide-[var(--glass-border)]">
+          <div className="customer-ledger-body min-h-0 flex-1 divide-y divide-[var(--glass-border)]">
             {statementRows.length === 0 ? (
               <p className="px-1 py-8 text-center text-[12px] font-normal text-[var(--muted)]">
                 Hareket kaydı yok.
@@ -584,9 +582,9 @@ export default function CustomerDetailPage() {
             )}
           </div>
 
-          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
+          <div className="mt-auto flex shrink-0 items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
             <p className={DETAIL_CELL_CLASS}>
-              {statementRows.length
+              {statementRows.length > 0
                 ? `${statementRows.length} kayıttan 1-${statementRows.length} arası gösteriliyor.`
                 : 'Kayıt yok.'}
             </p>
@@ -600,8 +598,8 @@ export default function CustomerDetailPage() {
           </div>
         </AppPagePanel>
 
-        <aside className="customer-detail-actions-panel space-y-4">
-          <section className="card space-y-3">
+        <aside className="customer-detail-actions-panel flex h-full flex-col gap-4">
+          <section className="card shrink-0 space-y-3">
             <button
               type="button"
               onClick={() => {
@@ -706,209 +704,192 @@ export default function CustomerDetailPage() {
             </button>
           </section>
 
-          <section className="card customer-screen-settings-card min-w-0 space-y-5 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setCustomerScreenOpen((open) => !open)}
-              className="flex w-full min-w-0 items-center justify-between gap-2 text-left"
-            >
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--muted)]">
-                  <Monitor className="h-5 w-5" />
+          <section className="card customer-screen-settings-card flex min-h-0 min-w-0 flex-1 flex-col space-y-5 overflow-hidden p-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--muted)]">
+                <Monitor className="h-5 w-5" aria-hidden />
+              </span>
+              <h2 className="customer-screen-settings-title text-[14px] font-bold uppercase leading-tight tracking-normal text-[var(--ink)]">
+                Müşteri Ekranı Ayarları
+              </h2>
+            </div>
+
+            <div className="flex min-w-0 gap-3 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+              <p className={`${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+                Müşteri ekranı ayarlarınızı buradan yapabilirsiniz. Değişiklikler anında kaydedilir.
+              </p>
+            </div>
+
+            <div className="min-w-0 flex-1 space-y-4 overflow-y-auto">
+              <label className="flex min-w-0 gap-3">
+                <input
+                  type="checkbox"
+                  checked={portalSettings.paymentReminder}
+                  onChange={(e) => updatePortalSettings({ paymentReminder: e.target.checked })}
+                  className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>Ödeme Hatırlat</span>
+                  <span className={`mt-1 block ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+                    Müşterinize ait faturalarınızın ödemeleri, ödeme tarihinde e-posta ile
+                    hatırlatılacaktır.
+                  </span>
                 </span>
-                <h2 className={`${DETAIL_CELL_CLASS} !font-bold !text-[var(--ink)]`}>
-                  Müşteri Ekranı Ayarları
-                </h2>
-              </div>
-              <ChevronRight
-                className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform ${customerScreenOpen ? '-rotate-90' : 'rotate-90'}`}
-              />
-            </button>
+              </label>
 
-            {customerScreenOpen && (
-              <>
-                <div className="flex min-w-0 gap-3 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
-                  <p className={`${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
-                    Müşteri ekranı ayarlarınızı buradan yapabilirsiniz. Değişiklikler anında
-                    kaydedilir.
-                  </p>
+              <label className="flex min-w-0 gap-3">
+                <input
+                  type="checkbox"
+                  checked={portalSettings.onlineCollection}
+                  onChange={(e) => updatePortalSettings({ onlineCollection: e.target.checked })}
+                  className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>Online Tahsilat</span>
+                  <span className={`mt-1 block ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+                    Kredi kartı ile tahsilat özelliği hazırla.
+                  </span>
+                </span>
+              </label>
+
+              <div className="min-w-0 space-y-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <List className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+                  <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>IBAN Numaralarınız</p>
                 </div>
-
-                <div className="min-w-0 space-y-4">
-                  <label className="flex min-w-0 gap-3">
-                    <input
-                      type="checkbox"
-                      checked={portalSettings.paymentReminder}
-                      onChange={(e) => updatePortalSettings({ paymentReminder: e.target.checked })}
-                      className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>
-                        Ödeme Hatırlat
-                      </span>
-                      <span className={`mt-1 block ${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
-                        Müşterinize ait faturalarınızın ödemeleri, ödeme tarihinde e-posta ile
-                        hatırlatılacaktır.
-                      </span>
-                    </span>
-                  </label>
-
-                  <label className="flex min-w-0 gap-3">
-                    <input
-                      type="checkbox"
-                      checked={portalSettings.onlineCollection}
-                      onChange={(e) => updatePortalSettings({ onlineCollection: e.target.checked })}
-                      className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>
-                        Online Tahsilat
-                      </span>
-                      <span className={`mt-1 block ${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
-                        Kredi kartı ile tahsilat özelliği hazırla.
-                      </span>
-                    </span>
-                  </label>
-
-                  <div className="min-w-0 space-y-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <List className="h-4 w-4 shrink-0 text-[var(--muted)]" />
-                      <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>
-                        IBAN Numaralarınız
-                      </p>
-                    </div>
-                    <p className={`pl-7 ${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
-                      Paylaşabileceğiniz IBAN numarası olan hesaplarınız
+                <p className={`pl-7 ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+                  Paylaşabileceğiniz IBAN numarası olan hesaplarınız
+                </p>
+                <div className="space-y-2 pl-7">
+                  {(companySettings.bankAccounts || []).length === 0 ? (
+                    <p className={`${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal`}>
+                      Henüz banka hesabı eklenmemiş.
                     </p>
-                    <div className="space-y-2 pl-7">
-                      {companySettings.bankAccounts.map((account) => (
-                        <label
-                          key={account.id}
-                          className={`flex min-w-0 items-start gap-2 ${DETAIL_CELL_CLASS}`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={portalSettings.sharedIbanIds?.includes(account.id)}
-                            onChange={(e) => {
-                              const ids = new Set(portalSettings.sharedIbanIds || [])
-                              if (e.target.checked) ids.add(account.id)
-                              else ids.delete(account.id)
-                              updatePortalSettings({ sharedIbanIds: [...ids] })
-                            }}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
-                          />
-                          <span className="min-w-0 flex-1">
-                            {account.bankName} · {account.label}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="min-w-0 space-y-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <Users className="h-4 w-4 shrink-0 text-[var(--muted)]" />
-                      <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>
-                        Erişimi Olan Kişiler
-                      </p>
-                    </div>
-                    {(portalSettings.accessEmails || []).map((email) => (
-                      <div
-                        key={email}
-                        className="flex min-w-0 items-center justify-between gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2"
+                  ) : (
+                    (companySettings.bankAccounts || []).map((account) => (
+                      <label
+                        key={account.id}
+                        className={`flex min-w-0 items-start gap-2 ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal`}
                       >
-                        <span className={`${DETAIL_CELL_CLASS} min-w-0 flex-1 !font-bold break-all`}>
-                          {email}
+                        <input
+                          type="checkbox"
+                          checked={portalSettings.sharedIbanIds?.includes(account.id)}
+                          onChange={(e) => {
+                            const ids = new Set(portalSettings.sharedIbanIds || [])
+                            if (e.target.checked) ids.add(account.id)
+                            else ids.delete(account.id)
+                            updatePortalSettings({ sharedIbanIds: [...ids] })
+                          }}
+                          className="mt-0.5 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
+                        />
+                        <span className="min-w-0 flex-1">
+                          {account.bankName} · {account.label}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updatePortalSettings({
-                              accessEmails: portalSettings.accessEmails.filter(
-                                (item) => item !== email,
-                              ),
-                            })
-                          }
-                          className="shrink-0 text-[var(--muted)] hover:text-red-500"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                    <input
-                      type="email"
-                      placeholder="E-posta ekle..."
-                      className="form-input"
-                      data-no-autocap
-                      onKeyDown={(event) => {
-                        if (event.key !== 'Enter') return
-                        event.preventDefault()
-                        const value = event.currentTarget.value.trim()
-                        if (!value) return
-                        const emails = new Set(portalSettings.accessEmails || [])
-                        emails.add(value)
-                        updatePortalSettings({ accessEmails: [...emails] })
-                        event.currentTarget.value = ''
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="min-w-0 space-y-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Link2 className="h-4 w-4 shrink-0 text-blue-600" />
-                    <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase !text-blue-600`}>
-                      B2B Müşteri Paneli
-                    </p>
-                  </div>
-                  <p className={`${DETAIL_CELL_CLASS} !text-[12px] leading-5`}>
-                    Müşterinize özel panel linki ile cari hareketler, ürünler, sipariş ve üretim
-                    takibini paylaşın.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={toggleB2bAccess}
-                    className={`w-full rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${
-                      b2bAccess?.enabled
-                        ? 'border border-red-500/30 bg-red-500/10 text-red-600 hover:bg-red-500/20'
-                        : 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20'
-                    }`}
-                  >
-                    {b2bAccess?.enabled ? 'B2B Erişimini Kapat' : 'B2B Erişimi Ver'}
-                  </button>
-                  {b2bAccess?.enabled && b2bAccess.accessToken && (
-                    <div className="min-w-0 space-y-2">
-                      <div className="flex min-w-0 items-start gap-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
-                        <p className={`min-w-0 flex-1 break-all ${DETAIL_CELL_CLASS}`}>
-                          {getPortalUrl(b2bAccess.accessToken)}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={copyPortalLink}
-                          className="shrink-0 text-[var(--muted)] hover:text-[var(--ink)]"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </button>
-                        <a
-                          href={getPortalUrl(b2bAccess.accessToken)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="shrink-0 text-[var(--muted)] hover:text-[var(--ink)]"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </div>
-                      {linkCopied && (
-                        <p className={`${DETAIL_CELL_CLASS} !font-bold !text-emerald-600`}>
-                          Link kopyalandı
-                        </p>
-                      )}
-                    </div>
+                      </label>
+                    ))
                   )}
                 </div>
-              </>
-            )}
+              </div>
+
+              <div className="min-w-0 space-y-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Users className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+                  <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>Erişimi Olan Kişiler</p>
+                </div>
+                {(portalSettings.accessEmails || []).map((email) => (
+                  <div
+                    key={email}
+                    className="flex min-w-0 items-center justify-between gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2"
+                  >
+                    <span className={`${DETAIL_CELL_CLASS} min-w-0 flex-1 !font-bold !overflow-visible !whitespace-normal break-all`}>
+                      {email}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updatePortalSettings({
+                          accessEmails: portalSettings.accessEmails.filter((item) => item !== email),
+                        })
+                      }
+                      className="shrink-0 text-[var(--muted)] hover:text-red-500"
+                      aria-label={`${email} kaldır`}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                <input
+                  type="email"
+                  placeholder="E-posta ekle..."
+                  className="form-input"
+                  data-no-autocap
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter') return
+                    event.preventDefault()
+                    const value = event.currentTarget.value.trim()
+                    if (!value) return
+                    const emails = new Set(portalSettings.accessEmails || [])
+                    emails.add(value)
+                    updatePortalSettings({ accessEmails: [...emails] })
+                    event.currentTarget.value = ''
+                  }}
+                />
+              </div>
+
+              <div className="min-w-0 space-y-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Link2 className="h-4 w-4 shrink-0 text-blue-600" aria-hidden />
+                  <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase !text-blue-600`}>
+                    B2B Müşteri Paneli
+                  </p>
+                </div>
+                <p className={`${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+                  Müşterinize özel panel linki ile cari hareketler, ürünler, sipariş ve üretim
+                  takibini paylaşın.
+                </p>
+                <button
+                  type="button"
+                  onClick={toggleB2bAccess}
+                  className={`w-full rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${
+                    b2bAccess?.enabled
+                      ? 'border border-red-500/30 bg-red-500/10 text-red-600 hover:bg-red-500/20'
+                      : 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20'
+                  }`}
+                >
+                  {b2bAccess?.enabled ? 'B2B Erişimini Kapat' : 'B2B Erişimi Ver'}
+                </button>
+                {b2bAccess?.enabled && b2bAccess.accessToken ? (
+                  <div className="min-w-0 space-y-2">
+                    <div className="flex min-w-0 items-start gap-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                      <p className={`min-w-0 flex-1 break-all ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal`}>
+                        {getPortalUrl(b2bAccess.accessToken)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={copyPortalLink}
+                        className="shrink-0 text-[var(--muted)] hover:text-[var(--ink)]"
+                        aria-label="Linki kopyala"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </button>
+                      <a
+                        href={getPortalUrl(b2bAccess.accessToken)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="shrink-0 text-[var(--muted)] hover:text-[var(--ink)]"
+                        aria-label="Paneli aç"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </div>
+                    {linkCopied ? (
+                      <p className={`${DETAIL_CELL_CLASS} !font-bold !text-emerald-600`}>Link kopyalandı</p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </section>
         </aside>
       </div>
@@ -986,8 +967,7 @@ function ActivityHistoryPanel({ activity }) {
       title="Aktivite Geçmişi"
       count={activity.length}
       accent="text-blue-300"
-      defaultOpen
-    >
+      defaultOpen={false}
       {activity.length === 0 ? (
         <EmptyPanelState message="Henüz bir işlem yapılmadı. Yaptığınız değişiklikler tarih, saat ve kullanıcı bilgisiyle burada listelenecek." />
       ) : (

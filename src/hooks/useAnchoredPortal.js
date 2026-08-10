@@ -90,6 +90,8 @@ export function useAnchoredPortal(
     }
 
     const maxHeight = Math.max(120, bottomLimit - top)
+    const contentHeight = menuEl?.scrollHeight || measuredHeight
+    const needsScroll = contentHeight > maxHeight + 1
 
     let left =
       align === 'right'
@@ -109,11 +111,22 @@ export function useAnchoredPortal(
       left: `${left}px`,
       width: matchWidth ? `${rect.width}px` : width ? `${width}px` : undefined,
       minWidth: !matchWidth && !width ? '210px' : undefined,
-      maxHeight: `${maxHeight}px`,
+      ...(needsScroll
+        ? {
+            maxHeight: `${maxHeight}px`,
+            overflowX: 'hidden',
+            overflowY: 'auto',
+          }
+        : {
+            overflow: 'visible',
+          }),
       visibility: 'visible',
       pointerEvents: 'auto',
       zIndex: DROPDOWN_Z_INDEX,
     })
+    if (menuEl) {
+      menuEl.dataset.scroll = needsScroll ? 'true' : 'false'
+    }
     setIsPositioned(true)
   }, [align, flip, getAnchor, matchWidth, maxBottomInset, offset, placement, width])
 
