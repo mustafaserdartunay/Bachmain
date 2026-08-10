@@ -169,8 +169,25 @@ export const VERSION_FEATURES = {
 export const VERSION_CHANGELOG = [
   {
     version: APP_VERSION,
-    previousVersion: null,
+    previousVersion: 'BM-V1.726',
     releasedAt: APP_VERSION_META.releasedAt,
+    title: 'BM-V1.826 — Yük ve Sevkiyat',
+    categories: [
+      {
+        title: 'Lojistik',
+        features: [
+          {
+            title: 'Yük ve Sevkiyat tek sayfa',
+            detail: 'Müşteri kartından yük planı + sevkiyat; marka adı header ortasında.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    version: 'BM-V1.726',
+    previousVersion: null,
+    releasedAt: '2026-07-27T19:45:00+03:00',
     title: 'BM-V1.726 özellik seti',
     categories: VERSION_FEATURES.categories,
   },
