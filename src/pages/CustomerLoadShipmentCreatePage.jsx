@@ -1,15 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import {
-  Minus,
-  Package,
-  Pencil,
-  Plus,
-  Save,
-  Trash2,
-  Truck,
-  X,
-} from 'lucide-react'
+import { Minus, Package, Pencil, Plus, Save, Trash2, Truck, X } from 'lucide-react'
 import {
   AppPageBackLink,
   AppPageHeader,
@@ -38,9 +29,10 @@ import {
   YF_TEXT_CLASS,
   YF_TEXT_ON_COLOR_CLASS,
 } from '../utils/dashboardDesign'
-import { loadDepoItems } from '../utils/depoStore'
+import { advanceDepoItemStatus, loadDepoItems } from '../utils/depoStore'
 import { resolveStockScope } from '../utils/stockScope'
 import { upsertLoadPlan } from '../utils/logisticsStore'
+import { buildLoadSuggestions } from '../utils/loadAiSuggest'
 import {
   computeLoadPlan,
   fmtKg,
@@ -66,6 +58,17 @@ const INPUT_CLASS =
 
 const TRUCK_OPTIONS = Object.values(TRUCK_PRESETS)
 const MODULE_OPTIONS = Object.values(GRID_MODULES)
+
+const TRUCK_TO_VEHICLE_TYPE = {
+  panelvan: { id: 'panelvan', label: 'Panelvan' },
+  kamyon_kucuk: { id: 'kamyon', label: 'Kamyon' },
+  kamyon_buyuk: { id: 'kamyon', label: 'Kamyon' },
+  tir: { id: 'tir', label: 'TIR' },
+  mega: { id: 'tir', label: 'TIR' },
+  konteyner20: { id: 'tir', label: 'TIR' },
+  konteyner40: { id: 'tir', label: 'TIR' },
+  konteyner40hc: { id: 'tir', label: 'TIR' },
+}
 
 function HeaderCta({ icon: Icon, label, gradient, onClick, to }) {
   const className = `${HEADER_ACTION_CTA_CLASS} ${gradient}`
@@ -207,6 +210,7 @@ export default function CustomerLoadShipmentCreatePage() {
   const [vehicleTypes, setVehicleTypes] = useState(() => loadVehicleTypes())
   const [activeMenu, setActiveMenu] = useState(null)
   const [error, setError] = useState('')
+  const [aiToast, setAiToast] = useState('')
 
   const [trip, setTrip] = useState(() => createTripDraft())
 
@@ -269,8 +273,27 @@ export default function CustomerLoadShipmentCreatePage() {
   const truck = TRUCK_PRESETS[truckKey] || TRUCK_PRESETS.kamyon_kucuk
   const module = GRID_MODULES[moduleKey] || GRID_MODULES.euro
   const plan = useMemo(() => computeLoadPlan(truck, module, loadItems), [truck, module, loadItems])
+  const ai = useMemo(
+    () => buildLoadSuggestions({ items: loadItems, truckKey, moduleKey }),
+    [loadItems, truckKey, moduleKey],
+  )
   const cell = Math.round(56 * zoom)
   const editingItem = loadItems.find((item) => item.id === editingItemId) || null
+
+  useEffect(() => {
+    const mapped = TRUCK_TO_VEHICLE_TYPE[truckKey]
+    if (!mapped) return
+    setTrip((current) => {
+      if (current.vehicleTypeId === mapped.id && current.vehicleTypeLabel === mapped.label) {
+        return current
+      }
+      return {
+        ...current,
+        vehicleTypeId: mapped.id,
+        vehicleTypeLabel: mapped.label,
+      }
+    })
+  }, [truckKey])
 
   useEffect(() => {
     setTrip((current) => {
@@ -405,6 +428,12 @@ export default function CustomerLoadShipmentCreatePage() {
     })
   }
 
+  function applyAiTruck() {
+    if (ai.recommendedTruckKey) setTruckKey(ai.recommendedTruckKey)
+    setAiToast(ai.tips[0] || 'AI önerisi uygulandı')
+    window.setTimeout(() => setAiToast(''), 2200)
+  }
+
   function handleSave() {
     setError('')
     if (!customer?.id) {
@@ -437,8 +466,13 @@ export default function CustomerLoadShipmentCreatePage() {
         totalSlots: plan.totalSlots,
         totalSlotsUsed: plan.totalSlotsUsed,
       },
+      meta: {
+        aiTips: ai.tips,
+        trucksNeeded: ai.trucksNeeded,
+      },
       warnings: plan.warnings,
       status: 'planned',
+      source: 'customer-load-shipment',
     })
 
     const stop = {
@@ -454,13 +488,39 @@ export default function CustomerLoadShipmentCreatePage() {
       status: 'planned',
       loadPlanId: loadPlan.id,
       loadPlanCode: loadPlan.code,
+      loadMetrics: {
+        fillPct: plan.fillPct,
+        weightPct: plan.weightPct,
+        slotPct: plan.slotPct,
+        totalWeight: plan.totalWeight,
+        totalSlots: plan.totalSlots,
+        totalSlotsUsed: plan.totalSlotsUsed,
+        truckName: truck.name,
+        moduleName: module.name,
+      },
       note: trip.note || note,
       stops: [stop],
     })
 
+    selectedStock.forEach((item) => {
+      if (!item.id) return
+      try {
+        advanceDepoItemStatus(item.id, 'Teslime Hazır', {
+          loadPlanId: loadPlan.id,
+          loadPlanCode: loadPlan.code,
+          tripId: savedTrip.id,
+          tripCode: savedTrip.code,
+        })
+      } catch {
+        /* stage may not exist — ignore */
+      }
+    })
+
     navigate(`/sevkiyat/${savedTrip.id}`, {
       replace: true,
-      state: { notice: `${loadPlan.code} yük planı ve ${savedTrip.code} sevkiyat oluşturuldu.` },
+      state: {
+        notice: `${loadPlan.code} yük planı ve ${savedTrip.code} sevkiyat oluşturuldu.`,
+      },
     })
   }
 
@@ -524,7 +584,9 @@ export default function CustomerLoadShipmentCreatePage() {
       </AppPagePanel>
 
       {error ? (
-        <p className={`${YF_TEXT_CLASS} rounded-2xl border border-rose-300/50 bg-rose-50/70 px-4 py-3 !font-bold !text-rose-700`}>
+        <p
+          className={`${YF_TEXT_CLASS} rounded-2xl border border-rose-300/50 bg-rose-50/70 px-4 py-3 !font-bold !text-rose-700`}
+        >
           {error}
         </p>
       ) : null}
@@ -626,6 +688,33 @@ export default function CustomerLoadShipmentCreatePage() {
             </div>
           ) : null}
 
+          {loadItems.length ? (
+            <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-4">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                  AI Load Optimizer
+                </p>
+                <button
+                  type="button"
+                  onClick={applyAiTruck}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-blue-500"
+                >
+                  Önerilen aracı uygula
+                </button>
+              </div>
+              <ul className="space-y-1">
+                {ai.tips.map((tip) => (
+                  <li key={tip} className={`${YF_TEXT_CLASS} !text-[13px]`}>
+                    · {tip}
+                  </li>
+                ))}
+              </ul>
+              {aiToast ? (
+                <p className={`mt-2 ${YF_TEXT_CLASS} !font-bold !text-blue-600`}>{aiToast}</p>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="tlc-card tlc-panel">
             <div className="tlc-panel__head">
               <h3>Araç Yerleşim Görünümü</h3>
@@ -650,8 +739,8 @@ export default function CustomerLoadShipmentCreatePage() {
             </div>
 
             <p className={`mb-3 ${YF_TEXT_CLASS} !text-[12px]`}>
-              Boş slota tıklayarak kalem ekleyin · dolu slota tıklayarak yük ayarını düzenleyin. Araç
-              ve grid seçimi yerleşimi anında günceller.
+              Boş slota tıklayarak kalem ekleyin · dolu slota tıklayarak yük ayarını düzenleyin.
+              Araç ve grid seçimi yerleşimi anında günceller.
             </p>
 
             <div className="tlc-stage">
@@ -844,8 +933,8 @@ export default function CustomerLoadShipmentCreatePage() {
 
           {!stockItems.length ? (
             <p className={YF_TEXT_CLASS}>
-              Bu müşteriye bağlı depo stoğu yok. Görseldeki boş slotlardan veya hazır
-              kalemlerden ekleyebilirsiniz.
+              Bu müşteriye bağlı depo stoğu yok. Görseldeki boş slotlardan veya hazır kalemlerden
+              ekleyebilirsiniz.
             </p>
           ) : (
             <div className="space-y-2">
@@ -983,7 +1072,9 @@ export default function CustomerLoadShipmentCreatePage() {
             <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
               Durak · {trip.stops?.[0]?.customerLabel || display.brandShortName}
             </p>
-            <p className={`${YF_TEXT_CLASS} !text-[12px]`}>Yük kalemleri sevkiyata otomatik aktarılır</p>
+            <p className={`${YF_TEXT_CLASS} !text-[12px]`}>
+              Yük kalemleri sevkiyata otomatik aktarılır
+            </p>
           </div>
           <div className="space-y-2">
             {(trip.stops?.[0]?.goods || []).length === 0 ? (

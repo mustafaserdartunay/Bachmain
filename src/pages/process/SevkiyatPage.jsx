@@ -12,9 +12,12 @@ import {
   X,
 } from 'lucide-react'
 import { DataTable } from '@bachmain/ui'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
-import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from '../../components/Common/ListDeleteConfirmPanel'
+import {
+  DeleteConfirmOverlay,
+  captureDeleteConfirmAnchor,
+} from '../../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../../components/EditableDropdownPill'
 import SevkiyatMap from '../../components/Sevkiyat/SevkiyatMap'
 import {
@@ -65,6 +68,8 @@ import {
   upsertTrip,
 } from '../../utils/sevkiyatStore'
 import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
+import { loadLoadPlans } from '../../utils/logisticsStore'
+import { fmtKg } from '../../utils/truckLoadCalc'
 
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const STATUS_FILTER_OPTIONS = [
@@ -132,6 +137,7 @@ const INPUT_CLASS =
 
 export default function SevkiyatPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { id: routeId } = useParams()
   const isNew = routeId === 'yeni'
   const isDetail = Boolean(routeId)
@@ -144,10 +150,27 @@ export default function SevkiyatPage() {
   const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [mapsUrl, setMapsUrl] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [notice, setNotice] = useState(() => location.state?.notice || '')
   const [draft, setDraft] = useState(() => {
     if (!routeId || routeId === 'yeni') return createTripDraft()
     return getTrip(routeId) || createTripDraft({ id: routeId })
   })
+
+  const loadPlan = useMemo(() => {
+    if (!draft?.loadPlanId && !draft?.loadPlanCode) return null
+    const plans = loadLoadPlans()
+    return (
+      plans.find((plan) => plan.id === draft.loadPlanId) ||
+      plans.find((plan) => plan.code === draft.loadPlanCode) ||
+      null
+    )
+  }, [draft?.loadPlanId, draft?.loadPlanCode, trips])
+
+  useEffect(() => {
+    if (!location.state?.notice) return undefined
+    setNotice(location.state.notice)
+    navigate(location.pathname, { replace: true, state: {} })
+  }, [location.state, location.pathname, navigate])
 
   const customers = useMemo(() => getCustomerProfiles(), [trips])
   const hq = useMemo(() => getCompanyStartPoint(readCompanySettings()), [])
@@ -188,8 +211,7 @@ export default function SevkiyatPage() {
 
   const filteredTrips = useMemo(() => {
     return trips.filter((trip) => {
-      const matchStatus =
-        filters.status === 'Tümü' || statusLabel(trip.status) === filters.status
+      const matchStatus = filters.status === 'Tümü' || statusLabel(trip.status) === filters.status
       const matchType =
         filters.vehicleType === 'Tümü' ||
         trip.vehicleTypeLabel === filters.vehicleType ||
@@ -274,9 +296,7 @@ export default function SevkiyatPage() {
     setDraft((current) => ({
       ...current,
       stops: (current.stops || []).map((stop) =>
-        stop.id === stopId
-          ? { ...stop, goods: [...(stop.goods || []), createEmptyGood()] }
-          : stop,
+        stop.id === stopId ? { ...stop, goods: [...(stop.goods || []), createEmptyGood()] } : stop,
       ),
     }))
   }
@@ -361,7 +381,9 @@ export default function SevkiyatPage() {
         <AppPageHeader
           showBack={false}
           title={<AppPageBackLink to="/sevkiyat" label="Sevkiyat" />}
-          centerTitle={String(isNew ? 'Yeni Sevkiyat' : draft.code || 'Sevkiyat').toLocaleUpperCase('tr-TR')}
+          centerTitle={String(isNew ? 'Yeni Sevkiyat' : draft.code || 'Sevkiyat').toLocaleUpperCase(
+            'tr-TR',
+          )}
           centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
           titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
@@ -381,6 +403,66 @@ export default function SevkiyatPage() {
             </div>
           }
         />
+
+        {notice ? (
+          <p
+            className={`${YF_TEXT_CLASS} rounded-2xl border border-emerald-300/50 bg-emerald-50/70 px-4 py-3 !font-bold !text-emerald-700`}
+          >
+            {notice}
+          </p>
+        ) : null}
+
+        {draft.loadPlanCode || draft.loadPlanId || draft.loadMetrics ? (
+          <AppPagePanel className="w-full space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AppPanelDot color="violet" />
+                <h2 className={APP_PANEL_TITLE_CLASS}>Bağlı Yük Planı :</h2>
+              </div>
+              <span
+                className={`${YF_TEXT_CLASS} rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-1 !font-bold`}
+              >
+                {draft.loadPlanCode || loadPlan?.code || '—'}
+              </span>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                <p className={`${YF_TEXT_CLASS} !text-[12px]`}>Araç</p>
+                <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                  {draft.loadMetrics?.truckName || loadPlan?.truckName || '—'}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                <p className={`${YF_TEXT_CLASS} !text-[12px]`}>Doluluk</p>
+                <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                  %{draft.loadMetrics?.fillPct ?? loadPlan?.metrics?.fillPct ?? '—'}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                <p className={`${YF_TEXT_CLASS} !text-[12px]`}>Ağırlık</p>
+                <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                  {fmtKg(draft.loadMetrics?.totalWeight ?? loadPlan?.metrics?.totalWeight ?? 0)} kg
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                <p className={`${YF_TEXT_CLASS} !text-[12px]`}>Slot</p>
+                <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                  {draft.loadMetrics?.totalSlotsUsed ?? loadPlan?.metrics?.totalSlotsUsed ?? '—'}
+                  {' / '}
+                  {draft.loadMetrics?.totalSlots ?? loadPlan?.metrics?.totalSlots ?? '—'}
+                </p>
+              </div>
+            </div>
+            {draft.stops?.[0]?.customerId ? (
+              <Link
+                to={`/musteriler/${draft.stops[0].customerId}/yuk-sevkiyat`}
+                className="inline-flex text-[14px] font-normal text-blue-600 hover:underline"
+              >
+                Müşteri yük ekranına dön
+              </Link>
+            ) : null}
+          </AppPagePanel>
+        ) : null}
 
         <AppPagePanel className="w-full space-y-4">
           <div className="flex items-center gap-2">
@@ -780,9 +862,7 @@ export default function SevkiyatPage() {
             <AppPanelDot color="blue" />
             <h2 className={APP_PANEL_TITLE_CLASS}>Sevkiyat Listesi :</h2>
           </div>
-          <span className={`ml-auto shrink-0 ${YF_TEXT_CLASS}`}>
-            {filteredTrips.length} Kayıt
-          </span>
+          <span className={`ml-auto shrink-0 ${YF_TEXT_CLASS}`}>{filteredTrips.length} Kayıt</span>
         </div>
 
         <DataTable
@@ -809,6 +889,12 @@ export default function SevkiyatPage() {
               header: 'PLAKA',
               accessorKey: 'plate',
               cell: (trip) => trip.plate || '—',
+            },
+            {
+              id: 'loadPlan',
+              header: 'YÜK',
+              hideOnMobile: true,
+              cell: (trip) => trip.loadPlanCode || '—',
             },
             {
               id: 'driver',
