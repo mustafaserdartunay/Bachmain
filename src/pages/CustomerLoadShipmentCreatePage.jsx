@@ -541,12 +541,16 @@ export default function CustomerLoadShipmentCreatePage() {
     )
   }
 
+  const brandTitle = String(
+    display.brandShortName || display.companyTitle || customer.company || '',
+  ).toLocaleUpperCase('tr-TR')
+
   return (
     <AppPageShell className="customers-page-type customer-load-shipment-page w-full space-y-4">
       <AppPageHeader
         showBack={false}
         title={<AppPageBackLink to={backTo} label="Müşteri" />}
-        centerTitle={'Yük ve Sevkiyat'.toLocaleUpperCase('tr-TR')}
+        centerTitle={brandTitle}
         centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
         titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
         actions={
@@ -566,22 +570,6 @@ export default function CustomerLoadShipmentCreatePage() {
           </div>
         }
       />
-
-      <AppPagePanel className="w-full">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
-              {display.brandShortName || display.companyTitle || customer.company}
-            </p>
-            <p className={`mt-1 ${YF_TEXT_CLASS} !text-[12px]`}>
-              {formatCustomerAddress(customer) || 'Adres tanımlı değil'}
-            </p>
-          </div>
-          <span className="rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-1.5 text-[12px] font-bold uppercase tracking-wide text-[var(--muted)]">
-            Tek sayfa · yük + sevkiyat
-          </span>
-        </div>
-      </AppPagePanel>
 
       {error ? (
         <p
