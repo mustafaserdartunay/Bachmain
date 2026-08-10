@@ -6,6 +6,8 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Copy,
   ExternalLink,
@@ -19,9 +21,11 @@ import {
   ListChecks,
   MessageCircle,
   Monitor,
+  Package,
   Pencil,
   Phone,
   Trash2,
+  Truck,
   Upload,
   Users,
   X,
@@ -105,6 +109,9 @@ const DETAIL_ACTIONS_MENU_CLASS = PAGE_FILTER_MENU_CLASS
 const STATEMENT_GRID_CLASS =
   'customer-ledger-row grid grid-cols-[9rem_7.75rem_7.75rem_minmax(0,1.4fr)_6.75rem_6.75rem] items-center gap-2 px-1'
 const STATEMENT_ROW_CLASS = `${STATEMENT_GRID_CLASS}`
+const STATEMENT_PAGE_SIZE = 10
+const LEDGER_PAGE_BTN_CLASS =
+  'glass-sidebar-toggle flex h-8 w-8 shrink-0 items-center justify-center rounded-xl disabled:cursor-not-allowed disabled:opacity-40'
 
 const editActionItems = [
   {
@@ -127,6 +134,18 @@ const editActionItems = [
   },
   { label: 'Ödeme Ekle', icon: Upload, tone: 'success', action: 'collection' },
   { label: 'Virman Yap', icon: ArrowRightLeft, tone: 'primary', docType: 'virman' },
+  {
+    label: 'Yük Oluştur',
+    icon: Package,
+    tone: 'primary',
+    path: '/lojistik/yukleme-plani',
+  },
+  {
+    label: 'Sevkiyat Oluştur',
+    icon: Truck,
+    tone: 'primary',
+    path: '/sevkiyat/yeni',
+  },
   { label: 'Arşivle', icon: Archive, tone: 'orange', action: 'archive' },
   { label: 'Sil', icon: Trash2, tone: 'danger', action: 'delete' },
 ]
@@ -164,6 +183,7 @@ export default function CustomerDetailPage() {
   const [pendingDelete, setPendingDelete] = useState(false)
   const deleteAnchorRef = useRef(null)
   const [voiceNotice, setVoiceNotice] = useState('')
+  const [ledgerPage, setLedgerPage] = useState(0)
 
   useEffect(() => {
     setCustomer(findCustomerProfile(customerId))
@@ -343,6 +363,16 @@ export default function CustomerDetailPage() {
     },
   ]
 
+  const ledgerPageCount = Math.max(1, Math.ceil(statementRows.length / STATEMENT_PAGE_SIZE) || 1)
+  const safeLedgerPage = Math.min(ledgerPage, ledgerPageCount - 1)
+  const ledgerPageStart = statementRows.length === 0 ? 0 : safeLedgerPage * STATEMENT_PAGE_SIZE
+  const ledgerPageRows = statementRows.slice(ledgerPageStart, ledgerPageStart + STATEMENT_PAGE_SIZE)
+  const ledgerPageEnd = ledgerPageStart + ledgerPageRows.length
+
+  useEffect(() => {
+    setLedgerPage(0)
+  }, [customer.id, statementRows.length])
+
   const movementAccounts = useMemo(
     () => movementAccountOptions(accounts, optionLists),
     [accounts, optionLists],
@@ -492,6 +522,14 @@ export default function CustomerDetailPage() {
                       tone={item.tone}
                       close={close}
                       onClick={() => {
+                        if (item.path) {
+                          navigate(
+                            item.path.includes('?')
+                              ? `${item.path}&customer=${customer.id}`
+                              : `${item.path}?customer=${customer.id}`,
+                          )
+                          return
+                        }
                         if (item.docType) {
                           navigate(`/musteriler/${customer.id}/belge/${item.docType}`)
                           return
@@ -544,12 +582,12 @@ export default function CustomerDetailPage() {
           </div>
 
           <div className="customer-ledger-body min-h-0 flex-1 divide-y divide-[var(--glass-border)]">
-            {statementRows.length === 0 ? (
+            {ledgerPageRows.length === 0 ? (
               <p className="px-1 py-8 text-center text-[12px] font-normal text-[var(--muted)]">
                 Hareket kaydı yok.
               </p>
             ) : (
-              statementRows.map((row) => (
+              ledgerPageRows.map((row) => (
                 <div
                   key={row.id}
                   role="button"
@@ -582,19 +620,44 @@ export default function CustomerDetailPage() {
             )}
           </div>
 
-          <div className="mt-auto flex shrink-0 items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
+          <div className="mt-auto flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-[var(--glass-border)] pt-3">
             <p className={DETAIL_CELL_CLASS}>
               {statementRows.length > 0
-                ? `${statementRows.length} kayıttan 1-${statementRows.length} arası gösteriliyor.`
+                ? `${statementRows.length} kayıttan ${ledgerPageStart + 1}-${ledgerPageEnd} arası gösteriliyor.`
                 : 'Kayıt yok.'}
             </p>
-            <button
-              type="button"
-              onClick={handleDownloadStatementPdf}
-              className={`${HEADER_ACTION_CTA_CLASS} !h-10 ${HEADER_ACTION_GRADIENTS.violet}`}
-            >
-              <span className={YF_TEXT_ON_COLOR_CLASS}>Dışarı Aktar</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className={LEDGER_PAGE_BTN_CLASS}
+                disabled={statementRows.length === 0 || safeLedgerPage <= 0}
+                onClick={() => setLedgerPage((page) => Math.max(0, page - 1))}
+                aria-label="Önceki sayfa"
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden />
+              </button>
+              <span className={`${DETAIL_CELL_CLASS} min-w-[3.5rem] text-center tabular-nums`}>
+                {statementRows.length === 0 ? '0/0' : `${safeLedgerPage + 1}/${ledgerPageCount}`}
+              </span>
+              <button
+                type="button"
+                className={LEDGER_PAGE_BTN_CLASS}
+                disabled={statementRows.length === 0 || safeLedgerPage >= ledgerPageCount - 1}
+                onClick={() =>
+                  setLedgerPage((page) => Math.min(ledgerPageCount - 1, page + 1))
+                }
+                aria-label="Sonraki sayfa"
+              >
+                <ChevronRight className="h-4 w-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadStatementPdf}
+                className={`${HEADER_ACTION_CTA_CLASS} !h-10 ${HEADER_ACTION_GRADIENTS.violet}`}
+              >
+                <span className={YF_TEXT_ON_COLOR_CLASS}>Dışarı Aktar</span>
+              </button>
+            </div>
           </div>
         </AppPagePanel>
 
@@ -894,11 +957,7 @@ export default function CustomerDetailPage() {
         </aside>
       </div>
 
-      <CustomerStockPanel customer={customer} />
-
-      <EngagementPanels customer={customer} />
-
-      <ActivityHistoryPanel activity={activity} />
+      <ActivityHistoryPanel activity={activity} customer={customer} />
 
       <DeleteConfirmOverlay
         open={pendingDelete}
@@ -920,23 +979,42 @@ function CollapsiblePanel({
   count,
   accent = 'text-blue-300',
   defaultOpen = false,
+  nested = false,
   children,
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  const Wrapper = nested ? 'div' : 'section'
   return (
-    <section className="card overflow-hidden p-0">
+    <Wrapper
+      className={
+        nested
+          ? 'overflow-hidden rounded-2xl border border-dark-500/40 bg-dark-700/25'
+          : 'card overflow-hidden p-0'
+      }
+    >
       <button
         type="button"
+        aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-dark-700/30"
+        className={`flex w-full items-center justify-between gap-3 text-left transition-colors hover:bg-dark-700/30 ${
+          nested ? 'px-4 py-3' : 'px-5 py-4'
+        }`}
       >
-        <span className="flex items-center gap-3">
+        <span className="flex min-w-0 items-center gap-3">
           <span
-            className={`flex h-9 w-9 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 ${accent}`}
+            className={`flex shrink-0 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 ${accent} ${
+              nested ? 'h-8 w-8' : 'h-9 w-9'
+            }`}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className={nested ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
           </span>
-          <span className="text-sm font-black uppercase tracking-wide text-gray-200">{title}</span>
+          <span
+            className={`font-black uppercase tracking-wide text-gray-200 ${
+              nested ? 'text-xs' : 'text-sm'
+            }`}
+          >
+            {title}
+          </span>
           {count != null && (
             <span className="rounded-lg bg-dark-700/70 px-2 py-0.5 text-[13px] font-black text-gray-400">
               {count}
@@ -947,8 +1025,10 @@ function CollapsiblePanel({
           className={`h-4 w-4 shrink-0 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
-      {open && <div className="border-t border-dark-500/40 p-5">{children}</div>}
-    </section>
+      {open && (
+        <div className={`border-t border-dark-500/40 ${nested ? 'p-3' : 'p-5'}`}>{children}</div>
+      )}
+    </Wrapper>
   )
 }
 
@@ -960,7 +1040,7 @@ function EmptyPanelState({ message }) {
   )
 }
 
-function ActivityHistoryPanel({ activity }) {
+function ActivityHistoryPanel({ activity, customer }) {
   return (
     <CollapsiblePanel
       icon={History}
@@ -969,31 +1049,47 @@ function ActivityHistoryPanel({ activity }) {
       accent="text-blue-300"
       defaultOpen={false}
     >
-      {activity.length === 0 ? (
-        <EmptyPanelState message="Henüz bir işlem yapılmadı. Yaptığınız değişiklikler tarih, saat ve kullanıcı bilgisiyle burada listelenecek." />
-      ) : (
-        <ol className="relative space-y-3 before:absolute before:left-[7px] before:top-1 before:h-[calc(100%-0.5rem)] before:w-px before:bg-dark-500/50">
-          {activity.map((entry) => (
-            <li key={entry.id} className="relative flex items-start gap-3 pl-6">
-              <span className="absolute left-0 top-1 h-3.5 w-3.5 rounded-full border-2 border-blue-500 bg-dark-800" />
-              <div className="min-w-0 flex-1 rounded-2xl border border-dark-500/40 bg-dark-700/35 px-4 py-2.5">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-black uppercase tracking-wide text-gray-200">
-                    {entry.action}
-                  </span>
-                  <span className="flex items-center gap-1 whitespace-nowrap text-[13px] font-bold text-gray-500">
-                    <Clock className="h-3 w-3" /> {formatActivityStamp(entry.at)}
-                  </span>
+      <div className="space-y-4">
+        {activity.length === 0 ? (
+          <EmptyPanelState message="Henüz bir işlem yapılmadı. Yaptığınız değişiklikler tarih, saat ve kullanıcı bilgisiyle burada listelenecek." />
+        ) : (
+          <ol className="relative space-y-3 before:absolute before:left-[7px] before:top-1 before:h-[calc(100%-0.5rem)] before:w-px before:bg-dark-500/50">
+            {activity.map((entry) => (
+              <li key={entry.id} className="relative flex items-start gap-3 pl-6">
+                <span className="absolute left-0 top-1 h-3.5 w-3.5 rounded-full border-2 border-blue-500 bg-dark-800" />
+                <div className="min-w-0 flex-1 rounded-2xl border border-dark-500/40 bg-dark-700/35 px-4 py-2.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-black uppercase tracking-wide text-gray-200">
+                      {entry.action}
+                    </span>
+                    <span className="flex items-center gap-1 whitespace-nowrap text-[13px] font-bold text-gray-500">
+                      <Clock className="h-3 w-3" /> {formatActivityStamp(entry.at)}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 truncate text-xs font-semibold text-gray-400">
+                    {entry.detail}
+                  </p>
+                  <p className="mt-1 text-[13px] font-bold text-blue-300/80">{entry.user}</p>
                 </div>
-                <p className="mt-0.5 truncate text-xs font-semibold text-gray-400">
-                  {entry.detail}
-                </p>
-                <p className="mt-1 text-[13px] font-bold text-blue-300/80">{entry.user}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
+              </li>
+            ))}
+          </ol>
+        )}
+
+        <div className="space-y-3 border-t border-dark-500/40 pt-4">
+          <CollapsiblePanel
+            nested
+            icon={Package}
+            title="Müşteri Stoğu"
+            accent="text-cyan-300"
+            defaultOpen={false}
+          >
+            <CustomerStockPanel customer={customer} embedded />
+          </CollapsiblePanel>
+
+          <EngagementPanels customer={customer} nested />
+        </div>
+      </div>
     </CollapsiblePanel>
   )
 }
@@ -1024,152 +1120,99 @@ function EngagementRow({ icon: Icon, title, detail, stamp, badge, badgeClass }) 
   )
 }
 
-function EngagementPanels({ customer }) {
+function EngagementPanels({ customer, nested = false }) {
   const data = useMemo(() => buildEngagementData(customer), [customer])
 
+  const panels = [
+    {
+      icon: ListChecks,
+      title: 'Görevler',
+      count: data.tasks.length,
+      accent: 'text-amber-300',
+      empty: 'Bu müşteri için görev bulunmuyor.',
+      items: data.tasks,
+      rowIcon: ListChecks,
+      withBadge: true,
+    },
+    {
+      icon: CalendarDays,
+      title: 'Ajanda',
+      count: data.agenda.length,
+      accent: 'text-purple-300',
+      empty: 'Bu müşteri için ajanda kaydı bulunmuyor.',
+      items: data.agenda,
+      rowIcon: CalendarDays,
+    },
+    {
+      icon: Phone,
+      title: 'İletişim Durumları',
+      count: data.contacts.length,
+      accent: 'text-emerald-300',
+      empty: 'Bu müşteri için iletişim kaydı bulunmuyor.',
+      items: data.contacts,
+      rowIcon: Phone,
+      withBadge: true,
+    },
+    {
+      icon: MessageCircle,
+      title: 'WhatsApp Görüşmeleri',
+      count: data.whatsapp.length,
+      accent: 'text-green-300',
+      empty: 'WhatsApp görüşmesi bulunmuyor.',
+      items: data.whatsapp,
+      rowIcon: MessageCircle,
+    },
+    {
+      icon: Instagram,
+      title: 'Instagram Görüşmeleri',
+      count: data.instagram.length,
+      accent: 'text-pink-300',
+      empty: 'Instagram görüşmesi bulunmuyor.',
+      items: data.instagram,
+      rowIcon: Instagram,
+    },
+    {
+      icon: Facebook,
+      title: 'Facebook Görüşmeleri',
+      count: data.facebook.length,
+      accent: 'text-sky-300',
+      empty: 'Facebook görüşmesi bulunmuyor.',
+      items: data.facebook,
+      rowIcon: Facebook,
+    },
+  ]
+
   return (
-    <div className="space-y-4">
-      <CollapsiblePanel
-        icon={ListChecks}
-        title="Görevler"
-        count={data.tasks.length}
-        accent="text-amber-300"
-      >
-        {data.tasks.length === 0 ? (
-          <EmptyPanelState message="Bu müşteri için görev bulunmuyor." />
-        ) : (
-          <div className="space-y-2">
-            {data.tasks.map((item) => (
-              <EngagementRow
-                key={item.id}
-                icon={ListChecks}
-                title={item.title}
-                detail={item.detail}
-                stamp={item.stamp}
-                badge={item.badge}
-                badgeClass={item.badgeClass}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsiblePanel>
-
-      <CollapsiblePanel
-        icon={CalendarDays}
-        title="Ajanda"
-        count={data.agenda.length}
-        accent="text-purple-300"
-      >
-        {data.agenda.length === 0 ? (
-          <EmptyPanelState message="Bu müşteri için ajanda kaydı bulunmuyor." />
-        ) : (
-          <div className="space-y-2">
-            {data.agenda.map((item) => (
-              <EngagementRow
-                key={item.id}
-                icon={CalendarDays}
-                title={item.title}
-                detail={item.detail}
-                stamp={item.stamp}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsiblePanel>
-
-      <CollapsiblePanel
-        icon={Phone}
-        title="İletişim Durumları"
-        count={data.contacts.length}
-        accent="text-emerald-300"
-      >
-        {data.contacts.length === 0 ? (
-          <EmptyPanelState message="Bu müşteri için iletişim kaydı bulunmuyor." />
-        ) : (
-          <div className="space-y-2">
-            {data.contacts.map((item) => (
-              <EngagementRow
-                key={item.id}
-                icon={Phone}
-                title={item.title}
-                detail={item.detail}
-                stamp={item.stamp}
-                badge={item.badge}
-                badgeClass={item.badgeClass}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsiblePanel>
-
-      <CollapsiblePanel
-        icon={MessageCircle}
-        title="WhatsApp Görüşmeleri"
-        count={data.whatsapp.length}
-        accent="text-green-300"
-      >
-        {data.whatsapp.length === 0 ? (
-          <EmptyPanelState message="WhatsApp görüşmesi bulunmuyor." />
-        ) : (
-          <div className="space-y-2">
-            {data.whatsapp.map((item) => (
-              <EngagementRow
-                key={item.id}
-                icon={MessageCircle}
-                title={item.title}
-                detail={item.detail}
-                stamp={item.stamp}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsiblePanel>
-
-      <CollapsiblePanel
-        icon={Instagram}
-        title="Instagram Görüşmeleri"
-        count={data.instagram.length}
-        accent="text-pink-300"
-      >
-        {data.instagram.length === 0 ? (
-          <EmptyPanelState message="Instagram görüşmesi bulunmuyor." />
-        ) : (
-          <div className="space-y-2">
-            {data.instagram.map((item) => (
-              <EngagementRow
-                key={item.id}
-                icon={Instagram}
-                title={item.title}
-                detail={item.detail}
-                stamp={item.stamp}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsiblePanel>
-
-      <CollapsiblePanel
-        icon={Facebook}
-        title="Facebook Görüşmeleri"
-        count={data.facebook.length}
-        accent="text-sky-300"
-      >
-        {data.facebook.length === 0 ? (
-          <EmptyPanelState message="Facebook görüşmesi bulunmuyor." />
-        ) : (
-          <div className="space-y-2">
-            {data.facebook.map((item) => (
-              <EngagementRow
-                key={item.id}
-                icon={Facebook}
-                title={item.title}
-                detail={item.detail}
-                stamp={item.stamp}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsiblePanel>
+    <div className="space-y-3">
+      {panels.map((panel) => (
+        <CollapsiblePanel
+          key={panel.title}
+          nested={nested}
+          icon={panel.icon}
+          title={panel.title}
+          count={panel.count}
+          accent={panel.accent}
+          defaultOpen={false}
+        >
+          {panel.items.length === 0 ? (
+            <EmptyPanelState message={panel.empty} />
+          ) : (
+            <div className="space-y-2">
+              {panel.items.map((item) => (
+                <EngagementRow
+                  key={item.id}
+                  icon={panel.rowIcon}
+                  title={item.title}
+                  detail={item.detail}
+                  stamp={item.stamp}
+                  badge={panel.withBadge ? item.badge : undefined}
+                  badgeClass={panel.withBadge ? item.badgeClass : undefined}
+                />
+              ))}
+            </div>
+          )}
+        </CollapsiblePanel>
+      ))}
     </div>
   )
 }
