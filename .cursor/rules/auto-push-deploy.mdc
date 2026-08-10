@@ -1,21 +1,33 @@
 ---
-description: Her özellik/değişiklik sonrası otomatik commit, push ve Vercel production deploy
+description: Push/deploy yalnızca kullanıcı "pd" yazınca; önce değişiklikleri göster, onay bekle
 alwaysApply: true
 ---
 
-# Otomatik Push + Deploy
+# Push + Deploy — `pd` komutu
 
-Kullanıcı BachMain üzerinde özellik, düzeltme veya içerik işi bitince **ayrıca sormadan**:
+## Kural
 
-1. İlgili dosyaları commit et (anlamlı mesaj).
-2. `git push origin main` yap.
-3. Production deploy çalıştır:
-   - Web (bachmain.com) değiştiyse → `bachmain-web`
-   - Yönetim değiştiyse → `bachmain-admin`
-   - Uygulama/CRM kök değiştiyse → `bachmain`
-   - Karışıksa → `./scripts/ship.sh` veya `./scripts/deploy-all.sh`
+1. Özellik / UI / düzeltme bittiğinde **önce değişiklikleri yerelde bırak** ve kullanıcıya göster / özetle.
+2. **Push veya deploy yapma** — kullanıcı kontrol edip onay verene kadar bekle.
+3. Kullanıcı **`pd`** yazarsa (tek başına veya mesaj içinde açık komut olarak):
+   - İlgili dosyaları commit et (anlamlı mesaj)
+   - App sürümünü bump et (`appVersion.js` + `public/app-version.json`) gerektiğinde
+   - `git push origin HEAD` (genelde `main`)
+   - Vercel production deploy’un gelmesini kontrol et (`uygulama.bachmain.com/app-version.json`)
 
-## Web landing değişiklikleri
+`pd` = **p**ush + **d**eploy. Bu kısaltmayı unutma.
+
+## Deploy yolu
+
+GitHub `main` → Vercel (CRM kök: `bachmain`). Yerel `npm run deploy` token yoksa gerekmez.
+
+- Web (`apps/landing` / `apps/web`) → `bachmain-web`
+- Yönetim → `bachmain-admin`
+- Uygulama/CRM → `bachmain`
+
+Karışıksa: `./scripts/ship.sh` veya `./scripts/deploy-all.sh`
+
+## Web landing
 
 `apps/landing` değiştiyse önce:
 
@@ -24,28 +36,10 @@ cd apps/landing && npm run build
 rsync -a --delete --exclude vercel.json --exclude .vercel --exclude CALISMA.md out/ ../web/
 ```
 
-(`out/` = Next static export; eski `dist/` yoksa kullanma.)
+Sonra `pd` ile push + deploy.
 
-Sonra push + `bachmain-web` deploy.
-
-## Standart komut
-
-```bash
-./scripts/ship.sh
-```
-
-Vercel project IDs:
-- CRM: `.vercel/project.json` (kök) → `prj_JDJO7v2dTvWBac2Gd0N7jX1ZdJjk`
-- Admin: `apps/admin/.vercel` → `prj_58uYNTn8uZNfSaNF53pg5mHkosf9`
-- Web: `apps/web/.vercel` → `prj_1IxdJq7c8Kamffare0gLAskdoD9k`
-- Org: `team_6Bs45GjLiuQAkKP5eE6fUOsf`
-
-## Canonical workspace (güncel)
+## Workspace
 
 ```
-~/Documents/bachmain/BachMain Tüm Proje
+~/Documents/Bachmain/BachMain Tüm Proje
 ```
-
-macOS “Belgelerim” = `~/Documents`. Eski iCloud yolu
-(`~/Library/Mobile Documents/com~apple~CloudDocs/Bachmain/...`) ve
-`~/Developer/Bach Crm` symlink’i **artık kaynak değil** — tüm iş bu Documents klasöründe yapılır.
