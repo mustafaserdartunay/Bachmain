@@ -43,6 +43,7 @@ import FinanceCenterPage from './pages/FinanceCenterPage'
 import AnalyticsCenterPage from './pages/AnalyticsCenterPage'
 import CustomerExperienceCloudPage from './pages/CustomerExperienceCloudPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
+import CustomerLoadShipmentCreatePage from './pages/CustomerLoadShipmentCreatePage'
 import CustomerMovementDetailPage from './pages/CustomerMovementDetailPage'
 import CustomerDocumentPage from './pages/CustomerDocumentPage'
 import CustomerFinderPage from './pages/CustomerFinderPage'
@@ -197,6 +198,7 @@ import {
   DocWhatsAppTemplatesPage,
   DocWorkflowPage,
 } from './pages/documentCenter/DocCenterModules'
+import WebsiteOsLaunchPage from './pages/WebsiteOsLaunchPage'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -282,6 +284,8 @@ export default function App() {
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/finans" element={<FinanceCenterPage />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
+                      <Route path="/website-os" element={<WebsiteOsLaunchPage />} />
+                      <Route path="/website" element={<WebsiteOsLaunchPage />} />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
                       <Route path="/platform" element={<Navigate to="/" replace />} />
                       <Route path="/cekirdek" element={<Navigate to="/" replace />} />
@@ -417,6 +421,10 @@ export default function App() {
                       <Route
                         path="/musteriler/:customerId/hareket/:movementId"
                         element={<CustomerMovementDetailPage />}
+                      />
+                      <Route
+                        path="/musteriler/:customerId/yuk-sevkiyat"
+                        element={<CustomerLoadShipmentCreatePage />}
                       />
                       <Route path="/musteriler/:customerId" element={<CustomerDetailPage />} />
                       <Route

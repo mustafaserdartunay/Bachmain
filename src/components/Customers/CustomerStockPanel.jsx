@@ -8,14 +8,6 @@ import {
   customerLabel,
   formatMoney,
 } from '../../utils/depoHelpers'
-import { getCustomerDisplay } from '../../utils/customerDisplay'
-import { formatCustomerAddress, getCustomerCoordinates } from '../../utils/customerGeo'
-import {
-  createEmptyGood,
-  createEmptyStop,
-  createTripDraft,
-  upsertTrip,
-} from '../../utils/sevkiyatStore'
 import { YF_TEXT_CLASS, YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesign'
 import {
   HEADER_ACTION_CTA_CLASS,
@@ -178,47 +170,15 @@ export default function CustomerStockPanel({ customer, embedded = false }) {
   function handleLoadCalc() {
     const ids = (selectedItems.length ? selectedItems : items).map((item) => item.id).join(',')
     navigate(
-      `/lojistik/yukleme-plani?customerId=${encodeURIComponent(customer.id || '')}${ids ? `&stockIds=${encodeURIComponent(ids)}` : ''}`,
+      `/musteriler/${customer.id}/yuk-sevkiyat${ids ? `?stockIds=${encodeURIComponent(ids)}` : ''}`,
     )
   }
 
   function handleShipOut() {
-    const payload = selectedItems.length ? selectedItems : items
-    if (!payload.length) {
-      setNotice('Sevkiyata çıkarılacak stok kalemi yok.')
-      return
-    }
-
-    const display = getCustomerDisplay(customer)
-    const coords = getCustomerCoordinates(customer)
-    const stop = {
-      ...createEmptyStop(1),
-      customerId: customer.id,
-      customerLabel: display.brandShortName || customer.company || customer.name || '',
-      address: formatCustomerAddress(customer),
-      city: customer.city || '',
-      lat: coords.lat,
-      lng: coords.lng,
-      goods: payload.map((item) => ({
-        ...createEmptyGood(),
-        label: item.product || item.productCode || 'Stok',
-        qty: item.quantity || 1,
-        unit: item.packaging === 'koli' ? 'koli' : item.packaging === 'paketli' ? 'paket' : 'adet',
-        note: item.location.detail,
-        depoItemId: item.id,
-        barcodes: item.barcodes,
-      })),
-    }
-
-    const trip = upsertTrip(
-      createTripDraft({
-        stops: [stop],
-        note: `${display.brandShortName || 'Müşteri'} stok sevkiyatı`,
-      }),
+    const ids = (selectedItems.length ? selectedItems : items).map((item) => item.id).join(',')
+    navigate(
+      `/musteriler/${customer.id}/yuk-sevkiyat${ids ? `?stockIds=${encodeURIComponent(ids)}` : ''}`,
     )
-
-    setNotice(`${trip.code} taslak sevkiyat oluşturuldu.`)
-    navigate(`/sevkiyat/${trip.id}`)
   }
 
   return (

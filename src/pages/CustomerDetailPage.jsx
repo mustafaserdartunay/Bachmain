@@ -135,16 +135,10 @@ const editActionItems = [
   { label: 'Ödeme Ekle', icon: Upload, tone: 'success', action: 'collection' },
   { label: 'Virman Yap', icon: ArrowRightLeft, tone: 'primary', docType: 'virman' },
   {
-    label: 'Yük Oluştur',
-    icon: Package,
-    tone: 'primary',
-    path: '/lojistik/yukleme-plani',
-  },
-  {
-    label: 'Sevkiyat Oluştur',
+    label: 'Yük ve Sevkiyat Oluştur',
     icon: Truck,
     tone: 'primary',
-    path: '/sevkiyat/yeni',
+    action: 'load-shipment',
   },
   { label: 'Arşivle', icon: Archive, tone: 'orange', action: 'archive' },
   { label: 'Sil', icon: Trash2, tone: 'danger', action: 'delete' },
@@ -532,6 +526,10 @@ export default function CustomerDetailPage() {
                         }
                         if (item.docType) {
                           navigate(`/musteriler/${customer.id}/belge/${item.docType}`)
+                          return
+                        }
+                        if (item.action === 'load-shipment') {
+                          navigate(`/musteriler/${customer.id}/yuk-sevkiyat`)
                           return
                         }
                         if (item.action === 'collection') {
