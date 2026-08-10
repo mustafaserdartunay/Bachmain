@@ -3,8 +3,7 @@ import { ArchiveRestore, ChevronDown, ChevronRight, Package, Trash2 } from 'luci
 import { MoreMenu } from '@bachmain/ui'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import { HEADER_ACTION_GRADIENTS } from '../Layout/HeaderCashActionsPanel'
-import ProductionProcessDotRail from './ProductionProcessDotRail'
-import ProductionStageMiniCards from './ProductionStageMiniCards'
+import ProductionProcessStageBar from './ProductionProcessStageBar'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
 import ProductionPartialDeliveryTable from './ProductionPartialDeliveryTable'
 import ProductionProgressRing from './ProductionProgressRing'
@@ -18,7 +17,6 @@ import {
 import {
   formatQty,
   getJobQuantityMetrics,
-  getLineQuantityMetrics,
   getQuantityRowMinimalSteps,
 } from '../../utils/productionQuantityMetrics'
 import { getProductionJobTimelineDates } from '../../utils/productionJobTimeline'
@@ -132,8 +130,13 @@ export default function ProductionJobCard({
     (metrics.delivered > 0 && metrics.delivered < metrics.ordered)
 
   function handleStageClick(stageId) {
-    if (!activeLine || !primaryRow) return
-    lineItemActions?.handleQuantityRowStageChange(activeLine, primaryRow.id, stageId)
+    if (!activeLine) return
+    const row = primaryRow || getLineQuantityRows(activeLine)[0]
+    if (!row?.id) {
+      lineItemActions?.handleAddQuantityRow?.(activeLine)
+      return
+    }
+    lineItemActions?.handleQuantityRowStageChange(activeLine, row.id, stageId)
   }
 
   function handlePhotosChange(photos) {
@@ -256,84 +259,41 @@ export default function ProductionJobCard({
         </div>
       </div>
 
-      {lineItems.length > 1 ? (
-        <div className="space-y-2 border-t border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#F8FAFC)]/70 px-4 py-3">
-          <p className="text-[11px] font-black uppercase tracking-wide text-[var(--muted,#94A3B8)]">
-            Ürün satırları
-          </p>
-          {lineItems.map((line, index) => {
-            const lineMetrics = getLineQuantityMetrics(line)
-            const lineSteps = buildStepsForLine(line, productionStages)
-            const linePct = lineMetrics.ordered
-              ? Math.min(100, Math.round((lineMetrics.produced / lineMetrics.ordered) * 100))
-              : 0
-            const isActive = index === activeLineIndex
-            return (
+      {/* Stepper always visible — no need to expand */}
+      <div className="border-t border-[var(--border,#E2E8F0)] bg-[linear-gradient(180deg,#fbfcfe_0%,#ffffff_100%)] px-3 py-4 dark:bg-none sm:px-5">
+        {lineItems.length > 1 ? (
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {lineItems.map((line, index) => (
               <button
                 key={line.id}
                 type="button"
-                onClick={() => {
-                  setActiveLineIndex(index)
-                  if (!expanded) onToggleExpand?.()
-                }}
-                className={`grid w-full grid-cols-1 items-center gap-3 rounded-[14px] border px-3 py-2.5 text-left transition hover:scale-[1.005] sm:grid-cols-[minmax(140px,1fr)_88px_minmax(180px,1.4fr)] ${
-                  isActive
-                    ? 'border-blue-200 bg-white shadow-sm'
-                    : 'border-[var(--border,#E2E8F0)] bg-white/60'
+                onClick={() => setActiveLineIndex(index)}
+                className={`rounded-full px-3 py-1 text-[12px] font-bold transition ${
+                  index === activeLineIndex
+                    ? 'bg-[var(--accent,#2563EB)] text-white'
+                    : 'bg-white text-[var(--muted,#64748B)] ring-1 ring-[var(--border,#E2E8F0)]'
                 }`}
               >
-                <div className="min-w-0">
-                  <p className="truncate text-[13px] font-bold text-[var(--ink,#0F172A)]">
-                    <span className="mr-1 text-[11px] font-black text-[var(--muted)]">
-                      #{index + 1}
-                    </span>
-                    {line.product || 'Ürün'}
-                  </p>
-                  <p className="text-[11px] font-semibold text-[var(--muted)]">
-                    {formatQty(lineMetrics.produced)} / {formatQty(lineMetrics.ordered)} adet
-                  </p>
-                </div>
-                <ProductionProgressRing percent={linePct} size={48} stroke={5} />
-                <ProductionProcessDotRail
-                  steps={lineSteps}
-                  readOnly
-                  showLabels={lineSteps.length <= 8}
-                />
+                {line.product || `Kalem ${index + 1}`}
               </button>
-            )
-          })}
-        </div>
-      ) : null}
+            ))}
+          </div>
+        ) : null}
+
+        <ProductionProcessStageBar
+          steps={processSteps}
+          stagePhotos={activeLine?.stagePhotos || []}
+          readOnly={activeLine?.productionClosed === true}
+          onStageClick={handleStageClick}
+          onPhotosChange={handlePhotosChange}
+          showEditLink
+          showPhotoStrip
+          showActiveGallery={expanded}
+        />
+      </div>
 
       {expanded ? (
-        <div className="space-y-5 border-t border-[var(--border,#E2E8F0)] bg-[linear-gradient(180deg,#fbfcfe_0%,#ffffff_100%)] px-4 py-5 dark:bg-none">
-          {lineItems.length > 1 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {lineItems.map((line, index) => (
-                <button
-                  key={line.id}
-                  type="button"
-                  onClick={() => setActiveLineIndex(index)}
-                  className={`rounded-full px-3 py-1 text-[12px] font-bold transition ${
-                    index === activeLineIndex
-                      ? 'bg-[var(--accent,#2563EB)] text-white'
-                      : 'bg-white text-[var(--muted,#64748B)] ring-1 ring-[var(--border,#E2E8F0)]'
-                  }`}
-                >
-                  {line.product || `Kalem ${index + 1}`}
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          <ProductionStageMiniCards
-            steps={processSteps}
-            stagePhotos={activeLine?.stagePhotos || []}
-            readOnly={activeLine?.productionClosed === true}
-            onStageClick={handleStageClick}
-            onPhotosChange={handlePhotosChange}
-          />
-
+        <div className="space-y-5 border-t border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#FCFCFD)]/90 px-4 py-4 dark:bg-none">
           {activeLine ? (
             <ProductionPartialDeliveryTable
               lineItem={activeLine}
