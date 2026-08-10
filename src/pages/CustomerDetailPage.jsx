@@ -968,6 +968,7 @@ function ActivityHistoryPanel({ activity }) {
       count={activity.length}
       accent="text-blue-300"
       defaultOpen={false}
+    >
       {activity.length === 0 ? (
         <EmptyPanelState message="Henüz bir işlem yapılmadı. Yaptığınız değişiklikler tarih, saat ve kullanıcı bilgisiyle burada listelenecek." />
       ) : (
