@@ -4,7 +4,6 @@ import { MoreMenu } from '@bachmain/ui'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import { HEADER_ACTION_GRADIENTS } from '../Layout/HeaderCashActionsPanel'
 import ProductionProcessDotRail from './ProductionProcessDotRail'
-import ProductionProcessStageBar from './ProductionProcessStageBar'
 import ProductionStageMiniCards from './ProductionStageMiniCards'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
 import ProductionPartialDeliveryTable from './ProductionPartialDeliveryTable'
@@ -23,8 +22,6 @@ import {
   getQuantityRowMinimalSteps,
 } from '../../utils/productionQuantityMetrics'
 import { getProductionJobTimelineDates } from '../../utils/productionJobTimeline'
-import { appendProductionJobActivity } from '../../utils/productionLineItemActions'
-import { updateProductionJob } from '../../utils/productionStore'
 
 function formatShortDate(value) {
   if (!value) return '—'
@@ -39,39 +36,18 @@ function formatShortDate(value) {
 function resolveStatusBadge(job, metrics) {
   const status = String(job.status || '')
   if (/iptal/i.test(status)) {
-    return {
-      label: 'İPTAL',
-      gradient: HEADER_ACTION_GRADIENTS.danger,
-    }
+    return { label: 'İptal', gradient: HEADER_ACTION_GRADIENTS.danger }
   }
   if (status === 'Bekliyor') {
-    return {
-      label: 'BEKLEMEDE',
-      gradient: 'from-slate-300 via-slate-400 to-slate-500',
-    }
+    return { label: 'Beklemede', gradient: 'from-slate-300 via-slate-400 to-slate-500' }
   }
   if (status === 'Tamamlandı') {
-    return {
-      label: 'TAMAMLANDI',
-      gradient: HEADER_ACTION_GRADIENTS.success,
-    }
+    return { label: 'Tamamlandı', gradient: HEADER_ACTION_GRADIENTS.success }
   }
   if (metrics.linesWithPartialDelivery > 0 || /kısmi/i.test(status)) {
-    return {
-      label: 'ÜRETİM DEVAM EDİYOR',
-      gradient: HEADER_ACTION_GRADIENTS.primary,
-    }
+    return { label: 'Üretim devam ediyor', gradient: HEADER_ACTION_GRADIENTS.primary }
   }
-  if (status === 'Devam Ediyor') {
-    return {
-      label: 'ÜRETİM DEVAM EDİYOR',
-      gradient: HEADER_ACTION_GRADIENTS.cash,
-    }
-  }
-  return {
-    label: 'ÜRETİM DEVAM EDİYOR',
-    gradient: HEADER_ACTION_GRADIENTS.cash,
-  }
+  return { label: 'Üretim devam ediyor', gradient: HEADER_ACTION_GRADIENTS.cash }
 }
 
 function buildStepsForLine(line, productionStages) {
@@ -91,13 +67,15 @@ function buildStepsForLine(line, productionStages) {
   return []
 }
 
-function MetricChip({ label, value }) {
+function MetricStat({ label, value }) {
   return (
-    <div className="rounded-lg bg-black/[0.04] px-2 py-1 dark:bg-white/10">
-      <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted,#94A3B8)]">
+    <div className="min-w-[4.5rem]">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted,#94A3B8)]">
         {label}
       </p>
-      <p className="text-[13px] font-black tabular-nums text-[var(--ink,#0F172A)]">{value}</p>
+      <p className="text-[15px] font-black tabular-nums tracking-tight text-[var(--ink,#0F172A)]">
+        {value}
+      </p>
     </div>
   )
 }
@@ -144,9 +122,6 @@ export default function ProductionJobCard({
   const activeRows = activeLine ? getLineQuantityRows(activeLine) : []
   const primaryRow = activeRows[0]
   const processSteps = buildStepsForLine(activeLine, productionStages)
-  const producedLabel = activeLine
-    ? `${formatQty(activeLine.producedQuantity)} / ${formatQty(activeLine.quantity)}`
-    : `${formatQty(metrics.produced)} / ${formatQty(metrics.ordered)}`
   const progressPct = metrics.ordered
     ? Math.min(100, Math.round((metrics.produced / metrics.ordered) * 100))
     : metrics.produced > 0
@@ -155,16 +130,6 @@ export default function ProductionJobCard({
   const hasPartial =
     metrics.linesWithPartialDelivery > 0 ||
     (metrics.delivered > 0 && metrics.delivered < metrics.ordered)
-
-  function handleStageNote(stageId, text) {
-    if (!text?.trim()) return
-    const stageLabel = productionStages?.find((stage) => stage.id === stageId)?.label || stageId
-    updateProductionJob(
-      job.id,
-      appendProductionJobActivity(job.id, `${stageLabel}: ${text.trim()}`),
-    )
-    window.dispatchEvent(new CustomEvent('bach:production-updated'))
-  }
 
   function handleStageClick(stageId) {
     if (!activeLine || !primaryRow) return
@@ -177,75 +142,75 @@ export default function ProductionJobCard({
   }
 
   return (
-    <article className="overflow-hidden rounded-[20px] border border-[var(--border,#E2E8F0)] bg-white/95 shadow-[0_6px_20px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_14px_36px_rgba(15,23,42,0.08)] dark:bg-white/5">
-      {/* Top meta row */}
-      <div className="flex flex-col gap-3 px-4 py-3.5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <input
-            type="checkbox"
-            checked={Boolean(selected)}
-            onChange={() => onToggleSelect?.(job.id)}
-            className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--border,#CBD5E1)]"
-            aria-label={`${job.id} seç`}
-          />
-          <button type="button" onClick={onToggleExpand} className="min-w-0 flex-1 text-left">
-            <p className="text-[13px] font-black tabular-nums text-[var(--bach-navy,#1E3A8A)]">
-              {job.id}
-            </p>
-            <p className="truncate text-[14px] font-bold text-[var(--ink,#0F172A)]">
-              {customerDisplay.brandShortName || job.customer || 'Müşteri yok'}
-            </p>
-            <p className="truncate text-[12px] font-medium text-[var(--muted,#64748B)]">
-              {productSummary}
-            </p>
-            <p className="mt-0.5 text-[11px] font-semibold text-[var(--muted,#94A3B8)]">
-              {formatShortDate(timeline.orderDate || timeline.productionStartDate)}
-            </p>
-          </button>
-        </div>
+    <article className="overflow-hidden rounded-[22px] border border-[var(--border,#E2E8F0)] bg-white shadow-[0_8px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:bg-white/5">
+      <div className="relative px-4 py-4 sm:px-5">
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${badge.gradient}`}
+          aria-hidden
+        />
 
-        <button
-          type="button"
-          onClick={onToggleExpand}
-          className="flex items-center gap-3 text-left"
-        >
-          <ProductionProgressRing percent={progressPct} />
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-            <MetricChip label="Üretilecek" value={formatQty(metrics.ordered)} />
-            <MetricChip label="Üretilen" value={formatQty(metrics.produced)} />
-            <MetricChip label="Teslim" value={formatQty(metrics.delivered)} />
-            <MetricChip label="Kalan" value={formatQty(metrics.remaining)} />
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <input
+              type="checkbox"
+              checked={Boolean(selected)}
+              onChange={() => onToggleSelect?.(job.id)}
+              className="mt-1.5 h-4 w-4 shrink-0 rounded border-[var(--border,#CBD5E1)]"
+              aria-label={`${job.id} seç`}
+            />
+            <button type="button" onClick={onToggleExpand} className="min-w-0 flex-1 text-left">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className="rounded-lg bg-[var(--surface-raised,#F1F5F9)] px-2 py-0.5 text-[12px] font-black tabular-nums text-[var(--bach-navy,#1E3A8A)]">
+                  {job.id}
+                </span>
+                <span
+                  className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white ${badge.gradient}`}
+                >
+                  {badge.label}
+                </span>
+                <span
+                  className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black text-white ${
+                    hasPartial ? HEADER_ACTION_GRADIENTS.success : HEADER_ACTION_GRADIENTS.amber
+                  }`}
+                >
+                  {hasPartial
+                    ? `Kısmi · ${formatQty(metrics.delivered)}/${formatQty(metrics.ordered)}`
+                    : 'Teslimat yok'}
+                </span>
+              </div>
+              <p className="truncate text-[16px] font-black tracking-tight text-[var(--ink,#0F172A)]">
+                {customerDisplay.brandShortName || job.customer || 'Müşteri yok'}
+              </p>
+              <p className="mt-0.5 truncate text-[13px] font-medium text-[var(--muted,#64748B)]">
+                {productSummary}
+                <span className="mx-1.5 text-[var(--border,#CBD5E1)]">·</span>
+                {formatShortDate(timeline.orderDate || timeline.productionStartDate)}
+              </p>
+            </button>
           </div>
-        </button>
 
-        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-          <span
-            className={`inline-flex rounded-xl bg-gradient-to-br px-3 py-1.5 text-[10px] font-black tracking-wide text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] ${badge.gradient}`}
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            className="flex items-center gap-4 rounded-2xl border border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#F8FAFC)]/80 px-3 py-2.5 text-left transition hover:border-blue-200 dark:bg-white/5"
           >
-            {badge.label}
-          </span>
-          {hasPartial ? (
-            <span
-              className={`inline-flex rounded-xl bg-gradient-to-br px-3 py-1.5 text-[10px] font-black text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] ${HEADER_ACTION_GRADIENTS.success}`}
-            >
-              Kısmi · {formatQty(metrics.delivered)}/{formatQty(metrics.ordered)}
-            </span>
-          ) : (
-            <span
-              className={`inline-flex rounded-xl bg-gradient-to-br px-3 py-1.5 text-[10px] font-black text-white/95 shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] ${HEADER_ACTION_GRADIENTS.amber}`}
-            >
-              Teslimat Yok
-            </span>
-          )}
+            <ProductionProgressRing percent={progressPct} />
+            <div className="grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
+              <MetricStat label="Üretilecek" value={formatQty(metrics.ordered)} />
+              <MetricStat label="Üretilen" value={formatQty(metrics.produced)} />
+              <MetricStat label="Teslim" value={formatQty(metrics.delivered)} />
+              <MetricStat label="Kalan" value={formatQty(metrics.remaining)} />
+            </div>
+          </button>
 
           <div
-            className="ml-auto flex items-center gap-1.5 lg:ml-0"
+            className="flex items-center justify-end gap-1.5"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={onToggleExpand}
-              className={`rounded-xl border p-2 transition hover:scale-105 ${
+              className={`rounded-xl border p-2.5 transition hover:scale-105 ${
                 expanded
                   ? 'border-blue-200 bg-blue-50 text-blue-600'
                   : 'border-[var(--border,#E2E8F0)] bg-white text-[var(--muted,#64748B)]'
@@ -289,17 +254,6 @@ export default function ProductionJobCard({
             ) : null}
           </div>
         </div>
-      </div>
-
-      {/* Full-width process + photo strip */}
-      <div className="border-t border-[var(--border,#E2E8F0)] bg-[linear-gradient(180deg,rgba(248,250,252,0.85),rgba(255,255,255,0.4))] px-3 py-3 dark:bg-none">
-        <ProductionProcessStageBar
-          steps={processSteps}
-          stagePhotos={activeLine?.stagePhotos || []}
-          readOnly={activeLine?.productionClosed === true}
-          onStageClick={handleStageClick}
-          onPhotosChange={handlePhotosChange}
-        />
       </div>
 
       {lineItems.length > 1 ? (
@@ -352,7 +306,7 @@ export default function ProductionJobCard({
       ) : null}
 
       {expanded ? (
-        <div className="space-y-5 border-t border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#FCFCFD)]/90 px-4 py-4 transition-opacity duration-300">
+        <div className="space-y-5 border-t border-[var(--border,#E2E8F0)] bg-[linear-gradient(180deg,#fbfcfe_0%,#ffffff_100%)] px-4 py-5 dark:bg-none">
           {lineItems.length > 1 ? (
             <div className="flex flex-wrap gap-1.5">
               {lineItems.map((line, index) => (
@@ -375,13 +329,9 @@ export default function ProductionJobCard({
           <ProductionStageMiniCards
             steps={processSteps}
             stagePhotos={activeLine?.stagePhotos || []}
-            producedLabel={producedLabel}
             readOnly={activeLine?.productionClosed === true}
-            jobId={job.id}
-            lineItemId={activeLine?.id || ''}
             onStageClick={handleStageClick}
             onPhotosChange={handlePhotosChange}
-            onStageNote={handleStageNote}
           />
 
           {activeLine ? (
