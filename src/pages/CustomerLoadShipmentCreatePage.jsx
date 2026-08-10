@@ -15,7 +15,6 @@ import {
   HEADER_ACTION_GRADIENTS,
 } from '../components/Layout/HeaderCashActionsPanel'
 import EditableDropdownPill from '../components/EditableDropdownPill'
-import VehicleLoadVisualizer from '../components/Logistics/VehicleLoadVisualizer'
 import { findCustomerProfile } from '../data/customerProfiles'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import { formatCustomerAddress, getCustomerCoordinates } from '../utils/customerGeo'
@@ -38,6 +37,7 @@ import {
   computeLoadPlan,
   fmtKg,
   GRID_MODULES,
+  itemInitials,
   LOAD_PRESETS,
   SLOT_COLORS,
   TRUCK_PRESETS,
@@ -253,7 +253,6 @@ export default function CustomerLoadShipmentCreatePage() {
   const [truckKey, setTruckKey] = useState(() => loadTruckCatalog()[0]?.key || 'kamyon_kucuk')
   const [moduleKey, setModuleKey] = useState('euro')
   const [orientation, setOrientation] = useState('uzun')
-  const [zoom, setZoom] = useState(1)
   const [editingItemId, setEditingItemId] = useState(null)
   const [note, setNote] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState(() => loadVehicleTypes())
@@ -325,6 +324,7 @@ export default function CustomerLoadShipmentCreatePage() {
     TRUCK_PRESETS.kamyon_kucuk
   const module = GRID_MODULES[moduleKey] || GRID_MODULES.euro
   const plan = useMemo(() => computeLoadPlan(truck, module, loadItems), [truck, module, loadItems])
+  const cell = 56
   const ai = useMemo(
     () =>
       buildLoadSuggestions({
@@ -832,20 +832,68 @@ export default function CustomerLoadShipmentCreatePage() {
             </div>
           ) : null}
 
-          <div className="space-y-3">
-            <VehicleLoadVisualizer
-              truckKey={truck.key || truckKey}
-              truck={truck}
-              plan={plan}
-              plate={trip.plate || ''}
-              editingItemId={editingItemId}
-              onEmptySlotClick={handleEmptySlotClick}
-              onFilledSlotClick={handleFilledSlotClick}
-              zoom={zoom}
-              onZoomChange={setZoom}
-            />
+          <div className="tlc-card tlc-panel">
+            <div className="tlc-stage">
+              <div className="tlc-front-label" aria-hidden>
+                ÖN
+              </div>
+              <div className="tlc-grid-wrap">
+                <div
+                  className="tlc-grid"
+                  style={{
+                    gridTemplateColumns: `repeat(${plan.rowsAlongLength}, ${cell}px)`,
+                    gridTemplateRows: `repeat(${plan.colsAcrossWidth}, ${cell}px)`,
+                  }}
+                >
+                  {plan.slotOwner.map((ownerIdx, slotIndex) => {
+                    if (ownerIdx == null) {
+                      return (
+                        <button
+                          key={`empty-${slotIndex}`}
+                          type="button"
+                          className="tlc-slot tlc-slot--empty"
+                          style={{ width: cell, height: cell }}
+                          onClick={handleEmptySlotClick}
+                        >
+                          +
+                        </button>
+                      )
+                    }
+                    const item = plan.results[ownerIdx]
+                    const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
+                    const selected = editingItemId === item.id
+                    return (
+                      <div
+                        key={`filled-${slotIndex}`}
+                        className="tlc-slot tlc-slot--filled"
+                        style={{
+                          width: cell,
+                          height: cell,
+                          background: tone.bg,
+                          color: tone.fg,
+                          outline: selected ? `2px solid ${tone.fg}` : undefined,
+                          outlineOffset: 1,
+                        }}
+                        title={item.name}
+                        onClick={() => handleFilledSlotClick(item)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') handleFilledSlotClick(item)
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <span>{itemInitials(item.name)}</span>
+                        <span style={{ fontWeight: 600 }}>
+                          {fmtKg(item.weight / Math.max(1, item.qty))}kg
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="tlc-legend">
               {plan.results.length ? (
                 plan.results.map((item) => {
                   const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
@@ -853,29 +901,22 @@ export default function CustomerLoadShipmentCreatePage() {
                     <button
                       key={item.id}
                       type="button"
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2 py-1 text-left hover:bg-black/5"
+                      className="inline-flex items-center gap-1.5 rounded-lg px-1 py-0.5 text-left hover:bg-black/5"
                       onClick={() => handleFilledSlotClick(item)}
                     >
-                      <i
-                        className="inline-block h-2.5 w-2.5 rounded-full"
-                        style={{ background: tone.bg, border: `1px solid ${tone.fg}22` }}
-                      />
-                      <span className={`${YF_TEXT_CLASS} !text-[12px] !text-[var(--ink)]`}>
-                        {item.name}
-                      </span>
-                      <span className={`${YF_TEXT_CLASS} !text-[11px]`}>
-                        ({item.slotsUsed} slot)
-                      </span>
+                      <i style={{ background: tone.bg, border: `1px solid ${tone.fg}22` }} />
+                      {item.name}{' '}
+                      <span style={{ color: 'var(--tlc-faint)' }}>({item.slotsUsed} slot)</span>
                     </button>
                   )
                 })
               ) : (
-                <span className={YF_TEXT_CLASS}>Henüz yük eklenmedi.</span>
+                <span style={{ color: 'var(--tlc-faint)' }}>Henüz yük eklenmedi.</span>
               )}
             </div>
 
             {editingItem ? (
-              <div className="mt-1 grid gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3 sm:grid-cols-[minmax(0,1.4fr)_5.5rem_5rem_5rem_5rem_auto_auto]">
+              <div className="mt-4 grid gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3 sm:grid-cols-[minmax(0,1.4fr)_5.5rem_5rem_5rem_5rem_auto_auto]">
                 <input
                   className={INPUT_CLASS}
                   value={editingItem.name}
@@ -952,8 +993,8 @@ export default function CustomerLoadShipmentCreatePage() {
               </div>
             ) : null}
 
-            <div className="flex flex-wrap gap-1.5">
-              {LOAD_PRESETS.slice(0, 5).map((preset) => (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {LOAD_PRESETS.slice(0, 4).map((preset) => (
                 <button
                   key={preset.name}
                   type="button"
