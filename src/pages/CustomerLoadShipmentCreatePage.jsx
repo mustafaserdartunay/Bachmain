@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
+  Minus,
   Package,
+  Pencil,
   Plus,
   Save,
   Trash2,
@@ -43,7 +45,9 @@ import {
   computeLoadPlan,
   fmtKg,
   GRID_MODULES,
+  itemInitials,
   LOAD_PRESETS,
+  SLOT_COLORS,
   TRUCK_PRESETS,
 } from '../utils/truckLoadCalc'
 import {
@@ -55,6 +59,7 @@ import {
   upsertTrip,
 } from '../utils/sevkiyatStore'
 import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../utils/buttonStyles'
+import '../components/Logistics/truck-load-calculator.css'
 
 const INPUT_CLASS =
   'h-9 w-full rounded-xl border border-[var(--glass-border)] bg-transparent px-3 text-[14px] font-normal leading-tight text-[var(--ink)] outline-none focus:border-blue-400'
@@ -141,16 +146,24 @@ function stockToLoadItem(item) {
   }
 }
 
-function Metric({ label, value, hint }) {
+function CabSvg() {
   return (
-    <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2.5">
-      <p className={YF_TEXT_CLASS}>{label}</p>
-      <p className="mt-1 tabular-nums text-[16px] font-bold leading-tight text-[var(--ink)]">
-        {value}
-      </p>
-      {hint ? <p className={`mt-0.5 ${YF_TEXT_CLASS} !text-[12px]`}>{hint}</p> : null}
-    </div>
+    <svg width="90" height="150" viewBox="0 0 90 150" aria-hidden className="tlc-cab">
+      <rect x="18" y="30" width="55" height="70" rx="8" fill="#0f172a" />
+      <rect x="26" y="38" width="38" height="26" rx="4" fill="#bfdbfe" />
+      <rect x="10" y="95" width="70" height="10" rx="4" fill="#0f172a" />
+      <circle cx="30" cy="112" r="11" fill="#1e293b" />
+      <circle cx="30" cy="112" r="4.5" fill="#bfdbfe" />
+      <circle cx="62" cy="112" r="11" fill="#1e293b" />
+      <circle cx="62" cy="112" r="4.5" fill="#bfdbfe" />
+    </svg>
   )
+}
+
+function badgeTone(pct) {
+  if (pct > 100) return 'tlc-badge--bad'
+  if (pct > 85) return 'tlc-badge--warn'
+  return 'tlc-badge--ok'
 }
 
 export default function CustomerLoadShipmentCreatePage() {
@@ -184,9 +197,12 @@ export default function CustomerLoadShipmentCreatePage() {
   }, [stockIdsParam, stockItems])
 
   const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [stockQtyOverrides, setStockQtyOverrides] = useState({})
   const [manualItems, setManualItems] = useState([])
   const [truckKey, setTruckKey] = useState('kamyon_kucuk')
   const [moduleKey, setModuleKey] = useState('euro')
+  const [zoom, setZoom] = useState(1)
+  const [editingItemId, setEditingItemId] = useState(null)
   const [note, setNote] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState(() => loadVehicleTypes())
   const [activeMenu, setActiveMenu] = useState(null)
@@ -196,6 +212,8 @@ export default function CustomerLoadShipmentCreatePage() {
 
   useEffect(() => {
     setSelectedIds(new Set(initialSelected))
+    setStockQtyOverrides({})
+    setEditingItemId(null)
   }, [initialSelected])
 
   useEffect(() => {
@@ -230,15 +248,29 @@ export default function CustomerLoadShipmentCreatePage() {
     return () => document.removeEventListener('click', close)
   }, [activeMenu])
 
-  const selectedStock = stockItems.filter((item) => selectedIds.has(item.id))
-  const loadItems = useMemo(
-    () => [...selectedStock, ...manualItems],
-    [selectedStock, manualItems],
+  const selectedStock = useMemo(
+    () =>
+      stockItems
+        .filter((item) => selectedIds.has(item.id))
+        .map((item) => ({
+          ...item,
+          qty: Math.max(1, Number(stockQtyOverrides[item.id] ?? item.qty) || 1),
+        })),
+    [stockItems, selectedIds, stockQtyOverrides],
   )
+  const loadItems = useMemo(() => {
+    const rows = [...selectedStock, ...manualItems]
+    return rows.map((item, index) => ({
+      ...item,
+      colorIdx: Number.isFinite(item.colorIdx) ? item.colorIdx : index % SLOT_COLORS.length,
+    }))
+  }, [selectedStock, manualItems])
 
   const truck = TRUCK_PRESETS[truckKey] || TRUCK_PRESETS.kamyon_kucuk
   const module = GRID_MODULES[moduleKey] || GRID_MODULES.euro
   const plan = useMemo(() => computeLoadPlan(truck, module, loadItems), [truck, module, loadItems])
+  const cell = Math.round(56 * zoom)
+  const editingItem = loadItems.find((item) => item.id === editingItemId) || null
 
   useEffect(() => {
     setTrip((current) => {
@@ -283,10 +315,12 @@ export default function CustomerLoadShipmentCreatePage() {
 
   function addManualItem(presetName) {
     const preset = LOAD_PRESETS.find((row) => row.name === presetName) || LOAD_PRESETS[2]
+    const id = `manual-${Date.now()}-${manualItems.length}`
+    const colorIdx = (selectedStock.length + manualItems.length) % SLOT_COLORS.length
     setManualItems((current) => [
       ...current,
       {
-        id: `manual-${Date.now()}-${current.length}`,
+        id,
         name: preset.name,
         qty: 1,
         L: preset.L,
@@ -296,8 +330,10 @@ export default function CustomerLoadShipmentCreatePage() {
         stackable: preset.stackable,
         unit: preset.name.toLowerCase().includes('koli') ? 'koli' : 'adet',
         source: 'manual',
+        colorIdx,
       },
     ])
+    setEditingItemId(id)
   }
 
   function updateManualItem(id, patch) {
@@ -306,8 +342,45 @@ export default function CustomerLoadShipmentCreatePage() {
     )
   }
 
+  function updateLoadItem(id, patch) {
+    if (manualItems.some((item) => item.id === id)) {
+      updateManualItem(id, patch)
+      return
+    }
+    if (patch.qty != null) {
+      setStockQtyOverrides((current) => ({ ...current, [id]: Math.max(1, Number(patch.qty) || 1) }))
+    }
+  }
+
+  function removeLoadItem(id) {
+    if (manualItems.some((item) => item.id === id)) {
+      removeManualItem(id)
+      return
+    }
+    setSelectedIds((current) => {
+      const next = new Set(current)
+      next.delete(id)
+      return next
+    })
+    setStockQtyOverrides((current) => {
+      const next = { ...current }
+      delete next[id]
+      return next
+    })
+    if (editingItemId === id) setEditingItemId(null)
+  }
+
   function removeManualItem(id) {
     setManualItems((current) => current.filter((item) => item.id !== id))
+    if (editingItemId === id) setEditingItemId(null)
+  }
+
+  function handleEmptySlotClick() {
+    addManualItem(LOAD_PRESETS[2]?.name || 'Koli — Orta')
+  }
+
+  function handleFilledSlotClick(item) {
+    setEditingItemId(item.id)
   }
 
   function patchTrip(patch) {
@@ -468,63 +541,292 @@ export default function CustomerLoadShipmentCreatePage() {
           </span>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Araç tipi">
-            <select
-              className={INPUT_CLASS}
-              value={truckKey}
-              onChange={(event) => setTruckKey(event.target.value)}
-            >
-              {TRUCK_OPTIONS.map((item) => (
-                <option key={item.key} value={item.key}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Yerleşim modülü">
-            <select
-              className={INPUT_CLASS}
-              value={moduleKey}
-              onChange={(event) => setModuleKey(event.target.value)}
-            >
-              {MODULE_OPTIONS.map((item) => (
-                <option key={item.key} value={item.key}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Yük notu">
-            <input
-              className={INPUT_CLASS}
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="Örn. sabah sevkiyatı"
-            />
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <Metric label="Doluluk" value={`%${plan.fillPct}`} hint="Ağırlık / slot" />
-          <Metric label="Ağırlık" value={`${fmtKg(plan.totalWeight)} kg`} hint={`Limit ${fmtKg(truck.maxWeight)} kg`} />
-          <Metric
-            label="Slot"
-            value={`${plan.totalSlotsUsed}/${plan.totalSlots}`}
-            hint={module.name}
-          />
-          <Metric label="Araç" value={`${truck.L}×${truck.W}×${truck.H}`} hint="cm" />
-        </div>
-
-        {plan.warnings?.length ? (
-          <div className="space-y-1 rounded-2xl border border-amber-300/50 bg-amber-50/60 px-3 py-2">
-            {plan.warnings.map((warning) => (
-              <p key={warning} className={`${YF_TEXT_CLASS} !text-amber-800`}>
-                {warning}
-              </p>
-            ))}
+        <div className="tlc customer-load-truck-visual space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Field label="Araç tipi">
+              <select
+                className={INPUT_CLASS}
+                value={truckKey}
+                onChange={(event) => setTruckKey(event.target.value)}
+              >
+                {TRUCK_OPTIONS.map((item) => (
+                  <option key={item.key} value={item.key}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Yerleşim modülü (grid)">
+              <select
+                className={INPUT_CLASS}
+                value={moduleKey}
+                onChange={(event) => setModuleKey(event.target.value)}
+              >
+                {MODULE_OPTIONS.map((item) => (
+                  <option key={item.key} value={item.key}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Yük notu">
+              <input
+                className={INPUT_CLASS}
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="Örn. sabah sevkiyatı"
+              />
+            </Field>
           </div>
-        ) : null}
+
+          <div className="tlc-kpis">
+            <div className="tlc-card tlc-kpi">
+              <div className="tlc-kpi__top">
+                <span className="tlc-kpi__label">Ağırlık</span>
+                <span className={`tlc-badge ${badgeTone(plan.weightPct)}`}>%{plan.weightPct}</span>
+              </div>
+              <div className="tlc-kpi__value">
+                {fmtKg(plan.totalWeight)} / {fmtKg(truck.maxWeight)} kg
+              </div>
+            </div>
+            <div className="tlc-card tlc-kpi">
+              <div className="tlc-kpi__top">
+                <span className="tlc-kpi__label">Slot / Pozisyon</span>
+                <span className={`tlc-badge ${badgeTone(plan.slotPct)}`}>%{plan.slotPct}</span>
+              </div>
+              <div className="tlc-kpi__value">
+                {plan.totalSlotsUsed} / {plan.totalSlots}
+              </div>
+            </div>
+            <div className="tlc-card tlc-kpi">
+              <div className="tlc-kpi__top">
+                <span className="tlc-kpi__label">Doluluk</span>
+                <span className="tlc-badge tlc-badge--info">Taban</span>
+              </div>
+              <div className="tlc-kpi__value">%{plan.fillPct}</div>
+            </div>
+            <div className="tlc-card tlc-kpi">
+              <div className="tlc-kpi__top">
+                <span className="tlc-kpi__label">Araç ölçü</span>
+                <span className="tlc-badge tlc-badge--info">cm</span>
+              </div>
+              <div className="tlc-kpi__value">
+                {truck.L}×{truck.W}×{truck.H}
+              </div>
+            </div>
+          </div>
+
+          {plan.warnings?.length ? (
+            <div className="space-y-1 rounded-2xl border border-amber-300/50 bg-amber-50/60 px-3 py-2">
+              {plan.warnings.map((warning) => (
+                <p key={warning} className={`${YF_TEXT_CLASS} !text-amber-800`}>
+                  {warning}
+                </p>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="tlc-card tlc-panel">
+            <div className="tlc-panel__head">
+              <h3>Araç Yerleşim Görünümü</h3>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  type="button"
+                  className="tlc-icon-btn"
+                  onClick={() => setZoom((value) => Math.max(0.6, +(value - 0.2).toFixed(1)))}
+                  aria-label="Uzaklaştır"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  className="tlc-icon-btn"
+                  onClick={() => setZoom((value) => Math.min(2, +(value + 0.2).toFixed(1)))}
+                  aria-label="Yakınlaştır"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <p className={`mb-3 ${YF_TEXT_CLASS} !text-[12px]`}>
+              Boş slota tıklayarak kalem ekleyin · dolu slota tıklayarak yük ayarını düzenleyin. Araç
+              ve grid seçimi yerleşimi anında günceller.
+            </p>
+
+            <div className="tlc-stage">
+              <CabSvg />
+              <div className="tlc-grid-wrap">
+                <div
+                  className="tlc-grid"
+                  style={{
+                    gridTemplateColumns: `repeat(${plan.rowsAlongLength}, ${cell}px)`,
+                    gridTemplateRows: `repeat(${plan.colsAcrossWidth}, ${cell}px)`,
+                  }}
+                >
+                  {plan.slotOwner.map((ownerIdx, slotIndex) => {
+                    if (ownerIdx == null) {
+                      return (
+                        <button
+                          key={`empty-${slotIndex}`}
+                          type="button"
+                          className="tlc-slot tlc-slot--empty"
+                          style={{ width: cell, height: cell }}
+                          onClick={handleEmptySlotClick}
+                        >
+                          +
+                        </button>
+                      )
+                    }
+                    const item = plan.results[ownerIdx]
+                    const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
+                    const selected = editingItemId === item.id
+                    return (
+                      <div
+                        key={`filled-${slotIndex}`}
+                        className="tlc-slot tlc-slot--filled"
+                        style={{
+                          width: cell,
+                          height: cell,
+                          background: tone.bg,
+                          color: tone.fg,
+                          outline: selected ? `2px solid ${tone.fg}` : undefined,
+                          outlineOffset: 1,
+                        }}
+                        title={item.name}
+                        onClick={() => handleFilledSlotClick(item)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') handleFilledSlotClick(item)
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <span>{itemInitials(item.name)}</span>
+                        <span style={{ fontWeight: 600 }}>
+                          {fmtKg(item.weight / Math.max(1, item.qty))}kg
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="tlc-legend">
+              {plan.results.length ? (
+                plan.results.map((item) => {
+                  const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="inline-flex items-center gap-1.5 rounded-lg px-1 py-0.5 text-left hover:bg-black/5"
+                      onClick={() => handleFilledSlotClick(item)}
+                    >
+                      <i style={{ background: tone.bg, border: `1px solid ${tone.fg}22` }} />
+                      {item.name}{' '}
+                      <span style={{ color: 'var(--tlc-faint)' }}>({item.slotsUsed} slot)</span>
+                    </button>
+                  )
+                })
+              ) : (
+                <span style={{ color: 'var(--tlc-faint)' }}>Henüz yük eklenmedi.</span>
+              )}
+            </div>
+
+            {editingItem ? (
+              <div className="mt-4 grid gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3 sm:grid-cols-[minmax(0,1.4fr)_5.5rem_5rem_5rem_5rem_auto_auto]">
+                <input
+                  className={INPUT_CLASS}
+                  value={editingItem.name}
+                  disabled={editingItem.source === 'stock'}
+                  onChange={(event) => updateLoadItem(editingItem.id, { name: event.target.value })}
+                />
+                <input
+                  className={INPUT_CLASS}
+                  type="number"
+                  min="1"
+                  value={editingItem.qty}
+                  onChange={(event) =>
+                    updateLoadItem(editingItem.id, {
+                      qty: Math.max(1, Number(event.target.value) || 1),
+                    })
+                  }
+                  title="Adet"
+                />
+                <input
+                  className={INPUT_CLASS}
+                  type="number"
+                  min="1"
+                  value={editingItem.L}
+                  disabled={editingItem.source === 'stock'}
+                  onChange={(event) =>
+                    updateLoadItem(editingItem.id, {
+                      L: Math.max(1, Number(event.target.value) || 1),
+                    })
+                  }
+                  title="Uzunluk cm"
+                />
+                <input
+                  className={INPUT_CLASS}
+                  type="number"
+                  min="1"
+                  value={editingItem.W}
+                  disabled={editingItem.source === 'stock'}
+                  onChange={(event) =>
+                    updateLoadItem(editingItem.id, {
+                      W: Math.max(1, Number(event.target.value) || 1),
+                    })
+                  }
+                  title="Genişlik cm"
+                />
+                <input
+                  className={INPUT_CLASS}
+                  type="number"
+                  min="0"
+                  value={editingItem.weight}
+                  disabled={editingItem.source === 'stock'}
+                  onChange={(event) =>
+                    updateLoadItem(editingItem.id, {
+                      weight: Math.max(0, Number(event.target.value) || 0),
+                    })
+                  }
+                  title="Kg / birim"
+                />
+                <button
+                  type="button"
+                  className="tlc-icon-btn tlc-icon-btn--sm"
+                  onClick={() => setEditingItemId(null)}
+                  aria-label="Düzenlemeyi kapat"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  className={COP_KUTUSU_BUTTON_CLASS}
+                  title="Kaldır"
+                  onClick={() => removeLoadItem(editingItem.id)}
+                >
+                  <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+                </button>
+              </div>
+            ) : null}
+
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {LOAD_PRESETS.slice(0, 4).map((preset) => (
+                <button
+                  key={preset.name}
+                  type="button"
+                  onClick={() => addManualItem(preset.name)}
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-normal text-blue-600 hover:bg-[rgba(37,99,235,0.12)]"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {preset.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -541,7 +843,10 @@ export default function CustomerLoadShipmentCreatePage() {
           </div>
 
           {!stockItems.length ? (
-            <p className={YF_TEXT_CLASS}>Bu müşteriye bağlı depo stoğu yok. Elle kalem ekleyebilirsiniz.</p>
+            <p className={YF_TEXT_CLASS}>
+              Bu müşteriye bağlı depo stoğu yok. Görseldeki boş slotlardan veya hazır
+              kalemlerden ekleyebilirsiniz.
+            </p>
           ) : (
             <div className="space-y-2">
               {stockItems.map((item) => (
@@ -560,96 +865,26 @@ export default function CustomerLoadShipmentCreatePage() {
                       {item.name}
                     </span>
                     <span className={`mt-1 block ${YF_TEXT_CLASS} !text-[12px]`}>
-                      {item.productCode || '—'} · {item.qty} {item.unit} · {item.L}×{item.W}×
-                      {item.H} cm · {fmtKg(item.weight)} kg/birim
+                      {item.productCode || '—'} · {stockQtyOverrides[item.id] ?? item.qty}{' '}
+                      {item.unit} · {item.L}×{item.W}×{item.H} cm · {fmtKg(item.weight)} kg/birim
                     </span>
                   </span>
+                  {selectedIds.has(item.id) ? (
+                    <button
+                      type="button"
+                      className="text-[13px] font-normal text-blue-600"
+                      onClick={(event) => {
+                        event.preventDefault()
+                        setEditingItemId(item.id)
+                      }}
+                    >
+                      Görselde ayarla
+                    </button>
+                  ) : null}
                 </label>
               ))}
             </div>
           )}
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>Manuel yük kalemleri</p>
-            <div className="flex flex-wrap gap-1.5">
-              {LOAD_PRESETS.slice(0, 4).map((preset) => (
-                <button
-                  key={preset.name}
-                  type="button"
-                  onClick={() => addManualItem(preset.name)}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-normal text-blue-600 hover:bg-[rgba(37,99,235,0.12)]"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  {preset.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {manualItems.map((item) => (
-            <div
-              key={item.id}
-              className="grid gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3 sm:grid-cols-[minmax(0,1.4fr)_5rem_5rem_5rem_5rem_auto]"
-            >
-              <input
-                className={INPUT_CLASS}
-                value={item.name}
-                onChange={(event) => updateManualItem(item.id, { name: event.target.value })}
-              />
-              <input
-                className={INPUT_CLASS}
-                type="number"
-                min="1"
-                value={item.qty}
-                onChange={(event) =>
-                  updateManualItem(item.id, { qty: Math.max(1, Number(event.target.value) || 1) })
-                }
-                title="Adet"
-              />
-              <input
-                className={INPUT_CLASS}
-                type="number"
-                min="1"
-                value={item.L}
-                onChange={(event) =>
-                  updateManualItem(item.id, { L: Math.max(1, Number(event.target.value) || 1) })
-                }
-                title="Uzunluk cm"
-              />
-              <input
-                className={INPUT_CLASS}
-                type="number"
-                min="1"
-                value={item.W}
-                onChange={(event) =>
-                  updateManualItem(item.id, { W: Math.max(1, Number(event.target.value) || 1) })
-                }
-                title="Genişlik cm"
-              />
-              <input
-                className={INPUT_CLASS}
-                type="number"
-                min="1"
-                value={item.weight}
-                onChange={(event) =>
-                  updateManualItem(item.id, {
-                    weight: Math.max(0, Number(event.target.value) || 0),
-                  })
-                }
-                title="Kg"
-              />
-              <button
-                type="button"
-                className={COP_KUTUSU_BUTTON_CLASS}
-                title="Sil"
-                onClick={() => removeManualItem(item.id)}
-              >
-                <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
-              </button>
-            </div>
-          ))}
         </div>
       </AppPagePanel>
 
