@@ -425,11 +425,21 @@ export default function SevkiyatPage() {
                 {draft.loadPlanCode || loadPlan?.code || '—'}
               </span>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
                 <p className={`${YF_TEXT_CLASS} !text-[12px]`}>Araç</p>
                 <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
                   {draft.loadMetrics?.truckName || loadPlan?.truckName || '—'}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                <p className={`${YF_TEXT_CLASS} !text-[12px]`}>Yönlendirme</p>
+                <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                  {(draft.loadMetrics?.orientation ||
+                    loadPlan?.orientation ||
+                    loadPlan?.metrics?.orientation) === 'en'
+                    ? 'Enlemesine'
+                    : 'Uzunlamasına'}
                 </p>
               </div>
               <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
@@ -445,6 +455,12 @@ export default function SevkiyatPage() {
                 </p>
               </div>
               <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                <p className={`${YF_TEXT_CLASS} !text-[12px]`}>Parça</p>
+                <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                  {draft.loadMetrics?.totalPieces ?? loadPlan?.metrics?.totalPieces ?? '—'}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
                 <p className={`${YF_TEXT_CLASS} !text-[12px]`}>Slot</p>
                 <p className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
                   {draft.loadMetrics?.totalSlotsUsed ?? loadPlan?.metrics?.totalSlotsUsed ?? '—'}
@@ -453,12 +469,42 @@ export default function SevkiyatPage() {
                 </p>
               </div>
             </div>
+            {(loadPlan?.items || []).length ? (
+              <div className="overflow-hidden rounded-2xl border border-[var(--glass-border)]">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-[var(--glass-bg)] text-[11px] uppercase tracking-wide text-[var(--ink)]/60">
+                    <tr>
+                      <th className="px-3 py-2">Ürün</th>
+                      <th className="px-3 py-2">Ölçü</th>
+                      <th className="px-3 py-2">Adet</th>
+                      <th className="px-3 py-2">Ağırlık</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loadPlan.items.map((item) => (
+                      <tr key={item.id} className="border-t border-[var(--glass-border)]">
+                        <td className={`px-3 py-2 ${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>
+                          {item.name}
+                        </td>
+                        <td className={`px-3 py-2 ${YF_TEXT_CLASS}`}>
+                          {item.L}×{item.W}×{item.H} cm
+                        </td>
+                        <td className={`px-3 py-2 ${YF_TEXT_CLASS}`}>{item.qty}</td>
+                        <td className={`px-3 py-2 ${YF_TEXT_CLASS}`}>
+                          {fmtKg((Number(item.weight) || 0) * (Number(item.qty) || 0))} kg
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
             {draft.stops?.[0]?.customerId ? (
               <Link
                 to={`/musteriler/${draft.stops[0].customerId}/yuk-sevkiyat`}
                 className="inline-flex text-[14px] font-normal text-blue-600 hover:underline"
               >
-                Müşteri yük ekranına dön
+                Yük planını düzenle
               </Link>
             ) : null}
           </AppPagePanel>

@@ -1,16 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Plus,
-  Minus,
-  Pencil,
-  Trash2,
-  X,
-  Package,
-  Box,
-  Square,
-  Truck,
-  Sparkles,
-} from 'lucide-react'
+import { Plus, Minus, Pencil, Trash2, X, Package, Box, Square, Truck, Sparkles } from 'lucide-react'
 import { AppPageShell } from '../Layout/AppPageLayout'
 import {
   TRUCK_PRESETS,
@@ -77,30 +66,33 @@ export default function TruckLoadCalculator() {
   const [truckKey, setTruckKey] = useState(saved?.truckKey || 'tir')
   const [moduleKey, setModuleKey] = useState(saved?.moduleKey || 'euro')
   const [zoom, setZoom] = useState(saved?.zoom || 1)
-  const [items, setItems] = useState(() => saved?.items || [
-    {
-      id: 'itm-seed1',
-      name: 'Europalet — Kuru Gıda',
-      L: 120,
-      W: 80,
-      H: 150,
-      weight: 500,
-      qty: 14,
-      stackable: false,
-      colorIdx: 0,
-    },
-    {
-      id: 'itm-seed2',
-      name: 'Koli — Orta (Tekstil)',
-      L: 60,
-      W: 40,
-      H: 40,
-      weight: 15,
-      qty: 120,
-      stackable: true,
-      colorIdx: 1,
-    },
-  ])
+  const [items, setItems] = useState(
+    () =>
+      saved?.items || [
+        {
+          id: 'itm-seed1',
+          name: 'Europalet — Kuru Gıda',
+          L: 120,
+          W: 80,
+          H: 150,
+          weight: 500,
+          qty: 14,
+          stackable: false,
+          colorIdx: 0,
+        },
+        {
+          id: 'itm-seed2',
+          name: 'Koli — Orta (Tekstil)',
+          L: 60,
+          W: 40,
+          H: 40,
+          weight: 15,
+          qty: 120,
+          stackable: true,
+          colorIdx: 1,
+        },
+      ],
+  )
   const [colorCounter, setColorCounter] = useState(saved?.colorCounter || 2)
   const [modalOpen, setModalOpen] = useState(false)
   const [confirmId, setConfirmId] = useState(null)
@@ -110,10 +102,7 @@ export default function TruckLoadCalculator() {
   const truck = TRUCK_PRESETS[truckKey] || TRUCK_PRESETS.tir
   const module = GRID_MODULES[moduleKey] || GRID_MODULES.euro
 
-  const calc = useMemo(
-    () => computeLoadPlan(truck, module, items),
-    [truck, module, items],
-  )
+  const calc = useMemo(() => computeLoadPlan(truck, module, items), [truck, module, items])
 
   const ai = useMemo(
     () => buildLoadSuggestions({ items, truckKey, moduleKey }),
@@ -130,11 +119,32 @@ export default function TruckLoadCalculator() {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        wizardStep, company, branch, warehouse, stockScope, selectMode,
-        truckKey, moduleKey, zoom, items, colorCounter,
+        wizardStep,
+        company,
+        branch,
+        warehouse,
+        stockScope,
+        selectMode,
+        truckKey,
+        moduleKey,
+        zoom,
+        items,
+        colorCounter,
       }),
     )
-  }, [wizardStep, company, branch, warehouse, stockScope, selectMode, truckKey, moduleKey, zoom, items, colorCounter])
+  }, [
+    wizardStep,
+    company,
+    branch,
+    warehouse,
+    stockScope,
+    selectMode,
+    truckKey,
+    moduleKey,
+    zoom,
+    items,
+    colorCounter,
+  ])
 
   const cell = Math.round(46 * zoom)
 
@@ -161,7 +171,9 @@ export default function TruckLoadCalculator() {
     e.preventDefault()
     if (!draft?.name?.trim()) return
     if (draft.id) {
-      setItems((prev) => prev.map((it) => (it.id === draft.id ? { ...it, ...draft, name: draft.name.trim() } : it)))
+      setItems((prev) =>
+        prev.map((it) => (it.id === draft.id ? { ...it, ...draft, name: draft.name.trim() } : it)),
+      )
     } else {
       const nextIdx = colorCounter
       setColorCounter((c) => c + 1)
@@ -204,7 +216,8 @@ export default function TruckLoadCalculator() {
         weight: Math.max(20, Number(row.unitPrice) || 50),
         qty: Math.max(1, Number(row.quantity) || Number(row.deliveredQuantity) || 1),
         stackable: false,
-        customer: typeof row.customer === 'string' ? row.customer : row.customer?.companyTitle || '',
+        customer:
+          typeof row.customer === 'string' ? row.customer : row.customer?.companyTitle || '',
         orderNo: row.orderId || '',
         invoiceNo: row.invoiceNo || '',
         depoItemId: row.id,
@@ -272,19 +285,31 @@ export default function TruckLoadCalculator() {
             <p>Şirket → stok tipi → ürün seçimi → akıllı paketleme ve araç yerleşimi.</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Link to="/lojistik/planlanan" className="tlc-btn tlc-btn--ghost">Planlanan</Link>
+            <Link to="/lojistik/planlanan" className="tlc-btn tlc-btn--ghost">
+              Planlanan
+            </Link>
             <button type="button" className="tlc-btn tlc-btn--ghost" onClick={saveAsPlan}>
               <Truck className="h-4 w-4" />
               Planı Kaydet
             </button>
-            <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => { setWizardStep(4); openNew() }}>
+            <button
+              type="button"
+              className="tlc-btn tlc-btn--primary"
+              onClick={() => {
+                setWizardStep(4)
+                openNew()
+              }}
+            >
               <Plus className="h-4 w-4" />
               Yük Ekle
             </button>
           </div>
         </div>
 
-        <div className="tlc-card" style={{ padding: 12, marginBottom: 14, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div
+          className="tlc-card"
+          style={{ padding: 12, marginBottom: 14, display: 'flex', flexWrap: 'wrap', gap: 8 }}
+        >
           {WIZARD.map((s) => (
             <button
               key={s.id}
@@ -298,7 +323,15 @@ export default function TruckLoadCalculator() {
         </div>
 
         {toast ? (
-          <div className="tlc-card" style={{ padding: '12px 16px', marginBottom: 14, fontWeight: 700, color: 'var(--tlc-accent)' }}>
+          <div
+            className="tlc-card"
+            style={{
+              padding: '12px 16px',
+              marginBottom: 14,
+              fontWeight: 700,
+              color: 'var(--tlc-accent)',
+            }}
+          >
             {toast}
           </div>
         ) : null}
@@ -311,19 +344,37 @@ export default function TruckLoadCalculator() {
                 <div className="tlc-form-row">
                   <div className="tlc-field" style={{ minWidth: 0 }}>
                     <label>Şirket</label>
-                    <input className="tlc-input" value={company} onChange={(e) => setCompany(e.target.value)} />
+                    <input
+                      className="tlc-input"
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                    />
                   </div>
                   <div className="tlc-field" style={{ minWidth: 0 }}>
                     <label>Şube</label>
-                    <input className="tlc-input" value={branch} onChange={(e) => setBranch(e.target.value)} />
+                    <input
+                      className="tlc-input"
+                      value={branch}
+                      onChange={(e) => setBranch(e.target.value)}
+                    />
                   </div>
                   <div className="tlc-field" style={{ minWidth: 0 }}>
                     <label>Depo</label>
-                    <input className="tlc-input" value={warehouse} onChange={(e) => setWarehouse(e.target.value)} />
+                    <input
+                      className="tlc-input"
+                      value={warehouse}
+                      onChange={(e) => setWarehouse(e.target.value)}
+                    />
                   </div>
                 </div>
                 <div className="tlc-modal-actions">
-                  <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => setWizardStep(2)}>Devam</button>
+                  <button
+                    type="button"
+                    className="tlc-btn tlc-btn--primary"
+                    onClick={() => setWizardStep(2)}
+                  >
+                    Devam
+                  </button>
                 </div>
               </div>
             )}
@@ -339,7 +390,14 @@ export default function TruckLoadCalculator() {
                       key={opt.id}
                       type="button"
                       className="tlc-preset"
-                      style={stockScope === opt.id ? { borderColor: 'var(--tlc-accent)', boxShadow: '0 0 0 3px rgba(37,99,235,.15)' } : undefined}
+                      style={
+                        stockScope === opt.id
+                          ? {
+                              borderColor: 'var(--tlc-accent)',
+                              boxShadow: '0 0 0 3px rgba(37,99,235,.15)',
+                            }
+                          : undefined
+                      }
                       onClick={() => setStockScope(opt.id)}
                     >
                       <strong>{opt.title}</strong>
@@ -348,8 +406,20 @@ export default function TruckLoadCalculator() {
                   ))}
                 </div>
                 <div className="tlc-modal-actions">
-                  <button type="button" className="tlc-btn tlc-btn--ghost" onClick={() => setWizardStep(1)}>Geri</button>
-                  <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => setWizardStep(3)}>Devam</button>
+                  <button
+                    type="button"
+                    className="tlc-btn tlc-btn--ghost"
+                    onClick={() => setWizardStep(1)}
+                  >
+                    Geri
+                  </button>
+                  <button
+                    type="button"
+                    className="tlc-btn tlc-btn--primary"
+                    onClick={() => setWizardStep(3)}
+                  >
+                    Devam
+                  </button>
                 </div>
               </div>
             )}
@@ -358,7 +428,11 @@ export default function TruckLoadCalculator() {
                 <h3 style={{ margin: 0 }}>Adım 3 — Seçim</h3>
                 <div className="tlc-field" style={{ minWidth: 0 }}>
                   <label>Seçim tipi</label>
-                  <select className="tlc-input" value={selectMode} onChange={(e) => setSelectMode(e.target.value)}>
+                  <select
+                    className="tlc-input"
+                    value={selectMode}
+                    onChange={(e) => setSelectMode(e.target.value)}
+                  >
                     <option value="customer">Cari</option>
                     <option value="invoice">Fatura</option>
                     <option value="order">Sipariş</option>
@@ -368,24 +442,51 @@ export default function TruckLoadCalculator() {
                 </div>
                 <div className="tlc-plan-list" style={{ maxHeight: 280 }}>
                   {!depoOptions.length ? (
-                    <div className="tlc-empty">Bu stok tipinde depo kalemi yok — manuel yük ekleyebilirsiniz.</div>
-                  ) : depoOptions.map((row) => (
-                    <div key={row.id} className="tlc-plan-row" style={{ gridTemplateColumns: '2fr 1fr 1fr auto' }}>
-                      <div>
-                        <strong>{row.product}</strong>
-                        <div style={{ fontSize: 11, color: 'var(--tlc-muted)' }}>
-                          {typeof row.customer === 'string' ? row.customer : '—'} · {row.orderId || row.productionCode || '—'}
-                        </div>
-                      </div>
-                      <div>{row.productCode || '—'}</div>
-                      <div>{row.quantity || row.deliveredQuantity || 0} adet</div>
-                      <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => importDepoRow(row)}>Ekle</button>
+                    <div className="tlc-empty">
+                      Bu stok tipinde depo kalemi yok — manuel yük ekleyebilirsiniz.
                     </div>
-                  ))}
+                  ) : (
+                    depoOptions.map((row) => (
+                      <div
+                        key={row.id}
+                        className="tlc-plan-row"
+                        style={{ gridTemplateColumns: '2fr 1fr 1fr auto' }}
+                      >
+                        <div>
+                          <strong>{row.product}</strong>
+                          <div style={{ fontSize: 11, color: 'var(--tlc-muted)' }}>
+                            {typeof row.customer === 'string' ? row.customer : '—'} ·{' '}
+                            {row.orderId || row.productionCode || '—'}
+                          </div>
+                        </div>
+                        <div>{row.productCode || '—'}</div>
+                        <div>{row.quantity || row.deliveredQuantity || 0} adet</div>
+                        <button
+                          type="button"
+                          className="tlc-btn tlc-btn--primary"
+                          onClick={() => importDepoRow(row)}
+                        >
+                          Ekle
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <div className="tlc-modal-actions">
-                  <button type="button" className="tlc-btn tlc-btn--ghost" onClick={() => setWizardStep(2)}>Geri</button>
-                  <button type="button" className="tlc-btn tlc-btn--primary" onClick={() => setWizardStep(4)}>Yüklemeye geç</button>
+                  <button
+                    type="button"
+                    className="tlc-btn tlc-btn--ghost"
+                    onClick={() => setWizardStep(2)}
+                  >
+                    Geri
+                  </button>
+                  <button
+                    type="button"
+                    className="tlc-btn tlc-btn--primary"
+                    onClick={() => setWizardStep(4)}
+                  >
+                    Yüklemeye geç
+                  </button>
                 </div>
               </div>
             )}
@@ -394,276 +495,454 @@ export default function TruckLoadCalculator() {
 
         {wizardStep >= 4 ? (
           <>
-        <div className="tlc-card" style={{ padding: 14, marginBottom: 14 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles className="h-4 w-4" style={{ color: 'var(--tlc-accent)' }} />
-                AI Load Optimizer
-              </strong>
-              <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 13, fontWeight: 600, color: 'var(--tlc-muted)' }}>
-                {ai.tips.map((t) => <li key={t}>{t}</li>)}
-              </ul>
-            </div>
-            <button type="button" className="tlc-btn tlc-btn--primary" onClick={applyAiTruck}>Önerilen aracı uygula</button>
-          </div>
-        </div>
-
-        <div className="tlc-card tlc-toolbar">
-          <div className="tlc-field">
-            <label>Araç Tipi</label>
-            <select className="tlc-input" value={truckKey} onChange={(e) => setTruckKey(e.target.value)}>
-              {Object.values(TRUCK_PRESETS).map((t) => (
-                <option key={t.key} value={t.key}>{t.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="tlc-field">
-            <label>Yerleşim Referansı (grid birimi)</label>
-            <select className="tlc-input" value={moduleKey} onChange={(e) => setModuleKey(e.target.value)}>
-              {Object.values(GRID_MODULES).map((m) => (
-                <option key={m.key} value={m.key}>{m.name}</option>
-              ))}
-            </select>
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--tlc-muted)', fontWeight: 600, paddingBottom: 8, lineHeight: 1.5 }}>
-            İç ölçüler: <b>{truck.L}×{truck.W}×{truck.H} cm</b>
-            {' '}|{' '}
-            Maks. yük: <b>{fmtKg(truck.maxWeight)} kg</b>
-          </div>
-          <div className="tlc-hint">
-            Bu araç yaklaşık bir yerleşim tahminidir; kesin istifleme planı değildir.
-          </div>
-        </div>
-
-        <div className="tlc-kpis">
-          <div className="tlc-card tlc-kpi">
-            <div className="tlc-kpi__top">
-              <span className="tlc-kpi__label">Ağırlık</span>
-              <span className={`tlc-badge ${badgeTone(calc.weightPct)}`}>%{calc.weightPct}</span>
-            </div>
-            <div className="tlc-kpi__value">{fmtKg(calc.totalWeight)} / {fmtKg(truck.maxWeight)} kg</div>
-          </div>
-          <div className="tlc-card tlc-kpi">
-            <div className="tlc-kpi__top">
-              <span className="tlc-kpi__label">Slot / Pozisyon</span>
-              <span className={`tlc-badge ${badgeTone(calc.slotPct)}`}>%{calc.slotPct}</span>
-            </div>
-            <div className="tlc-kpi__value">{calc.totalSlotsUsed} / {calc.totalSlots}</div>
-          </div>
-          <div className="tlc-card tlc-kpi">
-            <div className="tlc-kpi__top">
-              <span className="tlc-kpi__label">Doluluk Oranı</span>
-              <span className="tlc-badge tlc-badge--info">Taban</span>
-            </div>
-            <div className="tlc-kpi__value">%{calc.fillPct}</div>
-          </div>
-          <div className="tlc-card tlc-kpi">
-            <div className="tlc-kpi__top">
-              <span className="tlc-kpi__label">Uyarılar</span>
-              <span className={`tlc-badge ${calc.warnings.length ? 'tlc-badge--bad' : 'tlc-badge--ok'}`}>
-                {calc.warnings.length}
-              </span>
-            </div>
-            <div className={`tlc-alert-text ${calc.warnings.length ? 'is-bad' : 'is-ok'}`}>
-              {calc.warnings[0] || 'Sorun yok'}
-            </div>
-          </div>
-        </div>
-
-        <div className="tlc-main">
-          <div className="tlc-card tlc-panel">
-            <div className="tlc-panel__head">
-              <h3>Araç Yerleşim Görünümü</h3>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button type="button" className="tlc-icon-btn" onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.2).toFixed(1)))} aria-label="Uzaklaştır">
-                  <Minus className="h-4 w-4" />
-                </button>
-                <button type="button" className="tlc-icon-btn" onClick={() => setZoom((z) => Math.min(2, +(z + 0.2).toFixed(1)))} aria-label="Yakınlaştır">
-                  <Plus className="h-4 w-4" />
+            <div className="tlc-card" style={{ padding: 14, marginBottom: 14 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 10,
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <Sparkles className="h-4 w-4" style={{ color: 'var(--tlc-accent)' }} />
+                    AI Load Optimizer
+                  </strong>
+                  <ul
+                    style={{
+                      margin: '8px 0 0',
+                      paddingLeft: 18,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: 'var(--tlc-muted)',
+                    }}
+                  >
+                    {ai.tips.map((t) => (
+                      <li key={t}>{t}</li>
+                    ))}
+                  </ul>
+                </div>
+                <button type="button" className="tlc-btn tlc-btn--primary" onClick={applyAiTruck}>
+                  Önerilen aracı uygula
                 </button>
               </div>
             </div>
 
-            <div className="tlc-stage">
-              <CabSvg />
-              <div className="tlc-grid-wrap">
-                <div
-                  className="tlc-grid"
-                  style={{
-                    gridTemplateColumns: `repeat(${calc.rowsAlongLength}, ${cell}px)`,
-                    gridTemplateRows: `repeat(${calc.colsAcrossWidth}, ${cell}px)`,
-                  }}
+            <div className="tlc-card tlc-toolbar">
+              <div className="tlc-field">
+                <label>Araç Tipi</label>
+                <select
+                  className="tlc-input"
+                  value={truckKey}
+                  onChange={(e) => setTruckKey(e.target.value)}
                 >
-                  {calc.slotOwner.map((ownerIdx, s) => {
-                    if (ownerIdx == null) {
-                      return (
-                        <button
-                          key={`e-${s}`}
-                          type="button"
-                          className="tlc-slot tlc-slot--empty"
-                          style={{ width: cell, height: cell }}
-                          onClick={() => openNew()}
-                        >
-                          +
-                        </button>
-                      )
-                    }
-                    const item = calc.results[ownerIdx]
-                    const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
-                    return (
-                      <div
-                        key={`f-${s}`}
-                        className="tlc-slot tlc-slot--filled"
-                        style={{ width: cell, height: cell, background: tone.bg, color: tone.fg }}
-                        title={item.name}
-                        onClick={() => openEdit(item)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') openEdit(item)
-                        }}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        <span>{itemInitials(item.name)}</span>
-                        <span style={{ fontWeight: 600 }}>{fmtKg(item.weight / item.qty)}kg</span>
-                      </div>
-                    )
-                  })}
+                  {Object.values(TRUCK_PRESETS).map((t) => (
+                    <option key={t.key} value={t.key}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="tlc-field">
+                <label>Yerleşim Referansı (grid birimi)</label>
+                <select
+                  className="tlc-input"
+                  value={moduleKey}
+                  onChange={(e) => setModuleKey(e.target.value)}
+                >
+                  {Object.values(GRID_MODULES).map((m) => (
+                    <option key={m.key} value={m.key}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: 'var(--tlc-muted)',
+                  fontWeight: 600,
+                  paddingBottom: 8,
+                  lineHeight: 1.5,
+                }}
+              >
+                İç ölçüler:{' '}
+                <b>
+                  {truck.L}×{truck.W}×{truck.H} cm
+                </b>{' '}
+                | Maks. yük: <b>{fmtKg(truck.maxWeight)} kg</b>
+              </div>
+              <div className="tlc-hint">
+                Bu araç yaklaşık bir yerleşim tahminidir; kesin istifleme planı değildir.
+              </div>
+            </div>
+
+            <div className="tlc-kpis">
+              <div className="tlc-card tlc-kpi">
+                <div className="tlc-kpi__top">
+                  <span className="tlc-kpi__label">Ağırlık</span>
+                  <span className={`tlc-badge ${badgeTone(calc.weightPct)}`}>
+                    %{calc.weightPct}
+                  </span>
+                </div>
+                <div className="tlc-kpi__value">
+                  {fmtKg(calc.totalWeight)} / {fmtKg(truck.maxWeight)} kg
+                </div>
+              </div>
+              <div className="tlc-card tlc-kpi">
+                <div className="tlc-kpi__top">
+                  <span className="tlc-kpi__label">Slot / Pozisyon</span>
+                  <span className={`tlc-badge ${badgeTone(calc.slotPct)}`}>%{calc.slotPct}</span>
+                </div>
+                <div className="tlc-kpi__value">
+                  {calc.totalSlotsUsed} / {calc.totalSlots}
+                </div>
+              </div>
+              <div className="tlc-card tlc-kpi">
+                <div className="tlc-kpi__top">
+                  <span className="tlc-kpi__label">Doluluk Oranı</span>
+                  <span className="tlc-badge tlc-badge--info">Taban</span>
+                </div>
+                <div className="tlc-kpi__value">%{calc.fillPct}</div>
+              </div>
+              <div className="tlc-card tlc-kpi">
+                <div className="tlc-kpi__top">
+                  <span className="tlc-kpi__label">Uyarılar</span>
+                  <span
+                    className={`tlc-badge ${calc.warnings.length ? 'tlc-badge--bad' : 'tlc-badge--ok'}`}
+                  >
+                    {calc.warnings.length}
+                  </span>
+                </div>
+                <div className={`tlc-alert-text ${calc.warnings.length ? 'is-bad' : 'is-ok'}`}>
+                  {calc.warnings[0] || 'Sorun yok'}
                 </div>
               </div>
             </div>
 
-            <div className="tlc-legend">
-              {calc.results.length ? calc.results.map((item) => {
-                const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
-                return (
-                  <span key={item.id}>
-                    <i style={{ background: tone.bg, border: `1px solid ${tone.fg}22` }} />
-                    {item.name}
-                    {' '}
-                    <span style={{ color: 'var(--tlc-faint)' }}>({item.slotsUsed} slot)</span>
-                  </span>
-                )
-              }) : <span style={{ color: 'var(--tlc-faint)' }}>Henüz yük eklenmedi.</span>}
-            </div>
-          </div>
-
-          <div className="tlc-card tlc-panel">
-            <div className="tlc-panel__head">
-              <h3>Yük Planı</h3>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tlc-muted)' }}>
-                {calc.results.length} kalem
-              </span>
-            </div>
-            <div className="tlc-plan-head">
-              <div>Ürün</div>
-              <div>Adet</div>
-              <div>Slot</div>
-              <div>Ağırlık</div>
-              <div />
-            </div>
-            <div className="tlc-plan-list">
-              {!calc.results.length ? (
-                <div className="tlc-empty">Henüz yük eklenmedi.</div>
-              ) : (
-                calc.results.map((item) => {
-                  const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
-                  return (
-                    <div key={item.id} className="tlc-plan-row">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: 3, background: tone.bg, border: `1px solid ${tone.fg}30`, flexShrink: 0 }} />
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
-                      </div>
-                      <div>{item.qty}</div>
-                      <div>{item.slotsUsed}</div>
-                      <div>{fmtKg(item.weight)} kg</div>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
-                        <button type="button" className="tlc-icon-btn tlc-icon-btn--sm" onClick={() => openEdit(item)} aria-label="Düzenle">
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button type="button" className="tlc-icon-btn tlc-icon-btn--sm tlc-icon-btn--danger" onClick={() => setConfirmId(item.id)} aria-label="Sil">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-            <button type="button" className="tlc-btn tlc-btn--ghost" style={{ width: '100%', justifyContent: 'center', marginTop: 12 }} onClick={() => openNew()}>
-              <Plus className="h-4 w-4" />
-              Yeni Kalem Ekle
-            </button>
-          </div>
-        </div>
-
-        <div className="tlc-card tlc-panel">
-          <h3 style={{ margin: '0 0 14px', fontSize: 15, fontWeight: 800 }}>Palet / Koli Seçenekleri — Hızlı Ekle</h3>
-          <div className="tlc-presets">
-            {LOAD_PRESETS.map((p, idx) => {
-              const Icon = PRESET_ICONS[p.icon] || Package
-              const tone = SLOT_COLORS[idx % SLOT_COLORS.length]
-              return (
-                <button key={p.name} type="button" className="tlc-preset" onClick={() => openNew(p)}>
-                  <div className="tlc-preset__icon" style={{ background: tone.bg, color: tone.fg }}>
-                    <Icon className="h-4 w-4" />
+            <div className="tlc-main">
+              <div className="tlc-card tlc-panel">
+                <div className="tlc-panel__head">
+                  <h3>Araç Yerleşim Görünümü</h3>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      type="button"
+                      className="tlc-icon-btn"
+                      onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.2).toFixed(1)))}
+                      aria-label="Uzaklaştır"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="tlc-icon-btn"
+                      onClick={() => setZoom((z) => Math.min(2, +(z + 0.2).toFixed(1)))}
+                      aria-label="Yakınlaştır"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
                   </div>
-                  <strong>{p.name}</strong>
-                  <span>{p.L}×{p.W}×{p.H} cm · {p.weight} kg</span>
+                </div>
+
+                <div className="tlc-stage">
+                  <CabSvg />
+                  <div className="tlc-grid-wrap">
+                    <div
+                      className="tlc-grid"
+                      style={{
+                        gridTemplateColumns: `repeat(${Math.max(1, calc.cols || calc.rowsAlongLength)}, ${cell}px)`,
+                        gridTemplateRows: `repeat(${Math.max(1, calc.rows || calc.colsAcrossWidth)}, ${cell}px)`,
+                        gridAutoFlow: 'row',
+                      }}
+                    >
+                      {calc.slotOwner.map((ownerIdx, s) => {
+                        if (ownerIdx == null) {
+                          return (
+                            <button
+                              key={`e-${s}`}
+                              type="button"
+                              className="tlc-slot tlc-slot--empty"
+                              style={{ width: cell, height: cell }}
+                              onClick={() => openNew()}
+                            >
+                              +
+                            </button>
+                          )
+                        }
+                        const item = calc.results[ownerIdx]
+                        const tone = SLOT_COLORS[(item.colorIdx || 0) % SLOT_COLORS.length]
+                        const unitKg =
+                          item.unitWeight ??
+                          item.weight / Math.max(1, item.placedQty || item.qty || 1)
+                        return (
+                          <div
+                            key={`f-${s}`}
+                            className="tlc-slot tlc-slot--filled"
+                            style={{
+                              width: cell,
+                              height: cell,
+                              background: tone.bg,
+                              color: tone.fg,
+                            }}
+                            title={item.name}
+                            onClick={() => openEdit(item)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') openEdit(item)
+                            }}
+                            role="button"
+                            tabIndex={0}
+                          >
+                            <span>{itemInitials(item.name)}</span>
+                            <span style={{ fontWeight: 600 }}>{fmtKg(unitKg)}kg</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="tlc-legend">
+                  {calc.results.length ? (
+                    calc.results.map((item) => {
+                      const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
+                      return (
+                        <span key={item.id}>
+                          <i style={{ background: tone.bg, border: `1px solid ${tone.fg}22` }} />
+                          {item.name}{' '}
+                          <span style={{ color: 'var(--tlc-faint)' }}>({item.slotsUsed} slot)</span>
+                        </span>
+                      )
+                    })
+                  ) : (
+                    <span style={{ color: 'var(--tlc-faint)' }}>Henüz yük eklenmedi.</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="tlc-card tlc-panel">
+                <div className="tlc-panel__head">
+                  <h3>Yük Planı</h3>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tlc-muted)' }}>
+                    {calc.results.length} kalem
+                  </span>
+                </div>
+                <div className="tlc-plan-head">
+                  <div>Ürün</div>
+                  <div>Adet</div>
+                  <div>Slot</div>
+                  <div>Ağırlık</div>
+                  <div />
+                </div>
+                <div className="tlc-plan-list">
+                  {!calc.results.length ? (
+                    <div className="tlc-empty">Henüz yük eklenmedi.</div>
+                  ) : (
+                    calc.results.map((item) => {
+                      const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
+                      return (
+                        <div key={item.id} className="tlc-plan-row">
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}
+                          >
+                            <span
+                              style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: 3,
+                                background: tone.bg,
+                                border: `1px solid ${tone.fg}30`,
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span
+                              style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {item.name}
+                            </span>
+                          </div>
+                          <div>{item.qty}</div>
+                          <div>{item.slotsUsed}</div>
+                          <div>{fmtKg(item.weight)} kg</div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+                            <button
+                              type="button"
+                              className="tlc-icon-btn tlc-icon-btn--sm"
+                              onClick={() => openEdit(item)}
+                              aria-label="Düzenle"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              className="tlc-icon-btn tlc-icon-btn--sm tlc-icon-btn--danger"
+                              onClick={() => setConfirmId(item.id)}
+                              aria-label="Sil"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="tlc-btn tlc-btn--ghost"
+                  style={{ width: '100%', justifyContent: 'center', marginTop: 12 }}
+                  onClick={() => openNew()}
+                >
+                  <Plus className="h-4 w-4" />
+                  Yeni Kalem Ekle
                 </button>
-              )
-            })}
-          </div>
-        </div>
+              </div>
+            </div>
+
+            <div className="tlc-card tlc-panel">
+              <h3 style={{ margin: '0 0 14px', fontSize: 15, fontWeight: 800 }}>
+                Palet / Koli Seçenekleri — Hızlı Ekle
+              </h3>
+              <div className="tlc-presets">
+                {LOAD_PRESETS.map((p, idx) => {
+                  const Icon = PRESET_ICONS[p.icon] || Package
+                  const tone = SLOT_COLORS[idx % SLOT_COLORS.length]
+                  return (
+                    <button
+                      key={p.name}
+                      type="button"
+                      className="tlc-preset"
+                      onClick={() => openNew(p)}
+                    >
+                      <div
+                        className="tlc-preset__icon"
+                        style={{ background: tone.bg, color: tone.fg }}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <strong>{p.name}</strong>
+                      <span>
+                        {p.L}×{p.W}×{p.H} cm · {p.weight} kg
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </>
         ) : null}
       </div>
 
       {modalOpen && draft ? (
-        <div className="tlc-overlay" onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false) }}>
+        <div
+          className="tlc-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setModalOpen(false)
+          }}
+        >
           <div className="tlc-modal" role="dialog" aria-modal="true">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3>{draft.id ? 'Kalemi Düzenle' : 'Yük Ekle'}</h3>
-              <button type="button" className="tlc-icon-btn" onClick={() => setModalOpen(false)} aria-label="Kapat">
+              <button
+                type="button"
+                className="tlc-icon-btn"
+                onClick={() => setModalOpen(false)}
+                aria-label="Kapat"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <form className="tlc-form" onSubmit={saveDraft}>
               <div className="tlc-field" style={{ minWidth: 0 }}>
                 <label>Ürün / Palet / Koli Adı</label>
-                <input className="tlc-input" required value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Örn. Euro Palet — Kuru Gıda" />
+                <input
+                  className="tlc-input"
+                  required
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                  placeholder="Örn. Euro Palet — Kuru Gıda"
+                />
               </div>
               <div className="tlc-form-row">
                 <div className="tlc-field" style={{ minWidth: 0 }}>
                   <label>Uzunluk (cm)</label>
-                  <input className="tlc-input" type="number" min={1} required value={draft.L} onChange={(e) => setDraft({ ...draft, L: e.target.value })} />
+                  <input
+                    className="tlc-input"
+                    type="number"
+                    min={1}
+                    required
+                    value={draft.L}
+                    onChange={(e) => setDraft({ ...draft, L: e.target.value })}
+                  />
                 </div>
                 <div className="tlc-field" style={{ minWidth: 0 }}>
                   <label>Genişlik (cm)</label>
-                  <input className="tlc-input" type="number" min={1} required value={draft.W} onChange={(e) => setDraft({ ...draft, W: e.target.value })} />
+                  <input
+                    className="tlc-input"
+                    type="number"
+                    min={1}
+                    required
+                    value={draft.W}
+                    onChange={(e) => setDraft({ ...draft, W: e.target.value })}
+                  />
                 </div>
                 <div className="tlc-field" style={{ minWidth: 0 }}>
                   <label>Yükseklik (cm)</label>
-                  <input className="tlc-input" type="number" min={1} required value={draft.H} onChange={(e) => setDraft({ ...draft, H: e.target.value })} />
+                  <input
+                    className="tlc-input"
+                    type="number"
+                    min={1}
+                    required
+                    value={draft.H}
+                    onChange={(e) => setDraft({ ...draft, H: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="tlc-form-row tlc-form-row--2">
                 <div className="tlc-field" style={{ minWidth: 0 }}>
                   <label>Birim Ağırlık (kg)</label>
-                  <input className="tlc-input" type="number" min={0} step="0.1" required value={draft.weight} onChange={(e) => setDraft({ ...draft, weight: e.target.value })} />
+                  <input
+                    className="tlc-input"
+                    type="number"
+                    min={0}
+                    step="0.1"
+                    required
+                    value={draft.weight}
+                    onChange={(e) => setDraft({ ...draft, weight: e.target.value })}
+                  />
                 </div>
                 <div className="tlc-field" style={{ minWidth: 0 }}>
                   <label>Adet</label>
-                  <input className="tlc-input" type="number" min={1} required value={draft.qty} onChange={(e) => setDraft({ ...draft, qty: e.target.value })} />
+                  <input
+                    className="tlc-input"
+                    type="number"
+                    min={1}
+                    required
+                    value={draft.qty}
+                    onChange={(e) => setDraft({ ...draft, qty: e.target.value })}
+                  />
                 </div>
               </div>
               <label className="tlc-check">
-                <input type="checkbox" checked={Boolean(draft.stackable)} onChange={(e) => setDraft({ ...draft, stackable: e.target.checked })} />
+                <input
+                  type="checkbox"
+                  checked={Boolean(draft.stackable)}
+                  onChange={(e) => setDraft({ ...draft, stackable: e.target.checked })}
+                />
                 İstiflenebilir (araç yüksekliğine göre üst üste sayılır)
               </label>
               <div className="tlc-modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setModalOpen(false)}>Vazgeç</button>
-                <button type="submit" className="tlc-btn tlc-btn--primary">Kaydet</button>
+                <button type="button" className="btn-cancel" onClick={() => setModalOpen(false)}>
+                  Vazgeç
+                </button>
+                <button type="submit" className="tlc-btn tlc-btn--primary">
+                  Kaydet
+                </button>
               </div>
             </form>
           </div>
@@ -671,16 +950,42 @@ export default function TruckLoadCalculator() {
       ) : null}
 
       {confirmId ? (
-        <div className="tlc-overlay" onClick={(e) => { if (e.target === e.currentTarget) setConfirmId(null) }}>
+        <div
+          className="tlc-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmId(null)
+          }}
+        >
           <div className="tlc-modal" style={{ maxWidth: 360 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 16, background: '#ffe4e6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 16,
+                background: '#ffe4e6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 14,
+              }}
+            >
               <Trash2 className="h-5 w-5" style={{ color: 'var(--tlc-danger)' }} />
             </div>
             <h3>Bu kalemi sil?</h3>
-            <p style={{ fontSize: 14, color: 'var(--tlc-muted)', fontWeight: 600, marginTop: 8 }}>Yük planından kaldırılacak.</p>
+            <p style={{ fontSize: 14, color: 'var(--tlc-muted)', fontWeight: 600, marginTop: 8 }}>
+              Yük planından kaldırılacak.
+            </p>
             <div className="tlc-modal-actions">
-              <button type="button" className="btn-cancel" onClick={() => setConfirmId(null)}>Vazgeç</button>
-              <button type="button" className="tlc-btn tlc-btn--danger" onClick={() => removeItem(confirmId)}>Sil</button>
+              <button type="button" className="btn-cancel" onClick={() => setConfirmId(null)}>
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                className="tlc-btn tlc-btn--danger"
+                onClick={() => removeItem(confirmId)}
+              >
+                Sil
+              </button>
             </div>
           </div>
         </div>

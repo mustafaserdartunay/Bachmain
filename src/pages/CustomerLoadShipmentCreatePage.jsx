@@ -37,6 +37,8 @@ import {
   computeLoadPlan,
   fmtKg,
   GRID_MODULES,
+  isPlateComplete,
+  isValidPlate,
   itemInitials,
   LOAD_PRESETS,
   SLOT_COLORS,
@@ -51,6 +53,7 @@ import {
   upsertTrip,
 } from '../utils/sevkiyatStore'
 import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../utils/buttonStyles'
+import VehicleLoadViews from '../components/Logistics/VehicleLoadViews'
 import '../components/Logistics/truck-load-calculator.css'
 
 const INPUT_CLASS =
@@ -72,10 +75,14 @@ const TRUCK_OPTION_COLORS = [
 
 const TRUCK_TO_VEHICLE_TYPE = {
   panelvan: { id: 'panelvan', label: 'Panelvan' },
+  kamyon_kisa: { id: 'kamyon', label: 'Kamyon' },
   kamyon_kucuk: { id: 'kamyon', label: 'Kamyon' },
+  kamyon_uzun: { id: 'kamyon', label: 'Kamyon' },
+  kamyon_10t: { id: 'kamyon', label: 'Kamyon' },
   kamyon_buyuk: { id: 'kamyon', label: 'Kamyon' },
   tir: { id: 'tir', label: 'TIR' },
   mega: { id: 'tir', label: 'TIR' },
+  frigo: { id: 'tir', label: 'TIR' },
   konteyner20: { id: 'tir', label: 'TIR' },
   konteyner40: { id: 'tir', label: 'TIR' },
   konteyner40hc: { id: 'tir', label: 'TIR' },
@@ -259,6 +266,9 @@ export default function CustomerLoadShipmentCreatePage() {
   const [activeMenu, setActiveMenu] = useState(null)
   const [error, setError] = useState('')
   const [aiToast, setAiToast] = useState('')
+  const [layoutToast, setLayoutToast] = useState('')
+  const [plateTouched, setPlateTouched] = useState(false)
+  const [driverTouched, setDriverTouched] = useState(false)
 
   const [trip, setTrip] = useState(() => createTripDraft())
 
@@ -323,7 +333,13 @@ export default function CustomerLoadShipmentCreatePage() {
     truckCatalog[0] ||
     TRUCK_PRESETS.kamyon_kucuk
   const module = GRID_MODULES[moduleKey] || GRID_MODULES.euro
-  const plan = useMemo(() => computeLoadPlan(truck, module, loadItems), [truck, module, loadItems])
+  const plan = useMemo(
+    () =>
+      computeLoadPlan(truck, module, loadItems, {
+        orientation,
+      }),
+    [truck, module, loadItems, orientation],
+  )
   const cell = 56
   const ai = useMemo(
     () =>
@@ -405,8 +421,8 @@ export default function CustomerLoadShipmentCreatePage() {
     })
   }
 
-  function addManualItem(presetName) {
-    const preset = LOAD_PRESETS.find((row) => row.name === presetName) || LOAD_PRESETS[2]
+  function addManualItem(presetName, opts = {}) {
+    const preset = LOAD_PRESETS.find((row) => row.name === presetName) || LOAD_PRESETS[3]
     const id = `manual-${Date.now()}-${manualItems.length}`
     const colorIdx = (selectedStock.length + manualItems.length) % SLOT_COLORS.length
     setManualItems((current) => [
@@ -414,18 +430,50 @@ export default function CustomerLoadShipmentCreatePage() {
       {
         id,
         name: preset.name,
-        qty: 1,
+        qty: Math.max(1, Number(opts.qty) || 1),
         L: preset.L,
         W: preset.W,
         H: preset.H,
         weight: preset.weight,
         stackable: preset.stackable,
+        visualH: preset.visualH,
         unit: preset.name.toLowerCase().includes('koli') ? 'koli' : 'adet',
         source: 'manual',
         colorIdx,
+        preferSlotIndex: Number.isFinite(opts.slotIndex) ? Number(opts.slotIndex) : undefined,
       },
     ])
     setEditingItemId(id)
+  }
+
+  function changeOrientation(next) {
+    if (next === orientation) return
+    const hadItems = loadItems.length > 0
+    setOrientation(next)
+    if (hadItems) {
+      setLayoutToast('Yönlendirme değişti; yerleşim yeniden hesaplandı.')
+      window.setTimeout(() => setLayoutToast(''), 2800)
+    }
+  }
+
+  function changeModuleKey(next) {
+    if (next === moduleKey) return
+    const hadItems = loadItems.length > 0
+    setModuleKey(next)
+    if (hadItems) {
+      setLayoutToast('Grid modülü değişti; yerleşim yeniden hesaplandı.')
+      window.setTimeout(() => setLayoutToast(''), 2800)
+    }
+  }
+
+  function changeTruckKey(next) {
+    if (next === truckKey) return
+    const hadItems = loadItems.length > 0
+    setTruckKey(next)
+    if (hadItems) {
+      setLayoutToast('Araç tipi değişti; yerleşim yeniden hesaplandı.')
+      window.setTimeout(() => setLayoutToast(''), 2800)
+    }
   }
 
   function updateManualItem(id, patch) {
@@ -467,12 +515,21 @@ export default function CustomerLoadShipmentCreatePage() {
     if (editingItemId === id) setEditingItemId(null)
   }
 
-  function handleEmptySlotClick() {
-    addManualItem(LOAD_PRESETS[2]?.name || 'Koli — Orta')
+  function handleEmptySlotClick(slotIndex) {
+    const preset =
+      editingItem?.name ||
+      LOAD_PRESETS.find((row) => row.name.includes('Orta'))?.name ||
+      'Koli — Orta'
+    addManualItem(preset, { slotIndex, qty: 1 })
   }
 
   function handleFilledSlotClick(item) {
     setEditingItemId(item.id)
+  }
+
+  function clearSlotItem(item) {
+    if (!item) return
+    removeLoadItem(item.id)
   }
 
   function patchTrip(patch) {
@@ -535,16 +592,22 @@ export default function CustomerLoadShipmentCreatePage() {
 
   function handleSave() {
     setError('')
+    setPlateTouched(true)
+    setDriverTouched(true)
     if (!customer?.id) {
       setError('Müşteri bulunamadı.')
       return
     }
-    if (!loadItems.length) {
-      setError('En az bir yük kalemi seçin veya ekleyin.')
+    if (!loadItems.length || plan.totalPieces <= 0) {
+      setError('Sevkiyat için en az 1 yerleştirilmiş yük gerekli.')
       return
     }
-    if (!trip.plate?.trim()) {
-      setError('Sevkiyat için plaka girin.')
+    if (!isPlateComplete(trip.plate)) {
+      setError('Geçerli bir plaka girilmeden sevkiyat onaylanamaz.')
+      return
+    }
+    if (!String(trip.driverName || '').trim()) {
+      setError('Şoför adı girilmeden sevkiyat onaylanamaz.')
       return
     }
 
@@ -556,18 +619,25 @@ export default function CustomerLoadShipmentCreatePage() {
       truckName: truck.name,
       moduleKey,
       moduleName: module.name,
+      orientation,
       items: loadItems,
+      placements: plan.slotMeta,
       metrics: {
         fillPct: plan.fillPct,
         weightPct: plan.weightPct,
         slotPct: plan.slotPct,
         totalWeight: plan.totalWeight,
+        totalPieces: plan.totalPieces,
         totalSlots: plan.totalSlots,
         totalSlotsUsed: plan.totalSlotsUsed,
+        leftoverL: plan.leftoverL,
+        leftoverW: plan.leftoverW,
+        orientation,
       },
       meta: {
         aiTips: ai.tips,
         trucksNeeded: ai.trucksNeeded,
+        orientation,
       },
       warnings: plan.warnings,
       status: 'planned',
@@ -592,8 +662,12 @@ export default function CustomerLoadShipmentCreatePage() {
         weightPct: plan.weightPct,
         slotPct: plan.slotPct,
         totalWeight: plan.totalWeight,
+        totalPieces: plan.totalPieces,
         totalSlots: plan.totalSlots,
         totalSlotsUsed: plan.totalSlotsUsed,
+        leftoverL: plan.leftoverL,
+        leftoverW: plan.leftoverW,
+        orientation,
         truckName: truck.name,
         moduleName: module.name,
       },
@@ -705,7 +779,7 @@ export default function CustomerLoadShipmentCreatePage() {
                 onOptionsChange={handleTruckOptionsChange}
                 onChange={(value) => {
                   const match = truckCatalog.find((item) => item.name === value)
-                  if (match) setTruckKey(match.key)
+                  if (match) changeTruckKey(match.key)
                 }}
               />
             </div>
@@ -713,7 +787,7 @@ export default function CustomerLoadShipmentCreatePage() {
               <select
                 className={INPUT_CLASS}
                 value={moduleKey}
-                onChange={(event) => setModuleKey(event.target.value)}
+                onChange={(event) => changeModuleKey(event.target.value)}
               >
                 {MODULE_OPTIONS.map((item) => (
                   <option key={item.key} value={item.key}>
@@ -736,7 +810,7 @@ export default function CustomerLoadShipmentCreatePage() {
             <span className={`${YF_TEXT_CLASS} !font-bold !text-[var(--ink)]`}>Yönlendirme</span>
             <button
               type="button"
-              onClick={() => setOrientation('uzun')}
+              onClick={() => changeOrientation('uzun')}
               className={`rounded-xl px-3 py-1.5 text-[13px] font-bold ${
                 orientation === 'uzun'
                   ? 'bg-blue-600 text-white'
@@ -747,7 +821,7 @@ export default function CustomerLoadShipmentCreatePage() {
             </button>
             <button
               type="button"
-              onClick={() => setOrientation('en')}
+              onClick={() => changeOrientation('en')}
               className={`rounded-xl px-3 py-1.5 text-[13px] font-bold ${
                 orientation === 'en'
                   ? 'bg-blue-600 text-white'
@@ -756,7 +830,21 @@ export default function CustomerLoadShipmentCreatePage() {
             >
               Enlemesine
             </button>
+            <span className={`${YF_TEXT_CLASS} !text-[12px]`}>
+              Hücre {plan.cellL}×{plan.cellW} cm · {plan.cols}×{plan.rows} slot
+              {plan.leftoverL || plan.leftoverW
+                ? ` · boşluk L${plan.leftoverL}/W${plan.leftoverW}`
+                : ''}
+            </span>
           </div>
+
+          {layoutToast ? (
+            <p
+              className={`${YF_TEXT_CLASS} rounded-2xl border border-amber-300/50 bg-amber-50/70 px-3 py-2 !font-bold !text-amber-800`}
+            >
+              {layoutToast}
+            </p>
+          ) : null}
 
           <div className="tlc-kpis">
             <div className="tlc-card tlc-kpi">
@@ -779,10 +867,10 @@ export default function CustomerLoadShipmentCreatePage() {
             </div>
             <div className="tlc-card tlc-kpi">
               <div className="tlc-kpi__top">
-                <span className="tlc-kpi__label">Doluluk</span>
-                <span className="tlc-badge tlc-badge--info">Taban</span>
+                <span className="tlc-kpi__label">Parça / Doluluk</span>
+                <span className="tlc-badge tlc-badge--info">%{plan.fillPct}</span>
               </div>
-              <div className="tlc-kpi__value">%{plan.fillPct}</div>
+              <div className="tlc-kpi__value">{plan.totalPieces || 0}</div>
             </div>
             <div className="tlc-card tlc-kpi">
               <div className="tlc-kpi__top">
@@ -832,7 +920,15 @@ export default function CustomerLoadShipmentCreatePage() {
             </div>
           ) : null}
 
+          <VehicleLoadViews plan={plan} />
+
           <div className="tlc-card tlc-panel">
+            <div className="tlc-panel__head">
+              <h3>Üstten Görünüm</h3>
+              <span className={`${YF_TEXT_CLASS} !text-[12px]`}>
+                Boş slota tıkla → ekle · Dolu slota tıkla → düzenle (çift tık: kaldır)
+              </span>
+            </div>
             <div className="tlc-stage">
               <div className="tlc-front-label" aria-hidden>
                 ÖN
@@ -841,30 +937,32 @@ export default function CustomerLoadShipmentCreatePage() {
                 <div
                   className="tlc-grid"
                   style={{
-                    gridTemplateColumns: `repeat(${plan.rowsAlongLength}, ${cell}px)`,
-                    gridTemplateRows: `repeat(${plan.colsAcrossWidth}, ${cell}px)`,
+                    gridTemplateColumns: `repeat(${Math.max(1, plan.cols)}, ${cell}px)`,
+                    gridTemplateRows: `repeat(${Math.max(1, plan.rows)}, ${cell}px)`,
+                    gridAutoFlow: 'row',
                   }}
                 >
-                  {plan.slotOwner.map((ownerIdx, slotIndex) => {
-                    if (ownerIdx == null) {
+                  {(plan.slotMeta || []).map((slot) => {
+                    if (slot.itemIdx == null) {
                       return (
                         <button
-                          key={`empty-${slotIndex}`}
+                          key={`empty-${slot.index}`}
                           type="button"
                           className="tlc-slot tlc-slot--empty"
                           style={{ width: cell, height: cell }}
-                          onClick={handleEmptySlotClick}
+                          onClick={() => handleEmptySlotClick(slot.index)}
+                          title={`Boş slot r${slot.row + 1}/c${slot.col + 1}`}
                         >
                           +
                         </button>
                       )
                     }
-                    const item = plan.results[ownerIdx]
-                    const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
+                    const item = plan.results[slot.itemIdx]
+                    const tone = SLOT_COLORS[(item.colorIdx || 0) % SLOT_COLORS.length]
                     const selected = editingItemId === item.id
                     return (
                       <div
-                        key={`filled-${slotIndex}`}
+                        key={`filled-${slot.index}`}
                         className="tlc-slot tlc-slot--filled"
                         style={{
                           width: cell,
@@ -873,30 +971,66 @@ export default function CustomerLoadShipmentCreatePage() {
                           color: tone.fg,
                           outline: selected ? `2px solid ${tone.fg}` : undefined,
                           outlineOffset: 1,
+                          position: 'relative',
                         }}
-                        title={item.name}
+                        title={`${item.name} ×${slot.qty}`}
                         onClick={() => handleFilledSlotClick(item)}
+                        onDoubleClick={() => clearSlotItem(item)}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter') handleFilledSlotClick(item)
+                          if (event.key === 'Backspace' || event.key === 'Delete') {
+                            clearSlotItem(item)
+                          }
                         }}
                         role="button"
                         tabIndex={0}
                       >
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            width: 8,
+                            height: 8,
+                            borderRadius: 999,
+                            background: '#059669',
+                            border: '1px solid #fff',
+                          }}
+                        />
                         <span>{itemInitials(item.name)}</span>
-                        <span style={{ fontWeight: 600 }}>
-                          {fmtKg(item.weight / Math.max(1, item.qty))}kg
-                        </span>
+                        <span style={{ fontWeight: 600 }}>×{slot.qty}</span>
                       </div>
                     )
                   })}
                 </div>
+                {(plan.leftoverL > 0 || plan.leftoverW > 0) && (
+                  <p className="mt-2 text-[11px] font-bold text-rose-600">
+                    Engel / boşluk şeridi: L {plan.leftoverL} cm · W {plan.leftoverW} cm
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="tlc-legend">
+              <span className="inline-flex items-center gap-1.5">
+                <i style={{ background: 'transparent', border: '1.5px dashed #cbd5e1' }} />
+                Boş slot
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <i style={{ background: '#DBEAFE' }} />
+                Yerleştirilen
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <i style={{ background: '#059669' }} />
+                Sabitlenmiş
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <i style={{ background: '#ffe4e6', border: '1px solid #e11d48' }} />
+                Engel / boşluk
+              </span>
               {plan.results.length ? (
                 plan.results.map((item) => {
-                  const tone = SLOT_COLORS[item.colorIdx % SLOT_COLORS.length]
+                  const tone = SLOT_COLORS[(item.colorIdx || 0) % SLOT_COLORS.length]
                   return (
                     <button
                       key={item.id}
@@ -906,7 +1040,9 @@ export default function CustomerLoadShipmentCreatePage() {
                     >
                       <i style={{ background: tone.bg, border: `1px solid ${tone.fg}22` }} />
                       {item.name}{' '}
-                      <span style={{ color: 'var(--tlc-faint)' }}>({item.slotsUsed} slot)</span>
+                      <span style={{ color: 'var(--tlc-faint)' }}>
+                        ({item.placedQty}/{item.qty} · {item.slotsUsed} slot)
+                      </span>
                     </button>
                   )
                 })
@@ -1084,18 +1220,40 @@ export default function CustomerLoadShipmentCreatePage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Plaka">
             <input
-              className={INPUT_CLASS}
+              className={`${INPUT_CLASS} ${
+                plateTouched && trip.plate?.trim() && !isValidPlate(trip.plate)
+                  ? '!border-rose-500'
+                  : ''
+              }`}
               value={trip.plate || ''}
-              onChange={(event) => patchTrip({ plate: event.target.value })}
-              placeholder="34 BM 0101"
+              onChange={(event) => patchTrip({ plate: event.target.value.toUpperCase() })}
+              onBlur={() => setPlateTouched(true)}
+              placeholder="34 ABC 123"
             />
+            {plateTouched && trip.plate?.trim() && !isValidPlate(trip.plate) ? (
+              <span
+                className={`${YF_TEXT_CLASS} mt-1 block !text-[12px] !font-bold !text-rose-600`}
+              >
+                Geçersiz plaka formatı
+              </span>
+            ) : null}
           </Field>
           <Field label="Şoför">
             <input
-              className={INPUT_CLASS}
+              className={`${INPUT_CLASS} ${
+                driverTouched && !String(trip.driverName || '').trim() ? '!border-rose-500' : ''
+              }`}
               value={trip.driverName || ''}
               onChange={(event) => patchTrip({ driverName: event.target.value })}
+              onBlur={() => setDriverTouched(true)}
             />
+            {driverTouched && !String(trip.driverName || '').trim() ? (
+              <span
+                className={`${YF_TEXT_CLASS} mt-1 block !text-[12px] !font-bold !text-rose-600`}
+              >
+                Şoför adı zorunludur
+              </span>
+            ) : null}
           </Field>
           <Field label="Telefon">
             <input
