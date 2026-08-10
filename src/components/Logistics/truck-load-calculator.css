@@ -20,7 +20,9 @@
   background: var(--tlc-card);
   border: 1px solid var(--tlc-line);
   border-radius: 20px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 12px 28px -18px rgba(15, 23, 42, 0.12);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 12px 28px -18px rgba(15, 23, 42, 0.12);
 }
 
 .tlc-head {
@@ -56,7 +58,9 @@
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.12s ease, background 0.15s ease;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease;
 }
 
 .tlc-btn:hover {
@@ -265,6 +269,24 @@
   min-height: 180px;
 }
 
+.tlc-front-label {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  margin-right: 8px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  line-height: 1;
+  color: var(--tlc-ink, #0f172a);
+  text-transform: uppercase;
+  user-select: none;
+}
+
 .tlc-cab {
   flex-shrink: 0;
   display: flex;
@@ -394,7 +416,10 @@
   background: #fff;
   cursor: pointer;
   text-align: left;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .tlc-preset:hover {

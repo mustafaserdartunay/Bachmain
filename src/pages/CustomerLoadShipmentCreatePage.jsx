@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Minus, Package, Pencil, Plus, Save, Trash2, Truck, X } from 'lucide-react'
+import { Package, Pencil, Plus, Save, Trash2, Truck, X } from 'lucide-react'
 import {
   AppPageBackLink,
   AppPageHeader,
@@ -56,8 +56,19 @@ import '../components/Logistics/truck-load-calculator.css'
 const INPUT_CLASS =
   'h-9 w-full rounded-xl border border-[var(--glass-border)] bg-transparent px-3 text-[14px] font-normal leading-tight text-[var(--ink)] outline-none focus:border-blue-400'
 
-const TRUCK_OPTIONS = Object.values(TRUCK_PRESETS)
 const MODULE_OPTIONS = Object.values(GRID_MODULES)
+const CUSTOM_TRUCKS_KEY = 'bach-load-truck-presets'
+const DEFAULT_TRUCK_DIMS = { L: 720, W: 240, H: 240, maxWeight: 4000 }
+const TRUCK_OPTION_COLORS = [
+  'bg-sky-500',
+  'bg-blue-500',
+  'bg-indigo-500',
+  'bg-emerald-500',
+  'bg-violet-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-cyan-500',
+]
 
 const TRUCK_TO_VEHICLE_TYPE = {
   panelvan: { id: 'panelvan', label: 'Panelvan' },
@@ -68,6 +79,56 @@ const TRUCK_TO_VEHICLE_TYPE = {
   konteyner20: { id: 'tir', label: 'TIR' },
   konteyner40: { id: 'tir', label: 'TIR' },
   konteyner40hc: { id: 'tir', label: 'TIR' },
+}
+
+function defaultTruckCatalog() {
+  return Object.values(TRUCK_PRESETS).map((item, index) => ({
+    key: item.key,
+    name: item.name,
+    L: item.L,
+    W: item.W,
+    H: item.H,
+    maxWeight: item.maxWeight,
+    color: TRUCK_OPTION_COLORS[index % TRUCK_OPTION_COLORS.length],
+  }))
+}
+
+function loadTruckCatalog() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CUSTOM_TRUCKS_KEY) || 'null')
+    if (Array.isArray(parsed) && parsed.length) {
+      return parsed
+        .map((item, index) => ({
+          key: String(item.key || item.id || `truck-${index}`),
+          name: String(item.name || item.label || '').trim(),
+          L: Math.max(1, Number(item.L) || DEFAULT_TRUCK_DIMS.L),
+          W: Math.max(1, Number(item.W) || DEFAULT_TRUCK_DIMS.W),
+          H: Math.max(1, Number(item.H) || DEFAULT_TRUCK_DIMS.H),
+          maxWeight: Math.max(1, Number(item.maxWeight) || DEFAULT_TRUCK_DIMS.maxWeight),
+          color: item.color || TRUCK_OPTION_COLORS[index % TRUCK_OPTION_COLORS.length],
+        }))
+        .filter((item) => item.name)
+    }
+  } catch {
+    /* ignore */
+  }
+  return defaultTruckCatalog()
+}
+
+function saveTruckCatalog(rows) {
+  const next = (Array.isArray(rows) ? rows : [])
+    .map((item, index) => ({
+      key: String(item.key || item.id || `truck-${Date.now()}-${index}`),
+      name: String(item.name || item.label || '').trim(),
+      L: Math.max(1, Number(item.L) || DEFAULT_TRUCK_DIMS.L),
+      W: Math.max(1, Number(item.W) || DEFAULT_TRUCK_DIMS.W),
+      H: Math.max(1, Number(item.H) || DEFAULT_TRUCK_DIMS.H),
+      maxWeight: Math.max(1, Number(item.maxWeight) || DEFAULT_TRUCK_DIMS.maxWeight),
+      color: item.color || TRUCK_OPTION_COLORS[index % TRUCK_OPTION_COLORS.length],
+    }))
+    .filter((item) => item.name)
+  localStorage.setItem(CUSTOM_TRUCKS_KEY, JSON.stringify(next))
+  return next
 }
 
 function HeaderCta({ icon: Icon, label, gradient, onClick, to }) {
@@ -149,20 +210,6 @@ function stockToLoadItem(item) {
   }
 }
 
-function CabSvg() {
-  return (
-    <svg width="90" height="150" viewBox="0 0 90 150" aria-hidden className="tlc-cab">
-      <rect x="18" y="30" width="55" height="70" rx="8" fill="#0f172a" />
-      <rect x="26" y="38" width="38" height="26" rx="4" fill="#bfdbfe" />
-      <rect x="10" y="95" width="70" height="10" rx="4" fill="#0f172a" />
-      <circle cx="30" cy="112" r="11" fill="#1e293b" />
-      <circle cx="30" cy="112" r="4.5" fill="#bfdbfe" />
-      <circle cx="62" cy="112" r="11" fill="#1e293b" />
-      <circle cx="62" cy="112" r="4.5" fill="#bfdbfe" />
-    </svg>
-  )
-}
-
 function badgeTone(pct) {
   if (pct > 100) return 'tlc-badge--bad'
   if (pct > 85) return 'tlc-badge--warn'
@@ -202,9 +249,9 @@ export default function CustomerLoadShipmentCreatePage() {
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [stockQtyOverrides, setStockQtyOverrides] = useState({})
   const [manualItems, setManualItems] = useState([])
-  const [truckKey, setTruckKey] = useState('kamyon_kucuk')
+  const [truckCatalog, setTruckCatalog] = useState(() => loadTruckCatalog())
+  const [truckKey, setTruckKey] = useState(() => loadTruckCatalog()[0]?.key || 'kamyon_kucuk')
   const [moduleKey, setModuleKey] = useState('euro')
-  const [zoom, setZoom] = useState(1)
   const [editingItemId, setEditingItemId] = useState(null)
   const [note, setNote] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState(() => loadVehicleTypes())
@@ -270,19 +317,40 @@ export default function CustomerLoadShipmentCreatePage() {
     }))
   }, [selectedStock, manualItems])
 
-  const truck = TRUCK_PRESETS[truckKey] || TRUCK_PRESETS.kamyon_kucuk
+  const truck =
+    truckCatalog.find((item) => item.key === truckKey) ||
+    truckCatalog[0] ||
+    TRUCK_PRESETS.kamyon_kucuk
   const module = GRID_MODULES[moduleKey] || GRID_MODULES.euro
   const plan = useMemo(() => computeLoadPlan(truck, module, loadItems), [truck, module, loadItems])
   const ai = useMemo(
-    () => buildLoadSuggestions({ items: loadItems, truckKey, moduleKey }),
-    [loadItems, truckKey, moduleKey],
+    () =>
+      buildLoadSuggestions({
+        items: loadItems,
+        truckKey: truck.key || truckKey,
+        moduleKey,
+      }),
+    [loadItems, truck, truckKey, moduleKey],
   )
-  const cell = Math.round(56 * zoom)
+  const cell = 56
   const editingItem = loadItems.find((item) => item.id === editingItemId) || null
+  const truckTypeOptions = truckCatalog.map((item) => ({
+    id: item.key,
+    label: item.name,
+    color: item.color || 'bg-blue-500',
+  }))
 
   useEffect(() => {
-    const mapped = TRUCK_TO_VEHICLE_TYPE[truckKey]
-    if (!mapped) return
+    if (!truckCatalog.length) return
+    if (truckCatalog.some((item) => item.key === truckKey)) return
+    setTruckKey(truckCatalog[0].key)
+  }, [truckCatalog, truckKey])
+
+  useEffect(() => {
+    const mapped = TRUCK_TO_VEHICLE_TYPE[truckKey] || {
+      id: truckKey,
+      label: truck.name?.split('(')[0]?.trim() || 'Kamyon',
+    }
     setTrip((current) => {
       if (current.vehicleTypeId === mapped.id && current.vehicleTypeLabel === mapped.label) {
         return current
@@ -293,7 +361,7 @@ export default function CustomerLoadShipmentCreatePage() {
         vehicleTypeLabel: mapped.label,
       }
     })
-  }, [truckKey])
+  }, [truckKey, truck.name])
 
   useEffect(() => {
     setTrip((current) => {
@@ -429,9 +497,39 @@ export default function CustomerLoadShipmentCreatePage() {
   }
 
   function applyAiTruck() {
-    if (ai.recommendedTruckKey) setTruckKey(ai.recommendedTruckKey)
+    if (ai.recommendedTruckKey) {
+      const exists = truckCatalog.some((item) => item.key === ai.recommendedTruckKey)
+      if (exists) setTruckKey(ai.recommendedTruckKey)
+    }
     setAiToast(ai.tips[0] || 'AI önerisi uygulandı')
     window.setTimeout(() => setAiToast(''), 2200)
+  }
+
+  function handleTruckOptionsChange(next) {
+    const previousByKey = new Map(truckCatalog.map((item) => [item.key, item]))
+    const previousByName = new Map(truckCatalog.map((item) => [item.name, item]))
+    const saved = saveTruckCatalog(
+      next.map((item, index) => {
+        const prior =
+          previousByKey.get(item.id) ||
+          previousByName.get(item.label) ||
+          defaultTruckCatalog().find((row) => row.name === item.label)
+        return {
+          key: item.id || prior?.key || `truck-${Date.now()}-${index}`,
+          name: item.label,
+          color:
+            item.color || prior?.color || TRUCK_OPTION_COLORS[index % TRUCK_OPTION_COLORS.length],
+          L: prior?.L || DEFAULT_TRUCK_DIMS.L,
+          W: prior?.W || DEFAULT_TRUCK_DIMS.W,
+          H: prior?.H || DEFAULT_TRUCK_DIMS.H,
+          maxWeight: prior?.maxWeight || DEFAULT_TRUCK_DIMS.maxWeight,
+        }
+      }),
+    )
+    setTruckCatalog(saved)
+    if (!saved.some((item) => item.key === truckKey) && saved[0]) {
+      setTruckKey(saved[0].key)
+    }
   }
 
   function handleSave() {
@@ -593,19 +691,23 @@ export default function CustomerLoadShipmentCreatePage() {
 
         <div className="tlc customer-load-truck-visual space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Field label="Araç tipi">
-              <select
-                className={INPUT_CLASS}
-                value={truckKey}
-                onChange={(event) => setTruckKey(event.target.value)}
-              >
-                {TRUCK_OPTIONS.map((item) => (
-                  <option key={item.key} value={item.key}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Araç tipi :</p>
+              <EditableDropdownPill
+                value={truck.name || 'Seçiniz'}
+                options={truckTypeOptions}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
+                openKey="load-ship-truck-type"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onOptionsChange={handleTruckOptionsChange}
+                onChange={(value) => {
+                  const match = truckCatalog.find((item) => item.name === value)
+                  if (match) setTruckKey(match.key)
+                }}
+              />
+            </div>
             <Field label="Yerleşim modülü (grid)">
               <select
                 className={INPUT_CLASS}
@@ -704,35 +806,10 @@ export default function CustomerLoadShipmentCreatePage() {
           ) : null}
 
           <div className="tlc-card tlc-panel">
-            <div className="tlc-panel__head">
-              <h3>Araç Yerleşim Görünümü</h3>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button
-                  type="button"
-                  className="tlc-icon-btn"
-                  onClick={() => setZoom((value) => Math.max(0.6, +(value - 0.2).toFixed(1)))}
-                  aria-label="Uzaklaştır"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  className="tlc-icon-btn"
-                  onClick={() => setZoom((value) => Math.min(2, +(value + 0.2).toFixed(1)))}
-                  aria-label="Yakınlaştır"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <p className={`mb-3 ${YF_TEXT_CLASS} !text-[12px]`}>
-              Boş slota tıklayarak kalem ekleyin · dolu slota tıklayarak yük ayarını düzenleyin.
-              Araç ve grid seçimi yerleşimi anında günceller.
-            </p>
-
             <div className="tlc-stage">
-              <CabSvg />
+              <div className="tlc-front-label" aria-hidden>
+                ÖN
+              </div>
               <div className="tlc-grid-wrap">
                 <div
                   className="tlc-grid"
