@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { FileText, Package, Plus, Trash2 } from 'lucide-react'
+import { Package, Plus, Trash2 } from 'lucide-react'
 import { ListInlineActionConfirm } from '../Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../EditableDropdownPill'
 import NumericInput from '../Products/NumericInput'
 import { getLineQuantityRows } from '../../utils/productionLineItems'
 import { formatQty, resolveDepoSendQuantity } from '../../utils/productionQuantityMetrics'
+import { PAGE_TABLE_HEADER_CLASS } from '../../utils/dashboardDesign'
 
 function formatShortDate(value) {
   if (!value) return '—'
@@ -16,6 +17,9 @@ function formatShortDate(value) {
   return raw.slice(0, 10) || '—'
 }
 
+/**
+ * Compact partial-delivery panel for the expanded production job header.
+ */
 export default function ProductionPartialDeliveryTable({
   lineItem,
   productionJobId,
@@ -30,12 +34,148 @@ export default function ProductionPartialDeliveryTable({
   onRemoveQuantityRow,
   onSendToDepo,
   onUndoSendToDepo,
+  compact = false,
 }) {
   const [pendingDepoRowId, setPendingDepoRowId] = useState(null)
   const [pendingUndoDepoRowId, setPendingUndoDepoRowId] = useState(null)
   const quantityRows = getLineQuantityRows(lineItem)
 
   if (!quantityRows.length) return null
+
+  if (compact) {
+    return (
+      <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-ds-border">
+        <table className="w-max max-w-full border-collapse text-left">
+          <thead className="bg-[var(--ds-surface-muted)]">
+            <tr>
+              <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>NO</th>
+              <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>ADET</th>
+              <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DURUM</th>
+              <th className={`${PAGE_TABLE_HEADER_CLASS} w-[1%] whitespace-nowrap text-right`}>
+                <span className="inline-flex items-center gap-1">
+                  İŞLEM
+                  {typeof onAddQuantityRow === 'function' && !columnsLocked ? (
+                    <button
+                      type="button"
+                      onClick={() => onAddQuantityRow(quantityRows[0]?.id)}
+                      className="inline-flex h-5 w-5 items-center justify-center rounded text-[var(--accent,#2563EB)] hover:bg-white"
+                      title="Kısmi teslimat ekle"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {quantityRows.map((row, rowIndex) => {
+              const code = row.productionCode || `${productionJobId}-${rowIndex + 1}`
+              const depoQty = resolveDepoSendQuantity(row, rowIndex, lineItem, orderLineQuantity)
+              return (
+                <tr key={row.id} className="border-t border-ds-border">
+                  <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap">
+                    <span className="customer-name-primary text-[13px] font-bold tabular-nums text-[var(--muted)]">
+                      {code}
+                    </span>
+                  </td>
+                  <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap">
+                    <NumericInput
+                      value={row.deliveredQuantity}
+                      onChange={(value) =>
+                        onQuantityRowChange?.(row.id, {
+                          deliveredQuantity: Math.round(Number(value) || 0),
+                        })
+                      }
+                      readOnly={columnsLocked}
+                      className="form-input h-7 w-14 text-[12px] font-bold tabular-nums"
+                    />
+                  </td>
+                  <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap">
+                    <EditableDropdownPill
+                      value={
+                        row.fulfillmentStatus || fulfillmentOptions[0]?.label || 'Devam Ediyor'
+                      }
+                      options={fulfillmentOptions}
+                      editable={false}
+                      disabled={columnsLocked}
+                      includePlaceholderOption={false}
+                      buttonClassName="flex h-7 min-w-[6.5rem] items-center justify-between rounded-lg border border-ds-border bg-white px-2 text-[11px] font-semibold"
+                      openKey={`${fulfillmentOpenKey}-${row.id}`}
+                      activeMenu={activeMenu}
+                      setActiveMenu={setActiveMenu}
+                      onChange={(value) =>
+                        onQuantityRowChange?.(row.id, {
+                          fulfillmentStatus: value || 'Devam Ediyor',
+                        })
+                      }
+                    />
+                  </td>
+                  <td className="h-[var(--ds-row-h,2.75rem)] px-2 py-1 whitespace-nowrap text-right">
+                    <div className="inline-flex items-center justify-end gap-1">
+                      {typeof onSendToDepo === 'function' ? (
+                        pendingDepoRowId === row.id ? (
+                          <ListInlineActionConfirm
+                            message="Emin misin?"
+                            tone="orange"
+                            onConfirm={() => {
+                              onSendToDepo(row.id)
+                              setPendingDepoRowId(null)
+                            }}
+                            onCancel={() => setPendingDepoRowId(null)}
+                          />
+                        ) : row.depoItemId ? (
+                          <button
+                            type="button"
+                            onClick={() => setPendingUndoDepoRowId(row.id)}
+                            className="rounded-lg px-1.5 py-1 text-[11px] font-bold text-orange-600"
+                          >
+                            Geri Al
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={columnsLocked || !(depoQty > 0)}
+                            onClick={() => setPendingDepoRowId(row.id)}
+                            className="inline-flex items-center gap-0.5 rounded-lg px-1.5 py-1 text-[11px] font-bold text-orange-600 disabled:opacity-40"
+                            title="Teslim Et"
+                          >
+                            <Package className="h-3 w-3" />
+                            Teslim
+                          </button>
+                        )
+                      ) : null}
+                      {pendingUndoDepoRowId === row.id ? (
+                        <ListInlineActionConfirm
+                          message="Emin misin?"
+                          tone="orange"
+                          onConfirm={() => {
+                            onUndoSendToDepo?.(row.id)
+                            setPendingUndoDepoRowId(null)
+                          }}
+                          onCancel={() => setPendingUndoDepoRowId(null)}
+                        />
+                      ) : null}
+                      {quantityRows.length > 1 && typeof onRemoveQuantityRow === 'function' ? (
+                        <button
+                          type="button"
+                          onClick={() => onRemoveQuantityRow(row.id)}
+                          className="rounded p-1 text-red-500"
+                          title="Sil"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-3">
@@ -63,7 +203,6 @@ export default function ProductionPartialDeliveryTable({
               <th className="px-3 py-2.5">Tarih</th>
               <th className="px-3 py-2.5">Adet</th>
               <th className="px-3 py-2.5">Açıklama</th>
-              <th className="px-3 py-2.5">Belgeler</th>
               <th className="px-3 py-2.5 text-right">İşlemler</th>
             </tr>
           </thead>
@@ -76,13 +215,9 @@ export default function ProductionPartialDeliveryTable({
               return (
                 <tr key={row.id} className="transition hover:bg-blue-50/40">
                   <td className="px-3 py-2.5">
-                    <button
-                      type="button"
-                      className="font-bold tabular-nums text-[var(--bach-navy,#1E3A8A)] hover:underline"
-                      onClick={() => window.print()}
-                    >
+                    <span className="font-bold tabular-nums text-[var(--bach-navy,#1E3A8A)]">
                       {code}
-                    </button>
+                    </span>
                   </td>
                   <td className="px-3 py-2.5 font-semibold text-[var(--ink,#0F172A)]">
                     {formatShortDate(dateValue)}
@@ -130,32 +265,6 @@ export default function ProductionPartialDeliveryTable({
                       >
                         {note}
                       </p>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <div className="flex flex-wrap gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => window.print()}
-                        className="inline-flex items-center gap-1 text-[12px] font-bold text-blue-600 hover:underline"
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                        PDF
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => window.print()}
-                        className="inline-flex items-center gap-1 text-[12px] font-bold text-orange-600 hover:underline"
-                      >
-                        İrsaliye
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => window.print()}
-                        className="inline-flex items-center gap-1 text-[12px] font-bold text-emerald-600 hover:underline"
-                      >
-                        Fatura
-                      </button>
                     </div>
                   </td>
                   <td className="px-3 py-2.5">

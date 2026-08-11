@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArchiveRestore, Package, Trash2, Truck } from 'lucide-react'
+import { ArchiveRestore, Package, Trash2 } from 'lucide-react'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import ProductionProcessCapsuleRail from './ProductionProcessCapsuleRail'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
@@ -12,7 +12,6 @@ import {
 } from '../../utils/productionLineItems'
 import {
   formatQty,
-  getJobQuantityMetrics,
   getQuantityRowMinimalSteps,
 } from '../../utils/productionQuantityMetrics'
 import {
@@ -52,7 +51,7 @@ function buildStepsForLine(line, productionStages) {
 }
 
 /**
- * Expanded production detail — table-style product row + process rail with per-stage photos.
+ * Expanded production detail — compact product + partial delivery row, then process rail.
  */
 export default function ProductionJobCard({
   job,
@@ -69,10 +68,8 @@ export default function ProductionJobCard({
   lineItemActions,
   activeMenu,
   setActiveMenu,
-  initialPartialOpen = false,
 }) {
   const [activeLineIndex, setActiveLineIndex] = useState(0)
-  const [partialOpen, setPartialOpen] = useState(initialPartialOpen)
   const [liveWorkflowStages, setLiveWorkflowStages] = useState(
     () => workflowStagesProp || loadWorkflowStages(),
   )
@@ -101,7 +98,6 @@ export default function ProductionJobCard({
 
   const order = resolveOrderForProductionJob(job, orders)
   const lineItems = ensureLineItems(job, liveWorkflowStages, order)
-  const metrics = getJobQuantityMetrics(lineItems)
 
   const activeLine =
     lineItems[Math.min(activeLineIndex, Math.max(0, lineItems.length - 1))] || lineItems[0]
@@ -109,9 +105,6 @@ export default function ProductionJobCard({
   const primaryRow = activeRows[0]
   const processSteps = buildStepsForLine(activeLine, liveProductionStages)
   const stagePhotos = normalizeStagePhotos(activeLine?.stagePhotos || [])
-  const hasPartial =
-    metrics.linesWithPartialDelivery > 0 ||
-    (metrics.delivered > 0 && metrics.delivered < metrics.ordered)
 
   function handleStageClick(stageId) {
     if (!activeLine || activeLine.productionClosed) return
@@ -149,15 +142,15 @@ export default function ProductionJobCard({
 
   return (
     <div className="mt-3 space-y-4 rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1 overflow-x-auto rounded-ds-lg border border-ds-border">
-          <table className="w-full min-w-[28rem] border-collapse text-left">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="w-max max-w-full shrink-0 overflow-x-auto rounded-ds-lg border border-ds-border">
+          <table className="w-max border-collapse text-left">
             <thead className="bg-[var(--ds-surface-muted)]">
               <tr>
-                <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[18rem] w-[70%]`}>
+                <th className={`${PAGE_TABLE_HEADER_CLASS} w-[1%] whitespace-nowrap`}>
                   ÜRÜN AÇIKLAMASI
                 </th>
-                <th className={`${PAGE_TABLE_HEADER_CLASS} w-[8rem] whitespace-nowrap`}>
+                <th className={`${PAGE_TABLE_HEADER_CLASS} w-[1%] whitespace-nowrap`}>
                   SİPARİŞ ADETİ
                 </th>
               </tr>
@@ -189,19 +182,19 @@ export default function ProductionJobCard({
                       }`}
                       onClick={() => setActiveLineIndex(index)}
                     >
-                      <td className="h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 py-1.5 text-ds-body text-ds-ink">
+                      <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1.5 whitespace-nowrap text-ds-body text-ds-ink">
                         <span className="flex min-w-0 flex-col gap-0.5">
                           {description ? (
                             <>
-                              <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                              <span className="customer-name-primary text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
                                 {description}
                               </span>
-                              <span className="customer-name-secondary font-sans truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
+                              <span className="customer-name-secondary font-sans text-[14px] font-normal leading-tight text-[var(--muted)]">
                                 {productName}
                               </span>
                             </>
                           ) : (
-                            <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                            <span className="customer-name-primary text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
                               {productName}
                             </span>
                           )}
@@ -225,23 +218,40 @@ export default function ProductionJobCard({
           </table>
         </div>
 
+        {activeLine ? (
+          <div className="min-w-0 flex-1" onClick={(event) => event.stopPropagation()}>
+            <ProductionPartialDeliveryTable
+              compact
+              lineItem={activeLine}
+              productionJobId={job.id}
+              fulfillmentOptions={fulfillmentOptions}
+              fulfillmentOpenKey={`${job.id}-${activeLine.id}-fulfillment`}
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              columnsLocked={activeLine.productionClosed === true}
+              orderLineQuantity={resolveLineItemOrderQuantity(activeLine, order)}
+              onQuantityRowChange={(rowId, patch) =>
+                lineItemActions?.handleLineQuantityRowChange(activeLine, rowId, patch)
+              }
+              onAddQuantityRow={(rowId) => lineItemActions?.handleAddQuantityRow(activeLine, rowId)}
+              onRemoveQuantityRow={(rowId) =>
+                lineItemActions?.handleRemoveQuantityRow(activeLine, rowId)
+              }
+              onSendToDepo={(rowId) => {
+                lineItemActions?.handleSendRowToDepo(
+                  activeLine,
+                  rowId,
+                  resolveLineItemOrderQuantity(activeLine, order),
+                )
+              }}
+              onUndoSendToDepo={(rowId) =>
+                lineItemActions?.handleUndoSendRowToDepo(activeLine, rowId)
+              }
+            />
+          </div>
+        ) : null}
+
         <div className="flex shrink-0 items-center gap-1.5 pt-1" onClick={(event) => event.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => setPartialOpen((value) => !value)}
-            className={`glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl ${
-              partialOpen || hasPartial ? 'text-[var(--accent,#2563EB)]' : ''
-            }`}
-            aria-expanded={partialOpen}
-            aria-label={partialOpen ? 'Kısmi teslimatı kapat' : 'Kısmi teslimat'}
-            title={
-              hasPartial
-                ? `Kısmi teslimat · ${formatQty(metrics.delivered)}/${formatQty(metrics.ordered)}`
-                : 'Kısmi teslimat'
-            }
-          >
-            <Truck className="h-4 w-4" />
-          </button>
           {pendingDelete ? (
             <DeleteTrashButton
               pending
@@ -269,48 +279,6 @@ export default function ProductionJobCard({
           onAddPhotos={handleAddPhotos}
         />
       )}
-
-      {partialOpen && activeLine ? (
-        <div className="rounded-2xl border border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#FCFCFD)]/90 px-4 py-4 dark:bg-none">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h4 className="text-[13px] font-black uppercase tracking-wide text-[var(--muted,#64748B)]">
-              Kısmi Teslimat
-            </h4>
-            {hasPartial ? (
-              <span className="text-[12px] font-bold tabular-nums text-[var(--muted,#64748B)]">
-                {formatQty(metrics.delivered)}/{formatQty(metrics.ordered)} teslim
-              </span>
-            ) : null}
-          </div>
-          <ProductionPartialDeliveryTable
-            lineItem={activeLine}
-            productionJobId={job.id}
-            fulfillmentOptions={fulfillmentOptions}
-            fulfillmentOpenKey={`${job.id}-${activeLine.id}-fulfillment`}
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-            columnsLocked={activeLine.productionClosed === true}
-            orderLineQuantity={resolveLineItemOrderQuantity(activeLine, order)}
-            onQuantityRowChange={(rowId, patch) =>
-              lineItemActions?.handleLineQuantityRowChange(activeLine, rowId, patch)
-            }
-            onAddQuantityRow={(rowId) => lineItemActions?.handleAddQuantityRow(activeLine, rowId)}
-            onRemoveQuantityRow={(rowId) =>
-              lineItemActions?.handleRemoveQuantityRow(activeLine, rowId)
-            }
-            onSendToDepo={(rowId) => {
-              lineItemActions?.handleSendRowToDepo(
-                activeLine,
-                rowId,
-                resolveLineItemOrderQuantity(activeLine, order),
-              )
-            }}
-            onUndoSendToDepo={(rowId) =>
-              lineItemActions?.handleUndoSendRowToDepo(activeLine, rowId)
-            }
-          />
-        </div>
-      ) : null}
 
       {(job.activities || []).length > 0 ? (
         <div>
