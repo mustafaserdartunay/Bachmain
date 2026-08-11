@@ -49,14 +49,14 @@ export const PAGE_SUMMARY_METRICS_CLASS = 'customer-summary-metrics w-full'
 
 /* başlık panel — cam sayfa başlığı: sol geri linki / mutlak merkez başlık / sağ CTA */
 export const PAGE_HEADER_SHELL_CLASS =
-  'app-page-header relative z-30 flex min-h-[4.75rem] shrink-0 items-center justify-between gap-3 overflow-visible px-4 py-3 sm:px-6'
+  'app-page-header relative z-30 flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center justify-between gap-3 overflow-visible px-4 py-2 sm:px-6'
 export const PAGE_HEADER_BACK_LINK_CLASS =
   'customer-page-back-link group inline-flex shrink-0 items-center gap-2 rounded-xl px-1 py-1 text-[var(--muted)] transition-opacity hover:opacity-80'
 export const PAGE_HEADER_BACK_LABEL_CLASS =
   'customer-page-back-link-label min-w-0 truncate text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]'
 export const PAGE_HEADER_TITLE_SLOT_CLASS = '!min-w-0 !overflow-visible'
 export const PAGE_FILTER_PANEL_CLASS =
-  'customer-filter-panel flex min-h-[4.75rem] w-full items-center'
+  'customer-filter-panel flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] w-full items-center'
 export const PAGE_FILTER_BAR_CLASS =
   'app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4'
 export const PAGE_FILTER_FIELD_CLASS =
@@ -78,7 +78,7 @@ export const PAGE_BALANCE_AMOUNT_CLASS =
 export const SP_PANEL_SHELL_CLASS =
   'card customer-deleted-archived-panel overflow-hidden p-0 w-full'
 export const SP_HEADER_BUTTON_CLASS =
-  'flex min-h-[4.75rem] w-full items-center justify-between gap-3 bg-transparent px-4 py-3 text-left'
+  'flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] w-full items-center justify-between gap-3 bg-transparent px-4 py-2 text-left'
 export const SP_BODY_CLASS = 'border-t border-[var(--glass-border)] bg-transparent px-4 py-3'
 export const SP_EMPTY_CLASS =
   'bg-transparent px-4 py-8 text-center text-[12px] font-normal text-[var(--muted)]'

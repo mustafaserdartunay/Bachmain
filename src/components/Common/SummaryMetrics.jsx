@@ -20,7 +20,7 @@ export function SummaryMetricCard({ title, value, icon: Icon, valueTone = 'white
   const valueToneClass = resolveToneClass(valueTone, TONE_CLASSES.white)
 
   return (
-    <div className="app-page-metric flex min-h-[94px] items-center justify-center rounded-[18px] p-4">
+    <div className="app-page-metric flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] items-center justify-center rounded-[18px] px-4 py-2">
       <div className="flex min-w-0 flex-col items-center gap-1 text-center">
         <div className="flex min-w-0 items-center justify-center gap-2 text-[var(--muted)]">
           {Icon && <Icon className="h-4 w-4 shrink-0" />}

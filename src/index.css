@@ -747,7 +747,8 @@ textarea:not(.form-input)::placeholder {
   position: relative;
   z-index: 30;
   overflow: visible;
-  min-height: 4.75rem; /* match .app-header-banner cash quick-actions strip */
+  height: var(--ds-header-h, 4.75rem);
+  min-height: var(--ds-header-h, 4.75rem);
   background: var(--glass-bg) !important;
   backdrop-filter: blur(26px) saturate(180%);
   -webkit-backdrop-filter: blur(26px) saturate(180%);
@@ -1342,7 +1343,8 @@ textarea:not(.form-input)::placeholder {
 }
 
 .app-page-metric {
-  min-height: 94px;
+  min-height: var(--ds-header-h, 4.75rem);
+  height: var(--ds-header-h, 4.75rem);
   border-radius: 26px;
   background: var(--glass-bg);
   backdrop-filter: blur(26px) saturate(180%);
@@ -1355,9 +1357,9 @@ textarea:not(.form-input)::placeholder {
 }
 
 .customer-summary-metrics .app-page-metric {
-  height: 4.75rem;
-  min-height: 4.75rem;
-  padding: 0.75rem 1rem;
+  height: var(--ds-header-h, 4.75rem);
+  min-height: var(--ds-header-h, 4.75rem);
+  padding: 0.5rem 1rem;
 }
 
 .customer-summary-metrics .app-page-metric p:not(.text-xl),
@@ -3567,7 +3569,8 @@ html.night .glass-sidebar .sidebar-submenu {
 }
 
 .app-header-banner {
-  min-height: var(--ds-header-h, 4.5rem);
+  min-height: var(--ds-header-h, 4.75rem);
+  height: var(--ds-header-h, 4.75rem);
   background: var(--glass-bg) !important;
   backdrop-filter: blur(26px) saturate(180%);
   -webkit-backdrop-filter: blur(26px) saturate(180%);

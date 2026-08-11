@@ -145,7 +145,7 @@ export function HeaderQuickActionCard({ action, fixed = false, className = '' })
 
 export default function HeaderCashActionsPanel() {
   return (
-    <section className="app-header-banner flex min-h-[4.75rem] shrink-0 items-center px-4 py-3 sm:px-6">
+    <section className="app-header-banner flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center px-4 py-2 sm:px-6">
       <div className="flex w-full gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-7 lg:gap-2 lg:overflow-visible">
         {HEADER_QUICK_ACTIONS.map((action) => (
           <HeaderQuickActionCard key={action.id} action={action} />

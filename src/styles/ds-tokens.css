@@ -87,7 +87,7 @@
   /* Shell */
   --ds-sidebar-expanded: 17.5rem; /* 280px */
   --ds-sidebar-collapsed: 5.5rem; /* 88px */
-  --ds-header-h: 4.5rem; /* 72px */
+  --ds-header-h: 4.75rem; /* 76px — match cash strip / page header / filter panels */
   --ds-bottom-nav-h: 4rem;
 
   /* Motion */
