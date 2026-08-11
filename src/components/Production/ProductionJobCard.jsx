@@ -155,22 +155,104 @@ export default function ProductionJobCard({
           aria-hidden
         />
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
-          <div className="flex min-w-0 items-center gap-3 lg:max-w-[11rem]">
+        <div className="flex flex-col gap-3">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
             <input
               type="checkbox"
               checked={Boolean(selected)}
               onChange={() => onToggleSelect?.(job.id)}
-              className="h-4 w-4 shrink-0 rounded border-[var(--border,#CBD5E1)]"
+              className="mt-1.5 h-4 w-4 shrink-0 rounded border-[var(--border,#CBD5E1)] sm:mt-0"
               aria-label={`${job.id} seç`}
             />
-            <div className="min-w-0">
-              <p className="truncate text-[17px] font-black leading-tight tracking-tight text-[var(--ink,#0F172A)]">
-                {customerDisplay.brandShortName || job.customer || '—'}
-              </p>
-              <p className="mt-0.5 truncate text-[12px] font-semibold text-[var(--muted,#64748B)]">
+
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-4 sm:gap-y-1">
+              <p className="min-w-0 text-[15px] font-black leading-snug tracking-tight text-[var(--ink,#0F172A)] sm:text-[16px]">
                 {companyTitle}
               </p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-semibold text-[var(--muted,#64748B)]">
+                <span>
+                  Sipariş{' '}
+                  <span className="tabular-nums text-[var(--ink,#0F172A)]">
+                    {formatShortDate(timeline.orderDate)}
+                  </span>
+                </span>
+                <span className="hidden text-[var(--border,#CBD5E1)] sm:inline" aria-hidden>
+                  ·
+                </span>
+                <span>
+                  Üretim{' '}
+                  <span className="tabular-nums text-[var(--ink,#0F172A)]">
+                    {formatShortDate(timeline.productionStartDate)}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <div
+              className="flex shrink-0 items-center justify-end gap-1.5"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={onToggleExpand}
+                className={`glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl ${
+                  expanded ? 'text-[var(--accent,#2563EB)]' : ''
+                }`}
+                aria-expanded={expanded}
+                aria-label={expanded ? 'Üretim detayını kapat' : 'Üretim detayını aç'}
+                title={expanded ? 'Detayı kapat' : 'Sipariş / üretim detayı'}
+              >
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPartialOpen((value) => !value)}
+                className={`glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl ${
+                  partialOpen || hasPartial ? 'text-[var(--accent,#2563EB)]' : ''
+                }`}
+                aria-expanded={partialOpen}
+                aria-label={partialOpen ? 'Kısmi teslimatı kapat' : 'Kısmi teslimat'}
+                title={
+                  hasPartial
+                    ? `Kısmi teslimat · ${formatQty(metrics.delivered)}/${formatQty(metrics.ordered)}`
+                    : 'Kısmi teslimat'
+                }
+              >
+                <Truck className="h-4 w-4" />
+              </button>
+
+              <MoreMenu
+                items={[
+                  {
+                    id: 'cancel',
+                    label: 'Vazgeç',
+                    icon: ArchiveRestore,
+                    onClick: onCancelProduction,
+                  },
+                  { id: 'depo', label: 'Depoya gönder', icon: Package, onClick: onSendToDepo },
+                  {
+                    id: 'delete',
+                    label: 'Sil',
+                    icon: Trash2,
+                    tone: 'danger',
+                    onClick: onRequestDelete,
+                  },
+                ]}
+              />
+              {pendingDelete ? (
+                <DeleteTrashButton
+                  pending
+                  onClick={onRequestDelete}
+                  onConfirm={onConfirmDelete}
+                  onCancel={onCancelDelete}
+                  title="Üretim kaydı silinsin mi?"
+                  description="Bu işlem geri alınamaz."
+                  popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
+                />
+              ) : null}
             </div>
           </div>
 
@@ -179,73 +261,6 @@ export default function ProductionJobCard({
             readOnly={activeLine?.productionClosed === true}
             onStageClick={handleStageClick}
           />
-
-          <div
-            className="flex shrink-0 items-center justify-end gap-1.5"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={onToggleExpand}
-              className={`glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl ${
-                expanded ? 'text-[var(--accent,#2563EB)]' : ''
-              }`}
-              aria-expanded={expanded}
-              aria-label={expanded ? 'Üretim detayını kapat' : 'Üretim detayını aç'}
-              title={expanded ? 'Detayı kapat' : 'Sipariş / üretim detayı'}
-            >
-              <ChevronDown
-                className={`h-4 w-4 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
-              />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setPartialOpen((value) => !value)}
-              className={`glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl ${
-                partialOpen || hasPartial ? 'text-[var(--accent,#2563EB)]' : ''
-              }`}
-              aria-expanded={partialOpen}
-              aria-label={partialOpen ? 'Kısmi teslimatı kapat' : 'Kısmi teslimat'}
-              title={
-                hasPartial
-                  ? `Kısmi teslimat · ${formatQty(metrics.delivered)}/${formatQty(metrics.ordered)}`
-                  : 'Kısmi teslimat'
-              }
-            >
-              <Truck className="h-4 w-4" />
-            </button>
-
-            <MoreMenu
-              items={[
-                {
-                  id: 'cancel',
-                  label: 'Vazgeç',
-                  icon: ArchiveRestore,
-                  onClick: onCancelProduction,
-                },
-                { id: 'depo', label: 'Depoya gönder', icon: Package, onClick: onSendToDepo },
-                {
-                  id: 'delete',
-                  label: 'Sil',
-                  icon: Trash2,
-                  tone: 'danger',
-                  onClick: onRequestDelete,
-                },
-              ]}
-            />
-            {pendingDelete ? (
-              <DeleteTrashButton
-                pending
-                onClick={onRequestDelete}
-                onConfirm={onConfirmDelete}
-                onCancel={onCancelDelete}
-                title="Üretim kaydı silinsin mi?"
-                description="Bu işlem geri alınamaz."
-                popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
-              />
-            ) : null}
-          </div>
         </div>
       </div>
 
