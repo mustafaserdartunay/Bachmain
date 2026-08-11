@@ -61,10 +61,20 @@ export interface PlanRow {
 export interface AddonRow {
   id: string
   code: string
+  slug?: string
   label: string
+  description?: string
+  longDescription?: string
+  category?: string
+  icon?: string
+  iconColor?: string
+  features?: string[]
+  audience?: string
   monthlyPrice: number
   yearlyPrice: number
   trialDays: number
+  sortOrder?: number
+  storeVisible?: boolean
   active?: boolean
 }
 

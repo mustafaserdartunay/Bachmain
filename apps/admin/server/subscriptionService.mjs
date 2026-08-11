@@ -7,6 +7,7 @@ import {
   DEFAULT_PLANS,
   MODULE_CATALOG,
   PERIOD_MONTHS,
+  STORE_CATEGORIES,
   displayPlanName,
   modulesForPlan,
   normalizePlanCode,
@@ -50,9 +51,12 @@ export function seedBillingIfEmpty(store) {
       id: newId('addon'),
       ...a,
       active: true,
+      storeVisible: a.storeVisible !== false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }))
+  } else {
+    ensureStoreModuleCatalog(b)
   }
   if (!b.trialPeriods.length) {
     b.trialPeriods = [
@@ -153,6 +157,321 @@ export function getCatalog(store) {
     addons: b.addons.filter((a) => a.active !== false),
     periods: Object.keys(PERIOD_MONTHS),
   }
+}
+
+/** Upsert store-facing fields onto existing addons without wiping admin price edits. */
+function ensureStoreModuleCatalog(b) {
+  const byCode = new Map(b.addons.map((a) => [a.code, a]))
+  for (const seed of DEFAULT_ADDONS) {
+    const existing = byCode.get(seed.code)
+    if (!existing) {
+      b.addons.push({
+        id: newId('addon'),
+        ...seed,
+        active: true,
+        storeVisible: seed.storeVisible !== false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      continue
+    }
+    // Fill missing store metadata; keep admin-managed prices/active
+    for (const key of [
+      'slug',
+      'category',
+      'icon',
+      'iconColor',
+      'description',
+      'longDescription',
+      'audience',
+      'features',
+      'sortOrder',
+      'label',
+    ]) {
+      if (existing[key] == null || existing[key] === '') existing[key] = seed[key]
+    }
+    if (existing.storeVisible == null) existing.storeVisible = seed.storeVisible !== false
+  }
+}
+
+export function getModuleStoreCatalog(store, { customerId } = {}) {
+  const b = seedBillingIfEmpty(store)
+  const activeCodes = new Set()
+  if (customerId) {
+    const snap = getSubscriptionSnapshot(store, customerId)
+    for (const code of snap?.entitlements || []) activeCodes.add(code)
+    for (const a of snap?.addons || []) {
+      if (a.code) activeCodes.add(a.code)
+      if (a.moduleCode) activeCodes.add(a.moduleCode)
+    }
+  }
+
+  const modules = b.addons
+    .filter((a) => a.active !== false && a.storeVisible !== false)
+    .sort((a, c) => (a.sortOrder || 0) - (c.sortOrder || 0))
+    .map((a) => ({
+      id: a.id,
+      code: a.code,
+      slug: a.slug || a.code,
+      name: a.label || a.name || a.code,
+      description: a.description || '',
+      longDescription: a.longDescription || a.description || '',
+      category: a.category || 'management',
+      icon: a.icon || 'Box',
+      iconColor: a.iconColor || '#2563EB',
+      features: Array.isArray(a.features) ? a.features : [],
+      audience: a.audience || '',
+      monthlyPrice: Number(a.monthlyPrice) || 0,
+      yearlyPrice: Number(a.yearlyPrice) || 0,
+      currency: 'TRY',
+      trialDays: Number(a.trialDays) || 0,
+      sortOrder: a.sortOrder || 0,
+      active: a.active !== false,
+      isOwned: activeCodes.has(a.code),
+    }))
+
+  return {
+    categories: STORE_CATEGORIES,
+    modules,
+    yearlyDiscountPercent: 20,
+    vatRate: 0.2,
+    currency: 'TRY',
+  }
+}
+
+export function createModuleStoreCheckout(store, input) {
+  const b = seedBillingIfEmpty(store)
+  const period = input.period === 'year' ? 'year' : 'month'
+  const codes = Array.isArray(input.moduleCodes)
+    ? [...new Set(input.moduleCodes.map((c) => String(c)))]
+    : []
+  if (!codes.length) {
+    throw Object.assign(new Error('En az bir modül seçin'), { code: 'EMPTY_CART', status: 400 })
+  }
+
+  const selected = []
+  for (const code of codes) {
+    const addon = b.addons.find((a) => a.code === code && a.active !== false)
+    if (!addon) {
+      throw Object.assign(new Error(`Modül bulunamadı: ${code}`), {
+        code: 'MODULE_NOT_FOUND',
+        status: 404,
+      })
+    }
+    selected.push(addon)
+  }
+
+  // Block duplicates already owned
+  const snap = input.customerId ? getSubscriptionSnapshot(store, input.customerId) : null
+  const owned = new Set(snap?.entitlements || [])
+  for (const a of snap?.addons || []) {
+    if (a.code) owned.add(a.code)
+  }
+  for (const addon of selected) {
+    if (owned.has(addon.code)) {
+      throw Object.assign(new Error(`${addon.label || addon.code} zaten hesabınızda aktif.`), {
+        code: 'ALREADY_OWNED',
+        status: 409,
+      })
+    }
+  }
+
+  let amount = selected.reduce(
+    (sum, a) => sum + (period === 'year' ? Number(a.yearlyPrice) || 0 : Number(a.monthlyPrice) || 0),
+    0,
+  )
+  let coupon = null
+  if (input.couponCode) {
+    coupon = b.coupons.find(
+      (c) => String(c.code).toUpperCase() === String(input.couponCode).toUpperCase(),
+    )
+    const applied = applyCoupon(amount, coupon)
+    amount = applied.amount
+  }
+
+  const method = String(input.method || 'havale').toLowerCase()
+  const isCard = method === 'card' || method === 'stripe' || method === 'iyzico'
+  const paymentId = newId('pay')
+  const status =
+    isCard && (process.env.STRIPE_SECRET_KEY || process.env.IYZICO_API_KEY)
+      ? 'processing'
+      : 'pending_payment'
+
+  const payment = {
+    id: paymentId,
+    customerId: input.customerId,
+    accountId: input.accountId || null,
+    planCode: 'module_store',
+    planId: null,
+    period,
+    method: isCard ? 'card' : method,
+    amountTry: amount,
+    currency: 'TRY',
+    status,
+    couponCode: coupon?.code || null,
+    companyInvoice: Boolean(input.companyInvoice),
+    billingName: input.billingName || '',
+    taxNo: input.taxNo || '',
+    moduleCodes: selected.map((a) => a.code),
+    source: 'module_store',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  b.payments.unshift(payment)
+
+  if (!Array.isArray(store.paymentRequests)) store.paymentRequests = []
+  store.paymentRequests.unshift({
+    id: paymentId,
+    plan: `Modül Mağazası (${selected.length} modül)`,
+    planCode: 'module_store',
+    customerId: input.customerId,
+    email: input.email || '',
+    companyName: input.companyName || '',
+    phone: input.phone || '',
+    status: payment.status,
+    method: payment.method,
+    amountTry: amount,
+    period,
+    moduleCodes: payment.moduleCodes,
+    createdAt: payment.createdAt,
+    source: 'module_store',
+  })
+
+  pushHistory(b, {
+    customerId: input.customerId,
+    action: 'module_store_checkout',
+    meta: { paymentId, moduleCodes: payment.moduleCodes, period, amount },
+  })
+
+  if (coupon) coupon.usedCount = Number(coupon.usedCount || 0) + 1
+
+  return {
+    payment,
+    modules: selected.map((a) => ({
+      code: a.code,
+      label: a.label,
+      price: period === 'year' ? a.yearlyPrice : a.monthlyPrice,
+    })),
+    amountTry: amount,
+    period,
+  }
+}
+
+export function activateModuleStorePayment(store, paymentId, { provider = 'manual', raw = {} } = {}) {
+  const b = seedBillingIfEmpty(store)
+  const payment = b.payments.find((p) => p.id === paymentId)
+  if (!payment) {
+    throw Object.assign(new Error('Ödeme bulunamadı'), { code: 'PAYMENT_NOT_FOUND', status: 404 })
+  }
+  if (payment.status === 'succeeded') {
+    return getSubscriptionSnapshot(store, payment.customerId)
+  }
+  if (payment.source !== 'module_store' && payment.planCode !== 'module_store') {
+    throw Object.assign(new Error('Bu ödeme modül mağazası kaydı değil'), {
+      code: 'NOT_MODULE_STORE',
+      status: 400,
+    })
+  }
+
+  const codes = Array.isArray(payment.moduleCodes) ? payment.moduleCodes : []
+  const period = payment.period || 'month'
+  const start = new Date()
+  const end = periodEndFrom(start, period)
+
+  let sub = b.subscriptions.find((s) => s.customerId === payment.customerId && !s.deletedAt)
+  if (!sub) {
+    const starter = getPlanByCode(store, 'starter')
+    sub = {
+      id: newId('sub'),
+      customerId: payment.customerId,
+      planId: starter?.id,
+      planCode: starter?.code || 'starter',
+      status: 'active',
+      period,
+      periodStart: start.toISOString(),
+      periodEnd: end.toISOString(),
+      addonModules: [],
+      createdAt: start.toISOString(),
+      updatedAt: start.toISOString(),
+    }
+    b.subscriptions.unshift(sub)
+  }
+
+  sub.addonModules = [...new Set([...(sub.addonModules || []), ...codes])]
+  sub.updatedAt = new Date().toISOString()
+  if (!['active', 'trialing', 'grace'].includes(sub.status)) {
+    sub.status = 'active'
+    sub.periodStart = start.toISOString()
+    sub.periodEnd = end.toISOString()
+  }
+
+  for (const code of codes) {
+    const addon = b.addons.find((a) => a.code === code)
+    const existing = b.subscriptionAddons.find(
+      (sa) => sa.customerId === payment.customerId && sa.code === code && sa.status === 'active',
+    )
+    if (existing) {
+      existing.periodEnd = end.toISOString()
+      existing.updatedAt = new Date().toISOString()
+      continue
+    }
+    b.subscriptionAddons.unshift({
+      id: newId('sa'),
+      customerId: payment.customerId,
+      subscriptionId: sub.id,
+      addonId: addon?.id || null,
+      code,
+      label: addon?.label || code,
+      status: 'active',
+      period,
+      periodStart: start.toISOString(),
+      periodEnd: end.toISOString(),
+      monthlyPrice: addon?.monthlyPrice || 0,
+      yearlyPrice: addon?.yearlyPrice || 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+  }
+
+  payment.status = 'succeeded'
+  payment.provider = provider
+  payment.paidAt = new Date().toISOString()
+  payment.raw = raw
+  payment.updatedAt = payment.paidAt
+
+  b.invoices.unshift({
+    id: newId('inv'),
+    number: `BM-M-${Date.now().toString().slice(-8)}`,
+    customerId: payment.customerId,
+    paymentId: payment.id,
+    amountTry: payment.amountTry,
+    currency: 'TRY',
+    issuedAt: new Date().toISOString(),
+    planCode: 'module_store',
+    period,
+    moduleCodes: codes,
+  })
+
+  const req = (store.paymentRequests || []).find((r) => r.id === payment.id)
+  if (req) req.status = 'approved'
+
+  pushHistory(b, {
+    customerId: payment.customerId,
+    subscriptionId: sub.id,
+    action: 'module_store_activate',
+    meta: { paymentId: payment.id, moduleCodes: codes, period },
+  })
+
+  rebuildLicense(store, payment.customerId, sub, codes)
+
+  for (const account of store.accounts || []) {
+    if (account.customerId === payment.customerId && account.role !== 'demo_lead') {
+      account.canLogin = true
+      account.paymentPending = false
+    }
+  }
+
+  return getSubscriptionSnapshot(store, payment.customerId)
 }
 
 function rebuildLicense(store, customerId, sub, extraModules = []) {
@@ -591,6 +910,9 @@ export function activateFromPayment(store, paymentId, { provider = 'manual', raw
     const err = new Error('Ödeme bulunamadı')
     err.code = 'PAYMENT_NOT_FOUND'
     throw err
+  }
+  if (payment.source === 'module_store' || payment.planCode === 'module_store') {
+    return activateModuleStorePayment(store, paymentId, { provider, raw })
   }
   if (payment.status === 'succeeded') {
     return getSubscriptionSnapshot(store, payment.customerId)
@@ -1040,10 +1362,20 @@ export function staffCreateAddon(store, body) {
   const row = {
     id: newId('addon'),
     code: body.code,
+    slug: body.slug || body.code,
     label: body.label || body.code,
+    description: body.description || '',
+    longDescription: body.longDescription || body.description || '',
+    category: body.category || 'management',
+    icon: body.icon || 'Box',
+    iconColor: body.iconColor || '#2563EB',
+    features: Array.isArray(body.features) ? body.features : [],
+    audience: body.audience || '',
     monthlyPrice: Number(body.monthlyPrice) || 0,
     yearlyPrice: Number(body.yearlyPrice) || 0,
     trialDays: Number(body.trialDays) || 0,
+    sortOrder: Number(body.sortOrder) || b.addons.length + 1,
+    storeVisible: body.storeVisible !== false,
     active: body.active !== false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

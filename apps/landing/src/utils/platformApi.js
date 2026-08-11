@@ -107,6 +107,16 @@ function safeAppPath(next) {
   return next
 }
 
+/** Website-local paths that should not SSO into the app shell. */
+function isWebsiteLocalPath(path) {
+  return (
+    path.startsWith('/paketler/') ||
+    path.startsWith('/fiyatlar') ||
+    path.startsWith('/register') ||
+    path.startsWith('/uye-ol')
+  )
+}
+
 export function redirectToAppWithToken(token) {
   if (!token) {
     console.warn('[bachmain] redirectToAppWithToken called without token')
@@ -115,6 +125,18 @@ export function redirectToAppWithToken(token) {
   }
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
   const path = safeAppPath(params.get('next'))
+
+  if (isWebsiteLocalPath(path)) {
+    try {
+      localStorage.setItem('bachmain_token', token)
+      localStorage.setItem('bachmain_access_token', token)
+    } catch {
+      /* ignore */
+    }
+    window.location.replace(path)
+    return
+  }
+
   const url = new URL(path, APP_URL)
   url.searchParams.set('authToken', token)
   // replace avoids bouncing back to /giris via browser history after SSO handoff

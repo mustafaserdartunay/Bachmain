@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown, Menu, X } from 'lucide-react'
+import {
+  Boxes,
+  ChevronDown,
+  LayoutGrid,
+  Menu,
+  Receipt,
+  Sparkles,
+  X,
+} from 'lucide-react'
 import Logo from './Logo'
 
 const nav = [
@@ -30,14 +38,44 @@ const nav = [
       { label: 'Mobilya', href: '/sektorler/mobilya' },
     ],
   },
-  { label: 'Fiyatlandırma', href: '/fiyatlar' },
+  {
+    label: 'Paketler',
+    rich: true,
+    items: [
+      {
+        label: 'Modüller',
+        href: '/paketler/moduller',
+        description: 'İhtiyacınız olan Bachmain modüllerini seçin.',
+        icon: 'modules',
+      },
+      {
+        label: 'E-Fatura Kontör',
+        href: '/paketler/e-fatura-kontor',
+        description: 'E-Fatura işlemleriniz için kontör satın alın.',
+        icon: 'efatura',
+      },
+      {
+        label: 'AI Kontör',
+        href: '/paketler/ai-kontor',
+        description: 'Yapay zeka işlemleriniz için AI kontörü satın alın.',
+        icon: 'ai',
+      },
+    ],
+  },
   { label: 'Referanslar', href: '/referanslar' },
   { label: 'Başarı Hikayeleri', href: '/basari-hikayeleri' },
   { label: 'Blog', href: '/blog' },
   { label: 'İletişim', href: '/iletisim' },
 ]
 
-function Dropdown({ label, items, href }) {
+function RichNavIcon({ type }) {
+  if (type === 'efatura') return <Receipt className="h-4 w-4 text-blue-600" aria-hidden />
+  if (type === 'ai') return <Sparkles className="h-4 w-4 text-amber-500" aria-hidden />
+  if (type === 'modules') return <LayoutGrid className="h-4 w-4 text-blue-600" aria-hidden />
+  return <Boxes className="h-4 w-4 text-blue-600" aria-hidden />
+}
+
+function Dropdown({ label, items, href, rich }) {
   const [open, setOpen] = useState(false)
   const closeTimer = useRef(null)
 
@@ -77,6 +115,8 @@ function Dropdown({ label, items, href }) {
         <button
           type="button"
           className="flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
         >
           {label}
           <ChevronDown
@@ -86,16 +126,43 @@ function Dropdown({ label, items, href }) {
       )}
       {open && items && (
         <div className="absolute left-0 top-full z-50 pt-2">
-          <div className="min-w-[200px] rounded-2xl border border-slate-100 bg-white/95 p-2 shadow-xl backdrop-blur">
-            {items.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="block rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-blue-50 hover:text-blue-700"
-              >
-                {item.label}
-              </Link>
-            ))}
+          <div
+            className={[
+              'rounded-2xl border border-slate-100 bg-white/95 p-2 shadow-xl backdrop-blur',
+              rich ? 'min-w-[320px]' : 'min-w-[200px]',
+            ].join(' ')}
+          >
+            {items.map((item) =>
+              rich ? (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className="flex items-start gap-3 rounded-xl px-3 py-3 transition hover:bg-blue-50"
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50">
+                    <RichNavIcon type={item.icon} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[13.5px] font-bold text-slate-800">{item.label}</span>
+                    {item.description ? (
+                      <span className="mt-0.5 block text-[12px] leading-snug text-slate-500">
+                        {item.description}
+                      </span>
+                    ) : null}
+                  </span>
+                </Link>
+              ) : (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className="block rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-blue-50 hover:text-blue-700"
+                  onClick={() => setOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
           </div>
         </div>
       )}
@@ -123,7 +190,13 @@ export default function Header() {
         <nav className="hidden items-center xl:flex">
           {nav.map((item) =>
             item.items ? (
-              <Dropdown key={item.label} label={item.label} items={item.items} href={item.href} />
+              <Dropdown
+                key={item.label}
+                label={item.label}
+                items={item.items}
+                href={item.href}
+                rich={item.rich}
+              />
             ) : (
               <Link
                 key={item.label}
@@ -143,8 +216,8 @@ export default function Header() {
           <Link to="/giris" className="nav-cta nav-cta-login">
             Giriş Yap
           </Link>
-          <Link to="/fiyatlar" className="nav-cta nav-cta-buy">
-            Paket Satın Al
+          <Link to="/paketler/moduller" className="nav-cta nav-cta-buy">
+            Modül Seç
           </Link>
         </div>
 
@@ -184,6 +257,11 @@ export default function Header() {
                         onClick={() => setMobileOpen(false)}
                       >
                         {sub.label}
+                        {sub.description ? (
+                          <span className="mt-0.5 block text-[11px] text-slate-400">
+                            {sub.description}
+                          </span>
+                        ) : null}
                       </Link>
                     ))}
                   </>
@@ -206,11 +284,11 @@ export default function Header() {
                 Giriş Yap
               </Link>
               <Link
-                to="/fiyatlar"
+                to="/paketler/moduller"
                 className="nav-cta nav-cta-buy flex-1"
                 onClick={() => setMobileOpen(false)}
               >
-                Paket Satın Al
+                Modül Seç
               </Link>
             </div>
           </div>

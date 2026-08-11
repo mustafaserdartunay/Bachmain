@@ -8,9 +8,12 @@ import { getStaffSession } from './staffAuth.mjs'
 import { insertPaymentEvent, getTenantCollection, hasDatabase } from './db.mjs'
 import {
   activateFromPayment,
+  activateModuleStorePayment,
   activatePlanDirect,
   createCheckout,
+  createModuleStoreCheckout,
   getCatalog,
+  getModuleStoreCatalog,
   getSubscriptionSnapshot,
   listBillingAdmin,
   seedBillingIfEmpty,
@@ -122,6 +125,134 @@ export async function handleBillingApi(req, res, path, body = {}) {
         ...getCatalog(store),
         bank: billingBankInfo(),
         iyzicoReady: Boolean(process.env.IYZICO_API_KEY && process.env.IYZICO_SECRET_KEY),
+      })
+    }
+
+    if (method === 'GET' && path === 'billing/module-store') {
+      const store = await loadStore()
+      let customerId = null
+      try {
+        const session = requireTenant(req, store)
+        customerId = session.user.customerId
+      } catch {
+        /* public catalog */
+      }
+      return sendJson(req, res, 200, {
+        ok: true,
+        ...getModuleStoreCatalog(store, { customerId }),
+      })
+    }
+
+    if (method === 'POST' && path === 'billing/module-store/checkout') {
+      const store = await loadStore()
+      const session = requireTenant(req, store)
+      const result = await withStore((s) =>
+        createModuleStoreCheckout(s, {
+          ...body,
+          customerId: session.user.customerId,
+          accountId: session.user.id,
+          email: session.user.email,
+          companyName: session.user.companyName,
+          phone: session.user.phone,
+        }),
+      )
+
+      const methodPay = String(body.method || 'havale').toLowerCase()
+      const bank = billingBankInfo()
+      const iyzicoReady = Boolean(process.env.IYZICO_API_KEY && process.env.IYZICO_SECRET_KEY)
+
+      if ((methodPay === 'card' || methodPay === 'stripe') && process.env.STRIPE_SECRET_KEY) {
+        try {
+          const params = new URLSearchParams()
+          params.set('mode', 'payment')
+          params.set(
+            'success_url',
+            body.successUrl || 'https://bachmain.com/paketler/moduller/odeme?paid=1',
+          )
+          params.set(
+            'cancel_url',
+            body.cancelUrl || 'https://bachmain.com/paketler/moduller/odeme?canceled=1',
+          )
+          params.set('client_reference_id', session.user.customerId || '')
+          params.set('customer_email', session.user.email || '')
+          params.set('metadata[customerId]', session.user.customerId || '')
+          params.set('metadata[paymentId]', result.payment.id)
+          params.set('metadata[source]', 'module_store')
+          params.set('metadata[moduleCodes]', (result.payment.moduleCodes || []).join(','))
+          const amount = Math.max(Number(result.amountTry) || 1, 1) * 100
+          params.set('line_items[0][price_data][currency]', 'try')
+          params.set('line_items[0][price_data][unit_amount]', String(amount))
+          params.set(
+            'line_items[0][price_data][product_data][name]',
+            `BACHMAIN Modül Mağazası (${(result.payment.moduleCodes || []).length} modül)`,
+          )
+          params.set('line_items[0][quantity]', '1')
+
+          const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString(),
+          })
+          const stripe = await stripeRes.json()
+          if (!stripeRes.ok) {
+            return sendJson(req, res, 502, {
+              error: 'STRIPE_ERROR',
+              message: stripe.error?.message || 'Stripe hatası',
+            })
+          }
+          await withStore((s) => {
+            const pay = s.billing.payments.find((p) => p.id === result.payment.id)
+            if (pay) {
+              pay.provider = 'stripe'
+              pay.providerSessionId = stripe.id
+              pay.status = 'processing'
+            }
+            return s
+          })
+          return sendJson(req, res, 200, {
+            ok: true,
+            provider: 'stripe',
+            url: stripe.url,
+            sessionId: stripe.id,
+            paymentId: result.payment.id,
+            amountTry: result.amountTry,
+            modules: result.modules,
+          })
+        } catch (error) {
+          return sendJson(req, res, 502, {
+            error: error.code || 'STRIPE_ERROR',
+            message: error.message,
+          })
+        }
+      }
+
+      return sendJson(req, res, 200, {
+        ok: true,
+        provider:
+          methodPay === 'card' || methodPay === 'iyzico'
+            ? iyzicoReady
+              ? 'iyzico'
+              : 'iyzico_pending'
+            : methodPay,
+        paymentId: result.payment.id,
+        status: result.payment.status,
+        amountTry: result.amountTry,
+        expectedAmountTry: result.amountTry,
+        modules: result.modules,
+        period: result.period,
+        iban: bank.iban,
+        bank,
+        iyzicoReady,
+        message:
+          methodPay === 'card' || methodPay === 'iyzico'
+            ? iyzicoReady
+              ? 'Kart ödemesi iyzico ile işlenecek.'
+              : 'Kredi kartı yakında aktif. Şimdilik havale/EFT ile ödeme talebiniz alındı.'
+            : 'Havale/EFT talebi alındı. Ödeme onaylandıktan sonra seçtiğiniz modüller hesabınızda aktifleşir.',
+        nextUrl: 'https://uygulama.bachmain.com/giris',
       })
     }
 
@@ -492,14 +623,21 @@ export async function handleBillingApi(req, res, path, body = {}) {
       const id = path.split('/')[3]
       let notify = null
       const snap = await withStore((s) => {
-        const result = activateFromPayment(s, id, { provider: 'staff_approve' })
+        const payPreview = s.billing?.payments?.find((p) => p.id === id)
+        const result =
+          payPreview?.source === 'module_store' || payPreview?.planCode === 'module_store'
+            ? activateModuleStorePayment(s, id, { provider: 'staff_approve' })
+            : activateFromPayment(s, id, { provider: 'staff_approve' })
         const pay = s.billing?.payments?.find((p) => p.id === id)
         const account = (s.accounts || []).find((a) => a.customerId === pay?.customerId)
         if (account && pay) {
           notify = {
             to: account.email,
             name: account.fullName,
-            planName: pay.planCode,
+            planName:
+              pay.source === 'module_store'
+                ? `Modül Mağazası (${(pay.moduleCodes || []).length} modül)`
+                : pay.planCode,
             amount: `₺${Number(pay.amountTry || 0).toLocaleString('tr-TR')}`,
             method: pay.method,
             reference: pay.id,

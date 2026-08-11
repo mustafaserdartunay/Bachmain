@@ -74,11 +74,20 @@ export default function ProductionJobCard({
 }) {
   const [activeLineIndex, setActiveLineIndex] = useState(0)
   const [activeRowId, setActiveRowId] = useState(null)
+  /** Firm expand shows product list first; process rail + journal open via row toggle. */
+  const [detailOpen, setDetailOpen] = useState(false)
   const [journalOpen, setJournalOpen] = useState(false)
   const prunedEmptyRowsRef = useRef(false)
   const [liveWorkflowStages, setLiveWorkflowStages] = useState(
     () => workflowStagesProp || loadWorkflowStages(),
   )
+
+  useEffect(() => {
+    setDetailOpen(false)
+    setJournalOpen(false)
+    setActiveLineIndex(0)
+    setActiveRowId(null)
+  }, [job?.id])
 
   useEffect(() => {
     setLiveWorkflowStages(workflowStagesProp || loadWorkflowStages())
@@ -150,6 +159,21 @@ export default function ProductionJobCard({
     })
   }, [job?.id, lineItems, lineItemActions])
 
+  function handleToggleRowDetail(lineId, rowId) {
+    const index = lineItems.findIndex((line) => line.id === lineId)
+    if (index >= 0) setActiveLineIndex(index)
+    if (rowId) setActiveRowId(rowId)
+
+    const isSameRow = rowId && activeRowId === rowId
+    if (detailOpen && isSameRow) {
+      setDetailOpen(false)
+      setJournalOpen(false)
+      return
+    }
+    setDetailOpen(true)
+    setJournalOpen(true)
+  }
+
   function handleStageClick(stageId) {
     if (!activeLine || activeLine.productionClosed) return
     if (!liveProductionStages.some((stage) => stage.id === stageId)) return
@@ -218,6 +242,8 @@ export default function ProductionJobCard({
             lineItems={lineItems}
             activeLineId={activeLine?.id}
             activeRowId={activeRowId}
+            detailOpen={detailOpen}
+            onToggleDetail={handleToggleRowDetail}
             onSelectLine={(lineId) => {
               const index = lineItems.findIndex((line) => line.id === lineId)
               if (index >= 0) setActiveLineIndex(index)
@@ -274,70 +300,74 @@ export default function ProductionJobCard({
         ) : null}
       </div>
 
-      {liveProductionStages.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-[var(--border,#E2E8F0)] px-4 py-6 text-center text-[13px] font-semibold text-[var(--muted,#64748B)]">
-          Henüz üretim süreci tanımlı değil. Ayarlar → Üretim Süreçleri panelinden ekleyin.
-        </p>
-      ) : (
-        <div className="overflow-visible rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent px-3 py-3">
-          <ProductionProcessCapsuleRail
-            steps={processSteps}
-            stagePhotos={stagePhotos}
-            readOnly={activeLine?.productionClosed === true}
-            onStageClick={handleStageClick}
-            onAddPhotos={handleAddPhotos}
-            onReplacePhoto={handleReplacePhoto}
-            onDeletePhoto={handleDeletePhoto}
-          />
-        </div>
-      )}
+      {detailOpen ? (
+        <>
+          {liveProductionStages.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-[var(--border,#E2E8F0)] px-4 py-6 text-center text-[13px] font-semibold text-[var(--muted,#64748B)]">
+              Henüz üretim süreci tanımlı değil. Ayarlar → Üretim Süreçleri panelinden ekleyin.
+            </p>
+          ) : (
+            <div className="overflow-visible rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent px-3 py-3">
+              <ProductionProcessCapsuleRail
+                steps={processSteps}
+                stagePhotos={stagePhotos}
+                readOnly={activeLine?.productionClosed === true}
+                onStageClick={handleStageClick}
+                onAddPhotos={handleAddPhotos}
+                onReplacePhoto={handleReplacePhoto}
+                onDeletePhoto={handleDeletePhoto}
+              />
+            </div>
+          )}
 
-      <div className="overflow-hidden rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent">
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation()
-            setJournalOpen((open) => !open)
-          }}
-          className="flex w-full items-center justify-between gap-2 bg-transparent px-3 py-2 text-left transition-colors hover:bg-[var(--ds-surface-muted)]/30"
-          aria-expanded={journalOpen}
-        >
-          <span className="text-[12px] font-bold uppercase tracking-wide text-[var(--muted,#64748B)]">
-            Süreç Günlüğü
-            {(job.activities || []).length > 0 ? (
-              <span className="ml-1.5 tabular-nums font-semibold text-[var(--muted)]/70">
-                ({(job.activities || []).length})
+          <div className="overflow-hidden rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation()
+                setJournalOpen((open) => !open)
+              }}
+              className="flex w-full items-center justify-between gap-2 bg-transparent px-3 py-2 text-left transition-colors hover:bg-[var(--ds-surface-muted)]/30"
+              aria-expanded={journalOpen}
+            >
+              <span className="text-[12px] font-bold uppercase tracking-wide text-[var(--muted,#64748B)]">
+                Süreç Günlüğü
+                {(job.activities || []).length > 0 ? (
+                  <span className="ml-1.5 tabular-nums font-semibold text-[var(--muted)]/70">
+                    ({(job.activities || []).length})
+                  </span>
+                ) : null}
               </span>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200 ${
+                  journalOpen ? 'rotate-180' : ''
+                }`}
+                strokeWidth={2.25}
+              />
+            </button>
+            {journalOpen ? (
+              <div className="border-t border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent px-3 py-3">
+                <ProductionActivityTimeline
+                  activities={job.activities || []}
+                  trash={job.activityTrash || []}
+                  onDelete={(ids) => {
+                    softDeleteProductionActivities(job.id, ids)
+                    onRefresh?.()
+                  }}
+                  onRestore={(ids) => {
+                    restoreProductionActivities(job.id, ids)
+                    onRefresh?.()
+                  }}
+                  onPurgeTrash={(ids) => {
+                    purgeProductionActivityTrash(job.id, ids)
+                    onRefresh?.()
+                  }}
+                />
+              </div>
             ) : null}
-          </span>
-          <ChevronDown
-            className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200 ${
-              journalOpen ? 'rotate-180' : ''
-            }`}
-            strokeWidth={2.25}
-          />
-        </button>
-        {journalOpen ? (
-          <div className="border-t border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent px-3 py-3">
-            <ProductionActivityTimeline
-              activities={job.activities || []}
-              trash={job.activityTrash || []}
-              onDelete={(ids) => {
-                softDeleteProductionActivities(job.id, ids)
-                onRefresh?.()
-              }}
-              onRestore={(ids) => {
-                restoreProductionActivities(job.id, ids)
-                onRefresh?.()
-              }}
-              onPurgeTrash={(ids) => {
-                purgeProductionActivityTrash(job.id, ids)
-                onRefresh?.()
-              }}
-            />
           </div>
-        ) : null}
-      </div>
+        </>
+      ) : null}
     </div>
   )
 }

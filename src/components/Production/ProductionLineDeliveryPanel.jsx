@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  ChevronDown,
   Package,
   Pencil,
   Plus,
@@ -39,7 +40,9 @@ function isEmptyPartialRow(row) {
 export default function ProductionLineDeliveryPanel({
   lineItems = [],
   activeLineId,
-  activeRowId: _activeRowId,
+  activeRowId,
+  detailOpen = false,
+  onToggleDetail,
   onSelectLine,
   onSelectRow,
   productionJobId,
@@ -161,7 +164,7 @@ export default function ProductionLineDeliveryPanel({
 
   return (
     <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent">
-      <table className="w-full min-w-[52rem] border-collapse text-left">
+      <table className="w-full min-w-[54rem] border-collapse text-left">
         <thead className="bg-transparent">
           <tr>
             <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[12rem]`}>ÜRÜN AÇIKLAMASI</th>
@@ -170,6 +173,10 @@ export default function ProductionLineDeliveryPanel({
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>ÜRETİM ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>TESLİMAT ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DURUM</th>
+            <th
+              className={`${PAGE_TABLE_HEADER_CLASS} w-10 whitespace-nowrap text-center`}
+              aria-label="Süreç detayını aç"
+            />
             <th
               className={`${PAGE_TABLE_HEADER_CLASS} w-14 whitespace-nowrap text-center`}
               aria-label="Kısmi teslimat ekle"
@@ -199,6 +206,7 @@ export default function ProductionLineDeliveryPanel({
               fulfillmentOptions.some((option) => option.label === row.fulfillmentStatus)
                 ? row.fulfillmentStatus
                 : fulfillmentOptions[0]?.label || row.fulfillmentStatus || ''
+            const rowDetailExpanded = detailOpen && activeRowId === row.id
 
             return (
               <tr
@@ -258,7 +266,7 @@ export default function ProductionLineDeliveryPanel({
                       })
                     }
                     readOnly={columnsLocked || line.productionClosed}
-                    className="!h-8 !min-h-8 w-16 py-0 text-[12px] font-bold tabular-nums"
+                    className="!h-8 !min-h-8 w-24 py-0 text-[12px] font-bold tabular-nums"
                   />
                 </td>
 
@@ -300,6 +308,31 @@ export default function ProductionLineDeliveryPanel({
                       })
                     }
                   />
+                </td>
+
+                <td
+                  className="h-[var(--ds-row-h,2.75rem)] w-10 px-1 text-center align-middle"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div className="inline-flex h-[var(--ds-control-h,3rem)] w-8 items-center justify-center">
+                    <button
+                      type="button"
+                      className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
+                      aria-label={
+                        rowDetailExpanded ? 'Süreç detayını kapat' : 'Süreç detayını aç'
+                      }
+                      aria-expanded={rowDetailExpanded}
+                      title={rowDetailExpanded ? 'Süreç detayını kapat' : 'Süreç detayını aç'}
+                      onClick={() => onToggleDetail?.(line.id, row.id)}
+                    >
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform duration-200 ${
+                          rowDetailExpanded ? 'rotate-180' : ''
+                        }`}
+                        strokeWidth={2.25}
+                      />
+                    </button>
+                  </div>
                 </td>
 
                 <td

@@ -256,6 +256,15 @@ export function BillingPlansPage() {
 export function BillingModulesPage() {
   const [addons, setAddons] = useState<AddonRow[]>([])
   const [error, setError] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [draft, setDraft] = useState({
+    code: '',
+    label: '',
+    category: 'management',
+    monthlyPrice: 199,
+    yearlyPrice: 1990,
+    description: '',
+  })
 
   const load = useCallback(async () => {
     try {
@@ -276,36 +285,149 @@ export function BillingModulesPage() {
     await load()
   }
 
-  async function savePrice(addon: AddonRow, field: 'monthlyPrice' | 'yearlyPrice' | 'trialDays', value: number) {
+  async function toggleStore(addon: AddonRow) {
+    await billingAdminApi.updateAddon(addon.id, { storeVisible: addon.storeVisible === false })
+    await load()
+  }
+
+  async function saveField(
+    addon: AddonRow,
+    field: keyof AddonRow,
+    value: string | number | boolean | string[],
+  ) {
     await billingAdminApi.updateAddon(addon.id, { [field]: value })
     await load()
   }
 
+  async function createAddon() {
+    if (!draft.code.trim() || !draft.label.trim()) return
+    setCreating(true)
+    try {
+      await billingAdminApi.createAddon({
+        ...draft,
+        code: draft.code.trim(),
+        label: draft.label.trim(),
+        storeVisible: true,
+        active: true,
+        features: [],
+      })
+      setDraft({
+        code: '',
+        label: '',
+        category: 'management',
+        monthlyPrice: 199,
+        yearlyPrice: 1990,
+        description: '',
+      })
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Oluşturulamadı')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   return (
     <div className="space-y-6 p-6">
-      <PageHeader title="Modüller (Add-on)" subtitle="Tek tek aç/kapa; aylık-yıllık fiyat ve deneme süresi." />
+      <PageHeader
+        title="Modüller (Add-on / Mağaza)"
+        subtitle="Modül Mağazası fiyat, kategori, açıklama ve görünürlük yönetimi. Değişiklikler bachmain.com/paketler/moduller sayfasına yansır."
+      />
       {error ? <ErrorState title="Hata" description={error} onRetry={load} /> : null}
+
+      <Card className="space-y-3 p-4">
+        <p className="text-sm font-semibold">Yeni modül ekle</p>
+        <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-6">
+          <input
+            className="rounded border border-border px-2 py-1.5 text-sm"
+            placeholder="kod (crm_pro)"
+            value={draft.code}
+            onChange={(e) => setDraft((d) => ({ ...d, code: e.target.value }))}
+          />
+          <input
+            className="rounded border border-border px-2 py-1.5 text-sm"
+            placeholder="Ad"
+            value={draft.label}
+            onChange={(e) => setDraft((d) => ({ ...d, label: e.target.value }))}
+          />
+          <input
+            className="rounded border border-border px-2 py-1.5 text-sm"
+            placeholder="Kategori"
+            value={draft.category}
+            onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
+          />
+          <input
+            type="number"
+            className="rounded border border-border px-2 py-1.5 text-sm"
+            placeholder="Aylık"
+            value={draft.monthlyPrice}
+            onChange={(e) => setDraft((d) => ({ ...d, monthlyPrice: Number(e.target.value) }))}
+          />
+          <input
+            type="number"
+            className="rounded border border-border px-2 py-1.5 text-sm"
+            placeholder="Yıllık"
+            value={draft.yearlyPrice}
+            onChange={(e) => setDraft((d) => ({ ...d, yearlyPrice: Number(e.target.value) }))}
+          />
+          <button
+            type="button"
+            disabled={creating}
+            onClick={createAddon}
+            className="rounded-lg bg-bach-blue px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {creating ? 'Ekleniyor…' : 'Ekle'}
+          </button>
+        </div>
+        <input
+          className="w-full rounded border border-border px-2 py-1.5 text-sm"
+          placeholder="Kısa açıklama"
+          value={draft.description}
+          onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+        />
+      </Card>
+
       <div className="overflow-auto rounded-xl border border-border">
         <table className="min-w-full text-sm">
           <thead className="bg-surface-elevated text-left text-text-muted">
             <tr>
               <th className="px-3 py-2">Modül</th>
+              <th className="px-3 py-2">Kategori</th>
+              <th className="px-3 py-2">Açıklama</th>
               <th className="px-3 py-2">Aylık</th>
               <th className="px-3 py-2">Yıllık</th>
-              <th className="px-3 py-2">Deneme (gün)</th>
+              <th className="px-3 py-2">Sıra</th>
+              <th className="px-3 py-2">Mağaza</th>
               <th className="px-3 py-2">Durum</th>
             </tr>
           </thead>
           <tbody>
             {addons.map((a) => (
-              <tr key={a.id} className="border-t border-border">
-                <td className="px-3 py-2 font-medium">{a.label}</td>
+              <tr key={a.id} className="border-t border-border align-top">
+                <td className="px-3 py-2">
+                  <div className="font-medium">{a.label}</div>
+                  <div className="text-xs text-text-subtle">{a.code}</div>
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    className="w-28 rounded border border-border px-2 py-1"
+                    defaultValue={a.category || ''}
+                    onBlur={(e) => saveField(a, 'category', e.target.value)}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <textarea
+                    className="min-h-[56px] w-48 rounded border border-border px-2 py-1 text-xs"
+                    defaultValue={a.description || ''}
+                    onBlur={(e) => saveField(a, 'description', e.target.value)}
+                  />
+                </td>
                 <td className="px-3 py-2">
                   <input
                     type="number"
                     className="w-24 rounded border border-border px-2 py-1"
                     defaultValue={a.monthlyPrice}
-                    onBlur={(e) => savePrice(a, 'monthlyPrice', Number(e.target.value))}
+                    onBlur={(e) => saveField(a, 'monthlyPrice', Number(e.target.value))}
                   />
                 </td>
                 <td className="px-3 py-2">
@@ -313,16 +435,21 @@ export function BillingModulesPage() {
                     type="number"
                     className="w-28 rounded border border-border px-2 py-1"
                     defaultValue={a.yearlyPrice}
-                    onBlur={(e) => savePrice(a, 'yearlyPrice', Number(e.target.value))}
+                    onBlur={(e) => saveField(a, 'yearlyPrice', Number(e.target.value))}
                   />
                 </td>
                 <td className="px-3 py-2">
                   <input
                     type="number"
-                    className="w-20 rounded border border-border px-2 py-1"
-                    defaultValue={a.trialDays}
-                    onBlur={(e) => savePrice(a, 'trialDays', Number(e.target.value))}
+                    className="w-16 rounded border border-border px-2 py-1"
+                    defaultValue={a.sortOrder ?? 0}
+                    onBlur={(e) => saveField(a, 'sortOrder', Number(e.target.value))}
                   />
+                </td>
+                <td className="px-3 py-2">
+                  <button type="button" className="text-bach-blue font-semibold" onClick={() => toggleStore(a)}>
+                    {a.storeVisible === false ? 'Gizli' : 'Görünür'}
+                  </button>
                 </td>
                 <td className="px-3 py-2">
                   <button type="button" className="text-bach-blue font-semibold" onClick={() => toggle(a)}>

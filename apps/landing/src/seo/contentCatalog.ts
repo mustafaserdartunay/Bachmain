@@ -1431,6 +1431,51 @@ export const SEO_CONTENT: Record<string, PageSeo> = {
     breadcrumbs: crumbs({ name: 'Fiyatlar', path: '/fiyatlar' }),
   },
 
+  '/paketler/moduller': {
+    path: '/paketler/moduller',
+    title: 'Modül Mağazası | İhtiyacın Olan Modülü Seç',
+    description:
+      'Bachmain Modül Mağazası: CRM, üretim, depo, lojistik, B2B, İK ve daha fazlasını tek tek seçin. Sadece kullandığınız kadar ödeyin — Tüm Süreçler Tek Platformda.',
+    ogTitle: 'Modül Mağazası — İhtiyacın Olanı Seç',
+    ogDescription:
+      'Bachmain modüllerini tek tek seçin, sepete ekleyin ve işletmenizi ihtiyaçlarınıza göre şekillendirin.',
+    twitterTitle: 'Modül Mağazası | BACHMAIN',
+    twitterDescription: 'İhtiyacın olanı seç, sadece kullandığın kadar öde.',
+    h1: 'İhtiyacın Olan Modülü Seç.',
+    h2: ['Modül kataloğu', 'Esnek sepet', 'Şeffaf fiyatlandırma'],
+    h3: ['CRM & Satış', 'Üretim & Depo', 'Finans & Entegrasyon'],
+    schemaType: 'SoftwareApplication',
+    focusKeyword: 'modül mağazası',
+    secondaryKeywords: ['CRM modülü satın al', 'ERP modül fiyatı', 'Bachmain paketler'],
+    aiSearchDescription:
+      'BACHMAIN Modül Mağazası, kullanıcıların CRM, üretim, depo, lojistik, B2B ve diğer SaaS modüllerini tek tek seçip satın alabildiği e-ticaret tarzı bir mağazadır. E-Fatura ve AI kontör ayrı sayfalarda satılır.',
+    intro:
+      'Tek paket zorlaması yok. İhtiyacınız olan Bachmain modüllerini seçin, sepete ekleyin ve hemen kullanmaya başlayın.',
+    sections: [
+      {
+        h2: 'Modül kataloğu',
+        body: 'CRM’den üretime, depodan B2B’ye kadar tüm satılabilir modüller tek mağazada.',
+      },
+      {
+        h2: 'Esnek sepet',
+        body: 'İstediğiniz kadar farklı modül ekleyin; toplam anında güncellenir.',
+      },
+      {
+        h2: 'Şeffaf fiyatlandırma',
+        body: 'Aylık veya yıllık seçin. Yıllıkta avantajlı fiyat. Fiyatlar yönetim panelinden güncellenir.',
+      },
+    ],
+    relatedPaths: [
+      link('Fiyatlar', '/fiyatlar'),
+      link('Demo', '/demo'),
+      link('İletişim', '/iletisim'),
+    ],
+    breadcrumbs: crumbs(
+      { name: 'Paketler', path: '/paketler/moduller' },
+      { name: 'Modüller', path: '/paketler/moduller' },
+    ),
+  },
+
   '/demo': {
     path: '/demo',
     title: 'Demo Talep Et | Ücretsiz Canlı Tanıtım',
