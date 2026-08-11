@@ -147,11 +147,6 @@ export default function ProductionJobCard({
     lineItemActions?.handleQuantityRowStageChange(activeLine, row.id, stageId)
   }
 
-  function handlePhotosChange(photos) {
-    if (!activeLine) return
-    lineItemActions?.handleStagePhotosChange(activeLine, photos)
-  }
-
   return (
     <article className="overflow-hidden rounded-[22px] border border-[var(--border,#E2E8F0)] bg-white shadow-[0_8px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:bg-white/5">
       <div className="relative px-4 py-4 sm:px-5">
@@ -350,10 +345,9 @@ export default function ProductionJobCard({
             stagePhotos={activeLine?.stagePhotos || []}
             readOnly={activeLine?.productionClosed === true}
             onStageClick={handleStageClick}
-            onPhotosChange={handlePhotosChange}
             showEditLink
-            showPhotoStrip
-            showActiveGallery
+            showPhotoStrip={false}
+            showActiveGallery={false}
           />
 
           {(job.activities || []).length > 0 ? (
