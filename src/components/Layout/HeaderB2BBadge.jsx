@@ -16,6 +16,7 @@ const MESSAGES_KEY = 'erlenbox-b2b-messages'
 const NOTIFICATIONS_KEY = 'erlenbox-b2b-notifications'
 const ACCESS_KEY = 'erlenbox-b2b-access'
 const READ_KEY = 'bach:header-b2b-read-v1'
+const SAMPLE_ORDER_ID = 'b2b-header-sample-order'
 
 function readB2bMessages() {
   try {
@@ -86,6 +87,22 @@ function readStaffInbox() {
 
 function writeStaffInbox(items) {
   localStorage.setItem(STAFF_INBOX_KEY, JSON.stringify(items.slice(0, 80)))
+}
+
+/** Örnek sipariş bildirimi — gerçek B2B akışı yokken paneli göstermek için. */
+function ensureSampleOrderNotification() {
+  const inbox = readStaffInbox()
+  if (inbox.some((item) => item.id === SAMPLE_ORDER_ID)) return
+  inbox.unshift({
+    id: SAMPLE_ORDER_ID,
+    type: 'b2b_order',
+    title: 'Yeni B2B sipariş · SIP-DEMO-001',
+    subtitle: 'Wagon Ambalaj · 24.500 ₺ · Havale',
+    customerName: 'Wagon Ambalaj',
+    link: '/siparisler',
+    at: new Date().toISOString(),
+  })
+  writeStaffInbox(inbox)
 }
 
 function loadReadMap() {
@@ -301,6 +318,7 @@ export default function HeaderB2BBadge() {
   }, [])
 
   useEffect(() => {
+    ensureSampleOrderNotification()
     refresh()
 
     function onStaffNotify(event) {
@@ -395,7 +413,7 @@ export default function HeaderB2BBadge() {
         title="B2B Müşteri Bildirimleri"
       >
         <span className="icon-wrap">
-          <span className="select-none text-[10px] font-black leading-none tracking-tight text-[var(--ink)]">
+          <span className="header-b2b-label select-none text-[10px] font-black leading-none tracking-tight">
             B2B
           </span>
         </span>
