@@ -475,6 +475,7 @@ export function createProductionLineItemActions({
         customerName: job.customer || '',
         date: new Date().toISOString().slice(0, 10),
         notes: `${row.productionCode || job.id} · ${lineItem.product || 'Ürün'} · kısmi teslimat`,
+        enforceStock: false,
         items: [{
           productId: '',
           productName: lineItem.product || 'Ürün',
