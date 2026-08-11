@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { Building2, ClipboardList, FileText, MessageSquare, ShoppingCart } from 'lucide-react'
+import { ClipboardList, CreditCard, Factory, FileText, MessageSquare, ShoppingCart } from 'lucide-react'
 import {
   getB2bTicketNotifications,
   readAllB2bOrders,
@@ -13,6 +13,8 @@ import { useHeaderPopover } from '../../hooks/useHeaderPopover'
 
 const STAFF_INBOX_KEY = 'erlenbox-b2b-staff-inbox'
 const MESSAGES_KEY = 'erlenbox-b2b-messages'
+const NOTIFICATIONS_KEY = 'erlenbox-b2b-notifications'
+const ACCESS_KEY = 'erlenbox-b2b-access'
 const READ_KEY = 'bach:header-b2b-read-v1'
 
 function readB2bMessages() {
@@ -22,6 +24,55 @@ function readB2bMessages() {
   } catch {
     return []
   }
+}
+
+function readPortalNotifications() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]')
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function resolveCustomerName(customerId, fallback = '') {
+  if (!customerId) return fallback
+  try {
+    const access = JSON.parse(localStorage.getItem(ACCESS_KEY) || '{}')
+    const entry = access[customerId]
+    if (entry?.customerName) return entry.customerName
+    if (entry?.name) return entry.name
+  } catch {
+    /* ignore */
+  }
+  return fallback
+}
+
+function portalNotificationKind(type = '') {
+  const value = String(type).toLowerCase()
+  if (value.includes('message')) return 'message'
+  if (value.includes('quote')) return 'quote'
+  if (value.includes('order')) return 'order'
+  if (value.includes('payment') || value.includes('invoice')) return 'payment'
+  if (
+    value.includes('production') ||
+    value.includes('shipment') ||
+    value.includes('process') ||
+    value.includes('uretim') ||
+    value.includes('sevkiyat')
+  ) {
+    return 'process'
+  }
+  return 'other'
+}
+
+function portalNotificationLink(item) {
+  const view = item?.linkView
+  if (view === 'quotes') return '/teklifler'
+  if (view === 'process' || view === 'production') return '/uretim'
+  if (view === 'invoices' || view === 'payments' || view === 'payment-plan') return '/finans'
+  if (view === 'messages') return '/yonetici-kontrol'
+  return '/yonetici-kontrol'
 }
 
 function readStaffInbox() {
@@ -77,6 +128,12 @@ function kindMeta(kind) {
   }
   if (kind === 'order') {
     return { icon: ShoppingCart, tone: 'text-emerald-500 bg-emerald-500/10' }
+  }
+  if (kind === 'payment') {
+    return { icon: CreditCard, tone: 'text-amber-600 bg-amber-500/10' }
+  }
+  if (kind === 'process') {
+    return { icon: Factory, tone: 'text-blue-600 bg-blue-500/10' }
   }
   return { icon: ClipboardList, tone: 'text-[var(--ds-primary,#203375)] bg-[var(--ds-primary,#203375)]/10' }
 }
@@ -139,11 +196,18 @@ function collectB2bStaffNotifications() {
     })
     .slice(0, 20)
     .forEach((order) => {
+      const paymentNote = order.paymentPlan?.label || order.paymentMethod || ''
       push({
         id: `order-${order.id}`,
         kind: 'order',
         title: `Yeni sipariş · ${order.id}`,
-        subtitle: `${order.customerName || 'Müşteri'} · ${Number(order.total || 0).toLocaleString('tr-TR')} ₺`,
+        subtitle: [
+          order.customerName || 'Müşteri',
+          `${Number(order.total || 0).toLocaleString('tr-TR')} ₺`,
+          paymentNote,
+        ]
+          .filter(Boolean)
+          .join(' · '),
         customerName: order.customerName || '',
         link: '/siparisler',
         sortAt: order.createdAt || '',
@@ -173,6 +237,20 @@ function collectB2bStaffNotifications() {
     /* ignore */
   }
 
+  readPortalNotifications()
+    .slice(0, 40)
+    .forEach((note) => {
+      push({
+        id: `portal-${note.id}`,
+        kind: portalNotificationKind(note.type),
+        title: note.title || 'B2B portal bildirimi',
+        subtitle: note.body || '',
+        customerName: resolveCustomerName(note.customerId),
+        link: portalNotificationLink(note),
+        sortAt: note.createdAt || '',
+      })
+    })
+
   readStaffInbox().forEach((event) => {
     push({
       id: event.id,
@@ -183,7 +261,11 @@ function collectB2bStaffNotifications() {
             ? 'quote'
             : event.type === 'b2b_order'
               ? 'order'
-              : 'other',
+              : event.type === 'b2b_payment'
+                ? 'payment'
+                : event.type === 'b2b_process'
+                  ? 'process'
+                  : 'other',
       title: event.title || 'B2B bildirimi',
       subtitle: event.subtitle || '',
       customerName: event.customerName || '',
@@ -236,15 +318,23 @@ export default function HeaderB2BBadge() {
                 ? 'Yeni B2B sipariş'
                 : detail.type === 'b2b_ticket'
                   ? 'Yeni B2B canlı not'
-                  : 'B2B bildirimi',
-        subtitle: detail.message || detail.customerName || detail.orderId || detail.quoteId || '',
+                  : detail.type === 'b2b_payment'
+                    ? 'B2B ödeme bildirimi'
+                    : detail.type === 'b2b_process'
+                      ? 'B2B süreç güncellemesi'
+                      : 'B2B bildirimi',
+        subtitle: detail.message || detail.body || detail.customerName || detail.orderId || detail.quoteId || '',
         customerName: detail.customerName || '',
         link:
           detail.type === 'b2b_order'
             ? '/siparisler'
             : detail.type === 'b2b_quote'
               ? '/teklifler'
-              : '/yonetici-kontrol',
+              : detail.type === 'b2b_payment'
+                ? '/finans'
+                : detail.type === 'b2b_process'
+                  ? '/uretim'
+                  : '/yonetici-kontrol',
         at: new Date().toISOString(),
       })
       writeStaffInbox(inbox)
@@ -299,12 +389,13 @@ export default function HeaderB2BBadge() {
         data-header-popover-trigger="b2b-center"
         onClick={toggle}
         className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only relative`}
-        aria-label="B2B Bildirimleri"
+        aria-label={
+          count > 0 ? `B2B Bildirimleri · ${count} okunmamış` : 'B2B Bildirimleri'
+        }
         title="B2B Müşteri Bildirimleri"
       >
-        <span className="icon-wrap relative">
-          <Building2 className="h-4 w-4 shrink-0" />
-          <span className="pointer-events-none absolute -bottom-1 -right-1 rounded-[3px] bg-[var(--ds-primary,#203375)] px-[3px] py-px text-[6px] font-black leading-none tracking-tight text-white">
+        <span className="icon-wrap">
+          <span className="select-none text-[10px] font-black leading-none tracking-tight text-[var(--ink)]">
             B2B
           </span>
         </span>

@@ -352,6 +352,17 @@ export function updateB2bOrderStage(orderId, processStage, extra = {}) {
   ]
   orders[index] = { ...orders[index], processStage, status: extra.status || orders[index].status, timeline }
   writeJson(ORDERS_KEY, orders)
+  window.dispatchEvent(
+    new CustomEvent('bach:b2b-staff-notify', {
+      detail: {
+        type: 'b2b_process',
+        customerId: orders[index].customerId,
+        customerName: orders[index].customerName,
+        orderId: orders[index].id,
+        message: extra.note || `Süreç: ${processStage}`,
+      },
+    }),
+  )
   return orders[index]
 }
 
