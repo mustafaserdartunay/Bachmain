@@ -230,7 +230,7 @@ export default function ProductionJobCard({
   }
 
   return (
-    <div className="mt-3 space-y-5 rounded-ds-lg border border-[var(--glass-border,var(--ds-border))] bg-transparent p-5 sm:p-6">
+    <div className="mt-3 space-y-5 rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent p-5 sm:p-6">
       <div className="relative" onClick={(event) => event.stopPropagation()}>
         <ProductionLineDeliveryPanel
           lineItems={lineItems}
@@ -294,7 +294,7 @@ export default function ProductionJobCard({
           Henüz üretim süreci tanımlı değil. Ayarlar → Üretim Süreçleri panelinden ekleyin.
         </p>
       ) : (
-        <div className="overflow-visible rounded-ds-lg border border-[var(--glass-border,var(--ds-border))] bg-transparent px-3 py-3">
+        <div className="overflow-visible rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent px-3 py-3">
           <ProductionProcessCapsuleRail
             steps={processSteps}
             stagePhotos={stagePhotos}
@@ -307,7 +307,7 @@ export default function ProductionJobCard({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-ds-lg border border-[var(--glass-border,var(--ds-border))] bg-transparent">
+      <div className="overflow-hidden rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent">
         <button
           type="button"
           onClick={(event) => {
@@ -333,7 +333,7 @@ export default function ProductionJobCard({
           />
         </button>
         {journalOpen ? (
-          <div className="border-t border-[var(--glass-border,var(--ds-border))] bg-transparent px-3 py-3">
+          <div className="border-t border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent px-3 py-3">
             <ProductionActivityTimeline activities={job.activities || []} />
           </div>
         ) : null}

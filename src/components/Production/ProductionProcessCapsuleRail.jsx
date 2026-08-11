@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { ImagePlus, Pencil, Trash2 } from 'lucide-react'
 import {
   COP_KUTUSU_BUTTON_CLASS,
@@ -49,6 +49,7 @@ export default function ProductionProcessCapsuleRail({
 }) {
   const addRefs = useRef({})
   const replaceRefs = useRef({})
+  const [hoveredPhotoId, setHoveredPhotoId] = useState(null)
 
   if (!steps.length) {
     return (
@@ -159,24 +160,37 @@ export default function ProductionProcessCapsuleRail({
               <div className="relative z-[1] mt-2 flex w-full flex-col items-center gap-1.5">
                 {photos.length > 0 ? (
                   <div className="flex w-full flex-col items-center gap-1.5">
-                    {photos.slice(0, 3).map((photo) => (
+                    {photos.slice(0, 3).map((photo) => {
+                      const actionsOpen = hoveredPhotoId === photo.id
+                      return (
                       <div
                         key={photo.id}
-                        className="group/photo relative mx-auto flex h-14 w-[7.5rem] items-center justify-center"
+                        className="relative mx-auto flex h-14 w-[7.5rem] items-center justify-center"
+                        onMouseEnter={() => setHoveredPhotoId(photo.id)}
+                        onMouseLeave={() => setHoveredPhotoId(null)}
                       >
                         {!readOnly && canEditPhoto ? (
-                          <button
-                            type="button"
-                            className={`${KALEM_BUTTON_CLASS} pointer-events-none absolute left-0 top-1/2 z-[2] -translate-y-1/2 opacity-0 shadow-sm transition-opacity duration-150 group-hover/photo:pointer-events-auto group-hover/photo:opacity-100 group-focus-within/photo:pointer-events-auto group-focus-within/photo:opacity-100`}
-                            title="Fotoğrafı düzenle"
-                            aria-label="Fotoğrafı düzenle"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              replaceRefs.current[photo.id]?.click()
-                            }}
+                          <span
+                            className={`absolute left-0 top-1/2 z-[2] -translate-y-1/2 transition-opacity duration-150 ${
+                              actionsOpen
+                                ? 'pointer-events-auto opacity-100'
+                                : 'pointer-events-none opacity-0'
+                            }`}
                           >
-                            <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
-                          </button>
+                            <button
+                              type="button"
+                              className={KALEM_BUTTON_CLASS}
+                              title="Fotoğrafı düzenle"
+                              aria-label="Fotoğrafı düzenle"
+                              tabIndex={actionsOpen ? 0 : -1}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                replaceRefs.current[photo.id]?.click()
+                              }}
+                            >
+                              <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
+                            </button>
+                          </span>
                         ) : null}
 
                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[var(--ds-surface-muted,#F8FAFC)] ring-1 ring-[var(--border,#E2E8F0)] shadow-sm">
@@ -188,18 +202,27 @@ export default function ProductionProcessCapsuleRail({
                         </div>
 
                         {!readOnly && canDeletePhoto ? (
-                          <button
-                            type="button"
-                            className={`${COP_KUTUSU_BUTTON_CLASS} pointer-events-none absolute right-0 top-1/2 z-[2] -translate-y-1/2 opacity-0 shadow-sm transition-opacity duration-150 group-hover/photo:pointer-events-auto group-hover/photo:opacity-100 group-focus-within/photo:pointer-events-auto group-focus-within/photo:opacity-100`}
-                            title="Fotoğrafı sil"
-                            aria-label="Fotoğrafı sil"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              onDeletePhoto?.(photo)
-                            }}
+                          <span
+                            className={`absolute right-0 top-1/2 z-[2] -translate-y-1/2 transition-opacity duration-150 ${
+                              actionsOpen
+                                ? 'pointer-events-auto opacity-100'
+                                : 'pointer-events-none opacity-0'
+                            }`}
                           >
-                            <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
-                          </button>
+                            <button
+                              type="button"
+                              className={COP_KUTUSU_BUTTON_CLASS}
+                              title="Fotoğrafı sil"
+                              aria-label="Fotoğrafı sil"
+                              tabIndex={actionsOpen ? 0 : -1}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                onDeletePhoto?.(photo)
+                              }}
+                            >
+                              <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+                            </button>
+                          </span>
                         ) : null}
 
                         <input
@@ -217,7 +240,8 @@ export default function ProductionProcessCapsuleRail({
                           }}
                         />
                       </div>
-                    ))}
+                      )
+                    })}
                     {photos.length > 3 ? (
                       <span className="text-[10px] font-bold tabular-nums text-[var(--muted,#64748B)]">
                         +{photos.length - 3}

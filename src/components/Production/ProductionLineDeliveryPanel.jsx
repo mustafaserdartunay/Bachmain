@@ -164,7 +164,7 @@ export default function ProductionLineDeliveryPanel({
   }
 
   return (
-    <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-[var(--glass-border,var(--ds-border))] bg-transparent">
+    <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent">
       <table className="w-full min-w-[52rem] border-collapse text-left">
         <thead className="bg-transparent">
           <tr>
