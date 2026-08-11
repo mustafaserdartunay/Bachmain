@@ -264,7 +264,7 @@ export default function ProductionPage() {
         ]}
       />
 
-      <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
+      <AppPagePanel className="customer-filter-panel flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] w-full items-center">
         <ProductionFilterBar
           searchQuery={searchQuery}
           onSearchChange={(event) => setSearchQuery(event.target.value)}
