@@ -1,0 +1,148 @@
+import type { GlossaryTerm } from './types'
+
+export const GLOSSARY: GlossaryTerm[] = [
+  {
+    term: 'Cari',
+    slug: 'cari',
+    definition: 'Müşteri veya tedarikçi hesap kartı; bakiye ve hareketlerin izlendiği kayıttır.',
+    relatedGuide: 'cari-hesap',
+    relatedModule: '/cari',
+  },
+  {
+    term: 'Tahsilat',
+    slug: 'tahsilat',
+    definition: 'Alacakların nakit, kart veya havale ile tahsil edilmesidir.',
+    relatedGuide: 'finans',
+    relatedModule: '/finans',
+  },
+  {
+    term: 'MRP',
+    slug: 'mrp',
+    definition: 'Malzeme ihtiyaç planlaması; üretim için gereken malzemeyi zamanlar.',
+    relatedGuide: 'uretim',
+    relatedModule: '/uretim',
+  },
+  {
+    term: 'ERP',
+    slug: 'erp',
+    definition: 'Kurumsal kaynak planlama yazılımı / yaklaşımı.',
+    relatedGuide: 'erp',
+    relatedModule: '/erp',
+  },
+  {
+    term: 'CRM',
+    slug: 'crm',
+    definition: 'Müşteri ilişkileri yönetimi.',
+    relatedGuide: 'crm',
+    relatedModule: '/crm',
+  },
+  {
+    term: 'SKU',
+    slug: 'sku',
+    definition: 'Stok tutma birimi; ürün/varyant kodu.',
+    relatedGuide: 'stok',
+    relatedModule: '/stok',
+  },
+  {
+    term: 'Barkod',
+    slug: 'barkod',
+    definition: 'Ürünü hızlı tanımak için kullanılan kod.',
+    relatedGuide: 'stok',
+    relatedModule: '/stok',
+  },
+  {
+    term: 'Palet',
+    slug: 'palet',
+    definition: 'Depo ve sevkiyatta taşıma birimi.',
+    relatedGuide: 'depo',
+    relatedModule: '/depo',
+  },
+  {
+    term: 'İrsaliye',
+    slug: 'irsaliye',
+    definition: 'Mal hareketini belgeleyen sevk belgesi.',
+    relatedGuide: 'lojistik',
+    relatedModule: '/lojistik',
+  },
+  {
+    term: 'Lead',
+    slug: 'lead',
+    definition: 'Potansiyel müşteri kaydı.',
+    relatedGuide: 'crm',
+    relatedModule: '/crm',
+  },
+  {
+    term: 'Pipeline',
+    slug: 'pipeline',
+    definition: 'Satış fırsat hunisi.',
+    relatedGuide: 'crm',
+    relatedModule: '/crm',
+  },
+  {
+    term: 'Workflow',
+    slug: 'workflow',
+    definition: 'İş akışı; adımlar ve kurallar dizisi.',
+    relatedGuide: 'crm',
+    relatedModule: '/crm',
+  },
+  {
+    term: 'AI',
+    slug: 'ai',
+    definition: 'Yapay zekâ; otomasyon ve asistan yetenekleri.',
+    relatedGuide: 'yapay-zeka',
+    relatedModule: '/openai',
+  },
+  {
+    term: 'API',
+    slug: 'api',
+    definition: 'Uygulama programlama arayüzü.',
+    relatedGuide: 'openai',
+    relatedModule: '/docs/api',
+  },
+  {
+    term: 'Webhook',
+    slug: 'webhook',
+    definition: 'Olay tetiklemeli HTTP bildirimi.',
+    relatedGuide: 'openai',
+    relatedModule: '/docs/api',
+  },
+  {
+    term: 'OpenAI',
+    slug: 'openai',
+    definition: 'Yapay zekâ modelleri sağlayan platform / entegrasyon.',
+    relatedGuide: 'openai',
+    relatedModule: '/openai',
+  },
+  {
+    term: 'Dashboard',
+    slug: 'dashboard',
+    definition: 'KPI ve özet metriklerin göründüğü panel.',
+    relatedGuide: 'dashboard',
+    relatedModule: '/dashboard',
+  },
+  {
+    term: 'KPI',
+    slug: 'kpi',
+    definition: 'Ana performans göstergesi.',
+    relatedGuide: 'raporlama',
+    relatedModule: '/raporlar',
+  },
+  {
+    term: 'E-Fatura',
+    slug: 'e-fatura',
+    definition: 'GİB standartlarında elektronik fatura.',
+    relatedGuide: 'e-fatura',
+    relatedModule: '/e-fatura',
+  },
+  {
+    term: 'B2B',
+    slug: 'b2b',
+    definition: 'İşletmeden işletmeye ticaret modeli.',
+    relatedGuide: 'erp',
+    relatedModule: '/bayi',
+  },
+]
+
+export function getGlossaryTerm(slug: string) {
+  return GLOSSARY.find((t) => t.slug === slug)
+}
