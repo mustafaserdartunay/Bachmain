@@ -17,6 +17,22 @@ import {
   resolveDepoSendQuantity,
 } from '../../utils/productionQuantityMetrics'
 import { PAGE_TABLE_HEADER_CLASS } from '../../utils/dashboardDesign'
+import { URETIM_ARTI_BUTTON_CLASS } from '../../utils/buttonStyles'
+
+function isEmptyPartialRow(row) {
+  if (!row) return true
+  const produced = Math.max(0, Number(row.producedQuantity) || 0)
+  const delivered = Math.max(0, Number(row.deliveredQuantity) || 0)
+  return (
+    produced === 0 &&
+    delivered === 0 &&
+    !row.waybillNo &&
+    !row.invoiceNo &&
+    !row.depoItemId &&
+    !row.trackingToken &&
+    !row.sevkiyatTripId
+  )
+}
 
 /**
  * Unified product + partial-delivery table with row MoreMenu actions.
@@ -48,7 +64,12 @@ export default function ProductionLineDeliveryPanel({
 
   const flatRows = []
   lineItems.forEach((line) => {
-    const rows = getLineQuantityRows(line)
+    const allRows = getLineQuantityRows(line)
+    // Keep first row always; only keep extra rows that have real progress/docs.
+    const rows =
+      allRows.length <= 1
+        ? allRows
+        : allRows.filter((row, index) => index === 0 || !isEmptyPartialRow(row))
     const orderQty = Math.max(
       0,
       Number(resolveOrderQuantity?.(line) ?? line.quantity) || 0,
@@ -60,14 +81,13 @@ export default function ProductionLineDeliveryPanel({
         rowIndex,
         orderQty,
         isFirstOfLine: rowIndex === 0,
-        rowSpan: rows.length,
       })
     })
   })
 
   if (!flatRows.length) {
     return (
-      <div className="rounded-ds-lg border border-dashed border-ds-border px-4 py-6 text-center text-[13px] font-semibold text-[var(--muted)]">
+      <div className="rounded-ds-lg border border-dashed border-ds-border px-4 py-8 text-center text-[13px] font-semibold text-[var(--muted)]">
         Ürün / teslimat satırı yok
       </div>
     )
@@ -122,15 +142,6 @@ export default function ProductionLineDeliveryPanel({
       }
     }
 
-    if (typeof onAddQuantityRow === 'function' && !locked) {
-      items.push({
-        id: 'add-partial',
-        label: 'Kısmi teslimat ekle',
-        icon: Plus,
-        onClick: () => onAddQuantityRow(line, row.id),
-      })
-    }
-
     if (getLineQuantityRows(line).length > 1 && typeof onRemoveQuantityRow === 'function') {
       items.push({
         id: 'remove',
@@ -144,12 +155,20 @@ export default function ProductionLineDeliveryPanel({
     return items
   }
 
+  function handleHeaderAdd() {
+    const active =
+      lineItems.find((line) => line.id === activeLineId) || lineItems[0]
+    if (!active || columnsLocked || active.productionClosed) return
+    const rows = getLineQuantityRows(active)
+    onAddQuantityRow?.(active, rows[0]?.id)
+  }
+
   return (
-    <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-ds-border">
-      <table className="w-full min-w-[48rem] border-collapse text-left">
+    <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)]">
+      <table className="w-full min-w-[52rem] border-collapse text-left">
         <thead className="bg-[var(--ds-surface-muted)]">
           <tr>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>ÜRÜN AÇIKLAMASI</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[12rem]`}>ÜRÜN AÇIKLAMASI</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ NUMARASI</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>ÜRETİM ADEDİ</th>
@@ -157,17 +176,25 @@ export default function ProductionLineDeliveryPanel({
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DURUM</th>
             <th
               className={`${PAGE_TABLE_HEADER_CLASS} w-14 whitespace-nowrap text-center`}
-              aria-label="İşlemler"
+              aria-label="Kısmi teslimat ekle"
             >
-              <span className="inline-flex h-[var(--ds-control-h,3rem)] w-[var(--ds-control-h,3rem)] items-center justify-center">
-                ···
-              </span>
+              <div className="inline-flex h-[var(--ds-control-h,3rem)] w-[var(--ds-control-h,3rem)] items-center justify-center">
+                <button
+                  type="button"
+                  disabled={columnsLocked}
+                  onClick={handleHeaderAdd}
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${URETIM_ARTI_BUTTON_CLASS}`}
+                  title="Kısmi teslimat ekle"
+                  aria-label="Kısmi teslimat ekle"
+                >
+                  <Plus className="h-4 w-4" strokeWidth={2.25} />
+                </button>
+              </div>
             </th>
           </tr>
         </thead>
         <tbody>
-          {flatRows.map(({ line, row, rowIndex, orderQty, isFirstOfLine, rowSpan }) => {
-            const isActiveRow = row.id === activeRowId || (!activeRowId && line.id === activeLineId && isFirstOfLine)
+          {flatRows.map(({ line, row, rowIndex, orderQty, isFirstOfLine }) => {
             const productName = line.product || 'Ürün'
             const description = String(line.description || '').trim()
             const code = row.productionCode || `${productionJobId}-${rowIndex + 1}`
@@ -180,19 +207,14 @@ export default function ProductionLineDeliveryPanel({
             return (
               <tr
                 key={`${line.id}-${row.id}`}
-                className={`border-t border-ds-border transition-colors hover:bg-[var(--ds-surface-muted)] ${
-                  isActiveRow ? 'bg-[var(--ds-surface-muted)]' : ''
-                }`}
+                className="border-t border-ds-border transition-colors hover:bg-[var(--ds-surface-muted)]/50"
                 onClick={() => {
                   onSelectLine?.(line.id)
                   onSelectRow?.(row.id)
                 }}
               >
-                {isFirstOfLine ? (
-                  <td
-                    rowSpan={rowSpan}
-                    className="h-[var(--ds-row-h,2.75rem)] max-w-[14rem] px-3 py-1.5 align-middle"
-                  >
+                <td className="h-[var(--ds-row-h,2.75rem)] max-w-[14rem] px-3 py-2 align-middle">
+                  {isFirstOfLine ? (
                     <span className="flex min-w-0 flex-col gap-0.5">
                       {description ? (
                         <>
@@ -209,28 +231,27 @@ export default function ProductionLineDeliveryPanel({
                         </span>
                       )}
                     </span>
-                  </td>
-                ) : null}
+                  ) : (
+                    <span className="text-[13px] text-[var(--muted)]/50">↳</span>
+                  )}
+                </td>
 
-                {isFirstOfLine ? (
-                  <td
-                    rowSpan={rowSpan}
-                    className="h-[var(--ds-row-h,2.75rem)] px-3 py-1.5 align-middle whitespace-nowrap"
-                  >
+                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap">
+                  {isFirstOfLine ? (
                     <span className="customer-name-primary tabular-nums text-[14px] font-bold text-[var(--muted)]">
                       {formatQty(orderQty)}
                     </span>
-                  </td>
-                ) : null}
+                  ) : null}
+                </td>
 
-                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap">
+                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap">
                   <span className="text-[13px] font-bold tabular-nums text-[var(--muted)]">
                     {code}
                   </span>
                 </td>
 
                 <td
-                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap"
+                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <NumericInput
@@ -241,12 +262,12 @@ export default function ProductionLineDeliveryPanel({
                       })
                     }
                     readOnly={columnsLocked || line.productionClosed}
-                    className="form-input h-7 w-14 text-[12px] font-bold tabular-nums"
+                    className="form-input h-8 w-16 text-[12px] font-bold tabular-nums"
                   />
                 </td>
 
                 <td
-                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap"
+                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <NumericInput
@@ -257,12 +278,12 @@ export default function ProductionLineDeliveryPanel({
                       })
                     }
                     readOnly={columnsLocked || line.productionClosed}
-                    className="form-input h-7 w-14 text-[12px] font-bold tabular-nums"
+                    className="form-input h-8 w-16 text-[12px] font-bold tabular-nums"
                   />
                 </td>
 
                 <td
-                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap"
+                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <EditableDropdownPill
@@ -272,7 +293,7 @@ export default function ProductionLineDeliveryPanel({
                     disabled={columnsLocked || line.productionClosed || !fulfillmentOptions.length}
                     includePlaceholderOption={false}
                     placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum yok'}
-                    buttonClassName="flex h-7 min-w-[7rem] items-center justify-between rounded-lg border border-ds-border bg-white px-2 text-[11px] font-semibold"
+                    buttonClassName="flex h-8 min-w-[7.5rem] items-center justify-between rounded-lg border border-ds-border bg-white px-2 text-[11px] font-semibold"
                     openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
@@ -322,3 +343,5 @@ export default function ProductionLineDeliveryPanel({
     </div>
   )
 }
+
+export { isEmptyPartialRow }

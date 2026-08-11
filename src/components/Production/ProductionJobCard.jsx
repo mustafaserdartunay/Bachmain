@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArchiveRestore, Package, Trash2 } from 'lucide-react'
+import { ArchiveRestore, ChevronDown, Package, Trash2 } from 'lucide-react'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import ProductionProcessCapsuleRail from './ProductionProcessCapsuleRail'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
-import ProductionLineDeliveryPanel from './ProductionLineDeliveryPanel'
+import ProductionLineDeliveryPanel, {
+  isEmptyPartialRow,
+} from './ProductionLineDeliveryPanel'
 import {
   ensureLineItems,
   getLineQuantityRows,
@@ -69,6 +71,8 @@ export default function ProductionJobCard({
   const navigate = useNavigate()
   const [activeLineIndex, setActiveLineIndex] = useState(0)
   const [activeRowId, setActiveRowId] = useState(null)
+  const [journalOpen, setJournalOpen] = useState(false)
+  const prunedEmptyRowsRef = useRef(false)
   const [liveWorkflowStages, setLiveWorkflowStages] = useState(
     () => workflowStagesProp || loadWorkflowStages(),
   )
@@ -122,6 +126,26 @@ export default function ProductionJobCard({
       setActiveRowId(rows[0].id)
     }
   }, [activeLine?.id, activeLine?.quantityRows, activeRowId])
+
+  // Drop leftover empty partial rows (from older auto-add behavior) once per card open.
+  useEffect(() => {
+    prunedEmptyRowsRef.current = false
+  }, [job?.id])
+
+  useEffect(() => {
+    if (prunedEmptyRowsRef.current || !lineItemActions?.handleRemoveQuantityRow) return
+    prunedEmptyRowsRef.current = true
+    lineItems.forEach((line) => {
+      const rows = getLineQuantityRows(line)
+      if (rows.length <= 1) return
+      rows.forEach((row, index) => {
+        if (index === 0) return
+        if (isEmptyPartialRow(row)) {
+          lineItemActions.handleRemoveQuantityRow(line, row.id)
+        }
+      })
+    })
+  }, [job?.id, lineItems, lineItemActions])
 
   function handleStageClick(stageId) {
     if (!activeLine || activeLine.productionClosed) return
@@ -206,54 +230,52 @@ export default function ProductionJobCard({
   }
 
   return (
-    <div className="mt-3 space-y-4 rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)] p-4">
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1" onClick={(event) => event.stopPropagation()}>
-          <ProductionLineDeliveryPanel
-            lineItems={lineItems}
-            activeLineId={activeLine?.id}
-            activeRowId={activeRowId}
-            onSelectLine={(lineId) => {
-              const index = lineItems.findIndex((line) => line.id === lineId)
-              if (index >= 0) setActiveLineIndex(index)
-            }}
-            onSelectRow={(rowId) => setActiveRowId(rowId)}
-            productionJobId={job.id}
-            fulfillmentOptions={fulfillmentOptions}
-            fulfillmentOpenKey={`${job.id}-fulfillment`}
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-            columnsLocked={false}
-            resolveOrderQuantity={(line) => resolveLineItemOrderQuantity(line, order)}
-            onQuantityRowChange={(line, rowId, patch) =>
-              lineItemActions?.handleLineQuantityRowChange(line, rowId, patch)
-            }
-            onAddQuantityRow={(line, rowId) => {
-              const newId = lineItemActions?.handleAddQuantityRow(line, rowId)
-              if (newId) setActiveRowId(newId)
-            }}
-            onRemoveQuantityRow={(line, rowId) => {
-              lineItemActions?.handleRemoveQuantityRow(line, rowId)
-              if (activeRowId === rowId) setActiveRowId(null)
-            }}
-            onSendToDepo={(line, rowId) => {
-              lineItemActions?.handleSendRowToDepo(
-                line,
-                rowId,
-                resolveLineItemOrderQuantity(line, order),
-              )
-            }}
-            onUndoSendToDepo={(line, rowId) =>
-              lineItemActions?.handleUndoSendRowToDepo(line, rowId)
-            }
-            onIssueWaybill={handleIssueWaybill}
-            onOpenMapLink={handleOpenMapLink}
-            onIssueInvoice={handleIssueInvoice}
-          />
-        </div>
+    <div className="mt-3 space-y-5 rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)] p-5 sm:p-6">
+      <div className="relative" onClick={(event) => event.stopPropagation()}>
+        <ProductionLineDeliveryPanel
+          lineItems={lineItems}
+          activeLineId={activeLine?.id}
+          activeRowId={activeRowId}
+          onSelectLine={(lineId) => {
+            const index = lineItems.findIndex((line) => line.id === lineId)
+            if (index >= 0) setActiveLineIndex(index)
+          }}
+          onSelectRow={(rowId) => setActiveRowId(rowId)}
+          productionJobId={job.id}
+          fulfillmentOptions={fulfillmentOptions}
+          fulfillmentOpenKey={`${job.id}-fulfillment`}
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+          columnsLocked={false}
+          resolveOrderQuantity={(line) => resolveLineItemOrderQuantity(line, order)}
+          onQuantityRowChange={(line, rowId, patch) =>
+            lineItemActions?.handleLineQuantityRowChange(line, rowId, patch)
+          }
+          onAddQuantityRow={(line, rowId) => {
+            const newId = lineItemActions?.handleAddQuantityRow(line, rowId)
+            if (newId) setActiveRowId(newId)
+          }}
+          onRemoveQuantityRow={(line, rowId) => {
+            lineItemActions?.handleRemoveQuantityRow(line, rowId)
+            if (activeRowId === rowId) setActiveRowId(null)
+          }}
+          onSendToDepo={(line, rowId) => {
+            lineItemActions?.handleSendRowToDepo(
+              line,
+              rowId,
+              resolveLineItemOrderQuantity(line, order),
+            )
+          }}
+          onUndoSendToDepo={(line, rowId) =>
+            lineItemActions?.handleUndoSendRowToDepo(line, rowId)
+          }
+          onIssueWaybill={handleIssueWaybill}
+          onOpenMapLink={handleOpenMapLink}
+          onIssueInvoice={handleIssueInvoice}
+        />
 
-        <div className="flex shrink-0 items-center gap-1.5 pt-1" onClick={(event) => event.stopPropagation()}>
-          {pendingDelete ? (
+        {pendingDelete ? (
+          <div className="absolute right-2 top-2 z-20" onClick={(event) => event.stopPropagation()}>
             <DeleteTrashButton
               pending
               onClick={onRequestDelete}
@@ -263,8 +285,8 @@ export default function ProductionJobCard({
               description="Bu işlem geri alınamaz."
               popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
             />
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       {liveProductionStages.length === 0 ? (
@@ -272,7 +294,7 @@ export default function ProductionJobCard({
           Henüz üretim süreci tanımlı değil. Ayarlar → Üretim Süreçleri panelinden ekleyin.
         </p>
       ) : (
-        <div className="overflow-visible rounded-ds-lg border border-ds-border bg-[var(--ds-surface-muted,#F8FAFC)]/60 px-2 py-2">
+        <div className="overflow-visible rounded-ds-lg border border-ds-border bg-white px-3 py-3">
           <ProductionProcessCapsuleRail
             steps={processSteps}
             stagePhotos={stagePhotos}
@@ -285,14 +307,37 @@ export default function ProductionJobCard({
         </div>
       )}
 
-      {(job.activities || []).length > 0 ? (
-        <div>
-          <h4 className="mb-2 text-[13px] font-black uppercase tracking-wide text-[var(--muted,#64748B)]">
+      <div className="overflow-hidden rounded-ds-lg border border-ds-border">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            setJournalOpen((open) => !open)
+          }}
+          className="flex w-full items-center justify-between gap-2 bg-[var(--ds-surface,#fff)] px-3 py-2 text-left transition-colors hover:bg-[var(--ds-surface-muted)]/40"
+          aria-expanded={journalOpen}
+        >
+          <span className="text-[12px] font-bold uppercase tracking-wide text-[var(--muted,#64748B)]">
             Süreç Günlüğü
-          </h4>
-          <ProductionActivityTimeline activities={job.activities || []} />
-        </div>
-      ) : null}
+            {(job.activities || []).length > 0 ? (
+              <span className="ml-1.5 tabular-nums font-semibold text-[var(--muted)]/70">
+                ({(job.activities || []).length})
+              </span>
+            ) : null}
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200 ${
+              journalOpen ? 'rotate-180' : ''
+            }`}
+            strokeWidth={2.25}
+          />
+        </button>
+        {journalOpen ? (
+          <div className="border-t border-ds-border bg-[var(--ds-surface,#fff)] px-3 py-3">
+            <ProductionActivityTimeline activities={job.activities || []} />
+          </div>
+        ) : null}
+      </div>
 
       <div className="flex flex-wrap gap-2 border-t border-ds-border pt-3">
         <button

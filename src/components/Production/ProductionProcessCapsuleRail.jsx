@@ -162,49 +162,50 @@ export default function ProductionProcessCapsuleRail({
                     {photos.slice(0, 3).map((photo) => (
                       <div
                         key={photo.id}
-                        className="group/photo relative h-14 w-14 overflow-hidden rounded-xl bg-[var(--ds-surface-muted,#F8FAFC)] ring-1 ring-[var(--border,#E2E8F0)] shadow-sm"
+                        className="group/photo flex items-center justify-center gap-0.5"
                       >
-                        <img
-                          src={photo.dataUrl}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                        {!readOnly && (canEditPhoto || canDeletePhoto) ? (
-                          <div className="pointer-events-none absolute inset-0 flex items-stretch opacity-0 transition-opacity duration-150 group-hover/photo:pointer-events-auto group-hover/photo:opacity-100">
-                            {canEditPhoto ? (
-                              <button
-                                type="button"
-                                className={`${KALEM_BUTTON_CLASS} h-auto w-auto flex-1 rounded-none hover:bg-[rgba(37,99,235,0.82)] hover:text-white`}
-                                title="Fotoğrafı düzenle"
-                                aria-label="Fotoğrafı düzenle"
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  replaceRefs.current[photo.id]?.click()
-                                }}
-                              >
-                                <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
-                              </button>
-                            ) : (
-                              <span className="flex-1" />
-                            )}
-                            {canDeletePhoto ? (
-                              <button
-                                type="button"
-                                className={`${COP_KUTUSU_BUTTON_CLASS} h-auto w-auto flex-1 rounded-none hover:bg-red-600/85 hover:text-white`}
-                                title="Fotoğrafı sil"
-                                aria-label="Fotoğrafı sil"
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  onDeletePhoto?.(photo)
-                                }}
-                              >
-                                <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
-                              </button>
-                            ) : (
-                              <span className="flex-1" />
-                            )}
-                          </div>
-                        ) : null}
+                        {!readOnly && canEditPhoto ? (
+                          <button
+                            type="button"
+                            className={`${KALEM_BUTTON_CLASS} opacity-0 transition-opacity group-hover/photo:opacity-100`}
+                            title="Fotoğrafı düzenle"
+                            aria-label="Fotoğrafı düzenle"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              replaceRefs.current[photo.id]?.click()
+                            }}
+                          >
+                            <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
+                          </button>
+                        ) : (
+                          <span className="h-8 w-8 shrink-0" aria-hidden />
+                        )}
+
+                        <div className="h-14 w-14 overflow-hidden rounded-xl bg-[var(--ds-surface-muted,#F8FAFC)] ring-1 ring-[var(--border,#E2E8F0)] shadow-sm">
+                          <img
+                            src={photo.dataUrl}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+
+                        {!readOnly && canDeletePhoto ? (
+                          <button
+                            type="button"
+                            className={`${COP_KUTUSU_BUTTON_CLASS} opacity-0 transition-opacity group-hover/photo:opacity-100`}
+                            title="Fotoğrafı sil"
+                            aria-label="Fotoğrafı sil"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              onDeletePhoto?.(photo)
+                            }}
+                          >
+                            <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+                          </button>
+                        ) : (
+                          <span className="h-8 w-8 shrink-0" aria-hidden />
+                        )}
+
                         <input
                           ref={(node) => {
                             replaceRefs.current[photo.id] = node
