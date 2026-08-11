@@ -65,11 +65,8 @@ export default function ProductionLineDeliveryPanel({
 
   const flatRows = []
   lineItems.forEach((line) => {
-    const allRows = getLineQuantityRows(line)
-    const rows =
-      allRows.length <= 1
-        ? allRows
-        : allRows.filter((row, index) => index === 0 || !isEmptyPartialRow(row))
+    // Always show every quantity row — + creates 20000-2, 20000-3, …
+    const rows = getLineQuantityRows(line)
     const orderQty = Math.max(
       0,
       Number(resolveOrderQuantity?.(line) ?? line.quantity) || 0,
@@ -159,7 +156,8 @@ export default function ProductionLineDeliveryPanel({
       lineItems.find((line) => line.id === activeLineId) || lineItems[0]
     if (!active || columnsLocked || active.productionClosed) return
     const rows = getLineQuantityRows(active)
-    onAddQuantityRow?.(active, rows[0]?.id)
+    // Append after the last row so codes continue 20000-1 → 20000-2 → …
+    onAddQuantityRow?.(active, rows[rows.length - 1]?.id)
   }
 
   return (

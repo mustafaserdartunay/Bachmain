@@ -181,48 +181,23 @@ export function createProductionLineItemActions({
 
   function handleAddQuantityRow(lineItem, sourceRowId) {
     if (!job) return undefined
-    // Explicit user action only — never invent a row from stage/photo side-effects.
+    // Explicit user action only — append next sipariş numarası (20000-1 → 20000-2 → …).
     const rows = getLineQuantityRows(lineItem)
-    const sourceIndex = sourceRowId
-      ? rows.findIndex((row) => row.id === sourceRowId)
-      : rows.length - 1
-    const resolvedIndex = sourceIndex >= 0 ? sourceIndex : rows.length - 1
-    const sourceRow = rows[resolvedIndex]
-    if (!sourceRow) return undefined
+    if (!rows.length) return undefined
 
-    const sourceOrdered = getQuantityRowOrdered(sourceRow, lineItem, resolvedIndex)
-    const produced = Math.max(0, Number(sourceRow.producedQuantity) || 0)
-    const delivered = Math.max(0, Number(sourceRow.deliveredQuantity) || 0)
-    const sourceRemaining = Math.max(0, sourceOrdered - produced)
-    const sourceUndelivered = Math.max(0, produced - delivered)
-
-    let splitQty = sourceRemaining > 0 ? sourceRemaining : sourceUndelivered
-    if (splitQty <= 0) {
-      const lineMetrics = getLineQuantityMetrics(lineItem)
-      splitQty = Math.max(0, lineMetrics.remaining)
-    }
-    if (splitQty <= 0) {
-      splitQty = 1
-    }
+    const lineMetrics = getLineQuantityMetrics(lineItem)
+    let splitQty = Math.max(0, lineMetrics.remaining)
+    if (splitQty <= 0) splitQty = 1
 
     const now = createQuantityRowTimestamp()
     const firstStage = productionStageOptions[0]
-    const nextSource = {
-      ...sourceRow,
-      orderedQuantity: produced > 0 ? produced : Math.max(0, sourceOrdered - splitQty),
-    }
     const newRow = createQuantityRow({
       orderedQuantity: splitQty,
       createdAt: now,
       currentStageId: firstStage?.id || lineItem.currentStageId || '',
       stageUpdatedAt: now,
     })
-    const nextRows = assignProductionRowCodes([
-      ...rows.slice(0, resolvedIndex),
-      nextSource,
-      newRow,
-      ...rows.slice(resolvedIndex + 1),
-    ], job.id)
+    const nextRows = assignProductionRowCodes([...rows, newRow], job.id)
 
     const reopenPatch = lineItem.productionClosed
       ? {

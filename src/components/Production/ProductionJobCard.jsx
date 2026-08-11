@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import ProductionProcessCapsuleRail from './ProductionProcessCapsuleRail'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
-import ProductionLineDeliveryPanel, {
-  isEmptyPartialRow,
-} from './ProductionLineDeliveryPanel'
+import ProductionLineDeliveryPanel from './ProductionLineDeliveryPanel'
 import {
   ensureLineItems,
   getLineQuantityRows,
@@ -77,7 +75,6 @@ export default function ProductionJobCard({
   /** Firm expand shows product list first; process rail + journal open via row toggle. */
   const [detailOpen, setDetailOpen] = useState(false)
   const [journalOpen, setJournalOpen] = useState(false)
-  const prunedEmptyRowsRef = useRef(false)
   const [liveWorkflowStages, setLiveWorkflowStages] = useState(
     () => workflowStagesProp || loadWorkflowStages(),
   )
@@ -139,25 +136,6 @@ export default function ProductionJobCard({
     }
   }, [activeLine?.id, activeLine?.quantityRows, activeRowId])
 
-  // Drop leftover empty partial rows (from older auto-add behavior) once per card open.
-  useEffect(() => {
-    prunedEmptyRowsRef.current = false
-  }, [job?.id])
-
-  useEffect(() => {
-    if (prunedEmptyRowsRef.current || !lineItemActions?.handleRemoveQuantityRow) return
-    prunedEmptyRowsRef.current = true
-    lineItems.forEach((line) => {
-      const rows = getLineQuantityRows(line)
-      if (rows.length <= 1) return
-      rows.forEach((row, index) => {
-        if (index === 0) return
-        if (isEmptyPartialRow(row)) {
-          lineItemActions.handleRemoveQuantityRow(line, row.id)
-        }
-      })
-    })
-  }, [job?.id, lineItems, lineItemActions])
 
   function handleToggleRowDetail(lineId, rowId) {
     const index = lineItems.findIndex((line) => line.id === lineId)
