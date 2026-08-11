@@ -3431,6 +3431,35 @@ html.night .glass-sidebar .sidebar-submenu {
   animation: prod-capsule-flow 2.8s ease-in-out infinite;
 }
 
+.prod-process-dot-active {
+  background: linear-gradient(
+    120deg,
+    #93c5fd 0%,
+    #3b82f6 30%,
+    #2563eb 55%,
+    #60a5fa 80%,
+    #93c5fd 100%
+  ) !important;
+  background-size: 240% 100% !important;
+  animation: prod-capsule-flow 2.4s ease-in-out infinite;
+  box-shadow:
+    0 4px 16px rgba(37, 99, 235, 0.35),
+    0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.prod-process-dot-done {
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+}
+
+.prod-process-dot-pulse {
+  animation: prod-dot-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.45);
+}
+
+.prod-process-connector-live {
+  animation: prod-connector-shimmer 2.6s ease-in-out infinite;
+}
+
 @keyframes prod-capsule-flow {
   0% {
     background-position: 0% 50%;
@@ -3440,6 +3469,28 @@ html.night .glass-sidebar .sidebar-submenu {
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+@keyframes prod-dot-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
+    opacity: 0.85;
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+    opacity: 0.35;
+  }
+}
+
+@keyframes prod-connector-shimmer {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
   }
 }
 
