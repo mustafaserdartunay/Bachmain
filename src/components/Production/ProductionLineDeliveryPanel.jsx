@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import {
-  FileText,
-  MapPin,
   Package,
+  Pencil,
   Plus,
-  Receipt,
   Trash2,
 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
@@ -16,6 +14,7 @@ import {
   formatQty,
   resolveDepoSendQuantity,
 } from '../../utils/productionQuantityMetrics'
+import { publishPartDeliverySituations } from '../../utils/productionFulfillmentOptions'
 import { PAGE_TABLE_HEADER_CLASS } from '../../utils/dashboardDesign'
 import { URETIM_ARTI_BUTTON_CLASS } from '../../utils/buttonStyles'
 
@@ -40,11 +39,12 @@ function isEmptyPartialRow(row) {
 export default function ProductionLineDeliveryPanel({
   lineItems = [],
   activeLineId,
-  activeRowId,
+  activeRowId: _activeRowId,
   onSelectLine,
   onSelectRow,
   productionJobId,
   fulfillmentOptions,
+  onFulfillmentOptionsChange,
   fulfillmentOpenKey,
   activeMenu,
   setActiveMenu,
@@ -55,9 +55,7 @@ export default function ProductionLineDeliveryPanel({
   onRemoveQuantityRow,
   onSendToDepo,
   onUndoSendToDepo,
-  onIssueWaybill,
-  onOpenMapLink,
-  onIssueInvoice,
+  onEditRow,
 }) {
   const [pendingDepoRowId, setPendingDepoRowId] = useState(null)
   const [pendingUndoDepoRowId, setPendingUndoDepoRowId] = useState(null)
@@ -65,7 +63,6 @@ export default function ProductionLineDeliveryPanel({
   const flatRows = []
   lineItems.forEach((line) => {
     const allRows = getLineQuantityRows(line)
-    // Keep first row always; only keep extra rows that have real progress/docs.
     const rows =
       allRows.length <= 1
         ? allRows
@@ -93,47 +90,34 @@ export default function ProductionLineDeliveryPanel({
     )
   }
 
+  function handleOptionsChange(next) {
+    const saved = publishPartDeliverySituations(next)
+    onFulfillmentOptionsChange?.(saved)
+  }
+
   function buildRowActions(line, row, rowIndex, orderQty) {
     const depoQty = resolveDepoSendQuantity(row, rowIndex, line, orderQty)
     const locked = columnsLocked || line.productionClosed
-    const items = [
-      {
-        id: 'waybill',
-        label: row.waybillNo ? `Sevk fişi (${row.waybillNo})` : 'Sevk fişi kes',
-        icon: FileText,
-        onClick: () => onIssueWaybill?.(line, row.id),
-      },
-      {
-        id: 'map',
-        label: row.trackingToken ? 'Sevk harita linkini aç' : 'Sevk harita linki oluştur',
-        icon: MapPin,
-        onClick: () => onOpenMapLink?.(line, row.id),
-      },
-      {
-        id: 'invoice',
-        label: row.invoiceNo ? `Fatura (${row.invoiceNo})` : 'Fatura kes',
-        icon: Receipt,
-        onClick: () => onIssueInvoice?.(line, row.id),
-      },
-      { type: 'separator', id: 'sep-1' },
-    ]
+    const items = []
 
     if (typeof onSendToDepo === 'function') {
       if (row.depoItemId) {
         items.push({
           id: 'undo-depo',
-          label: 'Teslimatı geri al',
+          label: 'Depo gönderimini geri al',
           icon: Package,
+          tone: 'orange',
           onClick: () => setPendingUndoDepoRowId(row.id),
         })
       } else {
         items.push({
           id: 'depo',
-          label: 'Teslim et',
+          label: 'Ayarlarla depoya gönder',
           icon: Package,
+          tone: 'success',
           onClick: () => {
             if (locked || !(depoQty > 0)) {
-              window.alert('Teslim etmek için teslimat adedi girin.')
+              window.alert('Depoya göndermek için teslimat adedi girin.')
               return
             }
             setPendingDepoRowId(row.id)
@@ -142,10 +126,22 @@ export default function ProductionLineDeliveryPanel({
       }
     }
 
-    if (getLineQuantityRows(line).length > 1 && typeof onRemoveQuantityRow === 'function') {
+    items.push({
+      id: 'edit',
+      label: 'Düzenle',
+      icon: Pencil,
+      tone: 'primary',
+      onClick: () => {
+        onSelectLine?.(line.id)
+        onSelectRow?.(row.id)
+        onEditRow?.(line, row.id)
+      },
+    })
+
+    if (typeof onRemoveQuantityRow === 'function') {
       items.push({
         id: 'remove',
-        label: 'Satırı sil',
+        label: 'Sil',
         icon: Trash2,
         tone: 'danger',
         onClick: () => onRemoveQuantityRow(line, row.id),
@@ -202,7 +198,7 @@ export default function ProductionLineDeliveryPanel({
               row.fulfillmentStatus &&
               fulfillmentOptions.some((option) => option.label === row.fulfillmentStatus)
                 ? row.fulfillmentStatus
-                : fulfillmentOptions[0]?.label || ''
+                : fulfillmentOptions[0]?.label || row.fulfillmentStatus || ''
 
             return (
               <tr
@@ -289,10 +285,11 @@ export default function ProductionLineDeliveryPanel({
                   <EditableDropdownPill
                     value={statusValue}
                     options={fulfillmentOptions}
-                    editable={false}
-                    disabled={columnsLocked || line.productionClosed || !fulfillmentOptions.length}
+                    editable
+                    onOptionsChange={handleOptionsChange}
+                    disabled={columnsLocked || line.productionClosed}
                     includePlaceholderOption={false}
-                    placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum yok'}
+                    placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum ekle'}
                     buttonClassName="flex !h-8 !min-h-8 min-w-[7.5rem] items-center justify-between rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold"
                     openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
                     activeMenu={activeMenu}

@@ -399,8 +399,9 @@ export default function ProductionPage() {
                   <ProductionProgressRing
                     percent={progress.percent}
                     label={progress.label}
-                    size={40}
-                    stroke={4}
+                    stageCount={progress.stageCount || productionStageOptions.length}
+                    size={52}
+                    stroke={5}
                   />
                 )
               },
@@ -411,12 +412,14 @@ export default function ProductionPage() {
               id: 'expand',
               label: expandedJobId === job.id ? 'Detayı Kapat' : 'Detayı Aç',
               icon: ClipboardList,
+              tone: 'primary',
               onClick: () => toggleJobExpanded(job.id),
             },
             {
               id: 'cancel',
               label: 'Vazgeç',
               icon: ArchiveRestore,
+              tone: 'orange',
               onClick: () => {
                 cancelProductionBackToOrder(job.id)
                 refreshJobs()
@@ -426,6 +429,7 @@ export default function ProductionPage() {
               id: 'depo',
               label: 'Depoya gönder',
               icon: Package,
+              tone: 'success',
               onClick: () => {
                 sendProductionJobToDepo(job.id)
                 refreshJobs()
@@ -448,23 +452,16 @@ export default function ProductionPage() {
             workflowStages={workflowStages}
             productionStages={productionStageOptions}
             fulfillmentOptions={fulfillmentOptions}
+            onFulfillmentOptionsChange={setFulfillmentOptions}
             orders={orders}
             pendingDelete={pendingDeleteId === expandedJob.id}
             onRequestDelete={() => setPendingDeleteId(expandedJob.id)}
             onConfirmDelete={() => removeJob(expandedJob)}
             onCancelDelete={() => setPendingDeleteId(null)}
-            onCancelProduction={() => {
-              cancelProductionBackToOrder(expandedJob.id)
-              refreshJobs()
-            }}
-            onSendToDepo={() => {
-              sendProductionJobToDepo(expandedJob.id)
-              refreshJobs()
-              navigate('/depo')
-            }}
             lineItemActions={getLineItemActions(expandedJob)}
             activeMenu={activeMenu}
             setActiveMenu={setActiveMenu}
+            onRefresh={refreshJobs}
           />
         ) : null}
       </AppPagePanel>

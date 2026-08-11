@@ -563,44 +563,65 @@ export function resolveJobProductionFlowBadge(lineItems = [], jobStatus = '') {
 
 /**
  * List-row progress: % across order line items' process advance.
- * Beklemede → nothing started; Devam ediyor until job is confirmed Tamamlandı.
+ * Partial delivery never auto-completes; only explicit Tamamlandı → 100%.
  */
 export function resolveJobProductionProgress(job, lineItems = [], productionStages = []) {
   const statusRaw = String(job?.status || '')
   if (/iptal/i.test(statusRaw)) {
-    return { percent: 0, label: 'İptal', tone: 'cancel' }
+    return { percent: 0, label: 'İptal', tone: 'cancel', stageCount: productionStages.length }
   }
-  if (statusRaw === 'Tamamlandı') {
-    return { percent: 100, label: 'Tamamlandı', tone: 'done' }
+  if (statusRaw === 'Tamamlandı' || /tamamland/i.test(statusRaw)) {
+    return {
+      percent: 100,
+      label: 'Tamamlandı',
+      tone: 'done',
+      stageCount: productionStages.length,
+    }
   }
 
   const lines = Array.isArray(lineItems) ? lineItems : []
   const stages = Array.isArray(productionStages) ? productionStages : []
   if (!lines.length) {
-    return { percent: 0, label: 'Beklemede', tone: 'pending' }
+    return { percent: 0, label: 'Beklemede', tone: 'pending', stageCount: stages.length }
   }
 
   const lastIndex = Math.max(0, stages.length - 1)
   let anyStarted = false
   let allLinesFinished = true
   let progressSum = 0
+  let maxStageIndex = 0
 
   lines.forEach((line) => {
+    const rows = Array.isArray(line?.quantityRows) ? line.quantityRows : []
+    const lineOrdered = Math.max(0, Number(line?.quantity) || 0)
+    const lineDelivered = Math.max(
+      0,
+      Number(line?.deliveredQuantity) ||
+        rows.reduce((sum, row) => sum + (Math.max(0, Number(row?.deliveredQuantity) || 0)), 0),
+    )
+    const lineProduced = Math.max(
+      0,
+      Number(line?.producedQuantity) ||
+        rows.reduce((sum, row) => sum + (Math.max(0, Number(row?.producedQuantity) || 0)), 0),
+    )
+    const isPartial =
+      lineOrdered > 0 && lineDelivered > 0 && lineDelivered < lineOrdered
+    const rowStatuses = rows.map((row) => String(row?.fulfillmentStatus || ''))
     const closed =
       line?.productionClosed === true ||
       line?.fulfillmentStatus === 'Tamamlandı' ||
-      /tamamland/i.test(String(line?.fulfillmentStatus || ''))
+      /tamamland/i.test(String(line?.fulfillmentStatus || '')) ||
+      (rows.length > 0 && rowStatuses.every((status) => /tamamland/i.test(status)))
 
     let stageIndex = stages.findIndex((stage) => stage.id === line?.currentStageId)
-    const rows = Array.isArray(line?.quantityRows) ? line.quantityRows : []
     rows.forEach((row) => {
       const idx = stages.findIndex((stage) => stage.id === row?.currentStageId)
       if (idx > stageIndex) stageIndex = idx
     })
     if (stageIndex < 0) stageIndex = 0
+    if (stageIndex > maxStageIndex) maxStageIndex = stageIndex
 
-    const produced = Math.max(0, Number(line?.producedQuantity) || 0)
-    const started = closed || stageIndex > 0 || produced > 0
+    const started = closed || stageIndex > 0 || lineProduced > 0 || lineDelivered > 0
     if (started) anyStarted = true
 
     if (closed) {
@@ -615,28 +636,48 @@ export function resolveJobProductionProgress(job, lineItems = [], productionStag
     }
 
     if (stages.length === 1) {
-      progressSum += started ? 100 : 0
-      if (!started) allLinesFinished = false
+      const singlePct = started ? (isPartial ? 90 : 100) : 0
+      progressSum += singlePct
+      if (!started || isPartial) allLinesFinished = false
       return
     }
 
-    const linePct = Math.round((stageIndex / lastIndex) * 100)
+    let linePct = Math.round((stageIndex / lastIndex) * 100)
+    // Partial delivery: even last stage ("Depoda Hazır") must not fully complete the job.
+    if (isPartial || (stageIndex >= lastIndex && lineDelivered < lineOrdered)) {
+      const cap = Math.max(0, Math.round(((lastIndex - 0.15) / lastIndex) * 100))
+      linePct = Math.min(linePct, cap)
+      allLinesFinished = false
+    } else if (stageIndex < lastIndex) {
+      allLinesFinished = false
+    }
+
     progressSum += linePct
-    if (stageIndex < lastIndex) allLinesFinished = false
   })
 
   const percent = Math.min(100, Math.round(progressSum / lines.length))
 
   if (!anyStarted) {
-    return { percent: 0, label: 'Beklemede', tone: 'pending' }
+    return { percent: 0, label: 'Beklemede', tone: 'pending', stageCount: stages.length }
   }
 
-  // All line items finished process, but job not confirmed yet → still Devam ediyor.
   if (allLinesFinished && percent >= 100) {
-    return { percent: 100, label: 'Devam ediyor', tone: 'active' }
+    return {
+      percent: 100,
+      label: 'Devam ediyor',
+      tone: 'active',
+      stageCount: stages.length,
+      stageIndex: maxStageIndex,
+    }
   }
 
-  return { percent, label: 'Devam ediyor', tone: 'active' }
+  return {
+    percent,
+    label: 'Devam ediyor',
+    tone: 'active',
+    stageCount: stages.length,
+    stageIndex: maxStageIndex,
+  }
 }
 
 export const PRODUCTION_STATE_FILTER_OPTIONS = [

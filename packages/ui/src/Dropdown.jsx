@@ -7,10 +7,10 @@ export const DROPDOWN_PORTAL_SHELL_CLASS =
   'app-dropdown-portal glass-inset az min-w-[210px] rounded-[16px] p-2'
 
 const TONE_CLASS = {
-  danger: 'text-[#ef4444] hover:bg-transparent hover:text-[#dc2626]',
-  primary: 'text-[#2563eb] hover:bg-transparent hover:text-[#1d4ed8]',
-  success: 'text-[#10b981] hover:bg-transparent hover:text-[#047857]',
-  orange: 'text-[#ea580c] hover:bg-transparent hover:text-[#c2410c]',
+  danger: 'text-[#ef4444] hover:bg-transparent hover:text-[#dc2626] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#dc2626]',
+  primary: 'text-[#2563eb] hover:bg-transparent hover:text-[#1d4ed8] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#1d4ed8]',
+  success: 'text-[#10b981] hover:bg-transparent hover:text-[#047857] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#047857]',
+  orange: 'text-[#ea580c] hover:bg-transparent hover:text-[#c2410c] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#c2410c]',
   default: 'text-[var(--muted)] hover:bg-transparent',
 }
 
@@ -24,13 +24,7 @@ export function Dropdown({
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
   const menuRef = useRef(null)
-  const [pos, setPos] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-    maxHeight: undefined,
-    needsScroll: false,
-  })
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0, maxHeight: undefined })
 
   useEffect(() => {
     if (!open) return undefined
@@ -61,31 +55,21 @@ export function Dropdown({
       const gap = 6
       const viewportPad = 8
       const bottomLimit = window.innerHeight - viewportPad
-
-      // Ölçümü overflow/maxHeight kısıtı olmadan al
-      const prevMaxHeight = menuEl.style.maxHeight
-      const prevOverflow = menuEl.style.overflow
-      menuEl.style.maxHeight = 'none'
-      menuEl.style.overflow = 'visible'
-      const contentHeight = menuEl.scrollHeight || menuEl.offsetHeight || 280
-      menuEl.style.maxHeight = prevMaxHeight
-      menuEl.style.overflow = prevOverflow
+      const menuHeight = menuEl.offsetHeight || 280
 
       let top = rect.bottom + gap
       const opensUp =
-        top + contentHeight > bottomLimit && rect.top - contentHeight - gap > viewportPad
+        top + menuHeight > bottomLimit && rect.top - menuHeight - gap > viewportPad
       if (opensUp) {
-        top = Math.max(viewportPad, rect.top - contentHeight - gap)
+        top = Math.max(viewportPad, rect.top - menuHeight - gap)
       }
 
       const maxHeight = Math.max(120, bottomLimit - top)
-      const needsScroll = contentHeight > maxHeight + 1
       setPos({
         top,
         left: align === 'end' ? rect.right : rect.left,
         width: rect.width,
-        maxHeight: needsScroll ? maxHeight : undefined,
-        needsScroll,
+        maxHeight,
       })
     }
 
@@ -107,23 +91,14 @@ export function Dropdown({
         ? createPortal(
             <div
               ref={menuRef}
-              data-scroll={pos.needsScroll ? 'true' : 'false'}
               style={{
                 position: 'fixed',
                 top: pos.top,
                 left: align === 'end' ? undefined : pos.left,
                 right: align === 'end' ? window.innerWidth - pos.left : undefined,
                 minWidth: Math.max(pos.width, 210),
-                ...(pos.needsScroll
-                  ? {
-                      maxHeight: pos.maxHeight,
-                      overflowX: 'hidden',
-                      overflowY: 'auto',
-                    }
-                  : {
-                      maxHeight: undefined,
-                      overflow: 'visible',
-                    }),
+                maxHeight: pos.maxHeight,
+                overflowY: 'auto',
                 zIndex: 10000,
               }}
               className={`${DROPDOWN_PORTAL_SHELL_CLASS} ${menuClassName}`.trim()}

@@ -3,7 +3,12 @@ import { loadProductionJobs, saveProductionJobs } from './productionStore'
 
 const STORAGE_KEY = 'erlenbox-production-fulfillment-options'
 
-export const DEFAULT_PART_DELIVERY_SITUATIONS = []
+export const DEFAULT_PART_DELIVERY_SITUATIONS = [
+  { label: 'Devam Ediyor', color: 'bg-blue-500' },
+  { label: 'Kısmi Teslimat', color: 'bg-orange-500' },
+  { label: 'Depoda Hazır', color: 'bg-violet-500' },
+  { label: 'Tamamlandı', color: 'bg-emerald-500' },
+]
 
 export function loadPartDeliverySituations() {
   try {

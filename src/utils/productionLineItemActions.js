@@ -108,17 +108,6 @@ export function createProductionLineItemActions({
   function handleLineQuantityRowChange(lineItem, rowId, patch) {
     if (!job || lineItem.productionClosed) return
 
-    if (patch.fulfillmentStatus === 'Tamamlandı') {
-      const previewRows = getLineQuantityRows(lineItem).map((row) => (
-        row.id === rowId ? { ...row, ...patch } : row
-      ))
-      const metrics = getLineQuantityMetrics({ ...lineItem, ...syncLineQuantitiesFromRows(previewRows) })
-      if (!lineItem.productionClosed && metrics.produced < metrics.ordered) {
-        window.alert('Üretimi kapatmadan tamamlanmış sayılamaz. Önce "Üretimi Kapat" ile üretim sürecini sonlandırın.')
-        return
-      }
-    }
-
     const rows = getLineQuantityRows(lineItem).map((row) => {
       if (row.id !== rowId) return row
       const now = createQuantityRowTimestamp()
@@ -131,7 +120,10 @@ export function createProductionLineItemActions({
         nextRow.deliveredUpdatedAt = patch.deliveredQuantity > 0 ? now : ''
       }
       if (patch.fulfillmentStatus === 'Tamamlandı') {
-        nextRow.deliveredQuantity = Math.max(nextRow.deliveredQuantity, nextRow.producedQuantity)
+        nextRow.deliveredQuantity = Math.max(
+          Number(nextRow.deliveredQuantity) || 0,
+          Number(nextRow.producedQuantity) || 0,
+        )
         nextRow.deliveredUpdatedAt = now
         const lastStage = productionStageOptions[productionStageOptions.length - 1]
         if (lastStage?.id) {
@@ -147,9 +139,37 @@ export function createProductionLineItemActions({
       || patch.producedQuantity !== undefined
       || patch.deliveredQuantity !== undefined
 
-    patchLineQuantityRows(lineItem, rows, {
-      skipDeriveForRowId: skipAutoStatusForRow ? rowId : null,
+    const forceJobComplete = patch.fulfillmentStatus === 'Tamamlandı'
+    const synced = syncLineQuantitiesFromRows(
+      skipAutoStatusForRow
+        ? rows
+        : rows.map((row) =>
+            row.id === rowId
+              ? row
+              : withDerivedQuantityRowFulfillmentStatus(row, lineItem, productionStageOptions),
+          ),
+    )
+    const currentStageId = deriveLineCurrentStageId(synced.quantityRows, stagesForNormalize)
+    const currentJob = getProductionJobById(job.id)
+    const nextLineItems = ensureLineItems(currentJob, stagesForNormalize).map((line) => (
+      line.id === lineItem.id
+        ? {
+            ...line,
+            ...synced,
+            currentStageId,
+            quantityRows: synced.quantityRows,
+            ...(forceJobComplete ? { fulfillmentStatus: 'Tamamlandı' } : {}),
+          }
+        : line
+    ))
+    const summary = deriveJobSummary({ ...currentJob, lineItems: nextLineItems }, stagesForNormalize)
+    updateProductionJob(job.id, {
+      lineItems: nextLineItems,
+      status: forceJobComplete ? 'Tamamlandı' : summary.status,
+      currentStageId: summary.currentStageId,
+      stage: summary.stage,
     })
+    refreshJobs()
     if (patch.fulfillmentStatus) {
       appendActivity(`"${lineItem.product}" satır durumu "${patch.fulfillmentStatus}" olarak güncellendi.`)
     }
@@ -602,4 +622,55 @@ export function appendProductionJobActivity(jobId, text, extraPatch = {}) {
       { id: createActivityId(), date: new Date().toLocaleString('tr-TR'), text },
     ],
   }
+}
+
+export function softDeleteProductionActivities(jobId, activityIds = []) {
+  const current = getProductionJobById(jobId)
+  if (!current) return null
+  const idSet = new Set(activityIds.filter(Boolean))
+  if (!idSet.size) return null
+  const kept = []
+  const trash = [...(current.activityTrash || [])]
+  const now = new Date().toISOString()
+  ;(current.activities || []).forEach((item) => {
+    if (idSet.has(item.id)) {
+      trash.push({ ...item, deletedAt: now })
+    } else {
+      kept.push(item)
+    }
+  })
+  return updateProductionJob(jobId, { activities: kept, activityTrash: trash })
+}
+
+export function restoreProductionActivities(jobId, activityIds = []) {
+  const current = getProductionJobById(jobId)
+  if (!current) return null
+  const idSet = new Set(activityIds.filter(Boolean))
+  if (!idSet.size) return null
+  const restored = []
+  const trash = []
+  ;(current.activityTrash || []).forEach((item) => {
+    if (idSet.has(item.id)) {
+      const { deletedAt: _deletedAt, ...rest } = item
+      restored.push(rest)
+    } else {
+      trash.push(item)
+    }
+  })
+  return updateProductionJob(jobId, {
+    activities: [...(current.activities || []), ...restored],
+    activityTrash: trash,
+  })
+}
+
+export function purgeProductionActivityTrash(jobId, activityIds = null) {
+  const current = getProductionJobById(jobId)
+  if (!current) return null
+  if (!activityIds) {
+    return updateProductionJob(jobId, { activityTrash: [] })
+  }
+  const idSet = new Set(activityIds.filter(Boolean))
+  return updateProductionJob(jobId, {
+    activityTrash: (current.activityTrash || []).filter((item) => !idSet.has(item.id)),
+  })
 }

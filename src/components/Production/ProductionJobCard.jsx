@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArchiveRestore, ChevronDown, Package, Trash2 } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import ProductionProcessCapsuleRail from './ProductionProcessCapsuleRail'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
@@ -23,6 +22,11 @@ import {
   getProductionStageOptions,
   loadWorkflowStages,
 } from '../../utils/workflowStages'
+import {
+  purgeProductionActivityTrash,
+  restoreProductionActivities,
+  softDeleteProductionActivities,
+} from '../../utils/productionLineItemActions'
 
 function formatShortDate(value) {
   if (!value) return '—'
@@ -57,18 +61,17 @@ export default function ProductionJobCard({
   workflowStages: workflowStagesProp,
   productionStages: productionStagesProp,
   fulfillmentOptions,
+  onFulfillmentOptionsChange,
   orders,
   pendingDelete,
   onRequestDelete,
   onConfirmDelete,
   onCancelDelete,
-  onCancelProduction,
-  onSendToDepo,
   lineItemActions,
   activeMenu,
   setActiveMenu,
+  onRefresh,
 }) {
-  const navigate = useNavigate()
   const [activeLineIndex, setActiveLineIndex] = useState(0)
   const [activeRowId, setActiveRowId] = useState(null)
   const [journalOpen, setJournalOpen] = useState(false)
@@ -208,71 +211,53 @@ export default function ProductionJobCard({
     )
   }
 
-  function handleIssueWaybill(line, rowId) {
-    const result = lineItemActions?.handleIssueRowWaybill?.(line, rowId)
-    if (result?.path) navigate(result.path)
-  }
-
-  function handleOpenMapLink(line, rowId) {
-    const result = lineItemActions?.handleCreateRowSevkiyatLink?.(line, rowId)
-    if (result?.url) {
-      window.open(result.url, '_blank', 'noopener,noreferrer')
-      return
-    }
-    if (result?.mapsUrl) {
-      window.open(result.mapsUrl, '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  function handleIssueInvoice(line, rowId) {
-    const result = lineItemActions?.handleIssueRowInvoice?.(line, rowId)
-    if (result?.path) navigate(result.path)
-  }
-
   return (
     <div className="mt-3 space-y-5 rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent p-5 sm:p-6">
       <div className="relative" onClick={(event) => event.stopPropagation()}>
-        <ProductionLineDeliveryPanel
-          lineItems={lineItems}
-          activeLineId={activeLine?.id}
-          activeRowId={activeRowId}
-          onSelectLine={(lineId) => {
-            const index = lineItems.findIndex((line) => line.id === lineId)
-            if (index >= 0) setActiveLineIndex(index)
-          }}
-          onSelectRow={(rowId) => setActiveRowId(rowId)}
-          productionJobId={job.id}
-          fulfillmentOptions={fulfillmentOptions}
-          fulfillmentOpenKey={`${job.id}-fulfillment`}
-          activeMenu={activeMenu}
-          setActiveMenu={setActiveMenu}
-          columnsLocked={false}
-          resolveOrderQuantity={(line) => resolveLineItemOrderQuantity(line, order)}
-          onQuantityRowChange={(line, rowId, patch) =>
-            lineItemActions?.handleLineQuantityRowChange(line, rowId, patch)
-          }
-          onAddQuantityRow={(line, rowId) => {
-            const newId = lineItemActions?.handleAddQuantityRow(line, rowId)
-            if (newId) setActiveRowId(newId)
-          }}
-          onRemoveQuantityRow={(line, rowId) => {
-            lineItemActions?.handleRemoveQuantityRow(line, rowId)
-            if (activeRowId === rowId) setActiveRowId(null)
-          }}
-          onSendToDepo={(line, rowId) => {
-            lineItemActions?.handleSendRowToDepo(
-              line,
-              rowId,
-              resolveLineItemOrderQuantity(line, order),
-            )
-          }}
-          onUndoSendToDepo={(line, rowId) =>
-            lineItemActions?.handleUndoSendRowToDepo(line, rowId)
-          }
-          onIssueWaybill={handleIssueWaybill}
-          onOpenMapLink={handleOpenMapLink}
-          onIssueInvoice={handleIssueInvoice}
-        />
+          <ProductionLineDeliveryPanel
+            lineItems={lineItems}
+            activeLineId={activeLine?.id}
+            activeRowId={activeRowId}
+            onSelectLine={(lineId) => {
+              const index = lineItems.findIndex((line) => line.id === lineId)
+              if (index >= 0) setActiveLineIndex(index)
+            }}
+            onSelectRow={(rowId) => setActiveRowId(rowId)}
+            productionJobId={job.id}
+            fulfillmentOptions={fulfillmentOptions}
+            onFulfillmentOptionsChange={onFulfillmentOptionsChange}
+            fulfillmentOpenKey={`${job.id}-fulfillment`}
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+            columnsLocked={false}
+            resolveOrderQuantity={(line) => resolveLineItemOrderQuantity(line, order)}
+            onQuantityRowChange={(line, rowId, patch) =>
+              lineItemActions?.handleLineQuantityRowChange(line, rowId, patch)
+            }
+            onAddQuantityRow={(line, rowId) => {
+              const newId = lineItemActions?.handleAddQuantityRow(line, rowId)
+              if (newId) setActiveRowId(newId)
+            }}
+            onRemoveQuantityRow={(line, rowId) => {
+              lineItemActions?.handleRemoveQuantityRow(line, rowId)
+              if (activeRowId === rowId) setActiveRowId(null)
+            }}
+            onSendToDepo={(line, rowId) => {
+              lineItemActions?.handleSendRowToDepo(
+                line,
+                rowId,
+                resolveLineItemOrderQuantity(line, order),
+              )
+            }}
+            onUndoSendToDepo={(line, rowId) =>
+              lineItemActions?.handleUndoSendRowToDepo(line, rowId)
+            }
+            onEditRow={(line, rowId) => {
+              setActiveRowId(rowId)
+              const index = lineItems.findIndex((entry) => entry.id === line.id)
+              if (index >= 0) setActiveLineIndex(index)
+            }}
+          />
 
         {pendingDelete ? (
           <div className="absolute right-2 top-2 z-20" onClick={(event) => event.stopPropagation()}>
@@ -334,36 +319,24 @@ export default function ProductionJobCard({
         </button>
         {journalOpen ? (
           <div className="border-t border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent px-3 py-3">
-            <ProductionActivityTimeline activities={job.activities || []} />
+            <ProductionActivityTimeline
+              activities={job.activities || []}
+              trash={job.activityTrash || []}
+              onDelete={(ids) => {
+                softDeleteProductionActivities(job.id, ids)
+                onRefresh?.()
+              }}
+              onRestore={(ids) => {
+                restoreProductionActivities(job.id, ids)
+                onRefresh?.()
+              }}
+              onPurgeTrash={(ids) => {
+                purgeProductionActivityTrash(job.id, ids)
+                onRefresh?.()
+              }}
+            />
           </div>
         ) : null}
-      </div>
-
-      <div className="flex flex-wrap gap-2 border-t border-ds-border pt-3">
-        <button
-          type="button"
-          onClick={onCancelProduction}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border px-3 py-2 text-[12px] font-bold text-[var(--muted)] hover:bg-[var(--ds-surface-muted)]"
-        >
-          <ArchiveRestore className="h-3.5 w-3.5" />
-          Vazgeç
-        </button>
-        <button
-          type="button"
-          onClick={onSendToDepo}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border px-3 py-2 text-[12px] font-bold text-[var(--muted)] hover:bg-[var(--ds-surface-muted)]"
-        >
-          <Package className="h-3.5 w-3.5" />
-          Depoya gönder
-        </button>
-        <button
-          type="button"
-          onClick={onRequestDelete}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-[#fda4af]/50 px-3 py-2 text-[12px] font-bold text-[#e11d48] hover:bg-[#fff1f2]"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          Sil
-        </button>
       </div>
     </div>
   )

@@ -1651,15 +1651,17 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 }
 
 .app-dropdown-portal button[data-tone='primary'],
-.app-dropdown-portal button[data-tone='primary'] span,
 .app-dropdown-portal button[data-tone='primary'] svg,
 .customers-page-menu button[data-tone='primary'],
-.customers-page-menu button[data-tone='primary'] span,
 .customers-page-menu button[data-tone='primary'] svg,
 .customer-filter-dropdown-menu button[data-tone='primary'],
-.customer-filter-dropdown-menu button[data-tone='primary'] span,
 .customer-filter-dropdown-menu button[data-tone='primary'] svg {
   color: #2563eb !important;
+}
+.app-dropdown-portal button[data-tone='primary'] span,
+.customers-page-menu button[data-tone='primary'] span,
+.customer-filter-dropdown-menu button[data-tone='primary'] span {
+  color: var(--muted) !important;
 }
 .app-dropdown-portal button[data-tone='primary']:hover,
 .app-dropdown-portal button[data-tone='primary']:hover span,
@@ -1675,15 +1677,17 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 }
 
 .app-dropdown-portal button[data-tone='danger'],
-.app-dropdown-portal button[data-tone='danger'] span,
 .app-dropdown-portal button[data-tone='danger'] svg,
 .customers-page-menu button[data-tone='danger'],
-.customers-page-menu button[data-tone='danger'] span,
 .customers-page-menu button[data-tone='danger'] svg,
 .customer-filter-dropdown-menu button[data-tone='danger'],
-.customer-filter-dropdown-menu button[data-tone='danger'] span,
 .customer-filter-dropdown-menu button[data-tone='danger'] svg {
   color: #ef4444 !important;
+}
+.app-dropdown-portal button[data-tone='danger'] span,
+.customers-page-menu button[data-tone='danger'] span,
+.customer-filter-dropdown-menu button[data-tone='danger'] span {
+  color: var(--muted) !important;
 }
 .app-dropdown-portal button[data-tone='danger']:hover,
 .app-dropdown-portal button[data-tone='danger']:hover span,
@@ -1699,15 +1703,17 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 }
 
 .app-dropdown-portal button[data-tone='success'],
-.app-dropdown-portal button[data-tone='success'] span,
 .app-dropdown-portal button[data-tone='success'] svg,
 .customers-page-menu button[data-tone='success'],
-.customers-page-menu button[data-tone='success'] span,
 .customers-page-menu button[data-tone='success'] svg,
 .customer-filter-dropdown-menu button[data-tone='success'],
-.customer-filter-dropdown-menu button[data-tone='success'] span,
 .customer-filter-dropdown-menu button[data-tone='success'] svg {
   color: #10b981 !important;
+}
+.app-dropdown-portal button[data-tone='success'] span,
+.customers-page-menu button[data-tone='success'] span,
+.customer-filter-dropdown-menu button[data-tone='success'] span {
+  color: var(--muted) !important;
 }
 .app-dropdown-portal button[data-tone='success']:hover,
 .app-dropdown-portal button[data-tone='success']:hover span,
@@ -1723,15 +1729,17 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 }
 
 .app-dropdown-portal button[data-tone='orange'],
-.app-dropdown-portal button[data-tone='orange'] span,
 .app-dropdown-portal button[data-tone='orange'] svg,
 .customers-page-menu button[data-tone='orange'],
-.customers-page-menu button[data-tone='orange'] span,
 .customers-page-menu button[data-tone='orange'] svg,
 .customer-filter-dropdown-menu button[data-tone='orange'],
-.customer-filter-dropdown-menu button[data-tone='orange'] span,
 .customer-filter-dropdown-menu button[data-tone='orange'] svg {
   color: #ea580c !important;
+}
+.app-dropdown-portal button[data-tone='orange'] span,
+.customers-page-menu button[data-tone='orange'] span,
+.customer-filter-dropdown-menu button[data-tone='orange'] span {
+  color: var(--muted) !important;
 }
 .app-dropdown-portal button[data-tone='orange']:hover,
 .app-dropdown-portal button[data-tone='orange']:hover span,
