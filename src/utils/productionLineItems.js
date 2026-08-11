@@ -56,8 +56,11 @@ function resolveQuantityRowTimestamps(defaults, producedQuantity, deliveredQuant
 }
 
 export function createQuantityRow(defaults = {}) {
-  const fulfillmentStatus = isKnownFulfillmentLabel(defaults?.fulfillmentStatus)
-    ? defaults.fulfillmentStatus
+  const rawStatus = defaults?.fulfillmentStatus === 'Kısmi Teslimat'
+    ? 'Kısmi Üretim'
+    : defaults?.fulfillmentStatus
+  const fulfillmentStatus = isKnownFulfillmentLabel(rawStatus)
+    ? rawStatus
     : 'Devam Ediyor'
   const producedQuantity = Math.max(0, Number(defaults?.producedQuantity) || 0)
   const deliveredQuantity = Math.max(0, Number(defaults?.deliveredQuantity) || 0)
@@ -86,6 +89,8 @@ export function createQuantityRow(defaults = {}) {
     trackingToken: defaults?.trackingToken || '',
     depoItemId: defaults?.depoItemId || '',
     depoSentAt: defaults?.depoSentAt || '',
+    // Only + button sets this — empty extras without it stay hidden.
+    explicitPartial: defaults?.explicitPartial === true,
   }
 }
 
@@ -414,7 +419,7 @@ export function deriveJobSummary(job, stages = []) {
 
   let status = 'Devam Ediyor'
   if (statuses.every((item) => item === 'Tamamlandı')) status = 'Tamamlandı'
-  else if (statuses.some((item) => item === 'Kısmi Teslimat') || qtyMetrics.linesWithPartialDelivery > 0) status = 'Kısmi Teslimat'
+  else if (statuses.some((item) => item === 'Kısmi Üretim') || qtyMetrics.linesWithPartialDelivery > 0) status = 'Kısmi Üretim'
   else if (statuses.some((item) => item === 'Kısmi Üretim Bitti') || qtyMetrics.linesWithShortfall > 0 || qtyMetrics.linesWithExcess > 0) status = 'Kısmi Üretim Bitti'
   else if (statuses.every((item) => item === 'Bekliyor')) status = 'Bekliyor'
 

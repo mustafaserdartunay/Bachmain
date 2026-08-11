@@ -303,7 +303,7 @@ const PRODUCTION_CANCELLED_STATUSES = new Set(['İptal'])
 const PRODUCTION_CLOSED_LABELS = new Set(['Tamamlandı', 'Kapalı'])
 const PRODUCTION_CLOSED_STATUSES = new Set(['Tamamlandı'])
 const PRODUCTION_APPROVED_LABELS = new Set(['Onaylandı', 'Üretime Alındı', 'Üretimde'])
-const PRODUCTION_APPROVED_STATUSES = new Set(['Devam Ediyor', 'Üretimde', 'Kısmi Teslimat', 'Kısmi Üretim Bitti'])
+const PRODUCTION_APPROVED_STATUSES = new Set(['Devam Ediyor', 'Üretimde', 'Kısmi Üretim', 'Kısmi Üretim Bitti'])
 const PRODUCTION_PENDING_STATUSES = new Set(['Bekliyor'])
 
 function resolveDocumentAmount(document) {

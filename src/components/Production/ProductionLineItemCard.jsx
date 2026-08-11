@@ -25,7 +25,7 @@ const statusText = {
   'Devam Ediyor': 'text-[var(--accent)]',
   Bekliyor: 'text-[var(--text-muted)]',
   'Kısmi Üretim Bitti': 'text-amber-700',
-  'Kısmi Teslimat': 'text-orange-700',
+  'Kısmi Üretim': 'text-orange-700',
   Tamamlandı: 'text-emerald-700',
 }
 

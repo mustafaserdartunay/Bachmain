@@ -13,6 +13,7 @@ import NumericInput from '../Products/NumericInput'
 import { getLineQuantityRows } from '../../utils/productionLineItems'
 import {
   formatQty,
+  getCascadingRowRemaining,
   resolveDepoSendQuantity,
 } from '../../utils/productionQuantityMetrics'
 import { publishPartDeliverySituations } from '../../utils/productionFulfillmentOptions'
@@ -65,19 +66,24 @@ export default function ProductionLineDeliveryPanel({
 
   const flatRows = []
   lineItems.forEach((line) => {
-    // Always show every quantity row — + creates 20000-2, 20000-3, …
-    const rows = getLineQuantityRows(line)
+    const allRows = getLineQuantityRows(line)
+    // Hide leftover empty extras; + sets explicitPartial so new empty rows stay visible.
+    const rows = allRows.filter(
+      (row, index) => index === 0 || !isEmptyPartialRow(row) || row.explicitPartial === true,
+    )
     const orderQty = Math.max(
       0,
       Number(resolveOrderQuantity?.(line) ?? line.quantity) || 0,
     )
     rows.forEach((row, rowIndex) => {
+      const sourceIndex = allRows.findIndex((entry) => entry.id === row.id)
       flatRows.push({
         line,
         row,
-        rowIndex,
+        rowIndex: sourceIndex >= 0 ? sourceIndex : rowIndex,
         orderQty,
         isFirstOfLine: rowIndex === 0,
+        allRows,
       })
     })
   })
@@ -96,34 +102,16 @@ export default function ProductionLineDeliveryPanel({
   }
 
   function buildRowActions(line, row, rowIndex, orderQty) {
-    const depoQty = resolveDepoSendQuantity(row, rowIndex, line, orderQty)
-    const locked = columnsLocked || line.productionClosed
     const items = []
 
-    if (typeof onSendToDepo === 'function') {
-      if (row.depoItemId) {
-        items.push({
-          id: 'undo-depo',
-          label: 'Depo gönderimini geri al',
-          icon: Package,
-          tone: 'orange',
-          onClick: () => setPendingUndoDepoRowId(row.id),
-        })
-      } else {
-        items.push({
-          id: 'depo',
-          label: 'Ayarlarla depoya gönder',
-          icon: Package,
-          tone: 'success',
-          onClick: () => {
-            if (locked || !(depoQty > 0)) {
-              window.alert('Depoya göndermek için teslimat adedi girin.')
-              return
-            }
-            setPendingDepoRowId(row.id)
-          },
-        })
-      }
+    if (typeof onUndoSendToDepo === 'function' && row.depoItemId) {
+      items.push({
+        id: 'undo-depo',
+        label: 'Depo gönderimini geri al',
+        icon: Package,
+        tone: 'orange',
+        onClick: () => setPendingUndoDepoRowId(row.id),
+      })
     }
 
     items.push({
@@ -169,7 +157,7 @@ export default function ProductionLineDeliveryPanel({
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ NUMARASI</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>ÜRETİM ADEDİ</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>TESLİMAT ADEDİ</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DEPOYA GÖNDERİLEN</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>KALAN ADET</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DURUM</th>
             <th
@@ -196,7 +184,7 @@ export default function ProductionLineDeliveryPanel({
           </tr>
         </thead>
         <tbody>
-          {flatRows.map(({ line, row, rowIndex, orderQty, isFirstOfLine }) => {
+          {flatRows.map(({ line, row, rowIndex, orderQty, isFirstOfLine, allRows }) => {
             const productName = line.product || 'Ürün'
             const description = String(line.description || '').trim()
             const code = row.productionCode || `${productionJobId}-${rowIndex + 1}`
@@ -206,11 +194,8 @@ export default function ProductionLineDeliveryPanel({
               fulfillmentOptions[0]?.label ||
               ''
             const rowDetailExpanded = detailOpen && activeRowId === row.id
-            const lineDeliveredTotal = getLineQuantityRows(line).reduce(
-              (sum, entry) => sum + Math.max(0, Number(entry.deliveredQuantity) || 0),
-              0,
-            )
-            const remainingQty = Math.max(0, orderQty - lineDeliveredTotal)
+            // 2.+ satırlar: bir önceki kalandan üretim düşülerek
+            const remainingQty = getCascadingRowRemaining(allRows || getLineQuantityRows(line), orderQty, rowIndex)
 
             return (
               <tr
@@ -300,24 +285,63 @@ export default function ProductionLineDeliveryPanel({
                   className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap"
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <EditableDropdownPill
-                    value={statusValue}
-                    options={fulfillmentOptions}
-                    editable
-                    onOptionsChange={handleOptionsChange}
-                    disabled={columnsLocked || line.productionClosed}
-                    includePlaceholderOption={false}
-                    placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum ekle'}
-                    buttonClassName="flex !h-8 !min-h-8 min-w-[7.5rem] items-center justify-between rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold"
-                    openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
-                    activeMenu={activeMenu}
-                    setActiveMenu={setActiveMenu}
-                    onChange={(value) =>
-                      onQuantityRowChange?.(line, row.id, {
-                        fulfillmentStatus: value || fulfillmentOptions[0]?.label || 'Devam Ediyor',
-                      })
-                    }
-                  />
+                  <div className="inline-flex min-w-0 items-center gap-2">
+                    <EditableDropdownPill
+                      value={statusValue === 'Kısmi Teslimat' ? 'Kısmi Üretim' : statusValue}
+                      options={fulfillmentOptions}
+                      editable
+                      onOptionsChange={handleOptionsChange}
+                      disabled={columnsLocked || line.productionClosed}
+                      includePlaceholderOption={false}
+                      placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum ekle'}
+                      buttonClassName="flex !h-8 !min-h-8 min-w-[7.5rem] items-center justify-between rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold"
+                      openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
+                      activeMenu={activeMenu}
+                      setActiveMenu={setActiveMenu}
+                      onChange={(value) =>
+                        onQuantityRowChange?.(line, row.id, {
+                          fulfillmentStatus: value || fulfillmentOptions[0]?.label || 'Devam Ediyor',
+                        })
+                      }
+                    />
+                    {typeof onSendToDepo === 'function' ? (
+                      pendingDepoRowId === row.id ? (
+                        <ListInlineActionConfirm
+                          message="Emin misin?"
+                          tone="orange"
+                          onConfirm={() => {
+                            onSendToDepo?.(line, row.id)
+                            setPendingDepoRowId(null)
+                          }}
+                          onCancel={() => setPendingDepoRowId(null)}
+                        />
+                      ) : row.depoItemId ? (
+                        <span className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[11px] font-bold text-emerald-700">
+                          <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+                          Gönderildi
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={columnsLocked || line.productionClosed}
+                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700 disabled:opacity-50"
+                          title="Depoya gönder"
+                          aria-label="Depoya gönder"
+                          onClick={() => {
+                            const depoQty = resolveDepoSendQuantity(row, rowIndex, line, orderQty)
+                            if (columnsLocked || line.productionClosed || !(depoQty > 0)) {
+                              window.alert('Depoya göndermek için depoya gönderilen adedi girin.')
+                              return
+                            }
+                            setPendingDepoRowId(row.id)
+                          }}
+                        >
+                          <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+                          Depoya gönder
+                        </button>
+                      )
+                    ) : null}
+                  </div>
                 </td>
 
                 <td
@@ -349,17 +373,7 @@ export default function ProductionLineDeliveryPanel({
                   className="h-[var(--ds-row-h,2.75rem)] w-14 px-2 text-center align-middle"
                   onClick={(event) => event.stopPropagation()}
                 >
-                  {pendingDepoRowId === row.id ? (
-                    <ListInlineActionConfirm
-                      message="Emin misin?"
-                      tone="orange"
-                      onConfirm={() => {
-                        onSendToDepo?.(line, row.id)
-                        setPendingDepoRowId(null)
-                      }}
-                      onCancel={() => setPendingDepoRowId(null)}
-                    />
-                  ) : pendingUndoDepoRowId === row.id ? (
+                  {pendingUndoDepoRowId === row.id ? (
                     <ListInlineActionConfirm
                       message="Emin misin?"
                       tone="orange"

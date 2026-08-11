@@ -9,6 +9,7 @@ import {
 } from './productionLineItems'
 import {
   formatQty,
+  getLineCascadingRemainingAfterRows,
   getLineQuantityMetrics,
   getQuantityRowOrdered,
   resolveDepoSendQuantity,
@@ -65,11 +66,13 @@ export function createProductionLineItemActions({
   function patchLineQuantityRows(lineItem, nextRows, { skipDeriveForRowId = null, lineItemPatch = {} } = {}) {
     if (!job) return
     const now = createQuantityRowTimestamp()
-    const rows = nextRows.map((row) => (
+    const derived = nextRows.map((row) => (
       row.id === skipDeriveForRowId || row?.fulfillmentStatusManual
         ? row
         : withDerivedQuantityRowFulfillmentStatus(row, lineItem, productionStageOptions, { timestamp: now })
     ))
+    // Keep sipariş numarası sequential: 20000-1, 20000-2, …
+    const rows = assignProductionRowCodes(derived, job.id)
     const synced = syncLineQuantitiesFromRows(rows)
     const currentStageId = deriveLineCurrentStageId(synced.quantityRows, stagesForNormalize)
     const currentJob = getProductionJobById(job.id)
@@ -181,12 +184,12 @@ export function createProductionLineItemActions({
 
   function handleAddQuantityRow(lineItem, sourceRowId) {
     if (!job) return undefined
-    // Explicit user action only — append next sipariş numarası (20000-1 → 20000-2 → …).
+    // Explicit + only — never auto-create. Codes reassigned in patchLineQuantityRows.
     const rows = getLineQuantityRows(lineItem)
     if (!rows.length) return undefined
 
-    const lineMetrics = getLineQuantityMetrics(lineItem)
-    let splitQty = Math.max(0, lineMetrics.remaining)
+    const orderQty = Math.max(0, Number(lineItem.quantity) || 0)
+    let splitQty = getLineCascadingRemainingAfterRows(rows, orderQty)
     if (splitQty <= 0) splitQty = 1
 
     const now = createQuantityRowTimestamp()
@@ -196,8 +199,9 @@ export function createProductionLineItemActions({
       createdAt: now,
       currentStageId: firstStage?.id || lineItem.currentStageId || '',
       stageUpdatedAt: now,
+      explicitPartial: true,
     })
-    const nextRows = assignProductionRowCodes([...rows, newRow], job.id)
+    const nextRows = [...rows, newRow]
 
     const reopenPatch = lineItem.productionClosed
       ? {
@@ -259,7 +263,7 @@ export function createProductionLineItemActions({
 
     const depoQuantity = resolveDepoSendQuantity(row, rowIndex, lineItem, orderLineQuantity)
     if (depoQuantity <= 0) {
-      window.alert('Depoya göndermek için teslim adedi girin.')
+      window.alert('Depoya göndermek için depoya gönderilen adedi girin.')
       return null
     }
 
@@ -353,7 +357,7 @@ export function createProductionLineItemActions({
     if (metrics.delivered >= metrics.ordered) {
       fulfillmentStatus = 'Tamamlandı'
     } else if (metrics.delivered > 0) {
-      fulfillmentStatus = 'Kısmi Teslimat'
+      fulfillmentStatus = 'Kısmi Üretim'
     } else if (metrics.produced > 0) {
       fulfillmentStatus = 'Devam Ediyor'
     } else if (fulfillmentStatus === 'Tamamlandı' || fulfillmentStatus === 'Kısmi Üretim Bitti') {

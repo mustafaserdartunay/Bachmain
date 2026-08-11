@@ -5,7 +5,7 @@ const STORAGE_KEY = 'erlenbox-production-fulfillment-options'
 
 export const DEFAULT_PART_DELIVERY_SITUATIONS = [
   { label: 'Devam Ediyor', color: 'bg-blue-500' },
-  { label: 'Kısmi Teslimat', color: 'bg-orange-500' },
+  { label: 'Kısmi Üretim', color: 'bg-orange-500' },
   { label: 'Depoda Hazır', color: 'bg-violet-500' },
   { label: 'Tamamlandı', color: 'bg-emerald-500' },
 ]
@@ -18,7 +18,12 @@ export function loadPartDeliverySituations() {
     if (!Array.isArray(parsed) || parsed.length === 0) {
       return normalizeOptionList(DEFAULT_PART_DELIVERY_SITUATIONS)
     }
-    return normalizeOptionList(parsed)
+    const migrated = parsed.map((option) => {
+      if (!option || typeof option !== 'object') return option
+      if (option.label === 'Kısmi Teslimat') return { ...option, label: 'Kısmi Üretim' }
+      return option
+    })
+    return normalizeOptionList(migrated)
   } catch {
     return normalizeOptionList(DEFAULT_PART_DELIVERY_SITUATIONS)
   }
@@ -66,7 +71,7 @@ function migrateProductionFulfillmentLabels(previousOptions, nextOptions) {
     const statuses = lineItems.map((line) => line.fulfillmentStatus || fallbackLabel)
     let status = job.status || fallbackLabel
     if (statuses.every((item) => item === 'Tamamlandı')) status = 'Tamamlandı'
-    else if (statuses.some((item) => item === 'Kısmi Teslimat')) status = 'Kısmi Teslimat'
+    else if (statuses.some((item) => item === 'Kısmi Üretim' || item === 'Kısmi Teslimat')) status = 'Kısmi Üretim'
     else if (statuses.some((item) => item === 'Kısmi Üretim Bitti')) status = 'Kısmi Üretim Bitti'
     else if (statuses.some((item) => item === 'Bekliyor')) status = 'Bekliyor'
     else status = resolveLabel(status)
@@ -89,6 +94,17 @@ export function getLineFulfillmentOptions() {
   return loadPartDeliverySituations()
 }
 
+export function resolveFulfillmentLabel(label, options = loadPartDeliverySituations()) {
+  if (!label) return ''
+  if (label === 'Kısmi Teslimat') {
+    const partial = options.find((option) => option.label === 'Kısmi Üretim')
+    if (partial) return partial.label
+  }
+  if (options.some((option) => option.label === label)) return label
+  return label
+}
+
 export function isKnownFulfillmentLabel(label, options = loadPartDeliverySituations()) {
-  return options.some((option) => option.label === label)
+  const resolved = resolveFulfillmentLabel(label, options)
+  return options.some((option) => option.label === resolved)
 }

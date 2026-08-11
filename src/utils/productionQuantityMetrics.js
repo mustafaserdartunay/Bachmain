@@ -24,6 +24,22 @@ export function getQuantityRowRemaining(row, lineItem, rowIndex = 0) {
   return Math.max(0, ordered - produced)
 }
 
+/** Kalan: sipariş → her satırın üretiminden düşerek (önceki kalandan devam). */
+export function getCascadingRowRemaining(rows = [], orderQty = 0, throughIndex = 0) {
+  let remaining = Math.max(0, Number(orderQty) || 0)
+  const last = Math.min(throughIndex, rows.length - 1)
+  for (let i = 0; i <= last; i += 1) {
+    const produced = Math.max(0, Number(rows[i]?.producedQuantity) || 0)
+    remaining = Math.max(0, remaining - produced)
+  }
+  return remaining
+}
+
+export function getLineCascadingRemainingAfterRows(rows = [], orderQty = 0) {
+  if (!rows.length) return Math.max(0, Number(orderQty) || 0)
+  return getCascadingRowRemaining(rows, orderQty, rows.length - 1)
+}
+
 export function getFirstRowSplitBaseRemaining(lineItem, orderLineQuantity = null) {
   const rows = Array.isArray(lineItem?.quantityRows) ? lineItem.quantityRows : []
   const firstRow = rows[0]
@@ -344,10 +360,10 @@ export function jobMatchesQuantityFilter(job, filter, stages = []) {
   const lineItems = ensureLineItems(job, stages)
   const metrics = getJobQuantityMetrics(lineItems)
 
-  if (filter === 'Kısmi Teslimat') {
+  if (filter === 'Kısmi Üretim' || filter === 'Kısmi Teslimat') {
     return (
       lineItems.some((line) => getLineQuantityMetrics(line).hasPartialDelivery) ||
-      job.status === 'Kısmi Teslimat'
+      job.status === 'Kısmi Üretim'
     )
   }
   if (filter === 'Kalan Adet Var') {
@@ -383,7 +399,7 @@ export function deriveQuantityRowFulfillmentStatus(row, lineItem, productionStag
   }
 
   if (delivered > 0 && (ordered === 0 || delivered < ordered)) {
-    return 'Kısmi Teslimat'
+    return 'Kısmi Üretim'
   }
 
   if (isAtLastStage) {
@@ -438,13 +454,13 @@ export function resolveProductionClosedStatus(line, productionStages) {
     metrics.excess === 0
   ) {
     return {
-      fulfillmentStatus: metrics.delivered >= metrics.ordered ? 'Tamamlandı' : 'Kısmi Teslimat',
+      fulfillmentStatus: metrics.delivered >= metrics.ordered ? 'Tamamlandı' : 'Kısmi Üretim',
       currentStageId: lastStage?.id || line.currentStageId,
     }
   }
   if (metrics.hasExcess) {
     return {
-      fulfillmentStatus: metrics.delivered > 0 ? 'Kısmi Teslimat' : 'Kısmi Üretim Bitti',
+      fulfillmentStatus: metrics.delivered > 0 ? 'Kısmi Üretim' : 'Kısmi Üretim Bitti',
       currentStageId: lastStage?.id || line.currentStageId,
     }
   }
@@ -746,9 +762,9 @@ export function jobMatchesProductionStateFilter(job, filter, stages = []) {
     return (
       flow.tone === 'continuing' ||
       flow.tone === 'closed' ||
-      ['Devam Ediyor', 'Kısmi Teslimat', 'Kısmi Üretim Bitti'].includes(job.status || '') ||
+      ['Devam Ediyor', 'Kısmi Üretim', 'Kısmi Teslimat', 'Kısmi Üretim Bitti'].includes(job.status || '') ||
       lineItems.some((line) =>
-        ['Devam Ediyor', 'Kısmi Teslimat', 'Kısmi Üretim Bitti'].includes(line.fulfillmentStatus),
+        ['Devam Ediyor', 'Kısmi Üretim', 'Kısmi Teslimat', 'Kısmi Üretim Bitti'].includes(line.fulfillmentStatus),
       )
     )
   }
