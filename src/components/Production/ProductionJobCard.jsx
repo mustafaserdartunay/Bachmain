@@ -171,7 +171,8 @@ export default function ProductionJobCard({
       return
     }
     setDetailOpen(true)
-    setJournalOpen(true)
+    // Journal stays collapsed — user opens it explicitly.
+    setJournalOpen(false)
   }
 
   function handleStageClick(stageId) {
