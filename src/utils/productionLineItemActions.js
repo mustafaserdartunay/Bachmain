@@ -15,10 +15,22 @@ import {
   resolveProductionClosedStatus,
   withDerivedQuantityRowFulfillmentStatus,
 } from './productionQuantityMetrics'
-import { removeDepoItemByProductionLine, removeDepoItemByProductionRow, removeDepoItemById, createDepoItemFromRow, addDepoItem, getDepoItemByProductionRow, syncDepoFromProduction, updateDepoItem } from './depoStore'
+import { removeDepoItemByProductionLine, removeDepoItemByProductionRow, removeDepoItemById, createDepoItemFromRow, addDepoItem, getDepoItemByProductionRow, syncDepoFromProduction, updateDepoItem, createDepoWaybill } from './depoStore'
 import { findCustomerProfileByReference } from '../data/customerProfiles'
+import { getCustomerDisplay } from './customerDisplay'
+import { buildGoogleMapsNavigationUrl, formatCustomerAddress, getCustomerCoordinates } from './customerGeo'
 import { buildProductionInvoiceDraft, saveProductionInvoiceDraft } from './productionInvoiceDraft'
 import { getProductionJobById, updateProductionJob, updateProductionLineItem } from './productionStore'
+import {
+  createEmptyGood,
+  createEmptyStop,
+  createTripDraft,
+  getSevkiyatTrackingUrl,
+  getTrip,
+  shareTrackingLink,
+  upsertTrip,
+} from './sevkiyatStore'
+import { createOutgoingWaybill, getWarehouses } from './stockStore'
 
 function createActivityId() {
   return `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -404,7 +416,7 @@ export function createProductionLineItemActions({
     if (row.invoiceNo) return handleOpenRowInvoice(lineItem, rowId)
 
     if (!row.depoItemId) {
-      window.alert('Fatura kesmek için önce depoya gönderin.')
+      window.alert('Fatura kesmek için önce depoya gönderin / teslim edin.')
       return null
     }
 
@@ -440,6 +452,125 @@ export function createProductionLineItemActions({
     }
   }
 
+  function handleIssueRowWaybill(lineItem, rowId) {
+    if (!job) return null
+    const rows = getLineQuantityRows(lineItem)
+    const row = rows.find((entry) => entry.id === rowId)
+    if (!row) return null
+    if (row.waybillNo) {
+      return { waybillNo: row.waybillNo, path: '/stok/giden-irsaliye' }
+    }
+
+    const now = createQuantityRowTimestamp()
+    const waybillNo = `IRS-${Date.now().toString().slice(-8)}`
+    const qty = Math.max(
+      0,
+      Number(row.deliveredQuantity) || Number(row.producedQuantity) || getQuantityRowOrdered(row, lineItem) || 0,
+    )
+    const warehouses = getWarehouses()
+    try {
+      createOutgoingWaybill({
+        waybillNo,
+        warehouseId: warehouses[0]?.id || '',
+        customerName: job.customer || '',
+        date: new Date().toISOString().slice(0, 10),
+        notes: `${row.productionCode || job.id} · ${lineItem.product || 'Ürün'} · kısmi teslimat`,
+        items: [{
+          productId: '',
+          productName: lineItem.product || 'Ürün',
+          sku: row.productionCode || '',
+          unit: 'adet',
+          quantity: qty || 1,
+        }],
+      })
+    } catch {
+      // Keep row waybill even if stock write fails.
+    }
+
+    if (row.depoItemId) {
+      try {
+        createDepoWaybill(row.depoItemId)
+      } catch {
+        /* ignore */
+      }
+    }
+
+    const nextRow = { ...row, waybillNo, waybillAt: now }
+    patchLineQuantityRows(lineItem, rows.map((entry) => (entry.id === rowId ? nextRow : entry)))
+    appendActivity(`"${lineItem.product}" için ${waybillNo} sevk fişi / irsaliye oluşturuldu.`)
+    return { waybillNo, path: '/stok/giden-irsaliye' }
+  }
+
+  function handleCreateRowSevkiyatLink(lineItem, rowId) {
+    if (!job) return null
+    const rows = getLineQuantityRows(lineItem)
+    const row = rows.find((entry) => entry.id === rowId)
+    if (!row) return null
+
+    if (row.trackingToken) {
+      const existing = row.sevkiyatTripId ? getTrip(row.sevkiyatTripId) : null
+      if (existing) shareTrackingLink(existing.id, true)
+      return {
+        tripId: row.sevkiyatTripId || '',
+        trackingToken: row.trackingToken,
+        url: getSevkiyatTrackingUrl(row.trackingToken),
+      }
+    }
+
+    const profile = findCustomerProfileByReference(job.customer)
+    const qty = Math.max(
+      0,
+      Number(row.deliveredQuantity) || Number(row.producedQuantity) || getQuantityRowOrdered(row, lineItem) || 1,
+    )
+    const stop = {
+      ...createEmptyStop(1),
+      customerId: profile?.id || '',
+      customerLabel:
+        (profile ? getCustomerDisplay(profile).brandShortName : '') ||
+        profile?.company ||
+        job.customer ||
+        '',
+      address: profile ? formatCustomerAddress(profile) : '',
+      city: profile?.city || '',
+      ...(profile ? getCustomerCoordinates(profile) : {}),
+      goods: [{
+        ...createEmptyGood(),
+        label: lineItem.product || 'Ürün',
+        qty,
+        unit: 'adet',
+        note: row.productionCode || job.id || '',
+      }],
+    }
+
+    const trip = upsertTrip(
+      createTripDraft({
+        status: 'planned',
+        sharedWithCustomer: true,
+        stops: [stop],
+        plate: '',
+        driverName: '',
+        notes: `Üretim ${job.id} · ${row.productionCode || row.id}`,
+      }),
+    )
+    if (!trip) return null
+    shareTrackingLink(trip.id, true)
+
+    const nextRow = {
+      ...row,
+      sevkiyatTripId: trip.id,
+      trackingToken: trip.trackingToken,
+    }
+    patchLineQuantityRows(lineItem, rows.map((entry) => (entry.id === rowId ? nextRow : entry)))
+    appendActivity(`"${lineItem.product}" için sevk takip linki oluşturuldu (${trip.code}).`)
+
+    return {
+      tripId: trip.id,
+      trackingToken: trip.trackingToken,
+      url: getSevkiyatTrackingUrl(trip.trackingToken),
+      mapsUrl: profile ? buildGoogleMapsNavigationUrl(profile) : '',
+    }
+  }
+
   return {
     handleQuantityRowStageChange,
     handleLineQuantityRowChange,
@@ -452,6 +583,8 @@ export function createProductionLineItemActions({
     handleRemoveLineItem,
     handleIssueRowInvoice,
     handleOpenRowInvoice,
+    handleIssueRowWaybill,
+    handleCreateRowSevkiyatLink,
     handleSendRowToDepo,
     handleUndoSendRowToDepo,
   }

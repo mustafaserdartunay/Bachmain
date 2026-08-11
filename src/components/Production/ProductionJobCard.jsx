@@ -1,19 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ArchiveRestore, Package, Trash2 } from 'lucide-react'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import ProductionProcessCapsuleRail from './ProductionProcessCapsuleRail'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
-import ProductionPartialDeliveryTable from './ProductionPartialDeliveryTable'
+import ProductionLineDeliveryPanel from './ProductionLineDeliveryPanel'
 import {
   ensureLineItems,
   getLineQuantityRows,
   resolveLineItemOrderQuantity,
   resolveOrderForProductionJob,
 } from '../../utils/productionLineItems'
-import {
-  formatQty,
-  getQuantityRowMinimalSteps,
-} from '../../utils/productionQuantityMetrics'
+import { getQuantityRowMinimalSteps } from '../../utils/productionQuantityMetrics'
 import {
   createStagePhoto,
   normalizeStagePhotos,
@@ -23,7 +21,6 @@ import {
   getProductionStageOptions,
   loadWorkflowStages,
 } from '../../utils/workflowStages'
-import { PAGE_TABLE_HEADER_CLASS } from '../../utils/dashboardDesign'
 
 function formatShortDate(value) {
   if (!value) return '—'
@@ -51,7 +48,7 @@ function buildStepsForLine(line, productionStages) {
 }
 
 /**
- * Expanded production detail — compact product + partial delivery row, then process rail.
+ * Expanded production detail — unified product/partial panel + process rail.
  */
 export default function ProductionJobCard({
   job,
@@ -69,6 +66,7 @@ export default function ProductionJobCard({
   activeMenu,
   setActiveMenu,
 }) {
+  const navigate = useNavigate()
   const [activeLineIndex, setActiveLineIndex] = useState(0)
   const [liveWorkflowStages, setLiveWorkflowStages] = useState(
     () => workflowStagesProp || loadWorkflowStages(),
@@ -140,116 +138,70 @@ export default function ProductionJobCard({
     }
   }
 
+  function handleIssueWaybill(line, rowId) {
+    const result = lineItemActions?.handleIssueRowWaybill?.(line, rowId)
+    if (result?.path) navigate(result.path)
+  }
+
+  function handleOpenMapLink(line, rowId) {
+    const result = lineItemActions?.handleCreateRowSevkiyatLink?.(line, rowId)
+    if (result?.url) {
+      window.open(result.url, '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (result?.mapsUrl) {
+      window.open(result.mapsUrl, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  function handleIssueInvoice(line, rowId) {
+    const result = lineItemActions?.handleIssueRowInvoice?.(line, rowId)
+    if (result?.path) navigate(result.path)
+  }
+
   return (
     <div className="mt-3 space-y-4 rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)] p-4">
-      <div className="flex flex-wrap items-start gap-3">
-        <div className="w-max max-w-full shrink-0 overflow-x-auto rounded-ds-lg border border-ds-border">
-          <table className="w-max border-collapse text-left">
-            <thead className="bg-[var(--ds-surface-muted)]">
-              <tr>
-                <th className={`${PAGE_TABLE_HEADER_CLASS} w-[1%] whitespace-nowrap`}>
-                  ÜRÜN AÇIKLAMASI
-                </th>
-                <th className={`${PAGE_TABLE_HEADER_CLASS} w-[1%] whitespace-nowrap`}>
-                  SİPARİŞ ADETİ
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {lineItems.length === 0 ? (
-                <tr className="border-t border-ds-border">
-                  <td className="h-[var(--ds-row-h,2.75rem)] px-3 text-[14px] text-[var(--muted)]">
-                    {job.title || 'Ürün bilgisi yok'}
-                  </td>
-                  <td className="h-[var(--ds-row-h,2.75rem)] px-3 text-[14px] text-[var(--muted)]">
-                    —
-                  </td>
-                </tr>
-              ) : (
-                lineItems.map((line, index) => {
-                  const qty = Math.max(
-                    0,
-                    Number(resolveLineItemOrderQuantity(line, order) ?? line.quantity) || 0,
-                  )
-                  const isActive = index === activeLineIndex
-                  const productName = line.product || `Kalem ${index + 1}`
-                  const description = String(line.description || '').trim()
-                  return (
-                    <tr
-                      key={line.id}
-                      className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] cursor-pointer ${
-                        isActive ? 'bg-[var(--ds-surface-muted)]' : ''
-                      }`}
-                      onClick={() => setActiveLineIndex(index)}
-                    >
-                      <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1.5 whitespace-nowrap text-ds-body text-ds-ink">
-                        <span className="flex min-w-0 flex-col gap-0.5">
-                          {description ? (
-                            <>
-                              <span className="customer-name-primary text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
-                                {description}
-                              </span>
-                              <span className="customer-name-secondary font-sans text-[14px] font-normal leading-tight text-[var(--muted)]">
-                                {productName}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="customer-name-primary text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
-                              {productName}
-                            </span>
-                          )}
-                        </span>
-                      </td>
-                      <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1.5 whitespace-nowrap">
-                        <span className="flex min-w-0 flex-col gap-0.5">
-                          <span className="customer-name-primary tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
-                            {formatQty(qty)}
-                          </span>
-                          <span className="customer-name-secondary text-[14px] font-normal leading-tight text-[var(--muted)]">
-                            adet
-                          </span>
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1" onClick={(event) => event.stopPropagation()}>
+          <ProductionLineDeliveryPanel
+            lineItems={lineItems}
+            activeLineId={activeLine?.id}
+            onSelectLine={(lineId) => {
+              const index = lineItems.findIndex((line) => line.id === lineId)
+              if (index >= 0) setActiveLineIndex(index)
+            }}
+            order={order}
+            productionJobId={job.id}
+            fulfillmentOptions={fulfillmentOptions}
+            fulfillmentOpenKey={`${job.id}-fulfillment`}
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+            columnsLocked={false}
+            resolveOrderQuantity={(line) => resolveLineItemOrderQuantity(line, order)}
+            onQuantityRowChange={(line, rowId, patch) =>
+              lineItemActions?.handleLineQuantityRowChange(line, rowId, patch)
+            }
+            onAddQuantityRow={(line, rowId) =>
+              lineItemActions?.handleAddQuantityRow(line, rowId)
+            }
+            onRemoveQuantityRow={(line, rowId) =>
+              lineItemActions?.handleRemoveQuantityRow(line, rowId)
+            }
+            onSendToDepo={(line, rowId) => {
+              lineItemActions?.handleSendRowToDepo(
+                line,
+                rowId,
+                resolveLineItemOrderQuantity(line, order),
+              )
+            }}
+            onUndoSendToDepo={(line, rowId) =>
+              lineItemActions?.handleUndoSendRowToDepo(line, rowId)
+            }
+            onIssueWaybill={handleIssueWaybill}
+            onOpenMapLink={handleOpenMapLink}
+            onIssueInvoice={handleIssueInvoice}
+          />
         </div>
-
-        {activeLine ? (
-          <div className="min-w-0 flex-1" onClick={(event) => event.stopPropagation()}>
-            <ProductionPartialDeliveryTable
-              compact
-              lineItem={activeLine}
-              productionJobId={job.id}
-              fulfillmentOptions={fulfillmentOptions}
-              fulfillmentOpenKey={`${job.id}-${activeLine.id}-fulfillment`}
-              activeMenu={activeMenu}
-              setActiveMenu={setActiveMenu}
-              columnsLocked={activeLine.productionClosed === true}
-              orderLineQuantity={resolveLineItemOrderQuantity(activeLine, order)}
-              onQuantityRowChange={(rowId, patch) =>
-                lineItemActions?.handleLineQuantityRowChange(activeLine, rowId, patch)
-              }
-              onAddQuantityRow={(rowId) => lineItemActions?.handleAddQuantityRow(activeLine, rowId)}
-              onRemoveQuantityRow={(rowId) =>
-                lineItemActions?.handleRemoveQuantityRow(activeLine, rowId)
-              }
-              onSendToDepo={(rowId) => {
-                lineItemActions?.handleSendRowToDepo(
-                  activeLine,
-                  rowId,
-                  resolveLineItemOrderQuantity(activeLine, order),
-                )
-              }}
-              onUndoSendToDepo={(rowId) =>
-                lineItemActions?.handleUndoSendRowToDepo(activeLine, rowId)
-              }
-            />
-          </div>
-        ) : null}
 
         <div className="flex shrink-0 items-center gap-1.5 pt-1" onClick={(event) => event.stopPropagation()}>
           {pendingDelete ? (

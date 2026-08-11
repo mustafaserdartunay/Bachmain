@@ -79,6 +79,10 @@ export function createQuantityRow(defaults = {}) {
     productionCode: defaults?.productionCode || '',
     invoiceNo: defaults?.invoiceNo || '',
     invoiceAt: defaults?.invoiceAt || '',
+    waybillNo: defaults?.waybillNo || '',
+    waybillAt: defaults?.waybillAt || '',
+    sevkiyatTripId: defaults?.sevkiyatTripId || '',
+    trackingToken: defaults?.trackingToken || '',
     depoItemId: defaults?.depoItemId || '',
     depoSentAt: defaults?.depoSentAt || '',
   }
