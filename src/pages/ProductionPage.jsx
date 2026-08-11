@@ -26,16 +26,16 @@ import {
 import ProductionFilterBar from '../components/Production/ProductionFilterBar'
 import ProductionJobCard, {
   formatShortDate,
-  resolveStatusBadge,
 } from '../components/Production/ProductionJobCard'
+import ProductionProgressRing from '../components/Production/ProductionProgressRing'
 import { getListCustomerDisplay } from '../data/customerProfiles'
 import { ensureLineItems, getLineFulfillmentOptions } from '../utils/productionLineItems'
 import {
-  formatQty,
   getJobQuantityMetrics,
   jobMatchesProductionStateFilter,
   jobMatchesQuantityFilter,
   PRODUCTION_STATE_FILTER_OPTIONS,
+  resolveJobProductionProgress,
 } from '../utils/productionQuantityMetrics'
 import {
   appendProductionJobActivity,
@@ -387,33 +387,21 @@ export default function ProductionPage() {
             {
               id: 'status',
               header: 'DURUM',
-              className: 'w-[10rem]',
+              className: 'w-[11rem]',
               cell: (job) => {
-                const metrics = getJobQuantityMetrics(ensureLineItems(job, workflowStages))
-                const badge = resolveStatusBadge(job, metrics)
-                return (
-                  <span
-                    className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white ${badge.gradient}`}
-                  >
-                    {badge.label}
-                  </span>
+                const lineItems = ensureLineItems(job, workflowStages)
+                const progress = resolveJobProductionProgress(
+                  job,
+                  lineItems,
+                  productionStageOptions,
                 )
-              },
-            },
-            {
-              id: 'quantity',
-              header: 'ADET',
-              sortable: true,
-              accessorKey: 'quantity',
-              className: 'w-[1%] whitespace-nowrap text-right',
-              getSortValue: (job) =>
-                getJobQuantityMetrics(ensureLineItems(job, workflowStages)).ordered,
-              cell: (job) => {
-                const metrics = getJobQuantityMetrics(ensureLineItems(job, workflowStages))
                 return (
-                  <span className="tabular-nums text-[14px] font-bold text-[var(--muted)]">
-                    {formatQty(metrics.produced)}/{formatQty(metrics.ordered)}
-                  </span>
+                  <ProductionProgressRing
+                    percent={progress.percent}
+                    label={progress.label}
+                    size={40}
+                    stroke={4}
+                  />
                 )
               },
             },
@@ -461,7 +449,6 @@ export default function ProductionPage() {
             productionStages={productionStageOptions}
             fulfillmentOptions={fulfillmentOptions}
             orders={orders}
-            quotes={quotes}
             pendingDelete={pendingDeleteId === expandedJob.id}
             onRequestDelete={() => setPendingDeleteId(expandedJob.id)}
             onConfirmDelete={() => removeJob(expandedJob)}

@@ -561,6 +561,84 @@ export function resolveJobProductionFlowBadge(lineItems = [], jobStatus = '') {
   return { label: 'Üretim Devam Ediyor', tone: 'continuing' }
 }
 
+/**
+ * List-row progress: % across order line items' process advance.
+ * Beklemede → nothing started; Devam ediyor until job is confirmed Tamamlandı.
+ */
+export function resolveJobProductionProgress(job, lineItems = [], productionStages = []) {
+  const statusRaw = String(job?.status || '')
+  if (/iptal/i.test(statusRaw)) {
+    return { percent: 0, label: 'İptal', tone: 'cancel' }
+  }
+  if (statusRaw === 'Tamamlandı') {
+    return { percent: 100, label: 'Tamamlandı', tone: 'done' }
+  }
+
+  const lines = Array.isArray(lineItems) ? lineItems : []
+  const stages = Array.isArray(productionStages) ? productionStages : []
+  if (!lines.length) {
+    return { percent: 0, label: 'Beklemede', tone: 'pending' }
+  }
+
+  const lastIndex = Math.max(0, stages.length - 1)
+  let anyStarted = false
+  let allLinesFinished = true
+  let progressSum = 0
+
+  lines.forEach((line) => {
+    const closed =
+      line?.productionClosed === true ||
+      line?.fulfillmentStatus === 'Tamamlandı' ||
+      /tamamland/i.test(String(line?.fulfillmentStatus || ''))
+
+    let stageIndex = stages.findIndex((stage) => stage.id === line?.currentStageId)
+    const rows = Array.isArray(line?.quantityRows) ? line.quantityRows : []
+    rows.forEach((row) => {
+      const idx = stages.findIndex((stage) => stage.id === row?.currentStageId)
+      if (idx > stageIndex) stageIndex = idx
+    })
+    if (stageIndex < 0) stageIndex = 0
+
+    const produced = Math.max(0, Number(line?.producedQuantity) || 0)
+    const started = closed || stageIndex > 0 || produced > 0
+    if (started) anyStarted = true
+
+    if (closed) {
+      progressSum += 100
+      return
+    }
+
+    if (!stages.length) {
+      progressSum += started ? 50 : 0
+      allLinesFinished = false
+      return
+    }
+
+    if (stages.length === 1) {
+      progressSum += started ? 100 : 0
+      if (!started) allLinesFinished = false
+      return
+    }
+
+    const linePct = Math.round((stageIndex / lastIndex) * 100)
+    progressSum += linePct
+    if (stageIndex < lastIndex) allLinesFinished = false
+  })
+
+  const percent = Math.min(100, Math.round(progressSum / lines.length))
+
+  if (!anyStarted) {
+    return { percent: 0, label: 'Beklemede', tone: 'pending' }
+  }
+
+  // All line items finished process, but job not confirmed yet → still Devam ediyor.
+  if (allLinesFinished && percent >= 100) {
+    return { percent: 100, label: 'Devam ediyor', tone: 'active' }
+  }
+
+  return { percent, label: 'Devam ediyor', tone: 'active' }
+}
+
 export const PRODUCTION_STATE_FILTER_OPTIONS = [
   { label: 'Tümü', color: 'bg-gray-500' },
   { label: 'Devam Eden', color: 'bg-blue-500' },

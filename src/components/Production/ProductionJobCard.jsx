@@ -1,13 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ArchiveRestore, Package, Trash2, Truck } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArchiveRestore, ImagePlus, Package, Trash2, Truck } from 'lucide-react'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
-import { HEADER_ACTION_GRADIENTS } from '../Layout/HeaderCashActionsPanel'
-import ProductionProcessStageBar from './ProductionProcessStageBar'
 import ProductionProcessCapsuleRail from './ProductionProcessCapsuleRail'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
 import ProductionPartialDeliveryTable from './ProductionPartialDeliveryTable'
-import ProductionProgressRing from './ProductionProgressRing'
-import { getListCustomerDisplay } from '../../data/customerProfiles'
 import {
   ensureLineItems,
   getLineQuantityRows,
@@ -19,7 +15,11 @@ import {
   getJobQuantityMetrics,
   getQuantityRowMinimalSteps,
 } from '../../utils/productionQuantityMetrics'
-import { getProductionJobTimelineDates } from '../../utils/productionJobTimeline'
+import {
+  createStagePhoto,
+  normalizeStagePhotos,
+  readImageFileAsDataUrl,
+} from '../../utils/productionStagePhotos'
 import {
   getProductionStageOptions,
   loadWorkflowStages,
@@ -33,23 +33,6 @@ function formatShortDate(value) {
   const [year, month, day] = String(datePart).split('-')
   if (year && month && day) return `${day}.${month}.${year}`
   return raw.slice(0, 10) || '—'
-}
-
-function resolveStatusBadge(job, metrics) {
-  const status = String(job.status || '')
-  if (/iptal/i.test(status)) {
-    return { label: 'İptal', gradient: HEADER_ACTION_GRADIENTS.danger }
-  }
-  if (status === 'Bekliyor') {
-    return { label: 'Beklemede', gradient: 'from-slate-300 via-slate-400 to-slate-500' }
-  }
-  if (status === 'Tamamlandı') {
-    return { label: 'Tamamlandı', gradient: HEADER_ACTION_GRADIENTS.success }
-  }
-  if (metrics.linesWithPartialDelivery > 0 || /kısmi/i.test(status)) {
-    return { label: 'Üretim devam ediyor', gradient: HEADER_ACTION_GRADIENTS.primary }
-  }
-  return { label: 'Üretim devam ediyor', gradient: HEADER_ACTION_GRADIENTS.cash }
 }
 
 function buildStepsForLine(line, productionStages) {
@@ -67,22 +50,8 @@ function buildStepsForLine(line, productionStages) {
   }))
 }
 
-function MetricStat({ label, value }) {
-  return (
-    <div className="min-w-[4.5rem]">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted,#94A3B8)]">
-        {label}
-      </p>
-      <p className="text-[15px] font-black tabular-nums tracking-tight text-[var(--ink,#0F172A)]">
-        {value}
-      </p>
-    </div>
-  )
-}
-
 /**
- * Expanded production detail panel — process rail + metrics + stage bar.
- * Process steps always come from Settings → Üretim Süreçleri (live).
+ * Expanded production detail — full product info, process rail, photo add.
  */
 export default function ProductionJobCard({
   job,
@@ -90,7 +59,6 @@ export default function ProductionJobCard({
   productionStages: productionStagesProp,
   fulfillmentOptions,
   orders,
-  quotes,
   pendingDelete,
   onRequestDelete,
   onConfirmDelete,
@@ -104,6 +72,7 @@ export default function ProductionJobCard({
 }) {
   const [activeLineIndex, setActiveLineIndex] = useState(0)
   const [partialOpen, setPartialOpen] = useState(initialPartialOpen)
+  const photoInputRef = useRef(null)
   const [liveWorkflowStages, setLiveWorkflowStages] = useState(
     () => workflowStagesProp || loadWorkflowStages(),
   )
@@ -130,37 +99,27 @@ export default function ProductionJobCard({
     return Array.isArray(productionStagesProp) ? productionStagesProp : []
   }, [liveWorkflowStages, productionStagesProp])
 
-  const customerDisplay = getListCustomerDisplay(job.customer)
   const order = resolveOrderForProductionJob(job, orders)
   const lineItems = ensureLineItems(job, liveWorkflowStages, order)
   const metrics = getJobQuantityMetrics(lineItems)
-  const timeline = getProductionJobTimelineDates(job, lineItems, { orders, quotes })
-  const badge = resolveStatusBadge(job, metrics)
-  const productSummary =
-    lineItems
-      .map((line) => line.product)
-      .filter(Boolean)
-      .slice(0, 2)
-      .join(' · ') ||
-    job.title ||
-    'Ürün yok'
 
   const activeLine =
     lineItems[Math.min(activeLineIndex, Math.max(0, lineItems.length - 1))] || lineItems[0]
   const activeRows = activeLine ? getLineQuantityRows(activeLine) : []
   const primaryRow = activeRows[0]
   const processSteps = buildStepsForLine(activeLine, liveProductionStages)
-  const progressPct = metrics.ordered
-    ? Math.min(100, Math.round((metrics.produced / metrics.ordered) * 100))
-    : metrics.produced > 0
-      ? 100
-      : 0
   const hasPartial =
     metrics.linesWithPartialDelivery > 0 ||
     (metrics.delivered > 0 && metrics.delivered < metrics.ordered)
 
-  const companyTitle =
-    customerDisplay.companyTitle || job.customer || productSummary || 'Müşteri yok'
+  const activeStep =
+    processSteps.find((step) => step.isActive) ||
+    processSteps.find((step) => !step.isComplete) ||
+    processSteps[processSteps.length - 1] ||
+    null
+  const photoCount = normalizeStagePhotos(activeLine?.stagePhotos || []).filter(
+    (photo) => !activeStep?.id || photo.stageId === activeStep.id,
+  ).length
 
   function handleStageClick(stageId) {
     if (!activeLine || activeLine.productionClosed) return
@@ -173,33 +132,69 @@ export default function ProductionJobCard({
     lineItemActions?.handleQuantityRowStageChange(activeLine, row.id, stageId)
   }
 
+  async function handlePhotoFiles(fileList) {
+    if (!activeLine || activeLine.productionClosed || !activeStep?.id) return
+    const files = Array.from(fileList || []).filter((file) => file.type?.startsWith('image/'))
+    if (!files.length) return
+    try {
+      const existing = normalizeStagePhotos(activeLine.stagePhotos || [])
+      const created = []
+      for (const file of files) {
+        const dataUrl = await readImageFileAsDataUrl(file)
+        created.push(
+          createStagePhoto({
+            dataUrl,
+            stageId: activeStep.id,
+            stageLabel: activeStep.label,
+          }),
+        )
+      }
+      lineItemActions?.handleStagePhotosChange?.(activeLine, [...existing, ...created])
+    } catch (error) {
+      window.alert(error?.message || 'Görsel yüklenemedi.')
+    }
+  }
+
   return (
     <div className="mt-3 space-y-4 rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="customer-name-primary truncate text-[14px] font-bold leading-tight text-[var(--muted)]">
-            {customerDisplay.brandShortName || companyTitle}
-          </p>
-          <p className="customer-name-secondary mt-0.5 truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
-            {companyTitle}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="rounded-lg bg-[var(--surface-raised,#F1F5F9)] px-2 py-0.5 text-[12px] font-black tabular-nums text-[var(--bach-navy,#1E3A8A)]">
-              {job.id}
-            </span>
-            <span
-              className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white ${badge.gradient}`}
-            >
-              {badge.label}
-            </span>
-            <span className="text-[12px] font-semibold text-[var(--muted,#64748B)]">
-              {productSummary}
-              <span className="mx-1.5 text-[var(--border,#CBD5E1)]">·</span>
-              Sipariş {formatShortDate(timeline.orderDate)}
-              <span className="mx-1.5 text-[var(--border,#CBD5E1)]">·</span>
-              Üretim {formatShortDate(timeline.productionStartDate)}
-            </span>
-          </div>
+        <div className="min-w-0 flex-1 space-y-2">
+          {lineItems.length === 0 ? (
+            <p className="text-[14px] font-semibold text-[var(--muted,#64748B)]">
+              {job.title || 'Ürün bilgisi yok'}
+            </p>
+          ) : (
+            lineItems.map((line, index) => {
+              const qty = Math.max(0, Number(line.quantity) || 0)
+              const isActive = index === activeLineIndex
+              return (
+                <button
+                  key={line.id}
+                  type="button"
+                  onClick={() => setActiveLineIndex(index)}
+                  className={`block w-full rounded-xl px-3 py-2 text-left transition ${
+                    isActive
+                      ? 'bg-[var(--ds-surface-muted,#F8FAFC)] ring-1 ring-[var(--border,#E2E8F0)]'
+                      : 'hover:bg-[var(--ds-surface-muted,#F8FAFC)]/70'
+                  }`}
+                >
+                  <p className="text-[15px] font-bold leading-snug text-[var(--ink,#0F172A)]">
+                    {line.product || `Kalem ${index + 1}`}
+                    {qty > 0 ? (
+                      <span className="ml-2 text-[13px] font-semibold tabular-nums text-[var(--muted,#64748B)]">
+                        × {formatQty(qty)}
+                      </span>
+                    ) : null}
+                  </p>
+                  {line.description ? (
+                    <p className="mt-0.5 text-[13px] font-medium leading-snug text-[var(--muted,#64748B)]">
+                      {line.description}
+                    </p>
+                  ) : null}
+                </button>
+              )
+            })
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
@@ -238,11 +233,45 @@ export default function ProductionJobCard({
           Henüz üretim süreci tanımlı değil. Ayarlar → Üretim Süreçleri panelinden ekleyin.
         </p>
       ) : (
-        <ProductionProcessCapsuleRail
-          steps={processSteps}
-          readOnly={activeLine?.productionClosed === true}
-          onStageClick={handleStageClick}
-        />
+        <div className="space-y-3">
+          <ProductionProcessCapsuleRail
+            steps={processSteps}
+            readOnly={activeLine?.productionClosed === true}
+            onStageClick={handleStageClick}
+          />
+
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              disabled={activeLine?.productionClosed === true || !activeStep?.id}
+              onClick={() => photoInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border bg-white px-3 py-2 text-[12px] font-bold text-[var(--muted,#64748B)] transition hover:border-blue-300 hover:text-[var(--accent,#2563EB)] disabled:opacity-50"
+              title={
+                activeStep
+                  ? `${activeStep.label} için fotoğraf ekle`
+                  : 'Fotoğraf ekle'
+              }
+            >
+              <ImagePlus className="h-4 w-4" />
+              Fotoğraf ekle
+              {photoCount > 0 ? (
+                <span className="tabular-nums text-[var(--accent,#2563EB)]">({photoCount})</span>
+              ) : null}
+            </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              disabled={activeLine?.productionClosed === true}
+              onChange={(event) => {
+                handlePhotoFiles(event.target.files)
+                event.target.value = ''
+              }}
+            />
+          </div>
+        </div>
       )}
 
       {partialOpen && activeLine ? (
@@ -252,9 +281,7 @@ export default function ProductionJobCard({
               Kısmi Teslimat
             </h4>
             {hasPartial ? (
-              <span
-                className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black text-white ${HEADER_ACTION_GRADIENTS.success}`}
-              >
+              <span className="text-[12px] font-bold tabular-nums text-[var(--muted,#64748B)]">
                 {formatQty(metrics.delivered)}/{formatQty(metrics.ordered)} teslim
               </span>
             ) : null}
@@ -287,47 +314,6 @@ export default function ProductionJobCard({
             }
           />
         </div>
-      ) : null}
-
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <ProductionProgressRing percent={progressPct} />
-        <div className="grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
-          <MetricStat label="Üretilecek" value={formatQty(metrics.ordered)} />
-          <MetricStat label="Üretilen" value={formatQty(metrics.produced)} />
-          <MetricStat label="Teslim" value={formatQty(metrics.delivered)} />
-          <MetricStat label="Kalan" value={formatQty(metrics.remaining)} />
-        </div>
-      </div>
-
-      {lineItems.length > 1 ? (
-        <div className="flex flex-wrap gap-1.5">
-          {lineItems.map((line, index) => (
-            <button
-              key={line.id}
-              type="button"
-              onClick={() => setActiveLineIndex(index)}
-              className={`rounded-full px-3 py-1 text-[12px] font-bold transition ${
-                index === activeLineIndex
-                  ? 'bg-[var(--accent,#2563EB)] text-white'
-                  : 'bg-white text-[var(--muted,#64748B)] ring-1 ring-[var(--border,#E2E8F0)]'
-              }`}
-            >
-              {line.product || `Kalem ${index + 1}`}
-            </button>
-          ))}
-        </div>
-      ) : null}
-
-      {liveProductionStages.length > 0 ? (
-        <ProductionProcessStageBar
-          steps={processSteps}
-          stagePhotos={activeLine?.stagePhotos || []}
-          readOnly={activeLine?.productionClosed === true}
-          onStageClick={handleStageClick}
-          showEditLink
-          showPhotoStrip={false}
-          showActiveGallery={false}
-        />
       ) : null}
 
       {(job.activities || []).length > 0 ? (
@@ -369,4 +355,4 @@ export default function ProductionJobCard({
   )
 }
 
-export { formatShortDate, resolveStatusBadge, buildStepsForLine }
+export { formatShortDate, buildStepsForLine }
