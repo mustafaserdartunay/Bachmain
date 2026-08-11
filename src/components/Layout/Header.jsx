@@ -20,6 +20,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { isLocalDevHost, redirectToMarketingLogin } from '../../utils/marketingLogin'
 import NotificationDropdown from './NotificationDropdown'
+import HeaderB2BBadge from './HeaderB2BBadge'
 import AppearanceToggle from './AppearanceToggle'
 import HeaderMessageCenter from './HeaderMessageCenter'
 import HeaderNotebook from './HeaderNotebook'
@@ -120,6 +121,9 @@ function MobileHeaderTools({ onNavigate }) {
                 </MobileToolItem>
                 <MobileToolItem label="Mesajlar">
                   <HeaderMessageCenter />
+                </MobileToolItem>
+                <MobileToolItem label="B2B">
+                  <HeaderB2BBadge />
                 </MobileToolItem>
                 <MobileToolItem label="Ajanda">
                   <HeaderAgendaSwitch />
@@ -239,6 +243,7 @@ function HeaderBar({ onMenuClick }) {
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             <OrgSwitcher />
             <HeaderMessageCenter />
+            <HeaderB2BBadge />
             <HeaderAgendaSwitch />
             <HeaderNotebook hideTrigger />
             <HeaderCalendar hideTrigger />

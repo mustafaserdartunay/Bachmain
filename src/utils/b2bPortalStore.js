@@ -258,24 +258,101 @@ export function createB2bOrder({
   lines,
   note = '',
   paymentMethod = 'havale',
+  paymentPlan = null,
+  contractAcceptance = null,
   total = 0,
+  processStage = 'siparis',
 }) {
   const order = {
-    id: createId('ORD'),
+    id: createId('SIP'),
     customerId,
     customerName,
     status: 'Yeni',
+    processStage,
     createdAt: new Date().toISOString(),
     lines,
     note,
     paymentMethod,
+    paymentPlan,
+    contractAcceptance,
     total,
+    timeline: [
+      {
+        step: 'siparis',
+        status: 'completed',
+        at: new Date().toISOString(),
+        note: 'Sipariş portal üzerinden oluşturuldu',
+        owner: 'Sistem',
+      },
+      {
+        step: 'uretim',
+        status: 'active',
+        at: new Date().toISOString(),
+        note: 'Üretim planlamaya alındı',
+        owner: 'Üretim',
+        progress: 0,
+      },
+    ],
   }
   const orders = [order, ...readJson(ORDERS_KEY, [])]
   writeJson(ORDERS_KEY, orders)
   const production = [...readJson(PRODUCTION_KEY, []), ...seedProductionForOrder(order)]
   writeJson(PRODUCTION_KEY, production)
+  window.dispatchEvent(
+    new CustomEvent('bach:b2b-staff-notify', {
+      detail: { type: 'b2b_order', customerId, customerName, orderId: order.id, total },
+    }),
+  )
   return order
+}
+
+export function createB2bQuote({
+  customerId,
+  customerName,
+  lines,
+  note = '',
+  attachments = [],
+  total = 0,
+}) {
+  const quote = {
+    id: createId('TKL'),
+    customerId,
+    customerName,
+    status: 'Bekliyor',
+    createdAt: new Date().toISOString(),
+    lines,
+    note,
+    attachments,
+    total,
+  }
+  const quotes = [quote, ...readJson(QUOTES_KEY, [])]
+  writeJson(QUOTES_KEY, quotes)
+  window.dispatchEvent(
+    new CustomEvent('bach:b2b-staff-notify', {
+      detail: { type: 'b2b_quote', customerId, customerName, quoteId: quote.id, total },
+    }),
+  )
+  return quote
+}
+
+export function updateB2bOrderStage(orderId, processStage, extra = {}) {
+  const orders = readJson(ORDERS_KEY, [])
+  const index = orders.findIndex((item) => item.id === orderId)
+  if (index < 0) return null
+  const timeline = [
+    ...(orders[index].timeline || []),
+    {
+      step: processStage,
+      status: 'active',
+      at: new Date().toISOString(),
+      note: extra.note || '',
+      owner: extra.owner || 'Sistem',
+      ...extra,
+    },
+  ]
+  orders[index] = { ...orders[index], processStage, status: extra.status || orders[index].status, timeline }
+  writeJson(ORDERS_KEY, orders)
+  return orders[index]
 }
 
 export function readB2bProduction(customerId) {
@@ -318,6 +395,17 @@ export function createB2bTicket({ customerId, customerName, message }) {
   }
   const tickets = [ticket, ...readJson(TICKETS_KEY, [])]
   writeJson(TICKETS_KEY, tickets)
+  window.dispatchEvent(
+    new CustomEvent('bach:b2b-staff-notify', {
+      detail: {
+        type: 'b2b_ticket',
+        customerId,
+        customerName,
+        message,
+        ticketId: ticket.id,
+      },
+    }),
+  )
   return ticket
 }
 
