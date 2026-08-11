@@ -154,9 +154,13 @@ export default function ProductionPage() {
   }
 
   function getLineItemActions(job) {
+    // Prefer live settings list; fall back to page snapshot if empty.
+    const liveStages = getProductionStageOptions(loadWorkflowStages())
+    const stageOptions = liveStages.length ? liveStages : productionStageOptions
     return createProductionLineItemActions({
       job,
-      productionStageOptions,
+      productionStageOptions: stageOptions,
+      workflowStages,
       refreshJobs,
       addJobActivity: (text, extraPatch = {}) => {
         updateProductionJob(job.id, appendProductionJobActivity(job.id, text, extraPatch))

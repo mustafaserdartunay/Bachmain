@@ -1,5 +1,5 @@
 import { defaultQuoteStages } from '../data/quotesData'
-import { buildRecommendedProductionStages, productionStageId } from '../data/productionStages'
+import { productionStageId } from '../data/productionStages'
 
 const STORAGE_KEY = 'erlenbox-workflow-stages'
 
@@ -463,19 +463,44 @@ export function withoutPlaceholderProductionStages(stages = []) {
   return (stages || []).filter((stage) => !isPlaceholderProductionStage(stage))
 }
 
+/**
+ * Production stages from Settings → Üretim Süreçleri.
+ * Never injects the recommended template — empty means none configured.
+ */
 export function getProductionStageOptions(stages = loadWorkflowStages()) {
-  if (!stages?.length) return buildRecommendedProductionStages()
-  const fromWorkflow = withoutPlaceholderProductionStages(
+  if (!stages?.length) return []
+  return withoutPlaceholderProductionStages(
     partitionWorkflowStages(stages).productionStages,
   )
-  return fromWorkflow.length ? fromWorkflow : buildRecommendedProductionStages()
 }
 
+/**
+ * Resolve a production stage list for job/line helpers.
+ * Accepts either a full workflow pipeline or an already-partitioned production list.
+ * Must not fall back to recommended stages (that breaks click IDs vs Settings).
+ */
 export function resolveProductionStagesList(stages = []) {
   if (!stages?.length) return []
-  const fromWorkflow = getProductionStageOptions(stages)
-  if (fromWorkflow.length) return fromWorkflow
-  return withoutPlaceholderProductionStages(stages.filter((stage) => stage?.id && stage?.label))
+
+  const partitioned = withoutPlaceholderProductionStages(
+    partitionWorkflowStages(stages).productionStages,
+  )
+  if (partitioned.length) return partitioned
+
+  const hasWorkflowAnchors = stages.some(
+    (stage) =>
+      isOrderReceivedStage(stage) ||
+      isProductionEntryStage(stage) ||
+      stage?.id === ORDER_RECEIVED_STAGE_ID ||
+      stage?.id === PRODUCTION_ENTRY_STAGE_ID,
+  )
+  // Full workflow with no production tail → truly empty.
+  if (hasWorkflowAnchors) return []
+
+  // Caller already passed production-only stages (no quote/order anchors).
+  return withoutPlaceholderProductionStages(
+    stages.filter((stage) => stage?.id && stage?.label),
+  )
 }
 
 function resolveRawProductionStagesList(stages = []) {

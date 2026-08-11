@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArchiveRestore, Package, Trash2, Truck } from 'lucide-react'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import { HEADER_ACTION_GRADIENTS } from '../Layout/HeaderCashActionsPanel'
@@ -20,6 +20,10 @@ import {
   getQuantityRowMinimalSteps,
 } from '../../utils/productionQuantityMetrics'
 import { getProductionJobTimelineDates } from '../../utils/productionJobTimeline'
+import {
+  getProductionStageOptions,
+  loadWorkflowStages,
+} from '../../utils/workflowStages'
 
 function formatShortDate(value) {
   if (!value) return '—'
@@ -49,20 +53,18 @@ function resolveStatusBadge(job, metrics) {
 }
 
 function buildStepsForLine(line, productionStages) {
+  if (!productionStages?.length) return []
   const rows = getLineQuantityRows(line)
   const primaryRow = rows[0]
-  if (productionStages?.length && primaryRow) {
+  if (primaryRow) {
     return getQuantityRowMinimalSteps(primaryRow, productionStages)
   }
-  if (productionStages?.length) {
-    return productionStages.map((stage) => ({
-      id: stage.id,
-      label: stage.label,
-      isActive: false,
-      isComplete: false,
-    }))
-  }
-  return []
+  return productionStages.map((stage) => ({
+    id: stage.id,
+    label: stage.label,
+    isActive: false,
+    isComplete: false,
+  }))
 }
 
 function MetricStat({ label, value }) {
@@ -80,12 +82,12 @@ function MetricStat({ label, value }) {
 
 /**
  * Expanded production detail panel — process rail + metrics + stage bar.
- * Collapsed list rows live in ProductionPage DataTable.
+ * Process steps always come from Settings → Üretim Süreçleri (live).
  */
 export default function ProductionJobCard({
   job,
-  workflowStages,
-  productionStages,
+  workflowStages: workflowStagesProp,
+  productionStages: productionStagesProp,
   fulfillmentOptions,
   orders,
   quotes,
@@ -102,9 +104,35 @@ export default function ProductionJobCard({
 }) {
   const [activeLineIndex, setActiveLineIndex] = useState(0)
   const [partialOpen, setPartialOpen] = useState(initialPartialOpen)
+  const [liveWorkflowStages, setLiveWorkflowStages] = useState(
+    () => workflowStagesProp || loadWorkflowStages(),
+  )
+
+  useEffect(() => {
+    setLiveWorkflowStages(workflowStagesProp || loadWorkflowStages())
+  }, [workflowStagesProp])
+
+  useEffect(() => {
+    function refreshStages() {
+      setLiveWorkflowStages(loadWorkflowStages())
+    }
+    window.addEventListener('bach:workflow-stages-updated', refreshStages)
+    window.addEventListener('storage', refreshStages)
+    return () => {
+      window.removeEventListener('bach:workflow-stages-updated', refreshStages)
+      window.removeEventListener('storage', refreshStages)
+    }
+  }, [])
+
+  const liveProductionStages = useMemo(() => {
+    const fromLive = getProductionStageOptions(liveWorkflowStages)
+    if (fromLive.length) return fromLive
+    return Array.isArray(productionStagesProp) ? productionStagesProp : []
+  }, [liveWorkflowStages, productionStagesProp])
+
   const customerDisplay = getListCustomerDisplay(job.customer)
   const order = resolveOrderForProductionJob(job, orders)
-  const lineItems = ensureLineItems(job, workflowStages, order)
+  const lineItems = ensureLineItems(job, liveWorkflowStages, order)
   const metrics = getJobQuantityMetrics(lineItems)
   const timeline = getProductionJobTimelineDates(job, lineItems, { orders, quotes })
   const badge = resolveStatusBadge(job, metrics)
@@ -121,7 +149,7 @@ export default function ProductionJobCard({
     lineItems[Math.min(activeLineIndex, Math.max(0, lineItems.length - 1))] || lineItems[0]
   const activeRows = activeLine ? getLineQuantityRows(activeLine) : []
   const primaryRow = activeRows[0]
-  const processSteps = buildStepsForLine(activeLine, productionStages)
+  const processSteps = buildStepsForLine(activeLine, liveProductionStages)
   const progressPct = metrics.ordered
     ? Math.min(100, Math.round((metrics.produced / metrics.ordered) * 100))
     : metrics.produced > 0
@@ -135,7 +163,8 @@ export default function ProductionJobCard({
     customerDisplay.companyTitle || job.customer || productSummary || 'Müşteri yok'
 
   function handleStageClick(stageId) {
-    if (!activeLine) return
+    if (!activeLine || activeLine.productionClosed) return
+    if (!liveProductionStages.some((stage) => stage.id === stageId)) return
     const row = primaryRow || getLineQuantityRows(activeLine)[0]
     if (!row?.id) {
       lineItemActions?.handleAddQuantityRow?.(activeLine)
@@ -204,11 +233,17 @@ export default function ProductionJobCard({
         </div>
       </div>
 
-      <ProductionProcessCapsuleRail
-        steps={processSteps}
-        readOnly={activeLine?.productionClosed === true}
-        onStageClick={handleStageClick}
-      />
+      {liveProductionStages.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-[var(--border,#E2E8F0)] px-4 py-6 text-center text-[13px] font-semibold text-[var(--muted,#64748B)]">
+          Henüz üretim süreci tanımlı değil. Ayarlar → Üretim Süreçleri panelinden ekleyin.
+        </p>
+      ) : (
+        <ProductionProcessCapsuleRail
+          steps={processSteps}
+          readOnly={activeLine?.productionClosed === true}
+          onStageClick={handleStageClick}
+        />
+      )}
 
       {partialOpen && activeLine ? (
         <div className="rounded-2xl border border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#FCFCFD)]/90 px-4 py-4 dark:bg-none">
@@ -283,15 +318,17 @@ export default function ProductionJobCard({
         </div>
       ) : null}
 
-      <ProductionProcessStageBar
-        steps={processSteps}
-        stagePhotos={activeLine?.stagePhotos || []}
-        readOnly={activeLine?.productionClosed === true}
-        onStageClick={handleStageClick}
-        showEditLink
-        showPhotoStrip={false}
-        showActiveGallery={false}
-      />
+      {liveProductionStages.length > 0 ? (
+        <ProductionProcessStageBar
+          steps={processSteps}
+          stagePhotos={activeLine?.stagePhotos || []}
+          readOnly={activeLine?.productionClosed === true}
+          onStageClick={handleStageClick}
+          showEditLink
+          showPhotoStrip={false}
+          showActiveGallery={false}
+        />
+      ) : null}
 
       {(job.activities || []).length > 0 ? (
         <div>

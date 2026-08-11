@@ -35,10 +35,16 @@ function assignProductionRowCodes(rows = [], jobId = '') {
 export function createProductionLineItemActions({
   job,
   productionStageOptions,
+  workflowStages,
   refreshJobs,
   addJobActivity,
   setActiveMenu,
 }) {
+  // Full workflow when available; otherwise the already-partitioned production list.
+  const stagesForNormalize = Array.isArray(workflowStages) && workflowStages.length
+    ? workflowStages
+    : productionStageOptions
+
   function appendActivity(text, extraPatch = {}) {
     if (!job || typeof addJobActivity !== 'function') return
     addJobActivity(text, extraPatch)
@@ -53,14 +59,14 @@ export function createProductionLineItemActions({
         : withDerivedQuantityRowFulfillmentStatus(row, lineItem, productionStageOptions, { timestamp: now })
     ))
     const synced = syncLineQuantitiesFromRows(rows)
-    const currentStageId = deriveLineCurrentStageId(synced.quantityRows, productionStageOptions)
+    const currentStageId = deriveLineCurrentStageId(synced.quantityRows, stagesForNormalize)
     const currentJob = getProductionJobById(job.id)
-    const nextLineItems = ensureLineItems(currentJob, productionStageOptions).map((line) => (
+    const nextLineItems = ensureLineItems(currentJob, stagesForNormalize).map((line) => (
       line.id === lineItem.id
         ? { ...line, ...synced, currentStageId, quantityRows: synced.quantityRows, ...lineItemPatch }
         : line
     ))
-    const summary = deriveJobSummary({ ...currentJob, lineItems: nextLineItems }, productionStageOptions)
+    const summary = deriveJobSummary({ ...currentJob, lineItems: nextLineItems }, stagesForNormalize)
     updateProductionJob(job.id, {
       lineItems: nextLineItems,
       status: summary.status,
@@ -368,7 +374,7 @@ export function createProductionLineItemActions({
 
   function handleRemoveLineItem(lineItem) {
     if (!job) return
-    const lines = ensureLineItems(job, productionStageOptions)
+    const lines = ensureLineItems(job, stagesForNormalize)
     if (lines.length <= 1) {
       window.alert('Üretim kaydında en az bir kalem kalmalı. Tüm kaydı silmek için üst satırdaki çöp kutusunu kullanın.')
       return

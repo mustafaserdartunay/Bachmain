@@ -86,7 +86,16 @@ export function createQuantityRow(defaults = {}) {
 
 function normalizeQuantityRows(line, stages = []) {
   const productionStages = resolveProductionStagesList(stages)
-  const fallbackStageId = line?.currentStageId || productionStages[0]?.id || ''
+  const fallbackStageId = productionStages.some((stage) => stage.id === line?.currentStageId)
+    ? line.currentStageId
+    : productionStages[0]?.id || ''
+
+  function resolveRowStageId(rowStageId) {
+    // No stage list provided — keep stored ids (callers like getLineQuantityRows omit stages).
+    if (!productionStages.length) return rowStageId || line?.currentStageId || ''
+    if (rowStageId && productionStages.some((stage) => stage.id === rowStageId)) return rowStageId
+    return fallbackStageId
+  }
 
   if (Array.isArray(line?.quantityRows) && line.quantityRows.length > 0) {
     return line.quantityRows.map((row, index) => {
@@ -108,7 +117,7 @@ function normalizeQuantityRows(line, stages = []) {
       return createQuantityRow({
         ...row,
         orderedQuantity,
-        currentStageId: row.currentStageId || fallbackStageId,
+        currentStageId: resolveRowStageId(row.currentStageId || fallbackStageId),
       })
     })
   }
