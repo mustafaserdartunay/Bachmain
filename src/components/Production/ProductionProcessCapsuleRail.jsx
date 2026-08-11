@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { ImagePlus } from 'lucide-react'
+import { ImagePlus, Pencil, Trash2 } from 'lucide-react'
 
 const STAGE_FILLS = [
   '#3b82f6',
@@ -29,7 +29,7 @@ function statusLabel(kind) {
 }
 
 /**
- * Compact circular process rail — number, label, photo add + thumbs under each step.
+ * Process rail with larger stage photos — hover shows edit (left) / delete (right).
  */
 export default function ProductionProcessCapsuleRail({
   steps = [],
@@ -37,8 +37,11 @@ export default function ProductionProcessCapsuleRail({
   readOnly = false,
   onStageClick,
   onAddPhotos,
+  onReplacePhoto,
+  onDeletePhoto,
 }) {
-  const fileRefs = useRef({})
+  const addRefs = useRef({})
+  const replaceRefs = useRef({})
 
   if (!steps.length) {
     return (
@@ -48,13 +51,13 @@ export default function ProductionProcessCapsuleRail({
 
   return (
     <div
-      className="min-w-0 flex-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="min-w-0 flex-1 overflow-x-auto overflow-y-visible px-1 py-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="list"
       aria-label="Üretim süreç adımları"
     >
       <div
-        className="mx-auto grid min-w-max gap-0 px-1"
-        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(5rem, 1fr))` }}
+        className="mx-auto grid min-w-max gap-0 px-2"
+        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(6.25rem, 1fr))` }}
       >
         {steps.map((step, index) => {
           const kind = resolveKind(step)
@@ -69,16 +72,18 @@ export default function ProductionProcessCapsuleRail({
             steps[index + 1]?.isComplete || steps[index + 1]?.isActive || isActive
           const photos = (stagePhotos || []).filter((photo) => photo.stageId === step.id)
           const canAddPhoto = !readOnly && typeof onAddPhotos === 'function'
+          const canEditPhoto = !readOnly && typeof onReplacePhoto === 'function'
+          const canDeletePhoto = !readOnly && typeof onDeletePhoto === 'function'
 
           return (
             <div
               key={step.id || `${step.label}-${index}`}
-              className="relative flex min-w-0 flex-col items-center px-0.5"
+              className="relative flex min-w-0 flex-col items-center px-1 py-1"
               role="listitem"
             >
               {index < steps.length - 1 ? (
                 <span
-                  className={`prod-process-connector absolute left-1/2 top-[14px] z-0 h-[2px] w-full ${
+                  className={`prod-process-connector absolute left-1/2 top-[18px] z-0 h-[2px] w-full ${
                     isDone || (isActive && prevDone) ? 'prod-process-connector-live' : ''
                   }`}
                   style={{
@@ -92,7 +97,7 @@ export default function ProductionProcessCapsuleRail({
               ) : null}
               {index > 0 ? (
                 <span
-                  className="absolute right-1/2 top-[14px] z-0 h-[2px] w-1/2"
+                  className="absolute right-1/2 top-[18px] z-0 h-[2px] w-1/2"
                   style={{
                     background: prevDone || isDone || isActive ? fill : 'var(--border, #E2E8F0)',
                     opacity: prevDone || isDone || isActive ? 1 : 0.75,
@@ -106,12 +111,12 @@ export default function ProductionProcessCapsuleRail({
                 disabled={!clickable}
                 title={`${step.label} — ${statusLabel(kind)}`}
                 onClick={() => onStageClick?.(step.id)}
-                className={`group relative z-[1] flex w-full flex-col items-center gap-1 ${
+                className={`group relative z-[1] flex w-full flex-col items-center gap-1.5 ${
                   clickable ? 'cursor-pointer' : 'cursor-default'
                 }`}
               >
                 <span
-                  className={`prod-process-dot relative flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black transition-all duration-300 ${
+                  className={`prod-process-dot relative flex h-8 w-8 items-center justify-center rounded-full text-[12px] font-black transition-all duration-300 ${
                     clickable ? 'group-hover:scale-110' : ''
                   } ${
                     isPending
@@ -132,7 +137,7 @@ export default function ProductionProcessCapsuleRail({
                 </span>
 
                 <span
-                  className={`w-full truncate text-center text-[10px] font-bold leading-tight ${
+                  className={`w-full px-0.5 text-center text-[10px] font-bold leading-snug ${
                     isActive
                       ? 'text-[#2563eb]'
                       : isDone
@@ -144,20 +149,92 @@ export default function ProductionProcessCapsuleRail({
                 </span>
               </button>
 
-              <div className="relative z-[1] mt-1.5 flex w-full flex-col items-center gap-1">
+              <div className="relative z-[1] mt-2 flex w-full flex-col items-center gap-1.5">
+                {photos.length > 0 ? (
+                  <div className="flex w-full flex-col items-center gap-1.5">
+                    {photos.slice(0, 3).map((photo) => (
+                      <div
+                        key={photo.id}
+                        className="group/photo relative h-14 w-14 overflow-hidden rounded-xl bg-[var(--ds-surface-muted,#F8FAFC)] ring-1 ring-[var(--border,#E2E8F0)] shadow-sm"
+                      >
+                        <img
+                          src={photo.dataUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                        {!readOnly && (canEditPhoto || canDeletePhoto) ? (
+                          <div className="pointer-events-none absolute inset-0 flex items-stretch opacity-0 transition-opacity duration-150 group-hover/photo:pointer-events-auto group-hover/photo:opacity-100">
+                            {canEditPhoto ? (
+                              <button
+                                type="button"
+                                className="flex flex-1 items-center justify-center bg-black/45 text-white transition hover:bg-blue-600/80"
+                                title="Fotoğrafı düzenle"
+                                aria-label="Fotoğrafı düzenle"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  replaceRefs.current[photo.id]?.click()
+                                }}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                            ) : (
+                              <span className="flex-1" />
+                            )}
+                            {canDeletePhoto ? (
+                              <button
+                                type="button"
+                                className="flex flex-1 items-center justify-center bg-black/45 text-white transition hover:bg-rose-600/85"
+                                title="Fotoğrafı sil"
+                                aria-label="Fotoğrafı sil"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  onDeletePhoto?.(photo)
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            ) : (
+                              <span className="flex-1" />
+                            )}
+                          </div>
+                        ) : null}
+                        <input
+                          ref={(node) => {
+                            replaceRefs.current[photo.id] = node
+                          }}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={!canEditPhoto}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0]
+                            if (file) onReplacePhoto?.(photo, file)
+                            event.target.value = ''
+                          }}
+                        />
+                      </div>
+                    ))}
+                    {photos.length > 3 ? (
+                      <span className="text-[10px] font-bold tabular-nums text-[var(--muted,#64748B)]">
+                        +{photos.length - 3}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 <button
                   type="button"
                   disabled={!canAddPhoto}
-                  onClick={() => fileRefs.current[step.id]?.click()}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border,#E2E8F0)] bg-white text-[var(--muted,#64748B)] transition hover:border-blue-300 hover:text-[var(--accent,#2563EB)] disabled:opacity-40"
+                  onClick={() => addRefs.current[step.id]?.click()}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--border,#E2E8F0)] bg-white text-[var(--muted,#64748B)] shadow-sm transition hover:border-blue-300 hover:text-[var(--accent,#2563EB)] disabled:opacity-40"
                   title={`${step.label} — fotoğraf ekle`}
                   aria-label={`${step.label} fotoğraf ekle`}
                 >
-                  <ImagePlus className="h-3.5 w-3.5" />
+                  <ImagePlus className="h-4 w-4" />
                 </button>
                 <input
                   ref={(node) => {
-                    fileRefs.current[step.id] = node
+                    addRefs.current[step.id] = node
                   }}
                   type="file"
                   accept="image/*"
@@ -169,24 +246,6 @@ export default function ProductionProcessCapsuleRail({
                     event.target.value = ''
                   }}
                 />
-
-                {photos.length > 0 ? (
-                  <div className="flex max-w-[4.75rem] flex-wrap items-center justify-center gap-0.5">
-                    {photos.slice(0, 4).map((photo) => (
-                      <img
-                        key={photo.id}
-                        src={photo.dataUrl}
-                        alt=""
-                        className="h-6 w-6 rounded object-cover ring-1 ring-[var(--border,#E2E8F0)]"
-                      />
-                    ))}
-                    {photos.length > 4 ? (
-                      <span className="text-[9px] font-bold tabular-nums text-[var(--muted,#64748B)]">
-                        +{photos.length - 4}
-                      </span>
-                    ) : null}
-                  </div>
-                ) : null}
               </div>
             </div>
           )

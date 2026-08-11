@@ -138,6 +138,35 @@ export default function ProductionJobCard({
     }
   }
 
+  async function handleReplacePhoto(photo, file) {
+    if (!activeLine || activeLine.productionClosed || !photo?.id || !file) return
+    try {
+      const dataUrl = await readImageFileAsDataUrl(file)
+      const existing = normalizeStagePhotos(activeLine.stagePhotos || [])
+      const next = existing.map((item) =>
+        item.id === photo.id
+          ? {
+              ...item,
+              dataUrl,
+              createdAt: new Date().toLocaleString('tr-TR'),
+            }
+          : item,
+      )
+      lineItemActions?.handleStagePhotosChange?.(activeLine, next)
+    } catch (error) {
+      window.alert(error?.message || 'Görsel güncellenemedi.')
+    }
+  }
+
+  function handleDeletePhoto(photo) {
+    if (!activeLine || activeLine.productionClosed || !photo?.id) return
+    const existing = normalizeStagePhotos(activeLine.stagePhotos || [])
+    lineItemActions?.handleStagePhotosChange?.(
+      activeLine,
+      existing.filter((item) => item.id !== photo.id),
+    )
+  }
+
   function handleIssueWaybill(line, rowId) {
     const result = lineItemActions?.handleIssueRowWaybill?.(line, rowId)
     if (result?.path) navigate(result.path)
@@ -223,13 +252,17 @@ export default function ProductionJobCard({
           Henüz üretim süreci tanımlı değil. Ayarlar → Üretim Süreçleri panelinden ekleyin.
         </p>
       ) : (
-        <ProductionProcessCapsuleRail
-          steps={processSteps}
-          stagePhotos={stagePhotos}
-          readOnly={activeLine?.productionClosed === true}
-          onStageClick={handleStageClick}
-          onAddPhotos={handleAddPhotos}
-        />
+        <div className="overflow-visible rounded-ds-lg border border-ds-border bg-[var(--ds-surface-muted,#F8FAFC)]/60 px-2 py-2">
+          <ProductionProcessCapsuleRail
+            steps={processSteps}
+            stagePhotos={stagePhotos}
+            readOnly={activeLine?.productionClosed === true}
+            onStageClick={handleStageClick}
+            onAddPhotos={handleAddPhotos}
+            onReplacePhoto={handleReplacePhoto}
+            onDeletePhoto={handleDeletePhoto}
+          />
+        </div>
       )}
 
       {(job.activities || []).length > 0 ? (
