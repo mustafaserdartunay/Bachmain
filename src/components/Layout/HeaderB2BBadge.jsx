@@ -7,13 +7,22 @@ import {
   readAllB2bOrders,
   readB2bTickets,
 } from '../../utils/b2bPortalStore'
-import { readB2bMessages } from '../../utils/b2bPortalExtras'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { useHeaderPopover } from '../../hooks/useHeaderPopover'
 
 const STAFF_INBOX_KEY = 'erlenbox-b2b-staff-inbox'
+const MESSAGES_KEY = 'erlenbox-b2b-messages'
 const READ_KEY = 'bach:header-b2b-read-v1'
+
+function readB2bMessages() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MESSAGES_KEY) || '[]')
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
 
 function readStaffInbox() {
   try {
