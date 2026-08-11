@@ -1,9 +1,15 @@
 import SearchInput from '../Common/SearchInput'
 import EditableDropdownPill from '../EditableDropdownPill'
-import { LIST_PILL_CLASS } from '../Common/ListDeleteConfirmPanel'
+import {
+  PAGE_FILTER_FIELD_CLASS,
+  PAGE_FILTER_LABEL_CLASS,
+  PAGE_FILTER_MENU_CLASS,
+  PAGE_FILTER_PILL_CLASS,
+  YF_TEXT_CLASS,
+} from '../../utils/dashboardDesign'
 
 /**
- * Quotes/Orders-style filter strip: search + dark pill grid (no glass card chrome).
+ * Customers-page style filter strip for production list.
  */
 export default function ProductionFilterBar({
   searchQuery,
@@ -15,62 +21,71 @@ export default function ProductionFilterBar({
   quantityOptions,
   activeMenu,
   setActiveMenu,
+  showSearch = false,
 }) {
   return (
-    <div className="mb-4 space-y-3">
-      <SearchInput
-        value={searchQuery}
-        onChange={onSearchChange}
-        placeholder="Sipariş, müşteri veya ürün ara..."
-      />
-      <div className="grid grid-cols-2 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3 lg:grid-cols-3">
-        <div>
-          <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-            Süreç
-          </p>
-          <EditableDropdownPill
-            value={filters.process}
-            options={processOptions}
-            includePlaceholderOption={false}
-            editable={false}
-            buttonClassName={LIST_PILL_CLASS}
-            openKey="filter-process"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-            onChange={(value) => onFilterChange('process', value)}
-          />
+    <div className="space-y-3">
+      {showSearch ? (
+        <SearchInput
+          value={searchQuery}
+          onChange={onSearchChange}
+          placeholder="Sipariş, müşteri veya ürün ara..."
+        />
+      ) : null}
+      <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
+        <div className="flex shrink-0 items-center gap-2 px-1">
+          <span className="relative flex h-1.5 w-1.5 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
+          </span>
+          <span className={YF_TEXT_CLASS}>Filtre :</span>
         </div>
-        <div>
-          <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-            Durum
-          </p>
-          <EditableDropdownPill
-            value={filters.status}
-            options={statusOptions}
-            includePlaceholderOption={false}
-            editable={false}
-            buttonClassName={LIST_PILL_CLASS}
-            openKey="filter-status"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-            onChange={(value) => onFilterChange('status', value)}
-          />
-        </div>
-        <div>
-          <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-            Adet / Teslimat
-          </p>
-          <EditableDropdownPill
-            value={filters.quantity}
-            options={quantityOptions}
-            includePlaceholderOption={false}
-            editable={false}
-            buttonClassName={LIST_PILL_CLASS}
-            openKey="filter-quantity"
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-            onChange={(value) => onFilterChange('quantity', value)}
-          />
+        <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={PAGE_FILTER_FIELD_CLASS}>
+            <p className={PAGE_FILTER_LABEL_CLASS}>Süreç :</p>
+            <EditableDropdownPill
+              value={filters.process}
+              options={processOptions}
+              includePlaceholderOption={false}
+              editable={false}
+              buttonClassName={PAGE_FILTER_PILL_CLASS}
+              menuClassName={PAGE_FILTER_MENU_CLASS}
+              openKey="filter-process"
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              onChange={(value) => onFilterChange('process', value)}
+            />
+          </div>
+          <div className={PAGE_FILTER_FIELD_CLASS}>
+            <p className={PAGE_FILTER_LABEL_CLASS}>Durum :</p>
+            <EditableDropdownPill
+              value={filters.status}
+              options={statusOptions}
+              includePlaceholderOption={false}
+              editable={false}
+              buttonClassName={PAGE_FILTER_PILL_CLASS}
+              menuClassName={PAGE_FILTER_MENU_CLASS}
+              openKey="filter-status"
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              onChange={(value) => onFilterChange('status', value)}
+            />
+          </div>
+          <div className={PAGE_FILTER_FIELD_CLASS}>
+            <p className={PAGE_FILTER_LABEL_CLASS}>Adet / Teslimat :</p>
+            <EditableDropdownPill
+              value={filters.quantity}
+              options={quantityOptions}
+              includePlaceholderOption={false}
+              editable={false}
+              buttonClassName={PAGE_FILTER_PILL_CLASS}
+              menuClassName={PAGE_FILTER_MENU_CLASS}
+              openKey="filter-quantity"
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              onChange={(value) => onFilterChange('quantity', value)}
+            />
+          </div>
         </div>
       </div>
     </div>

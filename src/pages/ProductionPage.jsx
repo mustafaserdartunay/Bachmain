@@ -1,9 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, ClipboardList, Factory, Layers3, Package, ShoppingCart } from 'lucide-react'
+import { CheckCircle2, ClipboardList, Factory, Layers3 } from 'lucide-react'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
-import SplitCreateButton from '../components/Common/SplitCreateButton'
-import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
+import SearchInput from '../components/Common/SearchInput'
+import {
+  AppPageBackLink,
+  AppPageHeader,
+  AppPagePanel,
+  AppPageShell,
+  AppPanelDot,
+} from '../components/Layout/AppPageLayout'
+import {
+  HEADER_ACTION_GRADIENTS,
+  HeaderQuickActionCard,
+} from '../components/Layout/HeaderCashActionsPanel'
 import ProductionFilterBar from '../components/Production/ProductionFilterBar'
 import ProductionJobCard from '../components/Production/ProductionJobCard'
 import { ensureLineItems, getLineFulfillmentOptions } from '../utils/productionLineItems'
@@ -32,6 +42,12 @@ import {
   resolveProductionActiveStage,
   toStageDropdownOptions,
 } from '../utils/workflowStages'
+import {
+  APP_PANEL_TITLE_CLASS,
+  PAGE_CENTER_TITLE_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
+  YF_TEXT_CLASS,
+} from '../utils/dashboardDesign'
 
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const quantityFilterOptions = [
@@ -46,18 +62,12 @@ const productionStatusFilterOptions = PRODUCTION_STATE_FILTER_OPTIONS.filter((op
   ),
 )
 
-function ProductionListPanel({ title, action, children }) {
-  return (
-    <section className="card">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold text-white">{title}</h2>
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  )
+const PRODUCTION_CREATE_ACTION = {
+  id: 'production',
+  to: () => '/uretim/yeni',
+  title: 'Yeni Üretim Oluştur',
+  icon: Factory,
+  gradient: HEADER_ACTION_GRADIENTS.primary,
 }
 
 export default function ProductionPage() {
@@ -71,16 +81,10 @@ export default function ProductionPage() {
   const [expandedJobIds, setExpandedJobIds] = useState(() => new Set())
   const [selectedJobIds, setSelectedJobIds] = useState(() => new Set())
   const [fulfillmentOptions, setFulfillmentOptions] = useState(() => getLineFulfillmentOptions())
-  const [entered, setEntered] = useState(false)
 
   const productionStageOptions = getProductionStageOptions(workflowStages)
   const productionStageDropdownOptions = toStageDropdownOptions(productionStageOptions)
   const productionProcessFilterOptions = [filterAllOption, ...productionStageDropdownOptions]
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setEntered(true), 20)
-    return () => window.clearTimeout(timer)
-  }, [])
 
   useEffect(() => {
     function refresh() {
@@ -208,194 +212,130 @@ export default function ProductionPage() {
   const orders = loadOrders()
   const quotes = loadQuotes()
 
-  const bulkMenuItems = [
-    {
-      id: 'bulk-depo',
-      label: 'Seçilileri Depoya Gönder',
-      icon: Package,
-      iconClassName: 'text-orange-300',
-      onClick: () => {
-        selectedJobIds.forEach((jobId) => sendProductionJobToDepo(jobId))
-        refreshJobs()
-        setSelectedJobIds(new Set())
-        if (selectedJobIds.size) navigate('/depo')
-      },
-    },
-    {
-      id: 'bulk-cancel',
-      label: 'Seçililerden Vazgeç',
-      icon: ClipboardList,
-      iconClassName: 'text-blue-300',
-      onClick: () => {
-        selectedJobIds.forEach((jobId) => cancelProductionBackToOrder(jobId))
-        refreshJobs()
-        setSelectedJobIds(new Set())
-      },
-    },
-  ]
-
   return (
-    <AppPageShell className="w-full max-w-none">
-      <div
-        className={`space-y-6 transition-all duration-500 ${
-          entered ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
-        }`}
-      >
-        <AppPageHeader
-          title="ÜRETİM TAKİBİ"
-          backTo="/"
-          backLabel="Güncel Durum"
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <SplitCreateButton
-                label="Yeni Üretim Oluştur"
-                onPrimaryClick={() => navigate('/uretim/yeni')}
-                menuAriaLabel="Üretim seçenekleri"
-                menuItems={[
-                  {
-                    id: 'quick',
-                    label: 'Hızlı Üretim Kaydı',
-                    icon: Factory,
-                    iconClassName: 'text-blue-300',
-                    onClick: () => navigate('/uretim/yeni'),
-                  },
-                  {
-                    id: 'from-order',
-                    label: 'Siparişlerden Devam Et',
-                    icon: ShoppingCart,
-                    iconClassName: 'text-emerald-300',
-                    onClick: () => navigate('/siparisler'),
-                  },
-                ]}
-              />
-              <SplitCreateButton
-                label="Toplu İşlem"
-                onPrimaryClick={() => {
-                  if (!selectedJobIds.size) {
-                    window.alert('Önce listeden üretim seçin.')
-                  }
-                }}
-                menuAriaLabel="Toplu işlemler"
-                menuItems={bulkMenuItems}
-              />
-            </div>
-          }
+    <AppPageShell className="customers-page-type w-full">
+      <AppPageHeader
+        showBack={false}
+        title={<AppPageBackLink />}
+        centerTitle="ÜRETİM"
+        centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+        titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+        actions={<HeaderQuickActionCard fixed action={PRODUCTION_CREATE_ACTION} />}
+      />
+
+      <SummaryMetrics
+        columns={4}
+        className="customer-summary-metrics w-full"
+        items={[
+          {
+            title: 'Toplam Sipariş',
+            value: summary.total,
+            icon: Factory,
+            valueTone: 'text-violet-800',
+          },
+          {
+            title: 'Devam Eden',
+            value: summary.active,
+            icon: ClipboardList,
+            tone: 'emerald',
+            valueTone: 'text-blue-800',
+          },
+          {
+            title: 'Kısmi İlerleme',
+            value: summary.partial,
+            icon: Layers3,
+            tone: 'orange',
+            valueTone: 'text-[#ea580c]',
+          },
+          {
+            title: 'Tamamlanan',
+            value: summary.completed,
+            icon: CheckCircle2,
+            tone: 'purple',
+            valueTone: 'text-emerald-800',
+          },
+        ]}
+      />
+
+      <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
+        <ProductionFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={(event) => setSearchQuery(event.target.value)}
+          filters={filters}
+          onFilterChange={updateFilter}
+          processOptions={productionProcessFilterOptions}
+          statusOptions={productionStatusFilterOptions}
+          quantityOptions={quantityFilterOptions}
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
         />
+      </AppPagePanel>
 
-        <SummaryMetrics
-          columns={5}
-          items={[
-            {
-              title: 'Toplam Sipariş',
-              value: summary.total,
-              icon: Factory,
-              tone: 'blue',
-              valueTone: 'blue',
-            },
-            {
-              title: 'Devam Eden',
-              value: summary.active,
-              icon: ClipboardList,
-              tone: 'purple',
-              valueTone: 'purple',
-            },
-            {
-              title: 'Kısmi İlerleme',
-              value: summary.partial,
-              icon: Layers3,
-              tone: 'orange',
-              valueTone: 'orange',
-            },
-            {
-              title: 'Tamamlanan',
-              value: summary.completed,
-              icon: CheckCircle2,
-              tone: 'emerald',
-              valueTone: 'emerald',
-            },
-            {
-              title: 'Toplam Adet',
-              value: summary.quantity.toLocaleString('tr-TR'),
-              icon: Package,
-              tone: 'purple',
-              valueTone: 'purple',
-            },
-          ]}
-        />
-
-        <ProductionListPanel
-          title="Üretim Listesi"
-          action={
-            <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">
-              {filteredJobs.length} kayıt
-              {selectedJobIds.size ? ` · ${selectedJobIds.size} seçili` : ''}
-            </span>
-          }
-        >
-          <ProductionFilterBar
-            searchQuery={searchQuery}
-            onSearchChange={(event) => setSearchQuery(event.target.value)}
-            filters={filters}
-            onFilterChange={updateFilter}
-            processOptions={productionProcessFilterOptions}
-            statusOptions={productionStatusFilterOptions}
-            quantityOptions={quantityFilterOptions}
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-          />
-
-          <div className="hidden rounded-[18px] border border-dark-500/40 bg-dark-900/40 px-4 py-2.5 text-[11px] font-black uppercase tracking-wide text-gray-500 lg:flex lg:items-center lg:justify-between lg:gap-4">
-            <span className="min-w-[200px]">Ürün / Sipariş</span>
-            <span>Adet / Teslimat</span>
-            <span className="text-right">Durum · Teslimat · İşlemler</span>
+      <AppPagePanel className="customer-list-panel w-full">
+        <div className="mb-4 flex min-w-0 items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2">
+            <AppPanelDot color="blue" />
+            <h2 className={APP_PANEL_TITLE_CLASS}>Üretim Listesi</h2>
           </div>
-
-          <div className="mt-3 space-y-3">
-            {filteredJobs.map((job) => (
-              <ProductionJobCard
-                key={job.id}
-                job={job}
-                workflowStages={workflowStages}
-                productionStages={productionStageOptions}
-                fulfillmentOptions={fulfillmentOptions}
-                orders={orders}
-                quotes={quotes}
-                expanded={expandedJobIds.has(job.id)}
-                onToggleExpand={() => toggleJobExpanded(job.id)}
-                pendingDelete={pendingDeleteId === job.id}
-                onRequestDelete={() => setPendingDeleteId(job.id)}
-                onConfirmDelete={() => removeJob(job)}
-                onCancelDelete={() => setPendingDeleteId(null)}
-                onCancelProduction={() => {
-                  cancelProductionBackToOrder(job.id)
-                  refreshJobs()
-                }}
-                onSendToDepo={() => {
-                  sendProductionJobToDepo(job.id)
-                  refreshJobs()
-                  navigate('/depo')
-                }}
-                lineItemActions={getLineItemActions(job)}
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-                selected={selectedJobIds.has(job.id)}
-                onToggleSelect={toggleJobSelected}
-              />
-            ))}
+          <div className="min-w-0 flex-1">
+            <SearchInput
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Sipariş, müşteri veya ürün ara..."
+              className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+            />
           </div>
+          <span className={`shrink-0 ${YF_TEXT_CLASS}`}>
+            {filteredJobs.length} Kayıt
+            {selectedJobIds.size ? ` · ${selectedJobIds.size} seçili` : ''}
+          </span>
+        </div>
 
-          {filteredJobs.length === 0 ? (
-            <div className="mt-3 rounded-[18px] border border-dashed border-dark-500/60 bg-dark-800/40 p-10 text-center">
-              <Factory className="mx-auto mb-3 h-8 w-8 text-gray-500" />
-              <p className="text-sm font-bold text-white">Üretim kaydı bulunamadı.</p>
-              <p className="mt-1 text-[13px] text-gray-500">
-                Siparişler sayfasında &quot;Üretime Alındı&quot; seçildiğinde kayıtlar buraya
-                kopyalanır.
-              </p>
-            </div>
-          ) : null}
-        </ProductionListPanel>
-      </div>
+        <div className="space-y-3">
+          {filteredJobs.map((job) => (
+            <ProductionJobCard
+              key={job.id}
+              job={job}
+              workflowStages={workflowStages}
+              productionStages={productionStageOptions}
+              fulfillmentOptions={fulfillmentOptions}
+              orders={orders}
+              quotes={quotes}
+              expanded={expandedJobIds.has(job.id)}
+              onToggleExpand={() => toggleJobExpanded(job.id)}
+              pendingDelete={pendingDeleteId === job.id}
+              onRequestDelete={() => setPendingDeleteId(job.id)}
+              onConfirmDelete={() => removeJob(job)}
+              onCancelDelete={() => setPendingDeleteId(null)}
+              onCancelProduction={() => {
+                cancelProductionBackToOrder(job.id)
+                refreshJobs()
+              }}
+              onSendToDepo={() => {
+                sendProductionJobToDepo(job.id)
+                refreshJobs()
+                navigate('/depo')
+              }}
+              lineItemActions={getLineItemActions(job)}
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              selected={selectedJobIds.has(job.id)}
+              onToggleSelect={toggleJobSelected}
+            />
+          ))}
+        </div>
+
+        {filteredJobs.length === 0 ? (
+          <div className="mt-2 rounded-2xl border border-dashed border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#F8FAFC)]/70 p-10 text-center dark:bg-white/5">
+            <Factory className="mx-auto mb-3 h-8 w-8 text-[var(--muted,#94A3B8)]" />
+            <p className="text-sm font-bold text-[var(--ink,#0F172A)]">Üretim kaydı bulunamadı.</p>
+            <p className="mt-1 text-[13px] text-[var(--muted,#64748B)]">
+              Siparişler sayfasında &quot;Üretime Alındı&quot; seçildiğinde kayıtlar buraya
+              kopyalanır.
+            </p>
+          </div>
+        ) : null}
+      </AppPagePanel>
     </AppPageShell>
   )
 }
