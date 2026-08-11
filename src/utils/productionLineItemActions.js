@@ -158,6 +158,7 @@ export function createProductionLineItemActions({
 
   function handleAddQuantityRow(lineItem, sourceRowId) {
     if (!job) return undefined
+    // Explicit user action only — never invent a row from stage/photo side-effects.
     const rows = getLineQuantityRows(lineItem)
     const sourceIndex = sourceRowId
       ? rows.findIndex((row) => row.id === sourceRowId)

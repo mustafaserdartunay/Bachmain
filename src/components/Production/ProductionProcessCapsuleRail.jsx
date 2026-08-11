@@ -1,5 +1,11 @@
 import { useRef } from 'react'
 import { ImagePlus, Pencil, Trash2 } from 'lucide-react'
+import {
+  COP_KUTUSU_BUTTON_CLASS,
+  COP_KUTUSU_ICON_CLASS,
+  KALEM_BUTTON_CLASS,
+  KALEM_ICON_CLASS,
+} from '../../utils/buttonStyles'
 
 const STAGE_FILLS = [
   '#3b82f6',
@@ -29,7 +35,8 @@ function statusLabel(kind) {
 }
 
 /**
- * Process rail with larger stage photos — hover shows edit (left) / delete (right).
+ * Process rail with stage photos — hover shows design-system edit / delete.
+ * Add button only when the stage has no photos yet.
  */
 export default function ProductionProcessCapsuleRail({
   steps = [],
@@ -71,7 +78,7 @@ export default function ProductionProcessCapsuleRail({
           const nextLit =
             steps[index + 1]?.isComplete || steps[index + 1]?.isActive || isActive
           const photos = (stagePhotos || []).filter((photo) => photo.stageId === step.id)
-          const canAddPhoto = !readOnly && typeof onAddPhotos === 'function'
+          const canAddPhoto = !readOnly && typeof onAddPhotos === 'function' && photos.length === 0
           const canEditPhoto = !readOnly && typeof onReplacePhoto === 'function'
           const canDeletePhoto = !readOnly && typeof onDeletePhoto === 'function'
 
@@ -167,7 +174,7 @@ export default function ProductionProcessCapsuleRail({
                             {canEditPhoto ? (
                               <button
                                 type="button"
-                                className="flex flex-1 items-center justify-center bg-black/45 text-white transition hover:bg-blue-600/80"
+                                className={`${KALEM_BUTTON_CLASS} h-auto w-auto flex-1 rounded-none hover:bg-[rgba(37,99,235,0.82)] hover:text-white`}
                                 title="Fotoğrafı düzenle"
                                 aria-label="Fotoğrafı düzenle"
                                 onClick={(event) => {
@@ -175,7 +182,7 @@ export default function ProductionProcessCapsuleRail({
                                   replaceRefs.current[photo.id]?.click()
                                 }}
                               >
-                                <Pencil className="h-3.5 w-3.5" />
+                                <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
                               </button>
                             ) : (
                               <span className="flex-1" />
@@ -183,7 +190,7 @@ export default function ProductionProcessCapsuleRail({
                             {canDeletePhoto ? (
                               <button
                                 type="button"
-                                className="flex flex-1 items-center justify-center bg-black/45 text-white transition hover:bg-rose-600/85"
+                                className={`${COP_KUTUSU_BUTTON_CLASS} h-auto w-auto flex-1 rounded-none hover:bg-red-600/85 hover:text-white`}
                                 title="Fotoğrafı sil"
                                 aria-label="Fotoğrafı sil"
                                 onClick={(event) => {
@@ -191,7 +198,7 @@ export default function ProductionProcessCapsuleRail({
                                   onDeletePhoto?.(photo)
                                 }}
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
                               </button>
                             ) : (
                               <span className="flex-1" />
@@ -220,32 +227,32 @@ export default function ProductionProcessCapsuleRail({
                       </span>
                     ) : null}
                   </div>
+                ) : canAddPhoto ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => addRefs.current[step.id]?.click()}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--border,#E2E8F0)] bg-white text-[var(--muted,#64748B)] shadow-sm transition hover:border-blue-300 hover:text-[var(--accent,#2563EB)]"
+                      title={`${step.label} — fotoğraf ekle`}
+                      aria-label={`${step.label} fotoğraf ekle`}
+                    >
+                      <ImagePlus className="h-4 w-4" />
+                    </button>
+                    <input
+                      ref={(node) => {
+                        addRefs.current[step.id] = node
+                      }}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(event) => {
+                        onAddPhotos?.(step, event.target.files)
+                        event.target.value = ''
+                      }}
+                    />
+                  </>
                 ) : null}
-
-                <button
-                  type="button"
-                  disabled={!canAddPhoto}
-                  onClick={() => addRefs.current[step.id]?.click()}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--border,#E2E8F0)] bg-white text-[var(--muted,#64748B)] shadow-sm transition hover:border-blue-300 hover:text-[var(--accent,#2563EB)] disabled:opacity-40"
-                  title={`${step.label} — fotoğraf ekle`}
-                  aria-label={`${step.label} fotoğraf ekle`}
-                >
-                  <ImagePlus className="h-4 w-4" />
-                </button>
-                <input
-                  ref={(node) => {
-                    addRefs.current[step.id] = node
-                  }}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  disabled={!canAddPhoto}
-                  onChange={(event) => {
-                    onAddPhotos?.(step, event.target.files)
-                    event.target.value = ''
-                  }}
-                />
               </div>
             </div>
           )

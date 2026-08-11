@@ -68,6 +68,7 @@ export default function ProductionJobCard({
 }) {
   const navigate = useNavigate()
   const [activeLineIndex, setActiveLineIndex] = useState(0)
+  const [activeRowId, setActiveRowId] = useState(null)
   const [liveWorkflowStages, setLiveWorkflowStages] = useState(
     () => workflowStagesProp || loadWorkflowStages(),
   )
@@ -100,18 +101,34 @@ export default function ProductionJobCard({
   const activeLine =
     lineItems[Math.min(activeLineIndex, Math.max(0, lineItems.length - 1))] || lineItems[0]
   const activeRows = activeLine ? getLineQuantityRows(activeLine) : []
-  const primaryRow = activeRows[0]
-  const processSteps = buildStepsForLine(activeLine, liveProductionStages)
+  const primaryRow =
+    (activeRowId && activeRows.find((row) => row.id === activeRowId)) || activeRows[0] || null
+  const processSteps = primaryRow
+    ? getQuantityRowMinimalSteps(primaryRow, liveProductionStages)
+    : buildStepsForLine(activeLine, liveProductionStages)
   const stagePhotos = normalizeStagePhotos(activeLine?.stagePhotos || [])
+
+  useEffect(() => {
+    if (!activeLine) {
+      setActiveRowId(null)
+      return
+    }
+    const rows = getLineQuantityRows(activeLine)
+    if (!rows.length) {
+      setActiveRowId(null)
+      return
+    }
+    if (!activeRowId || !rows.some((row) => row.id === activeRowId)) {
+      setActiveRowId(rows[0].id)
+    }
+  }, [activeLine?.id, activeLine?.quantityRows, activeRowId])
 
   function handleStageClick(stageId) {
     if (!activeLine || activeLine.productionClosed) return
     if (!liveProductionStages.some((stage) => stage.id === stageId)) return
     const row = primaryRow || getLineQuantityRows(activeLine)[0]
-    if (!row?.id) {
-      lineItemActions?.handleAddQuantityRow?.(activeLine)
-      return
-    }
+    // Never auto-create a partial row from stage clicks — only advance an existing row.
+    if (!row?.id) return
     lineItemActions?.handleQuantityRowStageChange(activeLine, row.id, stageId)
   }
 
@@ -195,11 +212,12 @@ export default function ProductionJobCard({
           <ProductionLineDeliveryPanel
             lineItems={lineItems}
             activeLineId={activeLine?.id}
+            activeRowId={activeRowId}
             onSelectLine={(lineId) => {
               const index = lineItems.findIndex((line) => line.id === lineId)
               if (index >= 0) setActiveLineIndex(index)
             }}
-            order={order}
+            onSelectRow={(rowId) => setActiveRowId(rowId)}
             productionJobId={job.id}
             fulfillmentOptions={fulfillmentOptions}
             fulfillmentOpenKey={`${job.id}-fulfillment`}
@@ -210,12 +228,14 @@ export default function ProductionJobCard({
             onQuantityRowChange={(line, rowId, patch) =>
               lineItemActions?.handleLineQuantityRowChange(line, rowId, patch)
             }
-            onAddQuantityRow={(line, rowId) =>
-              lineItemActions?.handleAddQuantityRow(line, rowId)
-            }
-            onRemoveQuantityRow={(line, rowId) =>
+            onAddQuantityRow={(line, rowId) => {
+              const newId = lineItemActions?.handleAddQuantityRow(line, rowId)
+              if (newId) setActiveRowId(newId)
+            }}
+            onRemoveQuantityRow={(line, rowId) => {
               lineItemActions?.handleRemoveQuantityRow(line, rowId)
-            }
+              if (activeRowId === rowId) setActiveRowId(null)
+            }}
             onSendToDepo={(line, rowId) => {
               lineItemActions?.handleSendRowToDepo(
                 line,

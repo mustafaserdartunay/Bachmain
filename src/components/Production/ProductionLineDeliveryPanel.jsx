@@ -7,6 +7,7 @@ import {
   Receipt,
   Trash2,
 } from 'lucide-react'
+import { MoreMenu } from '@bachmain/ui'
 import { ListInlineActionConfirm } from '../Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../EditableDropdownPill'
 import NumericInput from '../Products/NumericInput'
@@ -18,13 +19,14 @@ import {
 import { PAGE_TABLE_HEADER_CLASS } from '../../utils/dashboardDesign'
 
 /**
- * Single panel: product + partial delivery rows with per-row sevk fişi / harita / fatura.
+ * Unified product + partial-delivery table with row MoreMenu actions.
  */
 export default function ProductionLineDeliveryPanel({
   lineItems = [],
   activeLineId,
+  activeRowId,
   onSelectLine,
-  order,
+  onSelectRow,
   productionJobId,
   fulfillmentOptions,
   fulfillmentOpenKey,
@@ -71,59 +73,125 @@ export default function ProductionLineDeliveryPanel({
     )
   }
 
+  function buildRowActions(line, row, rowIndex, orderQty) {
+    const depoQty = resolveDepoSendQuantity(row, rowIndex, line, orderQty)
+    const locked = columnsLocked || line.productionClosed
+    const items = [
+      {
+        id: 'waybill',
+        label: row.waybillNo ? `Sevk fişi (${row.waybillNo})` : 'Sevk fişi kes',
+        icon: FileText,
+        onClick: () => onIssueWaybill?.(line, row.id),
+      },
+      {
+        id: 'map',
+        label: row.trackingToken ? 'Sevk harita linkini aç' : 'Sevk harita linki oluştur',
+        icon: MapPin,
+        onClick: () => onOpenMapLink?.(line, row.id),
+      },
+      {
+        id: 'invoice',
+        label: row.invoiceNo ? `Fatura (${row.invoiceNo})` : 'Fatura kes',
+        icon: Receipt,
+        onClick: () => onIssueInvoice?.(line, row.id),
+      },
+      { type: 'separator', id: 'sep-1' },
+    ]
+
+    if (typeof onSendToDepo === 'function') {
+      if (row.depoItemId) {
+        items.push({
+          id: 'undo-depo',
+          label: 'Teslimatı geri al',
+          icon: Package,
+          onClick: () => setPendingUndoDepoRowId(row.id),
+        })
+      } else {
+        items.push({
+          id: 'depo',
+          label: 'Teslim et',
+          icon: Package,
+          onClick: () => {
+            if (locked || !(depoQty > 0)) {
+              window.alert('Teslim etmek için teslimat adedi girin.')
+              return
+            }
+            setPendingDepoRowId(row.id)
+          },
+        })
+      }
+    }
+
+    if (typeof onAddQuantityRow === 'function' && !locked) {
+      items.push({
+        id: 'add-partial',
+        label: 'Kısmi teslimat ekle',
+        icon: Plus,
+        onClick: () => onAddQuantityRow(line, row.id),
+      })
+    }
+
+    if (getLineQuantityRows(line).length > 1 && typeof onRemoveQuantityRow === 'function') {
+      items.push({
+        id: 'remove',
+        label: 'Satırı sil',
+        icon: Trash2,
+        tone: 'danger',
+        onClick: () => onRemoveQuantityRow(line, row.id),
+      })
+    }
+
+    return items
+  }
+
   return (
     <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-ds-border">
-      <table className="w-full min-w-[56rem] border-collapse text-left">
+      <table className="w-full min-w-[48rem] border-collapse text-left">
         <thead className="bg-[var(--ds-surface-muted)]">
           <tr>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>ÜRÜN AÇIKLAMASI</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>NO</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>KISMİ ADET</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ ADEDİ</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ NUMARASI</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>ÜRETİM ADEDİ</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>TESLİMAT ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DURUM</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SEVK FİŞİ</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>HARİTA</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>FATURA</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} w-[1%] whitespace-nowrap text-right`}>
-              <span className="inline-flex items-center gap-1">
-                İŞLEM
-                {!columnsLocked && typeof onAddQuantityRow === 'function' && activeLineId ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const active = lineItems.find((line) => line.id === activeLineId)
-                      if (active) onAddQuantityRow(active, getLineQuantityRows(active)[0]?.id)
-                    }}
-                    className="inline-flex h-5 w-5 items-center justify-center rounded text-[var(--accent,#2563EB)] hover:bg-white"
-                    title="Kısmi teslimat ekle"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </button>
-                ) : null}
+            <th
+              className={`${PAGE_TABLE_HEADER_CLASS} w-14 whitespace-nowrap text-center`}
+              aria-label="İşlemler"
+            >
+              <span className="inline-flex h-[var(--ds-control-h,3rem)] w-[var(--ds-control-h,3rem)] items-center justify-center">
+                ···
               </span>
             </th>
           </tr>
         </thead>
         <tbody>
           {flatRows.map(({ line, row, rowIndex, orderQty, isFirstOfLine, rowSpan }) => {
-            const isActive = line.id === activeLineId
+            const isActiveRow = row.id === activeRowId || (!activeRowId && line.id === activeLineId && isFirstOfLine)
             const productName = line.product || 'Ürün'
             const description = String(line.description || '').trim()
             const code = row.productionCode || `${productionJobId}-${rowIndex + 1}`
-            const depoQty = resolveDepoSendQuantity(row, rowIndex, line, orderQty)
+            const statusValue =
+              row.fulfillmentStatus &&
+              fulfillmentOptions.some((option) => option.label === row.fulfillmentStatus)
+                ? row.fulfillmentStatus
+                : fulfillmentOptions[0]?.label || ''
 
             return (
               <tr
                 key={`${line.id}-${row.id}`}
                 className={`border-t border-ds-border transition-colors hover:bg-[var(--ds-surface-muted)] ${
-                  isActive ? 'bg-[var(--ds-surface-muted)]' : ''
+                  isActiveRow ? 'bg-[var(--ds-surface-muted)]' : ''
                 }`}
-                onClick={() => onSelectLine?.(line.id)}
+                onClick={() => {
+                  onSelectLine?.(line.id)
+                  onSelectRow?.(row.id)
+                }}
               >
                 {isFirstOfLine ? (
                   <td
                     rowSpan={rowSpan}
-                    className="h-[var(--ds-row-h,2.75rem)] max-w-[14rem] px-3 py-1.5 align-top"
+                    className="h-[var(--ds-row-h,2.75rem)] max-w-[14rem] px-3 py-1.5 align-middle"
                   >
                     <span className="flex min-w-0 flex-col gap-0.5">
                       {description ? (
@@ -147,15 +215,10 @@ export default function ProductionLineDeliveryPanel({
                 {isFirstOfLine ? (
                   <td
                     rowSpan={rowSpan}
-                    className="h-[var(--ds-row-h,2.75rem)] px-3 py-1.5 align-top whitespace-nowrap"
+                    className="h-[var(--ds-row-h,2.75rem)] px-3 py-1.5 align-middle whitespace-nowrap"
                   >
-                    <span className="flex flex-col gap-0.5">
-                      <span className="customer-name-primary tabular-nums text-[14px] font-bold text-[var(--muted)]">
-                        {formatQty(orderQty)}
-                      </span>
-                      <span className="customer-name-secondary text-[14px] font-normal text-[var(--muted)]">
-                        adet
-                      </span>
+                    <span className="customer-name-primary tabular-nums text-[14px] font-bold text-[var(--muted)]">
+                      {formatQty(orderQty)}
                     </span>
                   </td>
                 ) : null}
@@ -166,7 +229,26 @@ export default function ProductionLineDeliveryPanel({
                   </span>
                 </td>
 
-                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                <td
+                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <NumericInput
+                    value={row.producedQuantity}
+                    onChange={(value) =>
+                      onQuantityRowChange?.(line, row.id, {
+                        producedQuantity: Math.round(Number(value) || 0),
+                      })
+                    }
+                    readOnly={columnsLocked || line.productionClosed}
+                    className="form-input h-7 w-14 text-[12px] font-bold tabular-nums"
+                  />
+                </td>
+
+                <td
+                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   <NumericInput
                     value={row.deliveredQuantity}
                     onChange={(value) =>
@@ -179,135 +261,58 @@ export default function ProductionLineDeliveryPanel({
                   />
                 </td>
 
-                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                <td
+                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-1 whitespace-nowrap"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   <EditableDropdownPill
-                    value={row.fulfillmentStatus || fulfillmentOptions[0]?.label || 'Devam Ediyor'}
+                    value={statusValue}
                     options={fulfillmentOptions}
                     editable={false}
-                    disabled={columnsLocked || line.productionClosed}
+                    disabled={columnsLocked || line.productionClosed || !fulfillmentOptions.length}
                     includePlaceholderOption={false}
+                    placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum yok'}
                     buttonClassName="flex h-7 min-w-[7rem] items-center justify-between rounded-lg border border-ds-border bg-white px-2 text-[11px] font-semibold"
                     openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
                     onChange={(value) =>
                       onQuantityRowChange?.(line, row.id, {
-                        fulfillmentStatus: value || 'Devam Ediyor',
+                        fulfillmentStatus: value || fulfillmentOptions[0]?.label || 'Devam Ediyor',
                       })
                     }
                   />
                 </td>
 
-                <td className="h-[var(--ds-row-h,2.75rem)] px-2 py-1 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    disabled={line.productionClosed}
-                    onClick={() => onIssueWaybill?.(line, row.id)}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold ${
-                      row.waybillNo
-                        ? 'text-emerald-700 hover:bg-emerald-50'
-                        : 'text-orange-600 hover:bg-orange-50'
-                    } disabled:opacity-40`}
-                    title={row.waybillNo ? `Sevk fişi ${row.waybillNo}` : 'Sevk fişi kes'}
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    {row.waybillNo || 'Kes'}
-                  </button>
-                </td>
-
-                <td className="h-[var(--ds-row-h,2.75rem)] px-2 py-1 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    disabled={line.productionClosed}
-                    onClick={() => onOpenMapLink?.(line, row.id)}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold ${
-                      row.trackingToken
-                        ? 'text-blue-700 hover:bg-blue-50'
-                        : 'text-[var(--muted)] hover:bg-[var(--ds-surface-muted)]'
-                    } disabled:opacity-40`}
-                    title={row.trackingToken ? 'Sevk harita linkini aç' : 'Sevk harita linki oluştur'}
-                  >
-                    <MapPin className="h-3.5 w-3.5" />
-                    {row.trackingToken ? 'Aç' : 'Link'}
-                  </button>
-                </td>
-
-                <td className="h-[var(--ds-row-h,2.75rem)] px-2 py-1 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    disabled={line.productionClosed}
-                    onClick={() => onIssueInvoice?.(line, row.id)}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold ${
-                      row.invoiceNo
-                        ? 'text-emerald-700 hover:bg-emerald-50'
-                        : 'text-[var(--bach-navy,#1E3A8A)] hover:bg-blue-50'
-                    } disabled:opacity-40`}
-                    title={row.invoiceNo ? `Fatura ${row.invoiceNo}` : 'Fatura kes'}
-                  >
-                    <Receipt className="h-3.5 w-3.5" />
-                    {row.invoiceNo || 'Kes'}
-                  </button>
-                </td>
-
                 <td
-                  className="h-[var(--ds-row-h,2.75rem)] px-2 py-1 whitespace-nowrap text-right"
-                  onClick={(e) => e.stopPropagation()}
+                  className="h-[var(--ds-row-h,2.75rem)] w-14 px-2 text-center align-middle"
+                  onClick={(event) => event.stopPropagation()}
                 >
-                  <div className="inline-flex items-center justify-end gap-1">
-                    {typeof onSendToDepo === 'function' ? (
-                      pendingDepoRowId === row.id ? (
-                        <ListInlineActionConfirm
-                          message="Emin misin?"
-                          tone="orange"
-                          onConfirm={() => {
-                            onSendToDepo(line, row.id)
-                            setPendingDepoRowId(null)
-                          }}
-                          onCancel={() => setPendingDepoRowId(null)}
-                        />
-                      ) : row.depoItemId ? (
-                        <button
-                          type="button"
-                          onClick={() => setPendingUndoDepoRowId(row.id)}
-                          className="rounded-lg px-1.5 py-1 text-[11px] font-bold text-orange-600"
-                        >
-                          Geri Al
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={columnsLocked || line.productionClosed || !(depoQty > 0)}
-                          onClick={() => setPendingDepoRowId(row.id)}
-                          className="inline-flex items-center gap-0.5 rounded-lg px-1.5 py-1 text-[11px] font-bold text-orange-600 disabled:opacity-40"
-                          title="Teslim Et"
-                        >
-                          <Package className="h-3 w-3" />
-                          Teslim
-                        </button>
-                      )
-                    ) : null}
-                    {pendingUndoDepoRowId === row.id ? (
-                      <ListInlineActionConfirm
-                        message="Emin misin?"
-                        tone="orange"
-                        onConfirm={() => {
-                          onUndoSendToDepo?.(line, row.id)
-                          setPendingUndoDepoRowId(null)
-                        }}
-                        onCancel={() => setPendingUndoDepoRowId(null)}
-                      />
-                    ) : null}
-                    {getLineQuantityRows(line).length > 1 && typeof onRemoveQuantityRow === 'function' ? (
-                      <button
-                        type="button"
-                        onClick={() => onRemoveQuantityRow(line, row.id)}
-                        className="rounded p-1 text-red-500"
-                        title="Kısmi teslimatı sil"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    ) : null}
-                  </div>
+                  {pendingDepoRowId === row.id ? (
+                    <ListInlineActionConfirm
+                      message="Emin misin?"
+                      tone="orange"
+                      onConfirm={() => {
+                        onSendToDepo?.(line, row.id)
+                        setPendingDepoRowId(null)
+                      }}
+                      onCancel={() => setPendingDepoRowId(null)}
+                    />
+                  ) : pendingUndoDepoRowId === row.id ? (
+                    <ListInlineActionConfirm
+                      message="Emin misin?"
+                      tone="orange"
+                      onConfirm={() => {
+                        onUndoSendToDepo?.(line, row.id)
+                        setPendingUndoDepoRowId(null)
+                      }}
+                      onCancel={() => setPendingUndoDepoRowId(null)}
+                    />
+                  ) : (
+                    <div className="inline-flex h-[var(--ds-control-h,3rem)] w-[var(--ds-control-h,3rem)] items-center justify-center">
+                      <MoreMenu items={buildRowActions(line, row, rowIndex, orderQty)} />
+                    </div>
+                  )}
                 </td>
               </tr>
             )
