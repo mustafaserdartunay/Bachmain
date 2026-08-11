@@ -164,9 +164,9 @@ export default function ProductionLineDeliveryPanel({
   }
 
   return (
-    <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)]">
+    <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-[var(--glass-border,var(--ds-border))] bg-transparent">
       <table className="w-full min-w-[52rem] border-collapse text-left">
-        <thead className="bg-[var(--ds-surface-muted)]">
+        <thead className="bg-transparent">
           <tr>
             <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[12rem]`}>ÜRÜN AÇIKLAMASI</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ ADEDİ</th>
@@ -262,7 +262,7 @@ export default function ProductionLineDeliveryPanel({
                       })
                     }
                     readOnly={columnsLocked || line.productionClosed}
-                    className="form-input h-8 w-16 text-[12px] font-bold tabular-nums"
+                    className="!h-8 !min-h-8 w-16 py-0 text-[12px] font-bold tabular-nums"
                   />
                 </td>
 
@@ -278,7 +278,7 @@ export default function ProductionLineDeliveryPanel({
                       })
                     }
                     readOnly={columnsLocked || line.productionClosed}
-                    className="form-input h-8 w-16 text-[12px] font-bold tabular-nums"
+                    className="!h-8 !min-h-8 w-16 py-0 text-[12px] font-bold tabular-nums"
                   />
                 </td>
 
@@ -293,7 +293,7 @@ export default function ProductionLineDeliveryPanel({
                     disabled={columnsLocked || line.productionClosed || !fulfillmentOptions.length}
                     includePlaceholderOption={false}
                     placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum yok'}
-                    buttonClassName="flex h-8 min-w-[7.5rem] items-center justify-between rounded-lg border border-ds-border bg-white px-2 text-[11px] font-semibold"
+                    buttonClassName="flex !h-8 !min-h-8 min-w-[7.5rem] items-center justify-between rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold"
                     openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}

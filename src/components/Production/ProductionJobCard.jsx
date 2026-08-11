@@ -230,7 +230,7 @@ export default function ProductionJobCard({
   }
 
   return (
-    <div className="mt-3 space-y-5 rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)] p-5 sm:p-6">
+    <div className="mt-3 space-y-5 rounded-ds-lg border border-[var(--glass-border,var(--ds-border))] bg-transparent p-5 sm:p-6">
       <div className="relative" onClick={(event) => event.stopPropagation()}>
         <ProductionLineDeliveryPanel
           lineItems={lineItems}
@@ -294,7 +294,7 @@ export default function ProductionJobCard({
           Henüz üretim süreci tanımlı değil. Ayarlar → Üretim Süreçleri panelinden ekleyin.
         </p>
       ) : (
-        <div className="overflow-visible rounded-ds-lg border border-ds-border bg-white px-3 py-3">
+        <div className="overflow-visible rounded-ds-lg border border-[var(--glass-border,var(--ds-border))] bg-transparent px-3 py-3">
           <ProductionProcessCapsuleRail
             steps={processSteps}
             stagePhotos={stagePhotos}
@@ -307,14 +307,14 @@ export default function ProductionJobCard({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-ds-lg border border-ds-border">
+      <div className="overflow-hidden rounded-ds-lg border border-[var(--glass-border,var(--ds-border))] bg-transparent">
         <button
           type="button"
           onClick={(event) => {
             event.stopPropagation()
             setJournalOpen((open) => !open)
           }}
-          className="flex w-full items-center justify-between gap-2 bg-[var(--ds-surface,#fff)] px-3 py-2 text-left transition-colors hover:bg-[var(--ds-surface-muted)]/40"
+          className="flex w-full items-center justify-between gap-2 bg-transparent px-3 py-2 text-left transition-colors hover:bg-[var(--ds-surface-muted)]/30"
           aria-expanded={journalOpen}
         >
           <span className="text-[12px] font-bold uppercase tracking-wide text-[var(--muted,#64748B)]">
@@ -333,7 +333,7 @@ export default function ProductionJobCard({
           />
         </button>
         {journalOpen ? (
-          <div className="border-t border-ds-border bg-[var(--ds-surface,#fff)] px-3 py-3">
+          <div className="border-t border-[var(--glass-border,var(--ds-border))] bg-transparent px-3 py-3">
             <ProductionActivityTimeline activities={job.activities || []} />
           </div>
         ) : null}

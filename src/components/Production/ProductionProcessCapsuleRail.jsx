@@ -64,7 +64,7 @@ export default function ProductionProcessCapsuleRail({
     >
       <div
         className="mx-auto grid min-w-max gap-0 px-2"
-        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(6.25rem, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(7.75rem, 1fr))` }}
       >
         {steps.map((step, index) => {
           const kind = resolveKind(step)
@@ -162,12 +162,12 @@ export default function ProductionProcessCapsuleRail({
                     {photos.slice(0, 3).map((photo) => (
                       <div
                         key={photo.id}
-                        className="group/photo flex items-center justify-center gap-0.5"
+                        className="group/photo relative mx-auto flex h-14 w-[7.5rem] items-center justify-center"
                       >
                         {!readOnly && canEditPhoto ? (
                           <button
                             type="button"
-                            className={`${KALEM_BUTTON_CLASS} opacity-0 transition-opacity group-hover/photo:opacity-100`}
+                            className={`${KALEM_BUTTON_CLASS} pointer-events-none absolute left-0 top-1/2 z-[2] -translate-y-1/2 opacity-0 shadow-sm transition-opacity duration-150 group-hover/photo:pointer-events-auto group-hover/photo:opacity-100 group-focus-within/photo:pointer-events-auto group-focus-within/photo:opacity-100`}
                             title="Fotoğrafı düzenle"
                             aria-label="Fotoğrafı düzenle"
                             onClick={(event) => {
@@ -177,11 +177,9 @@ export default function ProductionProcessCapsuleRail({
                           >
                             <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
                           </button>
-                        ) : (
-                          <span className="h-8 w-8 shrink-0" aria-hidden />
-                        )}
+                        ) : null}
 
-                        <div className="h-14 w-14 overflow-hidden rounded-xl bg-[var(--ds-surface-muted,#F8FAFC)] ring-1 ring-[var(--border,#E2E8F0)] shadow-sm">
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[var(--ds-surface-muted,#F8FAFC)] ring-1 ring-[var(--border,#E2E8F0)] shadow-sm">
                           <img
                             src={photo.dataUrl}
                             alt=""
@@ -192,7 +190,7 @@ export default function ProductionProcessCapsuleRail({
                         {!readOnly && canDeletePhoto ? (
                           <button
                             type="button"
-                            className={`${COP_KUTUSU_BUTTON_CLASS} opacity-0 transition-opacity group-hover/photo:opacity-100`}
+                            className={`${COP_KUTUSU_BUTTON_CLASS} pointer-events-none absolute right-0 top-1/2 z-[2] -translate-y-1/2 opacity-0 shadow-sm transition-opacity duration-150 group-hover/photo:pointer-events-auto group-hover/photo:opacity-100 group-focus-within/photo:pointer-events-auto group-focus-within/photo:opacity-100`}
                             title="Fotoğrafı sil"
                             aria-label="Fotoğrafı sil"
                             onClick={(event) => {
@@ -202,9 +200,7 @@ export default function ProductionProcessCapsuleRail({
                           >
                             <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
                           </button>
-                        ) : (
-                          <span className="h-8 w-8 shrink-0" aria-hidden />
-                        )}
+                        ) : null}
 
                         <input
                           ref={(node) => {
