@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, ClipboardList, Factory, Layers3 } from 'lucide-react'
+import {
+  ArchiveRestore,
+  CheckCircle2,
+  ClipboardList,
+  Factory,
+  Layers3,
+  Package,
+  Trash2,
+} from 'lucide-react'
+import { DataTable } from '@bachmain/ui'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import SearchInput from '../components/Common/SearchInput'
 import {
@@ -15,9 +24,14 @@ import {
   HeaderQuickActionCard,
 } from '../components/Layout/HeaderCashActionsPanel'
 import ProductionFilterBar from '../components/Production/ProductionFilterBar'
-import ProductionJobCard from '../components/Production/ProductionJobCard'
+import ProductionJobCard, {
+  formatShortDate,
+  resolveStatusBadge,
+} from '../components/Production/ProductionJobCard'
+import { getListCustomerDisplay } from '../data/customerProfiles'
 import { ensureLineItems, getLineFulfillmentOptions } from '../utils/productionLineItems'
 import {
+  formatQty,
   getJobQuantityMetrics,
   jobMatchesProductionStateFilter,
   jobMatchesQuantityFilter,
@@ -36,6 +50,7 @@ import {
 } from '../utils/productionStore'
 import { loadOrders } from '../utils/ordersStore'
 import { loadQuotes } from '../utils/quotesStore'
+import { getProductionJobTimelineDates } from '../utils/productionJobTimeline'
 import {
   getProductionStageOptions,
   loadWorkflowStages,
@@ -46,6 +61,7 @@ import {
   APP_PANEL_TITLE_CLASS,
   PAGE_CENTER_TITLE_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
+  PAGE_TABLE_HEADER_CLASS,
   YF_TEXT_CLASS,
 } from '../utils/dashboardDesign'
 
@@ -78,13 +94,14 @@ export default function ProductionPage() {
   const [filters, setFilters] = useState({ process: 'Tümü', status: 'Tümü', quantity: 'Tümü' })
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
-  const [expandedJobIds, setExpandedJobIds] = useState(() => new Set())
-  const [selectedJobIds, setSelectedJobIds] = useState(() => new Set())
+  const [expandedJobId, setExpandedJobId] = useState(null)
   const [fulfillmentOptions, setFulfillmentOptions] = useState(() => getLineFulfillmentOptions())
 
   const productionStageOptions = getProductionStageOptions(workflowStages)
   const productionStageDropdownOptions = toStageDropdownOptions(productionStageOptions)
   const productionProcessFilterOptions = [filterAllOption, ...productionStageDropdownOptions]
+  const orders = useMemo(() => loadOrders(), [jobs])
+  const quotes = useMemo(() => loadQuotes(), [jobs])
 
   useEffect(() => {
     function refresh() {
@@ -129,24 +146,11 @@ export default function ProductionPage() {
     deleteProductionJob(job.id)
     refreshJobs()
     setPendingDeleteId(null)
+    if (expandedJobId === job.id) setExpandedJobId(null)
   }
 
   function toggleJobExpanded(jobId) {
-    setExpandedJobIds((current) => {
-      const next = new Set(current)
-      if (next.has(jobId)) next.delete(jobId)
-      else next.add(jobId)
-      return next
-    })
-  }
-
-  function toggleJobSelected(jobId) {
-    setSelectedJobIds((current) => {
-      const next = new Set(current)
-      if (next.has(jobId)) next.delete(jobId)
-      else next.add(jobId)
-      return next
-    })
+    setExpandedJobId((current) => (current === jobId ? null : jobId))
   }
 
   function getLineItemActions(job) {
@@ -209,8 +213,7 @@ export default function ProductionPage() {
     }
   }, [filteredJobs, workflowStages])
 
-  const orders = loadOrders()
-  const quotes = loadQuotes()
+  const expandedJob = filteredJobs.find((job) => job.id === expandedJobId) || null
 
   return (
     <AppPageShell className="customers-page-type w-full">
@@ -285,55 +288,193 @@ export default function ProductionPage() {
               className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
             />
           </div>
-          <span className={`shrink-0 ${YF_TEXT_CLASS}`}>
-            {filteredJobs.length} Kayıt
-            {selectedJobIds.size ? ` · ${selectedJobIds.size} seçili` : ''}
-          </span>
+          <span className={`shrink-0 ${YF_TEXT_CLASS}`}>{filteredJobs.length} Kayıt</span>
         </div>
 
-        <div className="space-y-3">
-          {filteredJobs.map((job) => (
-            <ProductionJobCard
-              key={job.id}
-              job={job}
-              workflowStages={workflowStages}
-              productionStages={productionStageOptions}
-              fulfillmentOptions={fulfillmentOptions}
-              orders={orders}
-              quotes={quotes}
-              expanded={expandedJobIds.has(job.id)}
-              onToggleExpand={() => toggleJobExpanded(job.id)}
-              pendingDelete={pendingDeleteId === job.id}
-              onRequestDelete={() => setPendingDeleteId(job.id)}
-              onConfirmDelete={() => removeJob(job)}
-              onCancelDelete={() => setPendingDeleteId(null)}
-              onCancelProduction={() => {
+        <DataTable
+          emptyTitle="Üretim kaydı bulunamadı"
+          emptyDescription='Siparişler sayfasında "Üretime Alındı" seçildiğinde kayıtlar buraya kopyalanır.'
+          headerClassName={PAGE_TABLE_HEADER_CLASS}
+          mobileHeaderClassName={PAGE_TABLE_HEADER_CLASS}
+          data={filteredJobs}
+          defaultSort={{ key: 'orderDate', dir: 'desc' }}
+          getRowId={(job) => job.id}
+          onRowClick={(job) => toggleJobExpanded(job.id)}
+          columns={[
+            {
+              id: 'customer',
+              header: 'MÜŞTERİLER',
+              sortable: true,
+              accessorKey: 'customer',
+              className: 'min-w-[18rem] w-[40%]',
+              getSortValue: (job) => {
+                const display = getListCustomerDisplay(job.customer)
+                return display.brandShortName || display.companyTitle || job.customer || ''
+              },
+              cell: (job) => {
+                const display = getListCustomerDisplay(job.customer)
+                const companyTitle = display.companyTitle || job.customer || '—'
+                return (
+                  <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
+                    <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                      {display.brandShortName || companyTitle}
+                    </span>
+                    <span className="customer-name-secondary font-sans truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
+                      {companyTitle}
+                    </span>
+                  </span>
+                )
+              },
+            },
+            {
+              id: 'orderDate',
+              header: 'SİPARİŞ',
+              sortable: true,
+              accessorKey: 'orderDate',
+              className: 'w-[8.5rem]',
+              getSortValue: (job) => {
+                const timeline = getProductionJobTimelineDates(
+                  job,
+                  ensureLineItems(job, workflowStages),
+                  { orders, quotes },
+                )
+                return timeline.orderDate || ''
+              },
+              cell: (job) => {
+                const timeline = getProductionJobTimelineDates(
+                  job,
+                  ensureLineItems(job, workflowStages),
+                  { orders, quotes },
+                )
+                return (
+                  <span className="tabular-nums text-[14px] font-semibold text-[var(--muted)]">
+                    {formatShortDate(timeline.orderDate)}
+                  </span>
+                )
+              },
+            },
+            {
+              id: 'productionStart',
+              header: 'ÜRETİM',
+              sortable: true,
+              accessorKey: 'productionStart',
+              className: 'w-[8.5rem]',
+              getSortValue: (job) => {
+                const timeline = getProductionJobTimelineDates(
+                  job,
+                  ensureLineItems(job, workflowStages),
+                  { orders, quotes },
+                )
+                return timeline.productionStartDate || ''
+              },
+              cell: (job) => {
+                const timeline = getProductionJobTimelineDates(
+                  job,
+                  ensureLineItems(job, workflowStages),
+                  { orders, quotes },
+                )
+                return (
+                  <span className="tabular-nums text-[14px] font-semibold text-[var(--muted)]">
+                    {formatShortDate(timeline.productionStartDate)}
+                  </span>
+                )
+              },
+            },
+            {
+              id: 'status',
+              header: 'DURUM',
+              className: 'w-[10rem]',
+              cell: (job) => {
+                const metrics = getJobQuantityMetrics(ensureLineItems(job, workflowStages))
+                const badge = resolveStatusBadge(job, metrics)
+                return (
+                  <span
+                    className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white ${badge.gradient}`}
+                  >
+                    {badge.label}
+                  </span>
+                )
+              },
+            },
+            {
+              id: 'quantity',
+              header: 'ADET',
+              sortable: true,
+              accessorKey: 'quantity',
+              className: 'w-[1%] whitespace-nowrap text-right',
+              getSortValue: (job) =>
+                getJobQuantityMetrics(ensureLineItems(job, workflowStages)).ordered,
+              cell: (job) => {
+                const metrics = getJobQuantityMetrics(ensureLineItems(job, workflowStages))
+                return (
+                  <span className="tabular-nums text-[14px] font-bold text-[var(--muted)]">
+                    {formatQty(metrics.produced)}/{formatQty(metrics.ordered)}
+                  </span>
+                )
+              },
+            },
+          ]}
+          getRowActions={(job) => [
+            {
+              id: 'expand',
+              label: expandedJobId === job.id ? 'Detayı Kapat' : 'Detayı Aç',
+              icon: ClipboardList,
+              onClick: () => toggleJobExpanded(job.id),
+            },
+            {
+              id: 'cancel',
+              label: 'Vazgeç',
+              icon: ArchiveRestore,
+              onClick: () => {
                 cancelProductionBackToOrder(job.id)
                 refreshJobs()
-              }}
-              onSendToDepo={() => {
+              },
+            },
+            {
+              id: 'depo',
+              label: 'Depoya gönder',
+              icon: Package,
+              onClick: () => {
                 sendProductionJobToDepo(job.id)
                 refreshJobs()
                 navigate('/depo')
-              }}
-              lineItemActions={getLineItemActions(job)}
-              activeMenu={activeMenu}
-              setActiveMenu={setActiveMenu}
-              selected={selectedJobIds.has(job.id)}
-              onToggleSelect={toggleJobSelected}
-            />
-          ))}
-        </div>
+              },
+            },
+            {
+              id: 'delete',
+              label: 'Sil',
+              icon: Trash2,
+              tone: 'danger',
+              onClick: () => setPendingDeleteId(job.id),
+            },
+          ]}
+        />
 
-        {filteredJobs.length === 0 ? (
-          <div className="mt-2 rounded-2xl border border-dashed border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#F8FAFC)]/70 p-10 text-center dark:bg-white/5">
-            <Factory className="mx-auto mb-3 h-8 w-8 text-[var(--muted,#94A3B8)]" />
-            <p className="text-sm font-bold text-[var(--ink,#0F172A)]">Üretim kaydı bulunamadı.</p>
-            <p className="mt-1 text-[13px] text-[var(--muted,#64748B)]">
-              Siparişler sayfasında &quot;Üretime Alındı&quot; seçildiğinde kayıtlar buraya
-              kopyalanır.
-            </p>
-          </div>
+        {expandedJob ? (
+          <ProductionJobCard
+            job={expandedJob}
+            workflowStages={workflowStages}
+            productionStages={productionStageOptions}
+            fulfillmentOptions={fulfillmentOptions}
+            orders={orders}
+            quotes={quotes}
+            pendingDelete={pendingDeleteId === expandedJob.id}
+            onRequestDelete={() => setPendingDeleteId(expandedJob.id)}
+            onConfirmDelete={() => removeJob(expandedJob)}
+            onCancelDelete={() => setPendingDeleteId(null)}
+            onCancelProduction={() => {
+              cancelProductionBackToOrder(expandedJob.id)
+              refreshJobs()
+            }}
+            onSendToDepo={() => {
+              sendProductionJobToDepo(expandedJob.id)
+              refreshJobs()
+              navigate('/depo')
+            }}
+            lineItemActions={getLineItemActions(expandedJob)}
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+          />
         ) : null}
       </AppPagePanel>
     </AppPageShell>

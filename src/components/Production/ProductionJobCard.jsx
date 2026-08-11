@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { ArchiveRestore, ChevronDown, Package, Trash2, Truck } from 'lucide-react'
-import { MoreMenu } from '@bachmain/ui'
+import { ArchiveRestore, Package, Trash2, Truck } from 'lucide-react'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import { HEADER_ACTION_GRADIENTS } from '../Layout/HeaderCashActionsPanel'
 import ProductionProcessStageBar from './ProductionProcessStageBar'
@@ -79,6 +78,10 @@ function MetricStat({ label, value }) {
   )
 }
 
+/**
+ * Expanded production detail panel — process rail + metrics + stage bar.
+ * Collapsed list rows live in ProductionPage DataTable.
+ */
 export default function ProductionJobCard({
   job,
   workflowStages,
@@ -86,8 +89,6 @@ export default function ProductionJobCard({
   fulfillmentOptions,
   orders,
   quotes,
-  expanded,
-  onToggleExpand,
   pendingDelete,
   onRequestDelete,
   onConfirmDelete,
@@ -97,11 +98,10 @@ export default function ProductionJobCard({
   lineItemActions,
   activeMenu,
   setActiveMenu,
-  selected,
-  onToggleSelect,
+  initialPartialOpen = false,
 }) {
   const [activeLineIndex, setActiveLineIndex] = useState(0)
-  const [partialOpen, setPartialOpen] = useState(false)
+  const [partialOpen, setPartialOpen] = useState(initialPartialOpen)
   const customerDisplay = getListCustomerDisplay(job.customer)
   const order = resolveOrderForProductionJob(job, orders)
   const lineItems = ensureLineItems(job, workflowStages, order)
@@ -132,10 +132,7 @@ export default function ProductionJobCard({
     (metrics.delivered > 0 && metrics.delivered < metrics.ordered)
 
   const companyTitle =
-    customerDisplay.companyTitle ||
-    job.customer ||
-    productSummary ||
-    'Müşteri yok'
+    customerDisplay.companyTitle || job.customer || productSummary || 'Müşteri yok'
 
   function handleStageClick(stageId) {
     if (!activeLine) return
@@ -148,124 +145,73 @@ export default function ProductionJobCard({
   }
 
   return (
-    <article className="overflow-hidden rounded-[22px] border border-[var(--border,#E2E8F0)] bg-white shadow-[0_8px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:bg-white/5">
-      <div className="relative px-4 py-4 sm:px-5">
-        <div
-          className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${badge.gradient}`}
-          aria-hidden
-        />
-
-        <div className="flex flex-col gap-3">
-          <div className="flex min-w-0 items-start gap-3 sm:items-center">
-            <input
-              type="checkbox"
-              checked={Boolean(selected)}
-              onChange={() => onToggleSelect?.(job.id)}
-              className="mt-1.5 h-4 w-4 shrink-0 rounded border-[var(--border,#CBD5E1)] sm:mt-0"
-              aria-label={`${job.id} seç`}
-            />
-
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-4 sm:gap-y-1">
-              <p className="min-w-0 text-[15px] font-black leading-snug tracking-tight text-[var(--ink,#0F172A)] sm:text-[16px]">
-                {companyTitle}
-              </p>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-semibold text-[var(--muted,#64748B)]">
-                <span>
-                  Sipariş{' '}
-                  <span className="tabular-nums text-[var(--ink,#0F172A)]">
-                    {formatShortDate(timeline.orderDate)}
-                  </span>
-                </span>
-                <span className="hidden text-[var(--border,#CBD5E1)] sm:inline" aria-hidden>
-                  ·
-                </span>
-                <span>
-                  Üretim{' '}
-                  <span className="tabular-nums text-[var(--ink,#0F172A)]">
-                    {formatShortDate(timeline.productionStartDate)}
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            <div
-              className="flex shrink-0 items-center justify-end gap-1.5"
-              onClick={(event) => event.stopPropagation()}
+    <div className="mt-3 space-y-4 rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="customer-name-primary truncate text-[14px] font-bold leading-tight text-[var(--muted)]">
+            {customerDisplay.brandShortName || companyTitle}
+          </p>
+          <p className="customer-name-secondary mt-0.5 truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
+            {companyTitle}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="rounded-lg bg-[var(--surface-raised,#F1F5F9)] px-2 py-0.5 text-[12px] font-black tabular-nums text-[var(--bach-navy,#1E3A8A)]">
+              {job.id}
+            </span>
+            <span
+              className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white ${badge.gradient}`}
             >
-              <button
-                type="button"
-                onClick={onToggleExpand}
-                className={`glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl ${
-                  expanded ? 'text-[var(--accent,#2563EB)]' : ''
-                }`}
-                aria-expanded={expanded}
-                aria-label={expanded ? 'Üretim detayını kapat' : 'Üretim detayını aç'}
-                title={expanded ? 'Detayı kapat' : 'Sipariş / üretim detayı'}
-              >
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
-                />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPartialOpen((value) => !value)}
-                className={`glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl ${
-                  partialOpen || hasPartial ? 'text-[var(--accent,#2563EB)]' : ''
-                }`}
-                aria-expanded={partialOpen}
-                aria-label={partialOpen ? 'Kısmi teslimatı kapat' : 'Kısmi teslimat'}
-                title={
-                  hasPartial
-                    ? `Kısmi teslimat · ${formatQty(metrics.delivered)}/${formatQty(metrics.ordered)}`
-                    : 'Kısmi teslimat'
-                }
-              >
-                <Truck className="h-4 w-4" />
-              </button>
-
-              <MoreMenu
-                items={[
-                  {
-                    id: 'cancel',
-                    label: 'Vazgeç',
-                    icon: ArchiveRestore,
-                    onClick: onCancelProduction,
-                  },
-                  { id: 'depo', label: 'Depoya gönder', icon: Package, onClick: onSendToDepo },
-                  {
-                    id: 'delete',
-                    label: 'Sil',
-                    icon: Trash2,
-                    tone: 'danger',
-                    onClick: onRequestDelete,
-                  },
-                ]}
-              />
-              {pendingDelete ? (
-                <DeleteTrashButton
-                  pending
-                  onClick={onRequestDelete}
-                  onConfirm={onConfirmDelete}
-                  onCancel={onCancelDelete}
-                  title="Üretim kaydı silinsin mi?"
-                  description="Bu işlem geri alınamaz."
-                  popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
-                />
-              ) : null}
-            </div>
+              {badge.label}
+            </span>
+            <span className="text-[12px] font-semibold text-[var(--muted,#64748B)]">
+              {productSummary}
+              <span className="mx-1.5 text-[var(--border,#CBD5E1)]">·</span>
+              Sipariş {formatShortDate(timeline.orderDate)}
+              <span className="mx-1.5 text-[var(--border,#CBD5E1)]">·</span>
+              Üretim {formatShortDate(timeline.productionStartDate)}
+            </span>
           </div>
+        </div>
 
-          <ProductionProcessCapsuleRail
-            steps={processSteps}
-            readOnly={activeLine?.productionClosed === true}
-            onStageClick={handleStageClick}
-          />
+        <div className="flex shrink-0 items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
+          <button
+            type="button"
+            onClick={() => setPartialOpen((value) => !value)}
+            className={`glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl ${
+              partialOpen || hasPartial ? 'text-[var(--accent,#2563EB)]' : ''
+            }`}
+            aria-expanded={partialOpen}
+            aria-label={partialOpen ? 'Kısmi teslimatı kapat' : 'Kısmi teslimat'}
+            title={
+              hasPartial
+                ? `Kısmi teslimat · ${formatQty(metrics.delivered)}/${formatQty(metrics.ordered)}`
+                : 'Kısmi teslimat'
+            }
+          >
+            <Truck className="h-4 w-4" />
+          </button>
+          {pendingDelete ? (
+            <DeleteTrashButton
+              pending
+              onClick={onRequestDelete}
+              onConfirm={onConfirmDelete}
+              onCancel={onCancelDelete}
+              title="Üretim kaydı silinsin mi?"
+              description="Bu işlem geri alınamaz."
+              popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
+            />
+          ) : null}
         </div>
       </div>
 
+      <ProductionProcessCapsuleRail
+        steps={processSteps}
+        readOnly={activeLine?.productionClosed === true}
+        onStageClick={handleStageClick}
+      />
+
       {partialOpen && activeLine ? (
-        <div className="border-t border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#FCFCFD)]/90 px-4 py-4 dark:bg-none">
+        <div className="rounded-2xl border border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#FCFCFD)]/90 px-4 py-4 dark:bg-none">
           <div className="mb-3 flex items-center justify-between gap-2">
             <h4 className="text-[13px] font-black uppercase tracking-wide text-[var(--muted,#64748B)]">
               Kısmi Teslimat
@@ -308,73 +254,82 @@ export default function ProductionJobCard({
         </div>
       ) : null}
 
-      {expanded ? (
-        <div className="space-y-5 border-t border-[var(--border,#E2E8F0)] bg-[linear-gradient(180deg,#fbfcfe_0%,#ffffff_100%)] px-4 py-4 dark:bg-none sm:px-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-lg bg-[var(--surface-raised,#F1F5F9)] px-2 py-0.5 text-[12px] font-black tabular-nums text-[var(--bach-navy,#1E3A8A)]">
-              {job.id}
-            </span>
-            <span
-              className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white ${badge.gradient}`}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <ProductionProgressRing percent={progressPct} />
+        <div className="grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
+          <MetricStat label="Üretilecek" value={formatQty(metrics.ordered)} />
+          <MetricStat label="Üretilen" value={formatQty(metrics.produced)} />
+          <MetricStat label="Teslim" value={formatQty(metrics.delivered)} />
+          <MetricStat label="Kalan" value={formatQty(metrics.remaining)} />
+        </div>
+      </div>
+
+      {lineItems.length > 1 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {lineItems.map((line, index) => (
+            <button
+              key={line.id}
+              type="button"
+              onClick={() => setActiveLineIndex(index)}
+              className={`rounded-full px-3 py-1 text-[12px] font-bold transition ${
+                index === activeLineIndex
+                  ? 'bg-[var(--accent,#2563EB)] text-white'
+                  : 'bg-white text-[var(--muted,#64748B)] ring-1 ring-[var(--border,#E2E8F0)]'
+              }`}
             >
-              {badge.label}
-            </span>
-            <span className="text-[12px] font-semibold text-[var(--muted,#64748B)]">
-              {productSummary}
-              <span className="mx-1.5 text-[var(--border,#CBD5E1)]">·</span>
-              {formatShortDate(timeline.orderDate || timeline.productionStartDate)}
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <ProductionProgressRing percent={progressPct} />
-            <div className="grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
-              <MetricStat label="Üretilecek" value={formatQty(metrics.ordered)} />
-              <MetricStat label="Üretilen" value={formatQty(metrics.produced)} />
-              <MetricStat label="Teslim" value={formatQty(metrics.delivered)} />
-              <MetricStat label="Kalan" value={formatQty(metrics.remaining)} />
-            </div>
-          </div>
-
-          {lineItems.length > 1 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {lineItems.map((line, index) => (
-                <button
-                  key={line.id}
-                  type="button"
-                  onClick={() => setActiveLineIndex(index)}
-                  className={`rounded-full px-3 py-1 text-[12px] font-bold transition ${
-                    index === activeLineIndex
-                      ? 'bg-[var(--accent,#2563EB)] text-white'
-                      : 'bg-white text-[var(--muted,#64748B)] ring-1 ring-[var(--border,#E2E8F0)]'
-                  }`}
-                >
-                  {line.product || `Kalem ${index + 1}`}
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          <ProductionProcessStageBar
-            steps={processSteps}
-            stagePhotos={activeLine?.stagePhotos || []}
-            readOnly={activeLine?.productionClosed === true}
-            onStageClick={handleStageClick}
-            showEditLink
-            showPhotoStrip={false}
-            showActiveGallery={false}
-          />
-
-          {(job.activities || []).length > 0 ? (
-            <div>
-              <h4 className="mb-2 text-[13px] font-black uppercase tracking-wide text-[var(--muted,#64748B)]">
-                Süreç Günlüğü
-              </h4>
-              <ProductionActivityTimeline activities={job.activities || []} />
-            </div>
-          ) : null}
+              {line.product || `Kalem ${index + 1}`}
+            </button>
+          ))}
         </div>
       ) : null}
-    </article>
+
+      <ProductionProcessStageBar
+        steps={processSteps}
+        stagePhotos={activeLine?.stagePhotos || []}
+        readOnly={activeLine?.productionClosed === true}
+        onStageClick={handleStageClick}
+        showEditLink
+        showPhotoStrip={false}
+        showActiveGallery={false}
+      />
+
+      {(job.activities || []).length > 0 ? (
+        <div>
+          <h4 className="mb-2 text-[13px] font-black uppercase tracking-wide text-[var(--muted,#64748B)]">
+            Süreç Günlüğü
+          </h4>
+          <ProductionActivityTimeline activities={job.activities || []} />
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap gap-2 border-t border-ds-border pt-3">
+        <button
+          type="button"
+          onClick={onCancelProduction}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border px-3 py-2 text-[12px] font-bold text-[var(--muted)] hover:bg-[var(--ds-surface-muted)]"
+        >
+          <ArchiveRestore className="h-3.5 w-3.5" />
+          Vazgeç
+        </button>
+        <button
+          type="button"
+          onClick={onSendToDepo}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border px-3 py-2 text-[12px] font-bold text-[var(--muted)] hover:bg-[var(--ds-surface-muted)]"
+        >
+          <Package className="h-3.5 w-3.5" />
+          Depoya gönder
+        </button>
+        <button
+          type="button"
+          onClick={onRequestDelete}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[#fda4af]/50 px-3 py-2 text-[12px] font-bold text-[#e11d48] hover:bg-[#fff1f2]"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Sil
+        </button>
+      </div>
+    </div>
   )
 }
+
+export { formatShortDate, resolveStatusBadge, buildStepsForLine }
