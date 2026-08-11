@@ -164,7 +164,7 @@ export default function ProductionLineDeliveryPanel({
 
   return (
     <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent">
-      <table className="w-full min-w-[54rem] border-collapse text-left">
+      <table className="w-full min-w-[58rem] border-collapse text-left">
         <thead className="bg-transparent">
           <tr>
             <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[12rem]`}>ÜRÜN AÇIKLAMASI</th>
@@ -172,6 +172,7 @@ export default function ProductionLineDeliveryPanel({
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ NUMARASI</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>ÜRETİM ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>TESLİMAT ADEDİ</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>KALAN ADET</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DURUM</th>
             <th
               className={`${PAGE_TABLE_HEADER_CLASS} w-10 whitespace-nowrap text-center`}
@@ -207,6 +208,11 @@ export default function ProductionLineDeliveryPanel({
                 ? row.fulfillmentStatus
                 : fulfillmentOptions[0]?.label || row.fulfillmentStatus || ''
             const rowDetailExpanded = detailOpen && activeRowId === row.id
+            const lineDeliveredTotal = getLineQuantityRows(line).reduce(
+              (sum, entry) => sum + Math.max(0, Number(entry.deliveredQuantity) || 0),
+              0,
+            )
+            const remainingQty = Math.max(0, orderQty - lineDeliveredTotal)
 
             return (
               <tr
@@ -282,8 +288,14 @@ export default function ProductionLineDeliveryPanel({
                       })
                     }
                     readOnly={columnsLocked || line.productionClosed}
-                    className="!h-8 !min-h-8 w-16 py-0 text-[12px] font-bold tabular-nums"
+                    className="!h-8 !min-h-8 w-24 py-0 text-[12px] font-bold tabular-nums"
                   />
+                </td>
+
+                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap">
+                  <span className="inline-flex h-8 min-h-8 w-24 items-center tabular-nums text-[12px] font-bold text-[var(--muted)]">
+                    {formatQty(remainingQty)}
+                  </span>
                 </td>
 
                 <td

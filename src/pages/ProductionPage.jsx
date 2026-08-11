@@ -396,13 +396,15 @@ export default function ProductionPage() {
                   productionStageOptions,
                 )
                 return (
-                  <ProductionProgressRing
-                    percent={progress.percent}
-                    label={progress.label}
-                    stageCount={progress.stageCount || productionStageOptions.length}
-                    size={52}
-                    stroke={5}
-                  />
+                  <div className="flex w-full items-center justify-center pt-1.5">
+                    <ProductionProgressRing
+                      percent={progress.percent}
+                      label={progress.label}
+                      stageCount={progress.stageCount || productionStageOptions.length}
+                      size={52}
+                      stroke={5}
+                    />
+                  </div>
                 )
               },
             },
