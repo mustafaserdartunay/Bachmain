@@ -1,3 +1,6 @@
+import { useRef } from 'react'
+import { ImagePlus } from 'lucide-react'
+
 const STAGE_FILLS = [
   '#3b82f6',
   '#10b981',
@@ -26,13 +29,17 @@ function statusLabel(kind) {
 }
 
 /**
- * Compact circular process rail — number in circle, label below, animated connectors.
+ * Compact circular process rail — number, label, photo add + thumbs under each step.
  */
 export default function ProductionProcessCapsuleRail({
   steps = [],
+  stagePhotos = [],
   readOnly = false,
   onStageClick,
+  onAddPhotos,
 }) {
+  const fileRefs = useRef({})
+
   if (!steps.length) {
     return (
       <p className="text-[12px] font-semibold text-[var(--muted,#94A3B8)]">Süreç tanımlı değil</p>
@@ -47,7 +54,7 @@ export default function ProductionProcessCapsuleRail({
     >
       <div
         className="mx-auto grid min-w-max gap-0 px-1"
-        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(4.75rem, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(5rem, 1fr))` }}
       >
         {steps.map((step, index) => {
           const kind = resolveKind(step)
@@ -60,6 +67,8 @@ export default function ProductionProcessCapsuleRail({
           const clickable = !readOnly && typeof onStageClick === 'function'
           const nextLit =
             steps[index + 1]?.isComplete || steps[index + 1]?.isActive || isActive
+          const photos = (stagePhotos || []).filter((photo) => photo.stageId === step.id)
+          const canAddPhoto = !readOnly && typeof onAddPhotos === 'function'
 
           return (
             <div
@@ -134,6 +143,51 @@ export default function ProductionProcessCapsuleRail({
                   {step.label}
                 </span>
               </button>
+
+              <div className="relative z-[1] mt-1.5 flex w-full flex-col items-center gap-1">
+                <button
+                  type="button"
+                  disabled={!canAddPhoto}
+                  onClick={() => fileRefs.current[step.id]?.click()}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border,#E2E8F0)] bg-white text-[var(--muted,#64748B)] transition hover:border-blue-300 hover:text-[var(--accent,#2563EB)] disabled:opacity-40"
+                  title={`${step.label} — fotoğraf ekle`}
+                  aria-label={`${step.label} fotoğraf ekle`}
+                >
+                  <ImagePlus className="h-3.5 w-3.5" />
+                </button>
+                <input
+                  ref={(node) => {
+                    fileRefs.current[step.id] = node
+                  }}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  disabled={!canAddPhoto}
+                  onChange={(event) => {
+                    onAddPhotos?.(step, event.target.files)
+                    event.target.value = ''
+                  }}
+                />
+
+                {photos.length > 0 ? (
+                  <div className="flex max-w-[4.75rem] flex-wrap items-center justify-center gap-0.5">
+                    {photos.slice(0, 4).map((photo) => (
+                      <img
+                        key={photo.id}
+                        src={photo.dataUrl}
+                        alt=""
+                        className="h-6 w-6 rounded object-cover ring-1 ring-[var(--border,#E2E8F0)]"
+                      />
+                    ))}
+                    {photos.length > 4 ? (
+                      <span className="text-[9px] font-bold tabular-nums text-[var(--muted,#64748B)]">
+                        +{photos.length - 4}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             </div>
           )
         })}

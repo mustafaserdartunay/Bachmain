@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArchiveRestore, ImagePlus, Package, Trash2, Truck } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArchiveRestore, Package, Trash2, Truck } from 'lucide-react'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import ProductionProcessCapsuleRail from './ProductionProcessCapsuleRail'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
@@ -24,6 +24,7 @@ import {
   getProductionStageOptions,
   loadWorkflowStages,
 } from '../../utils/workflowStages'
+import { PAGE_TABLE_HEADER_CLASS } from '../../utils/dashboardDesign'
 
 function formatShortDate(value) {
   if (!value) return '—'
@@ -51,7 +52,7 @@ function buildStepsForLine(line, productionStages) {
 }
 
 /**
- * Expanded production detail — full product info, process rail, photo add.
+ * Expanded production detail — table-style product row + process rail with per-stage photos.
  */
 export default function ProductionJobCard({
   job,
@@ -72,7 +73,6 @@ export default function ProductionJobCard({
 }) {
   const [activeLineIndex, setActiveLineIndex] = useState(0)
   const [partialOpen, setPartialOpen] = useState(initialPartialOpen)
-  const photoInputRef = useRef(null)
   const [liveWorkflowStages, setLiveWorkflowStages] = useState(
     () => workflowStagesProp || loadWorkflowStages(),
   )
@@ -108,18 +108,10 @@ export default function ProductionJobCard({
   const activeRows = activeLine ? getLineQuantityRows(activeLine) : []
   const primaryRow = activeRows[0]
   const processSteps = buildStepsForLine(activeLine, liveProductionStages)
+  const stagePhotos = normalizeStagePhotos(activeLine?.stagePhotos || [])
   const hasPartial =
     metrics.linesWithPartialDelivery > 0 ||
     (metrics.delivered > 0 && metrics.delivered < metrics.ordered)
-
-  const activeStep =
-    processSteps.find((step) => step.isActive) ||
-    processSteps.find((step) => !step.isComplete) ||
-    processSteps[processSteps.length - 1] ||
-    null
-  const photoCount = normalizeStagePhotos(activeLine?.stagePhotos || []).filter(
-    (photo) => !activeStep?.id || photo.stageId === activeStep.id,
-  ).length
 
   function handleStageClick(stageId) {
     if (!activeLine || activeLine.productionClosed) return
@@ -132,8 +124,8 @@ export default function ProductionJobCard({
     lineItemActions?.handleQuantityRowStageChange(activeLine, row.id, stageId)
   }
 
-  async function handlePhotoFiles(fileList) {
-    if (!activeLine || activeLine.productionClosed || !activeStep?.id) return
+  async function handleAddPhotos(step, fileList) {
+    if (!activeLine || activeLine.productionClosed || !step?.id) return
     const files = Array.from(fileList || []).filter((file) => file.type?.startsWith('image/'))
     if (!files.length) return
     try {
@@ -144,8 +136,8 @@ export default function ProductionJobCard({
         created.push(
           createStagePhoto({
             dataUrl,
-            stageId: activeStep.id,
-            stageLabel: activeStep.label,
+            stageId: step.id,
+            stageLabel: step.label,
           }),
         )
       }
@@ -157,47 +149,83 @@ export default function ProductionJobCard({
 
   return (
     <div className="mt-3 space-y-4 rounded-ds-lg border border-ds-border bg-[var(--ds-surface,#fff)] p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1 space-y-2">
-          {lineItems.length === 0 ? (
-            <p className="text-[14px] font-semibold text-[var(--muted,#64748B)]">
-              {job.title || 'Ürün bilgisi yok'}
-            </p>
-          ) : (
-            lineItems.map((line, index) => {
-              const qty = Math.max(0, Number(line.quantity) || 0)
-              const isActive = index === activeLineIndex
-              return (
-                <button
-                  key={line.id}
-                  type="button"
-                  onClick={() => setActiveLineIndex(index)}
-                  className={`block w-full rounded-xl px-3 py-2 text-left transition ${
-                    isActive
-                      ? 'bg-[var(--ds-surface-muted,#F8FAFC)] ring-1 ring-[var(--border,#E2E8F0)]'
-                      : 'hover:bg-[var(--ds-surface-muted,#F8FAFC)]/70'
-                  }`}
-                >
-                  <p className="text-[15px] font-bold leading-snug text-[var(--ink,#0F172A)]">
-                    {line.product || `Kalem ${index + 1}`}
-                    {qty > 0 ? (
-                      <span className="ml-2 text-[13px] font-semibold tabular-nums text-[var(--muted,#64748B)]">
-                        × {formatQty(qty)}
-                      </span>
-                    ) : null}
-                  </p>
-                  {line.description ? (
-                    <p className="mt-0.5 text-[13px] font-medium leading-snug text-[var(--muted,#64748B)]">
-                      {line.description}
-                    </p>
-                  ) : null}
-                </button>
-              )
-            })
-          )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 overflow-x-auto rounded-ds-lg border border-ds-border">
+          <table className="w-full min-w-[28rem] border-collapse text-left">
+            <thead className="bg-[var(--ds-surface-muted)]">
+              <tr>
+                <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[18rem] w-[70%]`}>
+                  ÜRÜN AÇIKLAMASI
+                </th>
+                <th className={`${PAGE_TABLE_HEADER_CLASS} w-[8rem] whitespace-nowrap`}>
+                  SİPARİŞ ADETİ
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {lineItems.length === 0 ? (
+                <tr className="border-t border-ds-border">
+                  <td className="h-[var(--ds-row-h,2.75rem)] px-3 text-[14px] text-[var(--muted)]">
+                    {job.title || 'Ürün bilgisi yok'}
+                  </td>
+                  <td className="h-[var(--ds-row-h,2.75rem)] px-3 text-[14px] text-[var(--muted)]">
+                    —
+                  </td>
+                </tr>
+              ) : (
+                lineItems.map((line, index) => {
+                  const qty = Math.max(
+                    0,
+                    Number(resolveLineItemOrderQuantity(line, order) ?? line.quantity) || 0,
+                  )
+                  const isActive = index === activeLineIndex
+                  const productName = line.product || `Kalem ${index + 1}`
+                  const description = String(line.description || '').trim()
+                  return (
+                    <tr
+                      key={line.id}
+                      className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] cursor-pointer ${
+                        isActive ? 'bg-[var(--ds-surface-muted)]' : ''
+                      }`}
+                      onClick={() => setActiveLineIndex(index)}
+                    >
+                      <td className="h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 py-1.5 text-ds-body text-ds-ink">
+                        <span className="flex min-w-0 flex-col gap-0.5">
+                          {description ? (
+                            <>
+                              <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                                {description}
+                              </span>
+                              <span className="customer-name-secondary font-sans truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
+                                {productName}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                              {productName}
+                            </span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-1.5 whitespace-nowrap">
+                        <span className="flex min-w-0 flex-col gap-0.5">
+                          <span className="customer-name-primary tabular-nums text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                            {formatQty(qty)}
+                          </span>
+                          <span className="customer-name-secondary text-[14px] font-normal leading-tight text-[var(--muted)]">
+                            adet
+                          </span>
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
+        <div className="flex shrink-0 items-center gap-1.5 pt-1" onClick={(event) => event.stopPropagation()}>
           <button
             type="button"
             onClick={() => setPartialOpen((value) => !value)}
@@ -233,45 +261,13 @@ export default function ProductionJobCard({
           Henüz üretim süreci tanımlı değil. Ayarlar → Üretim Süreçleri panelinden ekleyin.
         </p>
       ) : (
-        <div className="space-y-3">
-          <ProductionProcessCapsuleRail
-            steps={processSteps}
-            readOnly={activeLine?.productionClosed === true}
-            onStageClick={handleStageClick}
-          />
-
-          <div className="flex items-center justify-center">
-            <button
-              type="button"
-              disabled={activeLine?.productionClosed === true || !activeStep?.id}
-              onClick={() => photoInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border bg-white px-3 py-2 text-[12px] font-bold text-[var(--muted,#64748B)] transition hover:border-blue-300 hover:text-[var(--accent,#2563EB)] disabled:opacity-50"
-              title={
-                activeStep
-                  ? `${activeStep.label} için fotoğraf ekle`
-                  : 'Fotoğraf ekle'
-              }
-            >
-              <ImagePlus className="h-4 w-4" />
-              Fotoğraf ekle
-              {photoCount > 0 ? (
-                <span className="tabular-nums text-[var(--accent,#2563EB)]">({photoCount})</span>
-              ) : null}
-            </button>
-            <input
-              ref={photoInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              disabled={activeLine?.productionClosed === true}
-              onChange={(event) => {
-                handlePhotoFiles(event.target.files)
-                event.target.value = ''
-              }}
-            />
-          </div>
-        </div>
+        <ProductionProcessCapsuleRail
+          steps={processSteps}
+          stagePhotos={stagePhotos}
+          readOnly={activeLine?.productionClosed === true}
+          onStageClick={handleStageClick}
+          onAddPhotos={handleAddPhotos}
+        />
       )}
 
       {partialOpen && activeLine ? (
