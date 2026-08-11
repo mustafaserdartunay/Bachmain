@@ -67,6 +67,7 @@ export function createQuantityRow(defaults = {}) {
   return {
     id: defaults?.id || createId('qrow'),
     fulfillmentStatus,
+    fulfillmentStatusManual: Boolean(defaults?.fulfillmentStatusManual),
     orderedQuantity,
     producedQuantity,
     deliveredQuantity,

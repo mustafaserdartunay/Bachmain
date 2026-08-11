@@ -17,7 +17,7 @@ import {
 } from '../../utils/productionQuantityMetrics'
 import { publishPartDeliverySituations } from '../../utils/productionFulfillmentOptions'
 import { PAGE_TABLE_HEADER_CLASS } from '../../utils/dashboardDesign'
-import { URETIM_ARTI_BUTTON_CLASS } from '../../utils/buttonStyles'
+import { HEADER_ACTION_GRADIENTS } from '../Layout/HeaderCashActionsPanel'
 
 function isEmptyPartialRow(row) {
   if (!row) return true
@@ -187,11 +187,11 @@ export default function ProductionLineDeliveryPanel({
                   type="button"
                   disabled={columnsLocked}
                   onClick={handleHeaderAdd}
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${URETIM_ARTI_BUTTON_CLASS}`}
+                  className={`glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${HEADER_ACTION_GRADIENTS.primary} text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5 disabled:opacity-50`}
                   title="Kısmi teslimat ekle"
                   aria-label="Kısmi teslimat ekle"
                 >
-                  <Plus className="h-4 w-4" strokeWidth={2.25} />
+                  <Plus className="h-4 w-4" strokeWidth={2.5} />
                 </button>
               </div>
             </th>
@@ -202,11 +202,11 @@ export default function ProductionLineDeliveryPanel({
             const productName = line.product || 'Ürün'
             const description = String(line.description || '').trim()
             const code = row.productionCode || `${productionJobId}-${rowIndex + 1}`
+            // Keep the stored status even if options list drifted — never silently swap.
             const statusValue =
-              row.fulfillmentStatus &&
-              fulfillmentOptions.some((option) => option.label === row.fulfillmentStatus)
-                ? row.fulfillmentStatus
-                : fulfillmentOptions[0]?.label || row.fulfillmentStatus || ''
+              row.fulfillmentStatus ||
+              fulfillmentOptions[0]?.label ||
+              ''
             const rowDetailExpanded = detailOpen && activeRowId === row.id
             const lineDeliveredTotal = getLineQuantityRows(line).reduce(
               (sum, entry) => sum + Math.max(0, Number(entry.deliveredQuantity) || 0),

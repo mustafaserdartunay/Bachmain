@@ -66,7 +66,7 @@ export function createProductionLineItemActions({
     if (!job) return
     const now = createQuantityRowTimestamp()
     const rows = nextRows.map((row) => (
-      row.id === skipDeriveForRowId
+      row.id === skipDeriveForRowId || row?.fulfillmentStatusManual
         ? row
         : withDerivedQuantityRowFulfillmentStatus(row, lineItem, productionStageOptions, { timestamp: now })
     ))
@@ -112,7 +112,10 @@ export function createProductionLineItemActions({
       if (row.id !== rowId) return row
       const now = createQuantityRowTimestamp()
       const nextRow = { ...row, ...patch, createdAt: row.createdAt || now }
-      if (patch.fulfillmentStatus !== undefined) nextRow.statusUpdatedAt = now
+      if (patch.fulfillmentStatus !== undefined) {
+        nextRow.statusUpdatedAt = now
+        nextRow.fulfillmentStatusManual = true
+      }
       if (patch.producedQuantity !== undefined) {
         nextRow.producedUpdatedAt = patch.producedQuantity > 0 ? now : ''
       }

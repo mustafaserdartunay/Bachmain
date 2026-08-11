@@ -415,7 +415,8 @@ export function withDerivedQuantityRowFulfillmentStatus(
   productionStages,
   { skipDerive = false, timestamp = '' } = {},
 ) {
-  if (skipDerive || lineItem?.productionClosed) return row
+  // Manual DURUM selection must stick until the user changes it again.
+  if (skipDerive || lineItem?.productionClosed || row?.fulfillmentStatusManual) return row
 
   const fulfillmentStatus = deriveQuantityRowFulfillmentStatus(row, lineItem, productionStages)
   if (fulfillmentStatus === row.fulfillmentStatus) return row

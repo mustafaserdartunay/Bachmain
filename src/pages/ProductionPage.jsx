@@ -396,7 +396,7 @@ export default function ProductionPage() {
                   productionStageOptions,
                 )
                 return (
-                  <div className="flex w-full items-center justify-center pt-1.5">
+                  <div className="flex h-full w-full items-center justify-center">
                     <ProductionProgressRing
                       percent={progress.percent}
                       label={progress.label}
