@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { ArchiveRestore, ChevronDown, ChevronRight, Package, Trash2 } from 'lucide-react'
+import { ArchiveRestore, ChevronDown, Package, Trash2, Truck } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { DeleteTrashButton } from '../Common/ListDeleteConfirmPanel'
 import { HEADER_ACTION_GRADIENTS } from '../Layout/HeaderCashActionsPanel'
 import ProductionProcessStageBar from './ProductionProcessStageBar'
+import ProductionProcessCapsuleRail from './ProductionProcessCapsuleRail'
 import ProductionActivityTimeline from './ProductionActivityTimeline'
 import ProductionPartialDeliveryTable from './ProductionPartialDeliveryTable'
 import ProductionProgressRing from './ProductionProgressRing'
@@ -100,6 +101,7 @@ export default function ProductionJobCard({
   onToggleSelect,
 }) {
   const [activeLineIndex, setActiveLineIndex] = useState(0)
+  const [partialOpen, setPartialOpen] = useState(false)
   const customerDisplay = getListCustomerDisplay(job.customer)
   const order = resolveOrderForProductionJob(job, orders)
   const lineItems = ensureLineItems(job, workflowStages, order)
@@ -129,6 +131,12 @@ export default function ProductionJobCard({
     metrics.linesWithPartialDelivery > 0 ||
     (metrics.delivered > 0 && metrics.delivered < metrics.ordered)
 
+  const companyTitle =
+    customerDisplay.companyTitle ||
+    job.customer ||
+    productSummary ||
+    'Müşteri yok'
+
   function handleStageClick(stageId) {
     if (!activeLine) return
     const row = primaryRow || getLineQuantityRows(activeLine)[0]
@@ -152,80 +160,67 @@ export default function ProductionJobCard({
           aria-hidden
         />
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
-          <div className="flex min-w-0 flex-1 items-start gap-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+          <div className="flex min-w-0 items-center gap-3 lg:max-w-[11rem]">
             <input
               type="checkbox"
               checked={Boolean(selected)}
               onChange={() => onToggleSelect?.(job.id)}
-              className="mt-1.5 h-4 w-4 shrink-0 rounded border-[var(--border,#CBD5E1)]"
+              className="h-4 w-4 shrink-0 rounded border-[var(--border,#CBD5E1)]"
               aria-label={`${job.id} seç`}
             />
-            <button type="button" onClick={onToggleExpand} className="min-w-0 flex-1 text-left">
-              <div className="mb-1 flex flex-wrap items-center gap-2">
-                <span className="rounded-lg bg-[var(--surface-raised,#F1F5F9)] px-2 py-0.5 text-[12px] font-black tabular-nums text-[var(--bach-navy,#1E3A8A)]">
-                  {job.id}
-                </span>
-                <span
-                  className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white ${badge.gradient}`}
-                >
-                  {badge.label}
-                </span>
-                <span
-                  className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black text-white ${
-                    hasPartial ? HEADER_ACTION_GRADIENTS.success : HEADER_ACTION_GRADIENTS.amber
-                  }`}
-                >
-                  {hasPartial
-                    ? `Kısmi · ${formatQty(metrics.delivered)}/${formatQty(metrics.ordered)}`
-                    : 'Teslimat yok'}
-                </span>
-              </div>
-              <p className="truncate text-[16px] font-black tracking-tight text-[var(--ink,#0F172A)]">
-                {customerDisplay.brandShortName || job.customer || 'Müşteri yok'}
+            <div className="min-w-0">
+              <p className="truncate text-[17px] font-black leading-tight tracking-tight text-[var(--ink,#0F172A)]">
+                {customerDisplay.brandShortName || job.customer || '—'}
               </p>
-              <p className="mt-0.5 truncate text-[13px] font-medium text-[var(--muted,#64748B)]">
-                {productSummary}
-                <span className="mx-1.5 text-[var(--border,#CBD5E1)]">·</span>
-                {formatShortDate(timeline.orderDate || timeline.productionStartDate)}
+              <p className="mt-0.5 truncate text-[12px] font-semibold text-[var(--muted,#64748B)]">
+                {companyTitle}
               </p>
-            </button>
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onToggleExpand}
-            className="flex items-center gap-4 rounded-2xl border border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#F8FAFC)]/80 px-3 py-2.5 text-left transition hover:border-blue-200 dark:bg-white/5"
-          >
-            <ProductionProgressRing percent={progressPct} />
-            <div className="grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
-              <MetricStat label="Üretilecek" value={formatQty(metrics.ordered)} />
-              <MetricStat label="Üretilen" value={formatQty(metrics.produced)} />
-              <MetricStat label="Teslim" value={formatQty(metrics.delivered)} />
-              <MetricStat label="Kalan" value={formatQty(metrics.remaining)} />
-            </div>
-          </button>
+          <ProductionProcessCapsuleRail
+            steps={processSteps}
+            readOnly={activeLine?.productionClosed === true}
+            onStageClick={handleStageClick}
+          />
 
           <div
-            className="flex items-center justify-end gap-1.5"
+            className="flex shrink-0 items-center justify-end gap-1.5"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={onToggleExpand}
-              className={`rounded-xl border p-2.5 transition hover:scale-105 ${
-                expanded
-                  ? 'border-blue-200 bg-blue-50 text-blue-600'
-                  : 'border-[var(--border,#E2E8F0)] bg-white text-[var(--muted,#64748B)]'
+              className={`glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl ${
+                expanded ? 'text-[var(--accent,#2563EB)]' : ''
               }`}
               aria-expanded={expanded}
+              aria-label={expanded ? 'Üretim detayını kapat' : 'Üretim detayını aç'}
+              title={expanded ? 'Detayı kapat' : 'Sipariş / üretim detayı'}
             >
-              {expanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
+              />
             </button>
+
+            <button
+              type="button"
+              onClick={() => setPartialOpen((value) => !value)}
+              className={`glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl ${
+                partialOpen || hasPartial ? 'text-[var(--accent,#2563EB)]' : ''
+              }`}
+              aria-expanded={partialOpen}
+              aria-label={partialOpen ? 'Kısmi teslimatı kapat' : 'Kısmi teslimat'}
+              title={
+                hasPartial
+                  ? `Kısmi teslimat · ${formatQty(metrics.delivered)}/${formatQty(metrics.ordered)}`
+                  : 'Kısmi teslimat'
+              }
+            >
+              <Truck className="h-4 w-4" />
+            </button>
+
             <MoreMenu
               items={[
                 {
@@ -259,70 +254,107 @@ export default function ProductionJobCard({
         </div>
       </div>
 
-      {/* Stepper always visible — no need to expand */}
-      <div className="border-t border-[var(--border,#E2E8F0)] bg-[linear-gradient(180deg,#fbfcfe_0%,#ffffff_100%)] px-3 py-4 dark:bg-none sm:px-5">
-        {lineItems.length > 1 ? (
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {lineItems.map((line, index) => (
-              <button
-                key={line.id}
-                type="button"
-                onClick={() => setActiveLineIndex(index)}
-                className={`rounded-full px-3 py-1 text-[12px] font-bold transition ${
-                  index === activeLineIndex
-                    ? 'bg-[var(--accent,#2563EB)] text-white'
-                    : 'bg-white text-[var(--muted,#64748B)] ring-1 ring-[var(--border,#E2E8F0)]'
-                }`}
+      {partialOpen && activeLine ? (
+        <div className="border-t border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#FCFCFD)]/90 px-4 py-4 dark:bg-none">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h4 className="text-[13px] font-black uppercase tracking-wide text-[var(--muted,#64748B)]">
+              Kısmi Teslimat
+            </h4>
+            {hasPartial ? (
+              <span
+                className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black text-white ${HEADER_ACTION_GRADIENTS.success}`}
               >
-                {line.product || `Kalem ${index + 1}`}
-              </button>
-            ))}
+                {formatQty(metrics.delivered)}/{formatQty(metrics.ordered)} teslim
+              </span>
+            ) : null}
           </div>
-        ) : null}
-
-        <ProductionProcessStageBar
-          steps={processSteps}
-          stagePhotos={activeLine?.stagePhotos || []}
-          readOnly={activeLine?.productionClosed === true}
-          onStageClick={handleStageClick}
-          onPhotosChange={handlePhotosChange}
-          showEditLink
-          showPhotoStrip
-          showActiveGallery={expanded}
-        />
-      </div>
+          <ProductionPartialDeliveryTable
+            lineItem={activeLine}
+            productionJobId={job.id}
+            fulfillmentOptions={fulfillmentOptions}
+            fulfillmentOpenKey={`${job.id}-${activeLine.id}-fulfillment`}
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+            columnsLocked={activeLine.productionClosed === true}
+            orderLineQuantity={resolveLineItemOrderQuantity(activeLine, order)}
+            onQuantityRowChange={(rowId, patch) =>
+              lineItemActions?.handleLineQuantityRowChange(activeLine, rowId, patch)
+            }
+            onAddQuantityRow={(rowId) => lineItemActions?.handleAddQuantityRow(activeLine, rowId)}
+            onRemoveQuantityRow={(rowId) =>
+              lineItemActions?.handleRemoveQuantityRow(activeLine, rowId)
+            }
+            onSendToDepo={(rowId) => {
+              lineItemActions?.handleSendRowToDepo(
+                activeLine,
+                rowId,
+                resolveLineItemOrderQuantity(activeLine, order),
+              )
+            }}
+            onUndoSendToDepo={(rowId) =>
+              lineItemActions?.handleUndoSendRowToDepo(activeLine, rowId)
+            }
+          />
+        </div>
+      ) : null}
 
       {expanded ? (
-        <div className="space-y-5 border-t border-[var(--border,#E2E8F0)] bg-[var(--surface-raised,#FCFCFD)]/90 px-4 py-4 dark:bg-none">
-          {activeLine ? (
-            <ProductionPartialDeliveryTable
-              lineItem={activeLine}
-              productionJobId={job.id}
-              fulfillmentOptions={fulfillmentOptions}
-              fulfillmentOpenKey={`${job.id}-${activeLine.id}-fulfillment`}
-              activeMenu={activeMenu}
-              setActiveMenu={setActiveMenu}
-              columnsLocked={activeLine.productionClosed === true}
-              orderLineQuantity={resolveLineItemOrderQuantity(activeLine, order)}
-              onQuantityRowChange={(rowId, patch) =>
-                lineItemActions?.handleLineQuantityRowChange(activeLine, rowId, patch)
-              }
-              onAddQuantityRow={(rowId) => lineItemActions?.handleAddQuantityRow(activeLine, rowId)}
-              onRemoveQuantityRow={(rowId) =>
-                lineItemActions?.handleRemoveQuantityRow(activeLine, rowId)
-              }
-              onSendToDepo={(rowId) => {
-                lineItemActions?.handleSendRowToDepo(
-                  activeLine,
-                  rowId,
-                  resolveLineItemOrderQuantity(activeLine, order),
-                )
-              }}
-              onUndoSendToDepo={(rowId) =>
-                lineItemActions?.handleUndoSendRowToDepo(activeLine, rowId)
-              }
-            />
+        <div className="space-y-5 border-t border-[var(--border,#E2E8F0)] bg-[linear-gradient(180deg,#fbfcfe_0%,#ffffff_100%)] px-4 py-4 dark:bg-none sm:px-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-lg bg-[var(--surface-raised,#F1F5F9)] px-2 py-0.5 text-[12px] font-black tabular-nums text-[var(--bach-navy,#1E3A8A)]">
+              {job.id}
+            </span>
+            <span
+              className={`inline-flex rounded-full bg-gradient-to-br px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white ${badge.gradient}`}
+            >
+              {badge.label}
+            </span>
+            <span className="text-[12px] font-semibold text-[var(--muted,#64748B)]">
+              {productSummary}
+              <span className="mx-1.5 text-[var(--border,#CBD5E1)]">·</span>
+              {formatShortDate(timeline.orderDate || timeline.productionStartDate)}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <ProductionProgressRing percent={progressPct} />
+            <div className="grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
+              <MetricStat label="Üretilecek" value={formatQty(metrics.ordered)} />
+              <MetricStat label="Üretilen" value={formatQty(metrics.produced)} />
+              <MetricStat label="Teslim" value={formatQty(metrics.delivered)} />
+              <MetricStat label="Kalan" value={formatQty(metrics.remaining)} />
+            </div>
+          </div>
+
+          {lineItems.length > 1 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {lineItems.map((line, index) => (
+                <button
+                  key={line.id}
+                  type="button"
+                  onClick={() => setActiveLineIndex(index)}
+                  className={`rounded-full px-3 py-1 text-[12px] font-bold transition ${
+                    index === activeLineIndex
+                      ? 'bg-[var(--accent,#2563EB)] text-white'
+                      : 'bg-white text-[var(--muted,#64748B)] ring-1 ring-[var(--border,#E2E8F0)]'
+                  }`}
+                >
+                  {line.product || `Kalem ${index + 1}`}
+                </button>
+              ))}
+            </div>
           ) : null}
+
+          <ProductionProcessStageBar
+            steps={processSteps}
+            stagePhotos={activeLine?.stagePhotos || []}
+            readOnly={activeLine?.productionClosed === true}
+            onStageClick={handleStageClick}
+            onPhotosChange={handlePhotosChange}
+            showEditLink
+            showPhotoStrip
+            showActiveGallery
+          />
 
           {(job.activities || []).length > 0 ? (
             <div>

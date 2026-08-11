@@ -3418,6 +3418,31 @@ html.night .glass-sidebar .sidebar-submenu {
   border-color: color-mix(in srgb, var(--muted) 70%, transparent);
 }
 
+.prod-process-capsule-active {
+  background: linear-gradient(
+    120deg,
+    #93c5fd 0%,
+    #3b82f6 25%,
+    #2563eb 50%,
+    #60a5fa 75%,
+    #93c5fd 100%
+  ) !important;
+  background-size: 220% 100% !important;
+  animation: prod-capsule-flow 2.8s ease-in-out infinite;
+}
+
+@keyframes prod-capsule-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .social-dock-badge {
   animation: social-badge-pulse 2.4s ease-in-out infinite;
 }
