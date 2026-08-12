@@ -190,6 +190,45 @@ export function getLineQuantityRows(line) {
   return normalizeQuantityRows(line)
 }
 
+/** True when production was explicitly started or legacy rows already have progress. */
+export function isLineProductionStarted(line, stages = []) {
+  if (String(line?.productionStartedAt || '').trim()) return true
+  if (line?.productionClosed) return true
+
+  const rows = Array.isArray(line?.quantityRows) ? line.quantityRows : []
+  if (
+    rows.some(
+      (row) =>
+        (Number(row.producedQuantity) || 0) > 0 ||
+        (Number(row.deliveredQuantity) || 0) > 0 ||
+        row.depoItemId ||
+        row.waybillNo ||
+        row.invoiceNo ||
+        row.sevkiyatTripId,
+    )
+  ) {
+    return true
+  }
+  if (rows.length > 1 && rows.some((row) => row.explicitPartial)) return true
+
+  const productionStages = resolveProductionStagesList(stages)
+  if (productionStages.length > 1) {
+    const firstId = productionStages[0]?.id
+    if (
+      rows.some(
+        (row) =>
+          row.currentStageId &&
+          row.currentStageId !== firstId &&
+          String(row.stageUpdatedAt || '').trim(),
+      )
+    ) {
+      return true
+    }
+  }
+
+  return false
+}
+
 export function applyJobFulfillmentStatusToLineItems(lineItems = [], statusLabel, stages = []) {
   const productionStages = resolveProductionStagesList(stages)
   const lastStage = productionStages[productionStages.length - 1]
@@ -282,6 +321,13 @@ export function normalizeLineItem(line, stages = []) {
     pendingStageId: line?.pendingStageId || '',
     depoWarehouseKind: line?.depoWarehouseKind === 'order' ? 'order' : '',
     stagePhotos: normalizeStagePhotos(line?.stagePhotos),
+    productionStartedAt: line?.productionStartedAt || '',
+    productionMode:
+      line?.productionMode === 'partial'
+        ? 'partial'
+        : line?.productionMode === 'full'
+          ? 'full'
+          : '',
   }
 }
 

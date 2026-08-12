@@ -47,7 +47,7 @@ export default function ProductionProgressRing({
     size <= 44 ? 'text-[9px]' : size <= 56 ? 'text-[10px]' : 'text-[11px]'
 
   return (
-    <div className={`inline-flex items-center gap-2 ${className}`.trim()}>
+    <div className={`inline-flex flex-col items-center gap-0.5 ${className}`.trim()}>
       <div
         className="relative flex shrink-0 items-center justify-center"
         style={{ width: size, height: size }}
@@ -85,7 +85,7 @@ export default function ProductionProgressRing({
         </span>
       </div>
       {label ? (
-        <span className="text-[11px] font-semibold leading-tight text-[var(--muted,#64748B)]">
+        <span className="max-w-[5.5rem] text-center text-[11px] font-semibold leading-tight text-[var(--muted,#64748B)]">
           {label}
         </span>
       ) : null}
