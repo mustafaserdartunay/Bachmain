@@ -41,6 +41,8 @@ function allowedOrigins() {
     .filter(Boolean)
   const defaults = [
     'https://uygulama.bachmain.com',
+    'https://app.bachmain.com',
+    'https://crm.bachmain.com',
     'https://bachmain.com',
     'https://www.bachmain.com',
     'http://localhost:5173',
