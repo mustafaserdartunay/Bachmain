@@ -10,6 +10,7 @@ export default function NumericInput({
   className = '',
   placeholder = '0',
   formatMode = 'plain',
+  maxLength,
 }) {
   const [text, setText] = useState('')
   const [focused, setFocused] = useState(false)
@@ -24,6 +25,7 @@ export default function NumericInput({
   function handleChange(raw) {
     const v = raw.replace(/\./g, '').replace(',', '.')
     if (v !== '' && !/^\d*\.?\d*$/.test(v)) return
+    if (maxLength && v.replace('.', '').length > maxLength) return
     setText(v)
     if (v === '' || v === '.') {
       onChange(0)
@@ -60,6 +62,7 @@ export default function NumericInput({
           const num = Number(value) || 0
           setText(num === 0 ? '' : String(num))
         }}
+        maxLength={maxLength}
         onChange={(e) => handleChange(e.target.value)}
         onBlur={() => {
           setFocused(false)

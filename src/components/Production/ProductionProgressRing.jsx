@@ -53,7 +53,11 @@ export default function ProductionProgressRing({
         style={{ width: size, height: size }}
         aria-label={`İlerleme %${value}${label ? ` · ${label}` : ''}`}
       >
-        <svg className="h-full w-full -rotate-90" viewBox={`0 0 ${size} ${size}`} aria-hidden>
+        <svg
+          className="production-progress-ring-glow h-full w-full -rotate-90"
+          viewBox={`0 0 ${size} ${size}`}
+          aria-hidden
+        >
           <circle
             cx={center}
             cy={center}

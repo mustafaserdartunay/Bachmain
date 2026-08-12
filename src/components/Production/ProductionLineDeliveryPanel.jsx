@@ -173,7 +173,7 @@ export default function ProductionLineDeliveryPanel({
           </tr>
         </thead>
         <tbody>
-          {flatRows.map(({ line, row, rowIndex, orderQty, isFirstOfLine, allRows }) => {
+          {flatRows.map(({ line, row, rowIndex, orderQty, isFirstOfLine, allRows }, flatIndex) => {
             const productName = line.product || 'Ürün'
             const description = String(line.description || '').trim()
             const code = row.productionCode || `${productionJobId}-${rowIndex + 1}`
@@ -183,8 +183,16 @@ export default function ProductionLineDeliveryPanel({
               fulfillmentOptions[0]?.label ||
               ''
             const rowDetailExpanded = detailOpen && activeRowId === row.id
-            // 2.+ satırlar: bir önceki kalandan üretim düşülerek
-            const remainingQty = getCascadingRowRemaining(allRows || getLineQuantityRows(line), orderQty, rowIndex)
+            const isLastOfLine =
+              flatIndex === flatRows.length - 1 ||
+              flatRows[flatIndex + 1]?.line?.id !== line.id
+            const lineRows = allRows || getLineQuantityRows(line)
+            const remainingQty = getCascadingRowRemaining(lineRows, orderQty, rowIndex)
+            const totalProduced = lineRows.reduce(
+              (sum, entry) => sum + Math.max(0, Number(entry.producedQuantity) || 0),
+              0,
+            )
+            const producedVariance = totalProduced - orderQty
 
             return (
               <tr
@@ -244,7 +252,8 @@ export default function ProductionLineDeliveryPanel({
                       })
                     }
                     readOnly={columnsLocked || line.productionClosed}
-                    className="!h-8 !min-h-8 w-24 py-0 text-[12px] font-bold tabular-nums"
+                    maxLength={5}
+                    className="!h-8 !min-h-8 !w-[4rem] !min-w-[4rem] !max-w-[4rem] !px-1.5 py-0 text-center text-[12px] font-bold tabular-nums"
                   />
                 </td>
 
@@ -260,21 +269,33 @@ export default function ProductionLineDeliveryPanel({
                       })
                     }
                     readOnly={columnsLocked || line.productionClosed}
-                    className="!h-8 !min-h-8 w-24 py-0 text-[12px] font-bold tabular-nums"
+                    maxLength={5}
+                    className="!h-8 !min-h-8 !w-[4rem] !min-w-[4rem] !max-w-[4rem] !px-1.5 py-0 text-center text-[12px] font-bold tabular-nums"
                   />
                 </td>
 
                 <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap">
-                  <span className="inline-flex h-8 min-h-8 w-24 items-center tabular-nums text-[12px] font-bold text-[var(--muted)]">
-                    {formatQty(remainingQty)}
-                  </span>
+                  {isLastOfLine && producedVariance !== 0 ? (
+                    <span
+                      className="inline-flex h-8 min-h-8 items-center tabular-nums text-[12px] font-bold"
+                      style={{ color: producedVariance > 0 ? '#10b981' : '#ff5e62' }}
+                    >
+                      {producedVariance > 0
+                        ? `+${formatQty(producedVariance)}`
+                        : `-${formatQty(Math.abs(producedVariance))}`}
+                    </span>
+                  ) : (
+                    <span className="inline-flex h-8 min-h-8 w-[4rem] items-center tabular-nums text-[12px] font-bold text-[var(--muted)]">
+                      {formatQty(remainingQty)}
+                    </span>
+                  )}
                 </td>
 
                 <td
                   className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap"
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <div className="inline-flex min-w-0 items-center gap-2">
+                  <div className="flex w-full min-w-0 items-center gap-2">
                     <EditableDropdownPill
                       value={statusValue === 'Kısmi Teslimat' ? 'Kısmi Üretim' : statusValue}
                       options={fulfillmentOptions}
@@ -295,17 +316,19 @@ export default function ProductionLineDeliveryPanel({
                     />
                     {typeof onSendToDepo === 'function' ? (
                       pendingDepoRowId === row.id ? (
-                        <ListInlineActionConfirm
-                          message="Emin misin?"
-                          tone="orange"
-                          onConfirm={() => {
-                            onSendToDepo?.(line, row.id)
-                            setPendingDepoRowId(null)
-                          }}
-                          onCancel={() => setPendingDepoRowId(null)}
-                        />
+                        <div className="ml-auto shrink-0">
+                          <ListInlineActionConfirm
+                            message="Emin misin?"
+                            tone="orange"
+                            onConfirm={() => {
+                              onSendToDepo?.(line, row.id)
+                              setPendingDepoRowId(null)
+                            }}
+                            onCancel={() => setPendingDepoRowId(null)}
+                          />
+                        </div>
                       ) : row.depoItemId ? (
-                        <span className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[11px] font-bold text-emerald-700">
+                        <span className="ml-auto inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[11px] font-bold text-emerald-700">
                           <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
                           Gönderildi
                         </span>
@@ -313,7 +336,7 @@ export default function ProductionLineDeliveryPanel({
                         <button
                           type="button"
                           disabled={columnsLocked || line.productionClosed}
-                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700 disabled:opacity-50"
+                          className="ml-auto inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700 disabled:opacity-50"
                           title="Depoya gönder"
                           aria-label="Depoya gönder"
                           onClick={() => {
