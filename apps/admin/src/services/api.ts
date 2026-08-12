@@ -84,9 +84,15 @@ export const customersApi = {
 export const supportApi = {
   list: () => api.get<SupportTicket[]>('/support/tickets'),
   get: (id: string) => api.get<SupportTicket>(`/support/tickets/${id}`),
-  create: (data: Partial<SupportTicket>) => api.post<SupportTicket>('/support/tickets', data),
+  create: (data: Partial<SupportTicket>) => api.post<{ ok?: boolean; ticket?: SupportTicket } | SupportTicket>('/support/tickets', data),
   addNote: (id: string, content: string, author = 'Admin') =>
     api.post(`/support/tickets/${id}/notes`, { content, author }),
+  reply: (id: string, content: string, author = 'Destek') =>
+    api.post<{ ok: boolean; reply: { id: string; content: string } }>(`/support/tickets/${id}/replies`, {
+      content,
+      author,
+      notifyUser: true,
+    }),
 }
 
 export const modulesApi = {

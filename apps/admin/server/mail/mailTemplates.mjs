@@ -235,6 +235,14 @@ export const MAIL_TEMPLATES = {
       cta: { href: data.ticketUrl || `${MAIL_BRAND.appUrl()}/destek`, label: 'Talebi gör' },
     })
   },
+  ticket_staff_alert(data) {
+    return layout({
+      title: 'Yeni CRM destek bildirimi',
+      preview: data.subject || 'Yeni destek talebi',
+      bodyHtml: `${p('CRM üzerinden yeni bir destek talebi oluşturuldu.')}${strongLine('Kategori', data.category || '—')}${strongLine('Konu', data.subject || '—')}${strongLine('Ticket', data.ticketId || '—')}${strongLine('Firma', data.customer || '—')}${strongLine('Kullanıcı', data.contactName || '—')}${strongLine('E-posta', data.contactEmail || '—')}${strongLine('Telefon', data.contactPhone || '—')}<p style="margin:12px 0;padding:12px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;white-space:pre-wrap">${escapeHtml(data.message || '')}</p>`,
+      cta: { href: data.ticketUrl || `${MAIL_BRAND.adminUrl()}/destek`, label: 'Talebi aç' },
+    })
+  },
   ticket_replied(data) {
     return layout({
       title: 'Ticket yanıtlandı',

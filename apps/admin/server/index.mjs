@@ -32,6 +32,11 @@ import { handleAiosApi } from './aiosRoutes.mjs'
 import { handleQualityControl } from './qualityControl.mjs'
 import { handleSocialConnections } from './socialConnections.mjs'
 import { handlePlatformAdminApi } from './platformAdminRoutes.mjs'
+import {
+  addSupportReply,
+  buildSupportModuleRows,
+  createSupportTicketFromRequest,
+} from './supportRoutes.mjs'
 
 assertAdminEnv()
 
@@ -307,33 +312,41 @@ async function handle(req, res, url) {
     }
 
     if (method === 'POST' && pathname === '/api/support/tickets') {
-      const body = await parseBody(req)
-      const result = await withStore((store) => {
-        const ticket = {
-          id: newId('t'),
-          status: 'open',
-          priority: 'medium',
-          assignee: 'Atanmadı',
-          tags: [],
-          internalNotes: [],
-          attachments: [],
-          timeline: [
-            {
-              id: newId('tl'),
-              title: 'Ticket oluşturuldu',
-              date: new Date().toISOString(),
-              type: 'info',
-            },
-          ],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          slaDeadline: new Date(Date.now() + 24 * 3600000).toISOString(),
-          ...body,
+      try {
+        const body = await parseBody(req)
+        const result = await withStore(async (store) =>
+          createSupportTicketFromRequest(store, req, body),
+        )
+        return sendJson(req, res, 201, { ok: true, ticket: result, ...result })
+      } catch (error) {
+        if (error?.message === 'MESSAGE_REQUIRED') {
+          return sendJson(req, res, 400, { error: 'Mesaj zorunludur' })
         }
-        store.supportTickets.unshift(ticket)
-        return ticket
-      })
-      return sendJson(req, res, 201, result)
+        throw error
+      }
+    }
+
+    const ticketReplyMatch = pathname.match(/^\/api\/support\/tickets\/([^/]+)\/replies$/)
+    if (method === 'POST' && ticketReplyMatch) {
+      try {
+        const body = await parseBody(req)
+        const result = await withStore(async (store) =>
+          addSupportReply(store, ticketReplyMatch[1], {
+            content: body.content || body.message || body.body,
+            author: body.author || 'Destek',
+            notifyUser: body.notifyUser !== false,
+          }),
+        )
+        return sendJson(req, res, 201, { ok: true, ...result })
+      } catch (error) {
+        if (error?.message === 'NOT_FOUND') {
+          return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
+        }
+        if (error?.message === 'MESSAGE_REQUIRED') {
+          return sendJson(req, res, 400, { error: 'Yanıt metni zorunludur' })
+        }
+        throw error
+      }
     }
 
     const noteMatch = pathname.match(/^\/api\/support\/tickets\/([^/]+)\/notes$/)
@@ -387,6 +400,10 @@ async function handle(req, res, url) {
           rows,
           metrics: buildMembershipMetrics(store).slice(3, 5),
         })
+      }
+      if (moduleId === 'support') {
+        const rows = buildSupportModuleRows(store)
+        return sendJson(req, res, 200, { rows, metrics: computeMetrics(rows) })
       }
       const rows = store.modules?.[moduleId]
       if (!rows) return sendJson(req, res, 404, { error: 'Modül bulunamadı' })

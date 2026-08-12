@@ -28,6 +28,7 @@ import HeaderCalendar from './HeaderCalendar'
 import HeaderAgendaSwitch from './HeaderAgendaSwitch'
 import HeaderAiAssistant from './HeaderAiAssistant'
 import HeaderOmniSearch from './HeaderOmniSearch'
+import HeaderSupport from './HeaderSupport'
 import OrgSwitcher from './OrgSwitcher'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { HeaderPopoverProvider, useHeaderPopover } from '../../hooks/useHeaderPopover'
@@ -133,6 +134,9 @@ function MobileHeaderTools({ onNavigate }) {
                 </MobileToolItem>
                 <MobileToolItem label="Görünüm">
                   <AppearanceToggle />
+                </MobileToolItem>
+                <MobileToolItem label="Destek">
+                  <HeaderSupport />
                 </MobileToolItem>
                 <MobileToolItem label="POS">
                   <button
@@ -262,6 +266,7 @@ function HeaderBar({ onMenuClick }) {
           </>
         ) : (
           <>
+            <HeaderSupport />
             <button
               type="button"
               onClick={() => navigate('/shopping')}

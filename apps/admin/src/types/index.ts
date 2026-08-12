@@ -68,6 +68,11 @@ export interface SupportTicket {
   subject: string
   customer: string
   customerId: string
+  contactName?: string
+  contactEmail?: string
+  contactPhone?: string
+  category?: string
+  categoryLabel?: string
   priority: 'low' | 'medium' | 'high' | 'critical'
   status: 'open' | 'in_progress' | 'waiting' | 'resolved' | 'closed'
   assignee: string
@@ -77,6 +82,7 @@ export interface SupportTicket {
   updatedAt: string
   description: string
   internalNotes: { id: string; author: string; content: string; date: string }[]
+  replies?: { id: string; author: string; content: string; date: string; isStaff?: boolean }[]
   attachments: { id: string; name: string; size: string }[]
   timeline: TimelineEvent[]
 }

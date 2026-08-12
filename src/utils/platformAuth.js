@@ -76,6 +76,10 @@ async function authRequest(path, { method = 'GET', body } = {}) {
   return data
 }
 
+export async function submitSupportTicket(payload) {
+  return authRequest('support/tickets', { method: 'POST', body: payload })
+}
+
 export async function registerAccount(payload) {
   const data = await authRequest('auth/register', { method: 'POST', body: payload })
   persistSession({ token: data.token, user: data.user })

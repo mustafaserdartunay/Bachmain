@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { StickyNote } from 'lucide-react'
+import { StickyNote, X } from 'lucide-react'
 import AgendaNoteBoard, {
   AGENDA_NOTE_BADGE_CLASS,
   countIncompleteAgendaNotes,
@@ -25,7 +25,7 @@ import {
 import { getHeaderAgendaAnchor } from '../../utils/headerAgendaAnchor'
 
 export default function HeaderNotebook({ hideTrigger = false }) {
-  const { open, toggle } = useHeaderPopover('notebook')
+  const { open, setOpen, toggle } = useHeaderPopover('notebook')
   const mobileHandoff = useMobileToolsHandoff('notebook')
   const [notes, setNotes] = useState(() => loadAgendaNotes())
   const [focusToken, setFocusToken] = useState(0)
@@ -174,12 +174,26 @@ export default function HeaderNotebook({ hideTrigger = false }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="header-popover-head !px-3 !py-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                Not Defteri
-              </p>
-              <p className="shrink-0 text-[11px] font-normal text-[var(--muted)]">
-                {sortedNotes.length} kayıt
-              </p>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Not Defteri
+                </p>
+                <p className="text-[11px] font-normal text-[var(--muted)]">
+                  {sortedNotes.length} kayıt
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false)
+                  clearMobileToolsHandoff('notebook')
+                }}
+                className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
+                aria-label="Not defterini kapat"
+                title="Kapat"
+              >
+                <X className="h-4 w-4" strokeWidth={2.25} />
+              </button>
             </div>
 
             <div className="header-notebook-body">

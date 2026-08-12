@@ -25,6 +25,8 @@ export function SupportDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [note, setNote] = useState('')
+  const [reply, setReply] = useState('')
+  const [replySending, setReplySending] = useState(false)
 
   const fetcher = useMemo(
     () => () => supportApi.get(id!),
@@ -41,6 +43,10 @@ export function SupportDetailPage() {
   const slaDate = new Date(ticket.slaDeadline)
   const now = new Date()
   const slaRemaining = Math.max(0, Math.round((slaDate.getTime() - now.getTime()) / 3600000))
+  const tags = Array.isArray(ticket.tags) ? ticket.tags : []
+  const attachments = Array.isArray(ticket.attachments) ? ticket.attachments : []
+  const internalNotes = Array.isArray(ticket.internalNotes) ? ticket.internalNotes : []
+  const replies = Array.isArray(ticket.replies) ? ticket.replies : []
 
   const handleAddNote = async () => {
     if (!note.trim() || !id) return
@@ -49,11 +55,23 @@ export function SupportDetailPage() {
     reload()
   }
 
+  const handleReply = async () => {
+    if (!reply.trim() || !id) return
+    setReplySending(true)
+    try {
+      await supportApi.reply(id, reply.trim())
+      setReply('')
+      reload()
+    } finally {
+      setReplySending(false)
+    }
+  }
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <PageHeader
         title={ticket.subject}
-        subtitle={`#${ticket.id} · ${ticket.customer}`}
+        subtitle={`#${ticket.id} · ${ticket.customer}${ticket.categoryLabel ? ` · ${ticket.categoryLabel}` : ''}`}
         breadcrumbs={[
           { label: 'Destek', href: '/destek' },
           { label: ticket.subject },
@@ -103,7 +121,50 @@ export function SupportDetailPage() {
             <CardHeader>
               <CardTitle className="text-base">Açıklama</CardTitle>
             </CardHeader>
-            <p className="text-sm leading-relaxed text-text-muted">{ticket.description}</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-muted">{ticket.description}</p>
+          </Card>
+
+          <Card padding="lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <MessageSquare className="h-4 w-4" /> Müşteriye Dönüş
+              </CardTitle>
+            </CardHeader>
+            {replies.length > 0 ? (
+              <ul className="mb-4 space-y-3">
+                {replies.map((item) => (
+                  <li key={item.id} className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-emerald-700">{item.author}</span>
+                      <span className="text-xs text-text-subtle">{formatDateTime(item.date)}</span>
+                    </div>
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-text-muted">{item.content}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mb-3 text-sm text-text-muted">Henüz müşteriye yanıt yok.</p>
+            )}
+            <Textarea
+              placeholder="Müşteriye e-posta ile iletilecek yanıt…"
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              className="min-h-[96px]"
+            />
+            <Button
+              variant="gold"
+              size="sm"
+              className="mt-3"
+              disabled={!reply.trim() || replySending || !ticket.contactEmail}
+              onClick={handleReply}
+            >
+              <Send className="h-4 w-4" /> Yanıtı Gönder
+            </Button>
+            {!ticket.contactEmail ? (
+              <p className="mt-2 text-xs text-rose-600">Dönüş için müşteri e-postası kayıtlı değil.</p>
+            ) : (
+              <p className="mt-2 text-xs text-text-muted">Yanıt {ticket.contactEmail} adresine gönderilir.</p>
+            )}
           </Card>
 
           <Card padding="lg">
@@ -113,9 +174,9 @@ export function SupportDetailPage() {
               </CardTitle>
             </CardHeader>
             <div className="flex flex-wrap gap-2">
-              {ticket.tags.map((tag) => (
+              {tags.length ? tags.map((tag) => (
                 <Badge key={tag} variant="default">{tag}</Badge>
-              ))}
+              )) : <span className="text-sm text-text-muted">—</span>}
             </div>
           </Card>
 
@@ -126,11 +187,11 @@ export function SupportDetailPage() {
               </CardTitle>
               <Button variant="secondary" size="sm">Dosya Ekle</Button>
             </CardHeader>
-            {ticket.attachments.length === 0 ? (
+            {attachments.length === 0 ? (
               <p className="text-sm text-text-muted">Henüz dosya eklenmemiş.</p>
             ) : (
               <ul className="space-y-2">
-                {ticket.attachments.map((file) => (
+                {attachments.map((file) => (
                   <li
                     key={file.id}
                     className="flex items-center justify-between rounded-lg border border-border p-3 transition hover:bg-bach-blue/5"
@@ -152,9 +213,9 @@ export function SupportDetailPage() {
                 <MessageSquare className="h-4 w-4" /> İç Notlar
               </CardTitle>
             </CardHeader>
-            {ticket.internalNotes.length > 0 && (
+            {internalNotes.length > 0 && (
               <ul className="mb-4 space-y-3">
-                {ticket.internalNotes.map((n) => (
+                {internalNotes.map((n) => (
                   <li key={n.id} className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">{n.author}</span>
@@ -183,16 +244,45 @@ export function SupportDetailPage() {
           <Card padding="lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <User className="h-4 w-4" /> Müşteri
+                <User className="h-4 w-4" /> İletişim
               </CardTitle>
             </CardHeader>
-            <p className="text-sm font-semibold text-text">{ticket.customer}</p>
-            <Link
-              to={`/musteriler/${ticket.customerId}`}
-              className="mt-2 inline-block text-sm font-medium text-bach-blue hover:underline"
-            >
-              Müşteri kartına git →
-            </Link>
+            <dl className="space-y-2 text-sm">
+              <div>
+                <dt className="text-text-muted">Firma</dt>
+                <dd className="font-semibold text-text">{ticket.customer}</dd>
+              </div>
+              <div>
+                <dt className="text-text-muted">Kullanıcı</dt>
+                <dd className="font-medium text-text">{ticket.contactName || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-text-muted">E-posta</dt>
+                <dd className="font-medium text-text">
+                  {ticket.contactEmail ? (
+                    <a className="text-bach-blue hover:underline" href={`mailto:${ticket.contactEmail}`}>
+                      {ticket.contactEmail}
+                    </a>
+                  ) : '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-text-muted">Telefon</dt>
+                <dd className="font-medium text-text">{ticket.contactPhone || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-text-muted">Kategori</dt>
+                <dd className="font-medium text-text">{ticket.categoryLabel || '—'}</dd>
+              </div>
+            </dl>
+            {ticket.customerId ? (
+              <Link
+                to={`/musteriler/${ticket.customerId}`}
+                className="mt-3 inline-block text-sm font-medium text-bach-blue hover:underline"
+              >
+                Müşteri kartına git →
+              </Link>
+            ) : null}
           </Card>
 
           <Card padding="lg">

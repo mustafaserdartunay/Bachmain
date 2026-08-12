@@ -828,6 +828,7 @@ const moduleDefinitions: Omit<ModuleConfig, 'metrics'>[] = [
     columns: [
       { key: 'subject', label: 'Konu', sortable: true },
       { key: 'customer', label: 'Müşteri', sortable: true },
+      { key: 'category', label: 'Kategori' },
       { key: 'priority', label: 'Öncelik' },
       { key: 'status', label: 'Durum' },
       { key: 'assignee', label: 'Atanan' },
