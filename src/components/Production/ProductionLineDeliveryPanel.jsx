@@ -5,7 +5,6 @@ import {
   Pencil,
   Plus,
   Trash2,
-  Undo2,
 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { ListInlineActionConfirm } from '../Common/ListDeleteConfirmPanel'
@@ -63,7 +62,6 @@ export default function ProductionLineDeliveryPanel({
   onEditRow,
 }) {
   const [pendingDepoRowId, setPendingDepoRowId] = useState(null)
-  const [pendingUndoDepoRowId, setPendingUndoDepoRowId] = useState(null)
 
   const flatRows = []
   lineItems.forEach((line) => {
@@ -104,16 +102,6 @@ export default function ProductionLineDeliveryPanel({
 
   function buildRowActions(line, row, rowIndex, orderQty) {
     const items = []
-
-    if (typeof onUndoSendToDepo === 'function' && row.depoItemId) {
-      items.push({
-        id: 'undo-depo',
-        label: 'Depo gönderimini geri al',
-        icon: Package,
-        tone: 'orange',
-        onClick: () => setPendingUndoDepoRowId(row.id),
-      })
-    }
 
     items.push({
       id: 'edit',
@@ -316,35 +304,11 @@ export default function ProductionLineDeliveryPanel({
                           }}
                           onCancel={() => setPendingDepoRowId(null)}
                         />
-                      ) : pendingUndoDepoRowId === row.id ? (
-                        <ListInlineActionConfirm
-                          message="Emin misin?"
-                          tone="orange"
-                          onConfirm={() => {
-                            onUndoSendToDepo?.(line, row.id)
-                            setPendingUndoDepoRowId(null)
-                          }}
-                          onCancel={() => setPendingUndoDepoRowId(null)}
-                        />
                       ) : row.depoItemId ? (
-                        <div className="inline-flex min-w-0 items-center gap-1.5">
-                          <span className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[11px] font-bold text-emerald-700">
-                            <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
-                            Gönderildi
-                          </span>
-                          {typeof onUndoSendToDepo === 'function' ? (
-                            <button
-                              type="button"
-                              disabled={columnsLocked || line.productionClosed}
-                              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-orange-500/30 bg-orange-500/10 text-orange-600 transition-colors hover:border-orange-500/45 hover:bg-orange-500/15 disabled:opacity-50"
-                              title="Depo gönderimini geri al"
-                              aria-label="Depo gönderimini geri al"
-                              onClick={() => setPendingUndoDepoRowId(row.id)}
-                            >
-                              <Undo2 className="h-3.5 w-3.5" strokeWidth={2.25} />
-                            </button>
-                          ) : null}
-                        </div>
+                        <span className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[11px] font-bold text-emerald-700">
+                          <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+                          Gönderildi
+                        </span>
                       ) : (
                         <button
                           type="button"
