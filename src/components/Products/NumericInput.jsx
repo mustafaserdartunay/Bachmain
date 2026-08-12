@@ -45,7 +45,7 @@ export default function NumericInput({
       : String(value)
 
   return (
-    <div className="relative">
+    <div className="relative inline-block">
       {prefix && (
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
           {prefix}

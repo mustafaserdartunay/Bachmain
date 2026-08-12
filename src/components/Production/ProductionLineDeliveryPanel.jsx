@@ -20,6 +20,13 @@ import { publishPartDeliverySituations } from '../../utils/productionFulfillment
 import { PAGE_TABLE_HEADER_CLASS } from '../../utils/dashboardDesign'
 import { HEADER_ACTION_GRADIENTS } from '../Layout/HeaderCashActionsPanel'
 
+const QTY_CELL_CLASS =
+  'h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap text-center'
+const QTY_INPUT_CLASS =
+  '!h-8 !min-h-8 !w-[4rem] !min-w-[4rem] !max-w-[4rem] !px-1.5 py-0 text-center text-[12px] font-bold tabular-nums'
+const QTY_BOX_CLASS =
+  'form-input inline-flex !h-8 !min-h-8 !w-[4rem] !min-w-[4rem] !max-w-[4rem] !px-1.5 py-0 items-center justify-center text-center text-[12px] font-bold tabular-nums'
+
 function isEmptyPartialRow(row) {
   if (!row) return true
   const produced = Math.max(0, Number(row.producedQuantity) || 0)
@@ -95,6 +102,16 @@ export default function ProductionLineDeliveryPanel({
     )
   }
 
+  const statusLabels = [
+    ...(fulfillmentOptions || []).map((option) => option.label || ''),
+    ...flatRows.map(({ row }) =>
+      row.fulfillmentStatus === 'Kısmi Teslimat'
+        ? 'Kısmi Üretim'
+        : row.fulfillmentStatus || '',
+    ),
+  ]
+  const statusMinWidth = `${Math.max(10, ...statusLabels.map((label) => String(label).length)) + 2}ch`
+
   function handleOptionsChange(next) {
     const saved = publishPartDeliverySituations(next)
     onFulfillmentOptionsChange?.(saved)
@@ -143,11 +160,11 @@ export default function ProductionLineDeliveryPanel({
         <thead className="bg-transparent">
           <tr>
             <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[12rem]`}>ÜRÜN AÇIKLAMASI</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ ADEDİ</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>SİPARİŞ ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ NUMARASI</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>ÜRETİM ADEDİ</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DEPOYA GÖNDERİLEN</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>KALAN ADET</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>ÜRETİM ADEDİ</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>DEPOYA GÖNDERİLEN</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>KALAN ADET</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DURUM</th>
             <th
               className={`${PAGE_TABLE_HEADER_CLASS} w-10 whitespace-nowrap text-center`}
@@ -226,9 +243,9 @@ export default function ProductionLineDeliveryPanel({
                   )}
                 </td>
 
-                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap">
+                <td className={QTY_CELL_CLASS}>
                   {isFirstOfLine ? (
-                    <span className="customer-name-primary tabular-nums text-[14px] font-bold text-[var(--muted)]">
+                    <span className={`${QTY_BOX_CLASS} text-[var(--muted)]`}>
                       {formatQty(orderQty)}
                     </span>
                   ) : null}
@@ -241,7 +258,7 @@ export default function ProductionLineDeliveryPanel({
                 </td>
 
                 <td
-                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap"
+                  className={QTY_CELL_CLASS}
                   onClick={(event) => event.stopPropagation()}
                 >
                   <NumericInput
@@ -253,12 +270,12 @@ export default function ProductionLineDeliveryPanel({
                     }
                     readOnly={columnsLocked || line.productionClosed}
                     maxLength={5}
-                    className="!h-8 !min-h-8 !w-[4rem] !min-w-[4rem] !max-w-[4rem] !px-1.5 py-0 text-center text-[12px] font-bold tabular-nums"
+                    className={QTY_INPUT_CLASS}
                   />
                 </td>
 
                 <td
-                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap"
+                  className={QTY_CELL_CLASS}
                   onClick={(event) => event.stopPropagation()}
                 >
                   <NumericInput
@@ -270,22 +287,25 @@ export default function ProductionLineDeliveryPanel({
                     }
                     readOnly={columnsLocked || line.productionClosed}
                     maxLength={5}
-                    className="!h-8 !min-h-8 !w-[4rem] !min-w-[4rem] !max-w-[4rem] !px-1.5 py-0 text-center text-[12px] font-bold tabular-nums"
+                    className={QTY_INPUT_CLASS}
                   />
                 </td>
 
-                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap">
+                <td className={QTY_CELL_CLASS}>
                   {isLastOfLine && producedVariance !== 0 ? (
                     <span
-                      className="inline-flex h-8 min-h-8 items-center tabular-nums text-[12px] font-bold"
-                      style={{ color: producedVariance > 0 ? '#10b981' : '#ff5e62' }}
+                      className={`${QTY_BOX_CLASS} customer-balance-amount ${
+                        producedVariance > 0
+                          ? 'customer-balance-positive'
+                          : 'customer-balance-negative'
+                      }`}
                     >
                       {producedVariance > 0
                         ? `+${formatQty(producedVariance)}`
                         : `-${formatQty(Math.abs(producedVariance))}`}
                     </span>
                   ) : (
-                    <span className="inline-flex h-8 min-h-8 w-[4rem] items-center tabular-nums text-[12px] font-bold text-[var(--muted)]">
+                    <span className={`${QTY_BOX_CLASS} text-[var(--muted)]`}>
                       {formatQty(remainingQty)}
                     </span>
                   )}
@@ -296,24 +316,26 @@ export default function ProductionLineDeliveryPanel({
                   onClick={(event) => event.stopPropagation()}
                 >
                   <div className="flex w-full min-w-0 items-center gap-2">
-                    <EditableDropdownPill
-                      value={statusValue === 'Kısmi Teslimat' ? 'Kısmi Üretim' : statusValue}
-                      options={fulfillmentOptions}
-                      editable
-                      onOptionsChange={handleOptionsChange}
-                      disabled={columnsLocked || line.productionClosed}
-                      includePlaceholderOption={false}
-                      placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum ekle'}
-                      buttonClassName="flex !h-8 !min-h-8 min-w-[7.5rem] items-center justify-between rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold"
-                      openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      onChange={(value) =>
-                        onQuantityRowChange?.(line, row.id, {
-                          fulfillmentStatus: value || fulfillmentOptions[0]?.label || 'Devam Ediyor',
-                        })
-                      }
-                    />
+                    <div className="shrink-0" style={{ minWidth: statusMinWidth }}>
+                      <EditableDropdownPill
+                        value={statusValue === 'Kısmi Teslimat' ? 'Kısmi Üretim' : statusValue}
+                        options={fulfillmentOptions}
+                        editable
+                        onOptionsChange={handleOptionsChange}
+                        disabled={columnsLocked || line.productionClosed}
+                        includePlaceholderOption={false}
+                        placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum ekle'}
+                        buttonClassName="flex !h-8 !min-h-8 w-full items-center justify-between rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold"
+                        openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
+                        activeMenu={activeMenu}
+                        setActiveMenu={setActiveMenu}
+                        onChange={(value) =>
+                          onQuantityRowChange?.(line, row.id, {
+                            fulfillmentStatus: value || fulfillmentOptions[0]?.label || 'Devam Ediyor',
+                          })
+                        }
+                      />
+                    </div>
                     {typeof onSendToDepo === 'function' ? (
                       pendingDepoRowId === row.id ? (
                         <div className="ml-auto shrink-0">
