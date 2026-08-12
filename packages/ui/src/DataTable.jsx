@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react'
 import { MoreMenu } from './MoreMenu'
 import { EmptyState } from './States'
 import { Tooltip } from './Tooltip'
@@ -61,6 +61,8 @@ export function DataTable({
   data = [],
   getRowId = (row, index) => row.id ?? index,
   getRowActions,
+  /** Optional row expand toggle — chevron column left of İşlemler (MoreMenu). */
+  rowExpandToggle,
   headerActions,
   selectionEnabled = false,
   selectedIds = [],
@@ -87,6 +89,7 @@ export function DataTable({
   const selectedVisibleCount = rowIds.filter((id) => selectedSet.has(id)).length
   const allVisibleSelected = rows.length > 0 && selectedVisibleCount === rows.length
   const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+  const showExpandColumn = Boolean(rowExpandToggle)
   const showActionsColumn = Boolean(getRowActions || (headerActions && headerActions.length))
 
   function toggleSort(key) {
@@ -156,6 +159,12 @@ export function DataTable({
                   </div>
                 </th>
               ))}
+              {showExpandColumn ? (
+                <th
+                  className="h-[var(--ds-row-h,2.75rem)] w-10 px-1 text-center align-middle"
+                  aria-label="Detay"
+                />
+              ) : null}
               {showActionsColumn ? (
                 <th
                   className="h-[var(--ds-row-h,2.75rem)] w-14 px-2 text-center align-middle"
@@ -232,6 +241,38 @@ export function DataTable({
                       </td>
                     )
                   })}
+                  {showExpandColumn ? (
+                    <td
+                      className="h-[var(--ds-row-h,2.75rem)] w-10 px-1 text-center align-middle"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <div className="inline-flex h-[var(--ds-control-h,3rem)] w-8 items-center justify-center">
+                        <button
+                          type="button"
+                          className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
+                          aria-label={
+                            rowExpandToggle.isExpanded?.(row)
+                              ? rowExpandToggle.collapseLabel || 'Detayı kapat'
+                              : rowExpandToggle.expandLabel || 'Detayı aç'
+                          }
+                          aria-expanded={Boolean(rowExpandToggle.isExpanded?.(row))}
+                          title={
+                            rowExpandToggle.isExpanded?.(row)
+                              ? rowExpandToggle.collapseLabel || 'Detayı kapat'
+                              : rowExpandToggle.expandLabel || 'Detayı aç'
+                          }
+                          onClick={() => rowExpandToggle.onToggle?.(row)}
+                        >
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform duration-200 ${
+                              rowExpandToggle.isExpanded?.(row) ? 'rotate-180' : ''
+                            }`}
+                            strokeWidth={2.25}
+                          />
+                        </button>
+                      </div>
+                    </td>
+                  ) : null}
                   {showActionsColumn ? (
                     <td
                       className="h-[var(--ds-row-h,2.75rem)] w-14 px-2 text-center align-middle"
@@ -311,9 +352,32 @@ export function DataTable({
                     })}
                   </div>
                 </div>
-                {actions.length && !selectionEnabled ? (
-                  <div onClick={(event) => event.stopPropagation()}>
-                    <MoreMenu items={actions} />
+                {!selectionEnabled && (showExpandColumn || actions.length) ? (
+                  <div
+                    className="inline-flex shrink-0 items-center gap-0.5"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {showExpandColumn ? (
+                      <button
+                        type="button"
+                        className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
+                        aria-label={
+                          rowExpandToggle.isExpanded?.(row)
+                            ? rowExpandToggle.collapseLabel || 'Detayı kapat'
+                            : rowExpandToggle.expandLabel || 'Detayı aç'
+                        }
+                        aria-expanded={Boolean(rowExpandToggle.isExpanded?.(row))}
+                        onClick={() => rowExpandToggle.onToggle?.(row)}
+                      >
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform duration-200 ${
+                            rowExpandToggle.isExpanded?.(row) ? 'rotate-180' : ''
+                          }`}
+                          strokeWidth={2.25}
+                        />
+                      </button>
+                    ) : null}
+                    {actions.length ? <MoreMenu items={actions} /> : null}
                   </div>
                 ) : null}
               </div>

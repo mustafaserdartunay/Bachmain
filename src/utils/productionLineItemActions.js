@@ -182,6 +182,82 @@ export function createProductionLineItemActions({
     setActiveMenu?.(null)
   }
 
+  function handleStartFullProduction(lineItem, orderLineQuantity = null) {
+    if (!job || lineItem.productionClosed) return
+    const qty = Math.max(
+      0,
+      Number(orderLineQuantity ?? lineItem.quantity) || 0,
+    )
+    if (qty <= 0) {
+      window.alert('Sipariş adedi tanımlı değil.')
+      return
+    }
+    const firstStage = productionStageOptions[0]
+    const now = createQuantityRowTimestamp()
+    const row = createQuantityRow({
+      orderedQuantity: qty,
+      fulfillmentStatus: 'Devam Ediyor',
+      createdAt: now,
+      currentStageId: firstStage?.id || lineItem.currentStageId || '',
+      stageUpdatedAt: now,
+      statusUpdatedAt: now,
+    })
+    patchLineQuantityRows(lineItem, [row], {
+      lineItemPatch: {
+        productionStartedAt: now,
+        productionMode: 'full',
+        productionClosed: false,
+        productionClosedAt: '',
+      },
+    })
+    appendActivity(`"${lineItem.product}" için tam üretim başlatıldı (${formatQty(qty)} adet).`)
+  }
+
+  function handleStartPartialProduction(lineItem, splits = [], orderLineQuantity = null) {
+    if (!job || lineItem.productionClosed) return
+    const orderQty = Math.max(
+      0,
+      Number(orderLineQuantity ?? lineItem.quantity) || 0,
+    )
+    const normalized = splits
+      .map((value) => Math.max(0, Math.round(Number(value) || 0)))
+      .filter((value) => value > 0)
+    const total = normalized.reduce((sum, value) => sum + value, 0)
+    if (!normalized.length) {
+      window.alert('En az bir parça adedi girin.')
+      return
+    }
+    if (total !== orderQty) {
+      window.alert(`Parça adetleri toplamı sipariş adedine eşit olmalı (${formatQty(orderQty)} adet).`)
+      return
+    }
+
+    const firstStage = productionStageOptions[0]
+    const now = createQuantityRowTimestamp()
+    const rows = normalized.map((qty, index) =>
+      createQuantityRow({
+        orderedQuantity: qty,
+        fulfillmentStatus: 'Devam Ediyor',
+        createdAt: now,
+        currentStageId: firstStage?.id || lineItem.currentStageId || '',
+        stageUpdatedAt: now,
+        statusUpdatedAt: now,
+        explicitPartial: index > 0,
+      }),
+    )
+    patchLineQuantityRows(lineItem, rows, {
+      lineItemPatch: {
+        productionStartedAt: now,
+        productionMode: 'partial',
+        productionClosed: false,
+        productionClosedAt: '',
+      },
+    })
+    appendActivity(
+      `"${lineItem.product}" için parçalı üretim başlatıldı (${normalized.map(formatQty).join(' + ')} adet).`,
+    )
+  }
+
   function handleAddQuantityRow(lineItem, sourceRowId) {
     if (!job) return undefined
     // Explicit + only — never auto-create. Codes reassigned in patchLineQuantityRows.
@@ -578,6 +654,8 @@ export function createProductionLineItemActions({
   return {
     handleQuantityRowStageChange,
     handleLineQuantityRowChange,
+    handleStartFullProduction,
+    handleStartPartialProduction,
     handleAddQuantityRow,
     handleRestartProcess,
     handleRemoveQuantityRow,

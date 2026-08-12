@@ -303,6 +303,12 @@ export default function ProductionPage() {
           data={filteredJobs}
           defaultSort={{ key: 'orderDate', dir: 'desc' }}
           getRowId={(job) => job.id}
+          rowExpandToggle={{
+            isExpanded: (job) => expandedJobId === job.id,
+            onToggle: (job) => toggleJobExpanded(job.id),
+            expandLabel: 'Üretim detayını aç',
+            collapseLabel: 'Üretim detayını kapat',
+          }}
           onRowClick={(job) => toggleJobExpanded(job.id)}
           columns={[
             {
@@ -410,13 +416,6 @@ export default function ProductionPage() {
             },
           ]}
           getRowActions={(job) => [
-            {
-              id: 'expand',
-              label: expandedJobId === job.id ? 'Detayı Kapat' : 'Detayı Aç',
-              icon: ClipboardList,
-              tone: 'primary',
-              onClick: () => toggleJobExpanded(job.id),
-            },
             {
               id: 'cancel',
               label: 'Vazgeç',

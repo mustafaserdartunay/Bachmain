@@ -7,9 +7,11 @@ import ProductionLineDeliveryPanel from './ProductionLineDeliveryPanel'
 import {
   ensureLineItems,
   getLineQuantityRows,
+  isLineProductionStarted,
   resolveLineItemOrderQuantity,
   resolveOrderForProductionJob,
 } from '../../utils/productionLineItems'
+import ProductionStartPanel from './ProductionStartPanel'
 import { getQuantityRowMinimalSteps } from '../../utils/productionQuantityMetrics'
 import {
   createStagePhoto,
@@ -110,9 +112,16 @@ export default function ProductionJobCard({
 
   const order = resolveOrderForProductionJob(job, orders)
   const lineItems = ensureLineItems(job, liveWorkflowStages, order)
+  const pendingLineItems = lineItems.filter(
+    (line) => !isLineProductionStarted(line, liveWorkflowStages),
+  )
+  const startedLineItems = lineItems.filter((line) =>
+    isLineProductionStarted(line, liveWorkflowStages),
+  )
 
   const activeLine =
-    lineItems[Math.min(activeLineIndex, Math.max(0, lineItems.length - 1))] || lineItems[0]
+    startedLineItems[Math.min(activeLineIndex, Math.max(0, startedLineItems.length - 1))] ||
+    startedLineItems[0]
   const activeRows = activeLine ? getLineQuantityRows(activeLine) : []
   const primaryRow =
     (activeRowId && activeRows.find((row) => row.id === activeRowId)) || activeRows[0] || null
@@ -138,7 +147,7 @@ export default function ProductionJobCard({
 
 
   function handleToggleRowDetail(lineId, rowId) {
-    const index = lineItems.findIndex((line) => line.id === lineId)
+    const index = startedLineItems.findIndex((line) => line.id === lineId)
     if (index >= 0) setActiveLineIndex(index)
     if (rowId) setActiveRowId(rowId)
 
@@ -216,9 +225,35 @@ export default function ProductionJobCard({
 
   return (
     <div className="mt-3 space-y-5 rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent p-5 sm:p-6">
+      {pendingLineItems.length ? (
+        <div className="space-y-4">
+          {pendingLineItems.map((line) => (
+            <ProductionStartPanel
+              key={line.id}
+              line={line}
+              orderQuantity={resolveLineItemOrderQuantity(line, order)}
+              onStartFull={() =>
+                lineItemActions?.handleStartFullProduction(
+                  line,
+                  resolveLineItemOrderQuantity(line, order),
+                )
+              }
+              onStartPartial={(splits) =>
+                lineItemActions?.handleStartPartialProduction(
+                  line,
+                  splits,
+                  resolveLineItemOrderQuantity(line, order),
+                )
+              }
+            />
+          ))}
+        </div>
+      ) : null}
+
+      {startedLineItems.length ? (
       <div className="relative" onClick={(event) => event.stopPropagation()}>
           <ProductionLineDeliveryPanel
-            lineItems={lineItems}
+            lineItems={startedLineItems}
             activeLineId={activeLine?.id}
             activeRowId={activeRowId}
             detailOpen={detailOpen}
@@ -278,8 +313,9 @@ export default function ProductionJobCard({
           </div>
         ) : null}
       </div>
+      ) : null}
 
-      {detailOpen ? (
+      {detailOpen && startedLineItems.length ? (
         <>
           {liveProductionStages.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-[var(--border,#E2E8F0)] px-4 py-6 text-center text-[13px] font-semibold text-[var(--muted,#64748B)]">
