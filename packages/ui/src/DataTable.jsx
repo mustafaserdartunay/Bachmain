@@ -10,6 +10,12 @@ function getSortValue(row, sort, columns = []) {
   return row[sort.key]
 }
 
+function columnAlignClass(col) {
+  if (col.align === 'center') return 'text-center'
+  if (col.align === 'right') return 'text-right'
+  return ''
+}
+
 function sortRows(rows, sort, columns = []) {
   if (!sort?.key) return rows
   const dir = sort.dir === 'desc' ? -1 : 1
@@ -123,9 +129,13 @@ export function DataTable({
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className={`${headerClassName} ${col.className || ''}`.trim()}
+                  className={`${headerClassName} ${col.className || ''} ${columnAlignClass(col)}`.trim()}
                 >
-                  <div className="inline-flex max-w-full items-center gap-1">
+                  <div
+                    className={`max-w-full items-center gap-1 ${
+                      col.align === 'center' ? 'flex w-full justify-center' : 'inline-flex'
+                    }`}
+                  >
                     {col.sortable ? (
                       <button
                         type="button"
@@ -229,7 +239,7 @@ export function DataTable({
                     return (
                       <td
                         key={col.id}
-                        className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-ds-body text-ds-ink ${col.className || ''}`}
+                        className={`h-[var(--ds-row-h,2.75rem)] max-w-[16rem] px-3 text-ds-body text-ds-ink ${col.className || ''} ${columnAlignClass(col)} ${col.align === 'center' ? 'align-middle' : ''}`}
                       >
                         {typeof content === 'string' || typeof content === 'number' ? (
                           <Tooltip content={text.length > 28 ? text : undefined}>

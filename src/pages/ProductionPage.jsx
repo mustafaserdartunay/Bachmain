@@ -338,7 +338,7 @@ export default function ProductionPage() {
             },
             {
               id: 'orderDate',
-              header: 'SİPARİŞ',
+              header: 'SİPARİŞ TARİHİ',
               sortable: true,
               accessorKey: 'orderDate',
               className: 'w-[8.5rem]',
@@ -365,7 +365,7 @@ export default function ProductionPage() {
             },
             {
               id: 'productionStart',
-              header: 'ÜRETİM',
+              header: 'ÜRETİM TARİHİ',
               sortable: true,
               accessorKey: 'productionStart',
               className: 'w-[8.5rem]',
@@ -393,6 +393,7 @@ export default function ProductionPage() {
             {
               id: 'status',
               header: 'DURUM',
+              align: 'center',
               className: 'w-[11rem]',
               cell: (job) => {
                 const lineItems = ensureLineItems(job, workflowStages)

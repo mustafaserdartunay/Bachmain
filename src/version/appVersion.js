@@ -6,10 +6,10 @@
  * Sonraki ay: BM-V1.826 (Ağustos 2026)
  */
 
-export const APP_VERSION = 'BM-V1.826.36'
+export const APP_VERSION = 'BM-V1.826.37'
 
 /** Deploy içeriği damgası — sürüm kodu aynı kalsa bile yenilemeyi tetikler */
-export const APP_BUILD = '2026-08-12T00:40:00+03:00'
+export const APP_BUILD = '2026-08-12T11:25:00+03:00'
 
 export const APP_VERSION_META = {
   code: APP_VERSION,
