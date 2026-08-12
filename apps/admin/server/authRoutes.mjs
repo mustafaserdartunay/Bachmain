@@ -229,6 +229,7 @@ export async function handleAuthApi(req, res, path, body = {}) {
   }
 
   // Üye hesabına özel bildirimler (CRM header Bildirimler)
+  // Sadece bu hesabın / aktif firmanın membership bildirimleri — staff/demo/global yok.
   if (method === 'GET' && path === 'auth/notifications') {
     const token = getBearerOrCookieToken(req)
     const store = await loadStore()
@@ -238,12 +239,20 @@ export async function handleAuthApi(req, res, path, body = {}) {
       return true
     }
     const accountId = session.account?.id || session.user?.id || null
-    const customerId = session.account?.customerId || session.user?.customerId || null
+    // Aktif şirket (company switch) öncelikli — primary account.customerId değil
+    const customerId = session.user?.customerId || session.account?.customerId || null
     const items = (store.notifications || [])
       .filter((n) => {
         if (!n || n.type !== 'membership') return false
-        if (accountId && n.accountId === accountId) return true
-        if (customerId && n.customerId === customerId) return true
+        if (n.audience === 'staff') return false
+        // Firma skopu zorunlu: başka firmanın membership satırı asla dönmez
+        if (n.customerId) {
+          return Boolean(customerId) && n.customerId === customerId
+        }
+        // customerId yoksa yalnızca aynı accountId ve customerId eşleşmesi yoksa reddet
+        if (accountId && n.accountId === accountId && !n.customerId) {
+          return true
+        }
         return false
       })
       .slice(0, 50)

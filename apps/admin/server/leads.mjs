@@ -7,6 +7,8 @@ import { sendJson } from './authRoutes.mjs'
 import { hitRateLimit } from './db.mjs'
 import { hashPassword, signToken, validateSignupPassword, buildSessionCookie } from './auth.mjs'
 import { ensureLegalStore, assertPackConsents, recordConsentBatch } from './legal.mjs'
+import { notifyStaffAdmin, rowsFromFields } from './staffNotify.mjs'
+import { MAIL_BRAND } from './mail/mailConfig.mjs'
 
 function normalizeEmail(email) {
   return String(email || '')
@@ -320,15 +322,6 @@ export function createDemoLead(store, body = {}) {
   demoRequest.customerId = customer.id
   demoRequest.accountId = account.id
 
-  store.notifications.unshift({
-    id: newId('ntf'),
-    title: `Demo kullanıcı: ${companyName}`,
-    body: `${fullName} · ${email} · ${phone} · 7 gün demo`,
-    type: 'demo_request',
-    createdAt: nowIso,
-  })
-  store.notifications = store.notifications.slice(0, 200)
-
   // Demo no longer requires contracts; purchase flow records consents instead.
   const consentItems = Array.isArray(body.consents) ? body.consents : []
   if (consentItems.length) {
@@ -357,7 +350,29 @@ export function createDemoLead(store, body = {}) {
   }
 
   const session = sessionPayload(account, customer)
-  return { request: demoRequest, customer, account, ...session }
+  return {
+    request: demoRequest,
+    customer,
+    account,
+    staffAlertRows: rowsFromFields({
+      'Ad Soyad': fullName,
+      Firma: companyName,
+      Eposta: email,
+      Telefon: phone,
+      'Vergi / TC No': taxNo,
+      'Vergi Dairesi': taxOffice,
+      Adres: address,
+      İl: city,
+      İlçe: district,
+      'Firma Ölçeği': companySize || undefined,
+      Mesaj: message || undefined,
+      Kaynak: source,
+      'Demo Bitiş': licenseExpiry,
+      'Hesap ID': account.id,
+      'Müşteri ID': customer.id,
+    }),
+    ...session,
+  }
 }
 
 export async function handleLeadsApi(req, res, path, body = {}) {
@@ -377,14 +392,29 @@ export async function handleLeadsApi(req, res, path, body = {}) {
       return true
     }
     try {
-      const result = await withStore((store) =>
-        createDemoLead(store, {
+      const result = await withStore(async (store) => {
+        const created = createDemoLead(store, {
           ...body,
           ip,
           userAgent: req.headers?.['user-agent'] || body.userAgent || '',
           language: body.language || req.headers?.['accept-language']?.split?.(',')[0] || 'tr',
-        }),
-      )
+        })
+        await notifyStaffAdmin(store, {
+          type: 'demo_request',
+          eventLabel: 'Yeni demo kullanıcı',
+          title: `Yeni demo: ${created.customer.company}`,
+          body: `${created.account.fullName} · ${created.account.email} · 7 gün demo`,
+          rows: created.staffAlertRows,
+          customerId: created.customer.id,
+          accountId: created.account.id,
+          link: `${MAIL_BRAND.adminUrl()}/uyeler/${created.account.id}`,
+          ctaLabel: 'Üye hesabını aç',
+          intro:
+            'bachmain.com üzerinden yeni bir demo hesabı oluşturuldu. Tablodaki bilgiler yalnızca bu formun kendi verileridir.',
+          meta: { source: 'bachmain_demo', requestId: created.request.id },
+        })
+        return created
+      })
       sendJson(
         req,
         res,

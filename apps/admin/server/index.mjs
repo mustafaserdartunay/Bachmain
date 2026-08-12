@@ -235,15 +235,32 @@ async function handle(req, res, url) {
       const store = await loadStore()
       const customer = store.customers.find((c) => c.id === customerMatch[1])
       if (!customer) return sendJson(req, res, 404, { error: 'Müşteri bulunamadı' })
-      const tickets = store.supportTickets.filter((t) => t.customerId === customer.id)
+      const tickets = (store.supportTickets || []).filter((t) => t.customerId === customer.id)
+      const accounts = (store.accounts || []).filter((a) => a.customerId === customer.id)
+      const billing = store.billing || {}
+      const loginHistory = (store.customerExtras?.loginHistory || []).filter(
+        (row) => row.customerId === customer.id,
+      )
       return sendJson(req, res, 200, {
         ...customer,
-        userList: store.customerExtras.users,
-        invoices: store.customerExtras.invoices,
-        payments: store.customerExtras.payments,
-        aiUsage: store.customerExtras.aiUsage,
-        loginHistory: store.customerExtras.loginHistory,
-        timeline: store.customerExtras.timeline,
+        userList: accounts.map((a) => ({
+          id: a.id,
+          name: a.fullName || a.email,
+          email: a.email,
+          role: a.role || 'owner',
+          lastLogin: a.lastLoginAt || null,
+          status: a.canLogin === false ? 'suspended' : 'active',
+        })),
+        invoices: (billing.invoices || []).filter((i) => i.customerId === customer.id),
+        payments: [
+          ...(billing.payments || []).filter((p) => p.customerId === customer.id),
+          ...(store.paymentRequests || []).filter((p) => p.customerId === customer.id),
+        ],
+        aiUsage: { totalQueries: 0, tokensUsed: 0, costEstimate: 0, topFeatures: [] },
+        loginHistory,
+        timeline: (store.dashboard?.recentActivities || []).filter(
+          (a) => !a.customerId || a.customerId === customer.id,
+        ),
         supportTickets: tickets,
       })
     }
@@ -404,6 +421,56 @@ async function handle(req, res, url) {
       if (moduleId === 'support') {
         const rows = buildSupportModuleRows(store)
         return sendJson(req, res, 200, { rows, metrics: computeMetrics(rows) })
+      }
+      if (moduleId === 'notifications') {
+        const staffOnly = (store.notifications || []).filter(
+          (n) =>
+            n &&
+            (n.audience === 'staff' ||
+              [
+                'demo_request',
+                'payment_request',
+                'new_user',
+                'package_purchase',
+                'kontor_purchase',
+                'module_purchase',
+                'staff_alert',
+              ].includes(n.type)),
+        )
+        const rows = staffOnly.map((n) => ({
+          id: n.id,
+          title: n.title,
+          type: n.type || 'Bildirim',
+          sent: n.createdAt ? new Date(n.createdAt).toLocaleString('tr-TR') : '—',
+          recipients: 'admin@bachmain.com',
+          status: 'Yönetim',
+          body: n.body || '',
+          customerId: n.customerId || null,
+          accountId: n.accountId || null,
+        }))
+        return sendJson(req, res, 200, {
+          rows,
+          metrics: [
+            { label: 'Toplam bildirim', value: String(rows.length) },
+            {
+              label: 'Demo',
+              value: String(staffOnly.filter((n) => n.type === 'demo_request').length),
+            },
+            {
+              label: 'Satın alma',
+              value: String(
+                staffOnly.filter((n) =>
+                  [
+                    'package_purchase',
+                    'kontor_purchase',
+                    'module_purchase',
+                    'payment_request',
+                  ].includes(n.type),
+                ).length,
+              ),
+            },
+          ],
+        })
       }
       const rows = store.modules?.[moduleId]
       if (!rows) return sendJson(req, res, 404, { error: 'Modül bulunamadı' })

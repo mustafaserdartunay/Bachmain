@@ -801,6 +801,11 @@ export async function createCheckout(store, input) {
   }
   const method = String(input.method || 'card').toLowerCase()
   let amount = priceForPlan(plan, period)
+  const kontorPackageId = input.kontorPackageId || input.kontorId || null
+  const kontorAmount = Number(input.kontorAmount || 0) || 0
+  const kontorPriceTry = Number(input.kontorPriceTry || 0) || 0
+  const kontorKind = String(input.kontorKind || input.kontorType || '').trim() || (kontorPackageId ? 'efatura_kontor' : null)
+  if (kontorPriceTry > 0) amount += kontorPriceTry
   let coupon = null
   if (input.couponCode) {
     coupon = b.coupons.find(
@@ -832,6 +837,10 @@ export async function createCheckout(store, input) {
     companyInvoice: Boolean(input.companyInvoice),
     billingName: input.billingName || '',
     taxNo: input.taxNo || '',
+    kontorPackageId,
+    kontorAmount: kontorAmount || null,
+    kontorPriceTry: kontorPriceTry || null,
+    kontorKind,
     ibanHint: process.env.BILLING_IBAN || 'TR00 0000 0000 0000 0000 0000 00',
     bankName: process.env.BILLING_BANK_NAME || '',
     accountHolder: process.env.BILLING_ACCOUNT_HOLDER || '',
@@ -876,7 +885,16 @@ export async function createCheckout(store, input) {
     customerId: input.customerId,
     subscriptionId: sub.id,
     action: 'checkout_created',
-    meta: { paymentId, planCode: plan.code, method: payment.method, amount },
+    meta: {
+      paymentId,
+      planCode: plan.code,
+      method: payment.method,
+      amount,
+      kontorPackageId,
+      kontorAmount,
+      kontorPriceTry,
+      kontorKind,
+    },
   })
 
   if (!Array.isArray(store.paymentRequests)) store.paymentRequests = []
@@ -892,6 +910,10 @@ export async function createCheckout(store, input) {
     method: payment.method,
     amountTry: amount,
     period,
+    kontorPackageId,
+    kontorAmount: kontorAmount || null,
+    kontorPriceTry: kontorPriceTry || null,
+    kontorKind,
     createdAt: payment.createdAt,
     source: input.source || 'billing_checkout',
   })

@@ -27,6 +27,7 @@ export const MAIL_BRAND = {
   adminUrl: () => process.env.ADMIN_URL || 'https://yonetim.bachmain.com',
   webUrl: () => process.env.WEB_URL || 'https://bachmain.com',
   supportEmail: () => process.env.SUPPORT_EMAIL || 'destek@bachmain.com',
+  adminEmail: () => process.env.ADMIN_EMAIL || 'admin@bachmain.com',
 }
 
 export function mailConfig() {

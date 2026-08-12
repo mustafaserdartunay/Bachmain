@@ -158,9 +158,11 @@ export async function handlePaymentsApi(req, res, path, body = {}) {
       if (!Array.isArray(s.notifications)) s.notifications = []
       s.notifications.unshift({
         id: newId('ntf'),
+        audience: 'staff',
         title: `Yeni ödeme talebi: ${planKey}`,
         body: `${email || 'Anonim'} — ${planKey} planı`,
         type: 'payment_request',
+        customerId: customerId || null,
         createdAt: new Date().toISOString(),
       })
       return s

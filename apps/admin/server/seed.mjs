@@ -66,12 +66,12 @@ export const seedData = {
   customers,
   supportTickets,
   customerExtras: {
-    users: [{ id: 'u1', name: 'Ahmet Yılmaz', email: 'ahmet@erlenbox.com', role: 'Admin', lastLogin: '2026-07-09T08:30:00', status: 'active' }],
-    invoices: [{ id: 'inv1', number: 'FTR-2026-0142', date: '2026-07-01', amount: 45000, status: 'paid' }],
-    payments: [{ id: 'pay1', date: '2026-07-02', amount: 45000, method: 'Havale', status: 'completed' }],
+    users: [{ id: 'u1', customerId: 'c1', name: 'Ahmet Yılmaz', email: 'ahmet@erlenbox.com', role: 'Admin', lastLogin: '2026-07-09T08:30:00', status: 'active' }],
+    invoices: [{ id: 'inv1', customerId: 'c1', number: 'FTR-2026-0142', date: '2026-07-01', amount: 45000, status: 'paid' }],
+    payments: [{ id: 'pay1', customerId: 'c1', date: '2026-07-02', amount: 45000, method: 'Havale', status: 'completed' }],
     aiUsage: { totalQueries: 1247, tokensUsed: 892000, costEstimate: 445, topFeatures: ['Fatura Analizi', 'Stok Tahmini'] },
-    loginHistory: [{ id: 'lh1', user: 'Ahmet Yılmaz', ip: '185.27.xxx.12', device: 'Chrome / Windows', date: '2026-07-09T08:30:00' }],
-    timeline: [{ id: 'ct1', title: 'Aylık ödeme alındı', description: '₺45.000', date: '2026-07-02T10:00:00', type: 'success' }],
+    loginHistory: [{ id: 'lh1', customerId: 'c1', user: 'Ahmet Yılmaz', ip: '185.27.xxx.12', device: 'Chrome / Windows', date: '2026-07-09T08:30:00' }],
+    timeline: [{ id: 'ct1', customerId: 'c1', title: 'Aylık ödeme alındı', description: '₺45.000', date: '2026-07-02T10:00:00', type: 'success' }],
   },
   dashboard: {
     kpis: [

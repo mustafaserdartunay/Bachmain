@@ -25,6 +25,97 @@ import {
 import { normalizePlanCode } from './billingCatalog.mjs'
 import { claimStripeEventId, verifyStripeWebhookSignature } from './stripeWebhook.mjs'
 import { sendTemplateMail } from './mail/mailService.mjs'
+import { notifyStaffAdmin, rowsFromFields } from './staffNotify.mjs'
+import { MAIL_BRAND } from './mail/mailConfig.mjs'
+
+function formatTry(amount) {
+  return `${Number(amount || 0).toLocaleString('tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}₺`
+}
+
+async function alertStaffCheckout(store, result, session, body = {}) {
+  const payment = result.payment || {}
+  const planName = result.plan?.name || payment.planCode || 'Paket'
+  const hasKontor = Boolean(payment.kontorPackageId || payment.kontorAmount || payment.kontorPriceTry)
+  const kontorLabel =
+    payment.kontorKind === 'ai_token'
+      ? 'AI token kontör'
+      : payment.kontorKind === 'efatura_kontor' || hasKontor
+        ? 'E-fatura / belge kontör'
+        : null
+  const title = hasKontor
+    ? `Paket + kontör talebi: ${session?.user?.companyName || planName}`
+    : `Paket satın alma talebi: ${session?.user?.companyName || planName}`
+  await notifyStaffAdmin(store, {
+    type: hasKontor ? 'kontor_purchase' : 'package_purchase',
+    eventLabel: hasKontor ? 'Paket + kontör satın alma' : 'Paket satın alma',
+    title,
+    body: `${session?.user?.email || payment.email || '—'} · ${formatTry(payment.amountTry)} · ${payment.method || '—'}`,
+    rows: rowsFromFields({
+      Firma: session?.user?.companyName || body.companyName || '',
+      'Ad Soyad': session?.user?.fullName || body.billingName || '',
+      Eposta: session?.user?.email || body.email || '',
+      Telefon: session?.user?.phone || body.phone || '',
+      Paket: planName,
+      Dönem: payment.period === 'year' ? 'Yıllık' : 'Aylık',
+      'Ödeme yöntemi': payment.method || '—',
+      Tutar: formatTry(payment.amountTry),
+      'Kontör paketi': payment.kontorPackageId || undefined,
+      'Kontör adedi': payment.kontorAmount || undefined,
+      'Kontör tutarı': payment.kontorPriceTry ? formatTry(payment.kontorPriceTry) : undefined,
+      'Kontör türü': kontorLabel || undefined,
+      'Vergi / TC No': payment.taxNo || body.taxNo || undefined,
+      'Fatura ünvanı': payment.billingName || undefined,
+      Kaynak: payment.source || body.source || 'billing_checkout',
+      'Ödeme ID': payment.id,
+      'Müşteri ID': payment.customerId,
+      'Hesap ID': payment.accountId || session?.user?.id || undefined,
+    }),
+    customerId: payment.customerId,
+    accountId: payment.accountId || session?.user?.id || null,
+    link: `${MAIL_BRAND.adminUrl()}/odemeler`,
+    ctaLabel: 'Ödeme taleplerini aç',
+    intro:
+      'Yeni bir paket / kontör satın alma talebi oluşturuldu. Tablodaki bilgiler yalnızca bu işlemin kendi verileridir.',
+    meta: { paymentId: payment.id, source: payment.source },
+  })
+}
+
+async function alertStaffModuleCheckout(store, result, session, body = {}) {
+  const payment = result.payment || {}
+  const modulesLabel = (result.modules || [])
+    .map((m) => m.label || m.code)
+    .filter(Boolean)
+    .join(', ')
+  await notifyStaffAdmin(store, {
+    type: 'module_purchase',
+    eventLabel: 'Modül / kontör mağazası',
+    title: `Modül satın alma: ${session?.user?.companyName || 'Firma'}`,
+    body: `${session?.user?.email || '—'} · ${formatTry(payment.amountTry)} · ${modulesLabel || 'modül'}`,
+    rows: rowsFromFields({
+      Firma: session?.user?.companyName || body.companyName || '',
+      Eposta: session?.user?.email || body.email || '',
+      Telefon: session?.user?.phone || body.phone || '',
+      Modüller: modulesLabel || (payment.moduleCodes || []).join(', '),
+      Dönem: payment.period === 'year' ? 'Yıllık' : 'Aylık',
+      'Ödeme yöntemi': payment.method || '—',
+      Tutar: formatTry(payment.amountTry),
+      Kaynak: payment.source || 'module_store',
+      'Ödeme ID': payment.id,
+      'Müşteri ID': payment.customerId,
+      'Hesap ID': payment.accountId || session?.user?.id || undefined,
+    }),
+    customerId: payment.customerId,
+    accountId: payment.accountId || session?.user?.id || null,
+    link: `${MAIL_BRAND.adminUrl()}/odemeler`,
+    ctaLabel: 'Ödeme taleplerini aç',
+    intro:
+      'Modül mağazasından yeni bir satın alma talebi geldi. Tablodaki bilgiler yalnızca bu işlemin kendi verileridir.',
+    meta: { paymentId: payment.id, moduleCodes: payment.moduleCodes },
+  })
+}
 
 function billingBankInfo() {
   return {
@@ -146,16 +237,18 @@ export async function handleBillingApi(req, res, path, body = {}) {
     if (method === 'POST' && path === 'billing/module-store/checkout') {
       const store = await loadStore()
       const session = requireTenant(req, store)
-      const result = await withStore((s) =>
-        createModuleStoreCheckout(s, {
+      const result = await withStore(async (s) => {
+        const checkout = createModuleStoreCheckout(s, {
           ...body,
           customerId: session.user.customerId,
           accountId: session.user.id,
           email: session.user.email,
           companyName: session.user.companyName,
           phone: session.user.phone,
-        }),
-      )
+        })
+        await alertStaffModuleCheckout(s, checkout, session, body)
+        return checkout
+      })
 
       const methodPay = String(body.method || 'havale').toLowerCase()
       const bank = billingBankInfo()
@@ -266,16 +359,18 @@ export async function handleBillingApi(req, res, path, body = {}) {
     if (method === 'POST' && path === 'billing/checkout') {
       const store = await loadStore()
       const session = requireTenant(req, store)
-      const result = await withStore((s) =>
-        createCheckout(s, {
+      const result = await withStore(async (s) => {
+        const checkout = createCheckout(s, {
           ...body,
           customerId: session.user.customerId,
           accountId: session.user.id,
           email: session.user.email,
           companyName: session.user.companyName,
           phone: session.user.phone,
-        }),
-      )
+        })
+        await alertStaffCheckout(s, checkout, session, body)
+        return checkout
+      })
 
       const methodPay = String(body.method || 'card').toLowerCase()
       const bank = billingBankInfo()
@@ -378,15 +473,17 @@ export async function handleBillingApi(req, res, path, body = {}) {
       body.period = period
       body.method = body.method || 'card'
       // reuse checkout
-      const result = await withStore((s) =>
-        createCheckout(s, {
+      const result = await withStore(async (s) => {
+        const checkout = createCheckout(s, {
           ...body,
           customerId: session.user.customerId,
           accountId: session.user.id,
           email: session.user.email,
           companyName: session.user.companyName,
-        }),
-      )
+        })
+        await alertStaffCheckout(s, checkout, session, body)
+        return checkout
+      })
       return sendJson(req, res, 200, {
         ok: true,
         paymentId: result.payment.id,

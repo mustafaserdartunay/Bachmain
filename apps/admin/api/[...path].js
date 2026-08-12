@@ -413,6 +413,51 @@ export default async function handler(req, res) {
             mrr: c.mrr,
             source: c.source,
           }))
+        } else if (moduleId === 'notifications') {
+          const staffOnly = (store.notifications || []).filter(
+            (n) =>
+              n &&
+              (n.audience === 'staff' ||
+                [
+                  'demo_request',
+                  'payment_request',
+                  'new_user',
+                  'package_purchase',
+                  'kontor_purchase',
+                  'module_purchase',
+                  'staff_alert',
+                ].includes(n.type)),
+          )
+          rows = staffOnly.map((n) => ({
+            id: n.id,
+            title: n.title,
+            type: n.type || 'Bildirim',
+            sent: n.createdAt
+              ? new Date(n.createdAt).toLocaleString('tr-TR')
+              : '—',
+            recipients: 'admin@bachmain.com',
+            status: 'Yönetim',
+            body: n.body || '',
+            customerId: n.customerId || null,
+            accountId: n.accountId || null,
+          }))
+          metrics = [
+            { label: 'Toplam bildirim', value: String(rows.length) },
+            {
+              label: 'Demo',
+              value: String(staffOnly.filter((n) => n.type === 'demo_request').length),
+            },
+            {
+              label: 'Satın alma',
+              value: String(
+                staffOnly.filter((n) =>
+                  ['package_purchase', 'kontor_purchase', 'module_purchase', 'payment_request'].includes(
+                    n.type,
+                  ),
+                ).length,
+              ),
+            },
+          ]
         } else {
           rows = store.modules[moduleId] || []
         }
@@ -688,13 +733,32 @@ export default async function handler(req, res) {
     }
 
     if (method === 'GET' && path === 'notifications') {
+      const staffGate = requireStaffOrReject(req, path, method)
+      if (!staffGate.ok) return sendJson(req, res, staffGate.status || 401, staffGate.body)
       const store = await loadStore()
-      return sendJson(req, res, 200, store.notifications || store.campaigns || [])
+      const staffOnly = (store.notifications || []).filter(
+        (n) =>
+          n &&
+          (n.audience === 'staff' ||
+            [
+              'demo_request',
+              'payment_request',
+              'new_user',
+              'package_purchase',
+              'kontor_purchase',
+              'module_purchase',
+              'staff_alert',
+            ].includes(n.type)),
+      )
+      return sendJson(req, res, 200, staffOnly)
     }
 
     if (method === 'POST' && path === 'notifications') {
+      const staffGate = requireStaffOrReject(req, path, method)
+      if (!staffGate.ok) return sendJson(req, res, staffGate.status || 401, staffGate.body)
       const item = {
         id: newId('ntf'),
+        audience: 'staff',
         title: body.title || 'Bildirim',
         body: body.body || body.message || '',
         type: body.type || 'announcement',

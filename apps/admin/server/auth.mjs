@@ -1,8 +1,9 @@
 import crypto from 'node:crypto'
 import { newId } from './store.mjs'
 import { entitlementPayloadForCustomer, seedBillingIfEmpty } from './subscriptionService.mjs'
-import { mailConfig } from './mail/mailConfig.mjs'
+import { mailConfig, MAIL_BRAND } from './mail/mailConfig.mjs'
 import { sendTemplateMail } from './mail/mailService.mjs'
+import { notifyStaffAdmin, rowsFromFields } from './staffNotify.mjs'
 
 const COOKIE_NAME = 'bachmain_session'
 const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 14
@@ -493,6 +494,37 @@ export async function registerAccount(store, body) {
     customerId,
     accountId: account.id,
     data: { name: fullName, verifyUrl },
+  })
+
+  await notifyStaffAdmin(store, {
+    type: 'new_user',
+    eventLabel: 'Yeni kullanıcı kaydı',
+    title: `Yeni üye: ${companyName}`,
+    body: `${fullName} · ${email}${requirePayment ? ' · ödeme bekliyor' : ' · deneme'}`,
+    rows: rowsFromFields({
+      'Ad Soyad': fullName,
+      Firma: companyName,
+      Eposta: email,
+      Telefon: primaryPhone,
+      'Vergi / TC No': taxNo,
+      'Vergi Dairesi': taxOffice,
+      Adres: address,
+      İl: city,
+      İlçe: district,
+      'Firma Ölçeği': companySize || undefined,
+      Plan: account.plan,
+      Kaynak: account.source,
+      Durum: requirePayment ? 'Ödeme bekliyor' : 'Deneme',
+      'Hesap ID': account.id,
+      'Müşteri ID': customerId,
+    }),
+    customerId,
+    accountId: account.id,
+    link: `${MAIL_BRAND.adminUrl()}/uyeler/${account.id}`,
+    ctaLabel: 'Üye hesabını aç',
+    intro:
+      'bachmain.com üzerinden yeni bir üyelik oluşturuldu. Tablodaki bilgiler yalnızca bu kaydın kendi verileridir.',
+    meta: { source: account.source, requirePayment },
   })
 
   const token = signToken({

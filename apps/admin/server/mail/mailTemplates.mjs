@@ -114,6 +114,26 @@ function strongLine(label, value) {
   return `<p style="margin:0 0 8px"><span style="color:${MAIL_BRAND.muted}">${escapeHtml(label)}:</span> <strong>${escapeHtml(value)}</strong></p>`
 }
 
+/** Corporate form-table block for staff admin alerts */
+function formTable(rows = []) {
+  const list = Array.isArray(rows) ? rows.filter((r) => r && r.label) : []
+  if (!list.length) return ''
+  const body = list
+    .map(
+      (r, i) => `<tr style="background:${i % 2 === 0 ? '#ffffff' : '#f8fafc'}">
+      <td style="padding:11px 14px;border-bottom:1px solid ${MAIL_BRAND.border};color:${MAIL_BRAND.muted};width:38%;font-size:12px;font-weight:700;letter-spacing:0.01em;vertical-align:top">${escapeHtml(r.label)}</td>
+      <td style="padding:11px 14px;border-bottom:1px solid ${MAIL_BRAND.border};color:${MAIL_BRAND.ink};font-size:14px;font-weight:700;vertical-align:top;word-break:break-word">${escapeHtml(r.value ?? '—')}</td>
+    </tr>`,
+    )
+    .join('')
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:18px 0 8px;border:1px solid ${MAIL_BRAND.border};border-radius:12px;overflow:hidden;border-collapse:separate">
+    <tr>
+      <td colspan="2" style="padding:12px 14px;background:${MAIL_BRAND.primary};color:#ffffff;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase">İşlem detayları</td>
+    </tr>
+    ${body}
+  </table>`
+}
+
 /** @type {Record<string, (data: Record<string, any>) => {subject:string,html:string,text:string}>} */
 export const MAIL_TEMPLATES = {
   welcome(data) {
@@ -241,6 +261,21 @@ export const MAIL_TEMPLATES = {
       preview: data.subject || 'Yeni destek talebi',
       bodyHtml: `${p('CRM üzerinden yeni bir destek talebi oluşturuldu.')}${strongLine('Kategori', data.category || '—')}${strongLine('Konu', data.subject || '—')}${strongLine('Ticket', data.ticketId || '—')}${strongLine('Firma', data.customer || '—')}${strongLine('Kullanıcı', data.contactName || '—')}${strongLine('E-posta', data.contactEmail || '—')}${strongLine('Telefon', data.contactPhone || '—')}<p style="margin:12px 0;padding:12px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;white-space:pre-wrap">${escapeHtml(data.message || '')}</p>`,
       cta: { href: data.ticketUrl || `${MAIL_BRAND.adminUrl()}/destek`, label: 'Talebi aç' },
+    })
+  },
+  /**
+   * Staff ops alert → admin@bachmain.com
+   * Logo + kurumsal form/tablo; yalnızca bu işlemin satırları.
+   */
+  admin_event_alert(data) {
+    const title = data.title || 'Yönetim bildirimi'
+    return layout({
+      title,
+      preview: data.preview || title,
+      bodyHtml: `${p(data.intro || 'BACHMAIN yönetim paneline yeni bir işlem düştü.')}${data.eventType ? strongLine('İşlem türü', data.eventType) : ''}${formTable(data.rows)}${p('Bu e-posta yalnızca yönetim ekibine gönderilir; başka firma bilgisi içermez.')}`,
+      cta: data.ctaUrl
+        ? { href: data.ctaUrl, label: data.ctaLabel || 'Yönetim panelinde aç' }
+        : { href: MAIL_BRAND.adminUrl(), label: 'Yönetim paneli' },
     })
   },
   ticket_replied(data) {

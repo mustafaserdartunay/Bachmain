@@ -75,11 +75,22 @@ export async function saveStore(data) {
   return saveToFile(data)
 }
 
+let storeWriteChain = Promise.resolve()
+
 export async function withStore(mutator) {
-  const data = await loadStore()
-  const result = await mutator(data)
-  await saveStore(data)
-  return result
+  // Serialize mutations to avoid last-write-wins cross-tenant corruption.
+  const run = storeWriteChain.then(async () => {
+    const data = await loadStore()
+    const result = await mutator(data)
+    await saveStore(data)
+    return result
+  })
+  // Keep chain alive even if a mutator fails
+  storeWriteChain = run.then(
+    () => undefined,
+    () => undefined,
+  )
+  return run
 }
 
 export function newId(prefix = 'id') {
