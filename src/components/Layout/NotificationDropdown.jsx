@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Check, ChevronDown, CreditCard } from 'lucide-react'
+import { Bell, Check, ChevronDown, CreditCard, LifeBuoy } from 'lucide-react'
 import { fetchAccountNotifications } from '../../utils/platformApi'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
@@ -16,6 +16,8 @@ const kindIcons = {
   trial_extended: CreditCard,
   package_extended: CreditCard,
   support_renewed: CreditCard,
+  support_ticket_ack: LifeBuoy,
+  support: LifeBuoy,
   account_activated: CreditCard,
   account_suspended: CreditCard,
 }
@@ -30,8 +32,13 @@ function urgencyBadge(item) {
   if (item.rawKind === 'package_extended' || item.rawKind === 'trial_extended') {
     return { label: 'UZATMA', className: 'bg-sky-500/20 text-sky-300' }
   }
-  if (item.rawKind === 'support_renewed') {
-    return { label: 'DESTEK', className: 'bg-violet-500/20 text-violet-300' }
+  if (
+    item.rawKind === 'support_renewed' ||
+    item.rawKind === 'support_ticket_ack' ||
+    item.type === 'support' ||
+    item.kind === 'support'
+  ) {
+    return { label: 'DESTEK', className: 'bg-sky-500/20 text-sky-300' }
   }
   return { label: 'ÜYELİK', className: 'bg-sky-500/20 text-sky-300' }
 }
@@ -39,20 +46,23 @@ function urgencyBadge(item) {
 function mapAdminNotifications(items) {
   if (!Array.isArray(items)) return []
   return items
-    .map((n) => ({
-      id: n.id || `membership-${n.createdAt}`,
-      kind: 'membership',
-      type: 'membership',
-      rawKind: n.kind || n.type,
-      entityId: n.id,
-      title: n.title || 'Üyelik bildirimi',
-      subtitle: n.body || '',
-      detail: n.endDate ? `Bitiş: ${n.endDate}` : '',
-      date: String(n.createdAt || '').slice(0, 10),
-      sortAt: n.sortAt || n.createdAt || '',
-      urgency: 'membership',
-      link: n.link || '/hesap/lisans',
-    }))
+    .map((n) => {
+      const isSupport = n.type === 'support' || String(n.kind || '').startsWith('support_ticket')
+      return {
+        id: n.id || `${isSupport ? 'support' : 'membership'}-${n.createdAt}`,
+        kind: isSupport ? 'support' : 'membership',
+        type: isSupport ? 'support' : 'membership',
+        rawKind: n.kind || n.type,
+        entityId: n.id,
+        title: n.title || (isSupport ? 'Destek bildirimi' : 'Üyelik bildirimi'),
+        subtitle: n.body || '',
+        detail: n.endDate ? `Bitiş: ${n.endDate}` : '',
+        date: String(n.createdAt || '').slice(0, 10),
+        sortAt: n.sortAt || n.createdAt || '',
+        urgency: isSupport ? 'support' : 'membership',
+        link: n.link || (isSupport ? '/hesap' : '/hesap/lisans'),
+      }
+    })
     .sort((a, b) => String(b.sortAt || b.date || '').localeCompare(String(a.sortAt || a.date || '')))
 }
 
@@ -85,11 +95,14 @@ function pruneReadMap(map) {
 function isAdminNotification(item) {
   if (!item) return false
   if (item.kind === 'membership' || item.type === 'membership') return true
+  if (item.kind === 'support' || item.type === 'support') return true
   const raw = String(item.rawKind || item.kind || '')
   return [
     'trial_extended',
     'package_extended',
     'support_renewed',
+    'support_ticket_ack',
+    'support',
     'account_activated',
     'account_suspended',
     'membership',
@@ -164,9 +177,14 @@ export default function NotificationDropdown() {
     }
     loadMembership()
     const interval = setInterval(loadMembership, 60000)
+    const onRefresh = () => {
+      loadMembership()
+    }
+    window.addEventListener('bach:notifications-refresh', onRefresh)
     return () => {
       cancelled = true
       clearInterval(interval)
+      window.removeEventListener('bach:notifications-refresh', onRefresh)
     }
   }, [])
 

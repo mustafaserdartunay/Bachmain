@@ -8,21 +8,42 @@ import { sendTemplateMail } from './mail/mailService.mjs'
 import { MAIL_BRAND } from './mail/mailConfig.mjs'
 
 export const SUPPORT_CATEGORIES = [
-  { id: 'not', label: 'Not' },
-  { id: 'sikayet', label: 'Şikayet' },
   { id: 'destek', label: 'Destek' },
   { id: 'talep', label: 'Talep' },
-  { id: 'bilgi', label: 'Bilgi' },
+  { id: 'sikayet', label: 'Şikayet' },
+  { id: 'not', label: 'Not' },
 ]
 
 const CATEGORY_LABELS = Object.fromEntries(SUPPORT_CATEGORIES.map((c) => [c.id, c.label]))
 
 const PRIORITY_BY_CATEGORY = {
-  sikayet: 'high',
   destek: 'medium',
   talep: 'medium',
-  bilgi: 'low',
+  sikayet: 'high',
   not: 'low',
+}
+
+const ACK_BY_CATEGORY = {
+  destek: {
+    title: 'Destek talebiniz alındı',
+    body: 'Destek talebiniz alınmıştır. Destek ekibimiz en kısa sürede talebinizle ilgilenecektir. Teşekkür ederiz.',
+  },
+  talep: {
+    title: 'Talebiniz alındı',
+    body: 'Talebiniz alınmıştır. Destek ekibimiz en kısa sürede talebinizle ilgilenecektir. Teşekkür ederiz.',
+  },
+  sikayet: {
+    title: 'Şikayetiniz alındı',
+    body: 'Şikayetiniz alınmıştır. Destek ekibimiz en kısa sürede konuyu inceleyecektir. Teşekkür ederiz.',
+  },
+  not: {
+    title: 'Notunuz alındı',
+    body: 'Notunuz alınmıştır. Destek ekibimiz en kısa sürede değerlendirecektir. Teşekkür ederiz.',
+  },
+}
+
+function acknowledgmentFor(category) {
+  return ACK_BY_CATEGORY[category] || ACK_BY_CATEGORY.destek
 }
 
 const STATUS_TR = {
@@ -79,17 +100,34 @@ function resolveRequester(store, req, body) {
   const token = getBearerOrCookieToken(req)
   const session = token ? getAccountFromToken(store, token) : null
   const user = session?.user || null
+  const account = session?.account || null
   const displayName =
-    String(body.displayName || body.name || user?.fullName || '').trim() || 'Kullanıcı'
-  const email = String(body.email || user?.email || '').trim().toLowerCase() || ''
+    String(body.displayName || body.name || user?.fullName || account?.fullName || '').trim() ||
+    'Kullanıcı'
+  const email =
+    String(body.email || user?.email || account?.email || '')
+      .trim()
+      .toLowerCase() || ''
   const companyName =
-    String(body.companyName || user?.companyName || '').trim() || '—'
-  const phone = String(body.phone || user?.phone || '').trim()
+    String(body.companyName || user?.companyName || account?.companyName || '').trim() || '—'
+  const phone = String(body.phone || user?.phone || account?.phone || '').trim()
   const tenantCode = String(
     body.tenantCode || user?.tenantCode || session?.companySession?.tenantCode || '',
   ).trim()
+  const accountId = user?.id || account?.id || null
+  const resolvedAccount =
+    accountId && Array.isArray(store.accounts)
+      ? store.accounts.find((a) => a.id === accountId)
+      : account
+  const customerId =
+    user?.customerId ||
+    account?.customerId ||
+    resolvedAccount?.customerId ||
+    session?.companySession?.customerId ||
+    null
   return {
-    accountId: user?.id || session?.account?.id || null,
+    accountId,
+    customerId,
     displayName,
     email,
     companyName,
@@ -189,6 +227,23 @@ export async function createSupportTicketFromRequest(store, req, body = {}) {
   })
   store.dashboard.recentActivities = store.dashboard.recentActivities.slice(0, 40)
 
+  const ack = acknowledgmentFor(category)
+  if (!Array.isArray(store.notifications)) store.notifications = []
+  store.notifications.unshift({
+    id: newId('ntf'),
+    title: ack.title,
+    body: ack.body,
+    type: 'support',
+    kind: 'support_ticket_ack',
+    accountId: requester.accountId || null,
+    customerId: requester.customerId || null,
+    ticketId: ticket.id,
+    category,
+    link: '/hesap',
+    createdAt: now,
+  })
+  store.notifications = store.notifications.slice(0, 2000)
+
   const supportEmail = MAIL_BRAND.supportEmail()
   const adminUrl = `${MAIL_BRAND.adminUrl()}/destek/${ticket.id}`
 
@@ -225,11 +280,15 @@ export async function createSupportTicketFromRequest(store, req, body = {}) {
         subject: ticket.subject,
         ticketId: ticket.id,
         ticketUrl: adminUrl,
+        category: categoryLabel,
+        ackTitle: ack.title,
+        ackMessage: ack.body,
       },
       meta: { ticketId: ticket.id },
     })
   }
 
+  ticket.acknowledgment = ack
   return ticket
 }
 

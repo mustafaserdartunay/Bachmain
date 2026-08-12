@@ -9,12 +9,14 @@ import { ensureUserProfile } from '../../utils/userProfile'
 import { readCompanySettings } from '../../utils/companySettings'
 
 const CATEGORIES = [
-  { id: 'not', label: 'Not' },
-  { id: 'sikayet', label: 'Şikayet' },
   { id: 'destek', label: 'Destek' },
   { id: 'talep', label: 'Talep' },
-  { id: 'bilgi', label: 'Bilgi' },
+  { id: 'sikayet', label: 'Şikayet' },
+  { id: 'not', label: 'Not' },
 ]
+
+const DEFAULT_ACK =
+  'Talebiniz alınmıştır. Destek ekibimiz en kısa sürede talebinizle ilgilenecektir. Teşekkür ederiz.'
 
 export default function HeaderSupport() {
   const { open, setOpen, toggle } = useHeaderPopover('support')
@@ -60,12 +62,16 @@ export default function HeaderSupport() {
       setSubject('')
       setMessage('')
       setCategory('destek')
+      const ack = result?.acknowledgment?.body || result?.ackMessage || DEFAULT_ACK
       setFeedback({
         tone: 'success',
-        text: result?.ticket?.id
-          ? `Talebiniz alındı (#${result.ticket.id}). Destek ekibi dönüş yapacak.`
-          : 'Talebiniz alındı. Destek ekibi dönüş yapacak.',
+        text: ack,
       })
+      try {
+        window.dispatchEvent(new CustomEvent('bach:notifications-refresh'))
+      } catch {
+        /* ignore */
+      }
     } catch (error) {
       setFeedback({
         tone: 'error',
@@ -119,9 +125,6 @@ export default function HeaderSupport() {
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                     Destek
-                  </p>
-                  <p className="text-[11px] font-normal text-[var(--muted)]">
-                    Not, şikayet, talep ve bilgi
                   </p>
                 </div>
                 <button
@@ -183,7 +186,7 @@ export default function HeaderSupport() {
                     rows={5}
                     maxLength={4000}
                     placeholder="Detayları yazın…"
-                    className="form-input w-full resize-y !px-2.5 !py-2 text-[13px] leading-snug"
+                    className="form-input support-message-input w-full resize-y !rounded-lg !px-2.5 !py-2 text-[13px] leading-snug"
                     required
                   />
                 </label>
@@ -208,7 +211,7 @@ export default function HeaderSupport() {
                 <button
                   type="submit"
                   disabled={sending}
-                  className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#60a5fa] via-[#2563eb] to-[#1d4ed8] text-[13px] font-bold text-white shadow-sm transition hover:brightness-105 disabled:opacity-60"
+                  className="header-support-submit inline-flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#60a5fa] via-[#2563eb] to-[#1d4ed8] text-[13px] font-bold text-white shadow-sm transition hover:brightness-105 disabled:opacity-60"
                 >
                   <Send className="h-4 w-4" strokeWidth={2.25} />
                   {sending ? 'Gönderiliyor…' : 'Gönder'}

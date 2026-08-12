@@ -334,7 +334,13 @@ async function handle(req, res, url) {
         const result = await withStore(async (store) =>
           createSupportTicketFromRequest(store, req, body),
         )
-        return sendJson(req, res, 201, { ok: true, ticket: result, ...result })
+        return sendJson(req, res, 201, {
+          ok: true,
+          ticket: result,
+          acknowledgment: result?.acknowledgment || null,
+          ackMessage: result?.acknowledgment?.body || null,
+          ...result,
+        })
       } catch (error) {
         if (error?.message === 'MESSAGE_REQUIRED') {
           return sendJson(req, res, 400, { error: 'Mesaj zorunludur' })

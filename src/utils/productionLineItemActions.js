@@ -134,20 +134,10 @@ export function createProductionLineItemActions({
       }
       if (patch.producedQuantity !== undefined) {
         const produced = Math.max(0, Number(patch.producedQuantity) || 0)
-        const delivered = Math.max(0, Number(nextRow.deliveredQuantity) || 0)
-        if (delivered > produced) {
-          window.alert('Depoya gönderilen adet, üretim adedinden fazla olamaz.')
-          return row
-        }
         nextRow.producedUpdatedAt = produced > 0 ? now : ''
       }
       if (patch.deliveredQuantity !== undefined) {
         const delivered = Math.max(0, Number(patch.deliveredQuantity) || 0)
-        const produced = Math.max(0, Number(nextRow.producedQuantity) || 0)
-        if (delivered > produced) {
-          window.alert('Depoya gönderilen adet, üretim adedinden fazla olamaz.')
-          return row
-        }
         nextRow.deliveredQuantity = delivered
         nextRow.deliveredQuantityManual = true
         nextRow.deliveredUpdatedAt = delivered > 0 ? now : ''

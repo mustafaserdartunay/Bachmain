@@ -457,8 +457,19 @@ html.space #root {
 .btn-primary,
 .btn-primary *,
 .btn-success,
-.btn-success * {
+.btn-success *,
+.header-popover-panel button.header-support-submit,
+.header-popover-panel button.header-support-submit *,
+.app-dropdown-portal button.header-support-submit,
+.app-dropdown-portal button.header-support-submit * {
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Destek mesaj alanı — hafif köşe (global textarea 18px elipsini kır) */
+.header-popover-panel textarea.form-input.support-message-input,
+.app-responsive .header-popover-panel textarea.form-input.support-message-input {
+  border-radius: 8px !important;
 }
 
 /* Header quick action label — yf scale/weight (white kept by rule above) */

@@ -365,34 +365,6 @@ export default function ProductionPage() {
               },
             },
             {
-              id: 'productionStart',
-              header: 'ÜRETİM TARİHİ',
-              sortable: true,
-              align: 'center',
-              accessorKey: 'productionStart',
-              className: 'w-[8.5rem]',
-              getSortValue: (job) => {
-                const timeline = getProductionJobTimelineDates(
-                  job,
-                  ensureLineItems(job, workflowStages),
-                  { orders, quotes },
-                )
-                return timeline.productionStartDate || ''
-              },
-              cell: (job) => {
-                const timeline = getProductionJobTimelineDates(
-                  job,
-                  ensureLineItems(job, workflowStages),
-                  { orders, quotes },
-                )
-                return (
-                  <span className="block text-center tabular-nums text-[14px] font-semibold text-[var(--muted)]">
-                    {formatShortDate(timeline.productionStartDate)}
-                  </span>
-                )
-              },
-            },
-            {
               id: 'productionStartedAt',
               header: 'ÜRETİME BAŞLAMA',
               sortable: true,

@@ -243,13 +243,14 @@ export async function handleAuthApi(req, res, path, body = {}) {
     const customerId = session.user?.customerId || session.account?.customerId || null
     const items = (store.notifications || [])
       .filter((n) => {
-        if (!n || n.type !== 'membership') return false
-        if (n.audience === 'staff') return false
-        // Firma skopu zorunlu: başka firmanın membership satırı asla dönmez
+        if (!n || n.audience === 'staff') return false
+        const allowedType = n.type === 'membership' || n.type === 'support'
+        if (!allowedType) return false
+        // Firma skopu zorunlu: başka firmanın satırı asla dönmez
         if (n.customerId) {
           return Boolean(customerId) && n.customerId === customerId
         }
-        // customerId yoksa yalnızca aynı accountId ve customerId eşleşmesi yoksa reddet
+        // customerId yoksa yalnızca aynı accountId
         if (accountId && n.accountId === accountId && !n.customerId) {
           return true
         }
@@ -264,7 +265,7 @@ export async function handleAuthApi(req, res, path, body = {}) {
         type: n.type || 'membership',
         endDate: n.endDate || null,
         daysAdded: n.daysAdded || null,
-        link: n.link || '/hesap/lisans',
+        link: n.link || (n.type === 'support' ? '/hesap' : '/hesap/lisans'),
         createdAt: n.createdAt,
         sortAt: n.createdAt,
       }))

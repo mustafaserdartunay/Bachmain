@@ -248,10 +248,13 @@ export const MAIL_TEMPLATES = {
     })
   },
   ticket_new(data) {
+    const ack =
+      data.ackMessage ||
+      'Talebiniz alınmıştır. Destek ekibimiz en kısa sürede talebinizle ilgilenecektir. Teşekkür ederiz.'
     return layout({
-      title: 'Yeni destek talebi',
-      preview: data.subject || 'Ticket oluşturuldu',
-      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('Destek talebiniz alındı. Ekibimiz en kısa sürede dönüş yapacak.')}${strongLine('Konu', data.subject || '—')}${strongLine('Ticket', data.ticketId || '—')}`,
+      title: data.ackTitle || 'Talebiniz alındı',
+      preview: data.subject || 'Destek talebiniz alındı',
+      bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p(ack)}${strongLine('Konu başlığı', data.category || '—')}${strongLine('Konu', data.subject || '—')}${strongLine('Ticket', data.ticketId || '—')}`,
       cta: { href: data.ticketUrl || `${MAIL_BRAND.appUrl()}/destek`, label: 'Talebi gör' },
     })
   },

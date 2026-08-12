@@ -5,6 +5,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Undo2,
 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
@@ -42,16 +43,6 @@ function isEmptyPartialRow(row) {
   )
 }
 
-function validateDeliveredAgainstProduced(producedQuantity, deliveredQuantity) {
-  const produced = Math.max(0, Number(producedQuantity) || 0)
-  const delivered = Math.max(0, Number(deliveredQuantity) || 0)
-  if (delivered > produced) {
-    window.alert('Depoya gönderilen adet, üretim adedinden fazla olamaz.')
-    return false
-  }
-  return true
-}
-
 /**
  * Unified product + partial-delivery table with row MoreMenu actions.
  */
@@ -75,9 +66,11 @@ export default function ProductionLineDeliveryPanel({
   onAddQuantityRow,
   onRemoveQuantityRow,
   onSendToDepo,
+  onUndoSendToDepo,
   onEditRow,
 }) {
   const [pendingDepoRowId, setPendingDepoRowId] = useState(null)
+  const [pendingUndoDepoRowId, setPendingUndoDepoRowId] = useState(null)
 
   const flatRows = []
   lineItems.forEach((line) => {
@@ -217,7 +210,6 @@ export default function ProductionLineDeliveryPanel({
               0,
             )
             const producedVariance = totalProduced - orderQty
-            const producedQty = Math.max(0, Number(row.producedQuantity) || 0)
 
             return (
               <tr
@@ -273,8 +265,6 @@ export default function ProductionLineDeliveryPanel({
                     value={row.producedQuantity}
                     onChange={(value) => {
                       const nextProduced = Math.round(Number(value) || 0)
-                      const delivered = Math.max(0, Number(row.deliveredQuantity) || 0)
-                      if (!validateDeliveredAgainstProduced(nextProduced, delivered)) return
                       onQuantityRowChange?.(line, row.id, {
                         producedQuantity: nextProduced,
                       })
@@ -294,7 +284,6 @@ export default function ProductionLineDeliveryPanel({
                     allowEmpty
                     onChange={(value) => {
                       const nextDelivered = Math.round(Number(value) || 0)
-                      if (!validateDeliveredAgainstProduced(producedQty, nextDelivered)) return
                       onQuantityRowChange?.(line, row.id, {
                         deliveredQuantity: nextDelivered,
                         deliveredQuantityManual: true,
@@ -371,10 +360,39 @@ export default function ProductionLineDeliveryPanel({
                         onCancel={() => setPendingDepoRowId(null)}
                       />
                     ) : row.depoItemId ? (
-                      <span className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-2 text-[11px] font-bold text-emerald-700">
-                        <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
-                        Depoya Gönderildi
-                      </span>
+                      pendingUndoDepoRowId === row.id ? (
+                        <DeleteConfirmPopover
+                          title="Depo gönderimi geri alınsın mı?"
+                          description="Depo kaydı kaldırılır; satır yeniden düzenlenebilir."
+                          confirmLabel="Geri al"
+                          cancelLabel="Vazgeç"
+                          inline
+                          onConfirm={() => {
+                            onUndoSendToDepo?.(line, row.id)
+                            setPendingUndoDepoRowId(null)
+                          }}
+                          onCancel={() => setPendingUndoDepoRowId(null)}
+                        />
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-2 text-[11px] font-bold text-emerald-700">
+                            <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+                            Depoya Gönderildi
+                          </span>
+                          {typeof onUndoSendToDepo === 'function' ? (
+                            <button
+                              type="button"
+                              disabled={columnsLocked}
+                              onClick={() => setPendingUndoDepoRowId(row.id)}
+                              className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl disabled:opacity-50"
+                              title="Depo gönderimini geri al"
+                              aria-label="Depo gönderimini geri al"
+                            >
+                              <Undo2 className="h-4 w-4" strokeWidth={2.25} />
+                            </button>
+                          ) : null}
+                        </span>
+                      )
                     ) : (
                       <button
                         type="button"
