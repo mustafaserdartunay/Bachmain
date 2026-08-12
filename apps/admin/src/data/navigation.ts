@@ -214,7 +214,6 @@ export const navItems: NavItem[] = [
     label: 'Destek / Ticket',
     path: '/destek',
     icon: Headphones,
-    badge: 12,
     group: 'Destek',
   },
   {
@@ -222,7 +221,6 @@ export const navItems: NavItem[] = [
     label: 'Canlı Destek',
     path: '/canli-destek',
     icon: MessageCircle,
-    badge: 3,
     group: 'Destek',
   },
   {
@@ -230,7 +228,6 @@ export const navItems: NavItem[] = [
     label: 'Bildirim Merkezi',
     path: '/bildirimler',
     icon: Bell,
-    badge: 5,
     group: 'Destek',
   },
   {

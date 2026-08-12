@@ -34,6 +34,12 @@ import { handleSocialConnections } from '../server/socialConnections.mjs'
 import { handlePlatformAdminApi } from '../server/platformAdminRoutes.mjs'
 import { handleSecurityApi } from '../server/securityRoutes.mjs'
 import { handleAiosApi } from '../server/aiosRoutes.mjs'
+import {
+  buildDashboardPayload,
+  buildServerMonitorRows,
+  loadLiveSupportRows,
+} from '../server/systemMetrics.mjs'
+import { buildSupportModuleRows } from '../server/supportRoutes.mjs'
 
 function getPath(req) {
   // Vercel catch-all: /api/[...path] may expose segments via query.path
@@ -291,69 +297,17 @@ export default async function handler(req, res) {
 
     if (method === 'GET' && path === 'dashboard') {
       const store = await loadStore()
-      const customers = store.customers || []
-      const tickets = store.supportTickets || []
-      const paymentRequests = store.paymentRequests || []
-      const expiringLicenses = customers
-        .filter((c) => ['active', 'trial'].includes(c.status))
-        .filter(
-          (c) =>
-            c.licenseExpiry && new Date(c.licenseExpiry) < new Date(Date.now() + 90 * 86400000),
-        )
-        .slice(0, 5)
-      const openTickets = tickets
-        .filter((t) => !['resolved', 'closed'].includes(t.status))
-        .slice(0, 8)
-      const webSignups = customers.filter((c) => c.source === 'self_signup').length
+      const extras = await buildServerMonitorRows()
+      const payload = buildDashboardPayload(store)
       return sendJson(req, res, 200, {
-        ...(store.dashboard || {}),
-        expiringLicenses,
-        openTickets,
-        pendingPayments: (store.dashboard?.pendingPayments || []).concat(
-          paymentRequests
-            .filter((p) => p.status === 'pending')
-            .slice(0, 8)
-            .map((p) => ({
-              id: p.id,
-              customer: p.companyName || p.email || 'Web üye',
-              amount: 0,
-              dueDate: (p.createdAt || '').slice(0, 10),
-              status: 'Bekleyen',
-            })),
-        ),
-        recentActivities: [
-          ...customers
-            .filter((c) => c.source === 'self_signup')
-            .slice(0, 5)
-            .map((c) => ({
-              id: `act_${c.id}`,
-              title: 'Yeni web üyeliği',
-              description: `${c.company} · ${c.plan} · ${c.email}`,
-              date: c.createdAt,
-              type: 'success',
-              user: 'Sistem',
-            })),
-          ...(store.dashboard?.recentActivities || []),
-        ].slice(0, 12),
-        kpis: [
-          { label: 'Toplam Müşteri', value: String(customers.length), change: '', trend: 'up' },
-          { label: 'Web Üyelik', value: String(webSignups), change: '', trend: 'up' },
-          {
-            label: 'Demo Kullanıcısı',
-            value: String(
-              customers.filter((c) => c.source === 'demo_request' || c.source === 'demo_converted')
-                .length,
-            ),
-            change: '',
-            trend: 'up',
-          },
-          {
-            label: 'Ödeme Talebi',
-            value: String(paymentRequests.filter((p) => p.status === 'pending').length),
-            change: '',
-            trend: 'neutral',
-          },
-        ],
+        ...payload,
+        systemHealth: extras.map((row) => ({
+          name: row.name,
+          status:
+            row.status === 'Sağlıklı' ? 'healthy' : row.status === 'Kritik' ? 'down' : 'warning',
+          uptime: '—',
+          latency: row.latency || '—',
+        })),
       })
     }
 
@@ -400,7 +354,7 @@ export default async function handler(req, res) {
         } else if (moduleId === 'payment-requests' || moduleId === 'payments') {
           // Real payment requests take priority for "payments" list when present
           const real = buildPaymentRequestRows(store)
-          rows = real.length ? real : store.modules.payments || []
+          rows = real
           metrics = buildMembershipMetrics(store).slice(3, 5)
         } else if (moduleId === 'subscriptions') {
           rows = buildCustomerRows(store).map((c, i) => ({
@@ -458,6 +412,12 @@ export default async function handler(req, res) {
               ),
             },
           ]
+        } else if (moduleId === 'support') {
+          rows = buildSupportModuleRows(store)
+        } else if (moduleId === 'live-support') {
+          rows = await loadLiveSupportRows()
+        } else if (moduleId === 'server') {
+          rows = await buildServerMonitorRows()
         } else {
           rows = store.modules[moduleId] || []
         }

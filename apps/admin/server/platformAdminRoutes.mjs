@@ -6,8 +6,6 @@ import crypto from 'node:crypto'
 import { loadStore, withStore, newId } from './store.mjs'
 import { sendJson } from './authRoutes.mjs'
 import { getStaffSession, staffAuthEnabled } from './staffAuth.mjs'
-import { hasDatabase } from './db.mjs'
-import { envHealthSnapshot } from './assertEnv.mjs'
 import { deleteMembershipAccount } from './emailChange.mjs'
 import {
   activatePlanDirect,
@@ -19,6 +17,8 @@ import { displayPlanName, normalizePlanCode } from './billingCatalog.mjs'
 import { hashPassword, requestPasswordReset } from './auth.mjs'
 import { mailConfig } from './mail/mailConfig.mjs'
 import { sendTemplateMail, getMailStatus } from './mail/mailService.mjs'
+import { collectSystemHealthExtras } from './systemMetrics.mjs'
+import { purgeDemoData } from './purgeDemoData.mjs'
 
 function requireStaffOrFail(req, res) {
   const session = getStaffSession(req)
@@ -311,7 +311,7 @@ export async function handlePlatformAdminApi(req, res, path, body = {}) {
     const accounts = store.accounts || []
     const customers = store.customers || []
     const mail = getMailStatus(store)
-    const env = envHealthSnapshot()
+    const extras = await collectSystemHealthExtras()
     const trialUsers = customers.filter((c) =>
       ['trial', 'trialing'].includes(String(c.status || c.subscriptionStatus || '')),
     ).length
@@ -326,31 +326,63 @@ export async function handlePlatformAdminApi(req, res, path, body = {}) {
 
     sendJson(req, res, 200, {
       onlineUsers,
-      cpuPercent: 0,
-      ramPercent: 0,
-      storagePercent: 0,
+      cpuPercent: extras.cpuPercent,
+      ramPercent: extras.ramPercent,
+      storagePercent: extras.storagePercent,
+      hostname: extras.hostname,
+      platform: extras.platform,
+      loadAverage: extras.loadAverage,
+      memory: extras.memory,
       database: {
-        status: hasDatabase() ? 'healthy' : 'degraded',
-        latencyMs: hasDatabase() ? 8 : 0,
+        status: extras.database.status,
+        latencyMs: extras.database.latencyMs,
+        detail: extras.database.detail,
       },
-      api: { status: 'healthy', latencyMs: 12 },
+      api: {
+        status: extras.api.status,
+        latencyMs: extras.api.latencyMs,
+        detail: extras.api.detail,
+      },
       emailQueue: {
         status: mail.configured ? (mail.queuePending > 50 ? 'degraded' : 'healthy') : 'degraded',
         pending: mail.queuePending || 0,
       },
       redis: {
-        status: env.checks?.redis ? 'healthy' : 'degraded',
-        latencyMs: env.checks?.redis ? 3 : 0,
+        status: extras.redis.status,
+        latencyMs: extras.redis.latencyMs,
+        detail: extras.redis.detail,
       },
+      github: extras.github,
+      vercel: extras.vercel,
       ticketsOpen: openTickets,
       revenueMrr: customers.reduce((sum, c) => sum + (Number(c.mrr) || 0), 0),
       trialUsers,
       expiredUsers,
       paidUsers,
+      memberCount: accounts.length,
+      customerCount: customers.length,
       sampledAt: new Date().toISOString(),
       mock: false,
       source: '/v1/admin/system-health',
-    });
+    })
+    return true
+  }
+
+  // POST /v1/admin/purge-demo — strip seed/demo rows; keep real membership accounts
+  if (method === 'POST' && path === 'v1/admin/purge-demo') {
+    const result = await withStore((store) => {
+      ensureAudit(store)
+      const purged = purgeDemoData(store)
+      pushAudit(store, {
+        actor,
+        action: 'store.purge_demo',
+        target: 'app_state',
+        ip,
+        meta: purged,
+      })
+      return purged
+    })
+    sendJson(req, res, 200, { ok: true, ...result })
     return true
   }
 

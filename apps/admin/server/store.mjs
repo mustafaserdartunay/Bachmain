@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { seedData } from './seed.mjs'
 import { hasDatabase, loadPayload, savePayload, ensureSchema } from './db.mjs'
+import { needsDemoPurge, purgeDemoData } from './purgeDemoData.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DB_FILE = process.env.VERCEL
@@ -37,6 +38,18 @@ async function saveToFile(data) {
   return data
 }
 
+async function scrubDemoIfNeeded(data) {
+  if (!needsDemoPurge(data)) return data
+  const result = purgeDemoData(data)
+  if (result.changed) {
+    console.info(
+      `[bachmain] demo data purged: customers -${result.removedCustomers}, tickets -${result.removedTickets}`,
+    )
+    await saveStore(data)
+  }
+  return data
+}
+
 export async function loadStore() {
   warnIfEphemeral()
   let data
@@ -52,6 +65,9 @@ export async function loadStore() {
   } else {
     data = await loadFromFile()
   }
+
+  data = await scrubDemoIfNeeded(data)
+
   try {
     const { seedBillingIfEmpty } = await import('./subscriptionService.mjs')
     seedBillingIfEmpty(data)

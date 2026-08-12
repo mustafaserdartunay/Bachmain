@@ -6,6 +6,7 @@ import { getStaffSession, staffAuthEnabled } from './staffAuth.mjs'
 import { loadStore } from './store.mjs'
 import { hasDatabase } from './db.mjs'
 import { envHealthSnapshot, validateAdminEnv } from './assertEnv.mjs'
+import { collectSystemHealthExtras } from './systemMetrics.mjs'
 
 function requireStaffOrFail(req, res) {
   const session = getStaffSession(req)
@@ -37,6 +38,7 @@ export async function handleSecurityApi(req, res, path) {
     const envValidation = validateAdminEnv()
     const accounts = Array.isArray(store.accounts) ? store.accounts : []
     const sessionsApprox = accounts.filter((a) => a?.token || a?.sessionToken).length
+    const live = await collectSystemHealthExtras()
 
     const panels = {
       audit: {
@@ -58,9 +60,9 @@ export async function handleSecurityApi(req, res, path) {
         checks: envSnap.checks,
       },
       api: {
-        status: 'healthy',
+        status: live.api.status,
         label: 'API',
-        detail: 'Admin control-plane ayakta',
+        detail: `${live.api.detail || 'Admin control-plane'} · ${live.api.latencyMs}ms`,
       },
       openai: {
         status: envSnap.checks.openai ? 'healthy' : 'degraded',
@@ -70,26 +72,28 @@ export async function handleSecurityApi(req, res, path) {
           : 'OPENAI_API_KEY eksik',
       },
       rateLimit: {
-        status: envSnap.checks.redis ? 'healthy' : 'degraded',
-        label: 'Rate limit',
-        detail: envSnap.checks.redis ? 'Redis URL mevcut' : 'In-memory fallback',
+        status: live.redis.status,
+        label: 'Rate limit / Redis',
+        detail: live.redis.detail || (envSnap.checks.redis ? 'Redis URL mevcut' : 'In-memory fallback'),
       },
       deploy: {
-        status: 'degraded',
-        label: 'CI / Deploy',
-        detail:
-          'GitHub Actions CI iskeleti aktif (lint soft). Rollback: Vercel → previous Ready deploy. Bkz. docs/63_STAGING_AND_PREVIEW.md',
+        status: live.github.status,
+        label: 'CI / Deploy (GitHub)',
+        detail: live.github.detail || 'GitHub Actions',
         links: {
-          actions: 'https://github.com/mustafaserdartunay/Bachmain/actions',
+          actions: `https://github.com/${live.github.repository || 'mustafaserdartunay/Bachmain'}/actions`,
           vercelCrm: 'https://vercel.com/bachmain/bachmain',
           vercelAdmin: 'https://vercel.com/bachmain/bachmain-admin',
         },
       },
       backup: {
-        status: 'degraded',
-        label: 'Backup',
-        detail: 'Neon PITR + object backup runbook — bkz. docs/55_OPS_BACKUP_DR.md',
-        placeholder: true,
+        status: live.database.status === 'healthy' ? 'healthy' : 'degraded',
+        label: 'Backup / Neon',
+        detail:
+          live.database.status === 'healthy'
+            ? `Neon canlı · ${live.database.latencyMs}ms latency · PITR runbook docs/55`
+            : live.database.detail || 'Neon bağlantısı yok',
+        placeholder: live.database.status !== 'healthy',
       },
       storage: {
         status: 'degraded',

@@ -37,6 +37,11 @@ import {
   buildSupportModuleRows,
   createSupportTicketFromRequest,
 } from './supportRoutes.mjs'
+import {
+  buildDashboardPayload,
+  buildServerMonitorRows,
+  loadLiveSupportRows,
+} from './systemMetrics.mjs'
 
 assertAdminEnv()
 
@@ -195,33 +200,17 @@ async function handle(req, res, url) {
 
     if (method === 'GET' && pathname === '/api/dashboard') {
       const store = await loadStore()
-      const expiringLicenses = store.customers
-        .filter((c) => ['active', 'trial'].includes(c.status))
-        .filter((c) => new Date(c.licenseExpiry) < new Date('2026-03-01'))
-        .slice(0, 5)
-      const openTickets = store.supportTickets.filter(
-        (t) => !['resolved', 'closed'].includes(t.status),
-      )
+      const extras = await buildServerMonitorRows()
+      const payload = buildDashboardPayload(store)
       return sendJson(req, res, 200, {
-        ...store.dashboard,
-        expiringLicenses,
-        openTickets,
-        kpis: [
-          {
-            label: 'Aktif Müşteri',
-            value: String(store.customers.filter((c) => c.status === 'active').length),
-            change: '+12 bu ay',
-            trend: 'up',
-          },
-          { label: 'Aylık Gelir (MRR)', value: '₺1.24M', change: '+8.3%', trend: 'up' },
-          {
-            label: 'Açık Ticket',
-            value: String(openTickets.length),
-            change: '-3 dünden',
-            trend: 'down',
-          },
-          { label: 'Sistem Uptime', value: '99.97%', change: 'Son 30 gün', trend: 'neutral' },
-        ],
+        ...payload,
+        systemHealth: extras.map((row) => ({
+          name: row.name,
+          status:
+            row.status === 'Sağlıklı' ? 'healthy' : row.status === 'Kritik' ? 'down' : 'warning',
+          uptime: '—',
+          latency: row.latency || '—',
+        })),
       })
     }
 
@@ -418,7 +407,7 @@ async function handle(req, res, url) {
       }
       if (moduleId === 'payment-requests' || moduleId === 'payments') {
         const real = buildPaymentRequestRows(store)
-        const rows = real.length ? real : store.modules?.payments || []
+        const rows = real
         return sendJson(req, res, 200, {
           rows,
           metrics: buildMembershipMetrics(store).slice(3, 5),
@@ -426,6 +415,14 @@ async function handle(req, res, url) {
       }
       if (moduleId === 'support') {
         const rows = buildSupportModuleRows(store)
+        return sendJson(req, res, 200, { rows, metrics: computeMetrics(rows) })
+      }
+      if (moduleId === 'live-support') {
+        const rows = await loadLiveSupportRows()
+        return sendJson(req, res, 200, { rows, metrics: computeMetrics(rows) })
+      }
+      if (moduleId === 'server') {
+        const rows = await buildServerMonitorRows()
         return sendJson(req, res, 200, { rows, metrics: computeMetrics(rows) })
       }
       if (moduleId === 'notifications') {

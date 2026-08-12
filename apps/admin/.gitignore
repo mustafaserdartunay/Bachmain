@@ -1,3 +1,5 @@
 .vercel
 .local
 .local/
+
+.tmp-vercel/

@@ -73,10 +73,41 @@ export function PlatformOpsPage() {
   if (status === 'error' || !data) return <ErrorState onRetry={reload} />
 
   const services = [
-    { name: 'Database', icon: Database, ...data.database },
-    { name: 'API', icon: Server, ...data.api },
-    { name: 'Email Queue', icon: Mail, pending: data.emailQueue.pending, status: data.emailQueue.status, latencyMs: undefined as number | undefined },
+    { name: 'Neon Database', icon: Database, ...data.database },
+    { name: 'API Runtime', icon: Server, ...data.api },
+    {
+      name: 'Email Queue',
+      icon: Mail,
+      pending: data.emailQueue.pending,
+      status: data.emailQueue.status,
+      latencyMs: undefined as number | undefined,
+      detail: undefined as string | undefined,
+    },
     { name: 'Redis', icon: Wifi, ...data.redis },
+    ...(data.github
+      ? [
+          {
+            name: 'GitHub',
+            icon: Activity,
+            status: data.github.status,
+            latencyMs: data.github.latencyMs,
+            pending: undefined as number | undefined,
+            detail: data.github.detail,
+          },
+        ]
+      : []),
+    ...(data.vercel
+      ? [
+          {
+            name: `Vercel (${data.vercel.env || '—'})`,
+            icon: Server,
+            status: data.vercel.status,
+            latencyMs: undefined as number | undefined,
+            pending: undefined as number | undefined,
+            detail: data.vercel.region ? `region ${data.vercel.region}` : undefined,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -94,7 +125,9 @@ export function PlatformOpsPage() {
       <p className="text-xs text-text-subtle">
         Metrikler canlı olarak <code className="rounded bg-border/50 px-1.5 py-0.5 font-mono">/v1/admin/system-health</code> üzerinden
         gelir. Son örnek: {formatDateTime(data.sampledAt)}
-        {data.mock ? ' (endpoint henüz yok — placeholder gösteriliyor)' : ''}.
+        {data.hostname ? ` · ${data.hostname}` : ''}
+        {data.platform ? ` · ${data.platform}` : ''}
+        {data.github?.repository ? ` · ${data.github.repository}` : ''}
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -179,6 +212,9 @@ export function PlatformOpsPage() {
                       {'pending' in srv && srv.pending !== undefined && (
                         <p className="text-xs text-text-subtle">{srv.pending} bekleyen</p>
                       )}
+                      {'detail' in srv && srv.detail ? (
+                        <p className="text-xs text-text-subtle">{String(srv.detail)}</p>
+                      ) : null}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
