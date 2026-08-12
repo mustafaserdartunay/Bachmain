@@ -6,6 +6,7 @@ import {
   KALEM_BUTTON_CLASS,
   KALEM_ICON_CLASS,
 } from '../../utils/buttonStyles'
+import { splitQuantityRowDateTime } from '../../utils/productionLineItems'
 
 const STAGE_FILLS = [
   '#3b82f6',
@@ -82,6 +83,7 @@ export default function ProductionProcessCapsuleRail({
           const canAddPhoto = !readOnly && typeof onAddPhotos === 'function' && photos.length === 0
           const canEditPhoto = !readOnly && typeof onReplacePhoto === 'function'
           const canDeletePhoto = !readOnly && typeof onDeletePhoto === 'function'
+          const stageStamp = splitQuantityRowDateTime(step.stageAt)
 
           return (
             <div
@@ -155,6 +157,18 @@ export default function ProductionProcessCapsuleRail({
                 >
                   {step.label}
                 </span>
+                {stageStamp.date && (isDone || isActive) ? (
+                  <span className="flex flex-col items-center gap-0 leading-tight">
+                    <span className="text-[10px] font-bold tabular-nums text-[var(--muted,#64748B)]">
+                      {stageStamp.date}
+                    </span>
+                    {stageStamp.time ? (
+                      <span className="text-[9px] font-semibold tabular-nums text-[var(--muted,#94A3B8)]">
+                        {stageStamp.time}
+                      </span>
+                    ) : null}
+                  </span>
+                ) : null}
               </button>
 
               <div className="relative z-[1] mt-2 flex w-full flex-col items-center gap-1.5">

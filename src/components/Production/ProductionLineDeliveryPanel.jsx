@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import {
   ChevronDown,
-  Factory,
   Package,
   Pencil,
   Plus,
   Trash2,
+  Undo2,
 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { ListInlineActionConfirm } from '../Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../EditableDropdownPill'
 import NumericInput from '../Products/NumericInput'
-import { getLineQuantityRows, splitQuantityRowDateTime } from '../../utils/productionLineItems'
+import { getLineQuantityRows } from '../../utils/productionLineItems'
 import {
   formatQty,
   getCascadingRowRemaining,
@@ -43,6 +43,16 @@ function isEmptyPartialRow(row) {
   )
 }
 
+function validateDeliveredAgainstProduced(producedQuantity, deliveredQuantity) {
+  const produced = Math.max(0, Number(producedQuantity) || 0)
+  const delivered = Math.max(0, Number(deliveredQuantity) || 0)
+  if (delivered > produced) {
+    window.alert('Depoya gönderilen adet, üretim adedinden fazla olamaz.')
+    return false
+  }
+  return true
+}
+
 /**
  * Unified product + partial-delivery table with row MoreMenu actions.
  */
@@ -68,14 +78,13 @@ export default function ProductionLineDeliveryPanel({
   onSendToDepo,
   onUndoSendToDepo,
   onEditRow,
-  onStartRowProduction,
 }) {
   const [pendingDepoRowId, setPendingDepoRowId] = useState(null)
+  const [pendingUndoDepoRowId, setPendingUndoDepoRowId] = useState(null)
 
   const flatRows = []
   lineItems.forEach((line) => {
     const allRows = getLineQuantityRows(line)
-    // Hide leftover empty extras; + sets explicitPartial so new empty rows stay visible.
     const rows = allRows.filter(
       (row, index) => index === 0 || !isEmptyPartialRow(row) || row.explicitPartial === true,
     )
@@ -152,23 +161,26 @@ export default function ProductionLineDeliveryPanel({
       lineItems.find((line) => line.id === activeLineId) || lineItems[0]
     if (!active || columnsLocked || active.productionClosed) return
     const rows = getLineQuantityRows(active)
-    // Append after the last row so codes continue 20000-1 → 20000-2 → …
     onAddQuantityRow?.(active, rows[rows.length - 1]?.id)
   }
 
   return (
     <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent">
-      <table className="w-full min-w-[64rem] border-collapse text-left">
+      <table className="w-full min-w-[62rem] border-collapse text-left">
         <thead className="bg-transparent">
           <tr>
             <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[12rem]`}>ÜRÜN AÇIKLAMASI</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>SİPARİŞ ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ NUMARASI</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>ÜRETİME BAŞLA</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>ÜRETİM ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>DEPOYA GÖNDERİLEN</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>KALAN ADET</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DURUM</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>DEPO</th>
+            <th
+              className={`${PAGE_TABLE_HEADER_CLASS} w-10 whitespace-nowrap text-center`}
+              aria-label="Depo gönderimini geri al"
+            />
             <th
               className={`${PAGE_TABLE_HEADER_CLASS} w-10 whitespace-nowrap text-center`}
               aria-label="Süreç detayını aç"
@@ -197,7 +209,6 @@ export default function ProductionLineDeliveryPanel({
             const productName = line.product || 'Ürün'
             const description = String(line.description || '').trim()
             const code = row.productionCode || `${productionJobId}-${rowIndex + 1}`
-            // Keep the stored status even if options list drifted — never silently swap.
             const statusValue =
               row.fulfillmentStatus ||
               fulfillmentOptions[0]?.label ||
@@ -213,8 +224,7 @@ export default function ProductionLineDeliveryPanel({
               0,
             )
             const producedVariance = totalProduced - orderQty
-            const startStamp = splitQuantityRowDateTime(row.productionStartedAt)
-            const endStamp = splitQuantityRowDateTime(row.productionEndedAt)
+            const producedQty = Math.max(0, Number(row.producedQuantity) || 0)
 
             return (
               <tr
@@ -263,69 +273,19 @@ export default function ProductionLineDeliveryPanel({
                 </td>
 
                 <td
-                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap text-center"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <div className="inline-flex flex-col items-center gap-0.5">
-                    {!row.productionStartedAt ? (
-                      <button
-                        type="button"
-                        disabled={columnsLocked || line.productionClosed}
-                        onClick={() => onStartRowProduction?.(line, row.id)}
-                        className="glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-sm transition-transform hover:-translate-y-0.5 disabled:opacity-50"
-                        title="Üretime başla"
-                        aria-label="Üretime başla"
-                      >
-                        <Factory className="h-4 w-4" strokeWidth={2.25} />
-                      </button>
-                    ) : (
-                      <>
-                        <span className="text-[11px] font-semibold leading-tight text-emerald-700">
-                          Üretim başladı
-                        </span>
-                        {startStamp.date ? (
-                          <span className="text-[11px] font-bold tabular-nums leading-tight text-[var(--muted)]">
-                            {startStamp.date}
-                          </span>
-                        ) : null}
-                        {startStamp.time ? (
-                          <span className="text-[10px] font-semibold tabular-nums leading-tight text-[var(--muted)]/80">
-                            {startStamp.time}
-                          </span>
-                        ) : null}
-                        {row.productionEndedAt ? (
-                          <>
-                            <span className="mt-0.5 text-[10px] font-semibold uppercase leading-tight tracking-wide text-[var(--muted)]/70">
-                              Bitiş
-                            </span>
-                            {endStamp.date ? (
-                              <span className="text-[11px] font-bold tabular-nums leading-tight text-[var(--muted)]">
-                                {endStamp.date}
-                              </span>
-                            ) : null}
-                            {endStamp.time ? (
-                              <span className="text-[10px] font-semibold tabular-nums leading-tight text-[var(--muted)]/80">
-                                {endStamp.time}
-                              </span>
-                            ) : null}
-                          </>
-                        ) : null}
-                      </>
-                    )}
-                  </div>
-                </td>
-
-                <td
                   className={QTY_CELL_CLASS}
                   onClick={(event) => event.stopPropagation()}
                 >
                   <NumericInput
                     value={row.producedQuantity}
-                    onChange={(value) =>
+                    onChange={(value) => {
+                      const nextProduced = Math.round(Number(value) || 0)
+                      const delivered = Math.max(0, Number(row.deliveredQuantity) || 0)
+                      if (!validateDeliveredAgainstProduced(nextProduced, delivered)) return
                       onQuantityRowChange?.(line, row.id, {
-                        producedQuantity: Math.round(Number(value) || 0),
+                        producedQuantity: nextProduced,
                       })
-                    }
+                    }}
                     readOnly={columnsLocked || line.productionClosed}
                     maxLength={5}
                     className={QTY_INPUT_CLASS}
@@ -338,11 +298,13 @@ export default function ProductionLineDeliveryPanel({
                 >
                   <NumericInput
                     value={row.deliveredQuantity}
-                    onChange={(value) =>
+                    onChange={(value) => {
+                      const nextDelivered = Math.round(Number(value) || 0)
+                      if (!validateDeliveredAgainstProduced(producedQty, nextDelivered)) return
                       onQuantityRowChange?.(line, row.id, {
-                        deliveredQuantity: Math.round(Number(value) || 0),
+                        deliveredQuantity: nextDelivered,
                       })
-                    }
+                    }}
                     readOnly={columnsLocked || line.productionClosed}
                     maxLength={5}
                     className={QTY_INPUT_CLASS}
@@ -373,67 +335,101 @@ export default function ProductionLineDeliveryPanel({
                   className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap"
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <div className="flex w-full min-w-0 items-center gap-2">
-                    <div className="shrink-0" style={{ minWidth: statusMinWidth }}>
-                      <EditableDropdownPill
-                        value={statusValue === 'Kısmi Teslimat' ? 'Kısmi Üretim' : statusValue}
-                        options={fulfillmentOptions}
-                        editable
-                        onOptionsChange={handleOptionsChange}
-                        disabled={columnsLocked || line.productionClosed}
-                        includePlaceholderOption={false}
-                        placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum ekle'}
-                        buttonClassName="flex !h-8 !min-h-8 w-full items-center justify-between rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold"
-                        openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
-                        activeMenu={activeMenu}
-                        setActiveMenu={setActiveMenu}
-                        onChange={(value) =>
-                          onQuantityRowChange?.(line, row.id, {
-                            fulfillmentStatus: value || fulfillmentOptions[0]?.label || 'Devam Ediyor',
-                          })
-                        }
+                  <div className="shrink-0" style={{ minWidth: statusMinWidth }}>
+                    <EditableDropdownPill
+                      value={statusValue === 'Kısmi Teslimat' ? 'Kısmi Üretim' : statusValue}
+                      options={fulfillmentOptions}
+                      editable
+                      onOptionsChange={handleOptionsChange}
+                      disabled={columnsLocked || line.productionClosed}
+                      includePlaceholderOption={false}
+                      placeholder={fulfillmentOptions.length ? 'Seçiniz' : 'Durum ekle'}
+                      buttonClassName="flex !h-8 !min-h-8 w-full items-center justify-between rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold"
+                      openKey={`${fulfillmentOpenKey}-${line.id}-${row.id}`}
+                      activeMenu={activeMenu}
+                      setActiveMenu={setActiveMenu}
+                      onChange={(value) =>
+                        onQuantityRowChange?.(line, row.id, {
+                          fulfillmentStatus: value || fulfillmentOptions[0]?.label || 'Devam Ediyor',
+                        })
+                      }
+                    />
+                  </div>
+                </td>
+
+                <td
+                  className="h-[var(--ds-row-h,2.75rem)] px-2 py-2 align-middle whitespace-nowrap text-center"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {typeof onSendToDepo === 'function' ? (
+                    pendingDepoRowId === row.id ? (
+                      <ListInlineActionConfirm
+                        message="Emin misin?"
+                        tone="orange"
+                        onConfirm={() => {
+                          onSendToDepo?.(line, row.id)
+                          setPendingDepoRowId(null)
+                        }}
+                        onCancel={() => setPendingDepoRowId(null)}
                       />
-                    </div>
-                    {typeof onSendToDepo === 'function' ? (
-                      pendingDepoRowId === row.id ? (
-                        <div className="ml-auto shrink-0">
-                          <ListInlineActionConfirm
-                            message="Emin misin?"
-                            tone="orange"
-                            onConfirm={() => {
-                              onSendToDepo?.(line, row.id)
-                              setPendingDepoRowId(null)
-                            }}
-                            onCancel={() => setPendingDepoRowId(null)}
-                          />
-                        </div>
-                      ) : row.depoItemId ? (
-                        <span className="ml-auto inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[11px] font-bold text-emerald-700">
-                          <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
-                          Gönderildi
-                        </span>
-                      ) : (
+                    ) : row.depoItemId ? (
+                      <span className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-2 text-[11px] font-bold text-emerald-700">
+                        <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+                        Depoya Gönderildi
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={columnsLocked || line.productionClosed}
+                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700 disabled:opacity-50"
+                        title="Depoya gönder"
+                        aria-label="Depoya gönder"
+                        onClick={() => {
+                          const depoQty = resolveDepoSendQuantity(row, rowIndex, line, orderQty)
+                          if (columnsLocked || line.productionClosed || !(depoQty > 0)) {
+                            window.alert('Depoya göndermek için depoya gönderilen adedi girin.')
+                            return
+                          }
+                          setPendingDepoRowId(row.id)
+                        }}
+                      >
+                        <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+                        Depoya gönder
+                      </button>
+                    )
+                  ) : null}
+                </td>
+
+                <td
+                  className="h-[var(--ds-row-h,2.75rem)] w-10 px-1 text-center align-middle"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {row.depoItemId && typeof onUndoSendToDepo === 'function' ? (
+                    pendingUndoDepoRowId === row.id ? (
+                      <ListInlineActionConfirm
+                        message="Geri al?"
+                        tone="orange"
+                        onConfirm={() => {
+                          onUndoSendToDepo?.(line, row.id)
+                          setPendingUndoDepoRowId(null)
+                        }}
+                        onCancel={() => setPendingUndoDepoRowId(null)}
+                      />
+                    ) : (
+                      <div className="inline-flex h-[var(--ds-control-h,3rem)] w-8 items-center justify-center">
                         <button
                           type="button"
                           disabled={columnsLocked || line.productionClosed}
-                          className="ml-auto inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700 disabled:opacity-50"
-                          title="Depoya gönder"
-                          aria-label="Depoya gönder"
-                          onClick={() => {
-                            const depoQty = resolveDepoSendQuantity(row, rowIndex, line, orderQty)
-                            if (columnsLocked || line.productionClosed || !(depoQty > 0)) {
-                              window.alert('Depoya göndermek için depoya gönderilen adedi girin.')
-                              return
-                            }
-                            setPendingDepoRowId(row.id)
-                          }}
+                          className="glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:text-orange-600 disabled:opacity-50"
+                          title="Depo gönderimini geri al"
+                          aria-label="Depo gönderimini geri al"
+                          onClick={() => setPendingUndoDepoRowId(row.id)}
                         >
-                          <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
-                          Depoya gönder
+                          <Undo2 className="h-4 w-4" strokeWidth={2.25} />
                         </button>
-                      )
-                    ) : null}
-                  </div>
+                      </div>
+                    )
+                  ) : null}
                 </td>
 
                 <td

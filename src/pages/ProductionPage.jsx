@@ -29,7 +29,7 @@ import ProductionJobCard, {
 } from '../components/Production/ProductionJobCard'
 import ProductionProgressRing from '../components/Production/ProductionProgressRing'
 import { getListCustomerDisplay } from '../data/customerProfiles'
-import { ensureLineItems, getLineFulfillmentOptions } from '../utils/productionLineItems'
+import { ensureLineItems, getLineFulfillmentOptions, splitQuantityRowDateTime } from '../utils/productionLineItems'
 import {
   getJobQuantityMetrics,
   jobMatchesProductionStateFilter,
@@ -386,6 +386,37 @@ export default function ProductionPage() {
                 return (
                   <span className="tabular-nums text-[14px] font-semibold text-[var(--muted)]">
                     {formatShortDate(timeline.productionStartDate)}
+                  </span>
+                )
+              },
+            },
+            {
+              id: 'productionStartedAt',
+              header: 'ÜRETİME BAŞLAMA',
+              sortable: true,
+              className: 'w-[8.5rem]',
+              getSortValue: (job) => {
+                const lineItems = ensureLineItems(job, workflowStages)
+                const timeline = getProductionJobTimelineDates(job, lineItems, { orders, quotes })
+                return timeline.productionStartDate || ''
+              },
+              cell: (job) => {
+                const lineItems = ensureLineItems(job, workflowStages)
+                const timeline = getProductionJobTimelineDates(job, lineItems, { orders, quotes })
+                const stamp = splitQuantityRowDateTime(timeline.productionStartDate)
+                if (!stamp.date) {
+                  return <span className="text-[14px] font-semibold text-[var(--muted)]">—</span>
+                }
+                return (
+                  <span className="flex flex-col gap-0.5 tabular-nums">
+                    <span className="text-[14px] font-semibold text-[var(--muted)]">
+                      {stamp.date}
+                    </span>
+                    {stamp.time ? (
+                      <span className="text-[12px] font-semibold text-[var(--muted)]/75">
+                        {stamp.time}
+                      </span>
+                    ) : null}
                   </span>
                 )
               },

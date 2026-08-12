@@ -34,7 +34,33 @@ function pickLatestTimestamp(values = []) {
   return latest
 }
 
-function findProductionStartDate(job) {
+function pickEarliestTimestamp(values = []) {
+  let earliest = ''
+  let earliestTime = Infinity
+  values.forEach((value) => {
+    const time = parseTimestamp(value)
+    if (time != null && time <= earliestTime) {
+      earliestTime = time
+      earliest = value
+    }
+  })
+  return earliest
+}
+
+function findProductionStartDate(job, lineItems = []) {
+  const timestamps = []
+  lineItems.forEach((line) => {
+    if (line?.productionStartedAt) timestamps.push(line.productionStartedAt)
+    getLineQuantityRows(line).forEach((row) => {
+      if (row?.productionStartedAt) timestamps.push(row.productionStartedAt)
+      Object.values(row?.stageTimestamps || {}).forEach((value) => {
+        if (value) timestamps.push(value)
+      })
+    })
+  })
+  const fromRows = pickEarliestTimestamp(timestamps)
+  if (fromRows) return fromRows
+
   const activities = Array.isArray(job?.activities) ? job.activities : []
   const productionActivity = activities.find((entry) => /üretime/i.test(entry?.text || ''))
   if (productionActivity?.date) return productionActivity.date
@@ -73,7 +99,7 @@ export function getProductionJobTimelineDates(job, lineItems = [], options = {})
   return {
     quoteDate: quote?.createdAt || '',
     orderDate: order?.createdAt || order?.date || job?.createdAt || '',
-    productionStartDate: findProductionStartDate(job),
+    productionStartDate: findProductionStartDate(job, lineItems),
     completedDate: findJobCompletedDate(job, lineItems),
   }
 }

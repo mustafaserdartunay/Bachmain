@@ -109,6 +109,10 @@ export function createQuantityRow(defaults = {}) {
     depoSentAt: defaults?.depoSentAt || '',
     productionStartedAt: defaults?.productionStartedAt || '',
     productionEndedAt: defaults?.productionEndedAt || '',
+    stageTimestamps:
+      defaults?.stageTimestamps && typeof defaults.stageTimestamps === 'object'
+        ? { ...defaults.stageTimestamps }
+        : {},
     // Only + button sets this — empty extras without it stay hidden.
     explicitPartial: defaults?.explicitPartial === true,
   }

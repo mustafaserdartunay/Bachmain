@@ -95,17 +95,29 @@ export function createProductionLineItemActions({
   function handleQuantityRowStageChange(lineItem, rowId, stageId) {
     if (!job || lineItem.productionClosed) return
     const stage = productionStageOptions.find((item) => item.id === stageId)
+    const stageIndex = productionStageOptions.findIndex((item) => item.id === stageId)
     const rows = getLineQuantityRows(lineItem).map((row) => {
       if (row.id !== rowId) return row
       const now = createQuantityRowTimestamp()
+      const stageTimestamps = { ...(row.stageTimestamps || {}) }
+      productionStageOptions.forEach((item, index) => {
+        if (stageIndex >= 0 && index <= stageIndex && !stageTimestamps[item.id]) {
+          stageTimestamps[item.id] = now
+        }
+      })
+      if (stageId) stageTimestamps[stageId] = now
       return {
         ...row,
         currentStageId: stageId || row.currentStageId,
         stageUpdatedAt: now,
+        stageTimestamps,
+        productionStartedAt: row.productionStartedAt || now,
       }
     })
 
-    patchLineQuantityRows(lineItem, rows)
+    patchLineQuantityRows(lineItem, rows, {
+      lineItemPatch: !lineItem.productionStartedAt ? { productionStartedAt: createQuantityRowTimestamp() } : {},
+    })
     appendActivity(`"${lineItem.product}" teslimat #${rows.findIndex((row) => row.id === rowId) + 1} "${stage?.label || ''}" aşamasına alındı.`)
   }
 
@@ -121,10 +133,22 @@ export function createProductionLineItemActions({
         nextRow.fulfillmentStatusManual = true
       }
       if (patch.producedQuantity !== undefined) {
-        nextRow.producedUpdatedAt = patch.producedQuantity > 0 ? now : ''
+        const produced = Math.max(0, Number(patch.producedQuantity) || 0)
+        const delivered = Math.max(0, Number(nextRow.deliveredQuantity) || 0)
+        if (delivered > produced) {
+          window.alert('Depoya gönderilen adet, üretim adedinden fazla olamaz.')
+          return row
+        }
+        nextRow.producedUpdatedAt = produced > 0 ? now : ''
       }
       if (patch.deliveredQuantity !== undefined) {
-        nextRow.deliveredUpdatedAt = patch.deliveredQuantity > 0 ? now : ''
+        const delivered = Math.max(0, Number(patch.deliveredQuantity) || 0)
+        const produced = Math.max(0, Number(nextRow.producedQuantity) || 0)
+        if (delivered > produced) {
+          window.alert('Depoya gönderilen adet, üretim adedinden fazla olamaz.')
+          return row
+        }
+        nextRow.deliveredUpdatedAt = delivered > 0 ? now : ''
       }
       if (patch.fulfillmentStatus === 'Tamamlandı') {
         nextRow.deliveredQuantity = Math.max(
