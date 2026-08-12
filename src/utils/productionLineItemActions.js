@@ -148,14 +148,11 @@ export function createProductionLineItemActions({
           window.alert('Depoya gönderilen adet, üretim adedinden fazla olamaz.')
           return row
         }
+        nextRow.deliveredQuantity = delivered
+        nextRow.deliveredQuantityManual = true
         nextRow.deliveredUpdatedAt = delivered > 0 ? now : ''
       }
       if (patch.fulfillmentStatus === 'Tamamlandı') {
-        nextRow.deliveredQuantity = Math.max(
-          Number(nextRow.deliveredQuantity) || 0,
-          Number(nextRow.producedQuantity) || 0,
-        )
-        nextRow.deliveredUpdatedAt = now
         const lastStage = productionStageOptions[productionStageOptions.length - 1]
         if (lastStage?.id) {
           nextRow.currentStageId = lastStage.id

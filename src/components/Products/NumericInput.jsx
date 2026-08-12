@@ -11,16 +11,21 @@ export default function NumericInput({
   placeholder = '0',
   formatMode = 'plain',
   maxLength,
+  allowEmpty = false,
 }) {
   const [text, setText] = useState('')
   const [focused, setFocused] = useState(false)
 
   useEffect(() => {
     if (!focused) {
+      if (allowEmpty && (value === '' || value == null)) {
+        setText('')
+        return
+      }
       const num = Number(value) || 0
       setText(num === 0 ? '' : String(num))
     }
-  }, [value, focused])
+  }, [value, focused, allowEmpty])
 
   function handleChange(raw) {
     const v = raw.replace(/\./g, '').replace(',', '.')
@@ -35,14 +40,17 @@ export default function NumericInput({
   }
 
   const inputClass = `${readOnly ? 'form-input-readonly' : 'form-input'} ${prefix ? 'pl-8' : ''} ${suffix ? 'pr-8' : ''} ${highlight ? 'border-accent-orange/50 text-accent-orange font-semibold' : ''} ${className}`
-  const displayValue = Number(value) === 0
-    ? ''
-    : formatMode === 'price'
-      ? new Intl.NumberFormat('tr-TR', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(Number(value) || 0)
-      : String(value)
+  const displayValue =
+    allowEmpty && (value === '' || value == null)
+      ? ''
+      : Number(value) === 0
+        ? ''
+        : formatMode === 'price'
+          ? new Intl.NumberFormat('tr-TR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(Number(value) || 0)
+          : String(value)
 
   return (
     <div className="relative inline-block">
@@ -66,7 +74,9 @@ export default function NumericInput({
         onChange={(e) => handleChange(e.target.value)}
         onBlur={() => {
           setFocused(false)
-          if (text === '' || text === '.') onChange(0)
+          if (text === '' || text === '.') {
+            if (!allowEmpty) onChange(0)
+          }
         }}
         className={inputClass}
       />

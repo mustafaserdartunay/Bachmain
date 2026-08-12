@@ -1409,10 +1409,18 @@ textarea:not(.form-input)::placeholder {
   --customers-type-leading: 1.25;
 }
 
-/* Uzun satır menüleri kaydırılabilir olsun */
+/* Uzun satır menüleri kaydırılabilir olsun — kısa menülerde kaydırma çubuğu görünmesin */
 .app-dropdown-portal.customers-page-menu {
   max-height: min(70vh, 28rem);
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.app-dropdown-portal.customers-page-menu::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .page-type-shell :where(h1, h2, h3, p, span, button, a, th, td, label, input, select, textarea),

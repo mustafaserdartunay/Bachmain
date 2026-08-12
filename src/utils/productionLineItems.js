@@ -92,6 +92,7 @@ export function createQuantityRow(defaults = {}) {
     orderedQuantity,
     producedQuantity,
     deliveredQuantity,
+    deliveredQuantityManual: Boolean(defaults?.deliveredQuantityManual),
     currentStageId: defaults?.currentStageId || '',
     createdAt: timestamps.createdAt,
     statusUpdatedAt: timestamps.statusUpdatedAt,

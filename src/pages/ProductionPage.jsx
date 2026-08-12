@@ -340,6 +340,7 @@ export default function ProductionPage() {
               id: 'orderDate',
               header: 'SİPARİŞ TARİHİ',
               sortable: true,
+              align: 'center',
               accessorKey: 'orderDate',
               className: 'w-[8.5rem]',
               getSortValue: (job) => {
@@ -357,7 +358,7 @@ export default function ProductionPage() {
                   { orders, quotes },
                 )
                 return (
-                  <span className="tabular-nums text-[14px] font-semibold text-[var(--muted)]">
+                  <span className="block text-center tabular-nums text-[14px] font-semibold text-[var(--muted)]">
                     {formatShortDate(timeline.orderDate)}
                   </span>
                 )
@@ -367,6 +368,7 @@ export default function ProductionPage() {
               id: 'productionStart',
               header: 'ÜRETİM TARİHİ',
               sortable: true,
+              align: 'center',
               accessorKey: 'productionStart',
               className: 'w-[8.5rem]',
               getSortValue: (job) => {
@@ -384,7 +386,7 @@ export default function ProductionPage() {
                   { orders, quotes },
                 )
                 return (
-                  <span className="tabular-nums text-[14px] font-semibold text-[var(--muted)]">
+                  <span className="block text-center tabular-nums text-[14px] font-semibold text-[var(--muted)]">
                     {formatShortDate(timeline.productionStartDate)}
                   </span>
                 )
@@ -394,6 +396,7 @@ export default function ProductionPage() {
               id: 'productionStartedAt',
               header: 'ÜRETİME BAŞLAMA',
               sortable: true,
+              align: 'center',
               className: 'w-[8.5rem]',
               getSortValue: (job) => {
                 const lineItems = ensureLineItems(job, workflowStages)
@@ -405,10 +408,14 @@ export default function ProductionPage() {
                 const timeline = getProductionJobTimelineDates(job, lineItems, { orders, quotes })
                 const stamp = splitQuantityRowDateTime(timeline.productionStartDate)
                 if (!stamp.date) {
-                  return <span className="text-[14px] font-semibold text-[var(--muted)]">—</span>
+                  return (
+                    <span className="block text-center text-[14px] font-semibold text-[var(--muted)]">
+                      —
+                    </span>
+                  )
                 }
                 return (
-                  <span className="flex flex-col gap-0.5 tabular-nums">
+                  <span className="flex flex-col items-center gap-0.5 tabular-nums">
                     <span className="text-[14px] font-semibold text-[var(--muted)]">
                       {stamp.date}
                     </span>

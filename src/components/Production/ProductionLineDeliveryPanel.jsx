@@ -8,7 +8,7 @@ import {
   Undo2,
 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
-import { ListInlineActionConfirm } from '../Common/ListDeleteConfirmPanel'
+import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../EditableDropdownPill'
 import NumericInput from '../Products/NumericInput'
 import { getLineQuantityRows } from '../../utils/productionLineItems'
@@ -171,11 +171,11 @@ export default function ProductionLineDeliveryPanel({
           <tr>
             <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[12rem]`}>ÜRÜN AÇIKLAMASI</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>SİPARİŞ ADEDİ</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ NUMARASI</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>SİPARİŞ NUMARASI</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>ÜRETİM ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>DEPOYA GÖNDERİLEN</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>KALAN ADET</th>
-            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>DURUM</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>DURUM</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>DEPO</th>
             <th
               className={`${PAGE_TABLE_HEADER_CLASS} w-10 whitespace-nowrap text-center`}
@@ -266,7 +266,7 @@ export default function ProductionLineDeliveryPanel({
                   ) : null}
                 </td>
 
-                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap">
+                <td className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap text-center">
                   <span className="text-[13px] font-bold tabular-nums text-[var(--muted)]">
                     {code}
                   </span>
@@ -297,12 +297,14 @@ export default function ProductionLineDeliveryPanel({
                   onClick={(event) => event.stopPropagation()}
                 >
                   <NumericInput
-                    value={row.deliveredQuantity}
+                    value={row.deliveredQuantityManual ? row.deliveredQuantity : ''}
+                    allowEmpty
                     onChange={(value) => {
                       const nextDelivered = Math.round(Number(value) || 0)
                       if (!validateDeliveredAgainstProduced(producedQty, nextDelivered)) return
                       onQuantityRowChange?.(line, row.id, {
                         deliveredQuantity: nextDelivered,
+                        deliveredQuantityManual: true,
                       })
                     }}
                     readOnly={columnsLocked || line.productionClosed}
@@ -332,10 +334,10 @@ export default function ProductionLineDeliveryPanel({
                 </td>
 
                 <td
-                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap"
+                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap text-center"
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <div className="shrink-0" style={{ minWidth: statusMinWidth }}>
+                  <div className="mx-auto shrink-0" style={{ minWidth: statusMinWidth, maxWidth: statusMinWidth }}>
                     <EditableDropdownPill
                       value={statusValue === 'Kısmi Teslimat' ? 'Kısmi Üretim' : statusValue}
                       options={fulfillmentOptions}
@@ -363,9 +365,12 @@ export default function ProductionLineDeliveryPanel({
                 >
                   {typeof onSendToDepo === 'function' ? (
                     pendingDepoRowId === row.id ? (
-                      <ListInlineActionConfirm
-                        message="Emin misin?"
-                        tone="orange"
+                      <DeleteConfirmPopover
+                        title="Depoya gönderilsin mi?"
+                        description="Girilen adet depoya aktarılacak."
+                        confirmLabel="Evet"
+                        cancelLabel="Vazgeç"
+                        inline
                         onConfirm={() => {
                           onSendToDepo?.(line, row.id)
                           setPendingDepoRowId(null)
@@ -406,9 +411,12 @@ export default function ProductionLineDeliveryPanel({
                 >
                   {row.depoItemId && typeof onUndoSendToDepo === 'function' ? (
                     pendingUndoDepoRowId === row.id ? (
-                      <ListInlineActionConfirm
-                        message="Geri al?"
-                        tone="orange"
+                      <DeleteConfirmPopover
+                        title="Geri alınsın mı?"
+                        description="Depo gönderimi iptal edilecek."
+                        confirmLabel="Evet"
+                        cancelLabel="Vazgeç"
+                        inline
                         onConfirm={() => {
                           onUndoSendToDepo?.(line, row.id)
                           setPendingUndoDepoRowId(null)
