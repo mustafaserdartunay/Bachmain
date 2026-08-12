@@ -73,9 +73,14 @@ export default function HeaderSupport() {
         /* ignore */
       }
     } catch (error) {
+      const networkFail =
+        error?.name === 'TypeError' ||
+        /failed to fetch|networkerror|load failed/i.test(String(error?.message || ''))
       setFeedback({
         tone: 'error',
-        text: error?.message || 'Gönderilemedi. Lütfen tekrar deneyin.',
+        text: networkFail
+          ? 'Bağlantı kurulamadı. Lütfen internetinizi kontrol edip tekrar deneyin.'
+          : error?.message || 'Gönderilemedi. Lütfen tekrar deneyin.',
       })
     } finally {
       setSending(false)

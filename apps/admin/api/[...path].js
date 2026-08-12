@@ -39,7 +39,13 @@ import {
   buildServerMonitorRows,
   loadLiveSupportRows,
 } from '../server/systemMetrics.mjs'
-import { buildSupportModuleRows } from '../server/supportRoutes.mjs'
+import {
+  addSupportReply,
+  buildSupportModuleRows,
+  createSupportTicketFromRequest,
+  getSupportTicket,
+  listSupportTickets,
+} from '../server/supportRoutes.mjs'
 
 function getPath(req) {
   // Vercel catch-all: /api/[...path] may expose segments via query.path
@@ -271,6 +277,26 @@ export default async function handler(req, res) {
     if (await handleWhatsAppApi(req, res, path, body)) return
     if (await handleTenantApi(req, res, path, body)) return
     if (await handleMailApi(req, res, path, body)) return
+
+    // CRM destek talebi — staff gate öncesi (üyelik Bearer yeterli)
+    if (method === 'POST' && path === 'support/tickets') {
+      try {
+        const result = await withStore(async (store) =>
+          createSupportTicketFromRequest(store, req, body),
+        )
+        return sendJson(req, res, 201, {
+          ok: true,
+          ticket: result,
+          acknowledgment: result?.acknowledgment || null,
+          ackMessage: result?.acknowledgment?.body || null,
+        })
+      } catch (error) {
+        if (error?.message === 'MESSAGE_REQUIRED') {
+          return sendJson(req, res, 400, { error: 'Mesaj zorunludur', message: 'Mesaj zorunludur' })
+        }
+        throw error
+      }
+    }
 
     if (method === 'GET' && (path === '' || path === 'health')) {
       return sendJson(req, res, 200, {
