@@ -16,11 +16,20 @@ export function createQuantityRowTimestamp() {
 }
 
 export function formatQuantityRowDateTime(value) {
-  if (!value) return ''
+  const parts = splitQuantityRowDateTime(value)
+  if (!parts.date) return ''
+  return parts.time ? `${parts.date} ${parts.time}` : parts.date
+}
+
+export function splitQuantityRowDateTime(value) {
+  if (!value) return { date: '', time: '' }
   const raw = String(value).trim()
   const trMatch = raw.match(/^(\d{2}\.\d{2}\.\d{4})(?:[, ]+\s*(\d{1,2}:\d{2}(?::\d{2})?))?/)
   if (trMatch) {
-    return trMatch[2] ? `${trMatch[1]} ${trMatch[2].slice(0, 5)}` : trMatch[1]
+    return {
+      date: trMatch[1],
+      time: trMatch[2] ? trMatch[2].slice(0, 5) : '',
+    }
   }
 
   const parsed = new Date(raw)
@@ -30,10 +39,19 @@ export function formatQuantityRowDateTime(value) {
     const year = parsed.getFullYear()
     const hours = String(parsed.getHours()).padStart(2, '0')
     const minutes = String(parsed.getMinutes()).padStart(2, '0')
-    return `${day}.${month}.${year} ${hours}:${minutes}`
+    return {
+      date: `${day}.${month}.${year}`,
+      time: `${hours}:${minutes}`,
+    }
   }
 
-  return raw
+  return { date: raw, time: '' }
+}
+
+const PRODUCTION_END_STATUSES = new Set(['Tamamlandı', 'Depoda Hazır'])
+
+export function shouldStampProductionEndedAt(status) {
+  return PRODUCTION_END_STATUSES.has(String(status || '').trim())
 }
 
 function inferTimestampFromRowId(id) {
@@ -89,6 +107,8 @@ export function createQuantityRow(defaults = {}) {
     trackingToken: defaults?.trackingToken || '',
     depoItemId: defaults?.depoItemId || '',
     depoSentAt: defaults?.depoSentAt || '',
+    productionStartedAt: defaults?.productionStartedAt || '',
+    productionEndedAt: defaults?.productionEndedAt || '',
     // Only + button sets this — empty extras without it stay hidden.
     explicitPartial: defaults?.explicitPartial === true,
   }

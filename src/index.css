@@ -3504,22 +3504,6 @@ html.night .glass-sidebar .sidebar-submenu {
   }
 }
 
-@keyframes production-ring-glow {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 3px rgba(124, 242, 198, 0.7))
-      drop-shadow(0 0 8px rgba(16, 185, 129, 0.45));
-  }
-  50% {
-    filter: drop-shadow(0 0 7px rgba(124, 242, 198, 0.95))
-      drop-shadow(0 0 16px rgba(16, 185, 129, 0.65));
-  }
-}
-
-.production-progress-ring-glow {
-  animation: production-ring-glow 2.8s ease-in-out infinite;
-}
-
 .social-dock-badge {
   animation: social-badge-pulse 2.4s ease-in-out infinite;
 }

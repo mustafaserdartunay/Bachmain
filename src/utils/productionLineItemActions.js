@@ -5,6 +5,7 @@ import {
   deriveLineCurrentStageId,
   ensureLineItems,
   getLineQuantityRows,
+  shouldStampProductionEndedAt,
   syncLineQuantitiesFromRows,
 } from './productionLineItems'
 import {
@@ -136,6 +137,13 @@ export function createProductionLineItemActions({
           nextRow.currentStageId = lastStage.id
           nextRow.stageUpdatedAt = now
         }
+      }
+      if (
+        patch.fulfillmentStatus !== undefined
+        && shouldStampProductionEndedAt(patch.fulfillmentStatus)
+        && !nextRow.productionEndedAt
+      ) {
+        nextRow.productionEndedAt = now
       }
       return nextRow
     })
@@ -312,6 +320,23 @@ export function createProductionLineItemActions({
     appendActivity(`"${lineItem.product}" üretim süreci yeniden başlatıldı.`)
   }
 
+  function handleStartRowProduction(lineItem, rowId) {
+    if (!job || lineItem.productionClosed) return
+    const rows = getLineQuantityRows(lineItem)
+    const target = rows.find((row) => row.id === rowId)
+    if (!target || target.productionStartedAt) return
+
+    const now = createQuantityRowTimestamp()
+    const nextRows = rows.map((row) => (
+      row.id === rowId
+        ? { ...row, productionStartedAt: now }
+        : row
+    ))
+    patchLineQuantityRows(lineItem, nextRows)
+    const code = target.productionCode || `${job.id}-${rows.findIndex((row) => row.id === rowId) + 1}`
+    appendActivity(`"${lineItem.product}" · ${code} üretime başladı.`)
+  }
+
   function handleRemoveQuantityRow(lineItem, rowId) {
     if (!job) return
     removeDepoItemByProductionRow(job.id, lineItem.id, rowId)
@@ -356,7 +381,12 @@ export function createProductionLineItemActions({
     const depoItem = createDepoItemFromRow(job, lineItem, row, { quantity: depoQuantity })
     addDepoItem(depoItem)
     const now = createQuantityRowTimestamp()
-    const nextRow = { ...row, depoItemId: depoItem.id, depoSentAt: now }
+    const nextRow = {
+      ...row,
+      depoItemId: depoItem.id,
+      depoSentAt: now,
+      productionEndedAt: row.productionEndedAt || now,
+    }
     patchLineQuantityRows(lineItem, codedRows.map((entry) => (entry.id === rowId ? nextRow : entry)))
     appendActivity(`"${lineItem.product}" · ${formatQty(depoQuantity)} adet depoya gönderildi.`)
     return { depoItemId: depoItem.id }
@@ -669,6 +699,7 @@ export function createProductionLineItemActions({
     handleCreateRowSevkiyatLink,
     handleSendRowToDepo,
     handleUndoSendRowToDepo,
+    handleStartRowProduction,
   }
 }
 

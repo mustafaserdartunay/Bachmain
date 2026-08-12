@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   ChevronDown,
+  Factory,
   Package,
   Pencil,
   Plus,
@@ -10,7 +11,7 @@ import { MoreMenu } from '@bachmain/ui'
 import { ListInlineActionConfirm } from '../Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../EditableDropdownPill'
 import NumericInput from '../Products/NumericInput'
-import { getLineQuantityRows } from '../../utils/productionLineItems'
+import { getLineQuantityRows, splitQuantityRowDateTime } from '../../utils/productionLineItems'
 import {
   formatQty,
   getCascadingRowRemaining,
@@ -67,6 +68,7 @@ export default function ProductionLineDeliveryPanel({
   onSendToDepo,
   onUndoSendToDepo,
   onEditRow,
+  onStartRowProduction,
 }) {
   const [pendingDepoRowId, setPendingDepoRowId] = useState(null)
 
@@ -156,12 +158,13 @@ export default function ProductionLineDeliveryPanel({
 
   return (
     <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent">
-      <table className="w-full min-w-[58rem] border-collapse text-left">
+      <table className="w-full min-w-[64rem] border-collapse text-left">
         <thead className="bg-transparent">
           <tr>
             <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[12rem]`}>ÜRÜN AÇIKLAMASI</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>SİPARİŞ ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap`}>SİPARİŞ NUMARASI</th>
+            <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>ÜRETİME BAŞLA</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>ÜRETİM ADEDİ</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>DEPOYA GÖNDERİLEN</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>KALAN ADET</th>
@@ -210,6 +213,8 @@ export default function ProductionLineDeliveryPanel({
               0,
             )
             const producedVariance = totalProduced - orderQty
+            const startStamp = splitQuantityRowDateTime(row.productionStartedAt)
+            const endStamp = splitQuantityRowDateTime(row.productionEndedAt)
 
             return (
               <tr
@@ -255,6 +260,59 @@ export default function ProductionLineDeliveryPanel({
                   <span className="text-[13px] font-bold tabular-nums text-[var(--muted)]">
                     {code}
                   </span>
+                </td>
+
+                <td
+                  className="h-[var(--ds-row-h,2.75rem)] px-3 py-2 align-middle whitespace-nowrap text-center"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div className="inline-flex flex-col items-center gap-0.5">
+                    {!row.productionStartedAt ? (
+                      <button
+                        type="button"
+                        disabled={columnsLocked || line.productionClosed}
+                        onClick={() => onStartRowProduction?.(line, row.id)}
+                        className="glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-sm transition-transform hover:-translate-y-0.5 disabled:opacity-50"
+                        title="Üretime başla"
+                        aria-label="Üretime başla"
+                      >
+                        <Factory className="h-4 w-4" strokeWidth={2.25} />
+                      </button>
+                    ) : (
+                      <>
+                        <span className="text-[11px] font-semibold leading-tight text-emerald-700">
+                          Üretim başladı
+                        </span>
+                        {startStamp.date ? (
+                          <span className="text-[11px] font-bold tabular-nums leading-tight text-[var(--muted)]">
+                            {startStamp.date}
+                          </span>
+                        ) : null}
+                        {startStamp.time ? (
+                          <span className="text-[10px] font-semibold tabular-nums leading-tight text-[var(--muted)]/80">
+                            {startStamp.time}
+                          </span>
+                        ) : null}
+                        {row.productionEndedAt ? (
+                          <>
+                            <span className="mt-0.5 text-[10px] font-semibold uppercase leading-tight tracking-wide text-[var(--muted)]/70">
+                              Bitiş
+                            </span>
+                            {endStamp.date ? (
+                              <span className="text-[11px] font-bold tabular-nums leading-tight text-[var(--muted)]">
+                                {endStamp.date}
+                              </span>
+                            ) : null}
+                            {endStamp.time ? (
+                              <span className="text-[10px] font-semibold tabular-nums leading-tight text-[var(--muted)]/80">
+                                {endStamp.time}
+                              </span>
+                            ) : null}
+                          </>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
                 </td>
 
                 <td

@@ -1,5 +1,5 @@
 /**
- * Production progress circle — single green neon arc.
+ * Production progress circle — single green arc (no glow).
  */
 const GREEN = '#10b981'
 
@@ -27,7 +27,7 @@ export default function ProductionProgressRing({
         aria-label={`İlerleme %${value}${label ? ` · ${label}` : ''}`}
       >
         <svg
-          className="production-progress-ring-glow h-full w-full -rotate-90"
+          className="h-full w-full -rotate-90"
           viewBox={`0 0 ${size} ${size}`}
           aria-hidden
         >
