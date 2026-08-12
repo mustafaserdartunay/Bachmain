@@ -5,7 +5,6 @@ import {
   Pencil,
   Plus,
   Trash2,
-  Undo2,
 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
@@ -76,11 +75,9 @@ export default function ProductionLineDeliveryPanel({
   onAddQuantityRow,
   onRemoveQuantityRow,
   onSendToDepo,
-  onUndoSendToDepo,
   onEditRow,
 }) {
   const [pendingDepoRowId, setPendingDepoRowId] = useState(null)
-  const [pendingUndoDepoRowId, setPendingUndoDepoRowId] = useState(null)
 
   const flatRows = []
   lineItems.forEach((line) => {
@@ -166,7 +163,7 @@ export default function ProductionLineDeliveryPanel({
 
   return (
     <div className="min-w-0 overflow-x-auto rounded-ds-lg border border-[var(--ds-border-strong,var(--ds-border,#CBD5E1))] bg-transparent">
-      <table className="w-full min-w-[62rem] border-collapse text-left">
+      <table className="w-full min-w-[58rem] border-collapse text-left">
         <thead className="bg-transparent">
           <tr>
             <th className={`${PAGE_TABLE_HEADER_CLASS} min-w-[12rem]`}>ÜRÜN AÇIKLAMASI</th>
@@ -177,10 +174,6 @@ export default function ProductionLineDeliveryPanel({
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>KALAN ADET</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>DURUM</th>
             <th className={`${PAGE_TABLE_HEADER_CLASS} whitespace-nowrap text-center`}>DEPO</th>
-            <th
-              className={`${PAGE_TABLE_HEADER_CLASS} w-10 whitespace-nowrap text-center`}
-              aria-label="Depo gönderimini geri al"
-            />
             <th
               className={`${PAGE_TABLE_HEADER_CLASS} w-10 whitespace-nowrap text-center`}
               aria-label="Süreç detayını aç"
@@ -401,41 +394,6 @@ export default function ProductionLineDeliveryPanel({
                         <Package className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
                         Depoya gönder
                       </button>
-                    )
-                  ) : null}
-                </td>
-
-                <td
-                  className="h-[var(--ds-row-h,2.75rem)] w-10 px-1 text-center align-middle"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  {row.depoItemId && typeof onUndoSendToDepo === 'function' ? (
-                    pendingUndoDepoRowId === row.id ? (
-                      <DeleteConfirmPopover
-                        title="Geri alınsın mı?"
-                        description="Depo gönderimi iptal edilecek."
-                        confirmLabel="Evet"
-                        cancelLabel="Vazgeç"
-                        inline
-                        onConfirm={() => {
-                          onUndoSendToDepo?.(line, row.id)
-                          setPendingUndoDepoRowId(null)
-                        }}
-                        onCancel={() => setPendingUndoDepoRowId(null)}
-                      />
-                    ) : (
-                      <div className="inline-flex h-[var(--ds-control-h,3rem)] w-8 items-center justify-center">
-                        <button
-                          type="button"
-                          disabled={columnsLocked || line.productionClosed}
-                          className="glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:text-orange-600 disabled:opacity-50"
-                          title="Depo gönderimini geri al"
-                          aria-label="Depo gönderimini geri al"
-                          onClick={() => setPendingUndoDepoRowId(row.id)}
-                        >
-                          <Undo2 className="h-4 w-4" strokeWidth={2.25} />
-                        </button>
-                      </div>
                     )
                   ) : null}
                 </td>

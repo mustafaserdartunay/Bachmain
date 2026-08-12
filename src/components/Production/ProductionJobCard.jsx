@@ -289,9 +289,6 @@ export default function ProductionJobCard({
                 resolveLineItemOrderQuantity(line, order),
               )
             }}
-            onUndoSendToDepo={(line, rowId) =>
-              lineItemActions?.handleUndoSendRowToDepo(line, rowId)
-            }
             onEditRow={(line, rowId) => {
               setActiveRowId(rowId)
               const index = lineItems.findIndex((entry) => entry.id === line.id)

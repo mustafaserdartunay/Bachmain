@@ -288,6 +288,9 @@ export function getQuantityRowMinimalSteps(row, productionStages = []) {
   const stageTimestamps = row?.stageTimestamps && typeof row.stageTimestamps === 'object'
     ? row.stageTimestamps
     : {}
+  const stageActors = row?.stageActors && typeof row.stageActors === 'object'
+    ? row.stageActors
+    : {}
   return progress.map((stage) => ({
     id: stage.id,
     label: stage.label,
@@ -297,6 +300,7 @@ export function getQuantityRowMinimalSteps(row, productionStages = []) {
     isActive: stage.active,
     isComplete: stage.completed,
     stageAt: stageTimestamps[stage.id] || '',
+    stageActor: stageActors[stage.id] || '',
   }))
 }
 

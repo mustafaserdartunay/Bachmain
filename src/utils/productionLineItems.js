@@ -114,6 +114,10 @@ export function createQuantityRow(defaults = {}) {
       defaults?.stageTimestamps && typeof defaults.stageTimestamps === 'object'
         ? { ...defaults.stageTimestamps }
         : {},
+    stageActors:
+      defaults?.stageActors && typeof defaults.stageActors === 'object'
+        ? { ...defaults.stageActors }
+        : {},
     // Only + button sets this — empty extras without it stay hidden.
     explicitPartial: defaults?.explicitPartial === true,
   }
@@ -185,16 +189,26 @@ export function deriveLineCurrentStageId(rows = [], stages = []) {
 }
 
 export function getQuantityRowStageProgress(row, stages = []) {
-  const { productionStages, activeIndex } = resolveProductionStageActiveIndex(
-    { currentStageId: row?.currentStageId },
-    stages,
-  )
-  return productionStages.map((stage, index) => ({
-    ...stage,
-    completed: activeIndex >= 0 && index < activeIndex,
-    active: activeIndex >= 0 && index === activeIndex,
-    pending: activeIndex < 0 || index > activeIndex,
-  }))
+  const productionStages = resolveProductionStagesList(stages)
+  if (!productionStages.length) return []
+
+  const activeStageId =
+    String(row?.currentStageId || '').trim() || productionStages[0]?.id || ''
+  const stageTimestamps =
+    row?.stageTimestamps && typeof row.stageTimestamps === 'object'
+      ? row.stageTimestamps
+      : {}
+
+  return productionStages.map((stage) => {
+    const hasVisit = Boolean(String(stageTimestamps[stage.id] || '').trim())
+    const isActive = stage.id === activeStageId
+    return {
+      ...stage,
+      completed: hasVisit && !isActive,
+      active: isActive,
+      pending: !hasVisit && !isActive,
+    }
+  })
 }
 
 export function syncLineQuantitiesFromRows(quantityRows = []) {

@@ -33,6 +33,7 @@ import {
   upsertTrip,
 } from './sevkiyatStore'
 import { createOutgoingWaybill, getWarehouses } from './stockStore'
+import { getProductionActorName } from './productionActor'
 
 function createActivityId() {
   return `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -94,23 +95,22 @@ export function createProductionLineItemActions({
 
   function handleQuantityRowStageChange(lineItem, rowId, stageId) {
     if (!job || lineItem.productionClosed) return
+    if (!stageId) return
     const stage = productionStageOptions.find((item) => item.id === stageId)
-    const stageIndex = productionStageOptions.findIndex((item) => item.id === stageId)
+    const actor = getProductionActorName()
     const rows = getLineQuantityRows(lineItem).map((row) => {
       if (row.id !== rowId) return row
       const now = createQuantityRowTimestamp()
       const stageTimestamps = { ...(row.stageTimestamps || {}) }
-      productionStageOptions.forEach((item, index) => {
-        if (stageIndex >= 0 && index <= stageIndex && !stageTimestamps[item.id]) {
-          stageTimestamps[item.id] = now
-        }
-      })
-      if (stageId) stageTimestamps[stageId] = now
+      const stageActors = { ...(row.stageActors || {}) }
+      stageTimestamps[stageId] = now
+      stageActors[stageId] = actor
       return {
         ...row,
-        currentStageId: stageId || row.currentStageId,
+        currentStageId: stageId,
         stageUpdatedAt: now,
         stageTimestamps,
+        stageActors,
         productionStartedAt: row.productionStartedAt || now,
       }
     })
@@ -118,7 +118,7 @@ export function createProductionLineItemActions({
     patchLineQuantityRows(lineItem, rows, {
       lineItemPatch: !lineItem.productionStartedAt ? { productionStartedAt: createQuantityRowTimestamp() } : {},
     })
-    appendActivity(`"${lineItem.product}" teslimat #${rows.findIndex((row) => row.id === rowId) + 1} "${stage?.label || ''}" aşamasına alındı.`)
+    appendActivity(`"${lineItem.product}" teslimat #${rows.findIndex((row) => row.id === rowId) + 1} "${stage?.label || ''}" aşamasına alındı (${actor}).`)
   }
 
   function handleLineQuantityRowChange(lineItem, rowId, patch) {

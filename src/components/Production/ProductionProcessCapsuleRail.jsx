@@ -75,10 +75,11 @@ export default function ProductionProcessCapsuleRail({
           const isActive = kind === 'active'
           const isDone = kind === 'done'
           const isPending = kind === 'pending'
-          const prevDone = index > 0 && Boolean(steps[index - 1]?.isComplete)
+          const prevVisited =
+            index > 0 && (Boolean(steps[index - 1]?.isComplete) || Boolean(steps[index - 1]?.isActive))
           const clickable = !readOnly && typeof onStageClick === 'function'
-          const nextLit =
-            steps[index + 1]?.isComplete || steps[index + 1]?.isActive || isActive
+          const nextVisited =
+            Boolean(steps[index + 1]?.isComplete) || Boolean(steps[index + 1]?.isActive) || isActive
           const photos = (stagePhotos || []).filter((photo) => photo.stageId === step.id)
           const canAddPhoto = !readOnly && typeof onAddPhotos === 'function' && photos.length === 0
           const canEditPhoto = !readOnly && typeof onReplacePhoto === 'function'
@@ -94,12 +95,12 @@ export default function ProductionProcessCapsuleRail({
               {index < steps.length - 1 ? (
                 <span
                   className={`prod-process-connector absolute left-1/2 top-[18px] z-0 h-[2px] w-full ${
-                    isDone || (isActive && prevDone) ? 'prod-process-connector-live' : ''
+                    isDone || isActive || prevVisited ? 'prod-process-connector-live' : ''
                   }`}
                   style={{
                     background:
-                      isDone || (isActive && prevDone)
-                        ? `linear-gradient(90deg, ${fill}, ${nextFill}${nextLit ? '' : '88'})`
+                      isDone || isActive || prevVisited
+                        ? `linear-gradient(90deg, ${fill}, ${nextFill}${nextVisited ? '' : '88'})`
                         : 'var(--border, #E2E8F0)',
                   }}
                   aria-hidden
@@ -109,8 +110,8 @@ export default function ProductionProcessCapsuleRail({
                 <span
                   className="absolute right-1/2 top-[18px] z-0 h-[2px] w-1/2"
                   style={{
-                    background: prevDone || isDone || isActive ? fill : 'var(--border, #E2E8F0)',
-                    opacity: prevDone || isDone || isActive ? 1 : 0.75,
+                    background: prevVisited || isDone || isActive ? fill : 'var(--border, #E2E8F0)',
+                    opacity: prevVisited || isDone || isActive ? 1 : 0.75,
                   }}
                   aria-hidden
                 />
@@ -157,7 +158,7 @@ export default function ProductionProcessCapsuleRail({
                 >
                   {step.label}
                 </span>
-                {stageStamp.date && (isDone || isActive) ? (
+                {stageStamp.date ? (
                   <span className="flex flex-col items-center gap-0 leading-tight">
                     <span className="text-[10px] font-bold tabular-nums text-[var(--muted,#64748B)]">
                       {stageStamp.date}
@@ -165,6 +166,14 @@ export default function ProductionProcessCapsuleRail({
                     {stageStamp.time ? (
                       <span className="text-[9px] font-semibold tabular-nums text-[var(--muted,#94A3B8)]">
                         {stageStamp.time}
+                      </span>
+                    ) : null}
+                    {step.stageActor ? (
+                      <span
+                        className="mt-0.5 max-w-full truncate px-0.5 text-[9px] font-semibold text-[var(--muted,#64748B)]"
+                        title={step.stageActor}
+                      >
+                        {step.stageActor}
                       </span>
                     ) : null}
                   </span>
