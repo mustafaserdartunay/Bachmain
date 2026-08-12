@@ -102,7 +102,7 @@ export function ModuleListPage({ moduleId }: ModuleListPageProps) {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {data!.metrics.map((m, i) => (
+        {(data?.metrics ?? []).map((m, i) => (
           <motion.div
             key={m.label}
             initial={{ opacity: 0, y: 12 }}

@@ -45,6 +45,8 @@ import {
   createSupportTicketFromRequest,
   getSupportTicket,
   listSupportTickets,
+  notifySupportReply,
+  notifySupportTicketCreated,
 } from '../server/supportRoutes.mjs'
 
 function getPath(req) {
@@ -284,6 +286,9 @@ export default async function handler(req, res) {
         const result = await withStore(async (store) =>
           createSupportTicketFromRequest(store, req, body),
         )
+        await withStore(async (store) => {
+          await notifySupportTicketCreated(store, result)
+        }).catch(() => null)
         return sendJson(req, res, 201, {
           ok: true,
           ticket: result,
@@ -315,6 +320,69 @@ export default async function handler(req, res) {
     }
 
     const query = getQuery(req)
+
+    // Single-segment ticket detail (Vercel-safe): /api/support-ticket?id=
+    if (path === 'support-ticket') {
+      const id = String(query.id || query.ticketId || body.id || '').trim()
+      const op = String(query.op || (method === 'GET' ? 'get' : '')).trim().toLowerCase()
+      if (!id) {
+        return sendJson(req, res, 400, { error: 'MISSING_ID', message: 'Ticket id zorunlu' })
+      }
+      if (method === 'GET' || op === 'get') {
+        const store = await loadStore()
+        const ticket = getSupportTicket(store, id)
+        if (!ticket) return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
+        return sendJson(req, res, 200, ticket)
+      }
+      if (method === 'POST' && (op === 'reply' || op === 'replies')) {
+        try {
+          const result = await withStore(async (store) =>
+            addSupportReply(store, id, {
+              content: body.content || body.message || body.body,
+              author: body.author || 'Destek',
+              notifyUser: body.notifyUser !== false,
+            }),
+          )
+          await withStore(async (store) => {
+            await notifySupportReply(store, result.ticket, result.reply)
+          }).catch(() => null)
+          return sendJson(req, res, 201, { ok: true, ...result })
+        } catch (error) {
+          if (error?.message === 'NOT_FOUND') {
+            return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
+          }
+          if (error?.message === 'MESSAGE_REQUIRED') {
+            return sendJson(req, res, 400, { error: 'Yanıt metni zorunludur' })
+          }
+          throw error
+        }
+      }
+      if (method === 'POST' && (op === 'note' || op === 'notes')) {
+        const note = await withStore((store) => {
+          const ticket = getSupportTicket(store, id)
+          if (!ticket) return null
+          if (!Array.isArray(ticket.internalNotes)) ticket.internalNotes = []
+          const row = {
+            id: newId('n'),
+            content: String(body.content || body.note || body.body || '').trim(),
+            author: body.author || 'Destek',
+            createdAt: new Date().toISOString(),
+            date: new Date().toISOString(),
+          }
+          if (!row.content) {
+            const err = new Error('MESSAGE_REQUIRED')
+            err.status = 400
+            throw err
+          }
+          ticket.internalNotes.push(row)
+          ticket.updatedAt = row.createdAt
+          return row
+        })
+        if (!note) return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
+        return sendJson(req, res, 201, { ok: true, note })
+      }
+    }
+
     if (await handleQualityControl(req, res, path, body, query)) return
     if (await handleSocialConnections(req, res, path)) return
     if (await handleSecurityApi(req, res, path)) return
@@ -440,6 +508,27 @@ export default async function handler(req, res) {
           ]
         } else if (moduleId === 'support') {
           rows = buildSupportModuleRows(store)
+          metrics = [
+            { label: 'Toplam', value: String(rows.length), change: 'Ticket', trend: 'neutral' },
+            {
+              label: 'Açık',
+              value: String(rows.filter((r) => r.status === 'Açık').length),
+              change: '—',
+              trend: 'up',
+            },
+            {
+              label: 'Bekliyor',
+              value: String(rows.filter((r) => r.status === 'Bekliyor').length),
+              change: '—',
+              trend: 'neutral',
+            },
+            {
+              label: 'Yüksek',
+              value: String(rows.filter((r) => r.priority === 'Yüksek' || r.priority === 'Kritik').length),
+              change: 'Öncelik',
+              trend: 'down',
+            },
+          ]
         } else if (moduleId === 'live-support') {
           rows = await loadLiveSupportRows()
         } else if (moduleId === 'server') {

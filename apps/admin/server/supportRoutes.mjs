@@ -181,7 +181,8 @@ export async function createSupportTicketFromRequest(store, req, body = {}) {
     category,
     categoryLabel,
     customer: requester.companyName,
-    customerId: requester.accountId || '',
+    customerId: requester.customerId || '',
+    accountId: requester.accountId || null,
     contactName: requester.displayName,
     contactEmail: requester.email,
     contactPhone: requester.phone,
@@ -244,6 +245,14 @@ export async function createSupportTicketFromRequest(store, req, body = {}) {
   })
   store.notifications = store.notifications.slice(0, 2000)
 
+  ticket.acknowledgment = ack
+  return ticket
+}
+
+/** Mail after withStore — avoids long locks + mid-save races wiping tickets. */
+export async function notifySupportTicketCreated(store, ticket) {
+  if (!ticket?.id) return
+  const ack = ticket.acknowledgment || acknowledgmentFor(ticket.category)
   const supportEmail = MAIL_BRAND.supportEmail()
   const adminUrl = `${MAIL_BRAND.adminUrl()}/destek/${ticket.id}`
 
@@ -252,12 +261,12 @@ export async function createSupportTicketFromRequest(store, req, body = {}) {
     template: 'ticket_staff_alert',
     type: 'support_staff',
     immediate: true,
-    accountId: requester.accountId || undefined,
+    accountId: ticket.accountId || undefined,
     data: {
       name: 'Destek Ekibi',
       subject: ticket.subject,
       ticketId: ticket.id,
-      category: categoryLabel,
+      category: ticket.categoryLabel || ticket.category || 'Destek',
       customer: ticket.customer,
       contactName: ticket.contactName,
       contactEmail: ticket.contactEmail || '—',
@@ -265,31 +274,28 @@ export async function createSupportTicketFromRequest(store, req, body = {}) {
       message: ticket.description,
       ticketUrl: adminUrl,
     },
-    meta: { ticketId: ticket.id, category },
-  })
+    meta: { ticketId: ticket.id, category: ticket.category },
+  }).catch(() => null)
 
-  if (requester.email) {
+  if (ticket.contactEmail) {
     await sendTemplateMail(store, {
-      to: requester.email,
+      to: ticket.contactEmail,
       template: 'ticket_new',
       type: 'support_user',
       immediate: true,
-      accountId: requester.accountId || undefined,
+      accountId: ticket.accountId || undefined,
       data: {
-        name: requester.displayName,
+        name: ticket.contactName || 'Kullanıcı',
         subject: ticket.subject,
         ticketId: ticket.id,
         ticketUrl: adminUrl,
-        category: categoryLabel,
+        category: ticket.categoryLabel || ticket.category || 'Destek',
         ackTitle: ack.title,
         ackMessage: ack.body,
       },
       meta: { ticketId: ticket.id },
-    })
+    }).catch(() => null)
   }
-
-  ticket.acknowledgment = ack
-  return ticket
 }
 
 export async function addSupportReply(store, ticketId, { content, author = 'Destek', notifyUser = true }) {
@@ -327,20 +333,42 @@ export async function addSupportReply(store, ticketId, { content, author = 'Dest
   syncSupportModuleRow(store, ticket)
 
   if (notifyUser && ticket.contactEmail) {
-    await sendTemplateMail(store, {
+    ticket._pendingReplyNotify = {
       to: ticket.contactEmail,
-      template: 'ticket_replied',
-      type: 'support_reply',
-      immediate: true,
-      data: {
-        name: ticket.contactName || 'Kullanıcı',
-        subject: ticket.subject,
-        replyPreview: reply.content.slice(0, 280),
-        ticketUrl: `${MAIL_BRAND.adminUrl()}/destek/${ticket.id}`,
-      },
-      meta: { ticketId: ticket.id, replyId: reply.id },
-    })
+      name: ticket.contactName || 'Kullanıcı',
+      subject: ticket.subject,
+      replyPreview: reply.content.slice(0, 280),
+      ticketUrl: `${MAIL_BRAND.adminUrl()}/destek/${ticket.id}`,
+    }
   }
 
   return { ticket, reply }
+}
+
+export async function notifySupportReply(store, ticket, reply) {
+  const pending = ticket?._pendingReplyNotify
+  if (pending) delete ticket._pendingReplyNotify
+  const payload = pending || (ticket?.contactEmail
+    ? {
+        to: ticket.contactEmail,
+        name: ticket.contactName || 'Kullanıcı',
+        subject: ticket.subject,
+        replyPreview: String(reply?.content || '').slice(0, 280),
+        ticketUrl: `${MAIL_BRAND.adminUrl()}/destek/${ticket.id}`,
+      }
+    : null)
+  if (!payload?.to) return
+  await sendTemplateMail(store, {
+    to: payload.to,
+    template: 'ticket_replied',
+    type: 'support_reply',
+    immediate: true,
+    data: {
+      name: payload.name,
+      subject: payload.subject,
+      replyPreview: payload.replyPreview,
+      ticketUrl: payload.ticketUrl,
+    },
+    meta: { ticketId: ticket.id, replyId: reply?.id },
+  }).catch(() => null)
 }

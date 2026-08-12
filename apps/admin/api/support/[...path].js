@@ -1,16 +1,15 @@
 /**
- * Explicit /api/support/* for Vercel.
- * Multi-segment catch-all (/api/a/b) returns NOT_FOUND without this file.
- * CRM ticket create is public (member Bearer optional); list/detail/replies need staff.
+ * Explicit /api/support/* for Vercel (max one path segment after /support).
+ * CRM create: POST /api/support/tickets
+ * Detail/reply use /api/support-ticket?id= (see support-ticket.js)
  */
 import { withStore, loadStore } from '../../server/store.mjs'
 import { applyCors, sendJson } from '../../server/authRoutes.mjs'
 import { requireStaffOrReject } from '../../server/staffAuth.mjs'
 import {
-  addSupportReply,
   createSupportTicketFromRequest,
-  getSupportTicket,
   listSupportTickets,
+  notifySupportTicketCreated,
 } from '../../server/supportRoutes.mjs'
 
 async function readBody(req) {
@@ -48,12 +47,15 @@ export default async function handler(req, res) {
     const body =
       method === 'POST' || method === 'PUT' || method === 'PATCH' ? await readBody(req) : {}
 
-    // CRM → yeni talep (üyelik Bearer ile; staff gerekmez)
+    // CRM → yeni talep
     if (method === 'POST' && (sub === 'tickets' || sub === '')) {
       try {
         const result = await withStore(async (store) =>
           createSupportTicketFromRequest(store, req, body),
         )
+        await withStore(async (store) => {
+          await notifySupportTicketCreated(store, result)
+        }).catch(() => null)
         return sendJson(req, res, 201, {
           ok: true,
           ticket: result,
@@ -79,62 +81,11 @@ export default async function handler(req, res) {
       return sendJson(req, res, 200, listSupportTickets(store))
     }
 
-    const ticketMatch = sub.match(/^tickets\/([^/]+)$/)
-    if (method === 'GET' && ticketMatch) {
-      const store = await loadStore()
-      const ticket = getSupportTicket(store, ticketMatch[1])
-      if (!ticket) return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
-      return sendJson(req, res, 200, ticket)
-    }
-
-    const replyMatch = sub.match(/^tickets\/([^/]+)\/replies$/)
-    if (method === 'POST' && replyMatch) {
-      try {
-        const result = await withStore(async (store) =>
-          addSupportReply(store, replyMatch[1], {
-            content: body.content || body.message || body.body,
-            author: body.author || staffGate.session?.user?.email || 'Destek',
-            notifyUser: body.notifyUser !== false,
-          }),
-        )
-        return sendJson(req, res, 201, { ok: true, ...result })
-      } catch (error) {
-        if (error?.message === 'NOT_FOUND') {
-          return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
-        }
-        if (error?.message === 'MESSAGE_REQUIRED') {
-          return sendJson(req, res, 400, { error: 'Yanıt metni zorunludur' })
-        }
-        throw error
-      }
-    }
-
-    const noteMatch = sub.match(/^tickets\/([^/]+)\/notes$/)
-    if (method === 'POST' && noteMatch) {
-      const result = await withStore((store) => {
-        const ticket = getSupportTicket(store, noteMatch[1])
-        if (!ticket) return null
-        if (!Array.isArray(ticket.internalNotes)) ticket.internalNotes = []
-        const note = {
-          id: `n_${Date.now()}`,
-          content: String(body.content || body.note || body.body || '').trim(),
-          author: body.author || staffGate.session?.user?.email || 'Destek',
-          createdAt: new Date().toISOString(),
-        }
-        if (!note.content) {
-          const err = new Error('MESSAGE_REQUIRED')
-          err.status = 400
-          throw err
-        }
-        ticket.internalNotes.push(note)
-        ticket.updatedAt = note.createdAt
-        return note
-      })
-      if (!result) return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
-      return sendJson(req, res, 201, { ok: true, note: result })
-    }
-
-    return sendJson(req, res, 404, { error: 'NOT_FOUND', path: fullPath })
+    return sendJson(req, res, 404, {
+      error: 'NOT_FOUND',
+      path: fullPath,
+      hint: 'Detay için /api/support-ticket?id=... kullanın',
+    })
   } catch (error) {
     return sendJson(req, res, error?.status || 500, {
       error: 'SERVER_ERROR',

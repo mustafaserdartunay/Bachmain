@@ -36,6 +36,8 @@ import {
   addSupportReply,
   buildSupportModuleRows,
   createSupportTicketFromRequest,
+  notifySupportReply,
+  notifySupportTicketCreated,
 } from './supportRoutes.mjs'
 import {
   buildDashboardPayload,
@@ -323,6 +325,9 @@ async function handle(req, res, url) {
         const result = await withStore(async (store) =>
           createSupportTicketFromRequest(store, req, body),
         )
+        await withStore(async (store) => {
+          await notifySupportTicketCreated(store, result)
+        }).catch(() => null)
         return sendJson(req, res, 201, {
           ok: true,
           ticket: result,
@@ -349,6 +354,9 @@ async function handle(req, res, url) {
             notifyUser: body.notifyUser !== false,
           }),
         )
+        await withStore(async (store) => {
+          await notifySupportReply(store, result.ticket, result.reply)
+        }).catch(() => null)
         return sendJson(req, res, 201, { ok: true, ...result })
       } catch (error) {
         if (error?.message === 'NOT_FOUND') {
