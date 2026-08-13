@@ -87,6 +87,14 @@ export const supportApi = {
     api.get<SupportTicket>(`/support-ticket?id=${encodeURIComponent(id)}`),
   create: (data: Partial<SupportTicket>) =>
     api.post<{ ok?: boolean; ticket?: SupportTicket } | SupportTicket>('/support/tickets', data),
+  update: (
+    id: string,
+    patch: { status?: string; priority?: string; assignee?: string },
+  ) =>
+    api.post<{ ok: boolean; ticket: SupportTicket }>(
+      `/support-ticket?id=${encodeURIComponent(id)}&op=update`,
+      patch,
+    ),
   addNote: (id: string, content: string, author = 'Admin') =>
     api.post(`/support-ticket?id=${encodeURIComponent(id)}&op=notes`, { content, author }),
   reply: (id: string, content: string, author = 'Destek') =>
@@ -144,6 +152,9 @@ export interface MembershipRow {
   message?: string
   canLogin?: boolean
   subscriptionStatus?: string | null
+  openTicketCount?: number
+  lastActivityAt?: string
+  lastPaymentStatus?: string | null
 }
 
 export interface MembershipDetail extends MembershipRow {

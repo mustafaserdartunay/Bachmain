@@ -190,6 +190,21 @@ export function MembershipsPage() {
 
   const rows = (data?.rows ?? []) as unknown as MembershipRow[]
 
+  const boardMetrics = useMemo(() => {
+    const total = rows.length
+    const demo = rows.filter((r) => r.role === 'demo' || r.statusKind?.includes('demo') || r.sourceRaw === 'demo').length
+    const active = rows.filter((r) => r.statusKind === 'active' || r.canLogin !== false && (r.remainingDays ?? 0) >= 0 && !String(r.statusKind || '').includes('ended')).length
+    const ended = rows.filter((r) => String(r.statusKind || '').includes('ended') || (typeof r.remainingDays === 'number' && r.remainingDays < 0)).length
+    const withTickets = rows.filter((r) => (r.openTicketCount || 0) > 0).length
+    return [
+      { label: 'Toplam üye', value: String(total), change: '', trend: 'up' as const },
+      { label: 'Demo', value: String(demo), change: '', trend: 'neutral' as const },
+      { label: 'Aktif / açık', value: String(active), change: '', trend: 'up' as const },
+      { label: 'Süresi biten', value: String(ended), change: '', trend: 'down' as const },
+      { label: 'Açık ticketlı', value: String(withTickets), change: '', trend: 'neutral' as const },
+    ]
+  }, [rows])
+
   const openDetail = (id: string) => {
     if (!id) return
     navigate(`/uyeler/${encodeURIComponent(id)}`)
@@ -448,6 +463,16 @@ export function MembershipsPage() {
       label: 'Kaynak',
       render: (row) => <Badge variant="default">{row.source || '—'}</Badge>,
     },
+    { key: 'plan', label: 'Plan' },
+    {
+      key: 'remainingDays',
+      label: 'Kalan',
+      render: (row) => (
+        <span className="tabular-nums text-sm">
+          {typeof row.remainingDays === 'number' ? `${row.remainingDays}g` : '—'}
+        </span>
+      ),
+    },
     {
       key: 'status',
       label: 'Durum',
@@ -461,6 +486,38 @@ export function MembershipsPage() {
       },
     },
     {
+      key: 'openTicketCount',
+      label: 'Ticket',
+      render: (row) => (
+        <span className={`tabular-nums text-sm font-semibold ${(row.openTicketCount || 0) > 0 ? 'text-amber-600' : 'text-text-muted'}`}>
+          {row.openTicketCount || 0}
+        </span>
+      ),
+    },
+    {
+      key: 'lastActivityAt',
+      label: 'Son aktivite',
+      render: (row) => (
+        <span className="text-xs tabular-nums">
+          {row.lastActivityAt && row.lastActivityAt !== '—'
+            ? formatDate(row.lastActivityAt)
+            : row.lastLoginAt && row.lastLoginAt !== '—'
+              ? formatDate(row.lastLoginAt)
+              : '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'lastPaymentStatus',
+      label: 'Ödeme',
+      render: (row) =>
+        row.lastPaymentStatus ? (
+          <Badge variant="default">{String(row.lastPaymentStatus)}</Badge>
+        ) : (
+          <span className="text-xs text-text-muted">—</span>
+        ),
+    },
+    {
       key: 'licenseExpiry',
       label: 'Bitiş',
       render: (row) => (
@@ -469,7 +526,6 @@ export function MembershipsPage() {
         </span>
       ),
     },
-    { key: 'plan', label: 'Plan' },
     {
       key: 'createdAt',
       label: 'Kayıt',
@@ -676,8 +732,8 @@ export function MembershipsPage() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {(data?.metrics ?? []).map((m, i) => (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {boardMetrics.map((m, i) => (
           <motion.div
             key={m.label}
             initial={{ opacity: 0, y: 12 }}

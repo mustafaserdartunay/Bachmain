@@ -68,6 +68,9 @@ export interface SupportTicket {
   subject: string
   customer: string
   customerId: string
+  accountId?: string | null
+  tenantCode?: string
+  source?: string
   contactName?: string
   contactEmail?: string
   contactPhone?: string

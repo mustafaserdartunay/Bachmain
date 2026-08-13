@@ -149,12 +149,85 @@ export function buildSupportModuleRows(store) {
     id: ticket.id,
     subject: ticket.subject,
     customer: ticket.customer,
+    contactName: ticket.contactName || '—',
+    contactEmail: ticket.contactEmail || '—',
+    contactPhone: ticket.contactPhone || '—',
     category: CATEGORY_LABELS[ticket.category] || ticket.category || 'Destek',
+    categoryId: ticket.category || 'destek',
     priority: PRIORITY_TR[ticket.priority] || ticket.priority,
+    priorityId: ticket.priority || 'medium',
     status: STATUS_TR[ticket.status] || ticket.status,
+    statusId: ticket.status || 'open',
     assignee: ticket.assignee || 'Atanmadı',
+    accountId: ticket.accountId || null,
+    customerId: ticket.customerId || null,
+    slaDeadline: ticket.slaDeadline || null,
     createdAt: String(ticket.createdAt || '').slice(0, 10),
+    createdAtFull: ticket.createdAt || null,
+    updatedAt: ticket.updatedAt || ticket.createdAt || null,
+    descriptionPreview: String(ticket.description || '').slice(0, 140),
   }))
+}
+
+const ALLOWED_STATUSES = new Set(['open', 'in_progress', 'waiting', 'resolved', 'closed'])
+const ALLOWED_PRIORITIES = new Set(['low', 'medium', 'high', 'critical'])
+
+export function updateSupportTicket(store, ticketId, patch = {}, actor = 'Destek') {
+  const ticket = getSupportTicket(store, ticketId)
+  if (!ticket) {
+    const err = new Error('NOT_FOUND')
+    err.status = 404
+    throw err
+  }
+  const now = new Date().toISOString()
+  const changes = []
+
+  if (patch.status != null) {
+    const next = String(patch.status).trim().toLowerCase()
+    if (!ALLOWED_STATUSES.has(next)) {
+      const err = new Error('INVALID_STATUS')
+      err.status = 400
+      throw err
+    }
+    if (next !== ticket.status) {
+      changes.push(`Durum: ${STATUS_TR[ticket.status] || ticket.status} → ${STATUS_TR[next]}`)
+      ticket.status = next
+    }
+  }
+  if (patch.priority != null) {
+    const next = String(patch.priority).trim().toLowerCase()
+    if (!ALLOWED_PRIORITIES.has(next)) {
+      const err = new Error('INVALID_PRIORITY')
+      err.status = 400
+      throw err
+    }
+    if (next !== ticket.priority) {
+      changes.push(`Öncelik: ${PRIORITY_TR[ticket.priority] || ticket.priority} → ${PRIORITY_TR[next]}`)
+      ticket.priority = next
+    }
+  }
+  if (patch.assignee != null) {
+    const next = String(patch.assignee).trim() || 'Atanmadı'
+    if (next !== ticket.assignee) {
+      changes.push(`Atanan: ${ticket.assignee || 'Atanmadı'} → ${next}`)
+      ticket.assignee = next
+    }
+  }
+
+  if (changes.length) {
+    ticket.updatedAt = now
+    if (!Array.isArray(ticket.timeline)) ticket.timeline = []
+    ticket.timeline.push({
+      id: newId('tl'),
+      title: 'Ticket güncellendi',
+      description: changes.join(' · '),
+      date: now,
+      type: 'info',
+      user: actor,
+    })
+    syncSupportModuleRow(store, ticket)
+  }
+  return ticket
 }
 
 export async function createSupportTicketFromRequest(store, req, body = {}) {

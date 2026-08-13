@@ -232,8 +232,79 @@ export function buildAccountRows(store) {
       message: a.demoMessage || c?.demoMessage || '—',
       canLogin: a.canLogin !== false,
       subscriptionStatus: c?.subscriptionStatus || null,
+      openTicketCount: countOpenTicketsForAccount(store, a),
+      lastActivityAt: resolveLastActivityAt(store, a),
+      lastPaymentStatus: resolveLastPaymentStatus(store, a),
     }
   })
+}
+
+function ticketMatchesAccount(ticket, account) {
+  if (!ticket || !account) return false
+  const email = String(account.email || '')
+    .trim()
+    .toLowerCase()
+  const contact = String(ticket.contactEmail || '')
+    .trim()
+    .toLowerCase()
+  if (account.customerId && ticket.customerId && ticket.customerId === account.customerId) {
+    return true
+  }
+  if (account.id && ticket.accountId && ticket.accountId === account.id) return true
+  if (email && contact && email === contact) return true
+  return false
+}
+
+function isOpenTicketStatus(status) {
+  const s = String(status || '').toLowerCase()
+  return s !== 'resolved' && s !== 'closed' && s !== 'çözüldü' && s !== 'kapalı'
+}
+
+function countOpenTicketsForAccount(store, account) {
+  return (store.supportTickets || []).filter(
+    (t) => ticketMatchesAccount(t, account) && isOpenTicketStatus(t.status),
+  ).length
+}
+
+function resolveLastActivityAt(store, account) {
+  const stamps = []
+  const push = (v) => {
+    if (v) stamps.push(String(v))
+  }
+  push(account.lastLoginAt)
+  push(account.lastDemoAt)
+  push(account.updatedAt)
+  push(account.createdAt)
+  for (const t of store.supportTickets || []) {
+    if (!ticketMatchesAccount(t, account)) continue
+    push(t.updatedAt)
+    push(t.createdAt)
+  }
+  for (const e of store.authEvents || []) {
+    if (
+      e.accountId === account.id ||
+      (account.customerId && e.customerId === account.customerId) ||
+      (account.email && e.email === account.email)
+    ) {
+      push(e.at || e.createdAt)
+    }
+  }
+  stamps.sort((a, b) => String(b).localeCompare(String(a)))
+  return stamps[0] || account.createdAt || '—'
+}
+
+function resolveLastPaymentStatus(store, account) {
+  const payments = (store.paymentRequests || [])
+    .filter(
+      (p) =>
+        (account.customerId && p.customerId === account.customerId) ||
+        (account.email &&
+          p.email &&
+          String(p.email).toLowerCase() === String(account.email).toLowerCase()),
+    )
+    .slice()
+    .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+  return payments[0]?.status || null
 }
 
 export function buildMembershipDetail(store, accountId) {
@@ -263,8 +334,9 @@ export function buildMembershipDetail(store, accountId) {
     .map((p, i) => ({ id: p.id || `pay_${i}`, ...p }))
 
   const tickets = (store.supportTickets || [])
-    .filter((t) => account.customerId && t.customerId === account.customerId)
+    .filter((t) => ticketMatchesAccount(t, account))
     .map((t, i) => ({ id: t.id || `tkt_${i}`, ...t }))
+    .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')))
 
   const history = (store.billing?.history || [])
     .filter((h) => account.customerId && h.customerId === account.customerId)

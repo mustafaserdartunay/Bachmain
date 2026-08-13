@@ -24,6 +24,7 @@ import { MailCenterPage } from '@/pages/mail/MailCenterPage'
 import { AiControlCenterPage } from '@/pages/AiControlCenterPage'
 import { MembershipsPage } from '@/pages/MembershipsPage'
 import { MembershipDetailPage } from '@/pages/MembershipDetailPage'
+import { SupportInboxPage } from '@/pages/SupportInboxPage'
 import { LegalContentPage } from '@/pages/LegalContentPage'
 import { AnnouncementsAdminPage } from '@/pages/AnnouncementsAdminPage'
 import { QualityControlPage } from '@/pages/QualityControlPage'
@@ -98,7 +99,7 @@ export function AppRoutes() {
         <Route path="hukuki" element={<LegalContentPage />} />
         <Route path="duyurular" element={<AnnouncementsAdminPage />} />
 
-        <Route path="destek" element={<ModuleListPage moduleId="support" />} />
+        <Route path="destek" element={<SupportInboxPage />} />
         <Route path="destek/yeni" element={<ModuleFormPage moduleId="support" mode="create" />} />
         <Route path="destek/:id" element={<SupportDetailPage />} />
         <Route

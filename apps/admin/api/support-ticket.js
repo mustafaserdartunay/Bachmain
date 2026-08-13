@@ -10,6 +10,7 @@ import {
   addSupportReply,
   getSupportTicket,
   notifySupportReply,
+  updateSupportTicket,
 } from '../server/supportRoutes.mjs'
 
 async function readBody(req) {
@@ -76,6 +77,32 @@ export default async function handler(req, res) {
       const ticket = getSupportTicket(store, id)
       if (!ticket) return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
       return sendJson(req, res, 200, ticket)
+    }
+
+    if (method === 'POST' && (op === 'update' || op === 'patch')) {
+      try {
+        const ticket = await withStore((store) =>
+          updateSupportTicket(
+            store,
+            id,
+            {
+              status: body.status,
+              priority: body.priority,
+              assignee: body.assignee,
+            },
+            staffAuthor,
+          ),
+        )
+        return sendJson(req, res, 200, { ok: true, ticket })
+      } catch (error) {
+        if (error?.message === 'NOT_FOUND') {
+          return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
+        }
+        if (error?.message === 'INVALID_STATUS' || error?.message === 'INVALID_PRIORITY') {
+          return sendJson(req, res, 400, { error: error.message, message: 'Geçersiz alan değeri' })
+        }
+        throw error
+      }
     }
 
     if (method === 'POST' && (op === 'reply' || op === 'replies')) {
