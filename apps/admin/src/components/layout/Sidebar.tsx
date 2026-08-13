@@ -4,11 +4,14 @@ import { motion } from 'framer-motion'
 import * as ScrollArea from '@radix-ui/react-scroll-area'
 import { filterNavItemsForRole } from '@/data/navigation'
 import { getStaffRole } from '@/pages/StaffLoginPage'
+import { useSupportAlert } from '@/hooks/useSupportAlertCount'
+import { CountBadge } from '@/components/ui/CountBadge'
 import { cn } from '@/lib/utils'
 
 export function Sidebar() {
   const items = useMemo(() => filterNavItemsForRole(getStaffRole()), [])
   const groups = [...new Set(items.map((n) => n.group))]
+  const supportAlert = useSupportAlert()
 
   return (
     <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-border bg-surface-elevated">
@@ -52,11 +55,13 @@ export function Sidebar() {
                               )}
                               <item.icon className="relative h-4 w-4 shrink-0" aria-hidden />
                               <span className="relative truncate">{item.label}</span>
-                              {item.badge && (
+                              {item.id === 'support' && supportAlert > 0 ? (
+                                <CountBadge count={supportAlert} className="relative ml-auto" />
+                              ) : item.badge ? (
                                 <span className="relative ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
                                   {item.badge}
                                 </span>
-                              )}
+                              ) : null}
                             </>
                           )}
                         </NavLink>

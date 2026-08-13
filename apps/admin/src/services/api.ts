@@ -1,6 +1,7 @@
 import { api } from '@/lib/api'
 import type { Customer, MetricItem, SupportTicket, TimelineEvent } from '@/types'
 import { getModuleById } from '@/data/modules'
+import { dispatchSupportUpdated } from '@/lib/supportAlertEvents'
 
 export {
   platformAdminApi,
@@ -86,26 +87,46 @@ export const supportApi = {
   get: (id: string) =>
     api.get<SupportTicket>(`/support-ticket?id=${encodeURIComponent(id)}`),
   create: (data: Partial<SupportTicket>) =>
-    api.post<{ ok?: boolean; ticket?: SupportTicket } | SupportTicket>('/support/tickets', data),
+    api
+      .post<{ ok?: boolean; ticket?: SupportTicket } | SupportTicket>('/support/tickets', data)
+      .then((result) => {
+        dispatchSupportUpdated()
+        return result
+      }),
   update: (
     id: string,
     patch: { status?: string; priority?: string; assignee?: string },
   ) =>
-    api.post<{ ok: boolean; ticket: SupportTicket }>(
-      `/support-ticket?id=${encodeURIComponent(id)}&op=update`,
-      patch,
-    ),
+    api
+      .post<{ ok: boolean; ticket: SupportTicket }>(
+        `/support-ticket?id=${encodeURIComponent(id)}&op=update`,
+        patch,
+      )
+      .then((result) => {
+        dispatchSupportUpdated()
+        return result
+      }),
   addNote: (id: string, content: string, author = 'Admin') =>
-    api.post(`/support-ticket?id=${encodeURIComponent(id)}&op=notes`, { content, author }),
+    api
+      .post(`/support-ticket?id=${encodeURIComponent(id)}&op=notes`, { content, author })
+      .then((result) => {
+        dispatchSupportUpdated()
+        return result
+      }),
   reply: (id: string, content: string, author = 'Destek') =>
-    api.post<{ ok: boolean; reply: { id: string; content: string } }>(
-      `/support-ticket?id=${encodeURIComponent(id)}&op=reply`,
-      {
-        content,
-        author,
-        notifyUser: true,
-      },
-    ),
+    api
+      .post<{ ok: boolean; reply: { id: string; content: string } }>(
+        `/support-ticket?id=${encodeURIComponent(id)}&op=reply`,
+        {
+          content,
+          author,
+          notifyUser: true,
+        },
+      )
+      .then((result) => {
+        dispatchSupportUpdated()
+        return result
+      }),
 }
 
 export const modulesApi = {
