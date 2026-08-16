@@ -2394,10 +2394,7 @@ export default function QuotesPage() {
           <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
             <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
               <div className="flex shrink-0 items-center gap-2 px-1">
-                <span className="relative flex h-1.5 w-1.5 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
-                </span>
+                <AppPanelDot color="blue" />
                 <span className={YF_TEXT_CLASS}>Filtre :</span>
               </div>
               <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-3">

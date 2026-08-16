@@ -835,11 +835,11 @@ html:not(.night) .app-responsive .page-type-shell .document-compact-controls inp
 .app-responsive .page-type-shell .document-compact-controls .document-frame-only,
 html:not(.night) .app-responsive .page-type-shell .document-compact-controls .glass-inset,
 html:not(.night) .app-responsive .page-type-shell .document-compact-controls .document-frame-only,
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-dark-'],
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-black/'],
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-white'],
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-emerald-'],
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-blue-'],
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-dark-']:not(.app-panel-dot *),
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-black/']:not(.app-panel-dot *),
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-white']:not(.app-panel-dot *),
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-emerald-']:not(.app-panel-dot *),
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-blue-']:not(.app-panel-dot *),
 html.night .app-responsive .page-type-shell .document-compact-controls .glass-inset,
 html.night .app-responsive .page-type-shell .document-compact-controls .document-frame-only {
   background: transparent !important;
@@ -849,6 +849,32 @@ html.night .app-responsive .page-type-shell .document-compact-controls .document
   -webkit-backdrop-filter: none !important;
   border-width: 1px !important;
   border-color: var(--search-border) !important;
+}
+
+/* Panel başlık noktaları — şeffaf zemin kuralı renkleri silmesin; teklif formunda mavi kalsın */
+.page-type-shell .document-compact-controls .app-panel-dot,
+.app-responsive .page-type-shell .document-compact-controls .app-panel-dot {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.page-type-shell .document-compact-controls .app-panel-dot > span,
+.app-responsive .page-type-shell .document-compact-controls .app-panel-dot > span {
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.page-type-shell .document-compact-controls .app-panel-dot > span:first-child,
+.app-responsive .page-type-shell .document-compact-controls .app-panel-dot > span:first-child {
+  background-color: #60a5fa !important;
+}
+
+.page-type-shell .document-compact-controls .app-panel-dot > span:last-child,
+.app-responsive .page-type-shell .document-compact-controls .app-panel-dot > span:last-child {
+  background-color: #2563eb !important;
 }
 
 .page-type-shell .document-compact-controls .glass-inset,

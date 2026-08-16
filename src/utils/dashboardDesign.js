@@ -101,12 +101,12 @@ export const APP_OMNI_EMPTY_CLASS =
   'px-4 py-8 text-center text-xs font-semibold text-[var(--muted)]'
 
 export const APP_DOT_COLORS = {
-  emerald: { ping: 'bg-emerald-400', dot: 'bg-emerald-500' },
-  rose: { ping: 'bg-rose-400', dot: 'bg-rose-500' },
-  amber: { ping: 'bg-amber-400', dot: 'bg-amber-500' },
-  violet: { ping: 'bg-violet-400', dot: 'bg-violet-500' },
-  blue: { ping: 'bg-blue-400', dot: 'bg-blue-500' },
-  orange: { ping: 'bg-orange-400', dot: 'bg-orange-500' },
+  emerald: { ping: 'bg-[#34d399]', dot: 'bg-[#10b981]' },
+  rose: { ping: 'bg-[#fb7185]', dot: 'bg-[#e11d48]' },
+  amber: { ping: 'bg-[#fbbf24]', dot: 'bg-[#f59e0b]' },
+  violet: { ping: 'bg-[#a78bfa]', dot: 'bg-[#8b5cf6]' },
+  blue: { ping: 'bg-[#60a5fa]', dot: 'bg-[#2563eb]' },
+  orange: { ping: 'bg-[#fb923c]', dot: 'bg-[#ea580c]' },
 }
 
 /** Aktivasyon Zaman Tablosu — nokta + tutar renkleri (header hızlı aksiyon tonlarıyla uyumlu) */

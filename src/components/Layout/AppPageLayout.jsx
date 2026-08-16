@@ -116,7 +116,7 @@ export function AppPageBackLink({ to = '/', label = 'Güncel Durum', onClick }) 
 export function AppPanelDot({ color = 'blue' }) {
   const palette = APP_DOT_COLORS[color] || APP_DOT_COLORS.blue
   return (
-    <span className="relative flex h-1.5 w-1.5 shrink-0">
+    <span className="app-panel-dot relative flex h-1.5 w-1.5 shrink-0">
       <span
         className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${palette.ping}`}
       />
