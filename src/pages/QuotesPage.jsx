@@ -193,9 +193,9 @@ function StageColorSwatches({
   )
 }
 
-const quoteItemGridClass = 'grid-cols-[150px_minmax(0,1fr)]'
-const quoteItemFieldsGridClass = 'grid-cols-[minmax(0,1.4fr)_110px_150px_110px_150px_92px]'
-const quoteItemFieldGapClass = 'gap-x-4'
+const quoteItemGridClass = 'grid-cols-[72px_minmax(0,1fr)]'
+const quoteItemFieldsGridClass = 'grid-cols-[minmax(0,1.5fr)_72px_108px_72px_112px_72px]'
+const quoteItemFieldGapClass = 'gap-x-2'
 
 const statusClasses = {
   Taslak: 'badge-gray',
@@ -794,8 +794,8 @@ function TurkishLiraIcon({ className = '' }) {
 
 function Field({ label, children }) {
   return (
-    <div>
-      <label className={`${YF_TEXT_CLASS} mb-2 block`}>{label}</label>
+    <div className="min-w-0">
+      <label className={`${YF_TEXT_CLASS} mb-1 block`}>{label}</label>
       {children}
     </div>
   )
@@ -803,7 +803,7 @@ function Field({ label, children }) {
 
 function FieldLabelSpacer({ label = 'Alan' }) {
   return (
-    <label className="mb-2 block text-base font-bold text-white opacity-0" aria-hidden>
+    <label className={`${YF_TEXT_CLASS} mb-1 block opacity-0`} aria-hidden>
       {label}
     </label>
   )
@@ -1111,8 +1111,8 @@ function MiniButton({ children, onClick, danger = false }) {
       onClick={onClick}
       className={
         danger
-          ? 'h-[38px] rounded-lg border border-red-500/30 px-3 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10'
-          : `${BTN_PRIMARY} h-[38px] gap-1.5 px-3 text-xs`
+          ? 'inline-flex h-8 items-center rounded-lg border border-red-500/30 px-2.5 text-[12px] font-semibold text-red-300 transition-colors hover:bg-red-500/10'
+          : `${BTN_PRIMARY} h-8 gap-1 px-2.5 text-[12px]`
       }
     >
       {!danger && <Plus className="h-3.5 w-3.5" />}
@@ -2796,7 +2796,7 @@ export default function QuotesPage() {
                     <CustomerPicker
                       quote={selectedQuote}
                       onPatch={patchSelected}
-                      allowCreate={false}
+                      allowCreate={true}
                     />
                     <Field label="Oluşturma Tarihi">
                       <input
@@ -2821,14 +2821,12 @@ export default function QuotesPage() {
                 </section>
               </div>
 
-              <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <h2 className={APP_PANEL_TITLE_CLASS}>Ürün Seçimi</h2>
-                  </div>
+              <section className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-4 shadow-card">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 className={APP_PANEL_TITLE_CLASS}>Ürün Seçimi</h2>
                   <MiniButton onClick={addItem}>Ürün Ekle</MiniButton>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {(selectedQuote.items || []).map((item) => {
                     const totals = itemTotals(item)
                     const hasTaxExtras =
@@ -2836,16 +2834,14 @@ export default function QuotesPage() {
                     return (
                       <div
                         key={item.id}
-                        className="rounded-3xl border border-dark-500/45 bg-dark-700/30 p-4"
+                        className="rounded-xl border border-dark-500/40 bg-dark-700/25 p-2.5"
                       >
                         <div
                           className={`grid ${quoteItemGridClass} ${quoteItemFieldGapClass} items-start`}
                         >
                           <div className="flex flex-col self-start">
-                            <label className="mb-2 block shrink-0 text-base font-bold text-white">
-                              Görsel
-                            </label>
-                            <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-dashed border-blue-500/25 bg-dark-800/40">
+                            <label className={`${YF_TEXT_CLASS} mb-1 block`}>Görsel</label>
+                            <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-dashed border-dark-500/50 bg-dark-800/40">
                               {item.lineImage ? (
                                 <>
                                   <img
@@ -2856,19 +2852,19 @@ export default function QuotesPage() {
                                   <button
                                     type="button"
                                     onClick={() => updateItem(item.id, 'lineImage', '')}
-                                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/90 text-white shadow-lg transition-colors hover:bg-red-400"
+                                    className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-md border border-red-500/30 bg-red-500/90 text-white transition-colors hover:bg-red-400"
                                     title="Görseli kaldır"
                                   >
-                                    <X className="h-4 w-4" />
+                                    <X className="h-3.5 w-3.5" />
                                   </button>
                                 </>
                               ) : (
-                                <label className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-2 px-3 py-4 text-center transition-colors hover:bg-blue-500/5">
-                                  <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/25 bg-blue-500/10 text-blue-300">
-                                    <Upload className="h-5 w-5" />
+                                <label className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 px-1 text-center transition-colors hover:bg-blue-500/5">
+                                  <span className="flex h-7 w-7 items-center justify-center rounded-md border border-dark-500/50 text-[var(--muted)]">
+                                    <Upload className="h-3.5 w-3.5" />
                                   </span>
-                                  <span className="text-xs font-bold text-gray-400">
-                                    Görsel Yükle
+                                  <span className="text-[10px] font-medium text-[var(--muted)]">
+                                    Yükle
                                   </span>
                                   <input
                                     type="file"
@@ -2883,7 +2879,7 @@ export default function QuotesPage() {
                               )}
                             </div>
                           </div>
-                          <div className="flex min-h-0 flex-col gap-3 self-stretch">
+                          <div className="flex min-h-0 flex-col gap-2 self-stretch">
                             <div
                               className={`grid ${quoteItemFieldsGridClass} ${quoteItemFieldGapClass} items-end`}
                             >
@@ -2926,14 +2922,14 @@ export default function QuotesPage() {
                                 </select>
                               </Field>
                               <Field label="Toplam">
-                                <div className="flex h-[38px] items-center justify-end rounded-xl bg-emerald-500/10 px-3 text-sm font-black tabular-nums text-white">
+                                <div className="flex h-8 items-center justify-end rounded-lg bg-emerald-500/10 px-2 text-[13px] font-bold tabular-nums text-[var(--muted)]">
                                   {formatTL(totals.total)}
                                 </div>
                               </Field>
                               <div className="relative">
                                 <FieldLabelSpacer label="İşlem" />
                                 <div
-                                  className={`flex h-[38px] items-center ${quoteItemFieldGapClass}`}
+                                  className={`flex h-8 items-center ${quoteItemFieldGapClass}`}
                                   data-quote-dropdown
                                 >
                                   <button
@@ -2941,22 +2937,22 @@ export default function QuotesPage() {
                                     onClick={() =>
                                       setOpenItemMenuId(openItemMenuId === item.id ? null : item.id)
                                     }
-                                    className="flex h-[38px] w-[38px] items-center justify-center rounded-xl border border-blue-500/25 bg-blue-500/10 text-blue-300 transition-colors hover:bg-blue-500/20"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-dark-500/50 text-[var(--muted)] transition-colors hover:bg-dark-700/60"
                                     title="Satıra alan ekle"
                                   >
-                                    <Plus className="h-4 w-4" />
+                                    <Plus className="h-3.5 w-3.5" />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => setPendingItemDeleteId(item.id)}
-                                    className="flex h-[38px] w-[38px] items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 transition-colors hover:bg-red-500/20"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/20 text-red-300 transition-colors hover:bg-red-500/10"
                                     title="Satırı sil"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </button>
                                   {openItemMenuId === item.id && (
                                     <div
-                                      className={`absolute right-0 top-12 z-30 w-56 ${documentDropdownMenuClass}`}
+                                      className={`absolute right-0 top-10 z-30 w-52 ${documentDropdownMenuClass}`}
                                     >
                                       {[
                                         ['showDescription', 'Açıklama ekle'],
@@ -2973,9 +2969,9 @@ export default function QuotesPage() {
                                             key={field}
                                             type="button"
                                             onClick={() => enableItemOption(item.id, field)}
-                                            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-gray-300 transition-colors hover:bg-blue-500/15 hover:text-white"
+                                            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12px] font-medium text-[var(--muted)] transition-colors hover:bg-blue-500/10 hover:text-[var(--ink)]"
                                           >
-                                            <Plus className="h-3.5 w-3.5 text-blue-300" /> {label}
+                                            <Plus className="h-3 w-3 text-blue-400" /> {label}
                                           </button>
                                         ))}
                                     </div>
@@ -2984,7 +2980,7 @@ export default function QuotesPage() {
                                     <DeleteConfirmPopover
                                       onConfirm={() => removeItem(item.id)}
                                       onCancel={() => setPendingItemDeleteId(null)}
-                                      className="absolute right-0 top-12 z-40"
+                                      className="absolute right-0 top-10 z-40"
                                     />
                                   )}
                                 </div>
@@ -3012,7 +3008,7 @@ export default function QuotesPage() {
                                             discountRate: 0,
                                           })
                                         }
-                                        className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
+                                        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 text-[11px] font-bold text-red-300 transition-colors hover:bg-red-500/20"
                                       >
                                         <X className="h-3.5 w-3.5" /> Kaldır
                                       </button>
@@ -3037,7 +3033,7 @@ export default function QuotesPage() {
                                             exciseTaxRate: 0,
                                           })
                                         }
-                                        className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
+                                        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 text-[11px] font-bold text-red-300 transition-colors hover:bg-red-500/20"
                                       >
                                         <X className="h-3.5 w-3.5" /> Kaldır
                                       </button>
@@ -3062,7 +3058,7 @@ export default function QuotesPage() {
                                             accommodationTaxRate: 0,
                                           })
                                         }
-                                        className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
+                                        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 text-[11px] font-bold text-red-300 transition-colors hover:bg-red-500/20"
                                       >
                                         <X className="h-3.5 w-3.5" /> Kaldır
                                       </button>
@@ -3092,7 +3088,7 @@ export default function QuotesPage() {
                                       extraDescription: '',
                                     })
                                   }
-                                  className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-black text-red-300 transition-colors hover:bg-red-500/20"
+                                  className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 text-[11px] font-bold text-red-300 transition-colors hover:bg-red-500/20"
                                 >
                                   <X className="h-3.5 w-3.5" /> Kaldır
                                 </button>
@@ -3104,8 +3100,8 @@ export default function QuotesPage() {
                     )
                   })}
                   {(selectedQuote.items || []).length === 0 && (
-                    <div className="rounded-2xl border border-dashed border-dark-500/60 bg-dark-700/20 p-8 text-center text-sm font-semibold text-gray-500">
-                      Henüz ürün eklenmedi. Ürün Ekle butonu ile teklif satırı oluşturun.
+                    <div className="rounded-xl border border-dashed border-dark-500/50 bg-dark-700/15 px-4 py-6 text-center text-[13px] font-medium text-[var(--muted)]">
+                      Henüz ürün eklenmedi. Ürün Ekle ile satır oluşturun.
                     </div>
                   )}
 

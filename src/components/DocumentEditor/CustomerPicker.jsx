@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import SearchInput from '../Common/SearchInput'
-import { Instagram, Landmark, Mail, MapPin, Phone, Plus, UserRound, Warehouse } from 'lucide-react'
+import { Instagram, Landmark, Mail, MapPin, Phone, UserPlus, UserRound, Warehouse } from 'lucide-react'
 import { customers as customerData } from '../../data/mockData'
 import { findCustomerProfileByReference, getCustomerProfiles } from '../../data/customerProfiles'
 import { getCustomerDisplay } from '../../utils/customerDisplay'
@@ -23,7 +24,6 @@ import {
   getTreasuryMovements,
 } from '../../utils/treasuryStore'
 import { BTN_PRIMARY } from '../../utils/buttonStyles'
-import CustomerQuickEditModal from './CustomerQuickEditModal'
 import { DocumentField } from './DocumentField'
 
 function resolveCustomerWarehouse(customer) {
@@ -328,7 +328,7 @@ function CustomerInfoStrip({ customer, record }) {
   )
 }
 
-export const DOCUMENT_SIDE_ACTION_WIDTH = 'w-[155px] shrink-0'
+export const DOCUMENT_SIDE_ACTION_WIDTH = 'w-[11.5rem] shrink-0'
 
 function CustomerFieldActionRow({ children, actions }) {
   return (
@@ -340,9 +340,9 @@ function CustomerFieldActionRow({ children, actions }) {
 }
 
 export default function CustomerPicker({ record, quote, onPatch, allowCreate = true }) {
+  const navigate = useNavigate()
   const doc = record || quote
   const [isOpen, setIsOpen] = useState(false)
-  const [isQuickEditOpen, setIsQuickEditOpen] = useState(false)
   const [profileVersion, setProfileVersion] = useState(0)
   const pickerRef = useRef(null)
   const customerOptions = getCustomerProfiles()
@@ -392,53 +392,20 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
     setIsOpen(false)
   }
 
-  function addNewCustomer() {
-    const company = window.prompt('Yeni müşteri adı')
-    const customerName = company?.trim()
-    if (!customerName) return
-    onPatch({ customerId: '', customer: customerName, contact: '', email: '', phone: '' })
-    setIsOpen(false)
-  }
-
-  function handleCustomerSaved(customer) {
-    const display = getCustomerDisplay(customer)
-    const contactInfo = resolveCustomerContactInfo(customer)
-    onPatch({
-      customerId: customer.id || '',
-      customer: customer.companyTitle || customer.company || display.companyTitle,
-      contact: contactInfo.contactName,
-      email: contactInfo.email,
-      phone: contactInfo.phone,
-      owner: getCustomerRepresentative(customer),
-    })
-    setIsQuickEditOpen(false)
-    setProfileVersion((value) => value + 1)
-  }
-
   return (
     <div ref={pickerRef} className="col-span-2">
       <DocumentField label="Müşteri">
         <CustomerFieldActionRow
           actions={
-            <div className="flex shrink-0 items-center gap-2">
+            allowCreate ? (
               <button
                 type="button"
-                disabled={!matchedCustomer}
-                onClick={() => setIsQuickEditOpen(true)}
-                className={`${BTN_PRIMARY} h-[38px] shrink-0 gap-2 px-4 text-xs disabled:cursor-not-allowed disabled:opacity-40`}
+                onClick={() => navigate('/musteriler/yeni')}
+                className={`${BTN_PRIMARY} ${DOCUMENT_SIDE_ACTION_WIDTH} h-[38px] gap-2 px-3 text-xs`}
               >
-                <Plus className="h-3.5 w-3.5" /> Hızlı Müşteri Düzenle
+                <UserPlus className="h-3.5 w-3.5" /> Yeni Müşteri Oluştur
               </button>
-              {allowCreate ? (
-                <button
-                  type="button"
-                  onClick={addNewCustomer}
-                  className={`${BTN_PRIMARY} ${DOCUMENT_SIDE_ACTION_WIDTH} h-[38px] gap-2 px-4 text-xs`}
-                >
-                  <Plus className="h-3.5 w-3.5" /> Yeni Müşteri Ekle
-                </button>
-              ) : null}
-            </div>
+            ) : null
           }
         >
           <SearchInput
@@ -491,13 +458,6 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
           key={`${matchedCustomer.id}-${profileVersion}`}
           customer={matchedCustomer}
           record={doc}
-        />
-      )}
-      {isQuickEditOpen && matchedCustomer && (
-        <CustomerQuickEditModal
-          customer={matchedCustomer}
-          onClose={() => setIsQuickEditOpen(false)}
-          onSaved={handleCustomerSaved}
         />
       )}
     </div>
