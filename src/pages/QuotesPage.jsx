@@ -249,8 +249,9 @@ function QuoteListOrderModuleButton({
         title="Sipariş oluşturulsun mu?"
         description="Teklif siparişe aktarılacak."
         confirmLabel="Evet"
-        cancelLabel="Vazgeç"
+        cancelLabel="Hayır"
         inline
+        compact
         onConfirm={onConfirmCreate}
         onCancel={onCancelPending}
       />
@@ -262,9 +263,10 @@ function QuoteListOrderModuleButton({
       <DeleteConfirmPopover
         title="Sipariş geri alınsın mı?"
         description="Sipariş kaydı kaldırılır; teklif listede kalır."
-        confirmLabel="Geri al"
-        cancelLabel="Vazgeç"
+        confirmLabel="Evet"
+        cancelLabel="Hayır"
         inline
+        compact
         onConfirm={onConfirmUndo}
         onCancel={onCancelPending}
       />

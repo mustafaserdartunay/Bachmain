@@ -14,27 +14,29 @@ export const EDIT_PENCIL_BUTTON_CLASS = DUZENLEME_KALEMI_BUTTON_CLASS
 export const DELETE_TRASH_BUTTON_HIDDEN_CLASS = 'pointer-events-none invisible'
 
 /**
- * Standart silme onayı: kırmızı gradient (Gelen E-Faturalar CTA tonu), minimal ölçüler.
- * Metin üstte, aksiyonlar altta: dar kabuklarda da satırlar birbirine girmez.
+ * Standart silme onayı: ince yatay şerit — satır yüksekliğini şişirmez.
  */
 export const DELETE_CONFIRM_PANEL_CLASS =
-  'delete-confirm-panel flex w-full flex-col gap-2 rounded-xl border border-white/35 bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-2 shadow-[0_10px_24px_-14px_rgba(30,35,60,0.65)] ring-1 ring-white/20'
+  'delete-confirm-panel flex h-8 w-full max-w-[22rem] items-center gap-1.5 rounded-lg border border-white/35 bg-gradient-to-r from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-1.5 py-0 shadow-[0_8px_16px_-12px_rgba(30,35,60,0.55)] ring-1 ring-white/20'
 
 /** Popover her zaman en üstte: portal + dropdown katmanının üstünde z-index. */
 export const DELETE_CONFIRM_Z_INDEX = 12000
 
-export const DELETE_CONFIRM_POPOVER_WIDTH = 288
+export const DELETE_CONFIRM_POPOVER_WIDTH = 280
 
 /** Geriye dönük uyumluluk — tüm varyantlar tek standart tasarıma bağlandı. */
 export const DELETE_CONFIRM_POPOVER_PANEL_CLASS = DELETE_CONFIRM_PANEL_CLASS
 export const DELETE_CONFIRM_POPOVER_WARM_PANEL_CLASS = DELETE_CONFIRM_PANEL_CLASS
-export const DELETE_CONFIRM_POPOVER_ANCHOR_CLASS = 'absolute right-0 top-12 z-40'
+export const DELETE_CONFIRM_POPOVER_ANCHOR_CLASS = 'absolute right-0 top-full z-40 mt-1'
 
 const CONFIRM_BUTTON_CLASS =
-  'delete-confirm-yes inline-flex h-6 shrink-0 items-center gap-1 rounded-lg bg-white px-2 text-[12px] font-bold leading-none text-[#e11d48] transition-transform hover:scale-105'
+  'delete-confirm-yes inline-flex h-5 shrink-0 items-center gap-0.5 rounded-md bg-white px-1.5 text-[11px] font-bold leading-none text-[#e11d48] transition-transform hover:scale-105'
 
 const CANCEL_BUTTON_CLASS =
-  'delete-confirm-no inline-flex h-6 shrink-0 items-center rounded-lg border border-white/45 bg-white/15 px-2 text-[12px] font-semibold leading-none text-white transition-transform hover:scale-105'
+  'delete-confirm-no inline-flex h-5 shrink-0 items-center rounded-md border border-white/45 bg-white/15 px-1.5 text-[11px] font-semibold leading-none text-white transition-transform hover:scale-105'
+
+export const DELETE_CONFIRM_COMPACT_PANEL_CLASS =
+  'delete-confirm-panel delete-confirm-panel-compact inline-flex h-8 w-max max-w-full items-center gap-1 rounded-lg border border-white/35 bg-gradient-to-r from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-1.5 py-0 shadow-[0_8px_16px_-12px_rgba(30,35,60,0.55)] ring-1 ring-white/20'
 
 function DeleteConfirmPanel({
   title,
@@ -44,26 +46,38 @@ function DeleteConfirmPanel({
   onConfirm,
   onCancel,
   className = '',
+  compact = false,
 }) {
+  if (compact) {
+    return (
+      <div
+        className={`${DELETE_CONFIRM_COMPACT_PANEL_CLASS} ${className}`.trim()}
+        title={description || title}
+        role="alertdialog"
+        aria-label={title}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button type="button" onClick={onConfirm} className={CONFIRM_BUTTON_CLASS}>
+          {confirmLabel}
+        </button>
+        <button type="button" onClick={onCancel} className={CANCEL_BUTTON_CLASS}>
+          {cancelLabel}
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div
       className={`${DELETE_CONFIRM_PANEL_CLASS} ${className}`.trim()}
+      title={description || title}
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="flex items-start gap-2">
-        <Trash2 className="mt-px h-3.5 w-3.5 shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="delete-confirm-title break-words text-[13px] font-bold leading-tight text-white">
-            {title}
-          </p>
-          {description ? (
-            <p className="delete-confirm-desc break-words text-[11px] font-normal leading-tight text-white/85">
-              {description}
-            </p>
-          ) : null}
-        </div>
-      </div>
-      <div className="flex items-center justify-end gap-1.5">
+      <Trash2 className="h-3 w-3 shrink-0 text-white" aria-hidden />
+      <p className="delete-confirm-title min-w-0 flex-1 truncate text-[11px] font-bold leading-none text-white">
+        {title}
+      </p>
+      <div className="flex shrink-0 items-center gap-1">
         <button type="button" onClick={onConfirm} className={CONFIRM_BUTTON_CLASS}>
           {confirmLabel}
         </button>
@@ -225,6 +239,7 @@ export function DeleteConfirmPopover({
   align = 'right',
   placement = 'below',
   inline,
+  compact = false,
 }) {
   const holderRef = useRef(null)
   // Konumlandırma sınıfı verilmişse popover, verilmemişse akış içi (inline) render edilir.
@@ -265,13 +280,30 @@ export function DeleteConfirmPopover({
       cancelLabel={cancelLabel}
       onConfirm={onConfirm}
       onCancel={onCancel}
+      compact={compact}
     />
   )
 
   if (isInline) {
+    if (compact) {
+      return (
+        <div
+          className={`inline-flex h-8 items-center justify-center ${className}`.trim()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {panel}
+        </div>
+      )
+    }
+    // Satır içinde: akışı şişirmeden hücre üzerine ince şerit olarak biner.
     return (
-      <div className={`w-full ${className}`.trim()} onClick={(event) => event.stopPropagation()}>
-        {panel}
+      <div
+        className={`relative h-8 w-full min-w-[12rem] ${className}`.trim()}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="absolute inset-y-0 right-0 z-20 flex w-max max-w-[min(100%,22rem)] items-center">
+          {panel}
+        </div>
       </div>
     )
   }
