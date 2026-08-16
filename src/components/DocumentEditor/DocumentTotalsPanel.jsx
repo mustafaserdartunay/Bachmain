@@ -11,7 +11,7 @@ const AMOUNT_CLASS =
   'block w-full text-right text-[14px] font-bold tabular-nums leading-tight tracking-normal text-[var(--muted)]'
 const ACTION_SLOT_CLASS = 'flex w-7 shrink-0 items-center justify-end'
 const ROW_FRAME =
-  'document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent px-1 py-2.5'
+  'document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent py-2.5 pl-1 pr-2.5'
 
 function TotalRow({ label, value, valueContent, labelAction, trailingAction }) {
   return (

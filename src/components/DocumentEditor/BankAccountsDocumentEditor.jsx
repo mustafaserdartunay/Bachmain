@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Landmark, Pencil, Plus, X } from 'lucide-react'
 import InlineDeleteConfirm from '../Common/InlineDeleteConfirm'
-import { BTN_PRIMARY } from '../../utils/buttonStyles'
 
 function displaySummary(account) {
   const parts = [account.bankName, account.label].filter(Boolean)
@@ -49,6 +48,8 @@ export default function BankAccountsDocumentEditor({
   const listRef = useRef(null)
   const previousCountRef = useRef(accounts.length)
   const [newBankName, setNewBankName] = useState('')
+  const [newBranch, setNewBranch] = useState('')
+  const [newIban, setNewIban] = useState('')
   const [editingAccountId, setEditingAccountId] = useState(null)
   const newBankInputRef = useRef(null)
 
@@ -72,8 +73,14 @@ export default function BankAccountsDocumentEditor({
   function handleAddAccount() {
     const bankName = (newBankInputRef.current?.value ?? newBankName).trim()
     if (!bankName) return
-    onAddAccount(bankName)
+    onAddAccount({
+      bankName,
+      branch: newBranch.trim(),
+      iban: newIban.trim(),
+    })
     setNewBankName('')
+    setNewBranch('')
+    setNewIban('')
     if (newBankInputRef.current) newBankInputRef.current.value = ''
   }
 
@@ -198,22 +205,60 @@ export default function BankAccountsDocumentEditor({
         <p className="py-6 text-center text-xs font-semibold text-gray-500">{emptyMessage}</p>
       )}
 
-      <div className="mt-3 flex gap-2 border-t border-dark-500/35 pt-3">
-        <input
-          ref={newBankInputRef}
-          value={newBankName}
-          onChange={(event) => setNewBankName(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-              event.preventDefault()
-              handleAddAccount()
-            }
-          }}
-          placeholder={addPlaceholder}
-          className="form-input h-9 min-w-0 flex-1"
-        />
-        <button type="button" onClick={handleAddAccount} className={`${BTN_PRIMARY} h-9 shrink-0 gap-1.5 px-3 text-xs`}>
-          <Plus className="h-3.5 w-3.5" /> Ekle
+      <div className="mt-3 grid grid-cols-1 items-end gap-2 border-t border-[var(--search-border)] pt-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_auto]">
+        <label className="block min-w-0 space-y-1">
+          <span className="text-[12px] font-normal uppercase tracking-wide text-[var(--muted)]">Banka adı</span>
+          <input
+            ref={newBankInputRef}
+            value={newBankName}
+            onChange={(event) => setNewBankName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                event.preventDefault()
+                handleAddAccount()
+              }
+            }}
+            placeholder={addPlaceholder}
+            className="form-input h-10 w-full !text-[14px] !font-normal !text-[var(--muted)]"
+          />
+        </label>
+        <label className="block min-w-0 space-y-1">
+          <span className="text-[12px] font-normal uppercase tracking-wide text-[var(--muted)]">Şube</span>
+          <input
+            value={newBranch}
+            onChange={(event) => setNewBranch(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                event.preventDefault()
+                handleAddAccount()
+              }
+            }}
+            placeholder="Şube"
+            className="form-input h-10 w-full !text-[14px] !font-normal !text-[var(--muted)]"
+          />
+        </label>
+        <label className="block min-w-0 space-y-1">
+          <span className="text-[12px] font-normal uppercase tracking-wide text-[var(--muted)]">IBAN</span>
+          <input
+            value={newIban}
+            onChange={(event) => setNewIban(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                event.preventDefault()
+                handleAddAccount()
+              }
+            }}
+            placeholder="IBAN"
+            className="form-input h-10 w-full !text-[14px] !font-normal !text-[var(--muted)]"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={handleAddAccount}
+          className="inline-flex h-10 shrink-0 items-center justify-center gap-2 self-end rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[#2563eb] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb]"
+        >
+          <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
+          Yeni Banka Oluştur
         </button>
       </div>
     </div>

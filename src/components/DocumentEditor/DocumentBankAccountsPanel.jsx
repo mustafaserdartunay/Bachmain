@@ -50,8 +50,16 @@ export default function DocumentBankAccountsPanel({
     )
   }
 
-  function addAccount(bankName) {
-    const account = createBankAccount({ bankName, label: 'Ticari Hesap' })
+  function addAccount(partial = {}) {
+    const payload = typeof partial === 'string' ? { bankName: partial } : partial || {}
+    const bankName = String(payload.bankName || '').trim()
+    if (!bankName) return
+    const account = createBankAccount({
+      bankName,
+      branch: String(payload.branch || '').trim(),
+      iban: String(payload.iban || '').trim(),
+      label: payload.label || 'Ticari Hesap',
+    })
     saveBankAccounts([...bankAccounts, account])
     onPatch({ selectedBankAccountIds: [...selectedAccountIds, account.id] })
     setIsOpen(true)

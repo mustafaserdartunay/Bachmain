@@ -24,6 +24,15 @@ export default function DocumentTermsEditor({
   const showTitle = Boolean(title) && !hideTitle
   const leftHeader = panelTitle || savedTermsTitle
 
+  function termIsApplied(term) {
+    const needle = String(term || '').trim()
+    if (!needle) return false
+    return String(value)
+      .split('\n')
+      .map((line) => line.replace(/^- /, '').trim())
+      .includes(needle)
+  }
+
   function saveTerm(term) {
     const cleanTerm = term.trim()
     if (!cleanTerm || savedTerms.includes(cleanTerm)) return
@@ -34,6 +43,7 @@ export default function DocumentTermsEditor({
   }
 
   function appendTermToDescription(term) {
+    if (termIsApplied(term)) return
     const currentText = value
     const nextText = currentText.trim()
       ? `${currentText.trimEnd()}\n- ${term}`
@@ -58,7 +68,9 @@ export default function DocumentTermsEditor({
           </div>
           <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-[16px] border border-[var(--search-border)] bg-transparent p-3">
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-              {savedTerms.map((term) => (
+              {savedTerms.map((term) => {
+                const applied = termIsApplied(term)
+                return (
                 <div key={term} className="relative flex items-center gap-2">
                   {pendingDeleteTerm === term ? (
                     <div className="document-frame-only min-w-0 flex-1 rounded-xl border border-[var(--search-border)] bg-transparent">
@@ -81,8 +93,15 @@ export default function DocumentTermsEditor({
                         className="document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left transition-opacity hover:opacity-90"
                         data-tone="primary"
                       >
-                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" strokeWidth={2.25} />
-                        <span className={APP_PANEL_TITLE_CLASS}>{term}</span>
+                        <CheckCircle2
+                          className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${applied ? 'text-[#10b981]' : 'text-[var(--muted)]'}`}
+                          strokeWidth={2.25}
+                        />
+                        <span
+                          className={`${APP_PANEL_TITLE_CLASS} ${applied ? '!text-[#10b981]' : ''}`.trim()}
+                        >
+                          {term}
+                        </span>
                       </button>
                       <button
                         type="button"
@@ -96,7 +115,8 @@ export default function DocumentTermsEditor({
                     </>
                   )}
                 </div>
-              ))}
+                )
+              })}
               {savedTerms.length === 0 && (
                 <div className="rounded-xl border border-dashed border-[var(--search-border)] px-3 py-4 text-center text-[14px] font-normal text-[var(--muted)]">
                   Henüz kayıtlı hazır koşul yok.
@@ -161,7 +181,9 @@ export default function DocumentTermsEditor({
             <h3 className={APP_PANEL_TITLE_CLASS}>{savedTermsTitle}</h3>
           </div>
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-            {savedTerms.map((term) => (
+            {savedTerms.map((term) => {
+              const applied = termIsApplied(term)
+              return (
               <div key={term} className="relative flex items-center gap-2">
                 {pendingDeleteTerm === term ? (
                   <div className="document-frame-only min-w-0 flex-1 rounded-xl border border-[var(--search-border)] bg-transparent">
@@ -181,10 +203,13 @@ export default function DocumentTermsEditor({
                     <button
                       type="button"
                       onClick={() => appendTermToDescription(term)}
-                      className="document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left text-[13px] font-medium text-[var(--muted)] transition-opacity hover:opacity-90"
+                      className="document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left text-[13px] font-medium transition-opacity hover:opacity-90"
                     >
-                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" strokeWidth={2.25} />
-                      <span>{term}</span>
+                      <CheckCircle2
+                        className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${applied ? 'text-[#10b981]' : 'text-[var(--muted)]'}`}
+                        strokeWidth={2.25}
+                      />
+                      <span className={applied ? 'text-[#10b981]' : 'text-[var(--muted)]'}>{term}</span>
                     </button>
                     <button
                       type="button"
@@ -198,7 +223,8 @@ export default function DocumentTermsEditor({
                   </>
                 )}
               </div>
-            ))}
+              )
+            })}
             {savedTerms.length === 0 && (
               <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-[13px] font-medium text-[var(--muted)]">
                 Henüz kayıtlı hazır koşul yok.

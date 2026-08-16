@@ -3017,8 +3017,10 @@ export default function QuotesPage() {
                   </button>
 
                   {selectedTotals ? (
-                    <div className="w-full max-w-[480px] pt-2 lg:ml-auto">
-                      <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
+                    <div className="w-full pt-2">
+                      <div className="ml-auto w-full max-w-[480px]">
+                        <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
+                      </div>
                     </div>
                   ) : null}
                 </div>
