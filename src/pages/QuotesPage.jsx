@@ -191,12 +191,13 @@ function StageColorSwatches({
   )
 }
 
-const quoteItemGridClass = 'grid-cols-[72px_minmax(0,1fr)]'
 const quoteItemFieldsGridClass =
   'grid-cols-[minmax(0,1.4fr)_64px_100px_56px_96px_96px_auto]'
 const quoteItemFieldGapClass = 'gap-x-2'
 const quoteLineActionBtnClass =
   'glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl'
+const quoteMsCtaClass =
+  'inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[#2563eb] transition-all hover:font-bold hover:opacity-100'
 
 const statusClasses = {
   Taslak: 'badge-gray',
@@ -1023,146 +1024,6 @@ function QuoteProcessManagement({
   )
 }
 
-function QuoteNotesPanel({ quote, onPatch, className = '' }) {
-  return (
-    <label className={`flex h-full min-h-0 flex-col ${className}`.trim()}>
-      <div className="mb-2.5 flex min-w-0 items-center gap-2">
-        <AppPanelDot color="violet" />
-        <span className={APP_PANEL_TITLE_CLASS}>Notlar :</span>
-      </div>
-      <textarea
-        value={quote.notes || ''}
-        onChange={(event) => onPatch({ notes: event.target.value })}
-        rows={3}
-        placeholder="Teklif ile ilgili genel notlar..."
-        className="form-input min-h-[9.5rem] flex-1 resize-none !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
-      />
-    </label>
-  )
-}
-
-function QuoteTermsEditor({ quote, onPatch, compact = false }) {
-  const [customTerm, setCustomTerm] = useState('')
-  const [savedTerms, setSavedTerms] = useState(loadSavedQuoteTerms)
-  const [pendingDeleteTerm, setPendingDeleteTerm] = useState(null)
-
-  function saveTerm(term) {
-    const cleanTerm = term.trim()
-    if (!cleanTerm || savedTerms.includes(cleanTerm)) return
-    const nextTerms = [cleanTerm, ...savedTerms]
-    setSavedTerms(nextTerms)
-    saveSavedQuoteTerms(nextTerms)
-    setCustomTerm('')
-  }
-
-  function appendTermToDescription(term) {
-    const currentText = quote.termsDescription || ''
-    const nextText = currentText.trim() ? `${currentText.trimEnd()}\n- ${term}` : `- ${term}`
-    onPatch({ termsDescription: nextText })
-  }
-
-  function deleteSavedTerm(term) {
-    const nextTerms = savedTerms.filter((item) => item !== term)
-    setSavedTerms(nextTerms)
-    saveSavedQuoteTerms(nextTerms)
-    setPendingDeleteTerm(null)
-  }
-
-  return (
-    <div
-      className={
-        compact ? '' : 'col-span-2 rounded-3xl border border-dark-500/45 bg-dark-900/35 p-4'
-      }
-    >
-      {!compact && (
-        <div className="mb-4 text-center">
-          <h3 className="text-base font-bold text-white">Teklif Koşulları</h3>
-        </div>
-      )}
-      {compact && <p className="mb-4 text-base font-bold text-white">Teklif Koşulları</p>}
-      <div
-        className={
-          compact ? 'space-y-3' : 'grid grid-cols-[minmax(0,1fr)_390px] items-stretch gap-4'
-        }
-      >
-        <div
-          className={`flex flex-col rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3 ${compact ? 'min-h-[180px]' : 'h-[332px]'}`}
-        >
-          <div className="mb-3">
-            <h4 className="text-base font-bold text-white">Açıklama</h4>
-          </div>
-          <textarea
-            value={quote.termsDescription || ''}
-            onChange={(event) => onPatch({ termsDescription: event.target.value })}
-            placeholder="Teklifin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
-            className="min-h-0 flex-1 resize-none rounded-2xl border border-dark-500/50 bg-dark-700/70 px-4 py-3 text-sm text-gray-200 placeholder-gray-500 outline-none transition-colors focus:border-blue-500/35 focus:bg-dark-700/80"
-          />
-        </div>
-
-        <div
-          className={`flex flex-col rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3 ${compact ? 'min-h-[220px]' : 'h-[332px]'}`}
-        >
-          <div className="mb-3">
-            <h3 className="text-base font-bold text-white">Hazır Teklif Koşulları</h3>
-          </div>
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-            {savedTerms.map((term) => (
-              <div key={term} className="relative rounded-xl bg-dark-700/70">
-                {pendingDeleteTerm === term ? (
-                  <DeleteConfirmPopover
-                    description="Hazır koşul listeden kaldırılacak."
-                    onConfirm={() => deleteSavedTerm(term)}
-                    onCancel={() => setPendingDeleteTerm(null)}
-                    className="w-full"
-                  />
-                ) : (
-                  <div className="flex items-start gap-2 rounded-xl transition-colors hover:bg-blue-500/15">
-                    <button
-                      type="button"
-                      onClick={() => appendTermToDescription(term)}
-                      className="flex min-w-0 flex-1 items-start gap-2 px-3 py-2 text-left text-xs font-semibold text-gray-300"
-                    >
-                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-500" />
-                      <span>{term}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPendingDeleteTerm(term)}
-                      className="mr-2 mt-2 shrink-0 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-500/15 hover:text-red-300"
-                      title="Hazır koşulu sil"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-            {savedTerms.length === 0 && (
-              <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-xs font-semibold text-gray-500">
-                Henüz kayıtlı hazır koşul yok.
-              </div>
-            )}
-          </div>
-          <div className="mt-3 flex gap-2">
-            <input
-              value={customTerm}
-              onChange={(event) => setCustomTerm(event.target.value)}
-              placeholder="Hazır koşul kaydet..."
-              className="h-10 min-w-0 flex-1 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-xs font-semibold text-gray-200 placeholder-gray-500 outline-none focus:border-blue-500/35"
-            />
-            <button
-              type="button"
-              onClick={() => saveTerm(customTerm)}
-              className={`${BTN_PRIMARY} h-10 gap-1.5 px-3 text-xs`}
-            >
-              <Plus className="h-3.5 w-3.5" /> Ekle
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function MiniButton({ children, onClick, danger = false }) {
   return (
@@ -2822,7 +2683,7 @@ export default function QuotesPage() {
               <AppPagePanel className="customer-list-panel w-full">
                 <div className="mb-4 flex min-w-0 items-center gap-3">
                   <div className="flex shrink-0 items-center gap-2">
-                    <AppPanelDot color="blue" />
+                    <AppPanelDot color="orange" />
                     <h2 className={APP_PANEL_TITLE_CLASS}>Teklif Bilgileri :</h2>
                   </div>
                   <div className="min-w-0 flex-1">
@@ -2833,16 +2694,22 @@ export default function QuotesPage() {
                       placeholder="Teklif başlığı"
                     />
                   </div>
-                  <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
-                    <input
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={resolvedQuoteCode}
-                      onChange={(event) => patchQuoteCode(event.target.value)}
-                      className="form-input !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
-                      placeholder="Kod"
-                      title="Teklif kodu"
-                    />
+                  <div className="flex min-w-0 shrink-0 items-center gap-3">
+                    <div className="flex shrink-0 items-center gap-2">
+                      <AppPanelDot color="orange" />
+                      <h2 className={APP_PANEL_TITLE_CLASS}>Teklif Kodu :</h2>
+                    </div>
+                    <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
+                      <input
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={resolvedQuoteCode}
+                        onChange={(event) => patchQuoteCode(event.target.value)}
+                        className="form-input !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+                        placeholder="Kod"
+                        title="Teklif kodu"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -2878,97 +2745,78 @@ export default function QuotesPage() {
                         className="document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent p-2.5"
                       >
                         <div
-                          className={`grid ${quoteItemGridClass} ${quoteItemFieldGapClass} items-start`}
+                          className={`grid ${quoteItemFieldsGridClass} ${quoteItemFieldGapClass} items-end`}
                         >
-                          <div className="flex flex-col items-center self-start">
-                            <label className={`${YF_TEXT_CLASS} mb-1 block w-full text-center`}>
-                              Görsel
-                            </label>
-                            <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-dashed border-[var(--search-border)] bg-transparent">
-                              {itemImage ? (
-                                <img
-                                  src={itemImage}
-                                  alt=""
-                                  className="h-full w-full object-cover object-center"
-                                />
-                              ) : (
-                                <div className="aspect-square w-full" aria-hidden />
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex min-h-0 flex-col gap-1.5 self-stretch">
-                            <div
-                              className={`grid ${quoteItemFieldsGridClass} ${quoteItemFieldGapClass} items-end`}
+                          <Field label="Ürün" align="start">
+                            <ProductSearchSelect
+                              item={item}
+                              selectedImage={itemImage}
+                              onSelect={(product) => selectProductForItem(item.id, product)}
+                              onTextChange={(value) => {
+                                patchSelected({
+                                  items: selectedQuote.items.map((entry) =>
+                                    entry.id === item.id
+                                      ? {
+                                          ...entry,
+                                          product: value,
+                                          productId: '',
+                                          lineImage: '',
+                                        }
+                                      : entry,
+                                  ),
+                                })
+                              }}
+                              customerId={selectedCustomer?.id || ''}
+                              customerLabel={selectedQuote.customer || ''}
+                            />
+                          </Field>
+                          <Field label="Adet" align="center">
+                            <NumericInput
+                              value={item.quantity}
+                              onChange={(value) => updateItem(item.id, 'quantity', value)}
+                              className="!text-center"
+                            />
+                          </Field>
+                          <Field label="Birim Fiyat" align="center">
+                            <NumericInput
+                              value={item.unitPrice}
+                              onChange={(value) => updateItem(item.id, 'unitPrice', value)}
+                              suffix="₺"
+                              formatMode="price"
+                              className="!text-center"
+                            />
+                          </Field>
+                          <Field label="KDV %" align="center">
+                            <select
+                              value={item.vatRate ?? 20}
+                              onChange={(event) =>
+                                updateItem(item.id, 'vatRate', Number(event.target.value))
+                              }
+                              className="form-input text-center"
                             >
-                              <Field label="Ürün" align="center">
-                                <ProductSearchSelect
-                                  item={item}
-                                  onSelect={(product) => selectProductForItem(item.id, product)}
-                                  onTextChange={(value) => {
-                                    patchSelected({
-                                      items: selectedQuote.items.map((entry) =>
-                                        entry.id === item.id
-                                          ? {
-                                              ...entry,
-                                              product: value,
-                                              productId: '',
-                                              lineImage: '',
-                                            }
-                                          : entry,
-                                      ),
-                                    })
-                                  }}
-                                  customerId={selectedCustomer?.id || ''}
-                                  customerLabel={selectedQuote.customer || ''}
-                                />
-                              </Field>
-                              <Field label="Adet" align="center">
-                                <NumericInput
-                                  value={item.quantity}
-                                  onChange={(value) => updateItem(item.id, 'quantity', value)}
-                                  className="!text-center"
-                                />
-                              </Field>
-                              <Field label="Birim Fiyat" align="center">
-                                <NumericInput
-                                  value={item.unitPrice}
-                                  onChange={(value) => updateItem(item.id, 'unitPrice', value)}
-                                  suffix="₺"
-                                  formatMode="price"
-                                  className="!text-center"
-                                />
-                              </Field>
-                              <Field label="KDV %" align="center">
-                                <select
-                                  value={item.vatRate ?? 20}
-                                  onChange={(event) =>
-                                    updateItem(item.id, 'vatRate', Number(event.target.value))
-                                  }
-                                  className="form-input text-center"
-                                >
-                                  {vatRates.map((rate) => (
-                                    <option key={rate} value={rate}>
-                                      {rate}
-                                    </option>
-                                  ))}
-                                </select>
-                              </Field>
-                              <Field label="KDV Hariç" align="center">
-                                <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
-                                  {formatTL(totals.net)}
-                                </div>
-                              </Field>
-                              <Field label="KDV Dahil" align="center">
-                                <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
-                                  {formatTL(totals.total)}
-                                </div>
-                              </Field>
-                              <div className="relative">
-                                <FieldLabelSpacer label="İşlem" />
-                                <div
-                                  className={`flex h-10 items-center ${quoteItemFieldGapClass}`}
-                                  data-quote-dropdown
-                                >
+                              {vatRates.map((rate) => (
+                                <option key={rate} value={rate}>
+                                  {rate}
+                                </option>
+                              ))}
+                            </select>
+                          </Field>
+                          <Field label="KDV Hariç" align="center">
+                            <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
+                              {formatTL(totals.net)}
+                            </div>
+                          </Field>
+                          <Field label="KDV Dahil" align="center">
+                            <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
+                              {formatTL(totals.total)}
+                            </div>
+                          </Field>
+                          <div className="relative">
+                            <FieldLabelSpacer label="İşlem" />
+                            <div
+                              className={`flex h-10 items-center ${quoteItemFieldGapClass}`}
+                              data-quote-dropdown
+                            >
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -3029,7 +2877,7 @@ export default function QuotesPage() {
                             </div>
                             {item.showDescription && (
                               <div
-                                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center ${quoteItemFieldGapClass}`}
+                                className={`mt-1.5 grid grid-cols-[minmax(0,1fr)_auto] items-center ${quoteItemFieldGapClass}`}
                               >
                                 <input
                                   value={item.extraDescription ?? ''}
@@ -3134,8 +2982,6 @@ export default function QuotesPage() {
                                 )}
                               </div>
                             )}
-                          </div>
-                        </div>
                       </div>
                     )
                   })}
@@ -3148,7 +2994,7 @@ export default function QuotesPage() {
                   <button
                     type="button"
                     onClick={addItem}
-                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[#2563eb] transition-opacity hover:opacity-80"
+                    className={`${quoteMsCtaClass} w-full`}
                   >
                     <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                     Ürün Ekle
@@ -3156,16 +3002,13 @@ export default function QuotesPage() {
                 </div>
               </AppPagePanel>
 
-              {selectedQuote && (
+              {selectedQuote && selectedTotals ? (
                 <AppPagePanel className="customer-list-panel w-full">
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-stretch">
-                    <QuoteNotesPanel quote={selectedQuote} onPatch={patchSelected} />
-                    {selectedTotals ? (
-                      <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
-                    ) : null}
+                  <div className="w-full max-w-[480px] lg:ml-auto">
+                    <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
                   </div>
                 </AppPagePanel>
-              )}
+              ) : null}
 
               {selectedQuote && (
                 <AppPagePanel className="customer-list-panel w-full">

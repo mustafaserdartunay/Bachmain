@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import SearchInput from '../Common/SearchInput'
 import ConfirmModal from '../Common/ConfirmModal'
-import { getCatalogProducts } from '../../utils/productCatalog'
+import { formatTL } from '../../utils/productPricing'
+import {
+  getCatalogProducts,
+  getStockStatus,
+  getTotalStock,
+  resolveProductImage,
+} from '../../utils/productCatalog'
 import {
   getProductCustomerMismatchMessage,
   rankCatalogProductsForCustomer,
@@ -9,7 +15,25 @@ import {
 import { PAGE_FILTER_MENU_CLASS } from '../../utils/dashboardDesign'
 
 const MS_SEARCH_CLASS =
-  'customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]'
+  'customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)] !text-left'
+
+function productDetailLine(product) {
+  const code = product.stockCode || product.productCode || ''
+  const barcode = product.barcode || ''
+  const category = product.category || ''
+  const stock = getTotalStock(product)
+  const stockInfo = getStockStatus(stock)
+  const price = Number(product.salesPriceExcl || 0)
+  const vat = Number(product.vatRate ?? 0)
+  const parts = [
+    code && `Kod: ${code}`,
+    barcode && `Barkod: ${barcode}`,
+    category && category,
+    `Stok: ${stock} (${stockInfo.label})`,
+    price > 0 && `${formatTL(price)} + KDV %${vat}`,
+  ].filter(Boolean)
+  return parts.join(' · ')
+}
 
 export default function ProductSearchSelect({
   item,
@@ -17,6 +41,7 @@ export default function ProductSearchSelect({
   onTextChange,
   customerId = '',
   customerLabel = '',
+  selectedImage = '',
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [catalogProducts, setCatalogProducts] = useState(() => getCatalogProducts())
@@ -26,6 +51,7 @@ export default function ProductSearchSelect({
   const trimmedQuery = query.trim()
   const rankedProducts = rankCatalogProductsForCustomer(catalogProducts, customerId, query)
   const showDropdown = isOpen && trimmedQuery.length > 0
+  const hasSelectedProduct = Boolean(item.productId || (selectedImage && trimmedQuery))
 
   useEffect(() => {
     function refreshCatalog() {
@@ -71,37 +97,58 @@ export default function ProductSearchSelect({
   return (
     <>
       <div ref={pickerRef} className="relative">
-        <SearchInput
-          value={query}
-          onChange={(event) => {
-            const next = event.target.value
-            onTextChange(next)
-            setIsOpen(next.trim().length > 0)
-          }}
-          onFocus={() => {
-            if (trimmedQuery.length > 0) setIsOpen(true)
-          }}
-          placeholder="Ürün adı, ürün kodu veya barkod ara..."
-          className={`${MS_SEARCH_CLASS} !text-center`}
-        />
+        <div className="flex min-w-0 items-center gap-2">
+          {hasSelectedProduct && selectedImage ? (
+            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-[var(--search-border)]">
+              <img src={selectedImage} alt="" className="h-full w-full object-cover object-center" />
+            </div>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <SearchInput
+              value={query}
+              onChange={(event) => {
+                const next = event.target.value
+                onTextChange(next)
+                setIsOpen(next.trim().length > 0)
+              }}
+              onFocus={() => {
+                if (trimmedQuery.length > 0) setIsOpen(true)
+              }}
+              placeholder="Ürün adı, ürün kodu veya barkod ara..."
+              className={MS_SEARCH_CLASS}
+            />
+          </div>
+        </div>
         {showDropdown && (
           <div className={`absolute left-0 right-0 top-11 z-40 ${PAGE_FILTER_MENU_CLASS} p-2`}>
             <div className="max-h-72 space-y-1 overflow-y-auto">
               {rankedProducts.map(({ product, compatibility }) => {
-                const code = product.stockCode || product.productCode || product.barcode || ''
+                const imageUrl = resolveProductImage(product)
+                const detail = productDetailLine(product)
                 return (
                   <button
                     key={product.id}
                     type="button"
                     onClick={() => selectProduct(product, compatibility)}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left transition-transform hover:scale-[1.02]"
+                    className="flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left transition-transform hover:scale-[1.01]"
                     data-tone="primary"
                   >
+                    <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-[var(--search-border)] bg-transparent">
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt=""
+                          className="h-full w-full object-cover object-center"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[10px] text-[var(--muted)]">
+                          —
+                        </div>
+                      )}
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="customer-name-primary truncate">{product.name}</p>
-                      {code ? (
-                        <p className="customer-name-secondary truncate">{code}</p>
-                      ) : null}
+                      <p className="customer-name-secondary mt-0.5 line-clamp-2">{detail}</p>
                     </div>
                   </button>
                 )

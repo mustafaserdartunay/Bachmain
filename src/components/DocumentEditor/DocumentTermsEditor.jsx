@@ -113,9 +113,9 @@ export default function DocumentTermsEditor({
               <button
                 type="button"
                 onClick={() => saveTerm(customTerm)}
-                className="inline-flex h-10 shrink-0 items-center gap-1.5 px-2 text-[14px] font-normal text-[#2563eb] transition-opacity hover:opacity-80"
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[#2563eb] transition-all hover:font-bold"
               >
-                <Plus className="h-4 w-4" strokeWidth={2.25} />
+                <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                 Ekle
               </button>
             </div>
@@ -131,7 +131,7 @@ export default function DocumentTermsEditor({
             value={value}
             onChange={(event) => onPatch({ [field]: event.target.value })}
             placeholder={descriptionPlaceholder}
-            className="document-no-frame min-h-0 flex-1 resize-none bg-transparent px-1 py-0 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)] placeholder-[var(--muted)] outline-none"
+            className="document-frame-only min-h-0 flex-1 resize-none rounded-[16px] border border-[var(--search-border)] bg-transparent px-4 py-3 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)] placeholder-[var(--muted)] outline-none"
           />
         </div>
       </div>

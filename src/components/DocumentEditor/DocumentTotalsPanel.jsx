@@ -6,13 +6,13 @@ import NumericInput from '../Products/NumericInput'
 import { formatTL } from '../../utils/productPricing'
 import {
   APP_PANEL_TITLE_CLASS,
-  PAGE_BALANCE_AMOUNT_CLASS,
   YF_TEXT_CLASS,
 } from '../../utils/dashboardDesign'
 
 const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_minmax(7rem,1fr)_28px] items-center gap-x-2'
 const LABEL_CELL_CLASS = 'flex min-w-0 items-center gap-1.5 pl-2.5'
-const AMOUNT_CLASS = `${PAGE_BALANCE_AMOUNT_CLASS} block w-full text-right`
+const AMOUNT_CLASS =
+  'block w-full text-right text-[14px] font-bold tabular-nums leading-tight tracking-normal text-[var(--muted)]'
 const ACTION_SLOT_CLASS = 'flex w-7 shrink-0 items-center justify-end'
 
 function TotalRow({ label, value, valueContent, labelAction, trailingAction }) {
@@ -200,11 +200,9 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
             <TotalRow key={label} label={label} value={value} />
           ))}
           <TotalRow label="KDV" value={totals.vat} />
-          <div className={`${ROW_GRID} mt-auto rounded-xl border border-[var(--search-border)] py-3`}>
+          <div className={`${ROW_GRID} mt-auto py-3`}>
             <span className={`pl-2.5 ${YF_TEXT_CLASS}`}>Genel Toplam</span>
-            <span className={`${AMOUNT_CLASS} customer-balance-positive`}>
-              {formatTL(totals.grandTotal)}
-            </span>
+            <span className={AMOUNT_CLASS}>{formatTL(totals.grandTotal)}</span>
             <span />
           </div>
         </div>
