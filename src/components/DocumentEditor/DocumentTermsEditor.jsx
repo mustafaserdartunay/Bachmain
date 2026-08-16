@@ -90,15 +90,23 @@ export default function DocumentTermsEditor({
                       <button
                         type="button"
                         onClick={() => appendTermToDescription(term)}
-                        className="document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left transition-opacity hover:opacity-90"
+                        className="group document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left transition-colors"
                         data-tone="primary"
                       >
                         <CheckCircle2
-                          className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${applied ? 'text-[#10b981]' : 'text-[var(--muted)]'}`}
+                          className={`mt-0.5 h-3.5 w-3.5 shrink-0 transition-colors ${
+                            applied
+                              ? 'text-[#10b981]'
+                              : 'text-[var(--muted)] group-hover:text-[#10b981]'
+                          }`}
                           strokeWidth={2.25}
                         />
                         <span
-                          className={`${APP_PANEL_TITLE_CLASS} ${applied ? '!text-[#10b981]' : ''}`.trim()}
+                          className={`${APP_PANEL_TITLE_CLASS} transition-colors ${
+                            applied
+                              ? '!text-[#10b981]'
+                              : 'group-hover:!text-[#10b981]'
+                          }`.trim()}
                         >
                           {term}
                         </span>
@@ -203,13 +211,25 @@ export default function DocumentTermsEditor({
                     <button
                       type="button"
                       onClick={() => appendTermToDescription(term)}
-                      className="document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left text-[13px] font-medium transition-opacity hover:opacity-90"
+                      className="group document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left text-[13px] font-medium transition-colors"
                     >
                       <CheckCircle2
-                        className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${applied ? 'text-[#10b981]' : 'text-[var(--muted)]'}`}
+                        className={`mt-0.5 h-3.5 w-3.5 shrink-0 transition-colors ${
+                          applied
+                            ? 'text-[#10b981]'
+                            : 'text-[var(--muted)] group-hover:text-[#10b981]'
+                        }`}
                         strokeWidth={2.25}
                       />
-                      <span className={applied ? 'text-[#10b981]' : 'text-[var(--muted)]'}>{term}</span>
+                      <span
+                        className={`transition-colors ${
+                          applied
+                            ? 'text-[#10b981]'
+                            : 'text-[var(--muted)] group-hover:text-[#10b981]'
+                        }`}
+                      >
+                        {term}
+                      </span>
                     </button>
                     <button
                       type="button"

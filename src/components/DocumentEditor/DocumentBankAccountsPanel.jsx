@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, Landmark, Plus } from 'lucide-react'
+import { ChevronDown, Landmark } from 'lucide-react'
 import BankAccountsDocumentEditor from './BankAccountsDocumentEditor'
 import { AppPanelDot } from '../Layout/AppPageLayout'
 import { createBankAccount, readCompanySettings, updateCompanySettings } from '../../utils/companySettings'
 import { APP_PANEL_TITLE_CLASS, YF_TEXT_CLASS } from '../../utils/dashboardDesign'
+
+const MS_CTA_CLASS =
+  'inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[#2563eb] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb]'
 
 export default function DocumentBankAccountsPanel({
   quote,
@@ -74,6 +77,7 @@ export default function DocumentBankAccountsPanel({
   }
 
   const paddingClass = compact ? 'p-2' : 'p-3'
+  const toggleLabel = isOpen ? 'Gizle' : selectedAccounts.length > 0 ? 'Düzenle' : 'Seç / Ekle'
 
   return (
     <div className="w-full min-w-0">
@@ -85,9 +89,9 @@ export default function DocumentBankAccountsPanel({
         <button
           type="button"
           onClick={() => setIsOpen((current) => !current)}
-          className={`inline-flex shrink-0 items-center gap-1 ${YF_TEXT_CLASS} transition-opacity hover:opacity-80`}
+          className={`${MS_CTA_CLASS} h-auto min-h-0 shrink-0 gap-1.5 px-3 py-1.5`}
         >
-          {isOpen ? 'Gizle' : selectedAccounts.length > 0 ? 'Düzenle' : 'Seç / Ekle'}
+          {toggleLabel}
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
@@ -95,24 +99,41 @@ export default function DocumentBankAccountsPanel({
       <div className="document-frame-only overflow-hidden rounded-xl border border-[var(--search-border)] bg-transparent">
         {!isOpen ? (
           <div className={`flex w-full min-w-0 items-stretch gap-3 ${paddingClass}`}>
-            {selectedAccounts.length > 0 ? (
+            {bankAccounts.length > 0 ? (
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                {selectedAccounts.map((account) => (
-                  <div
-                    key={account.id}
-                    className="document-frame-only flex min-w-0 max-w-full items-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2"
-                  >
-                    <Landmark className="h-3.5 w-3.5 shrink-0 text-[#10b981]" strokeWidth={2.25} />
-                    <div className="min-w-0">
-                      <p className="customer-name-primary truncate">
-                        {[account.bankName, account.label].filter(Boolean).join(' · ') || 'Hesap'}
-                      </p>
-                      {account.iban ? (
-                        <p className="customer-name-secondary truncate">{account.iban}</p>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
+                {bankAccounts.map((account) => {
+                  const isSelected = selectedAccountIds.includes(account.id)
+                  return (
+                    <button
+                      key={account.id}
+                      type="button"
+                      onClick={() => toggleSelect(account)}
+                      aria-pressed={isSelected}
+                      className={`document-frame-only flex min-w-0 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${
+                        isSelected
+                          ? 'border-[#10b981]/55 bg-[#10b981]/10'
+                          : 'border-[var(--search-border)] bg-transparent hover:border-[#10b981]/35'
+                      }`}
+                    >
+                      <Landmark
+                        className={`h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-[#10b981]' : 'text-[var(--muted)]'}`}
+                        strokeWidth={2.25}
+                      />
+                      <div className="min-w-0">
+                        <p
+                          className={`customer-name-primary truncate ${
+                            isSelected ? '!text-[#10b981]' : ''
+                          }`}
+                        >
+                          {[account.bankName, account.label].filter(Boolean).join(' · ') || 'Hesap'}
+                        </p>
+                        {account.iban ? (
+                          <p className="customer-name-secondary truncate">{account.iban}</p>
+                        ) : null}
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
             ) : (
               <button
@@ -124,15 +145,6 @@ export default function DocumentBankAccountsPanel({
                 Banka hesabı seçin veya ekleyin — teklifte birden fazla hesap seçilebilir
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setIsOpen(true)}
-              className="glass-sidebar-toggle flex h-7 w-7 shrink-0 self-center items-center justify-center rounded-xl text-[var(--muted)] transition-colors"
-              data-tone="primary"
-              title="Banka hesabı ekle / seç"
-            >
-              <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
-            </button>
           </div>
         ) : (
           <div
@@ -140,7 +152,7 @@ export default function DocumentBankAccountsPanel({
             onClick={(event) => event.stopPropagation()}
           >
             <p className={`mb-3 ${YF_TEXT_CLASS}`}>
-              İstediğiniz kadar banka seçebilirsiniz. Yeni hesap eklediğinizde teklife otomatik eklenir.
+              İstediğiniz kadar banka seçebilirsiniz. Seçilenler teklife ve yazdırma çıktısına eklenir.
             </p>
             <BankAccountsDocumentEditor
               key={bankAccounts.map((account) => account.id).join('-')}

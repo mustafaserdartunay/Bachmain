@@ -1652,7 +1652,6 @@ export default function QuotesPage() {
 
   function createQuoteDraft(baseQuotes = quotes) {
     const stages = loadWorkflowStages()
-    const bankAccounts = readCompanySettings().bankAccounts || []
     const createdAt = todayIsoDate()
     return {
       ...initialQuotes[0],
@@ -1679,7 +1678,7 @@ export default function QuotesPage() {
       documentDiscountMode: 'percent',
       documentDiscountRate: 0,
       documentDiscountAmount: 0,
-      selectedBankAccountIds: bankAccounts.map((account) => account.id),
+      selectedBankAccountIds: [],
       activities: [
         {
           id: createId('act'),
