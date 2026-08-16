@@ -189,7 +189,8 @@ export default function DocumentTermsEditor({
                     <button
                       type="button"
                       onClick={() => setPendingDeleteTerm(term)}
-                      className="glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:!border-[#e11d48] hover:!text-[#e11d48]"
+                      className="glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors"
+                      data-tone="danger"
                       title="Hazır koşulu sil"
                     >
                       <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
