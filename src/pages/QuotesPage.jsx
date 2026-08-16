@@ -192,8 +192,11 @@ function StageColorSwatches({
 }
 
 const quoteItemGridClass = 'grid-cols-[72px_minmax(0,1fr)]'
-const quoteItemFieldsGridClass = 'grid-cols-[minmax(0,1.5fr)_72px_108px_72px_112px_72px]'
+const quoteItemFieldsGridClass =
+  'grid-cols-[minmax(0,1.4fr)_64px_100px_56px_96px_96px_auto]'
 const quoteItemFieldGapClass = 'gap-x-2'
+const quoteLineActionBtnClass =
+  'glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl'
 
 const statusClasses = {
   Taslak: 'badge-gray',
@@ -1020,9 +1023,9 @@ function QuoteProcessManagement({
   )
 }
 
-function QuoteNotesPanel({ quote, onPatch }) {
+function QuoteNotesPanel({ quote, onPatch, className = '' }) {
   return (
-    <label className="block">
+    <label className={`flex h-full min-h-0 flex-col ${className}`.trim()}>
       <div className="mb-1 flex min-w-0 items-center gap-2">
         <AppPanelDot color="violet" />
         <span className={APP_PANEL_TITLE_CLASS}>Notlar :</span>
@@ -1032,7 +1035,7 @@ function QuoteNotesPanel({ quote, onPatch }) {
         onChange={(event) => onPatch({ notes: event.target.value })}
         rows={3}
         placeholder="Teklif ile ilgili genel notlar..."
-        className="form-input resize-none text-xs"
+        className="form-input min-h-[9.5rem] flex-1 resize-none text-xs"
       />
     </label>
   )
@@ -2897,7 +2900,7 @@ export default function QuotesPage() {
                             <div
                               className={`grid ${quoteItemFieldsGridClass} ${quoteItemFieldGapClass} items-end`}
                             >
-                              <Field label="Ürün">
+                              <Field label="Ürün" align="center">
                                 <ProductSearchSelect
                                   item={item}
                                   onSelect={(product) => selectProductForItem(item.id, product)}
@@ -2950,8 +2953,13 @@ export default function QuotesPage() {
                                   ))}
                                 </select>
                               </Field>
-                              <Field label="Toplam" align="center">
-                                <div className="flex h-10 items-center justify-center rounded-lg bg-emerald-500/10 px-2 text-[13px] font-bold tabular-nums text-[var(--muted)]">
+                              <Field label="KDV Hariç" align="center">
+                                <div className="flex h-10 items-center justify-center rounded-lg bg-dark-700/40 px-1.5 text-center text-[12px] font-bold tabular-nums text-[var(--muted)]">
+                                  {formatTL(totals.net)}
+                                </div>
+                              </Field>
+                              <Field label="KDV Dahil" align="center">
+                                <div className="flex h-10 items-center justify-center rounded-lg bg-emerald-500/10 px-1.5 text-center text-[12px] font-bold tabular-nums text-[var(--muted)]">
                                   {formatTL(totals.total)}
                                 </div>
                               </Field>
@@ -2966,18 +2974,18 @@ export default function QuotesPage() {
                                     onClick={() =>
                                       setOpenItemMenuId(openItemMenuId === item.id ? null : item.id)
                                     }
-                                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-dark-500/50 text-[var(--muted)] transition-colors hover:bg-dark-700/60"
+                                    className={quoteLineActionBtnClass}
                                     title="Satıra alan ekle"
                                   >
-                                    <Plus className="h-3.5 w-3.5" />
+                                    <Plus className="h-4 w-4" strokeWidth={2.25} />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => setPendingItemDeleteId(item.id)}
-                                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-500/20 text-red-300 transition-colors hover:bg-red-500/10"
+                                    className={`${quoteLineActionBtnClass} !text-red-300 hover:!text-red-200`}
                                     title="Satırı sil"
                                   >
-                                    <Trash2 className="h-3.5 w-3.5" />
+                                    <Trash2 className="h-4 w-4" strokeWidth={2.25} />
                                   </button>
                                   {openItemMenuId === item.id && (
                                     <div
@@ -3147,16 +3155,14 @@ export default function QuotesPage() {
                   </button>
 
                   {selectedQuote && (
-                    <div className="grid grid-cols-1 gap-4 border-t border-dark-500/35 pt-4 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-start">
-                      <div className="flex min-w-0 flex-col gap-4">
+                    <div className="space-y-4 border-t border-dark-500/35 pt-4">
+                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-stretch">
                         <QuoteNotesPanel quote={selectedQuote} onPatch={patchSelected} />
-                        <DocumentBankAccountsPanel quote={selectedQuote} onPatch={patchSelected} />
-                      </div>
-                      {selectedTotals && (
-                        <div className="w-full max-w-[480px] lg:justify-self-end">
+                        {selectedTotals ? (
                           <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
-                        </div>
-                      )}
+                        ) : null}
+                      </div>
+                      <DocumentBankAccountsPanel quote={selectedQuote} onPatch={patchSelected} />
                     </div>
                   )}
                 </div>
@@ -3176,26 +3182,26 @@ export default function QuotesPage() {
                     type="button"
                     onClick={downloadQuotePdf}
                     disabled={isGeneratingPdf}
-                    className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#e11d48] transition-opacity hover:opacity-80 disabled:opacity-50"
+                    className="group inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--muted)] transition-colors hover:text-[#e11d48] disabled:opacity-50"
                   >
-                    <FileText className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                    <FileText className="h-4 w-4 text-[#e11d48]" strokeWidth={2.25} aria-hidden />
                     {isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
                   </button>
                   <button
                     type="button"
                     onClick={sendQuoteByWhatsApp}
                     disabled={isGeneratingPdf}
-                    className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#10b981] transition-opacity hover:opacity-80 disabled:opacity-50"
+                    className="group inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--muted)] transition-colors hover:text-[#10b981] disabled:opacity-50"
                   >
-                    <Send className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                    <Send className="h-4 w-4 text-[#10b981]" strokeWidth={2.25} aria-hidden />
                     WhatsApp PDF Gönder
                   </button>
                   <button
                     type="button"
                     onClick={sendQuoteByMail}
-                    className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#2563eb] transition-opacity hover:opacity-80"
+                    className="group inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--muted)] transition-colors hover:text-[#2563eb]"
                   >
-                    <Mail className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                    <Mail className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} aria-hidden />
                     Mail Gönder
                   </button>
                 </div>

@@ -78,6 +78,7 @@ export default function ProductSearchSelect({
             if (trimmedQuery.length > 0) setIsOpen(true)
           }}
           placeholder="Ürün adı, ürün kodu veya barkod ara..."
+          className="!text-center"
         />
         {showDropdown && (
           <div className="absolute left-0 right-0 top-11 z-40 rounded-2xl border border-dark-500 bg-dark-900 p-2 shadow-card">

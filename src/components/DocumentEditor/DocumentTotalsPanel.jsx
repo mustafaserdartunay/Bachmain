@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import { AppPanelDot } from '../Layout/AppPageLayout'
 import { documentDropdownMenuClass } from './documentItemLayout'
 import NumericInput from '../Products/NumericInput'
 import { formatTL } from '../../utils/productPricing'
+import { APP_PANEL_TITLE_CLASS, PAGE_BALANCE_AMOUNT_CLASS } from '../../utils/dashboardDesign'
 
-const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_128px_28px] items-center gap-x-2'
+const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_minmax(7rem,1fr)_28px] items-center gap-x-2'
 const LABEL_CELL_CLASS = 'flex min-w-0 items-center gap-1.5 pl-2.5'
-const AMOUNT_CLASS = 'block w-full text-right font-black tabular-nums text-white'
+const AMOUNT_CLASS = `${PAGE_BALANCE_AMOUNT_CLASS} block w-full text-right text-white`
 const ACTION_SLOT_CLASS = 'flex w-7 shrink-0 items-center justify-end'
 
 function TotalRow({ label, value, valueContent, labelAction, trailingAction }) {
@@ -16,9 +18,7 @@ function TotalRow({ label, value, valueContent, labelAction, trailingAction }) {
         <span className="font-bold text-gray-500">{label}</span>
         {labelAction}
       </div>
-      {valueContent || (
-        <span className={AMOUNT_CLASS}>{formatTL(value ?? 0)}</span>
-      )}
+      {valueContent || <span className={AMOUNT_CLASS}>{formatTL(value ?? 0)}</span>}
       <div className={ACTION_SLOT_CLASS}>{trailingAction}</div>
     </div>
   )
@@ -61,7 +61,7 @@ function CompactNumericInput({ value, onChange, suffix, formatMode = 'plain', wi
   )
 }
 
-export default function DocumentTotalsPanel({ totals, onPatch, children }) {
+export default function DocumentTotalsPanel({ totals, onPatch, children, className = '' }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
 
@@ -104,89 +104,103 @@ export default function DocumentTotalsPanel({ totals, onPatch, children }) {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="rounded-2xl border border-dark-500/45 bg-dark-700/35 p-4">
-        <TotalRow
-          label="Ara Toplam"
-          value={totals.subtotal}
-          trailingAction={!totals.showDocumentDiscount && onPatch ? (
-            <div className="relative" ref={menuRef}>
-              <button
-                type="button"
-                onClick={() => setMenuOpen((current) => !current)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-blue-500/25 bg-blue-500/10 text-blue-300 transition-colors hover:bg-blue-500/20"
-                title="Alan ekle"
-                aria-expanded={menuOpen}
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-              {menuOpen && (
-                <div className={`absolute right-0 top-full z-30 mt-1 w-56 ${documentDropdownMenuClass}`}>
+    <div className={`flex h-full min-h-0 flex-col space-y-3 ${className}`.trim()}>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="mb-1 flex min-w-0 items-center gap-2">
+          <AppPanelDot color="emerald" />
+          <span className={APP_PANEL_TITLE_CLASS}>Toplamlar :</span>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-dark-500/45 bg-dark-700/35 p-4">
+          <TotalRow
+            label="Ara Toplam"
+            value={totals.subtotal}
+            trailingAction={
+              !totals.showDocumentDiscount && onPatch ? (
+                <div className="relative" ref={menuRef}>
                   <button
                     type="button"
-                    onClick={enableDocumentDiscount}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-gray-300 transition-colors hover:bg-blue-500/15 hover:text-white"
+                    onClick={() => setMenuOpen((current) => !current)}
+                    className="glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl"
+                    title="Alan ekle"
+                    aria-expanded={menuOpen}
                   >
-                    <Plus className="h-3.5 w-3.5 text-blue-300" /> İndirim ekle
+                    <Plus className="h-3.5 w-3.5" />
                   </button>
-                </div>
-              )}
-            </div>
-          ) : null}
-        />
-
-        {showLineDiscount && (
-          <TotalRow label="Satır İndirimi" value={totals.lineDiscount} />
-        )}
-
-        {totals.showDocumentDiscount && (
-          <TotalRow
-            label="Toplam İndirim"
-            value={totals.documentDiscount}
-            labelAction={onPatch ? (
-              <div className="ml-1.5 flex shrink-0 items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={disableDocumentDiscount}
-                  className="inline-flex h-5 w-5 items-center justify-center text-gray-500 transition-colors hover:text-red-400"
-                  title="Toplam indirimi kaldır"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-                <DiscountModeToggle
-                  mode={discountMode}
-                  onChange={(nextMode) => onPatch({ documentDiscountMode: nextMode })}
-                />
-                <div className={discountMode === 'amount' ? 'w-[120px]' : 'w-[88px]'}>
-                  {discountMode === 'percent' ? (
-                    <CompactNumericInput
-                      value={totals.documentDiscountRate || 0}
-                      onChange={(value) => onPatch({ documentDiscountRate: value, showDocumentDiscount: true })}
-                      suffix="%"
-                    />
-                  ) : (
-                    <CompactNumericInput
-                      value={totals.documentDiscountAmount || 0}
-                      onChange={(value) => onPatch({ documentDiscountAmount: value, showDocumentDiscount: true })}
-                      suffix="₺"
-                      formatMode="price"
-                      wide
-                    />
+                  {menuOpen && (
+                    <div className={`absolute right-0 top-full z-30 mt-1 w-56 ${documentDropdownMenuClass}`}>
+                      <button
+                        type="button"
+                        onClick={enableDocumentDiscount}
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-gray-300 transition-colors hover:bg-blue-500/15 hover:text-white"
+                      >
+                        <Plus className="h-3.5 w-3.5 text-blue-300" /> İndirim ekle
+                      </button>
+                    </div>
                   )}
                 </div>
-              </div>
-            ) : null}
+              ) : null
+            }
           />
-        )}
 
-        {optionalRows.map(([label, value]) => (
-          <TotalRow key={label} label={label} value={value} />
-        ))}
-        <TotalRow label="KDV" value={totals.vat} />
-        <div className={`${ROW_GRID} mt-3 rounded-xl bg-emerald-500/10 py-3`}>
-          <span className="pl-2.5 text-sm font-black text-emerald-300">Genel Toplam</span>
-          <span className={`${AMOUNT_CLASS} text-lg`}>{formatTL(totals.grandTotal)}</span>
-          <span />
+          {showLineDiscount && <TotalRow label="Satır İndirimi" value={totals.lineDiscount} />}
+
+          {totals.showDocumentDiscount && (
+            <TotalRow
+              label="Toplam İndirim"
+              value={totals.documentDiscount}
+              labelAction={
+                onPatch ? (
+                  <div className="ml-1.5 flex shrink-0 items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={disableDocumentDiscount}
+                      className="inline-flex h-5 w-5 items-center justify-center text-gray-500 transition-colors hover:text-red-400"
+                      title="Toplam indirimi kaldır"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    <DiscountModeToggle
+                      mode={discountMode}
+                      onChange={(nextMode) => onPatch({ documentDiscountMode: nextMode })}
+                    />
+                    <div className={discountMode === 'amount' ? 'w-[120px]' : 'w-[88px]'}>
+                      {discountMode === 'percent' ? (
+                        <CompactNumericInput
+                          value={totals.documentDiscountRate || 0}
+                          onChange={(value) =>
+                            onPatch({ documentDiscountRate: value, showDocumentDiscount: true })
+                          }
+                          suffix="%"
+                        />
+                      ) : (
+                        <CompactNumericInput
+                          value={totals.documentDiscountAmount || 0}
+                          onChange={(value) =>
+                            onPatch({ documentDiscountAmount: value, showDocumentDiscount: true })
+                          }
+                          suffix="₺"
+                          formatMode="price"
+                          wide
+                        />
+                      )}
+                    </div>
+                  </div>
+                ) : null
+              }
+            />
+          )}
+
+          {optionalRows.map(([label, value]) => (
+            <TotalRow key={label} label={label} value={value} />
+          ))}
+          <TotalRow label="KDV" value={totals.vat} />
+          <div className={`${ROW_GRID} mt-auto rounded-xl bg-emerald-500/10 py-3`}>
+            <span className="pl-2.5 text-sm font-bold text-emerald-300">Genel Toplam</span>
+            <span className={`${AMOUNT_CLASS} customer-balance-positive`}>
+              {formatTL(totals.grandTotal)}
+            </span>
+            <span />
+          </div>
         </div>
       </div>
       {children}

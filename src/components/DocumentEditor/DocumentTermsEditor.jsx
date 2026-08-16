@@ -127,19 +127,19 @@ export default function DocumentTermsEditor({
           </div>
         </div>
 
-        <div
-          className={`glass-inset flex flex-col rounded-[16px] p-3 ${compact ? 'min-h-[180px]' : 'h-[332px]'}`}
-        >
-          <div className="mb-3 flex items-center gap-2">
+        <div className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-[332px]'}`}>
+          <div className="mb-2 flex items-center gap-2">
             <AppPanelDot color="orange" />
             <h4 className={APP_PANEL_TITLE_CLASS}>Açıklama :</h4>
           </div>
-          <textarea
-            value={value}
-            onChange={(event) => onPatch({ [field]: event.target.value })}
-            placeholder={descriptionPlaceholder}
-            className="min-h-0 flex-1 resize-none rounded-2xl border border-dark-500/50 bg-dark-700/70 px-4 py-3 text-[14px] font-normal text-gray-200 placeholder-gray-500 outline-none transition-colors focus:border-blue-500/35 focus:bg-dark-700/80"
-          />
+          <div className="glass-inset flex min-h-0 flex-1 flex-col rounded-[16px] p-3">
+            <textarea
+              value={value}
+              onChange={(event) => onPatch({ [field]: event.target.value })}
+              placeholder={descriptionPlaceholder}
+              className="min-h-0 flex-1 resize-none rounded-2xl border border-dark-500/50 bg-dark-700/70 px-4 py-3 text-[14px] font-normal text-gray-200 placeholder-gray-500 outline-none transition-colors focus:border-blue-500/35 focus:bg-dark-700/80"
+            />
+          </div>
         </div>
       </div>
     </div>
