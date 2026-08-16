@@ -89,7 +89,7 @@ import { publishB2bPortal } from '../utils/platformAuth'
 import { customerSubMenus } from '../data/customerMenu'
 import { expensesSubMenus } from '../data/expensesMenu'
 
-const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
+const filterAllOption = { label: 'Tümü', color: 'bg-gray-500', locked: true }
 const balanceFilterOptions = [
   filterAllOption,
   { label: 'Alacak', color: 'bg-emerald-500' },
@@ -546,13 +546,13 @@ export default function CustomersPage({
                 value={filters.type}
                 options={[filterAllOption, ...typeOptions]}
                 includePlaceholderOption={false}
-                editable={false}
                 buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
                 menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 openKey="filter-type"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
                 onChange={(value) => updateFilter('type', value)}
+                onOptionsChange={(next) => updateOptionList('type', next)}
               />
             </div>
             <div className={CUSTOMER_FILTER_FIELD_CLASS}>
@@ -561,13 +561,13 @@ export default function CustomersPage({
                 value={filters.representative}
                 options={[filterAllOption, ...optionLists.representative]}
                 includePlaceholderOption={false}
-                editable={false}
                 buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
                 menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 openKey="filter-representative"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
                 onChange={(value) => updateFilter('representative', value)}
+                onOptionsChange={(next) => updateOptionList('representative', next)}
               />
             </div>
             <div className={CUSTOMER_FILTER_FIELD_CLASS}>
@@ -576,13 +576,13 @@ export default function CustomersPage({
                 value={filters.scoring}
                 options={[filterAllOption, ...optionLists.scoring]}
                 includePlaceholderOption={false}
-                editable={false}
                 buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
                 menuClassName={CUSTOMER_FILTER_MENU_CLASS}
                 openKey="filter-scoring"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
                 onChange={(value) => updateFilter('scoring', value)}
+                onOptionsChange={(next) => updateOptionList('scoring', next)}
               />
             </div>
             <div className={CUSTOMER_FILTER_FIELD_CLASS}>

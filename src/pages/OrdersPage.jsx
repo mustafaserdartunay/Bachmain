@@ -85,7 +85,7 @@ import { resolveCustomerContactInfo } from '../utils/customerContacts'
 const orderListGrid = '118px 72px minmax(180px,1.2fr) 148px 148px 118px 118px minmax(220px,auto)'
 const orderListProcessPillClass =
   'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 py-1 text-[12px] font-bold transition-colors hover:bg-dark-700/80'
-const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
+const filterAllOption = { label: 'Tümü', color: 'bg-gray-500', locked: true }
 const sortFilterOptions = [
   { label: 'Son işleme göre', color: 'bg-blue-500' },
   { label: 'Tarihe göre', color: 'bg-purple-500' },
@@ -1216,12 +1216,12 @@ export default function OrdersPage() {
                   value={filters.priority}
                   options={orderPriorityFilterOptions}
                   includePlaceholderOption={false}
-                  editable={false}
                   buttonClassName={LIST_PILL_CLASS}
                   openKey="filter-priority"
                   activeMenu={activeMenu}
                   setActiveMenu={setActiveMenu}
                   onChange={(value) => updateFilter('priority', value)}
+                  onOptionsChange={(next) => updateOptionList('priority', next)}
                 />
               </div>
               <div>
@@ -1332,12 +1332,12 @@ export default function OrdersPage() {
                     <EditableDropdownPill
                       value={priorityValue}
                       options={orderPriorityDropdownOptions}
-                      editable={false}
                       buttonClassName={orderListProcessPillClass}
                       openKey={`${order.id}-priority`}
                       activeMenu={activeMenu}
                       setActiveMenu={setActiveMenu}
                       onChange={(value) => setOrderPriority(order, value)}
+                      onOptionsChange={(next) => updateOptionList('priority', next)}
                     />
                   </div>
                   <div

@@ -29,6 +29,9 @@ const AUTH_PATHS = new Set([
   '/email-degistir',
 ])
 
+/** Full-bleed product chooser & Studio — no marketing chrome */
+const CHROMELESS_PATHS = new Set(['/', '/studio'])
+
 function ScrollToTop() {
   const pathname = usePathname()
   useEffect(() => {
@@ -41,6 +44,8 @@ function ScrollToTop() {
 export default function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || ''
   const isAuth = AUTH_PATHS.has(pathname)
+  const isChromeless = CHROMELESS_PATHS.has(pathname)
+  const hideChrome = isAuth || isChromeless
 
   return (
     <>
@@ -51,17 +56,17 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
         İçeriğe geç
       </a>
       <ScrollToTop />
-      <Header />
+      {hideChrome ? null : <Header />}
       <main
         id="main-content"
-        className={isAuth ? 'flex min-h-[100dvh] flex-col p-0' : 'pt-0 pb-24'}
+        className={hideChrome ? 'flex min-h-[100dvh] flex-col p-0' : 'pt-0 pb-24'}
         role="main"
       >
         {children}
       </main>
-      {isAuth ? null : <Footer />}
-      {isAuth ? null : <StickyCta />}
-      <CookieBanner />
+      {hideChrome ? null : <Footer />}
+      {hideChrome ? null : <StickyCta />}
+      {isChromeless ? null : <CookieBanner />}
     </>
   )
 }
