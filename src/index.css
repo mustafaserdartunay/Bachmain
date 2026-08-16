@@ -754,6 +754,22 @@ textarea:not(.form-input)::placeholder {
   color: var(--ink);
 }
 
+/* Eski shadow-card / dark panel kabukları — müşteri listesi .card tonuyla aynı */
+.page-type-shell section.shadow-card:not(.card),
+.page-type-shell section[class*='bg-dark-800'][class*='rounded-']:not(.card),
+.customers-page-type section.shadow-card:not(.card),
+.customers-page-type section[class*='bg-dark-800'][class*='rounded-']:not(.card) {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 26px !important;
+  box-shadow:
+    0 10px 36px -14px rgba(30, 35, 60, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  color: var(--ink);
+}
+
 .app-page-header {
   position: relative;
   z-index: 30;

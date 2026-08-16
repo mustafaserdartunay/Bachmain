@@ -23,7 +23,7 @@ export default function ShippingProcessesPage() {
   const totalPieces = loadings.reduce((sum, item) => sum + (item.summary?.pieceCount || 0), 0)
 
   return (
-    <AppPageShell>
+    <AppPageShell className="customers-page-type w-full">
       <AppPageHeader
         title={t('page.title', 'tr')}
         actions={(
@@ -36,6 +36,7 @@ export default function ShippingProcessesPage() {
 
       <SummaryMetrics
         columns={4}
+        className="customer-summary-metrics w-full"
         items={[
           { title: 'Toplam Yükleme', value: loadings.length, icon: Truck, tone: 'blue', valueTone: 'blue' },
           { title: 'Toplam Parça', value: totalPieces, icon: PackagePlus, tone: 'orange', valueTone: 'orange' },
@@ -45,8 +46,9 @@ export default function ShippingProcessesPage() {
       />
 
       <AppPagePanel
-        title={t('page.list', 'tr')}
-        action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">{loadings.length} kayıt</span>}
+        className="customer-list-panel w-full"
+        title={`${t('page.list', 'tr')} :`}
+        action={<span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-[14px] font-bold text-blue-300">{loadings.length} kayıt</span>}
       >
         {loadings.length === 0 ? (
           <p className="rounded-xl border border-dashed border-dark-500/60 bg-dark-800/40 py-10 text-center text-sm text-gray-500">

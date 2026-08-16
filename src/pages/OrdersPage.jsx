@@ -22,7 +22,7 @@ import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import SplitCreateButton from '../components/Common/SplitCreateButton'
 import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
-import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
+import { AppPageHeader, AppPageShell, AppPagePanel } from '../components/Layout/AppPageLayout'
 import { customerToDocumentPatch } from '../utils/documentCustomerPatch'
 import ListDeleteConfirmPanel, {
   DeleteTrashButton,
@@ -161,16 +161,14 @@ function TurkishLiraIcon({ className = '' }) {
 
 function Panel({ title, description, children, action }) {
   return (
-    <section className="card">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold text-white">{title}</h2>
-          {description && <p className="mt-1 text-xs text-gray-500">{description}</p>}
-        </div>
-        {action}
-      </div>
+    <AppPagePanel
+      className="customer-list-panel w-full"
+      title={title ? `${title} :` : undefined}
+      description={description}
+      action={action}
+    >
       {children}
-    </section>
+    </AppPagePanel>
   )
 }
 
@@ -1032,7 +1030,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <AppPageShell>
+    <AppPageShell className="customers-page-type w-full">
       {viewMode === 'list' ? (
         <AppPageHeader
           title="Sipariş Yönetimi"
@@ -1207,11 +1205,9 @@ export default function OrdersPage() {
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Sipariş kodu, teklif no, müşteri veya yetkili ara..."
             />
-            <div className="grid grid-cols-2 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3 lg:grid-cols-3">
+            <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
               <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-                  Öncelik
-                </p>
+                <p className="mb-2 text-[14px] font-normal text-[var(--muted)]">Öncelik :</p>
                 <EditableDropdownPill
                   value={filters.priority}
                   options={orderPriorityFilterOptions}
@@ -1225,9 +1221,7 @@ export default function OrdersPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-                  Süreç
-                </p>
+                <p className="mb-2 text-[14px] font-normal text-[var(--muted)]">Süreç :</p>
                 <EditableDropdownPill
                   value={filters.stage}
                   options={orderStageFilterOptions}
@@ -1241,9 +1235,7 @@ export default function OrdersPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-                  Sıralama
-                </p>
+                <p className="mb-2 text-[14px] font-normal text-[var(--muted)]">Sıralama :</p>
                 <EditableDropdownPill
                   value={sortLabelByMode[sortMode] || 'Son işleme göre'}
                   options={sortFilterOptions}
@@ -1440,58 +1432,56 @@ export default function OrdersPage() {
       ) : (
         selectedOrder && (
           <div className="space-y-5">
-            <div className="grid grid-cols-12 gap-4">
-              <section className="col-span-12 rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_200px]">
-                    <DocumentField label="Sipariş Başlığı">
-                      <input
-                        value={selectedOrder.title}
-                        onChange={(e) => patchSelected({ title: e.target.value })}
-                        className="form-input"
-                      />
+            <AppPagePanel className="w-full" title="Sipariş Bilgileri :">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_200px]">
+                  <DocumentField label="Sipariş Başlığı">
+                    <input
+                      value={selectedOrder.title}
+                      onChange={(e) => patchSelected({ title: e.target.value })}
+                      className="form-input"
+                    />
+                  </DocumentField>
+                  {selectedOrder.quoteId && (
+                    <DocumentField label="Kaynak Teklif">
+                      <div className="form-input flex items-center bg-dark-900/40 font-bold text-emerald-300">
+                        {selectedOrder.quoteId}
+                      </div>
                     </DocumentField>
-                    {selectedOrder.quoteId && (
-                      <DocumentField label="Kaynak Teklif">
-                        <div className="form-input flex items-center bg-dark-900/40 font-bold text-emerald-300">
-                          {selectedOrder.quoteId}
-                        </div>
-                      </DocumentField>
-                    )}
-                  </div>
-                  <CustomerPicker record={selectedOrder} onPatch={patchSelected} />
-                  <DocumentField label="Oluşturma Tarihi">
-                    <input
-                      type="date"
-                      value={selectedOrder.createdAt}
-                      onChange={(e) => patchSelected({ createdAt: e.target.value })}
-                      className="form-input"
-                    />
-                  </DocumentField>
-                  <DocumentField label="Teslim Tarihi">
-                    <input
-                      type="date"
-                      value={selectedOrder.deliveryDate || ''}
-                      onChange={(e) => patchSelected({ deliveryDate: e.target.value })}
-                      className="form-input"
-                    />
-                  </DocumentField>
-                  <div className="col-span-2">
-                    <RepresentativeEditor
-                      record={selectedOrder}
-                      onPatch={patchSelected}
-                      optionLists={optionLists}
-                      updateOptionList={updateOptionList}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      openKey="order-representative"
-                    />
-                  </div>
+                  )}
                 </div>
-              </section>
-            </div>
+                <CustomerPicker record={selectedOrder} onPatch={patchSelected} />
+                <DocumentField label="Oluşturma Tarihi">
+                  <input
+                    type="date"
+                    value={selectedOrder.createdAt}
+                    onChange={(e) => patchSelected({ createdAt: e.target.value })}
+                    className="form-input"
+                  />
+                </DocumentField>
+                <DocumentField label="Teslim Tarihi">
+                  <input
+                    type="date"
+                    value={selectedOrder.deliveryDate || ''}
+                    onChange={(e) => patchSelected({ deliveryDate: e.target.value })}
+                    className="form-input"
+                  />
+                </DocumentField>
+                <div className="col-span-2">
+                  <RepresentativeEditor
+                    record={selectedOrder}
+                    onPatch={patchSelected}
+                    optionLists={optionLists}
+                    updateOptionList={updateOptionList}
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    openKey="order-representative"
+                  />
+                </div>
+              </div>
+            </AppPagePanel>
 
-            <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
+            <AppPagePanel className="w-full" title="Sipariş Süreci :" dotColor="violet">
               <OrderProcessManagement
                 order={selectedOrder}
                 onPatch={patchSelected}
@@ -1511,13 +1501,11 @@ export default function OrdersPage() {
                 setPendingStageDeleteId={setPendingStageDeleteId}
                 onRemoveOrderStage={removeOrderStage}
               />
-            </section>
+            </AppPagePanel>
 
-            <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-bold text-white">Ürün Seçimi</h2>
-                </div>
+            <AppPagePanel className="w-full" title="Ürün Seçimi :" dotColor="violet">
+              <div className="mb-3 flex items-center justify-between">
+                <span />
                 <DocumentMiniButton onClick={addItem}>Ürün Ekle</DocumentMiniButton>
               </div>
               <div className="space-y-3">
@@ -1545,24 +1533,24 @@ export default function OrdersPage() {
                   </div>
                 )}
               </div>
-            </section>
+            </AppPagePanel>
 
             {selectedTotals && (
-              <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-                <div className="grid grid-cols-[minmax(0,1fr)_480px] items-start gap-4">
+              <AppPagePanel className="w-full" title="Sipariş Koşulları :" dotColor="orange">
+                <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_480px]">
                   <div className="min-w-0">
                     <DocumentTermsEditor
                       record={selectedOrder}
                       onPatch={patchSelected}
                       compact
-                      title="Sipariş Koşulları"
+                      hideTitle
                       savedTermsTitle="Hazır Sipariş Koşulları"
                       descriptionPlaceholder="Siparişin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
                     />
                   </div>
                   <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
                 </div>
-              </section>
+              </AppPagePanel>
             )}
 
             <DocumentActivityPanel

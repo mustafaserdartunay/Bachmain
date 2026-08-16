@@ -7,7 +7,7 @@ export default function DeliveredPage() {
   const navigate = useNavigate()
 
   return (
-    <AppPageShell>
+    <AppPageShell className="customers-page-type w-full">
       <AppPageHeader
         title="Teslim Edilenler"
         titleClassName="text-emerald-300"
@@ -36,11 +36,16 @@ export default function DeliveredPage() {
         )}
       />
 
-      <AppPagePanel title="Teslimat Kayıtları" description="Tamamlanan teslimatlar, irsaliye bağlantıları ve müşteri teslim geçmişi." dotColor="emerald">
-        <div className="rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-10 text-center">
-          <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-gray-600" />
-          <p className="text-sm font-bold text-white">Teslim edilenler listesi hazırlanıyor</p>
-          <p className="mx-auto mt-2 max-w-md text-xs text-gray-500">
+      <AppPagePanel
+        className="customer-list-panel w-full"
+        title="Teslimat Kayıtları :"
+        description="Tamamlanan teslimatlar, irsaliye bağlantıları ve müşteri teslim geçmişi."
+        dotColor="emerald"
+      >
+        <div className="rounded-2xl border border-dashed border-dark-500/60 p-10 text-center">
+          <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-[var(--muted)]" />
+          <p className="text-[14px] font-bold text-[var(--ink)]">Teslim edilenler listesi hazırlanıyor</p>
+          <p className="mx-auto mt-2 max-w-md text-[14px] font-normal text-[var(--muted)]">
             Depodan çıkan ve müşteriye teslim edilen kalemler; teslim tarihi, adet ve
             ilişkili sipariş bilgileriyle burada görüntülenecek.
           </p>

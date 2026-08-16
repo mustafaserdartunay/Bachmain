@@ -172,7 +172,7 @@ export default function DocumentLineItemRow({
           {(item.showDiscount || item.showExciseTax || item.showAccommodationTax) && (
             <div className={`grid grid-cols-2 ${documentItemFieldGapClass} gap-y-3`}>
               {item.showDiscount && (
-                <div className="rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3">
+                <div className="glass-inset rounded-2xl p-3">
                   <div className="grid grid-cols-[minmax(0,1fr)_92px] items-end gap-3">
                     <DocumentField label="İndirim %">
                       <NumericInput
@@ -191,7 +191,7 @@ export default function DocumentLineItemRow({
                 </div>
               )}
               {item.showExciseTax && (
-                <div className="rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3">
+                <div className="glass-inset rounded-2xl p-3">
                   <div className="grid grid-cols-[minmax(0,1fr)_92px] items-end gap-3">
                     <DocumentField label="ÖTV %">
                       <NumericInput
@@ -212,7 +212,7 @@ export default function DocumentLineItemRow({
                 </div>
               )}
               {item.showAccommodationTax && (
-                <div className="rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3">
+                <div className="glass-inset rounded-2xl p-3">
                   <div className="grid grid-cols-[minmax(0,1fr)_92px] items-end gap-3">
                     <DocumentField label="Konaklama Vergisi %">
                       <NumericInput

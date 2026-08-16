@@ -2816,7 +2816,7 @@ export default function QuotesPage() {
                     return (
                       <div
                         key={item.id}
-                        className="rounded-xl border border-dark-500/40 bg-dark-700/25 p-2.5"
+                        className="glass-inset rounded-xl p-2.5"
                       >
                         <div
                           className={`grid ${quoteItemGridClass} ${quoteItemFieldGapClass} items-start`}
@@ -2964,7 +2964,7 @@ export default function QuotesPage() {
                               item.showAccommodationTax) && (
                               <div className={`grid grid-cols-2 ${quoteItemFieldGapClass} gap-y-3`}>
                                 {item.showDiscount && (
-                                  <div className="rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3">
+                                  <div className="glass-inset rounded-2xl p-3">
                                     <div className="grid grid-cols-[minmax(0,1fr)_92px] items-end gap-3">
                                       <Field label="İndirim %">
                                         <NumericInput
@@ -2989,7 +2989,7 @@ export default function QuotesPage() {
                                   </div>
                                 )}
                                 {item.showExciseTax && (
-                                  <div className="rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3">
+                                  <div className="glass-inset rounded-2xl p-3">
                                     <div className="grid grid-cols-[minmax(0,1fr)_92px] items-end gap-3">
                                       <Field label="ÖTV %">
                                         <NumericInput
@@ -3014,7 +3014,7 @@ export default function QuotesPage() {
                                   </div>
                                 )}
                                 {item.showAccommodationTax && (
-                                  <div className="rounded-2xl border border-dark-500/45 bg-dark-800/70 p-3">
+                                  <div className="glass-inset rounded-2xl p-3">
                                     <div className="grid grid-cols-[minmax(0,1fr)_92px] items-end gap-3">
                                       <Field label="Konaklama Vergisi %">
                                         <NumericInput

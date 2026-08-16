@@ -15,7 +15,7 @@ export default function RepresentativeEditor({
   return (
     <div>
       <h2 className="mb-3 text-base font-bold text-white">Müşteri Temsilcisi</h2>
-      <div className="rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3">
+      <div className="glass-inset rounded-2xl p-3">
         <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Temsilci</p>
         <EditableDropdownPill
           value={record.owner || ''}

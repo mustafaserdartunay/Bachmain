@@ -19,7 +19,7 @@ import ListHeaderRow from '../Common/ListHeaderRow'
 import SummaryMetrics from '../Common/SummaryMetrics'
 import SplitCreateButton from '../Common/SplitCreateButton'
 import { LIST_PILL_CLASS } from '../Common/ListDeleteConfirmPanel'
-import { AppPageHeader, AppPageShell } from '../Layout/AppPageLayout'
+import { AppPageHeader, AppPageShell, AppPagePanel } from '../Layout/AppPageLayout'
 import EditableDropdownPill from '../EditableDropdownPill'
 import DepoItemStagePanel from './DepoItemStagePanel'
 import { findCustomerProfileByReference, getListCustomerDisplay } from '../../data/customerProfiles'
@@ -103,16 +103,14 @@ function buildDepoDocumentDraft(item) {
 
 function Panel({ title, description, children, action }) {
   return (
-    <section className="card">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold text-white">{title}</h2>
-          {description && <p className="mt-1 text-xs text-gray-500">{description}</p>}
-        </div>
-        {action}
-      </div>
+    <AppPagePanel
+      className="customer-list-panel w-full"
+      title={title ? `${title} :` : undefined}
+      description={description}
+      action={action}
+    >
       {children}
-    </section>
+    </AppPagePanel>
   )
 }
 
@@ -302,7 +300,7 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
   }
 
   return (
-    <AppPageShell>
+    <AppPageShell className="customers-page-type w-full">
       <AppPageHeader
         title={pageConfig.title}
         titleClassName={pageConfig.titleClass}
@@ -479,7 +477,7 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Sipariş, ürün veya müşteri ara..."
           />
-          <div className="rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3">
+          <div className="glass-inset rounded-2xl p-3">
             <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Durum</p>
             <EditableDropdownPill
               value={filters.status}
