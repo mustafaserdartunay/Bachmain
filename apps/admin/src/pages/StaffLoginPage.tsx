@@ -5,6 +5,10 @@ import { api } from '@/lib/api'
 const STAFF_TOKEN_KEY = 'bachmain_staff_token'
 const STAFF_ROLE_KEY = 'bachmain_staff_role'
 
+const APP_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_APP_URL) ||
+  'https://uygulama.bachmain.com'
+
 export function getStaffToken() {
   try {
     return localStorage.getItem(STAFF_TOKEN_KEY) || ''
@@ -35,77 +39,150 @@ export function setStaffToken(token: string, role?: string) {
   }
 }
 
+function redirectToBusinessApp(token: string) {
+  const url = new URL('/', APP_URL)
+  url.searchParams.set('authToken', token)
+  window.location.replace(url.toString())
+}
+
+type PortalTarget = 'business' | 'studio'
+
 export function StaffLoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState<PortalTarget | null>(null)
   const location = useLocation()
   const from = (location.state as { from?: string })?.from || '/'
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
+  async function loginTo(target: PortalTarget) {
+    if (!email.trim() || !password) {
+      setError('E-posta ve şifre gerekli.')
+      return
+    }
+    setLoading(target)
     setError('')
     try {
+      if (target === 'studio') {
+        const res = await api.post<{
+          ok: boolean
+          token: string
+          user: { fullName: string; role?: string }
+        }>('/staff/login', {
+          email: email.trim().toLowerCase(),
+          password,
+        })
+        setStaffToken(res.token, res.user?.role || 'super_admin')
+        window.location.href = from
+        return
+      }
+
       const res = await api.post<{
         ok: boolean
         token: string
-        user: { fullName: string; role?: string }
-      }>('/staff/login', {
-        email,
+      }>('/auth/login', {
+        email: email.trim().toLowerCase(),
         password,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
       })
-      setStaffToken(res.token, res.user?.role || 'super_admin')
-      window.location.href = from
+      if (!res.token) {
+        throw new Error('Oturum anahtarı alınamadı.')
+      }
+      redirectToBusinessApp(res.token)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Giriş başarısız')
-      setLoading(false)
+      setLoading(null)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_#e8eef8_0%,_#f7f8fb_55%,_#eef1f6_100%)] px-4">
-      <form
-        onSubmit={onSubmit}
-        className="w-full max-w-md space-y-4 rounded-2xl border border-border bg-surface-elevated p-8 shadow-sm"
-      >
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">BACHMAIN</p>
-          <h1 className="mt-2 text-2xl font-bold text-ink">Yönetim Girişi</h1>
-          <p className="mt-1 text-sm text-muted">Control Center personel oturumu</p>
-        </div>
-        <label className="block space-y-1.5 text-sm">
-          <span className="font-medium text-ink">E-posta</span>
-          <input
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 outline-none ring-brand/30 focus:ring-2"
-            type="email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
-        <label className="block space-y-1.5 text-sm">
-          <span className="font-medium text-ink">Şifre</span>
-          <input
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 outline-none ring-brand/30 focus:ring-2"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+    <div className="relative flex min-h-screen w-full flex-col lg:flex-row">
+      {/* Sol — Business */}
+      <section className="flex min-h-[42vh] flex-1 flex-col items-center justify-center bg-white px-6 py-16 lg:min-h-screen lg:px-10">
+        <img
+          src="/assets/bachmain-logo.png"
+          alt="BACHMAIN"
+          className="h-14 w-auto object-contain sm:h-16"
+          draggable={false}
+        />
+        <p className="mt-4 text-[16px] font-semibold tracking-[0.22em] text-[#0f172a] uppercase">
+          Business
+        </p>
+      </section>
+
+      {/* Sağ — Bachmain Studio */}
+      <section className="flex min-h-[42vh] flex-1 flex-col items-center justify-center bg-gradient-to-br from-[#1d4ed8] via-[#2563eb] to-[#1e40af] px-6 py-16 lg:min-h-screen lg:px-10">
+        <img
+          src="/assets/bachmain-logo-on-dark.png"
+          alt="BACHMAIN"
+          className="h-14 w-auto object-contain sm:h-16"
+          draggable={false}
+        />
+        <p className="mt-4 text-[16px] font-semibold tracking-[0.22em] text-white uppercase">
+          Bachmain Studio
+        </p>
+      </section>
+
+      {/* Ortak giriş kartı */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 py-8">
+        <form
+          className="pointer-events-auto w-full max-w-[420px] space-y-4 rounded-2xl border border-[#e2e8f0] bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.18)] backdrop-blur-md sm:p-8"
+          onSubmit={(e) => {
+            e.preventDefault()
+          }}
         >
-          {loading ? 'Giriş yapılıyor…' : 'Giriş Yap'}
-        </button>
-      </form>
+          <div className="text-center">
+            <h1 className="text-xl font-bold tracking-tight text-[#0f172a]">Giriş Yap</h1>
+            <p className="mt-1 text-sm text-[#64748b]">
+              Aynı hesapla Business veya Studio’ya geçebilirsiniz.
+            </p>
+          </div>
+
+          <label className="block space-y-1.5 text-sm">
+            <span className="font-medium text-[#0f172a]">E-posta</span>
+            <input
+              className="w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2.5 text-[#0f172a] outline-none ring-[#2563eb]/30 focus:ring-2"
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+          <label className="block space-y-1.5 text-sm">
+            <span className="font-medium text-[#0f172a]">Şifre</span>
+            <input
+              className="w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2.5 text-[#0f172a] outline-none ring-[#2563eb]/30 focus:ring-2"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              disabled={loading !== null}
+              onClick={() => loginTo('business')}
+              className="rounded-xl border border-[#0f172a] bg-[#0f172a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1e293b] disabled:opacity-60"
+            >
+              {loading === 'business' ? 'Giriş…' : 'Business'}
+            </button>
+            <button
+              type="button"
+              disabled={loading !== null}
+              onClick={() => loginTo('studio')}
+              className="rounded-xl bg-[#2563eb] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8] disabled:opacity-60"
+            >
+              {loading === 'studio' ? 'Giriş…' : 'Bachmain Studio'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }
@@ -118,7 +195,9 @@ export function RequireStaff({ children }: { children: React.ReactNode }) {
     let cancelled = false
     ;(async () => {
       try {
-        const health = await fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/health`).then((r) => r.json())
+        const health = await fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/health`).then((r) =>
+          r.json(),
+        )
         if (!health.staffAuth) {
           if (!cancelled) setState('ok')
           return
@@ -153,7 +232,11 @@ export function RequireStaff({ children }: { children: React.ReactNode }) {
   }, [])
 
   if (state === 'loading') {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-muted">Oturum kontrol ediliyor…</div>
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted">
+        Oturum kontrol ediliyor…
+      </div>
+    )
   }
   if (state === 'no') {
     return <Navigate to="/giris" replace state={{ from: location.pathname }} />
