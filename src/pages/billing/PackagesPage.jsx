@@ -1,12 +1,46 @@
 import { Link } from 'react-router-dom'
 import { Check, HardDrive, Users } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CRM_PRICING_PLANS, checkoutPath, formatTry } from '../../data/pricingPlans'
 import BrandLogo from '../../components/Layout/BrandLogo'
+import {
+  fetchProductUpdates,
+  filterChannel,
+  getUnreadIds,
+  markChannelSeen,
+  readUpdatesCache,
+  UNREAD_PILL_CLASS,
+  UPDATE_CHANNELS,
+} from '../../utils/productUpdates'
 
 export default function PackagesPage() {
   const [period, setPeriod] = useState('month')
+  const cachedItems = readUpdatesCache().items
+  const [notices, setNotices] = useState(() =>
+    filterChannel(cachedItems, UPDATE_CHANNELS.package),
+  )
+  const [freshIds, setFreshIds] = useState(
+    () => new Set(getUnreadIds(cachedItems, UPDATE_CHANNELS.package)),
+  )
   const perLabel = period === 'year' ? '/ yıl · KDV hariç' : '/ ay · KDV hariç'
+
+  useEffect(() => {
+    let cancelled = false
+    fetchProductUpdates()
+      .then((payload) => {
+        if (cancelled) return
+        const next = filterChannel(payload.items, UPDATE_CHANNELS.package)
+        setFreshIds(new Set(getUnreadIds(payload.items, UPDATE_CHANNELS.package)))
+        setNotices(next)
+        markChannelSeen(payload.items, UPDATE_CHANNELS.package)
+      })
+      .catch(() => {
+        if (!cancelled) markChannelSeen(notices, UPDATE_CHANNELS.package)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <div className="crm-pricing-page">
@@ -37,6 +71,48 @@ export default function PackagesPage() {
           </button>
         </div>
       </section>
+
+      {notices.length ? (
+        <section className="crm-pricing-plans" style={{ paddingTop: 0 }}>
+          <div className="mx-auto max-w-4xl space-y-3 px-4">
+            <h2 className="inline-flex items-center justify-center gap-2 text-center text-[14px] font-bold text-[var(--muted)]">
+              Fiyat ve paket bildirimleri
+              {freshIds.size ? (
+                <span className={UNREAD_PILL_CLASS}>{freshIds.size > 9 ? '9+' : freshIds.size}</span>
+              ) : null}
+            </h2>
+            {notices.map((item) => (
+              <article
+                key={item.id}
+                className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-4"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-[14px] font-bold text-[var(--muted)]">{item.title}</h3>
+                  {item.code ? (
+                    <span className="rounded-md bg-black/5 px-2 py-0.5 font-mono text-[12px] font-bold text-[var(--muted)]">
+                      {item.code}
+                    </span>
+                  ) : null}
+                  {freshIds.has(item.id) ? <span className={UNREAD_PILL_CLASS}>Yeni</span> : null}
+                </div>
+                {item.planName ? (
+                  <p className="mt-1 text-[14px] text-[var(--muted)]">Paket: {item.planName}</p>
+                ) : null}
+                {item.priceFrom != null || item.priceTo != null ? (
+                  <p className="mt-1 text-[14px] font-bold text-[var(--muted)]">
+                    {item.priceFrom != null ? formatTry(item.priceFrom) : '—'}
+                    {' → '}
+                    {item.priceTo != null ? formatTry(item.priceTo) : '—'}
+                  </p>
+                ) : null}
+                <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-[var(--muted)]">
+                  {item.body || item.detail}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="crm-pricing-plans">
         <div className="crm-pricing-grid">

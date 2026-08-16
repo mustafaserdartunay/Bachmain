@@ -32,6 +32,8 @@ import HeaderSupport from './HeaderSupport'
 import OrgSwitcher from './OrgSwitcher'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { HeaderPopoverProvider, useHeaderPopover } from '../../hooks/useHeaderPopover'
+import useProductUpdateBadges from '../../hooks/useProductUpdateBadges'
+import { UNREAD_PILL_CLASS } from '../../utils/productUpdates'
 
 function useCompactHeader() {
   const [compact, setCompact] = useState(() =>
@@ -195,7 +197,7 @@ function HeaderBar({ onMenuClick }) {
     offset: 8,
   })
 
-  const initials = profile.displayName?.slice(0, 1)?.toUpperCase() || 'Y'
+  const { counts: updateCounts } = useProductUpdateBadges()
 
   useEffect(() => {
     function syncProfile() {
@@ -224,9 +226,14 @@ function HeaderBar({ onMenuClick }) {
   }
 
   const menuItems = [
-    { label: 'Yeni Özellikler ve Duyurular', icon: Megaphone, path: '/duyurular' },
-    { label: 'Eğitim', icon: GraduationCap, path: '/egitim' },
-    { label: 'Paketler', icon: Package, path: '/paketler' },
+    {
+      label: 'Yeni Özellikler ve Duyurular',
+      icon: Megaphone,
+      path: '/duyurular',
+      badge: updateCounts.feature,
+    },
+    { label: 'Eğitim', icon: GraduationCap, path: '/egitim', badge: updateCounts.training },
+    { label: 'Paketler', icon: Package, path: '/paketler', badge: updateCounts.package },
     { label: 'Profilim', icon: UserRound, path: '/profil' },
     { label: 'Yönetici Ayarları', icon: Settings, path: '/ayarlar' },
   ]
@@ -407,7 +414,7 @@ function HeaderBar({ onMenuClick }) {
                   ) : (
                     <>
                       <div className="p-2">
-                        {menuItems.map(({ label, icon: Icon, path }) => (
+                        {menuItems.map(({ label, icon: Icon, path, badge }) => (
                           <button
                             key={label}
                             type="button"
@@ -415,10 +422,15 @@ function HeaderBar({ onMenuClick }) {
                               setMenuOpen(false)
                               navigate(path)
                             }}
-                            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-bold text-[var(--ink)] transition-colors hover:bg-white/55"
+                            className="relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-bold text-[var(--ink)] transition-colors hover:bg-white/55"
                           >
                             <Icon className="h-4 w-4 shrink-0 text-[var(--muted)]" />
-                            <span>{label}</span>
+                            <span className="min-w-0 flex-1">{label}</span>
+                            {badge > 0 ? (
+                              <span className={UNREAD_PILL_CLASS}>
+                                {badge > 9 ? '9+' : badge}
+                              </span>
+                            ) : null}
                           </button>
                         ))}
                       </div>

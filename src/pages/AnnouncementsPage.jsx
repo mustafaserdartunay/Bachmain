@@ -1,160 +1,139 @@
 import { useEffect, useState } from 'react'
 import { Megaphone, Sparkles } from 'lucide-react'
-
-const PLATFORM_API = import.meta.env.VITE_PLATFORM_API_URL || 'https://yonetim.bachmain.com/api'
-const CACHE_KEY = 'bachmain_announcements_cache_v1'
-
-const FALLBACK_ANNOUNCEMENTS = [
-  {
-    id: 'ann-1',
-    title: 'Müşteri Ekstre PDF Yenilendi',
-    date: '05.06.2026',
-    badge: 'Yeni',
-    detail:
-      'Cari hareketler sayfasından gönderilen ekstre PDF artık firma logonuz, IBAN bilgileriniz ve modern renk tonlarıyla oluşturuluyor.',
-  },
-  {
-    id: 'ann-2',
-    title: 'Tahsilat ve Ödeme Modülü',
-    date: '04.06.2026',
-    badge: 'Güncelleme',
-    detail:
-      'Müşteri detayında tahsilat ve ödeme işlemleri kasa/banka seçimiyle cari hareketlere işleniyor. İşlem yeri kolonu eklendi.',
-  },
-  {
-    id: 'ann-3',
-    title: 'Profil ve Müşteri Numarası',
-    date: '03.06.2026',
-    badge: 'Duyuru',
-    detail:
-      'Her firma için benzersiz müşteri numarası otomatik oluşturuluyor. Yönetici kontrol panelinden destek ekibi erişebilir.',
-  },
-  {
-    id: 'ann-4',
-    title: 'Düzenlenebilir Açılır Menüler',
-    date: '02.06.2026',
-    badge: 'Özellik',
-    detail:
-      'Tip, temsilci, puantaj, kategori ve kasa/banka listelerine yeni seçenek ekleyebilir, düzenleyebilir ve silebilirsiniz.',
-  },
-]
+import {
+  AppPageBackLink,
+  AppPageHeader,
+  AppPagePanel,
+  AppPageShell,
+} from '../components/Layout/AppPageLayout'
+import {
+  APP_PANEL_TITLE_CLASS,
+  PAGE_CENTER_TITLE_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
+  YF_TEXT_CLASS,
+} from '../utils/dashboardDesign'
+import {
+  fetchProductUpdates,
+  filterChannel,
+  getUnreadIds,
+  markChannelSeen,
+  readUpdatesCache,
+  UNREAD_PILL_CLASS,
+  UPDATE_CHANNELS,
+} from '../utils/productUpdates'
 
 const BADGE_CLASS = {
-  Yeni: 'bg-emerald-500/15 text-emerald-300',
-  Güncelleme: 'bg-cyan-500/15 text-cyan-300',
-  Duyuru: 'bg-blue-500/15 text-blue-300',
-  Özellik: 'bg-purple-500/15 text-purple-300',
-}
-
-function readCache() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed?.items) ? parsed.items : null
-  } catch {
-    return null
-  }
-}
-
-function writeCache(items) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ items, at: Date.now() }))
-  } catch {
-    /* ignore */
-  }
-}
-
-function normalizeItems(items) {
-  if (!Array.isArray(items)) return []
-  return items.map((item) => ({
-    id: item.id,
-    title: item.title || '',
-    detail: item.detail || '',
-    badge: item.badge || 'Duyuru',
-    date: item.date || '',
-    badgeClass: BADGE_CLASS[item.badge] || BADGE_CLASS.Duyuru,
-  }))
+  Yeni: 'bg-emerald-500/15 text-emerald-700',
+  Güncelleme: 'bg-cyan-500/15 text-cyan-700',
+  Duyuru: 'bg-blue-500/15 text-blue-700',
+  Özellik: 'bg-purple-500/15 text-purple-700',
+  Fiyat: 'bg-orange-500/15 text-orange-700',
 }
 
 export default function AnnouncementsPage() {
-  const cached = readCache()
-  const [announcements, setAnnouncements] = useState(() =>
-    normalizeItems(cached || FALLBACK_ANNOUNCEMENTS),
+  const cached = readUpdatesCache()
+  const [version, setVersion] = useState(cached.version)
+  const [items, setItems] = useState(() => filterChannel(cached.items, UPDATE_CHANNELS.feature))
+  const [freshIds, setFreshIds] = useState(
+    () => new Set(getUnreadIds(cached.items, UPDATE_CHANNELS.feature)),
   )
-  const [loading, setLoading] = useState(!cached)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      try {
-        const res = await fetch(`${PLATFORM_API}/announcements`, {
-          credentials: 'omit',
-          headers: { Accept: 'application/json' },
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = await res.json()
-        const items = normalizeItems(data.items || [])
-        if (!cancelled && items.length) {
-          setAnnouncements(items)
-          writeCache(items)
-        }
-      } catch {
-        if (!cancelled && !cached) {
-          setAnnouncements(normalizeItems(FALLBACK_ANNOUNCEMENTS))
-        }
-      } finally {
+    fetchProductUpdates()
+      .then((payload) => {
+        if (cancelled) return
+        setVersion(payload.version)
+        const next = filterChannel(payload.items, UPDATE_CHANNELS.feature)
+        setFreshIds(new Set(getUnreadIds(payload.items, UPDATE_CHANNELS.feature)))
+        setItems(next)
+        markChannelSeen(payload.items, UPDATE_CHANNELS.feature)
+      })
+      .catch(() => {
+        if (cancelled) return
+        const fallback = filterChannel(readUpdatesCache().items, UPDATE_CHANNELS.feature)
+        setFreshIds(new Set(getUnreadIds(readUpdatesCache().items, UPDATE_CHANNELS.feature)))
+        setItems(fallback)
+        markChannelSeen(fallback, UPDATE_CHANNELS.feature)
+      })
+      .finally(() => {
         if (!cancelled) setLoading(false)
-      }
-    })()
+      })
     return () => {
       cancelled = true
     }
   }, [])
 
   return (
-    <div className="space-y-5">
-      <section className="relative rounded-2xl border border-dark-500/50 bg-dark-800/70 p-5 text-center shadow-card">
-        <h1 className="text-2xl font-black uppercase tracking-wide text-blue-300">
-          Yeni Özellikler ve Duyurular
-        </h1>
-        <p className="mt-2 text-xs font-semibold text-gray-500">
-          Sistem güncellemeleri ve yeni modüller burada listelenir.
-        </p>
-      </section>
+    <AppPageShell className="customers-page-type w-full">
+      <AppPageHeader
+        showBack={false}
+        title={<AppPageBackLink />}
+        centerTitle="YENİ ÖZELLİKLER VE DUYURULAR"
+        centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+        titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+      />
 
-      {loading ? (
-        <p className="text-center text-xs font-semibold text-gray-500">Duyurular yükleniyor…</p>
-      ) : null}
+      <AppPagePanel className="customer-list-panel w-full">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className={APP_PANEL_TITLE_CLASS}>Sürüm notları</h2>
+            <p className={`mt-1 ${YF_TEXT_CLASS}`}>
+              Her yeni özellik yayınlandığında sürüm numarası otomatik artar. Aşağıda kod ve detay
+              yer alır.
+            </p>
+          </div>
+          <span className="rounded-xl border border-[var(--glass-border)] px-3 py-1.5 text-[14px] font-bold text-[var(--muted)]">
+            Sürüm {version}
+          </span>
+        </div>
 
-      <div className="space-y-3">
-        {announcements.map((item) => (
-          <article key={item.id} className="card">
-            <div className="flex items-start gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-dark-500/45 bg-dark-700/60 text-amber-300">
-                <Sparkles className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-sm font-black uppercase tracking-wide text-white">
-                    {item.title}
-                  </h2>
-                  <span
-                    className={`rounded-md px-2 py-0.5 text-[12px] font-black uppercase ${item.badgeClass}`}
-                  >
-                    {item.badge}
-                  </span>
+        {loading ? <p className={YF_TEXT_CLASS}>Duyurular yükleniyor…</p> : null}
+
+        <div className="space-y-3">
+          {items.map((item) => (
+            <article
+              key={item.id}
+              className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-4"
+            >
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(140,145,165,0.14)] text-[var(--muted)]">
+                  <Sparkles className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[14px] font-bold leading-tight text-[var(--muted)]">
+                      {item.title}
+                    </h3>
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-[12px] font-bold ${
+                        BADGE_CLASS[item.badge] || BADGE_CLASS.Duyuru
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                    {item.code ? (
+                      <span className="rounded-md bg-black/5 px-2 py-0.5 font-mono text-[12px] font-bold text-[var(--muted)]">
+                        {item.code}
+                      </span>
+                    ) : null}
+                    {freshIds.has(item.id) ? <span className={UNREAD_PILL_CLASS}>Yeni</span> : null}
+                  </div>
+                  <p className={`mt-2 whitespace-pre-line ${YF_TEXT_CLASS}`}>
+                    {item.body || item.detail}
+                  </p>
+                  <p className={`mt-3 flex items-center gap-1 ${YF_TEXT_CLASS}`}>
+                    <Megaphone className="h-3.5 w-3.5" />
+                    {item.date}
+                    {item.version ? ` · v${item.version}` : ''}
+                  </p>
                 </div>
-                <p className="mt-2 text-xs font-semibold leading-5 text-gray-400">{item.detail}</p>
-                <p className="mt-3 flex items-center gap-1 text-[13px] font-bold text-gray-500">
-                  <Megaphone className="h-3 w-3" />
-                  {item.date}
-                </p>
               </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
+            </article>
+          ))}
+        </div>
+      </AppPagePanel>
+    </AppPageShell>
   )
 }

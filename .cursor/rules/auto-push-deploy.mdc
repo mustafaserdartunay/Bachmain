@@ -1,45 +1,37 @@
 ---
-description: Push/deploy yalnızca kullanıcı "pd" yazınca; önce değişiklikleri göster, onay bekle
+description: Push/deploy kullanıcı isteyince; yerel Mac repo, deploy-all.sh
 alwaysApply: true
 ---
 
-# Push + Deploy — `pd` komutu
+# Push + Deploy
 
-## Kural
+Repo yerel Mac’te: `~/Documents/Bachmain/BachMain Tüm Proje`. iCloud yolu ve `~/Developer/Bach Crm` symlink kullanılmaz.
 
-1. Özellik / UI / düzeltme bittiğinde **önce değişiklikleri yerelde bırak** ve kullanıcıya göster / özetle.
-2. **Push veya deploy yapma** — kullanıcı kontrol edip onay verene kadar bekle.
-3. Kullanıcı **`pd`** yazarsa (tek başına veya mesaj içinde açık komut olarak):
-   - İlgili dosyaları commit et (anlamlı mesaj)
-   - App sürümünü bump et (`appVersion.js` + `public/app-version.json`) gerektiğinde
-   - `git push origin HEAD` (genelde `main`)
-   - Vercel production deploy’un gelmesini kontrol et (`uygulama.bachmain.com/app-version.json`)
+## Ne zaman
 
-`pd` = **p**ush + **d**eploy. Bu kısaltmayı unutma.
+Kullanıcı **push**, **deploy**, **pd** veya **push ve deploy** derse hemen:
 
-## Deploy yolu
+1. Sürümü bump et (`src/version/appVersion.js` + `public/app-version.json`)
+2. İlgili dosyaları commit et
+3. `./scripts/deploy-all.sh` çalıştır (push `origin main` + CRM/admin/web production)
 
-GitHub `main` → Vercel (CRM kök: `bachmain`). Yerel `npm run deploy` token yoksa gerekmez.
+Onay bekleme. iCloud gerekçesiyle durma.
 
-- Web (`apps/landing` / `apps/web`) → `bachmain-web`
-- Yönetim → `bachmain-admin`
-- Uygulama/CRM → `bachmain`
+## Git
 
-Karışıksa: `./scripts/ship.sh` veya `./scripts/deploy-all.sh`
-
-## Web landing
-
-`apps/landing` değiştiyse önce:
+Repo-wide `git status` / çıplak `git diff` çalıştırma. Yol ver:
 
 ```bash
-cd apps/landing && npm run build
-rsync -a --delete --exclude vercel.json --exclude .vercel --exclude CALISMA.md out/ ../web/
+git diff --name-only HEAD -- src apps/admin public
+git add -- path/to/file
 ```
 
-Sonra `pd` ile push + deploy.
+`git commit` takılırsa indeksten commit al:
 
-## Workspace
+```bash
+TREE=$(git write-tree)
+COMMIT=$(git commit-tree "$TREE" -p HEAD -m "feat: … (BM-V1.826.xx).")
+git update-ref HEAD "$COMMIT"
+```
 
-```
-~/Documents/Bachmain/BachMain Tüm Proje
-```
+Sonra `./scripts/deploy-all.sh`.

@@ -98,6 +98,8 @@ export function AppRoutes() {
 
         <Route path="hukuki" element={<LegalContentPage />} />
         <Route path="duyurular" element={<AnnouncementsAdminPage />} />
+        <Route path="egitim-duyurulari" element={<AnnouncementsAdminPage />} />
+        <Route path="paket-duyurulari" element={<AnnouncementsAdminPage />} />
 
         <Route path="destek" element={<SupportInboxPage />} />
         <Route path="destek/yeni" element={<ModuleFormPage moduleId="support" mode="create" />} />

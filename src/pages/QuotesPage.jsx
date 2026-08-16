@@ -4,37 +4,46 @@ import html2canvas from 'html2canvas'
 import SearchInput from '../components/Common/SearchInput'
 import { jsPDF } from 'jspdf'
 import {
-  ArrowLeft,
   CheckCircle2,
   ChevronDown,
   ClipboardList,
-  Clock3,
   FileText,
   Mail,
+  Pencil,
   Plus,
   Printer,
   Receipt,
   Save,
   Send,
-  Sparkles,
+  ShoppingCart,
   Trash2,
   Upload,
   Users,
   X,
-  ShoppingCart,
 } from 'lucide-react'
-import { MoreMenu } from '@bachmain/ui'
-import ListHeaderRow from '../components/Common/ListHeaderRow'
+import { DataTable, Dropdown, DropdownItem, DropdownSeparator } from '@bachmain/ui'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
-import SplitCreateButton from '../components/Common/SplitCreateButton'
 import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
-import { AppPageHeader, AppPageShell } from '../components/Layout/AppPageLayout'
+import {
+  AppPageBackLink,
+  AppPageHeader,
+  AppPagePanel,
+  AppPageShell,
+  AppPanelDot,
+} from '../components/Layout/AppPageLayout'
+import {
+  HEADER_ACTION_CTA_CLASS,
+  HEADER_ACTION_CTA_DIVIDER_CLASS,
+  HEADER_ACTION_CTA_ICON_CLASS,
+  HEADER_ACTION_CTA_ICON_WRAP_CLASS,
+  HEADER_ACTION_CTA_SHELL_CLASS,
+  HEADER_ACTION_GRADIENTS,
+} from '../components/Layout/HeaderCashActionsPanel'
 import { customerToDocumentPatch } from '../utils/documentCustomerPatch'
-import ListDeleteConfirmPanel, {
+import {
+  captureDeleteConfirmAnchor,
+  DeleteConfirmOverlay,
   DeleteConfirmPopover,
-  DeleteTrashButton,
-  LIST_PILL_CLASS,
-  ListInlineDeleteConfirmPopover,
 } from '../components/Common/ListDeleteConfirmPanel'
 import NumericInput from '../components/Products/NumericInput'
 import { formatTL } from '../utils/productPricing'
@@ -76,15 +85,15 @@ import {
   resolveOrderPanelCurrentStageId,
   resolveQuoteActiveStage,
   resolveQuoteProcessRecord,
-  toStageDropdownOptions,
 } from '../utils/workflowStages'
 import {
+  documentMoneyParts,
   documentTotals,
   itemTotals,
   safeNumber,
   sanitizeDocumentDiscountFields,
 } from '../utils/documentTotals'
-import { BTN_PRIMARY, BTN_SUCCESS } from '../utils/buttonStyles'
+import { BTN_PRIMARY } from '../utils/buttonStyles'
 import DocumentActivityPanel from '../components/DocumentEditor/DocumentActivityPanel'
 import DocumentTermsEditor from '../components/DocumentEditor/DocumentTermsEditor'
 import DocumentTotalsPanel from '../components/DocumentEditor/DocumentTotalsPanel'
@@ -101,7 +110,6 @@ import {
 } from '../components/DocumentEditor/processPanelUtils'
 import {
   stageColors as processStageColors,
-  getStageColumnSurfaceClasses,
 } from '../components/DocumentEditor/stageColors'
 import CustomerPicker, {
   DOCUMENT_SIDE_ACTION_WIDTH,
@@ -110,6 +118,22 @@ import CustomerPicker, {
 import ProductSearchSelect from '../components/DocumentEditor/ProductSearchSelect'
 import { documentDropdownMenuClass } from '../components/DocumentEditor/documentItemLayout'
 import { readCompanySettings } from '../utils/companySettings'
+import {
+  APP_PANEL_TITLE_CLASS,
+  PAGE_BALANCE_AMOUNT_CLASS,
+  PAGE_CENTER_TITLE_CLASS,
+  PAGE_FILTER_FIELD_CLASS,
+  PAGE_FILTER_LABEL_CLASS,
+  PAGE_FILTER_MENU_CLASS,
+  PAGE_FILTER_PILL_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
+  PAGE_LIST_MENU_CLASS,
+  PAGE_LIST_PILL_CLASS,
+  PAGE_LIST_PILL_WRAPPER_CLASS,
+  PAGE_TABLE_HEADER_CLASS,
+  YF_TEXT_CLASS,
+  YF_TEXT_ON_COLOR_CLASS,
+} from '../utils/dashboardDesign'
 
 const STORAGE_KEY = 'erlenbox-quotes'
 const TERMS_STORAGE_KEY = 'erlenbox-quote-terms'
@@ -183,10 +207,6 @@ const statusClasses = {
   Reddedildi: 'badge-red',
 }
 
-const quoteListGrid =
-  '118px 72px minmax(130px,1fr) 128px 128px 148px 118px 118px minmax(240px,auto)'
-const quoteListProcessPillClass =
-  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 py-1 text-[12px] font-bold transition-colors hover:bg-dark-700/80'
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const sortFilterOptions = [
   { label: 'Son işleme göre', color: 'bg-blue-500' },
@@ -650,18 +670,43 @@ function getQuoteListDateSource(quote) {
   return quote.activities?.[0]?.date || quote.createdAt || ''
 }
 
-function formatListDateTime(value) {
-  if (!value) return ''
+function formatListDateParts(value) {
+  if (!value) return { date: '', time: '' }
   const raw = String(value).trim()
   const trMatch = raw.match(/^(\d{2}\.\d{2}\.\d{4})(?:[, ]+\s*(\d{1,2}:\d{2}))/)
-  if (trMatch) return trMatch[2] ? `${trMatch[1]} ${trMatch[2]}` : trMatch[1]
+  if (trMatch) {
+    const [hours, minutes] = (trMatch[2] || '').split(':')
+    return {
+      date: trMatch[1],
+      time: hours && minutes ? `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}` : '',
+    }
+  }
 
   const formattedDate = formatListDate(raw.split(/[T ]/)[0] || raw)
   const timePart = raw.includes('T') ? raw.split('T')[1] : raw.split(' ')[1]
-  if (!timePart || !timePart.includes(':')) return formattedDate
+  if (!timePart || !timePart.includes(':')) return { date: formattedDate, time: '' }
   const [hours, minutes] = timePart.split(':')
-  if (!hours || !minutes) return formattedDate
-  return `${formattedDate} ${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`
+  if (!hours || !minutes) return { date: formattedDate, time: '' }
+  return {
+    date: formattedDate,
+    time: `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`,
+  }
+}
+
+function getQuoteListAmount(quote) {
+  const parts = documentMoneyParts(quote)
+  const candidates = [
+    parts.inclVat,
+    Number(quote?.grandTotal),
+    Number(quote?.total),
+    Number(quote?.amount),
+    parts.exclVat,
+    Number(quote?.amountNet),
+  ]
+  for (const value of candidates) {
+    if (Number.isFinite(value) && value > 0) return value
+  }
+  return 0
 }
 
 function TurkishLiraIcon({ className = '' }) {
@@ -674,25 +719,10 @@ function TurkishLiraIcon({ className = '' }) {
   )
 }
 
-function Panel({ title, description, children, action }) {
-  return (
-    <section className="card">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold text-white">{title}</h2>
-          {description && <p className="mt-1 text-xs text-gray-500">{description}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  )
-}
-
 function Field({ label, children }) {
   return (
     <div>
-      <label className="mb-2 block text-base font-bold text-white">{label}</label>
+      <label className={`${YF_TEXT_CLASS} mb-2 block`}>{label}</label>
       {children}
     </div>
   )
@@ -1119,6 +1149,7 @@ export default function QuotesPage() {
   const [sortMode, setSortMode] = useState('latest')
   const [viewMode, setViewMode] = useState('list')
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [openItemMenuId, setOpenItemMenuId] = useState(null)
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
@@ -1164,8 +1195,6 @@ export default function QuotesPage() {
   }, [quotes])
   const quoteStageOptions = getQuoteStageOptions(workflowStages)
   const orderStageOptions = getOrderStageOptions(workflowStages)
-  const quoteStageDropdownOptions = toStageDropdownOptions(quoteStageOptions)
-  const quoteStageFilterOptions = [filterAllOption, ...quoteStageDropdownOptions]
   const quotePriorityFilterOptions = [filterAllOption, ...optionLists.priority]
   const quoteStatusFilterOptions = [filterAllOption, ...optionLists.status]
 
@@ -2144,7 +2173,7 @@ export default function QuotesPage() {
     .sort((a, b) => {
       if (sortMode === 'date') return getQuoteSortDate(b) - getQuoteSortDate(a)
       if (sortMode === 'name') return (a.customer || '').localeCompare(b.customer || '', 'tr')
-      if (sortMode === 'price') return documentTotals(b).grandTotal - documentTotals(a).grandTotal
+      if (sortMode === 'price') return getQuoteListAmount(b) - getQuoteListAmount(a)
       return getQuoteSortDate(b) - getQuoteSortDate(a)
     })
 
@@ -2159,129 +2188,158 @@ export default function QuotesPage() {
     total: filteredQuotes.length,
     sent: filteredQuotes.filter((quote) => quote.status === 'Müşteriye Gönderildi').length,
     approved: filteredQuotes.filter((quote) => quote.status === 'Onaylandı').length,
-    totalNet: openQuotes.reduce((sum, quote) => sum + documentTotals(quote).net, 0),
-    totalAmount: openQuotes.reduce((sum, quote) => sum + documentTotals(quote).grandTotal, 0),
+    totalAmount: openQuotes.reduce((sum, quote) => sum + getQuoteListAmount(quote), 0),
   }
 
   return (
-    <AppPageShell>
+    <AppPageShell className="customers-page-type w-full">
       {viewMode === 'list' ? (
         <AppPageHeader
-          title="Teklif Yönetimi"
+          showBack={false}
+          title={<AppPageBackLink />}
+          centerTitle="TEKLİFLER"
+          centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+          titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
-            <SplitCreateButton
-              label="Yeni Teklif Oluştur"
-              onPrimaryClick={() => addQuote()}
-              menuAriaLabel="Teklif seçenekleri"
-              menuItems={[
-                {
-                  id: 'customer',
-                  label: 'Müşteri Seçerek Oluştur',
-                  icon: Users,
-                  iconClassName: 'text-blue-300',
-                  onClick: () => setCustomerModalOpen(true),
-                },
-                {
-                  id: 'draft',
-                  label: 'Hızlı Taslak Teklif',
-                  icon: Receipt,
-                  iconClassName: 'text-emerald-300',
-                  onClick: () => addQuote(),
-                },
-              ]}
-            />
+            <div
+              className={`relative inline-flex overflow-hidden ${HEADER_ACTION_CTA_SHELL_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}
+            >
+              <button
+                type="button"
+                onClick={() => addQuote()}
+                className="inline-flex h-full items-center gap-2.5 bg-transparent px-3"
+              >
+                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                  <FileText className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                </span>
+                <span className={YF_TEXT_ON_COLOR_CLASS}>Yeni Teklif Oluştur</span>
+              </button>
+              <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
+              <Dropdown
+                align="end"
+                className="h-full"
+                menuClassName={PAGE_FILTER_MENU_CLASS}
+                trigger={
+                  <button
+                    type="button"
+                    className="inline-flex h-full w-12 items-center justify-center bg-transparent"
+                    aria-label="Teklif seçenekleri"
+                  >
+                    <ChevronDown className={HEADER_ACTION_CTA_ICON_CLASS} aria-hidden="true" />
+                  </button>
+                }
+              >
+                {({ close }) => (
+                  <>
+                    <DropdownItem
+                      icon={Users}
+                      label="Müşteri Seçerek Oluştur"
+                      tone="primary"
+                      close={close}
+                      onClick={() => setCustomerModalOpen(true)}
+                    />
+                    <DropdownItem
+                      icon={Receipt}
+                      label="Hızlı Taslak Teklif"
+                      tone="success"
+                      close={close}
+                      onClick={() => addQuote()}
+                    />
+                  </>
+                )}
+              </Dropdown>
+            </div>
           }
         />
       ) : (
         <AppPageHeader
-          title={isDraftQuote ? 'Yeni Teklif Oluştur' : 'Teklif Düzenle'}
-          onBack={returnToQuoteList}
-          backLabel="Teklif listesine dön"
+          showBack={false}
+          title={
+            <AppPageBackLink
+              to={false}
+              onClick={returnToQuoteList}
+              label="Teklifler"
+            />
+          }
+          centerTitle={isDraftQuote ? 'YENİ TEKLİF OLUŞTUR' : 'TEKLİF DÜZENLE'}
+          centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+          titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
             <div className="relative flex shrink-0 items-center gap-2" data-quote-dropdown>
               {selectedQuote ? (
                 <Link
                   to={`/belge-merkezi/yazdir?type=quote&id=${encodeURIComponent(selectedQuote.id)}`}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-xs font-black uppercase text-gray-300 hover:bg-dark-700 hover:text-white"
+                  className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.violet}`}
                 >
-                  <Printer className="h-4 w-4" /> Şablonla Yazdır
+                  <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                    <Printer className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                  </span>
+                  <span className={YF_TEXT_ON_COLOR_CLASS}>Şablonla Yazdır</span>
                 </Link>
               ) : null}
-              <div className="relative">
-                <div className="btn-split">
-                  <button
-                    type="button"
-                    onClick={() => saveCurrentQuote({ returnToList: true })}
-                    disabled={!selectedQuote || isSaving}
-                    className={`${BTN_SUCCESS} min-w-[10.5rem] gap-2.5 px-3 disabled:cursor-not-allowed disabled:opacity-50`}
-                  >
-                    <Save className="h-4 w-4" />
+              <div
+                className={`relative inline-flex overflow-hidden ${HEADER_ACTION_CTA_SHELL_CLASS} ${HEADER_ACTION_GRADIENTS.success}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => saveCurrentQuote({ returnToList: true })}
+                  disabled={!selectedQuote || isSaving}
+                  className="inline-flex h-full items-center gap-2.5 bg-transparent px-3 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                    <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                  </span>
+                  <span className={YF_TEXT_ON_COLOR_CLASS}>
                     {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
-                  </button>
-                  <span className="btn-split-divider" aria-hidden />
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      setOpenSaveMenu((open) => {
-                        if (open) setPendingHeaderQuoteDelete(false)
-                        return !open
-                      })
-                    }}
-                    disabled={!selectedQuote || isSaving}
-                    className={`${BTN_SUCCESS} w-14 px-0 disabled:cursor-not-allowed disabled:opacity-50`}
-                    title="Kaydet seçenekleri"
-                    aria-expanded={openSaveMenu}
-                    aria-haspopup="menu"
-                  >
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform ${openSaveMenu ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                </div>
-                {openSaveMenu && (
-                  <div
-                    className="absolute right-0 top-full z-40 mt-2 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card"
-                    role="menu"
-                  >
+                  </span>
+                </button>
+                <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
+                <Dropdown
+                  align="end"
+                  className="h-full"
+                  menuClassName={PAGE_FILTER_MENU_CLASS}
+                  trigger={
                     <button
                       type="button"
-                      role="menuitem"
-                      onClick={() => saveCurrentQuote({ startNew: true })}
-                      className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
+                      disabled={!selectedQuote || isSaving}
+                      className="inline-flex h-full w-12 items-center justify-center bg-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                      title="Kaydet seçenekleri"
+                      aria-label="Kaydet seçenekleri"
                     >
-                      Kaydet ve Yeni Ekle
+                      <ChevronDown className={HEADER_ACTION_CTA_ICON_CLASS} aria-hidden="true" />
                     </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => saveCurrentQuote({ returnToList: false })}
-                      className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
-                    >
-                      Kaydet ve Düzenlemeye Devam Et
-                    </button>
-                    <div className="my-1 border-t border-dark-500/40" />
-                    {pendingHeaderQuoteDelete ? (
-                      <ListDeleteConfirmPanel
-                        title="Teklif silinsin mi?"
-                        description="Teklif silinenlere taşınır; geri alınabilir."
-                        onConfirm={() =>
-                          deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })
-                        }
-                        onCancel={() => setPendingHeaderQuoteDelete(false)}
+                  }
+                >
+                  {({ close }) => (
+                    <>
+                      <DropdownItem
+                        icon={Plus}
+                        label="Kaydet ve Yeni Ekle"
+                        tone="primary"
+                        close={close}
+                        onClick={() => saveCurrentQuote({ startNew: true })}
                       />
-                    ) : (
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => setPendingHeaderQuoteDelete(true)}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-300 transition-colors hover:bg-red-500/15 hover:text-red-200"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Teklifi Sil
-                      </button>
-                    )}
-                  </div>
-                )}
+                      <DropdownItem
+                        icon={Save}
+                        label="Kaydet ve Düzenlemeye Devam Et"
+                        tone="primary"
+                        close={close}
+                        onClick={() => saveCurrentQuote({ returnToList: false })}
+                      />
+                      <DropdownSeparator />
+                      <DropdownItem
+                        icon={Trash2}
+                        label="Teklifi Sil"
+                        tone="danger"
+                        close={close}
+                        onClick={(event) => {
+                          setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+                          setPendingHeaderQuoteDelete(true)
+                        }}
+                      />
+                    </>
+                  )}
+                </Dropdown>
               </div>
             </div>
           }
@@ -2290,291 +2348,304 @@ export default function QuotesPage() {
 
       {viewMode === 'list' && (
         <SummaryMetrics
+          columns={4}
+          className="customer-summary-metrics w-full"
           items={[
-            { title: 'Toplam Teklif', value: summary.total, icon: ClipboardList },
+            {
+              title: 'Toplam Teklif',
+              value: summary.total,
+              icon: ClipboardList,
+              valueTone: 'text-violet-800',
+            },
             {
               title: 'Gönderilen',
               value: summary.sent,
               icon: Send,
               tone: 'orange',
-              valueTone: 'orange',
+              valueTone: 'text-blue-800',
             },
             {
               title: 'Onaylanan',
               value: summary.approved,
               icon: CheckCircle2,
               tone: 'emerald',
-              valueTone: 'emerald',
+              valueTone: 'text-emerald-800',
             },
             {
-              title: 'Toplam KDV Hariç',
-              value: `${formatTL(summary.totalNet)}`,
-              icon: TurkishLiraIcon,
-              tone: 'purple',
-              valueTone: 'red',
-            },
-            {
-              title: 'Toplam KDV Dahil',
+              title: 'Toplam Tutar',
               value: `${formatTL(summary.totalAmount)}`,
               icon: TurkishLiraIcon,
               tone: 'orange',
-              valueTone: 'emerald',
+              valueTone: 'text-emerald-800',
             },
           ]}
         />
       )}
 
       {viewMode === 'list' ? (
-        <Panel
-          title="Teklif Listesi"
-          action={
-            <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">
-              {filteredQuotes.length} kayıt
-            </span>
-          }
-        >
-          <div className="mb-4 space-y-3">
-            <SearchInput
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Teklif kodu, müşteri, yetkili veya etiket ara..."
-            />
-            <div className="grid grid-cols-2 gap-3 rounded-2xl border border-dark-500/40 bg-dark-800/70 p-3 lg:grid-cols-4">
-              <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-                  Öncelik
-                </p>
-                <EditableDropdownPill
-                  value={filters.priority}
-                  options={quotePriorityFilterOptions}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey="filter-priority"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateFilter('priority', value)}
-                />
+        <>
+          <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
+            <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
+              <div className="flex shrink-0 items-center gap-2 px-1">
+                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
+                </span>
+                <span className={YF_TEXT_CLASS}>Filtre :</span>
               </div>
-              <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-                  Teklif Durumu
-                </p>
-                <EditableDropdownPill
-                  value={filters.status}
-                  options={quoteStatusFilterOptions}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey="filter-status"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateFilter('status', value)}
-                />
-              </div>
-              <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-                  Teklif Süreci
-                </p>
-                <EditableDropdownPill
-                  value={filters.stage}
-                  options={quoteStageFilterOptions}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey="filter-stage"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateFilter('stage', value)}
-                />
-              </div>
-              <div>
-                <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">
-                  Sıralama
-                </p>
-                <EditableDropdownPill
-                  value={sortLabelByMode[sortMode] || 'Son işleme göre'}
-                  options={sortFilterOptions}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey="filter-sort"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => setSortMode(sortModeByLabel[value] || 'latest')}
-                />
+              <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className={PAGE_FILTER_FIELD_CLASS}>
+                  <p className={PAGE_FILTER_LABEL_CLASS}>Öncelik :</p>
+                  <EditableDropdownPill
+                    value={filters.priority}
+                    options={quotePriorityFilterOptions}
+                    includePlaceholderOption={false}
+                    editable={false}
+                    buttonClassName={PAGE_FILTER_PILL_CLASS}
+                    menuClassName={PAGE_FILTER_MENU_CLASS}
+                    openKey="filter-priority"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    onChange={(value) => updateFilter('priority', value)}
+                  />
+                </div>
+                <div className={PAGE_FILTER_FIELD_CLASS}>
+                  <p className={PAGE_FILTER_LABEL_CLASS}>Durum :</p>
+                  <EditableDropdownPill
+                    value={filters.status}
+                    options={quoteStatusFilterOptions}
+                    includePlaceholderOption={false}
+                    editable={false}
+                    buttonClassName={PAGE_FILTER_PILL_CLASS}
+                    menuClassName={PAGE_FILTER_MENU_CLASS}
+                    openKey="filter-status"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    onChange={(value) => updateFilter('status', value)}
+                  />
+                </div>
+                <div className={PAGE_FILTER_FIELD_CLASS}>
+                  <p className={PAGE_FILTER_LABEL_CLASS}>Sıralama :</p>
+                  <EditableDropdownPill
+                    value={sortLabelByMode[sortMode] || 'Son işleme göre'}
+                    options={sortFilterOptions}
+                    includePlaceholderOption={false}
+                    editable={false}
+                    buttonClassName={PAGE_FILTER_PILL_CLASS}
+                    menuClassName={PAGE_FILTER_MENU_CLASS}
+                    openKey="filter-sort"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    onChange={(value) => setSortMode(sortModeByLabel[value] || 'latest')}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </AppPagePanel>
 
-          <ListHeaderRow
-            gridTemplate={quoteListGrid}
-            columns={[
-              'Tarih',
-              'Kod',
-              'Müşteri Adı',
-              'Öncelik',
-              'Teklif Durumu',
-              'Teklif Süreci',
-              { label: 'KDV Hariç', align: 'right', className: 'pr-2' },
-              { label: 'KDV Dahil', align: 'right', className: 'pr-2' },
-            ]}
-          />
+          <AppPagePanel className="customer-list-panel w-full">
+            <div className="mb-4 flex min-w-0 items-center gap-3">
+              <div className="flex shrink-0 items-center gap-2">
+                <AppPanelDot color="blue" />
+                <h2 className={APP_PANEL_TITLE_CLASS}>Teklif Listesi :</h2>
+              </div>
+              <div className="min-w-0 flex-1">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Teklif kodu, müşteri, yetkili veya etiket ara..."
+                  className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+                />
+              </div>
+              <span className={`shrink-0 ${YF_TEXT_CLASS}`}>{filteredQuotes.length} Kayıt</span>
+            </div>
 
-          <div className="mt-3 space-y-2 overflow-visible">
-            {filteredQuotes.map((quote) => {
-              const totals = documentTotals(quote)
-              const workflowStage = resolveListQuoteStage(quote)
-              const quoteProcess = resolveQuoteProcessRecord(quote, workflowStages)
-              const isOrderTransferred =
-                Boolean(quote.orderId) || isOrderReceivedStage(workflowStage)
-              const orderCreated = isOrderTransferred || linkedOrderQuoteIds.has(quote.id)
-              const stageColumnSurface =
-                isOrderTransferred && workflowStage
-                  ? getStageColumnSurfaceClasses(workflowStage)
-                  : ''
-              const customerDisplay = getListCustomerDisplay(quote.customer)
-              return (
-                <div
-                  key={quote.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => editQuote(quote.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') editQuote(quote.id)
-                  }}
-                  className="relative grid cursor-pointer items-center gap-2 rounded-2xl border border-dark-500/45 bg-dark-800/55 px-3 py-3 transition-all hover:border-blue-500/35 hover:bg-dark-700/60"
-                  style={{ gridTemplateColumns: quoteListGrid }}
-                >
-                  <div className="min-w-0 text-left">
-                    <p className="text-left text-xs font-semibold text-gray-500">
-                      {formatListDateTime(getQuoteListDateSource(quote))}
-                    </p>
-                  </div>
-                  <div className="min-w-0 text-left">
-                    <p className="text-left text-xs font-black tabular-nums text-blue-300">
+            <DataTable
+              emptyTitle="Teklif bulunamadı."
+              emptyDescription="Arama veya filtreleri değiştirin."
+              headerClassName={PAGE_TABLE_HEADER_CLASS}
+              mobileHeaderClassName={PAGE_TABLE_HEADER_CLASS}
+              data={filteredQuotes}
+              defaultSort={{ key: null, dir: 'asc' }}
+              getRowId={(quote) => quote.id}
+              onRowClick={(quote) => editQuote(quote.id)}
+              columns={[
+                {
+                  id: 'date',
+                  header: 'TARİH',
+                  sortable: true,
+                  align: 'center',
+                  accessorKey: 'date',
+                  className: 'w-[7.5rem] !max-w-none !h-auto',
+                  getSortValue: (quote) => getQuoteSortDate(quote),
+                  cell: (quote) => {
+                    const stamp = formatListDateParts(getQuoteListDateSource(quote))
+                    if (!stamp.date) {
+                      return (
+                        <span className="block text-center text-[14px] font-normal text-[var(--muted)]">
+                          —
+                        </span>
+                      )
+                    }
+                    return (
+                      <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
+                        <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+                          {stamp.date}
+                        </span>
+                        {stamp.time ? (
+                          <span className="text-[12px] font-normal leading-tight text-[var(--muted)]/75">
+                            {stamp.time}
+                          </span>
+                        ) : null}
+                      </span>
+                    )
+                  },
+                },
+                {
+                  id: 'code',
+                  header: 'KOD',
+                  sortable: true,
+                  accessorKey: 'code',
+                  className: 'w-[5.5rem] !max-w-none',
+                  getSortValue: (quote) =>
+                    resolveQuoteCode(
+                      quote.id,
+                      quotes.map((item) => item.id),
+                    ),
+                  cell: (quote) => (
+                    <span className={`${YF_TEXT_CLASS} tabular-nums`}>
                       {resolveQuoteCode(
                         quote.id,
                         quotes.map((item) => item.id),
                       )}
-                    </p>
-                  </div>
-                  <div className="min-w-0 text-left">
-                    <p className="flex min-w-0 items-center justify-start gap-2 text-left text-sm font-black text-white">
-                      <span className="shrink-0 truncate">
-                        {customerDisplay.brandShortName || 'Müşteri girilmedi'}
-                      </span>
-                      {customerDisplay.companyTitle && (
-                        <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[12px] font-black text-gray-400">
-                          <span className="truncate">{customerDisplay.companyTitle}</span>
+                    </span>
+                  ),
+                },
+                {
+                  id: 'customer',
+                  header: 'MÜŞTERİ ADI',
+                  sortable: true,
+                  accessorKey: 'customer',
+                  className: 'min-w-[22rem] w-[52%] !max-w-none !h-auto',
+                  getSortValue: (quote) => {
+                    const display = getListCustomerDisplay(quote.customer)
+                    return display.brandShortName || display.companyTitle || quote.customer || ''
+                  },
+                  cell: (quote) => {
+                    const display = getListCustomerDisplay(quote.customer)
+                    return (
+                      <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
+                        <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                          {display.brandShortName || 'Müşteri girilmedi'}
                         </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="min-w-0 text-left" onClick={(event) => event.stopPropagation()}>
-                    <EditableDropdownPill
-                      value={resolveListColumnLabel(quote.priority, optionLists.priority)}
-                      options={optionLists.priority}
-                      editable={false}
-                      buttonClassName={quoteListProcessPillClass}
-                      openKey={`${quote.id}-priority`}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      onChange={(value) => handleQuotePriorityChange(quote, value)}
-                    />
-                  </div>
-                  <div className="min-w-0 text-left" onClick={(event) => event.stopPropagation()}>
-                    <EditableDropdownPill
-                      value={resolveListColumnLabel(quote.status, optionLists.status)}
-                      options={optionLists.status}
-                      editable={false}
-                      buttonClassName={quoteListProcessPillClass}
-                      openKey={`${quote.id}-status`}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      onChange={(value) => handleQuoteStatusChange(quote, value)}
-                    />
-                  </div>
-                  <div
-                    className={`min-w-0 text-left rounded-xl transition-colors ${stageColumnSurface ? `${stageColumnSurface} px-1` : ''}`}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <EditableDropdownPill
-                      value={
-                        quoteProcess.activeStage?.label || quoteStageDropdownOptions[0]?.label || ''
-                      }
-                      options={quoteStageDropdownOptions}
-                      editable={false}
-                      buttonClassName={
-                        stageColumnSurface
-                          ? `${quoteListProcessPillClass} border-transparent bg-transparent hover:bg-black/10`
-                          : quoteListProcessPillClass
-                      }
-                      openKey={`${quote.id}-stage`}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      onChange={(value) => handleQuoteStageLabelChange(quote, value)}
-                    />
-                  </div>
-                  <p className="min-w-0 pr-2 text-right text-sm font-bold text-gray-200">
-                    {formatTL(totals.net)}
-                  </p>
-                  <p className="min-w-0 pr-2 text-right text-sm font-black text-white">
-                    {formatTL(totals.grandTotal)}
-                  </p>
-                  <div
-                    className="relative z-10 flex h-9 w-full items-center justify-end gap-2"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <MoreMenu
-                      items={[
-                        ...(orderCreated
-                          ? []
-                          : [
-                              {
-                                id: 'order',
-                                label: 'Sipariş Oluştur',
-                                icon: ShoppingCart,
-                                onClick: () => handleCreateOrderFromList(quote),
-                              },
-                            ]),
-                        {
-                          id: 'delete',
-                          label: 'Sil',
-                          icon: Trash2,
-                          tone: 'danger',
-                          onClick: () => setPendingDeleteId(quote.id),
-                        },
-                      ]}
-                    />
-                    {orderCreated ? (
-                      <span className="whitespace-nowrap rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-[12px] font-bold text-emerald-400/90">
-                        Sipariş Oluşturuldu
+                        {display.companyTitle ? (
+                          <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
+                            {display.companyTitle}
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
-                    {pendingDeleteId === quote.id && (
-                      <ListInlineDeleteConfirmPopover
-                        onConfirm={() => {
-                          deleteQuote(quote, { skipConfirm: true })
-                          setPendingDeleteId(null)
-                        }}
-                        onCancel={() => setPendingDeleteId(null)}
+                    )
+                  },
+                },
+                {
+                  id: 'priority',
+                  header: 'ÖNCELİK',
+                  className: 'w-[8.5rem] !max-w-none',
+                  hideOnMobile: true,
+                  cell: (quote) => (
+                    <span onClick={(event) => event.stopPropagation()}>
+                      <EditableDropdownPill
+                        value={resolveListColumnLabel(quote.priority, optionLists.priority)}
+                        options={optionLists.priority}
+                        editable={false}
+                        buttonClassName={PAGE_LIST_PILL_CLASS}
+                        wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                        menuClassName={PAGE_LIST_MENU_CLASS}
+                        menuMatchWidth={false}
+                        openKey={`${quote.id}-priority`}
+                        activeMenu={activeMenu}
+                        setActiveMenu={setActiveMenu}
+                        onChange={(value) => handleQuotePriorityChange(quote, value)}
                       />
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {filteredQuotes.length === 0 && (
-            <div className="mt-4 rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-8 text-center">
-              <ClipboardList className="mx-auto mb-3 h-8 w-8 text-gray-600" />
-              <p className="text-sm font-bold text-white">Teklif bulunamadı.</p>
-              <p className="mt-1 text-xs text-gray-500">Arama veya filtreleri değiştirin.</p>
-            </div>
-          )}
-        </Panel>
+                    </span>
+                  ),
+                },
+                {
+                  id: 'status',
+                  header: 'TEKLİF DURUMU',
+                  className: 'w-[9.5rem] !max-w-none',
+                  hideOnMobile: true,
+                  cell: (quote) => (
+                    <span onClick={(event) => event.stopPropagation()}>
+                      <EditableDropdownPill
+                        value={resolveListColumnLabel(quote.status, optionLists.status)}
+                        options={optionLists.status}
+                        editable={false}
+                        buttonClassName={PAGE_LIST_PILL_CLASS}
+                        wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                        menuClassName={PAGE_LIST_MENU_CLASS}
+                        menuMatchWidth={false}
+                        openKey={`${quote.id}-status`}
+                        activeMenu={activeMenu}
+                        setActiveMenu={setActiveMenu}
+                        onChange={(value) => handleQuoteStatusChange(quote, value)}
+                      />
+                    </span>
+                  ),
+                },
+                {
+                  id: 'amount',
+                  header: 'TUTAR',
+                  sortable: true,
+                  align: 'right',
+                  className: 'w-[1%] whitespace-nowrap !max-w-none',
+                  getSortValue: (quote) => getQuoteListAmount(quote),
+                  cell: (quote) => (
+                    <span className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}>
+                      {formatTL(getQuoteListAmount(quote))}
+                    </span>
+                  ),
+                },
+              ]}
+              getRowActions={(quote) => {
+                const workflowStage = resolveListQuoteStage(quote)
+                const isOrderTransferred =
+                  Boolean(quote.orderId) || isOrderReceivedStage(workflowStage)
+                const orderCreated = isOrderTransferred || linkedOrderQuoteIds.has(quote.id)
+                return [
+                  {
+                    id: 'edit',
+                    label: 'Düzenle',
+                    icon: Pencil,
+                    tone: 'primary',
+                    onClick: () => editQuote(quote.id),
+                  },
+                  ...(orderCreated
+                    ? []
+                    : [
+                        {
+                          id: 'order',
+                          label: 'Sipariş Oluştur',
+                          icon: ShoppingCart,
+                          tone: 'success',
+                          onClick: () => handleCreateOrderFromList(quote),
+                        },
+                      ]),
+                  {
+                    id: 'delete',
+                    label: 'Sil',
+                    icon: Trash2,
+                    tone: 'danger',
+                    onClick: (event) => {
+                      setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+                      setPendingDeleteId(quote.id)
+                    },
+                  },
+                ]
+              }}
+            />
+          </AppPagePanel>
+        </>
       ) : (
         <div className="space-y-5">
           {selectedQuote && (
@@ -2635,7 +2706,7 @@ export default function QuotesPage() {
               <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h2 className="text-base font-bold text-white">Ürün Seçimi</h2>
+                    <h2 className={APP_PANEL_TITLE_CLASS}>Ürün Seçimi</h2>
                   </div>
                   <MiniButton onClick={addItem}>Ürün Ekle</MiniButton>
                 </div>
@@ -2950,25 +3021,35 @@ export default function QuotesPage() {
                     type="button"
                     onClick={downloadQuotePdf}
                     disabled={isGeneratingPdf}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-red-500 transition-colors hover:bg-red-50"
+                    className={`${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.danger}`}
                   >
-                    <FileText className="h-4 w-4" />{' '}
-                    {isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
+                    <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                      <FileText className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                    </span>
+                    <span className={YF_TEXT_ON_COLOR_CLASS}>
+                      {isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
+                    </span>
                   </button>
                   <button
                     type="button"
                     onClick={sendQuoteByWhatsApp}
                     disabled={isGeneratingPdf}
-                    className={`${BTN_SUCCESS} h-10 gap-2 px-3 text-xs`}
+                    className={`${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.success}`}
                   >
-                    <Send className="h-4 w-4" /> WhatsApp PDF Gönder
+                    <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                      <Send className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                    </span>
+                    <span className={YF_TEXT_ON_COLOR_CLASS}>WhatsApp PDF Gönder</span>
                   </button>
                   <button
                     type="button"
                     onClick={sendQuoteByMail}
-                    className={`${BTN_PRIMARY} h-10 gap-2 px-3 text-xs`}
+                    className={`${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.primary}`}
                   >
-                    <Mail className="h-4 w-4" /> Mail Gönder
+                    <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                      <Mail className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                    </span>
+                    <span className={YF_TEXT_ON_COLOR_CLASS}>Mail Gönder</span>
                   </button>
                 </div>
               </section>
@@ -3218,6 +3299,32 @@ export default function QuotesPage() {
           )}
         </div>
       )}
+
+      <DeleteConfirmOverlay
+        open={Boolean(pendingDeleteId) || pendingHeaderQuoteDelete}
+        anchorRect={deleteConfirmAnchor}
+        title="Teklif silinsin mi?"
+        description="Teklif silinenlere taşınır; geri alınabilir."
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
+        onCancel={() => {
+          setPendingDeleteId(null)
+          setPendingHeaderQuoteDelete(false)
+          setDeleteConfirmAnchor(null)
+        }}
+        onConfirm={() => {
+          if (pendingHeaderQuoteDelete && selectedQuote) {
+            deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })
+          } else {
+            const quote = quotes.find((item) => item.id === pendingDeleteId)
+            if (quote) deleteQuote(quote, { skipConfirm: true })
+            else setPendingDeleteId(null)
+          }
+          setPendingDeleteId(null)
+          setPendingHeaderQuoteDelete(false)
+          setDeleteConfirmAnchor(null)
+        }}
+      />
 
       <CreateCustomerPickModal
         open={customerModalOpen}
