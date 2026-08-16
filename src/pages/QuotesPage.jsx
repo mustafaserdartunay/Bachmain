@@ -803,31 +803,7 @@ function Field({ label, children, align = 'start' }) {
   )
 }
 
-function InlineField({ label, children, className = '', onActivate }) {
-  return (
-    <div
-      className={`${PAGE_FILTER_FIELD_CLASS} !h-10 !rounded-xl px-0 ${className}`.trim()}
-      onClick={onActivate}
-      onKeyDown={
-        onActivate
-          ? (event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                onActivate()
-              }
-            }
-          : undefined
-      }
-      role={onActivate ? 'button' : undefined}
-      tabIndex={onActivate ? 0 : undefined}
-    >
-      <p className={`${PAGE_FILTER_LABEL_CLASS} shrink-0 pr-2`}>{label}</p>
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
-  )
-}
-
-function DateInlineField({ label, value, onChange }) {
+function DateInlineField({ label, value, onChange, dotColor = 'orange' }) {
   const inputRef = useRef(null)
 
   function openPicker() {
@@ -846,19 +822,36 @@ function DateInlineField({ label, value, onChange }) {
   }
 
   return (
-    <InlineField label={label} onActivate={openPicker} className="cursor-pointer">
-      <input
-        ref={inputRef}
-        type="date"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onClick={(event) => {
-          event.stopPropagation()
+    <div
+      className="flex min-w-0 cursor-pointer items-center gap-3"
+      onClick={openPicker}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
           openPicker()
-        }}
-        className="form-input w-full cursor-pointer"
-      />
-    </InlineField>
+        }
+      }}
+      role="button"
+      tabIndex={0}
+    >
+      <div className="flex shrink-0 items-center gap-2">
+        <AppPanelDot color={dotColor} />
+        <h2 className={APP_PANEL_TITLE_CLASS}>{label}</h2>
+      </div>
+      <div className="min-w-0 flex-1">
+        <input
+          ref={inputRef}
+          type="date"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onClick={(event) => {
+            event.stopPropagation()
+            openPicker()
+          }}
+          className="form-input w-full cursor-pointer"
+        />
+      </div>
+    </div>
   )
 }
 
@@ -1030,7 +1023,10 @@ function QuoteProcessManagement({
 function QuoteNotesPanel({ quote, onPatch }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-base font-bold text-white">Notlar</span>
+      <div className="mb-1 flex min-w-0 items-center gap-2">
+        <AppPanelDot color="violet" />
+        <span className={APP_PANEL_TITLE_CLASS}>Notlar :</span>
+      </div>
       <textarea
         value={quote.notes || ''}
         onChange={(event) => onPatch({ notes: event.target.value })}
@@ -3146,7 +3142,7 @@ export default function QuotesPage() {
                     onClick={addItem}
                     className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-dark-500/30 bg-white text-[14px] font-medium text-[#2563eb] transition-colors hover:bg-blue-50"
                   >
-                    <Plus className="h-4 w-4" strokeWidth={2.25} />
+                    <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                     Ürün Ekle
                   </button>
 
