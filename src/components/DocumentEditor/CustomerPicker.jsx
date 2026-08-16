@@ -24,7 +24,10 @@ import {
   getTreasuryMovements,
 } from '../../utils/treasuryStore'
 import { AppPanelDot } from '../Layout/AppPageLayout'
-import { APP_PANEL_TITLE_CLASS } from '../../utils/dashboardDesign'
+import { APP_PANEL_TITLE_CLASS, PAGE_FILTER_MENU_CLASS } from '../../utils/dashboardDesign'
+
+const MS_SEARCH_CLASS =
+  'customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]'
 
 function resolveCustomerWarehouse(customer) {
   if (!customer) return ''
@@ -399,9 +402,10 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
             }}
             onFocus={() => setIsOpen(true)}
             placeholder="Müşteri adı, yetkili veya e-posta ile ara..."
+            className={MS_SEARCH_CLASS}
           />
           {isOpen && (
-            <div className="absolute left-0 right-0 top-11 z-40 rounded-2xl border border-dark-500 bg-dark-900 p-2 shadow-card">
+            <div className={`absolute left-0 right-0 top-11 z-40 ${PAGE_FILTER_MENU_CLASS} p-2`}>
               <div className="max-h-64 space-y-1 overflow-y-auto">
                 {filteredCustomers.map((customer) => {
                   const display = getCustomerDisplay(customer)
@@ -410,24 +414,21 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
                       key={customer.id || customer.company}
                       type="button"
                       onClick={() => selectCustomer(customer)}
-                      className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-dark-700"
+                      className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-transform hover:scale-[1.02]"
+                      data-tone="primary"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-white">
-                          {display.brandShortName}
-                        </p>
-                        <p className="truncate text-xs text-gray-500">
+                        <p className="customer-name-primary truncate">{display.brandShortName}</p>
+                        <p className="customer-name-secondary truncate">
                           {display.companyTitle} · {customer.email}
                         </p>
                       </div>
-                      <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[12px] font-bold text-blue-300">
-                        Seç
-                      </span>
+                      <span className="shrink-0 text-[14px] font-normal text-[#2563eb]">Seç</span>
                     </button>
                   )
                 })}
                 {filteredCustomers.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-xs font-semibold text-gray-500">
+                  <div className="rounded-xl border border-dashed border-[var(--search-border)] px-3 py-4 text-center text-[14px] font-normal text-[var(--muted)]">
                     Eşleşen müşteri bulunamadı.
                   </div>
                 )}
@@ -439,7 +440,7 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
           <button
             type="button"
             onClick={() => navigate('/musteriler/yeni')}
-            className="document-frame-only inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-dark-500/40 bg-transparent px-3 text-[14px] font-medium text-[#2563eb] transition-colors hover:border-blue-500/50"
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[#2563eb] transition-opacity hover:opacity-80"
           >
             <UserPlus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} aria-hidden />
             Yeni Müşteri Oluştur

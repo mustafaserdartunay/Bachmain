@@ -6,6 +6,10 @@ import {
   getProductCustomerMismatchMessage,
   rankCatalogProductsForCustomer,
 } from '../../utils/productCustomerCompatibility'
+import { PAGE_FILTER_MENU_CLASS } from '../../utils/dashboardDesign'
+
+const MS_SEARCH_CLASS =
+  'customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]'
 
 export default function ProductSearchSelect({
   item,
@@ -78,10 +82,10 @@ export default function ProductSearchSelect({
             if (trimmedQuery.length > 0) setIsOpen(true)
           }}
           placeholder="Ürün adı, ürün kodu veya barkod ara..."
-          className="!text-center"
+          className={`${MS_SEARCH_CLASS} !text-center`}
         />
         {showDropdown && (
-          <div className="absolute left-0 right-0 top-11 z-40 rounded-2xl border border-dark-500 bg-dark-900 p-2 shadow-card">
+          <div className={`absolute left-0 right-0 top-11 z-40 ${PAGE_FILTER_MENU_CLASS} p-2`}>
             <div className="max-h-72 space-y-1 overflow-y-auto">
               {rankedProducts.map(({ product, compatibility }) => {
                 const code = product.stockCode || product.productCode || product.barcode || ''
@@ -90,19 +94,20 @@ export default function ProductSearchSelect({
                     key={product.id}
                     type="button"
                     onClick={() => selectProduct(product, compatibility)}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left transition-colors hover:bg-blue-500/15"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left transition-transform hover:scale-[1.02]"
+                    data-tone="primary"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[var(--ink)]">{product.name}</p>
+                      <p className="customer-name-primary truncate">{product.name}</p>
                       {code ? (
-                        <p className="truncate text-[12px] font-medium text-[var(--muted)]">{code}</p>
+                        <p className="customer-name-secondary truncate">{code}</p>
                       ) : null}
                     </div>
                   </button>
                 )
               })}
               {rankedProducts.length === 0 && (
-                <div className="rounded-xl px-3 py-4 text-center text-xs font-semibold text-gray-500">
+                <div className="rounded-xl border border-dashed border-[var(--search-border)] px-3 py-4 text-center text-[14px] font-normal text-[var(--muted)]">
                   Eşleşen ürün bulunamadı.
                 </div>
               )}

@@ -1026,7 +1026,7 @@ function QuoteProcessManagement({
 function QuoteNotesPanel({ quote, onPatch, className = '' }) {
   return (
     <label className={`flex h-full min-h-0 flex-col ${className}`.trim()}>
-      <div className="mb-1 flex min-w-0 items-center gap-2">
+      <div className="mb-2.5 flex min-w-0 items-center gap-2">
         <AppPanelDot color="violet" />
         <span className={APP_PANEL_TITLE_CLASS}>Notlar :</span>
       </div>
@@ -1035,7 +1035,7 @@ function QuoteNotesPanel({ quote, onPatch, className = '' }) {
         onChange={(event) => onPatch({ notes: event.target.value })}
         rows={3}
         placeholder="Teklif ile ilgili genel notlar..."
-        className="form-input min-h-[9.5rem] flex-1 resize-none text-xs"
+        className="form-input min-h-[9.5rem] flex-1 resize-none !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
       />
     </label>
   )
@@ -2819,7 +2819,7 @@ export default function QuotesPage() {
         <div className="space-y-5 document-compact-controls">
           {selectedQuote && (
             <>
-              <AppPagePanel className="w-full">
+              <AppPagePanel className="customer-list-panel w-full">
                 <div className="mb-4 flex min-w-0 items-center gap-3">
                   <div className="flex shrink-0 items-center gap-2">
                     <AppPanelDot color="blue" />
@@ -2829,7 +2829,7 @@ export default function QuotesPage() {
                     <input
                       value={selectedQuote.title}
                       onChange={(e) => patchSelected({ title: e.target.value })}
-                      className="form-input"
+                      className="form-input !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
                       placeholder="Teklif başlığı"
                     />
                   </div>
@@ -2839,7 +2839,7 @@ export default function QuotesPage() {
                       pattern="[0-9]*"
                       value={resolvedQuoteCode}
                       onChange={(event) => patchQuoteCode(event.target.value)}
-                      className="form-input"
+                      className="form-input !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
                       placeholder="Kod"
                       title="Teklif kodu"
                     />
@@ -2867,7 +2867,7 @@ export default function QuotesPage() {
                 </div>
               </AppPagePanel>
 
-              <AppPagePanel className="w-full" title="Ürün Seçimi :" dotColor="violet">
+              <AppPagePanel className="customer-list-panel w-full" title="Ürün Seçimi :" dotColor="violet">
                 <div className="space-y-2">
                   {(selectedQuote.items || []).map((item) => {
                     const totals = itemTotals(item)
@@ -2875,7 +2875,7 @@ export default function QuotesPage() {
                     return (
                       <div
                         key={item.id}
-                        className="glass-inset rounded-xl p-2.5"
+                        className="document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent p-2.5"
                       >
                         <div
                           className={`grid ${quoteItemGridClass} ${quoteItemFieldGapClass} items-start`}
@@ -2884,7 +2884,7 @@ export default function QuotesPage() {
                             <label className={`${YF_TEXT_CLASS} mb-1 block w-full text-center`}>
                               Görsel
                             </label>
-                            <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-dashed border-dark-500/50 bg-dark-800/40">
+                            <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-dashed border-[var(--search-border)] bg-transparent">
                               {itemImage ? (
                                 <img
                                   src={itemImage}
@@ -2954,12 +2954,12 @@ export default function QuotesPage() {
                                 </select>
                               </Field>
                               <Field label="KDV Hariç" align="center">
-                                <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-dark-500/40 px-1.5 text-center text-[12px] font-bold tabular-nums text-[var(--muted)]">
+                                <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
                                   {formatTL(totals.net)}
                                 </div>
                               </Field>
                               <Field label="KDV Dahil" align="center">
-                                <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-dark-500/40 px-1.5 text-center text-[12px] font-bold tabular-nums text-[var(--muted)]">
+                                <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
                                   {formatTL(totals.total)}
                                 </div>
                               </Field>
@@ -3058,7 +3058,7 @@ export default function QuotesPage() {
                               item.showAccommodationTax) && (
                               <div className={`grid grid-cols-2 ${quoteItemFieldGapClass} gap-y-2`}>
                                 {item.showDiscount && (
-                                  <div className="glass-inset rounded-xl p-2">
+                                  <div className="document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent p-2">
                                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                                       <Field label="İndirim %">
                                         <NumericInput
@@ -3083,7 +3083,7 @@ export default function QuotesPage() {
                                   </div>
                                 )}
                                 {item.showExciseTax && (
-                                  <div className="glass-inset rounded-xl p-2">
+                                  <div className="document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent p-2">
                                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                                       <Field label="ÖTV %">
                                         <NumericInput
@@ -3108,7 +3108,7 @@ export default function QuotesPage() {
                                   </div>
                                 )}
                                 {item.showAccommodationTax && (
-                                  <div className="glass-inset rounded-xl p-2">
+                                  <div className="document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent p-2">
                                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                                       <Field label="Konaklama Vergisi %">
                                         <NumericInput
@@ -3140,7 +3140,7 @@ export default function QuotesPage() {
                     )
                   })}
                   {(selectedQuote.items || []).length === 0 && (
-                    <div className="rounded-xl border border-dashed border-dark-500/50 bg-dark-700/15 px-4 py-6 text-center text-[13px] font-medium text-[var(--muted)]">
+                    <div className="rounded-xl border border-dashed border-[var(--search-border)] px-4 py-6 text-center text-[14px] font-normal text-[var(--muted)]">
                       Henüz ürün eklenmedi. Ürün Ekle ile satır oluşturun.
                     </div>
                   )}
@@ -3148,7 +3148,7 @@ export default function QuotesPage() {
                   <button
                     type="button"
                     onClick={addItem}
-                    className="document-frame-only flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-dark-500/40 bg-transparent text-[14px] font-medium text-[#2563eb] transition-colors hover:border-blue-500/50"
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[#2563eb] transition-opacity hover:opacity-80"
                   >
                     <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                     Ürün Ekle
@@ -3157,7 +3157,7 @@ export default function QuotesPage() {
               </AppPagePanel>
 
               {selectedQuote && (
-                <AppPagePanel className="w-full">
+                <AppPagePanel className="customer-list-panel w-full">
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-stretch">
                     <QuoteNotesPanel quote={selectedQuote} onPatch={patchSelected} />
                     {selectedTotals ? (
@@ -3168,12 +3168,12 @@ export default function QuotesPage() {
               )}
 
               {selectedQuote && (
-                <AppPagePanel className="w-full">
+                <AppPagePanel className="customer-list-panel w-full">
                   <DocumentBankAccountsPanel quote={selectedQuote} onPatch={patchSelected} />
                 </AppPagePanel>
               )}
 
-              <AppPagePanel className="w-full">
+              <AppPagePanel className="customer-list-panel w-full">
                 <DocumentTermsEditor
                   record={selectedQuote}
                   onPatch={patchSelected}
@@ -3184,12 +3184,12 @@ export default function QuotesPage() {
                   savedTermsTitle="Hazır Teklif Koşulları"
                   descriptionPlaceholder="Teklifin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
                 />
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-dark-500/35 pt-4">
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-[var(--search-border)] pt-4">
                   <button
                     type="button"
                     onClick={downloadQuotePdf}
                     disabled={isGeneratingPdf}
-                    className="group inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--muted)] transition-colors hover:text-[#e11d48] disabled:opacity-50"
+                    className="group inline-flex items-center gap-1.5 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#e11d48] disabled:opacity-50"
                   >
                     <FileText className="h-4 w-4 text-[#e11d48]" strokeWidth={2.25} aria-hidden />
                     {isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
@@ -3198,7 +3198,7 @@ export default function QuotesPage() {
                     type="button"
                     onClick={sendQuoteByWhatsApp}
                     disabled={isGeneratingPdf}
-                    className="group inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--muted)] transition-colors hover:text-[#10b981] disabled:opacity-50"
+                    className="group inline-flex items-center gap-1.5 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#10b981] disabled:opacity-50"
                   >
                     <Send className="h-4 w-4 text-[#10b981]" strokeWidth={2.25} aria-hidden />
                     WhatsApp PDF Gönder
@@ -3206,7 +3206,7 @@ export default function QuotesPage() {
                   <button
                     type="button"
                     onClick={sendQuoteByMail}
-                    className="group inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--muted)] transition-colors hover:text-[#2563eb]"
+                    className="group inline-flex items-center gap-1.5 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#2563eb]"
                   >
                     <Mail className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} aria-hidden />
                     Mail Gönder

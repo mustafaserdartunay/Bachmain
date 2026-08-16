@@ -3,7 +3,7 @@ import { ChevronDown, Landmark, Plus } from 'lucide-react'
 import BankAccountsDocumentEditor from './BankAccountsDocumentEditor'
 import { AppPanelDot } from '../Layout/AppPageLayout'
 import { createBankAccount, readCompanySettings, updateCompanySettings } from '../../utils/companySettings'
-import { APP_PANEL_TITLE_CLASS } from '../../utils/dashboardDesign'
+import { APP_PANEL_TITLE_CLASS, YF_TEXT_CLASS } from '../../utils/dashboardDesign'
 
 export default function DocumentBankAccountsPanel({
   quote,
@@ -69,7 +69,7 @@ export default function DocumentBankAccountsPanel({
 
   return (
     <div className="w-full min-w-0">
-      <div className="mb-1 flex min-w-0 items-center justify-between gap-3">
+      <div className="mb-2.5 flex min-w-0 items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <AppPanelDot color="blue" />
           <span className={APP_PANEL_TITLE_CLASS}>Banka Hesapları :</span>
@@ -77,14 +77,14 @@ export default function DocumentBankAccountsPanel({
         <button
           type="button"
           onClick={() => setIsOpen((current) => !current)}
-          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[var(--muted)] transition-colors hover:text-white"
+          className={`inline-flex shrink-0 items-center gap-1 ${YF_TEXT_CLASS} transition-opacity hover:opacity-80`}
         >
           {isOpen ? 'Gizle' : selectedAccounts.length > 0 ? 'Düzenle' : 'Seç / Ekle'}
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
-      <div className="document-frame-only overflow-hidden rounded-xl border border-dark-500/50 bg-transparent transition-colors focus-within:border-accent-blue/50">
+      <div className="document-frame-only overflow-hidden rounded-xl border border-[var(--search-border)] bg-transparent">
         {!isOpen ? (
           <div className={`flex w-full min-w-0 items-stretch gap-3 ${paddingClass}`}>
             {selectedAccounts.length > 0 ? (
@@ -92,15 +92,15 @@ export default function DocumentBankAccountsPanel({
                 {selectedAccounts.map((account) => (
                   <div
                     key={account.id}
-                    className="document-frame-only flex min-w-0 max-w-full items-center gap-2 rounded-xl border border-emerald-500/40 bg-transparent px-3 py-2"
+                    className="document-frame-only flex min-w-0 max-w-full items-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2"
                   >
-                    <Landmark className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                    <Landmark className="h-3.5 w-3.5 shrink-0 text-[#10b981]" strokeWidth={2.25} />
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-bold text-white">
+                      <p className="customer-name-primary truncate">
                         {[account.bankName, account.label].filter(Boolean).join(' · ') || 'Hesap'}
                       </p>
                       {account.iban ? (
-                        <p className="truncate text-[12px] font-semibold text-gray-400">{account.iban}</p>
+                        <p className="customer-name-secondary truncate">{account.iban}</p>
                       ) : null}
                     </div>
                   </div>
@@ -110,9 +110,9 @@ export default function DocumentBankAccountsPanel({
               <button
                 type="button"
                 onClick={() => setIsOpen(true)}
-                className="document-frame-only flex min-h-[3.25rem] min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-dashed border-dark-500/50 bg-transparent px-4 text-center text-xs font-semibold text-gray-500 transition-colors hover:border-blue-500/35 hover:text-gray-300"
+                className="document-frame-only flex min-h-[3.25rem] min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--search-border)] bg-transparent px-4 text-center text-[14px] font-normal text-[var(--muted)] transition-opacity hover:opacity-80"
               >
-                <Landmark className="h-3.5 w-3.5 shrink-0" />
+                <Landmark className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
                 Banka hesabı seçin veya ekleyin — teklifte birden fazla hesap seçilebilir
               </button>
             )}
@@ -130,7 +130,7 @@ export default function DocumentBankAccountsPanel({
             className={`max-h-[min(28rem,70vh)] overflow-y-auto ${paddingClass}`}
             onClick={(event) => event.stopPropagation()}
           >
-            <p className="mb-3 text-[12px] font-medium text-[var(--muted)]">
+            <p className={`mb-3 ${YF_TEXT_CLASS}`}>
               İstediğiniz kadar banka seçebilirsiniz. Yeni hesap eklediğinizde teklife otomatik eklenir.
             </p>
             <BankAccountsDocumentEditor

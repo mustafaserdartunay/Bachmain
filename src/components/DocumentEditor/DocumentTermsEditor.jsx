@@ -56,12 +56,12 @@ export default function DocumentTermsEditor({
             <AppPanelDot color="orange" />
             <h2 className={APP_PANEL_TITLE_CLASS}>{leftHeader}</h2>
           </div>
-          <div className="glass-inset flex min-h-0 flex-1 flex-col rounded-[16px] p-3">
+          <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-[16px] border border-[var(--search-border)] bg-transparent p-3">
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
               {savedTerms.map((term) => (
                 <div
                   key={term}
-                  className="document-frame-only relative rounded-xl border border-dark-500/40 bg-transparent"
+                  className="document-frame-only relative rounded-xl border border-[var(--search-border)] bg-transparent"
                 >
                   {pendingDeleteTerm === term ? (
                     <DeleteConfirmPopover
@@ -75,29 +75,30 @@ export default function DocumentTermsEditor({
                       className="w-full"
                     />
                   ) : (
-                    <div className="flex items-start gap-2 rounded-xl transition-colors hover:bg-blue-500/15">
+                    <div className="flex items-start gap-2 rounded-xl transition-transform hover:scale-[1.01]">
                       <button
                         type="button"
                         onClick={() => appendTermToDescription(term)}
-                        className="flex min-w-0 flex-1 items-start gap-2 px-3 py-2 text-left text-[13px] font-medium text-[var(--muted)]"
+                        className="flex min-w-0 flex-1 items-start gap-2 px-3 py-2 text-left"
+                        data-tone="primary"
                       >
-                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
-                        <span>{term}</span>
+                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" strokeWidth={2.25} />
+                        <span className={APP_PANEL_TITLE_CLASS}>{term}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setPendingDeleteTerm(term)}
-                        className="mr-2 mt-2 shrink-0 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-red-500/15 hover:text-red-300"
+                        className="mr-2 mt-2 shrink-0 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:text-[#e11d48]"
                         title="Hazır koşulu sil"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
                       </button>
                     </div>
                   )}
                 </div>
               ))}
               {savedTerms.length === 0 && (
-                <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-[13px] font-medium text-[var(--muted)]">
+                <div className="rounded-xl border border-dashed border-[var(--search-border)] px-3 py-4 text-center text-[14px] font-normal text-[var(--muted)]">
                   Henüz kayıtlı hazır koşul yok.
                 </div>
               )}
@@ -107,12 +108,12 @@ export default function DocumentTermsEditor({
                 value={customTerm}
                 onChange={(event) => setCustomTerm(event.target.value)}
                 placeholder="Hazır koşul kaydet..."
-                className="form-input h-10 min-w-0 flex-1"
+                className="form-input h-10 min-w-0 flex-1 !text-[14px] !font-normal !text-[var(--muted)]"
               />
               <button
                 type="button"
                 onClick={() => saveTerm(customTerm)}
-                className="inline-flex h-10 shrink-0 items-center gap-1.5 px-2 text-[14px] font-medium text-[#2563eb] transition-opacity hover:opacity-80"
+                className="inline-flex h-10 shrink-0 items-center gap-1.5 px-2 text-[14px] font-normal text-[#2563eb] transition-opacity hover:opacity-80"
               >
                 <Plus className="h-4 w-4" strokeWidth={2.25} />
                 Ekle
@@ -130,7 +131,7 @@ export default function DocumentTermsEditor({
             value={value}
             onChange={(event) => onPatch({ [field]: event.target.value })}
             placeholder={descriptionPlaceholder}
-            className="document-no-frame min-h-0 flex-1 resize-none bg-transparent px-1 py-0 text-[14px] font-normal text-[var(--ink)] placeholder-[var(--muted)] outline-none"
+            className="document-no-frame min-h-0 flex-1 resize-none bg-transparent px-1 py-0 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)] placeholder-[var(--muted)] outline-none"
           />
         </div>
       </div>

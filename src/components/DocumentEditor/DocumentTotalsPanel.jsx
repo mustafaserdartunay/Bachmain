@@ -4,18 +4,22 @@ import { AppPanelDot } from '../Layout/AppPageLayout'
 import { documentDropdownMenuClass } from './documentItemLayout'
 import NumericInput from '../Products/NumericInput'
 import { formatTL } from '../../utils/productPricing'
-import { APP_PANEL_TITLE_CLASS, PAGE_BALANCE_AMOUNT_CLASS } from '../../utils/dashboardDesign'
+import {
+  APP_PANEL_TITLE_CLASS,
+  PAGE_BALANCE_AMOUNT_CLASS,
+  YF_TEXT_CLASS,
+} from '../../utils/dashboardDesign'
 
 const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_minmax(7rem,1fr)_28px] items-center gap-x-2'
 const LABEL_CELL_CLASS = 'flex min-w-0 items-center gap-1.5 pl-2.5'
-const AMOUNT_CLASS = `${PAGE_BALANCE_AMOUNT_CLASS} block w-full text-right text-white`
+const AMOUNT_CLASS = `${PAGE_BALANCE_AMOUNT_CLASS} block w-full text-right`
 const ACTION_SLOT_CLASS = 'flex w-7 shrink-0 items-center justify-end'
 
 function TotalRow({ label, value, valueContent, labelAction, trailingAction }) {
   return (
-    <div className={`${ROW_GRID} border-b border-dark-500/35 py-1.5 text-sm last:border-b-0`}>
+    <div className={`${ROW_GRID} border-b border-[var(--search-border)] py-1.5 last:border-b-0`}>
       <div className={LABEL_CELL_CLASS}>
-        <span className="font-bold text-gray-500">{label}</span>
+        <span className={YF_TEXT_CLASS}>{label}</span>
         {labelAction}
       </div>
       {valueContent || <span className={AMOUNT_CLASS}>{formatTL(value ?? 0)}</span>}
@@ -26,12 +30,12 @@ function TotalRow({ label, value, valueContent, labelAction, trailingAction }) {
 
 function DiscountModeToggle({ mode, onChange }) {
   return (
-    <div className="inline-flex shrink-0 rounded-md border border-dark-500/40 p-0.5">
+    <div className="inline-flex shrink-0 rounded-md border border-[var(--search-border)] p-0.5">
       <button
         type="button"
         onClick={() => onChange('percent')}
-        className={`h-6 min-w-[28px] px-1.5 text-[12px] font-bold transition-colors ${
-          mode === 'percent' ? 'rounded bg-dark-600 text-gray-200' : 'text-gray-500 hover:text-gray-300'
+        className={`h-6 min-w-[28px] px-1.5 text-[14px] font-normal transition-colors ${
+          mode === 'percent' ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)]' : 'text-[var(--muted)]'
         }`}
       >
         %
@@ -39,8 +43,8 @@ function DiscountModeToggle({ mode, onChange }) {
       <button
         type="button"
         onClick={() => onChange('amount')}
-        className={`h-6 min-w-[28px] px-1.5 text-[12px] font-bold transition-colors ${
-          mode === 'amount' ? 'rounded bg-dark-600 text-gray-200' : 'text-gray-500 hover:text-gray-300'
+        className={`h-6 min-w-[28px] px-1.5 text-[14px] font-normal transition-colors ${
+          mode === 'amount' ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)]' : 'text-[var(--muted)]'
         }`}
       >
         ₺
@@ -56,7 +60,7 @@ function CompactNumericInput({ value, onChange, suffix, formatMode = 'plain', wi
       onChange={onChange}
       suffix={suffix}
       formatMode={formatMode}
-      className={`!h-8 !min-h-0 !py-0 !text-xs ${wide ? '!px-2.5 !pr-9' : '!px-2 !pr-7'}`}
+      className={`!h-8 !min-h-0 !py-0 !text-[14px] !font-normal ${wide ? '!px-2.5 !pr-9' : '!px-2 !pr-7'}`}
     />
   )
 }
@@ -106,11 +110,11 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
   return (
     <div className={`flex h-full min-h-0 flex-col space-y-3 ${className}`.trim()}>
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="mb-1 flex min-w-0 items-center gap-2">
+        <div className="mb-2.5 flex min-w-0 items-center gap-2">
           <AppPanelDot color="emerald" />
           <span className={APP_PANEL_TITLE_CLASS}>Toplamlar :</span>
         </div>
-        <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-2xl border border-dark-500/45 bg-transparent p-4">
+        <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-2xl border border-[var(--search-border)] bg-transparent p-4">
           <TotalRow
             label="Ara Toplam"
             value={totals.subtotal}
@@ -124,16 +128,18 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
                     title="Alan ekle"
                     aria-expanded={menuOpen}
                   >
-                    <Plus className="h-3.5 w-3.5" />
+                    <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
                   </button>
                   {menuOpen && (
-                    <div className={`absolute right-0 top-full z-30 mt-1 w-56 ${documentDropdownMenuClass}`}>
+                    <div className={`absolute right-0 top-full z-30 mt-1 w-56 p-1.5 ${documentDropdownMenuClass}`}>
                       <button
                         type="button"
                         onClick={enableDocumentDiscount}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-gray-300 transition-colors hover:bg-blue-500/15 hover:text-white"
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-transform hover:scale-[1.02]"
+                        data-tone="primary"
                       >
-                        <Plus className="h-3.5 w-3.5 text-blue-300" /> İndirim ekle
+                        <Plus className="h-3.5 w-3.5 shrink-0 text-[#2563eb]" strokeWidth={2.25} />
+                        <span className={YF_TEXT_CLASS}>İndirim ekle</span>
                       </button>
                     </div>
                   )}
@@ -154,10 +160,10 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
                     <button
                       type="button"
                       onClick={disableDocumentDiscount}
-                      className="inline-flex h-5 w-5 items-center justify-center text-gray-500 transition-colors hover:text-red-400"
+                      className="inline-flex h-5 w-5 items-center justify-center text-[var(--muted)] transition-colors hover:text-[#e11d48]"
                       title="Toplam indirimi kaldır"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-3.5 w-3.5" strokeWidth={2.25} />
                     </button>
                     <DiscountModeToggle
                       mode={discountMode}
@@ -194,8 +200,8 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
             <TotalRow key={label} label={label} value={value} />
           ))}
           <TotalRow label="KDV" value={totals.vat} />
-          <div className={`${ROW_GRID} mt-auto rounded-xl border border-emerald-500/35 bg-transparent py-3`}>
-            <span className="pl-2.5 text-sm font-bold text-emerald-300">Genel Toplam</span>
+          <div className={`${ROW_GRID} mt-auto rounded-xl border border-[var(--search-border)] py-3`}>
+            <span className={`pl-2.5 ${YF_TEXT_CLASS}`}>Genel Toplam</span>
             <span className={`${AMOUNT_CLASS} customer-balance-positive`}>
               {formatTL(totals.grandTotal)}
             </span>
