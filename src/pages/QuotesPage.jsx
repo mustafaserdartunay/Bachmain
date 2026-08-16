@@ -3153,27 +3153,34 @@ export default function QuotesPage() {
                     <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                     Ürün Ekle
                   </button>
-
-                  {selectedQuote && (
-                    <div className="space-y-4 border-t border-dark-500/35 pt-4">
-                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-stretch">
-                        <QuoteNotesPanel quote={selectedQuote} onPatch={patchSelected} />
-                        {selectedTotals ? (
-                          <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
-                        ) : null}
-                      </div>
-                      <DocumentBankAccountsPanel quote={selectedQuote} onPatch={patchSelected} />
-                    </div>
-                  )}
                 </div>
               </AppPagePanel>
 
-              <AppPagePanel className="w-full" title="Teklif Koşulları :" dotColor="orange">
+              {selectedQuote && (
+                <AppPagePanel className="w-full">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-stretch">
+                    <QuoteNotesPanel quote={selectedQuote} onPatch={patchSelected} />
+                    {selectedTotals ? (
+                      <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
+                    ) : null}
+                  </div>
+                </AppPagePanel>
+              )}
+
+              {selectedQuote && (
+                <AppPagePanel className="w-full">
+                  <DocumentBankAccountsPanel quote={selectedQuote} onPatch={patchSelected} />
+                </AppPagePanel>
+              )}
+
+              <AppPagePanel className="w-full">
                 <DocumentTermsEditor
                   record={selectedQuote}
                   onPatch={patchSelected}
                   compact
                   hideTitle
+                  alignDescriptionHeader
+                  panelTitle="Teklif Koşulları :"
                   savedTermsTitle="Hazır Teklif Koşulları"
                   descriptionPlaceholder="Teklifin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
                 />

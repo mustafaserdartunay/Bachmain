@@ -767,7 +767,7 @@ textarea:not(.form-input)::placeholder {
   padding-bottom: 0.625rem !important;
 }
 
-/* Teklif / sipariş: form alanları şeffaf — sadece çerçeve, panel zemini görünsün */
+/* Teklif / sipariş: form alanları şeffaf — teklif listesi araması gibi ince çerçeve */
 .page-type-shell .document-compact-controls .form-input,
 .page-type-shell .document-compact-controls .form-input-readonly,
 .page-type-shell .document-compact-controls select.form-input,
@@ -796,7 +796,15 @@ html.night .app-responsive .page-type-shell .document-compact-controls .app-sear
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-color: color-mix(in srgb, var(--muted) 40%, transparent) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--search-border) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  color: var(--muted) !important;
+  transition: none !important;
 }
 
 .page-type-shell .document-compact-controls .form-input:hover,
@@ -817,7 +825,8 @@ html:not(.night) .app-responsive .page-type-shell .document-compact-controls inp
 html:not(.night) .app-responsive .page-type-shell .document-compact-controls input.search-pill:focus {
   background-color: transparent !important;
   box-shadow: none !important;
-  border-color: color-mix(in srgb, var(--muted) 60%, transparent) !important;
+  outline: none !important;
+  border-color: var(--search-border) !important;
 }
 
 .page-type-shell .document-compact-controls .glass-inset,
@@ -838,12 +847,24 @@ html.night .app-responsive .page-type-shell .document-compact-controls .document
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-color: color-mix(in srgb, var(--muted) 40%, transparent) !important;
+  border-width: 1px !important;
+  border-color: var(--search-border) !important;
 }
 
 .page-type-shell .document-compact-controls .glass-inset,
 .app-responsive .page-type-shell .document-compact-controls .glass-inset {
-  border: 1px solid color-mix(in srgb, var(--muted) 40%, transparent) !important;
+  border: 1px solid var(--search-border) !important;
+}
+
+.page-type-shell .document-compact-controls .document-no-frame,
+.app-responsive .page-type-shell .document-compact-controls .document-no-frame,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls .document-no-frame {
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  outline: none !important;
 }
 
 .card {

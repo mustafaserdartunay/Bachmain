@@ -14,12 +14,15 @@ export default function DocumentTermsEditor({
   descriptionPlaceholder = 'Ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın...',
   field = 'termsDescription',
   hideTitle = false,
+  alignDescriptionHeader = false,
+  panelTitle = '',
 }) {
   const [customTerm, setCustomTerm] = useState('')
   const [savedTerms, setSavedTerms] = useState(loadSavedDocumentTerms)
   const [pendingDeleteTerm, setPendingDeleteTerm] = useState(null)
   const value = record?.[field] || ''
   const showTitle = Boolean(title) && !hideTitle
+  const leftHeader = panelTitle || savedTermsTitle
 
   function saveTerm(term) {
     const cleanTerm = term.trim()
@@ -43,6 +46,95 @@ export default function DocumentTermsEditor({
     setSavedTerms(nextTerms)
     saveSavedDocumentTerms(nextTerms)
     setPendingDeleteTerm(null)
+  }
+
+  if (compact && alignDescriptionHeader) {
+    return (
+      <div className="grid grid-cols-2 items-stretch gap-3">
+        <div className={`flex flex-col ${compact ? 'min-h-[220px]' : ''}`}>
+          <div className="mb-2.5 flex shrink-0 items-center gap-2">
+            <AppPanelDot color="orange" />
+            <h2 className={APP_PANEL_TITLE_CLASS}>{leftHeader}</h2>
+          </div>
+          <div className="glass-inset flex min-h-0 flex-1 flex-col rounded-[16px] p-3">
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+              {savedTerms.map((term) => (
+                <div
+                  key={term}
+                  className="document-frame-only relative rounded-xl border border-dark-500/40 bg-transparent"
+                >
+                  {pendingDeleteTerm === term ? (
+                    <DeleteConfirmPopover
+                      description="Hazır koşul listeden kaldırılacak."
+                      confirmLabel="Evet"
+                      cancelLabel="Hayır"
+                      compact
+                      inline
+                      onConfirm={() => deleteSavedTerm(term)}
+                      onCancel={() => setPendingDeleteTerm(null)}
+                      className="w-full"
+                    />
+                  ) : (
+                    <div className="flex items-start gap-2 rounded-xl transition-colors hover:bg-blue-500/15">
+                      <button
+                        type="button"
+                        onClick={() => appendTermToDescription(term)}
+                        className="flex min-w-0 flex-1 items-start gap-2 px-3 py-2 text-left text-[13px] font-medium text-[var(--muted)]"
+                      >
+                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
+                        <span>{term}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPendingDeleteTerm(term)}
+                        className="mr-2 mt-2 shrink-0 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-red-500/15 hover:text-red-300"
+                        title="Hazır koşulu sil"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {savedTerms.length === 0 && (
+                <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-[13px] font-medium text-[var(--muted)]">
+                  Henüz kayıtlı hazır koşul yok.
+                </div>
+              )}
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                value={customTerm}
+                onChange={(event) => setCustomTerm(event.target.value)}
+                placeholder="Hazır koşul kaydet..."
+                className="form-input h-10 min-w-0 flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => saveTerm(customTerm)}
+                className="inline-flex h-10 shrink-0 items-center gap-1.5 px-2 text-[14px] font-medium text-[#2563eb] transition-opacity hover:opacity-80"
+              >
+                <Plus className="h-4 w-4" strokeWidth={2.25} />
+                Ekle
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex min-h-[180px] flex-col">
+          <div className="mb-2.5 flex shrink-0 items-center gap-2">
+            <AppPanelDot color="orange" />
+            <h2 className={APP_PANEL_TITLE_CLASS}>Açıklama :</h2>
+          </div>
+          <textarea
+            value={value}
+            onChange={(event) => onPatch({ [field]: event.target.value })}
+            placeholder={descriptionPlaceholder}
+            className="document-no-frame min-h-0 flex-1 resize-none bg-transparent px-1 py-0 text-[14px] font-normal text-[var(--ink)] placeholder-[var(--muted)] outline-none"
+          />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -69,7 +161,10 @@ export default function DocumentTermsEditor({
           </div>
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
             {savedTerms.map((term) => (
-              <div key={term} className="document-frame-only relative rounded-xl border border-dark-500/40 bg-transparent">
+              <div
+                key={term}
+                className="document-frame-only relative rounded-xl border border-dark-500/40 bg-transparent"
+              >
                 {pendingDeleteTerm === term ? (
                   <DeleteConfirmPopover
                     description="Hazır koşul listeden kaldırılacak."
