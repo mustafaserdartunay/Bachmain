@@ -195,9 +195,9 @@ const quoteItemFieldsGridClass =
   'grid-cols-[minmax(0,1.4fr)_64px_100px_56px_96px_96px_auto]'
 const quoteItemFieldGapClass = 'gap-x-2'
 const quoteLineActionBtnClass =
-  'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:!text-[#2563eb]'
+  'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors'
 const quoteLineDeleteBtnClass =
-  'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:!text-[#e11d48]'
+  'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors'
 const quoteMsCtaClass =
   'inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[#2563eb] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb]'
 
@@ -2822,6 +2822,7 @@ export default function QuotesPage() {
                                       setOpenItemMenuId(openItemMenuId === item.id ? null : item.id)
                                     }
                                     className={quoteLineActionBtnClass}
+                                    data-tone="primary"
                                     title="Satıra alan ekle"
                                   >
                                     <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -2830,6 +2831,7 @@ export default function QuotesPage() {
                                     type="button"
                                     onClick={() => setPendingItemDeleteId(item.id)}
                                     className={quoteLineDeleteBtnClass}
+                                    data-tone="danger"
                                     title="Satırı sil"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />

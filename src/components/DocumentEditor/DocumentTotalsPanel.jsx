@@ -126,7 +126,8 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
                   <button
                     type="button"
                     onClick={() => setMenuOpen((current) => !current)}
-                    className="glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:!text-[#2563eb]"
+                    className="glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors"
+                    data-tone="primary"
                     title="Alan ekle"
                     aria-expanded={menuOpen}
                   >

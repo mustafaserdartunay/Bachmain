@@ -59,27 +59,26 @@ export default function DocumentTermsEditor({
           <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-[16px] border border-[var(--search-border)] bg-transparent p-3">
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
               {savedTerms.map((term) => (
-                <div
-                  key={term}
-                  className="document-frame-only relative rounded-xl border border-[var(--search-border)] bg-transparent"
-                >
+                <div key={term} className="relative flex items-center gap-2">
                   {pendingDeleteTerm === term ? (
-                    <DeleteConfirmPopover
-                      description="Hazır koşul listeden kaldırılacak."
-                      confirmLabel="Evet"
-                      cancelLabel="Hayır"
-                      compact
-                      inline
-                      onConfirm={() => deleteSavedTerm(term)}
-                      onCancel={() => setPendingDeleteTerm(null)}
-                      className="w-full"
-                    />
+                    <div className="document-frame-only min-w-0 flex-1 rounded-xl border border-[var(--search-border)] bg-transparent">
+                      <DeleteConfirmPopover
+                        description="Hazır koşul listeden kaldırılacak."
+                        confirmLabel="Evet"
+                        cancelLabel="Hayır"
+                        compact
+                        inline
+                        onConfirm={() => deleteSavedTerm(term)}
+                        onCancel={() => setPendingDeleteTerm(null)}
+                        className="w-full"
+                      />
+                    </div>
                   ) : (
-                    <div className="flex items-start gap-2 rounded-xl transition-transform hover:scale-[1.01]">
+                    <>
                       <button
                         type="button"
                         onClick={() => appendTermToDescription(term)}
-                        className="flex min-w-0 flex-1 items-start gap-2 px-3 py-2 text-left"
+                        className="document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left transition-opacity hover:opacity-90"
                         data-tone="primary"
                       >
                         <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" strokeWidth={2.25} />
@@ -88,12 +87,13 @@ export default function DocumentTermsEditor({
                       <button
                         type="button"
                         onClick={() => setPendingDeleteTerm(term)}
-                        className="mr-2 mt-1.5 glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:!text-[#e11d48]"
+                        className="glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors"
+                        data-tone="danger"
                         title="Hazır koşulu sil"
                       >
                         <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
                       </button>
-                    </div>
+                    </>
                   )}
                 </div>
               ))}
@@ -162,40 +162,39 @@ export default function DocumentTermsEditor({
           </div>
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
             {savedTerms.map((term) => (
-              <div
-                key={term}
-                className="document-frame-only relative rounded-xl border border-dark-500/40 bg-transparent"
-              >
+              <div key={term} className="relative flex items-center gap-2">
                 {pendingDeleteTerm === term ? (
-                  <DeleteConfirmPopover
-                    description="Hazır koşul listeden kaldırılacak."
-                    confirmLabel="Evet"
-                    cancelLabel="Hayır"
-                    compact
-                    inline
-                    onConfirm={() => deleteSavedTerm(term)}
-                    onCancel={() => setPendingDeleteTerm(null)}
-                    className="w-full"
-                  />
+                  <div className="document-frame-only min-w-0 flex-1 rounded-xl border border-[var(--search-border)] bg-transparent">
+                    <DeleteConfirmPopover
+                      description="Hazır koşul listeden kaldırılacak."
+                      confirmLabel="Evet"
+                      cancelLabel="Hayır"
+                      compact
+                      inline
+                      onConfirm={() => deleteSavedTerm(term)}
+                      onCancel={() => setPendingDeleteTerm(null)}
+                      className="w-full"
+                    />
+                  </div>
                 ) : (
-                  <div className="flex items-start gap-2 rounded-xl transition-colors hover:bg-blue-500/15">
+                  <>
                     <button
                       type="button"
                       onClick={() => appendTermToDescription(term)}
-                      className="flex min-w-0 flex-1 items-start gap-2 px-3 py-2 text-left text-[13px] font-medium text-[var(--muted)]"
+                      className="document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left text-[13px] font-medium text-[var(--muted)] transition-opacity hover:opacity-90"
                     >
-                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
+                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" strokeWidth={2.25} />
                       <span>{term}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setPendingDeleteTerm(term)}
-                      className="mr-2 mt-1.5 glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:!text-[#e11d48]"
+                      className="glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:!border-[#e11d48] hover:!text-[#e11d48]"
                       title="Hazır koşulu sil"
                     >
                       <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
             ))}
