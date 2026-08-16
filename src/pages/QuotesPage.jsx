@@ -384,7 +384,7 @@ function createEmptyQuoteItem() {
     description: '',
     extraDescription: '',
     lineImage: '',
-    showDescription: true,
+    showDescription: false,
     showDiscount: false,
     showExciseTax: false,
     showAccommodationTax: false,
@@ -416,7 +416,8 @@ function sanitizeQuoteItem(item) {
     exciseTaxRate: safeNumber(item.exciseTaxRate, 0, 100),
     accommodationTaxRate: safeNumber(item.accommodationTaxRate, 0, 100),
     vatRate: safeNumber(item.vatRate, 0, 100),
-    showDescription: item.showDescription !== false,
+    showDescription:
+      item.showDescription === true || Boolean(safeText(item.extraDescription)),
     showDiscount: Boolean(item.showDiscount),
     showExciseTax: Boolean(item.showExciseTax),
     showAccommodationTax: Boolean(item.showAccommodationTax),
@@ -2754,7 +2755,7 @@ export default function QuotesPage() {
           </AppPagePanel>
         </>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-5 document-compact-controls">
           {selectedQuote && (
             <>
               <AppPagePanel className="w-full" title="Teklif Bilgileri :">
@@ -2895,14 +2896,14 @@ export default function QuotesPage() {
                                 </select>
                               </Field>
                               <Field label="Toplam">
-                                <div className="flex h-8 items-center justify-end rounded-lg bg-emerald-500/10 px-2 text-[13px] font-bold tabular-nums text-[var(--muted)]">
+                                <div className="flex h-10 items-center justify-end rounded-lg bg-emerald-500/10 px-2 text-[13px] font-bold tabular-nums text-[var(--muted)]">
                                   {formatTL(totals.total)}
                                 </div>
                               </Field>
                               <div className="relative">
                                 <FieldLabelSpacer label="İşlem" />
                                 <div
-                                  className={`flex h-8 items-center ${quoteItemFieldGapClass}`}
+                                  className={`flex h-10 items-center ${quoteItemFieldGapClass}`}
                                   data-quote-dropdown
                                 >
                                   <button
@@ -2910,7 +2911,7 @@ export default function QuotesPage() {
                                     onClick={() =>
                                       setOpenItemMenuId(openItemMenuId === item.id ? null : item.id)
                                     }
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-dark-500/50 text-[var(--muted)] transition-colors hover:bg-dark-700/60"
+                                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-dark-500/50 text-[var(--muted)] transition-colors hover:bg-dark-700/60"
                                     title="Satıra alan ekle"
                                   >
                                     <Plus className="h-3.5 w-3.5" />
@@ -2918,7 +2919,7 @@ export default function QuotesPage() {
                                   <button
                                     type="button"
                                     onClick={() => setPendingItemDeleteId(item.id)}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/20 text-red-300 transition-colors hover:bg-red-500/10"
+                                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-500/20 text-red-300 transition-colors hover:bg-red-500/10"
                                     title="Satırı sil"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
@@ -2933,10 +2934,7 @@ export default function QuotesPage() {
                                         ['showExciseTax', 'ÖTV ekle'],
                                         ['showAccommodationTax', 'Konaklama vergisi ekle'],
                                       ]
-                                        .filter(
-                                          ([field]) =>
-                                            field !== 'showDescription' || !item.showDescription,
-                                        )
+                                        .filter(([field]) => !item[field])
                                         .map(([field, label]) => (
                                           <button
                                             key={field}
@@ -3046,7 +3044,7 @@ export default function QuotesPage() {
                               >
                                 <Field label="Satır Açıklaması">
                                   <input
-                                    value={item.extraDescription ?? item.description ?? ''}
+                                    value={item.extraDescription ?? ''}
                                     onChange={(event) =>
                                       updateItem(item.id, 'extraDescription', event.target.value)
                                     }

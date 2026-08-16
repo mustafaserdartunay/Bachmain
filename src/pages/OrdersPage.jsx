@@ -1431,7 +1431,7 @@ export default function OrdersPage() {
         </Panel>
       ) : (
         selectedOrder && (
-          <div className="space-y-5">
+          <div className="space-y-5 document-compact-controls">
             <AppPagePanel className="w-full" title="Sipariş Bilgileri :">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_200px]">

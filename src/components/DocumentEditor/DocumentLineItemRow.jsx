@@ -146,7 +146,7 @@ export default function DocumentLineItemRow({
                       ['showExciseTax', 'ÖTV ekle'],
                       ['showAccommodationTax', 'Konaklama vergisi ekle'],
                     ]
-                      .filter(([field]) => field !== 'showDescription' || !item.showDescription)
+                      .filter(([field]) => !item[field])
                       .map(([field, label]) => (
                         <button
                           key={field}
@@ -242,7 +242,7 @@ export default function DocumentLineItemRow({
             >
               <DocumentField label="Satır Açıklaması">
                 <input
-                  value={item.extraDescription ?? item.description ?? ''}
+                  value={item.extraDescription ?? ''}
                   onChange={(event) => onUpdate(item.id, 'extraDescription', event.target.value)}
                   placeholder="Bu ürün satırı için ekstra açıklama yazın..."
                   className="form-input"
@@ -272,7 +272,7 @@ export function createEmptyDocumentItem(createId) {
     description: '',
     extraDescription: '',
     lineImage: '',
-    showDescription: true,
+    showDescription: false,
     showDiscount: false,
     showExciseTax: false,
     showAccommodationTax: false,

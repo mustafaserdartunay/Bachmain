@@ -742,6 +742,31 @@ textarea:not(.form-input)::placeholder {
   width: 100%;
 }
 
+/* Teklif / sipariş form kontrolleri — search-pill (h-10) ile aynı yükseklik */
+.page-type-shell .document-compact-controls .form-input,
+.page-type-shell .document-compact-controls .form-input-readonly,
+.page-type-shell .document-compact-controls select.form-input,
+.app-responsive .page-type-shell .document-compact-controls .form-input,
+.app-responsive .page-type-shell .document-compact-controls .form-input-readonly,
+.app-responsive .page-type-shell .document-compact-controls select.form-input {
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+  max-height: 2.5rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 2.5rem !important;
+}
+
+.page-type-shell .document-compact-controls textarea.form-input,
+.app-responsive .page-type-shell .document-compact-controls textarea.form-input {
+  height: auto !important;
+  min-height: 6rem !important;
+  max-height: none !important;
+  line-height: 1.4 !important;
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+}
+
 .card {
   background: var(--glass-bg) !important;
   backdrop-filter: blur(26px) saturate(180%);
