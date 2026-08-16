@@ -41,9 +41,15 @@ async function loadProductsFromIndexedDb() {
 export function resolveProductImage(product) {
   const candidates = [
     product?.image,
+    product?.imageUrl,
+    product?.thumbnail,
+    product?.coverImage,
     product?.gallery?.[0],
     product?.webImages?.[0],
     product?.instagramImages?.[0],
+    product?.photos?.[0],
+    product?.media?.[0]?.url,
+    product?.media?.[0],
   ]
   return candidates.find((item) => typeof item === 'string' && item.length > 0) || null
 }

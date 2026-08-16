@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import SearchInput from '../Common/SearchInput'
 import { Instagram, Landmark, Mail, MapPin, Phone, UserPlus, UserRound, Warehouse } from 'lucide-react'
@@ -24,10 +25,15 @@ import {
   getTreasuryMovements,
 } from '../../utils/treasuryStore'
 import { AppPanelDot } from '../Layout/AppPageLayout'
+import { DROPDOWN_MENU_PORTAL_CLASS } from '../Common/DropdownMenu'
 import { APP_PANEL_TITLE_CLASS, PAGE_FILTER_MENU_CLASS } from '../../utils/dashboardDesign'
+import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 
 const MS_SEARCH_CLASS =
   'customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]'
+const MENU_SHELL = `${DROPDOWN_MENU_PORTAL_CLASS} ${PAGE_FILTER_MENU_CLASS}`
+const LIST_SCROLL_HIDE =
+  '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
 
 function resolveCustomerWarehouse(customer) {
   if (!customer) return ''
@@ -338,7 +344,6 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
   const doc = record || quote
   const [isOpen, setIsOpen] = useState(false)
   const [profileVersion, setProfileVersion] = useState(0)
-  const pickerRef = useRef(null)
   const customerOptions = getCustomerProfiles()
   const query = doc.customer || ''
   const normalizedQuery = query.trim().toLowerCase()
@@ -350,6 +355,12 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
       )
     : customerOptions
   const matchedCustomer = findDocumentCustomer(query)
+  const { anchorRef, menuRef, style: menuStyle } = useAnchoredPortal(isOpen, {
+    placement: 'below',
+    matchWidth: true,
+    offset: 6,
+    flip: true,
+  })
 
   useEffect(() => {
     function refreshProfiles() {
@@ -363,14 +374,14 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
     if (!isOpen) return undefined
 
     function handleOutsideClick(event) {
-      if (!pickerRef.current?.contains(event.target)) {
-        setIsOpen(false)
-      }
+      if (anchorRef.current?.contains(event.target)) return
+      if (menuRef.current?.contains(event.target)) return
+      setIsOpen(false)
     }
 
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
-  }, [isOpen])
+  }, [anchorRef, isOpen, menuRef])
 
   function selectCustomer(customer) {
     const display = getCustomerDisplay(customer)
@@ -387,13 +398,13 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
   }
 
   return (
-    <div ref={pickerRef} className="col-span-2">
+    <div className="col-span-2">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex shrink-0 items-center gap-2">
           <AppPanelDot color="blue" />
           <h2 className={APP_PANEL_TITLE_CLASS}>Müşteri :</h2>
         </div>
-        <div className="relative min-w-0 flex-1">
+        <div ref={anchorRef} className="relative min-w-0 flex-1">
           <SearchInput
             value={query}
             onChange={(event) => {
@@ -404,37 +415,6 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
             placeholder="Müşteri adı, yetkili veya e-posta ile ara..."
             className={MS_SEARCH_CLASS}
           />
-          {isOpen && (
-            <div className={`absolute left-0 right-0 top-11 z-40 ${PAGE_FILTER_MENU_CLASS} p-2`}>
-              <div className="max-h-64 space-y-1 overflow-y-auto">
-                {filteredCustomers.map((customer) => {
-                  const display = getCustomerDisplay(customer)
-                  return (
-                    <button
-                      key={customer.id || customer.company}
-                      type="button"
-                      onClick={() => selectCustomer(customer)}
-                      className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-transform hover:scale-[1.02]"
-                      data-tone="primary"
-                    >
-                      <div className="min-w-0">
-                        <p className="customer-name-primary truncate">{display.brandShortName}</p>
-                        <p className="customer-name-secondary truncate">
-                          {display.companyTitle} · {customer.email}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-[14px] font-normal text-[#2563eb]">Seç</span>
-                    </button>
-                  )
-                })}
-                {filteredCustomers.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-[var(--search-border)] px-3 py-4 text-center text-[14px] font-normal text-[var(--muted)]">
-                    Eşleşen müşteri bulunamadı.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
         {allowCreate ? (
           <button
@@ -447,6 +427,42 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
           </button>
         ) : null}
       </div>
+
+      {isOpen &&
+        menuStyle &&
+        createPortal(
+          <div ref={menuRef} style={menuStyle} className={`${MENU_SHELL} p-2`}>
+            <div className={`max-h-64 space-y-1 overflow-y-auto ${LIST_SCROLL_HIDE}`}>
+              {filteredCustomers.map((customer) => {
+                const display = getCustomerDisplay(customer)
+                return (
+                  <button
+                    key={customer.id || customer.company}
+                    type="button"
+                    onClick={() => selectCustomer(customer)}
+                    className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-transform hover:scale-[1.02]"
+                    data-tone="primary"
+                  >
+                    <div className="min-w-0">
+                      <p className="customer-name-primary truncate">{display.brandShortName}</p>
+                      <p className="customer-name-secondary truncate">
+                        {display.companyTitle} · {customer.email}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[14px] font-normal text-[#2563eb]">Seç</span>
+                  </button>
+                )
+              })}
+              {filteredCustomers.length === 0 && (
+                <div className="rounded-xl border border-dashed border-[var(--search-border)] px-3 py-4 text-center text-[14px] font-normal text-[var(--muted)]">
+                  Eşleşen müşteri bulunamadı.
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
+
       {matchedCustomer && (
         <CustomerInfoStrip
           key={`${matchedCustomer.id}-${profileVersion}`}

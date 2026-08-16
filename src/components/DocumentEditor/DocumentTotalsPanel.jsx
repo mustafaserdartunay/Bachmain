@@ -14,10 +14,12 @@ const LABEL_CELL_CLASS = 'flex min-w-0 items-center gap-1.5 pl-2.5'
 const AMOUNT_CLASS =
   'block w-full text-right text-[14px] font-bold tabular-nums leading-tight tracking-normal text-[var(--muted)]'
 const ACTION_SLOT_CLASS = 'flex w-7 shrink-0 items-center justify-end'
+const ROW_FRAME =
+  'document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent px-1 py-2.5'
 
 function TotalRow({ label, value, valueContent, labelAction, trailingAction }) {
   return (
-    <div className={`${ROW_GRID} border-b border-[var(--search-border)] py-1.5 last:border-b-0`}>
+    <div className={`${ROW_FRAME} ${ROW_GRID}`}>
       <div className={LABEL_CELL_CLASS}>
         <span className={YF_TEXT_CLASS}>{label}</span>
         {labelAction}
@@ -114,7 +116,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
           <AppPanelDot color="blue" />
           <span className={APP_PANEL_TITLE_CLASS}>Toplamlar :</span>
         </div>
-        <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-2xl border border-[var(--search-border)] bg-transparent p-4">
+        <div className="flex min-h-0 flex-1 flex-col space-y-2.5">
           <TotalRow
             label="Ara Toplam"
             value={totals.subtotal}
@@ -200,7 +202,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
             <TotalRow key={label} label={label} value={value} />
           ))}
           <TotalRow label="KDV" value={totals.vat} />
-          <div className={`${ROW_GRID} mt-auto py-3`}>
+          <div className={`${ROW_FRAME} ${ROW_GRID}`}>
             <span className={`pl-2.5 ${YF_TEXT_CLASS}`}>Genel Toplam</span>
             <span className={AMOUNT_CLASS}>{formatTL(totals.grandTotal)}</span>
             <span />
