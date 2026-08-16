@@ -803,12 +803,62 @@ function Field({ label, children, align = 'start' }) {
   )
 }
 
-function InlineField({ label, children, className = '' }) {
+function InlineField({ label, children, className = '', onActivate }) {
   return (
-    <div className={`${PAGE_FILTER_FIELD_CLASS} !h-10 !rounded-xl px-0 ${className}`.trim()}>
+    <div
+      className={`${PAGE_FILTER_FIELD_CLASS} !h-10 !rounded-xl px-0 ${className}`.trim()}
+      onClick={onActivate}
+      onKeyDown={
+        onActivate
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onActivate()
+              }
+            }
+          : undefined
+      }
+      role={onActivate ? 'button' : undefined}
+      tabIndex={onActivate ? 0 : undefined}
+    >
       <p className={`${PAGE_FILTER_LABEL_CLASS} shrink-0 pr-2`}>{label}</p>
       <div className="min-w-0 flex-1">{children}</div>
     </div>
+  )
+}
+
+function DateInlineField({ label, value, onChange }) {
+  const inputRef = useRef(null)
+
+  function openPicker() {
+    const node = inputRef.current
+    if (!node) return
+    if (typeof node.showPicker === 'function') {
+      try {
+        node.showPicker()
+        return
+      } catch {
+        /* fall through */
+      }
+    }
+    node.focus()
+    node.click()
+  }
+
+  return (
+    <InlineField label={label} onActivate={openPicker} className="cursor-pointer">
+      <input
+        ref={inputRef}
+        type="date"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onClick={(event) => {
+          event.stopPropagation()
+          openPicker()
+        }}
+        className="form-input w-full cursor-pointer"
+      />
+    </InlineField>
   )
 }
 
@@ -2771,54 +2821,50 @@ export default function QuotesPage() {
           {selectedQuote && (
             <>
               <AppPagePanel className="w-full">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2 flex items-center gap-3">
-                    <div className="relative min-w-0 flex-1">
-                      <InlineField label="Teklif Bilgileri :">
-                        <input
-                          value={selectedQuote.title}
-                          onChange={(e) => patchSelected({ title: e.target.value })}
-                          className="form-input"
-                          placeholder="Teklif başlığı"
-                        />
-                      </InlineField>
-                    </div>
-                    <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
-                      <InlineField label="Kod :">
-                        <input
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={resolvedQuoteCode}
-                          onChange={(event) => patchQuoteCode(event.target.value)}
-                          className="form-input"
-                        />
-                      </InlineField>
-                    </div>
+                <div className="mb-4 flex min-w-0 items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-2">
+                    <AppPanelDot color="blue" />
+                    <h2 className={APP_PANEL_TITLE_CLASS}>Teklif Bilgileri :</h2>
                   </div>
+                  <div className="min-w-0 flex-1">
+                    <input
+                      value={selectedQuote.title}
+                      onChange={(e) => patchSelected({ title: e.target.value })}
+                      className="form-input"
+                      placeholder="Teklif başlığı"
+                    />
+                  </div>
+                  <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
+                    <input
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={resolvedQuoteCode}
+                      onChange={(event) => patchQuoteCode(event.target.value)}
+                      className="form-input"
+                      placeholder="Kod"
+                      title="Teklif kodu"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <CustomerPicker
                     quote={selectedQuote}
                     onPatch={patchSelected}
                     allowCreate={true}
                   />
-                  <InlineField label="Oluşturma Tarihi :">
-                    <input
-                      type="date"
-                      value={selectedQuote.createdAt || todayIsoDate()}
-                      onChange={(e) => patchSelected({ createdAt: e.target.value })}
-                      className="form-input"
-                    />
-                  </InlineField>
-                  <InlineField label="Geçerlilik Tarihi :">
-                    <input
-                      type="date"
-                      value={
-                        selectedQuote.validUntil ||
-                        defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())
-                      }
-                      onChange={(e) => patchSelected({ validUntil: e.target.value })}
-                      className="form-input"
-                    />
-                  </InlineField>
+                  <DateInlineField
+                    label="Oluşturma Tarihi :"
+                    value={selectedQuote.createdAt || todayIsoDate()}
+                    onChange={(value) => patchSelected({ createdAt: value })}
+                  />
+                  <DateInlineField
+                    label="Geçerlilik Tarihi :"
+                    value={
+                      selectedQuote.validUntil ||
+                      defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())
+                    }
+                    onChange={(value) => patchSelected({ validUntil: value })}
+                  />
                 </div>
               </AppPagePanel>
 
@@ -3129,40 +3175,32 @@ export default function QuotesPage() {
                   savedTermsTitle="Hazır Teklif Koşulları"
                   descriptionPlaceholder="Teklifin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
                 />
-                <div className="mt-4 grid gap-2 border-t border-dark-500/35 pt-4 sm:grid-cols-3">
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-dark-500/35 pt-4">
                   <button
                     type="button"
                     onClick={downloadQuotePdf}
                     disabled={isGeneratingPdf}
-                    className={`${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.danger}`}
+                    className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#e11d48] transition-opacity hover:opacity-80 disabled:opacity-50"
                   >
-                    <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                      <FileText className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-                    </span>
-                    <span className={YF_TEXT_ON_COLOR_CLASS}>
-                      {isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
-                    </span>
+                    <FileText className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                    {isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
                   </button>
                   <button
                     type="button"
                     onClick={sendQuoteByWhatsApp}
                     disabled={isGeneratingPdf}
-                    className={`${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.success}`}
+                    className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#10b981] transition-opacity hover:opacity-80 disabled:opacity-50"
                   >
-                    <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                      <Send className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-                    </span>
-                    <span className={YF_TEXT_ON_COLOR_CLASS}>WhatsApp PDF Gönder</span>
+                    <Send className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                    WhatsApp PDF Gönder
                   </button>
                   <button
                     type="button"
                     onClick={sendQuoteByMail}
-                    className={`${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.primary}`}
+                    className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#2563eb] transition-opacity hover:opacity-80"
                   >
-                    <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                      <Mail className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-                    </span>
-                    <span className={YF_TEXT_ON_COLOR_CLASS}>Mail Gönder</span>
+                    <Mail className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                    Mail Gönder
                   </button>
                 </div>
               </AppPagePanel>

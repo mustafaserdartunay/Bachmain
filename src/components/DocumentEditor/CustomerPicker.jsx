@@ -23,13 +23,7 @@ import {
   getCustomerLiveBalance,
   getTreasuryMovements,
 } from '../../utils/treasuryStore'
-import {
-  HEADER_ACTION_CTA_CLASS,
-  HEADER_ACTION_CTA_ICON_CLASS,
-  HEADER_ACTION_CTA_ICON_WRAP_CLASS,
-  HEADER_ACTION_GRADIENTS,
-} from '../Layout/HeaderCashActionsPanel'
-import { PAGE_FILTER_FIELD_CLASS, PAGE_FILTER_LABEL_CLASS, YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesign'
+import { PAGE_FILTER_FIELD_CLASS, PAGE_FILTER_LABEL_CLASS } from '../../utils/dashboardDesign'
 
 function resolveCustomerWarehouse(customer) {
   if (!customer) return ''
@@ -337,8 +331,8 @@ export const DOCUMENT_SIDE_ACTION_WIDTH = 'w-[11.5rem] shrink-0'
 
 function CustomerFieldActionRow({ children, actions }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="relative min-w-0 flex-1">{children}</div>
+    <div className="space-y-2">
+      <div className="relative min-w-0">{children}</div>
       {actions}
     </div>
   )
@@ -399,8 +393,8 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
 
   return (
     <div ref={pickerRef} className="col-span-2">
-      <div className={`${PAGE_FILTER_FIELD_CLASS} !h-10 !rounded-xl px-0`}>
-        <p className={`${PAGE_FILTER_LABEL_CLASS} shrink-0 pr-2`}>Müşteri :</p>
+      <div className={`${PAGE_FILTER_FIELD_CLASS} !h-auto !min-h-10 !rounded-xl px-0`}>
+        <p className={`${PAGE_FILTER_LABEL_CLASS} shrink-0 self-start pt-2.5 pr-2`}>Müşteri :</p>
         <div className="min-w-0 flex-1">
           <CustomerFieldActionRow
             actions={
@@ -408,12 +402,10 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
                 <button
                   type="button"
                   onClick={() => navigate('/musteriler/yeni')}
-                  className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.primary} ${DOCUMENT_SIDE_ACTION_WIDTH} !h-10 !min-h-10`}
+                  className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-dark-500/30 bg-white text-[14px] font-medium text-[#2563eb] transition-colors hover:bg-blue-50"
                 >
-                  <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                    <UserPlus className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-                  </span>
-                  <span className={YF_TEXT_ON_COLOR_CLASS}>Yeni Müşteri Oluştur</span>
+                  <UserPlus className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                  Yeni Müşteri Oluştur
                 </button>
               ) : null
             }
