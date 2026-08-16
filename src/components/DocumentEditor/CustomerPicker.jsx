@@ -23,8 +23,13 @@ import {
   getCustomerLiveBalance,
   getTreasuryMovements,
 } from '../../utils/treasuryStore'
-import { BTN_PRIMARY } from '../../utils/buttonStyles'
-import { DocumentField } from './DocumentField'
+import {
+  HEADER_ACTION_CTA_CLASS,
+  HEADER_ACTION_CTA_ICON_CLASS,
+  HEADER_ACTION_CTA_ICON_WRAP_CLASS,
+  HEADER_ACTION_GRADIENTS,
+} from '../Layout/HeaderCashActionsPanel'
+import { PAGE_FILTER_FIELD_CLASS, PAGE_FILTER_LABEL_CLASS, YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesign'
 
 function resolveCustomerWarehouse(customer) {
   if (!customer) return ''
@@ -332,7 +337,7 @@ export const DOCUMENT_SIDE_ACTION_WIDTH = 'w-[11.5rem] shrink-0'
 
 function CustomerFieldActionRow({ children, actions }) {
   return (
-    <div className="flex gap-3">
+    <div className="flex items-center gap-3">
       <div className="relative min-w-0 flex-1">{children}</div>
       {actions}
     </div>
@@ -394,65 +399,71 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
 
   return (
     <div ref={pickerRef} className="col-span-2">
-      <DocumentField label="Müşteri">
-        <CustomerFieldActionRow
-          actions={
-            allowCreate ? (
-              <button
-                type="button"
-                onClick={() => navigate('/musteriler/yeni')}
-                className={`${BTN_PRIMARY} ${DOCUMENT_SIDE_ACTION_WIDTH} h-[38px] gap-2 px-3 text-xs`}
-              >
-                <UserPlus className="h-3.5 w-3.5" /> Yeni Müşteri Oluştur
-              </button>
-            ) : null
-          }
-        >
-          <SearchInput
-            value={query}
-            onChange={(event) => {
-              onPatch({ customerId: '', customer: event.target.value })
-              setIsOpen(true)
-            }}
-            onFocus={() => setIsOpen(true)}
-            placeholder="Müşteri adı, yetkili veya e-posta ile ara..."
-          />
-          {isOpen && (
-            <div className="absolute left-0 right-0 top-11 z-40 rounded-2xl border border-dark-500 bg-dark-900 p-2 shadow-card">
-              <div className="max-h-64 space-y-1 overflow-y-auto">
-                {filteredCustomers.map((customer) => {
-                  const display = getCustomerDisplay(customer)
-                  return (
-                    <button
-                      key={customer.id || customer.company}
-                      type="button"
-                      onClick={() => selectCustomer(customer)}
-                      className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-dark-700"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-white">
-                          {display.brandShortName}
-                        </p>
-                        <p className="truncate text-xs text-gray-500">
-                          {display.companyTitle} · {customer.email}
-                        </p>
-                      </div>
-                      <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[12px] font-bold text-blue-300">
-                        Seç
-                      </span>
-                    </button>
-                  )
-                })}
-                {filteredCustomers.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-xs font-semibold text-gray-500">
-                    Eşleşen müşteri bulunamadı.
-                  </div>
-                )}
+      <div className={`${PAGE_FILTER_FIELD_CLASS} !h-10 !rounded-xl px-0`}>
+        <p className={`${PAGE_FILTER_LABEL_CLASS} shrink-0 pr-2`}>Müşteri :</p>
+        <div className="min-w-0 flex-1">
+          <CustomerFieldActionRow
+            actions={
+              allowCreate ? (
+                <button
+                  type="button"
+                  onClick={() => navigate('/musteriler/yeni')}
+                  className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.primary} ${DOCUMENT_SIDE_ACTION_WIDTH} !h-10 !min-h-10`}
+                >
+                  <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                    <UserPlus className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                  </span>
+                  <span className={YF_TEXT_ON_COLOR_CLASS}>Yeni Müşteri Oluştur</span>
+                </button>
+              ) : null
+            }
+          >
+            <SearchInput
+              value={query}
+              onChange={(event) => {
+                onPatch({ customerId: '', customer: event.target.value })
+                setIsOpen(true)
+              }}
+              onFocus={() => setIsOpen(true)}
+              placeholder="Müşteri adı, yetkili veya e-posta ile ara..."
+            />
+            {isOpen && (
+              <div className="absolute left-0 right-0 top-11 z-40 rounded-2xl border border-dark-500 bg-dark-900 p-2 shadow-card">
+                <div className="max-h-64 space-y-1 overflow-y-auto">
+                  {filteredCustomers.map((customer) => {
+                    const display = getCustomerDisplay(customer)
+                    return (
+                      <button
+                        key={customer.id || customer.company}
+                        type="button"
+                        onClick={() => selectCustomer(customer)}
+                        className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-dark-700"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-white">
+                            {display.brandShortName}
+                          </p>
+                          <p className="truncate text-xs text-gray-500">
+                            {display.companyTitle} · {customer.email}
+                          </p>
+                        </div>
+                        <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[12px] font-bold text-blue-300">
+                          Seç
+                        </span>
+                      </button>
+                    )
+                  })}
+                  {filteredCustomers.length === 0 && (
+                    <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-xs font-semibold text-gray-500">
+                      Eşleşen müşteri bulunamadı.
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </CustomerFieldActionRow>
-      </DocumentField>
+            )}
+          </CustomerFieldActionRow>
+        </div>
+      </div>
       {matchedCustomer && (
         <CustomerInfoStrip
           key={`${matchedCustomer.id}-${profileVersion}`}

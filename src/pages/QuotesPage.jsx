@@ -114,7 +114,6 @@ import CustomerPicker, {
   findDocumentCustomer as findQuoteCustomer,
 } from '../components/DocumentEditor/CustomerPicker'
 import ProductSearchSelect from '../components/DocumentEditor/ProductSearchSelect'
-import { documentDropdownMenuClass } from '../components/DocumentEditor/documentItemLayout'
 import { readCompanySettings } from '../utils/companySettings'
 import {
   APP_PANEL_TITLE_CLASS,
@@ -790,11 +789,25 @@ function TurkishLiraIcon({ className = '' }) {
   )
 }
 
-function Field({ label, children }) {
+function Field({ label, children, align = 'start' }) {
+  const center = align === 'center'
   return (
-    <div className="min-w-0">
-      <label className={`${YF_TEXT_CLASS} mb-1 block`}>{label}</label>
+    <div className={`min-w-0 ${center ? 'text-center' : ''}`.trim()}>
+      <label
+        className={`${YF_TEXT_CLASS} mb-1 block ${center ? 'w-full text-center' : ''}`.trim()}
+      >
+        {label}
+      </label>
       {children}
+    </div>
+  )
+}
+
+function InlineField({ label, children, className = '' }) {
+  return (
+    <div className={`${PAGE_FILTER_FIELD_CLASS} !h-10 !rounded-xl px-0 ${className}`.trim()}>
+      <p className={`${PAGE_FILTER_LABEL_CLASS} shrink-0 pr-2`}>{label}</p>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   )
 }
@@ -2224,7 +2237,6 @@ export default function QuotesPage() {
   }
 
   function removeItem(id) {
-    if (!window.confirm('Son onay: Teklif kalemi kaldırılacak. Devam edilsin mi?')) return
     patchSelected({ items: selectedQuote.items.filter((item) => item.id !== id) })
     setPendingItemDeleteId(null)
   }
@@ -2758,20 +2770,21 @@ export default function QuotesPage() {
         <div className="space-y-5 document-compact-controls">
           {selectedQuote && (
             <>
-              <AppPagePanel className="w-full" title="Teklif Bilgileri :">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2 flex gap-3">
+              <AppPagePanel className="w-full">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2 flex items-center gap-3">
                     <div className="relative min-w-0 flex-1">
-                      <Field label="Teklif Başlığı">
+                      <InlineField label="Teklif Bilgileri :">
                         <input
                           value={selectedQuote.title}
                           onChange={(e) => patchSelected({ title: e.target.value })}
                           className="form-input"
+                          placeholder="Teklif başlığı"
                         />
-                      </Field>
+                      </InlineField>
                     </div>
                     <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
-                      <Field label="Teklif Kodu">
+                      <InlineField label="Kod :">
                         <input
                           inputMode="numeric"
                           pattern="[0-9]*"
@@ -2779,7 +2792,7 @@ export default function QuotesPage() {
                           onChange={(event) => patchQuoteCode(event.target.value)}
                           className="form-input"
                         />
-                      </Field>
+                      </InlineField>
                     </div>
                   </div>
                   <CustomerPicker
@@ -2787,15 +2800,15 @@ export default function QuotesPage() {
                     onPatch={patchSelected}
                     allowCreate={true}
                   />
-                  <Field label="Oluşturma Tarihi">
+                  <InlineField label="Oluşturma Tarihi :">
                     <input
                       type="date"
                       value={selectedQuote.createdAt || todayIsoDate()}
                       onChange={(e) => patchSelected({ createdAt: e.target.value })}
                       className="form-input"
                     />
-                  </Field>
-                  <Field label="Geçerlilik Tarihi">
+                  </InlineField>
+                  <InlineField label="Geçerlilik Tarihi :">
                     <input
                       type="date"
                       value={
@@ -2805,7 +2818,7 @@ export default function QuotesPage() {
                       onChange={(e) => patchSelected({ validUntil: e.target.value })}
                       className="form-input"
                     />
-                  </Field>
+                  </InlineField>
                 </div>
               </AppPagePanel>
 
@@ -2822,8 +2835,10 @@ export default function QuotesPage() {
                         <div
                           className={`grid ${quoteItemGridClass} ${quoteItemFieldGapClass} items-start`}
                         >
-                          <div className="flex flex-col self-start">
-                            <label className={`${YF_TEXT_CLASS} mb-1 block`}>Görsel</label>
+                          <div className="flex flex-col items-center self-start">
+                            <label className={`${YF_TEXT_CLASS} mb-1 block w-full text-center`}>
+                              Görsel
+                            </label>
                             <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-dashed border-dark-500/50 bg-dark-800/40">
                               {itemImage ? (
                                 <img
@@ -2832,15 +2847,11 @@ export default function QuotesPage() {
                                   className="h-full w-full object-cover object-center"
                                 />
                               ) : (
-                                <div className="flex aspect-square w-full flex-col items-center justify-center gap-1 px-1 text-center">
-                                  <span className="text-[10px] font-medium text-[var(--muted)]">
-                                    Ürün seçin
-                                  </span>
-                                </div>
+                                <div className="aspect-square w-full" aria-hidden />
                               )}
                             </div>
                           </div>
-                          <div className="flex min-h-0 flex-col gap-2 self-stretch">
+                          <div className="flex min-h-0 flex-col gap-1.5 self-stretch">
                             <div
                               className={`grid ${quoteItemFieldsGridClass} ${quoteItemFieldGapClass} items-end`}
                             >
@@ -2866,27 +2877,29 @@ export default function QuotesPage() {
                                   customerLabel={selectedQuote.customer || ''}
                                 />
                               </Field>
-                              <Field label="Adet">
+                              <Field label="Adet" align="center">
                                 <NumericInput
                                   value={item.quantity}
                                   onChange={(value) => updateItem(item.id, 'quantity', value)}
+                                  className="!text-center"
                                 />
                               </Field>
-                              <Field label="Birim Fiyat">
+                              <Field label="Birim Fiyat" align="center">
                                 <NumericInput
                                   value={item.unitPrice}
                                   onChange={(value) => updateItem(item.id, 'unitPrice', value)}
                                   suffix="₺"
                                   formatMode="price"
+                                  className="!text-center"
                                 />
                               </Field>
-                              <Field label="KDV %">
+                              <Field label="KDV %" align="center">
                                 <select
                                   value={item.vatRate ?? 20}
                                   onChange={(event) =>
                                     updateItem(item.id, 'vatRate', Number(event.target.value))
                                   }
-                                  className="form-input"
+                                  className="form-input text-center"
                                 >
                                   {vatRates.map((rate) => (
                                     <option key={rate} value={rate}>
@@ -2895,8 +2908,8 @@ export default function QuotesPage() {
                                   ))}
                                 </select>
                               </Field>
-                              <Field label="Toplam">
-                                <div className="flex h-10 items-center justify-end rounded-lg bg-emerald-500/10 px-2 text-[13px] font-bold tabular-nums text-[var(--muted)]">
+                              <Field label="Toplam" align="center">
+                                <div className="flex h-10 items-center justify-center rounded-lg bg-emerald-500/10 px-2 text-[13px] font-bold tabular-nums text-[var(--muted)]">
                                   {formatTL(totals.total)}
                                 </div>
                               </Field>
@@ -2926,7 +2939,7 @@ export default function QuotesPage() {
                                   </button>
                                   {openItemMenuId === item.id && (
                                     <div
-                                      className={`absolute right-0 top-10 z-30 w-52 ${documentDropdownMenuClass}`}
+                                      className={`absolute right-0 top-10 z-30 w-52 p-1.5 ${PAGE_FILTER_MENU_CLASS}`}
                                     >
                                       {[
                                         ['showDescription', 'Açıklama ekle'],
@@ -2939,31 +2952,64 @@ export default function QuotesPage() {
                                           <button
                                             key={field}
                                             type="button"
+                                            data-tone="primary"
                                             onClick={() => enableItemOption(item.id, field)}
-                                            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12px] font-medium text-[var(--muted)] transition-colors hover:bg-blue-500/10 hover:text-[var(--ink)]"
+                                            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-transform"
                                           >
-                                            <Plus className="h-3 w-3 text-blue-400" /> {label}
+                                            <Plus className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="truncate">{label}</span>
                                           </button>
                                         ))}
                                     </div>
                                   )}
                                   {pendingItemDeleteId === item.id && (
                                     <DeleteConfirmPopover
+                                      title="Satır silinsin mi?"
+                                      description="Bu satır kaldırılacak."
+                                      confirmLabel="Evet"
+                                      cancelLabel="Hayır"
+                                      compact
+                                      inline
                                       onConfirm={() => removeItem(item.id)}
                                       onCancel={() => setPendingItemDeleteId(null)}
-                                      className="absolute right-0 top-10 z-40"
                                     />
                                   )}
                                 </div>
                               </div>
                             </div>
+                            {item.showDescription && (
+                              <div
+                                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center ${quoteItemFieldGapClass}`}
+                              >
+                                <input
+                                  value={item.extraDescription ?? ''}
+                                  onChange={(event) =>
+                                    updateItem(item.id, 'extraDescription', event.target.value)
+                                  }
+                                  placeholder="Satır açıklaması..."
+                                  className="form-input"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    disableItemOption(item.id, 'showDescription', {
+                                      extraDescription: '',
+                                    })
+                                  }
+                                  className="inline-flex h-10 items-center justify-center gap-1 rounded-lg px-2 text-[12px] font-medium text-red-400 transition-colors hover:bg-red-500/10"
+                                  title="Açıklamayı kaldır"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            )}
                             {(item.showDiscount ||
                               item.showExciseTax ||
                               item.showAccommodationTax) && (
-                              <div className={`grid grid-cols-2 ${quoteItemFieldGapClass} gap-y-3`}>
+                              <div className={`grid grid-cols-2 ${quoteItemFieldGapClass} gap-y-2`}>
                                 {item.showDiscount && (
-                                  <div className="glass-inset rounded-2xl p-3">
-                                    <div className="grid grid-cols-[minmax(0,1fr)_92px] items-end gap-3">
+                                  <div className="glass-inset rounded-xl p-2">
+                                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                                       <Field label="İndirim %">
                                         <NumericInput
                                           value={item.discountRate || 0}
@@ -2979,16 +3025,16 @@ export default function QuotesPage() {
                                             discountRate: 0,
                                           })
                                         }
-                                        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 text-[11px] font-bold text-red-300 transition-colors hover:bg-red-500/20"
+                                        className="mt-5 inline-flex h-10 items-center justify-center rounded-lg px-2 text-red-400 hover:bg-red-500/10"
                                       >
-                                        <X className="h-3.5 w-3.5" /> Kaldır
+                                        <X className="h-3.5 w-3.5" />
                                       </button>
                                     </div>
                                   </div>
                                 )}
                                 {item.showExciseTax && (
-                                  <div className="glass-inset rounded-2xl p-3">
-                                    <div className="grid grid-cols-[minmax(0,1fr)_92px] items-end gap-3">
+                                  <div className="glass-inset rounded-xl p-2">
+                                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                                       <Field label="ÖTV %">
                                         <NumericInput
                                           value={item.exciseTaxRate || 0}
@@ -3004,16 +3050,16 @@ export default function QuotesPage() {
                                             exciseTaxRate: 0,
                                           })
                                         }
-                                        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 text-[11px] font-bold text-red-300 transition-colors hover:bg-red-500/20"
+                                        className="mt-5 inline-flex h-10 items-center justify-center rounded-lg px-2 text-red-400 hover:bg-red-500/10"
                                       >
-                                        <X className="h-3.5 w-3.5" /> Kaldır
+                                        <X className="h-3.5 w-3.5" />
                                       </button>
                                     </div>
                                   </div>
                                 )}
                                 {item.showAccommodationTax && (
-                                  <div className="glass-inset rounded-2xl p-3">
-                                    <div className="grid grid-cols-[minmax(0,1fr)_92px] items-end gap-3">
+                                  <div className="glass-inset rounded-xl p-2">
+                                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                                       <Field label="Konaklama Vergisi %">
                                         <NumericInput
                                           value={item.accommodationTaxRate || 0}
@@ -3029,40 +3075,13 @@ export default function QuotesPage() {
                                             accommodationTaxRate: 0,
                                           })
                                         }
-                                        className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 text-[11px] font-bold text-red-300 transition-colors hover:bg-red-500/20"
+                                        className="mt-5 inline-flex h-10 items-center justify-center rounded-lg px-2 text-red-400 hover:bg-red-500/10"
                                       >
-                                        <X className="h-3.5 w-3.5" /> Kaldır
+                                        <X className="h-3.5 w-3.5" />
                                       </button>
                                     </div>
                                   </div>
                                 )}
-                              </div>
-                            )}
-                            {item.showDescription && (
-                              <div
-                                className={`mt-auto grid grid-cols-[minmax(0,1fr)_92px] items-end ${quoteItemFieldGapClass}`}
-                              >
-                                <Field label="Satır Açıklaması">
-                                  <input
-                                    value={item.extraDescription ?? ''}
-                                    onChange={(event) =>
-                                      updateItem(item.id, 'extraDescription', event.target.value)
-                                    }
-                                    placeholder="Bu ürün satırı için ekstra açıklama yazın..."
-                                    className="form-input"
-                                  />
-                                </Field>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    disableItemOption(item.id, 'showDescription', {
-                                      extraDescription: '',
-                                    })
-                                  }
-                                  className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 text-[11px] font-bold text-red-300 transition-colors hover:bg-red-500/20"
-                                >
-                                  <X className="h-3.5 w-3.5" /> Kaldır
-                                </button>
                               </div>
                             )}
                           </div>
@@ -3076,9 +3095,14 @@ export default function QuotesPage() {
                     </div>
                   )}
 
-                  <div className="pt-1">
-                    <MiniButton onClick={addItem}>Ürün Ekle</MiniButton>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={addItem}
+                    className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-dark-500/30 bg-white text-[14px] font-medium text-[#2563eb] transition-colors hover:bg-blue-50"
+                  >
+                    <Plus className="h-4 w-4" strokeWidth={2.25} />
+                    Ürün Ekle
+                  </button>
 
                   {selectedQuote && (
                     <div className="grid grid-cols-1 gap-4 border-t border-dark-500/35 pt-4 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-start">

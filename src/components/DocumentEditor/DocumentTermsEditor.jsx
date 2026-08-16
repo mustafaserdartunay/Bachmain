@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { CheckCircle2, Plus, Trash2 } from 'lucide-react'
 import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
-import { BTN_PRIMARY } from '../../utils/buttonStyles'
-import { APP_PANEL_TITLE_CLASS, YF_TEXT_CLASS } from '../../utils/dashboardDesign'
+import { AppPanelDot } from '../Layout/AppPageLayout'
+import { APP_PANEL_TITLE_CLASS } from '../../utils/dashboardDesign'
 import { loadSavedDocumentTerms, saveSavedDocumentTerms } from '../../utils/documentTermsStorage'
 
 export default function DocumentTermsEditor({
@@ -63,8 +63,9 @@ export default function DocumentTermsEditor({
         <div
           className={`glass-inset flex flex-col rounded-[16px] p-3 ${compact ? 'min-h-[220px]' : 'h-[332px]'}`}
         >
-          <div className="mb-3">
-            <h3 className={YF_TEXT_CLASS}>{savedTermsTitle}</h3>
+          <div className="mb-3 flex items-center gap-2">
+            <AppPanelDot color="blue" />
+            <h3 className={APP_PANEL_TITLE_CLASS}>{savedTermsTitle}</h3>
           </div>
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
             {savedTerms.map((term) => (
@@ -72,6 +73,10 @@ export default function DocumentTermsEditor({
                 {pendingDeleteTerm === term ? (
                   <DeleteConfirmPopover
                     description="Hazır koşul listeden kaldırılacak."
+                    confirmLabel="Evet"
+                    cancelLabel="Hayır"
+                    compact
+                    inline
                     onConfirm={() => deleteSavedTerm(term)}
                     onCancel={() => setPendingDeleteTerm(null)}
                     className="w-full"
@@ -104,19 +109,20 @@ export default function DocumentTermsEditor({
               </div>
             )}
           </div>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex items-center gap-2">
             <input
               value={customTerm}
               onChange={(event) => setCustomTerm(event.target.value)}
               placeholder="Hazır koşul kaydet..."
-              className="h-10 min-w-0 flex-1 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-[13px] font-medium text-gray-200 placeholder-gray-500 outline-none focus:border-blue-500/35"
+              className="form-input h-10 min-w-0 flex-1"
             />
             <button
               type="button"
               onClick={() => saveTerm(customTerm)}
-              className={`${BTN_PRIMARY} h-10 gap-1.5 px-3 text-[12px]`}
+              className="inline-flex h-10 shrink-0 items-center gap-1.5 px-2 text-[14px] font-medium text-[#2563eb] transition-opacity hover:opacity-80"
             >
-              <Plus className="h-3.5 w-3.5" /> Ekle
+              <Plus className="h-4 w-4" strokeWidth={2.25} />
+              Ekle
             </button>
           </div>
         </div>
@@ -124,8 +130,9 @@ export default function DocumentTermsEditor({
         <div
           className={`glass-inset flex flex-col rounded-[16px] p-3 ${compact ? 'min-h-[180px]' : 'h-[332px]'}`}
         >
-          <div className="mb-3">
-            <h4 className={YF_TEXT_CLASS}>Açıklama</h4>
+          <div className="mb-3 flex items-center gap-2">
+            <AppPanelDot color="orange" />
+            <h4 className={APP_PANEL_TITLE_CLASS}>Açıklama :</h4>
           </div>
           <textarea
             value={value}
