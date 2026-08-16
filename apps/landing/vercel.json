@@ -3,6 +3,11 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/business",
+      "destination": "/Business",
+      "permanent": true
+    },
+    {
       "source": "/features/crm",
       "destination": "/crm",
       "permanent": true

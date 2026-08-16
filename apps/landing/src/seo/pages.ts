@@ -423,13 +423,15 @@ export function getSitemapEntries(): Array<{
     const priority =
       page.path === '/'
         ? 1
-        : page.path === '/fiyatlar' || page.path === '/crm' || page.path === '/erp'
-          ? 0.95
-          : page.path === '/blog' || page.path === '/demo'
-            ? 0.85
-            : page.path === '/giris' || page.path === '/uye-ol'
-              ? 0.3
-              : 0.9
+        : page.path === '/Business' || page.path === '/studio'
+          ? 0.98
+          : page.path === '/fiyatlar' || page.path === '/crm' || page.path === '/erp'
+            ? 0.95
+            : page.path === '/blog' || page.path === '/demo'
+              ? 0.85
+              : page.path === '/giris' || page.path === '/uye-ol'
+                ? 0.3
+                : 0.9
     push(page, page.path === '/' || page.path === '/blog' ? 'daily' : 'weekly', priority)
   }
 

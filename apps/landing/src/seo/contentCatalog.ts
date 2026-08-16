@@ -17,24 +17,62 @@ function link(label: string, path: string) {
 export const SEO_CONTENT: Record<string, PageSeo> = {
   '/': {
     path: '/',
-    title: 'BACHMAIN | Tüm Süreçler Tek Platformda',
+    title: 'BACHMAIN | Business & Studio',
     description:
-      'CRM, ERP, muhasebe, üretim, depo ve e-fatura tek panelde. BACHMAIN ile tekliften tahsilata tüm süreçleri yönetin — Tüm Süreçler Tek Platformda.',
-    ogTitle: 'BACHMAIN | Tüm Süreçler Tek Platformda',
+      'Bachmain Business ile CRM & ERP, Bachmain Studio ile web sitesi tasarımı. İki ürün, tek ekosistem — bachmain.com ana giriş.',
+    ogTitle: 'BACHMAIN | Business & Studio',
+    ogDescription:
+      'İş yönetimi için Bachmain Business; web sitesi yapımı için Bachmain Studio. Ürününüzü seçin.',
+    twitterTitle: 'BACHMAIN — Business & Studio',
+    twitterDescription: 'CRM/ERP veya web sitesi builder — Bachmain ürün seçimi.',
+    h1: 'Bachmain Business & Studio',
+    h2: ['Bachmain Business', 'Bachmain Studio'],
+    h3: ['CRM & ERP', 'Web sitesi builder', 'Tek ekosistem'],
+    schemaType: 'Organization',
+    focusKeyword: 'Bachmain',
+    secondaryKeywords: ['Bachmain Business', 'Bachmain Studio', 'CRM ERP', 'web sitesi yapma'],
+    aiSearchDescription:
+      'bachmain.com ana giriş sayfası Bachmain Business (CRM/ERP) ve Bachmain Studio (web sitesi yapma paneli) ürünlerini sunar.',
+    intro:
+      'Bachmain ekosisteminde işletme yönetimi Business ile, web sitesi tasarımı Studio ile ilerler.',
+    sections: [
+      {
+        h2: 'Bachmain Business',
+        body: 'CRM, ERP, üretim, depo, finans ve e-fatura tek panelde.',
+      },
+      {
+        h2: 'Bachmain Studio',
+        body: 'Sürükle-bırak editör ve yönetim paneliyle istediğiniz web sayfasını oluşturun.',
+      },
+    ],
+    relatedPaths: [
+      link('Business', '/Business'),
+      link('Studio', '/studio'),
+      link('Demo', '/demo'),
+    ],
+    breadcrumbs: [{ name: 'Ana Sayfa', path: '/' }],
+  },
+
+  '/Business': {
+    path: '/Business',
+    title: 'BACHMAIN Business | Tüm Süreçler Tek Platformda',
+    description:
+      'CRM, ERP, muhasebe, üretim, depo ve e-fatura tek panelde. Bachmain Business ile tekliften tahsilata tüm süreçleri yönetin.',
+    ogTitle: 'BACHMAIN Business | Tüm Süreçler Tek Platformda',
     ogDescription:
       'KOBİ’ler için premium CRM & ERP: müşteri, sipariş, üretim, stok, finans ve WhatsApp aynı bulutta.',
-    twitterTitle: 'BACHMAIN — Tüm Süreçler Tek Platformda',
+    twitterTitle: 'BACHMAIN Business — Tüm Süreçler Tek Platformda',
     twitterDescription: 'Tekliften tahsilata; CRM, ERP, e-fatura ve üretim tek SaaS platformunda.',
     h1: 'Tüm Süreçler Tek Platformda',
     h2: ['Neden BACHMAIN?', 'Modüller bir arada', 'Hemen başlayın'],
     h3: ['CRM & Pipeline', 'ERP & Üretim', 'Finans & E-Fatura'],
     schemaType: 'SoftwareApplication',
     focusKeyword: 'CRM ERP yazılımı',
-    secondaryKeywords: ['KOBİ yazılımı', 'bulut ERP', 'iş yönetimi platformu'],
+    secondaryKeywords: ['KOBİ yazılımı', 'bulut ERP', 'iş yönetimi platformu', 'Bachmain Business'],
     aiSearchDescription:
-      'BACHMAIN, Türkiye’deki işletmeler için CRM, ERP, stok, üretim, muhasebe, e-fatura, lojistik ve WhatsApp’ı tek SaaS panelinde birleştiren iş yönetimi platformudur. Sloganı: Tüm Süreçler Tek Platformda.',
+      'Bachmain Business, Türkiye’deki işletmeler için CRM, ERP, stok, üretim, muhasebe, e-fatura, lojistik ve WhatsApp’ı tek SaaS panelinde birleştiren iş yönetimi platformudur.',
     intro:
-      'BACHMAIN; satış, operasyon ve finansı aynı dilde konuşturur. Dağınık Excel’ler ve kopuk yazılımlar yerine tek premium panelde ilerleyin.',
+      'Bachmain Business; satış, operasyon ve finansı aynı dilde konuşturur. Dağınık Excel’ler ve kopuk yazılımlar yerine tek premium panelde ilerleyin.',
     sections: [
       {
         h2: 'Neden BACHMAIN?',
@@ -65,8 +103,57 @@ export const SEO_CONTENT: Record<string, PageSeo> = {
       link('ERP', '/erp'),
       link('Fiyatlar', '/fiyatlar'),
       link('Demo', '/demo'),
+      link('Studio', '/studio'),
     ],
-    breadcrumbs: [{ name: 'Ana Sayfa', path: '/' }],
+    breadcrumbs: [
+      { name: 'Ana Sayfa', path: '/' },
+      { name: 'Business', path: '/Business' },
+    ],
+  },
+
+  '/studio': {
+    path: '/studio',
+    title: 'BACHMAIN Studio | Web Sitesi Yapma & Yönetim Paneli',
+    description:
+      'Bachmain Studio ile sürükle-bırak editör, şablonlar, domain ve SEO paneliyle istediğiniz web sitesini tasarlayın ve yönetin.',
+    ogTitle: 'BACHMAIN Studio | Web Sitesi Builder',
+    ogDescription:
+      'Görsel builder, şablonlar ve yayın paneli — markanıza özel web siteleri Bachmain Studio’da.',
+    twitterTitle: 'BACHMAIN Studio — Web Sitesi Yapma',
+    twitterDescription: 'Sürükle-bırak web sitesi tasarımı ve yönetim paneli.',
+    h1: 'İstediğiniz web sayfasını Studio ile kurun',
+    h2: ['Görsel builder', 'Domain & yayın', 'SEO paneli'],
+    h3: ['Şablonlar', 'Sayfa yönetimi', 'Performans'],
+    schemaType: 'SoftwareApplication',
+    focusKeyword: 'web sitesi yapma',
+    secondaryKeywords: ['web sitesi builder', 'Bachmain Studio', 'site yönetim paneli'],
+    aiSearchDescription:
+      'Bachmain Studio, kullanıcıların sürükle-bırak editör ve yönetim paneliyle kendi web sitelerini oluşturup yayınlamasını sağlayan Bachmain ürünüdür.',
+    intro:
+      'Kod yazmadan sayfa tasarlayın, içerikleri yönetin ve sitenizi canlıya alın — Bachmain Studio.',
+    sections: [
+      {
+        h2: 'Görsel builder',
+        body: 'Bölümleri sürükleyip bırakın; metin ve görselleri yerinde düzenleyin.',
+      },
+      {
+        h2: 'Domain & yayın',
+        body: 'Kendi alan adınızı bağlayın ve tek tıkla güvenli yayına alın.',
+      },
+      {
+        h2: 'SEO paneli',
+        body: 'Başlık, meta ve yapılandırılmış veri kontrolleri Studio içinde.',
+      },
+    ],
+    relatedPaths: [
+      link('Business', '/Business'),
+      link('Ana giriş', '/'),
+      link('İletişim', '/iletisim'),
+    ],
+    breadcrumbs: [
+      { name: 'Ana Sayfa', path: '/' },
+      { name: 'Studio', path: '/studio' },
+    ],
   },
 
   '/crm': {
