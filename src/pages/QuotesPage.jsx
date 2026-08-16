@@ -18,7 +18,6 @@ import {
   ShoppingCart,
   Trash2,
   Undo2,
-  Upload,
   X,
 } from 'lucide-react'
 import { DataTable, Dropdown, DropdownItem, DropdownSeparator } from '@bachmain/ui'
@@ -60,7 +59,7 @@ import { defaultQuoteStages, initialQuotes } from '../data/quotesData'
 import { customers as customerData } from '../data/mockData'
 import { getListCustomerDisplay, findCustomerProfile } from '../data/customerProfiles'
 import { vatRates } from '../data/productsData'
-import { getCatalogProducts } from '../utils/productCatalog'
+import { getCatalogProducts, resolveProductImage } from '../utils/productCatalog'
 import { cancelOrderFromQuote, createOrderFromQuote, loadOrders, updateOrder } from '../utils/ordersStore'
 import { nextQuoteCode, resolveQuoteCode, sanitizeQuoteCode } from '../utils/documentCodes'
 import {
@@ -493,16 +492,14 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;')
 }
 
-function readImageFileAsDataUrl(file) {
-  if (!file?.type?.startsWith('image/')) {
-    return Promise.reject(new Error('Lütfen geçerli bir görsel dosyası seçin.'))
-  }
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result || ''))
-    reader.onerror = () => reject(new Error('Görsel okunamadı.'))
-    reader.readAsDataURL(file)
-  })
+function resolveQuoteItemImage(item) {
+  if (typeof item?.lineImage === 'string' && item.lineImage) return item.lineImage
+  const products = getCatalogProducts()
+  const product =
+    (item?.productId && products.find((entry) => entry.id === item.productId)) ||
+    (item?.product && products.find((entry) => entry.name === item.product)) ||
+    null
+  return resolveProductImage(product) || ''
 }
 
 function getQuoteCustomerRepresentative(customer) {
@@ -2192,6 +2189,7 @@ export default function QuotesPage() {
         ? productOrName
         : getCatalogProducts().find((entry) => entry.name === productOrName)
     const productName = product?.name || String(productOrName || '')
+    const productImage = resolveProductImage(product) || ''
     patchSelected({
       items: selectedQuote.items.map((item) =>
         item.id === id
@@ -2200,6 +2198,7 @@ export default function QuotesPage() {
               productId: product?.id || item.productId || '',
               product: productName,
               description: product?.notes || item.description || '',
+              lineImage: productImage,
               unitPrice: Number(
                 product?.salesPriceExcl || product?.purchasePriceExcl || item.unitPrice || 0,
               ),
@@ -2221,16 +2220,6 @@ export default function QuotesPage() {
         item.id === id ? { ...item, [option]: false, ...resetPatch } : item,
       ),
     })
-  }
-
-  async function uploadItemLineImage(id, file) {
-    if (!file) return
-    try {
-      const dataUrl = await readImageFileAsDataUrl(file)
-      updateItem(id, 'lineImage', dataUrl)
-    } catch (error) {
-      window.alert(error.message)
-    }
   }
 
   function removeItem(id) {
@@ -2768,69 +2757,62 @@ export default function QuotesPage() {
         <div className="space-y-5">
           {selectedQuote && (
             <>
-              <div className="grid grid-cols-12 gap-4">
-                <section className="col-span-12 rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2 flex gap-3">
-                      <div className="relative min-w-0 flex-1">
-                        <Field label="Teklif Başlığı">
-                          <input
-                            value={selectedQuote.title}
-                            onChange={(e) => patchSelected({ title: e.target.value })}
-                            className="form-input"
-                          />
-                        </Field>
-                      </div>
-                      <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
-                        <Field label="Teklif Kodu">
-                          <input
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={resolvedQuoteCode}
-                            onChange={(event) => patchQuoteCode(event.target.value)}
-                            className="form-input"
-                          />
-                        </Field>
-                      </div>
+              <AppPagePanel className="w-full" title="Teklif Bilgileri :">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 flex gap-3">
+                    <div className="relative min-w-0 flex-1">
+                      <Field label="Teklif Başlığı">
+                        <input
+                          value={selectedQuote.title}
+                          onChange={(e) => patchSelected({ title: e.target.value })}
+                          className="form-input"
+                        />
+                      </Field>
                     </div>
-                    <CustomerPicker
-                      quote={selectedQuote}
-                      onPatch={patchSelected}
-                      allowCreate={true}
-                    />
-                    <Field label="Oluşturma Tarihi">
-                      <input
-                        type="date"
-                        value={selectedQuote.createdAt || todayIsoDate()}
-                        onChange={(e) => patchSelected({ createdAt: e.target.value })}
-                        className="form-input"
-                      />
-                    </Field>
-                    <Field label="Geçerlilik Tarihi">
-                      <input
-                        type="date"
-                        value={
-                          selectedQuote.validUntil ||
-                          defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())
-                        }
-                        onChange={(e) => patchSelected({ validUntil: e.target.value })}
-                        className="form-input"
-                      />
-                    </Field>
+                    <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
+                      <Field label="Teklif Kodu">
+                        <input
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={resolvedQuoteCode}
+                          onChange={(event) => patchQuoteCode(event.target.value)}
+                          className="form-input"
+                        />
+                      </Field>
+                    </div>
                   </div>
-                </section>
-              </div>
-
-              <section className="rounded-2xl border border-dark-500/50 bg-dark-800/70 p-4 shadow-card">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <h2 className={APP_PANEL_TITLE_CLASS}>Ürün Seçimi</h2>
-                  <MiniButton onClick={addItem}>Ürün Ekle</MiniButton>
+                  <CustomerPicker
+                    quote={selectedQuote}
+                    onPatch={patchSelected}
+                    allowCreate={true}
+                  />
+                  <Field label="Oluşturma Tarihi">
+                    <input
+                      type="date"
+                      value={selectedQuote.createdAt || todayIsoDate()}
+                      onChange={(e) => patchSelected({ createdAt: e.target.value })}
+                      className="form-input"
+                    />
+                  </Field>
+                  <Field label="Geçerlilik Tarihi">
+                    <input
+                      type="date"
+                      value={
+                        selectedQuote.validUntil ||
+                        defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())
+                      }
+                      onChange={(e) => patchSelected({ validUntil: e.target.value })}
+                      className="form-input"
+                    />
+                  </Field>
                 </div>
+              </AppPagePanel>
+
+              <AppPagePanel className="w-full" title="Ürün Seçimi :" dotColor="violet">
                 <div className="space-y-2">
                   {(selectedQuote.items || []).map((item) => {
                     const totals = itemTotals(item)
-                    const hasTaxExtras =
-                      item.showDiscount || item.showExciseTax || item.showAccommodationTax
+                    const itemImage = resolveQuoteItemImage(item)
                     return (
                       <div
                         key={item.id}
@@ -2842,40 +2824,18 @@ export default function QuotesPage() {
                           <div className="flex flex-col self-start">
                             <label className={`${YF_TEXT_CLASS} mb-1 block`}>Görsel</label>
                             <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-dashed border-dark-500/50 bg-dark-800/40">
-                              {item.lineImage ? (
-                                <>
-                                  <img
-                                    src={item.lineImage}
-                                    alt=""
-                                    className="h-full w-full object-cover object-center"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => updateItem(item.id, 'lineImage', '')}
-                                    className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-md border border-red-500/30 bg-red-500/90 text-white transition-colors hover:bg-red-400"
-                                    title="Görseli kaldır"
-                                  >
-                                    <X className="h-3.5 w-3.5" />
-                                  </button>
-                                </>
+                              {itemImage ? (
+                                <img
+                                  src={itemImage}
+                                  alt=""
+                                  className="h-full w-full object-cover object-center"
+                                />
                               ) : (
-                                <label className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 px-1 text-center transition-colors hover:bg-blue-500/5">
-                                  <span className="flex h-7 w-7 items-center justify-center rounded-md border border-dark-500/50 text-[var(--muted)]">
-                                    <Upload className="h-3.5 w-3.5" />
-                                  </span>
+                                <div className="flex aspect-square w-full flex-col items-center justify-center gap-1 px-1 text-center">
                                   <span className="text-[10px] font-medium text-[var(--muted)]">
-                                    Yükle
+                                    Ürün seçin
                                   </span>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(event) => {
-                                      uploadItemLineImage(item.id, event.target.files?.[0])
-                                      event.target.value = ''
-                                    }}
-                                  />
-                                </label>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -2887,7 +2847,20 @@ export default function QuotesPage() {
                                 <ProductSearchSelect
                                   item={item}
                                   onSelect={(product) => selectProductForItem(item.id, product)}
-                                  onTextChange={(value) => updateItem(item.id, 'product', value)}
+                                  onTextChange={(value) => {
+                                    patchSelected({
+                                      items: selectedQuote.items.map((entry) =>
+                                        entry.id === item.id
+                                          ? {
+                                              ...entry,
+                                              product: value,
+                                              productId: '',
+                                              lineImage: '',
+                                            }
+                                          : entry,
+                                      ),
+                                    })
+                                  }}
                                   customerId={selectedCustomer?.id || ''}
                                   customerLabel={selectedQuote.customer || ''}
                                 />
@@ -3105,6 +3078,10 @@ export default function QuotesPage() {
                     </div>
                   )}
 
+                  <div className="pt-1">
+                    <MiniButton onClick={addItem}>Ürün Ekle</MiniButton>
+                  </div>
+
                   {selectedQuote && (
                     <div className="grid grid-cols-1 gap-4 border-t border-dark-500/35 pt-4 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-start">
                       <div className="flex min-w-0 flex-col gap-4">
@@ -3119,14 +3096,14 @@ export default function QuotesPage() {
                     </div>
                   )}
                 </div>
-              </section>
+              </AppPagePanel>
 
-              <section className="rounded-3xl border border-dark-500/50 bg-dark-800/70 p-5 shadow-card">
+              <AppPagePanel className="w-full" title="Teklif Koşulları :" dotColor="orange">
                 <DocumentTermsEditor
                   record={selectedQuote}
                   onPatch={patchSelected}
                   compact
-                  title="Teklif Koşulları"
+                  hideTitle
                   savedTermsTitle="Hazır Teklif Koşulları"
                   descriptionPlaceholder="Teklifin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
                 />
@@ -3166,7 +3143,7 @@ export default function QuotesPage() {
                     <span className={YF_TEXT_ON_COLOR_CLASS}>Mail Gönder</span>
                   </button>
                 </div>
-              </section>
+              </AppPagePanel>
 
               {selectedQuote && selectedTotals && (
                 <section
@@ -3269,15 +3246,16 @@ export default function QuotesPage() {
                           {previewQuote.items.map((item, index) => {
                             const row = itemTotals(item)
                             const description = item.extraDescription || item.description
+                            const previewImage = resolveQuoteItemImage(item)
                             return (
                               <div
                                 key={item.id}
                                 className={`grid grid-cols-[120px_minmax(0,1.4fr)_72px_110px_120px] items-center px-4 py-4 text-sm ${index < previewQuote.items.length - 1 ? 'border-b border-slate-100' : ''}`}
                               >
                                 <div className="h-[88px] w-[88px] overflow-hidden rounded-md border border-slate-200">
-                                  {item.lineImage ? (
+                                  {previewImage ? (
                                     <img
-                                      src={item.lineImage}
+                                      src={previewImage}
                                       alt=""
                                       className="h-full w-full object-cover object-center"
                                     />
