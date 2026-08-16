@@ -44,7 +44,14 @@ import {
   DeleteConfirmPopover,
 } from '../components/Common/ListDeleteConfirmPanel'
 import NumericInput from '../components/Products/NumericInput'
-import { formatTL } from '../utils/productPricing'
+import {
+  currencySymbol,
+  formatMoney,
+  formatTL,
+  normalizeCurrency,
+  QUOTE_CURRENCIES,
+} from '../utils/productPricing'
+import { getExchangeRatesSnapshot, useExchangeRates } from '../hooks/useExchangeRates'
 import { getCustomerDisplay } from '../utils/customerDisplay'
 import { resolveCustomerContactInfo } from '../utils/customerContacts'
 import {
@@ -395,6 +402,7 @@ function createEmptyQuoteItem() {
     showAccommodationTax: false,
     quantity: 1,
     unitPrice: 0,
+    currency: 'TRY',
     discountRate: 0,
     exciseTaxRate: 0,
     accommodationTaxRate: 0,
@@ -417,6 +425,7 @@ function sanitizeQuoteItem(item) {
     lineImage: typeof item.lineImage === 'string' ? item.lineImage : '',
     quantity: safeNumber(item.quantity, 0, 999999),
     unitPrice: safeNumber(item.unitPrice, 0, 999999999),
+    currency: normalizeCurrency(item.currency),
     discountRate: safeNumber(item.discountRate, 0, 100),
     exciseTaxRate: safeNumber(item.exciseTaxRate, 0, 100),
     accommodationTaxRate: safeNumber(item.accommodationTaxRate, 0, 100),
@@ -534,13 +543,14 @@ function getQuoteCustomerDetails(quote) {
   }
 }
 
-function buildQuoteShareText(quote) {
+function buildQuoteShareText(quote, rates = getExchangeRatesSnapshot()) {
   const safeQuote = sanitizeQuoteForSave(quote)
-  const totals = documentTotals(safeQuote)
+  const totals = documentTotals(safeQuote, rates)
   const customer = getQuoteCustomerDetails(safeQuote)
   const itemLines = safeQuote.items.map((item, index) => {
-    const itemTotal = itemTotals(item)
-    return `${index + 1}. ${item.product} | Adet: ${item.quantity} | KDV Hariç: ${formatTL(itemTotal.net)} | Toplam: ${formatTL(itemTotal.total)}`
+    const itemTotal = itemTotals(item, rates)
+    const currency = normalizeCurrency(item.currency)
+    return `${index + 1}. ${item.product} | Adet: ${item.quantity} | Birim: ${formatMoney(item.unitPrice, currency)} | KDV Hariç: ${formatTL(itemTotal.net)} | Toplam: ${formatTL(itemTotal.total)}`
   })
   const terms = safeQuote.termsDescription
     ? `\n\nTeklif Koşulları:\n${safeQuote.termsDescription}`
@@ -567,20 +577,25 @@ function buildQuoteShareText(quote) {
   ].join('\n')
 }
 
-function buildQuotePrintHtml(quote) {
+function buildQuotePrintHtml(quote, rates = getExchangeRatesSnapshot()) {
   const safeQuote = sanitizeQuoteForSave(quote)
-  const totals = documentTotals(safeQuote)
+  const totals = documentTotals(safeQuote, rates)
   const customer = getQuoteCustomerDetails(safeQuote)
   const bankAccounts = resolveQuoteBankAccounts(safeQuote)
   const rows = safeQuote.items
     .map((item, index) => {
-      const row = itemTotals(item)
+      const row = itemTotals(item, rates)
+      const currency = normalizeCurrency(item.currency)
+      const unitLabel =
+        currency === 'TRY'
+          ? formatTL(item.unitPrice)
+          : `${formatMoney(item.unitPrice, currency)}<br><small>${formatTL(row.subtotal / Math.max(1, Number(item.quantity) || 1))}</small>`
       return `
       <tr>
         <td>${index + 1}</td>
         <td><strong>${escapeHtml(item.product)}</strong>${item.extraDescription ? `<br><small>${escapeHtml(item.extraDescription)}</small>` : ''}</td>
         <td>${escapeHtml(item.quantity)}</td>
-        <td>${formatTL(item.unitPrice)}</td>
+        <td>${unitLabel}</td>
         <td>%${escapeHtml(item.vatRate)}</td>
         <td>${formatTL(row.total)}</td>
       </tr>
@@ -770,7 +785,7 @@ function formatListDateParts(value) {
 }
 
 function getQuoteListAmount(quote) {
-  const parts = documentMoneyParts(quote)
+  const parts = documentMoneyParts(quote, getExchangeRatesSnapshot())
   const candidates = [
     parts.inclVat,
     Number(quote?.grandTotal),
@@ -805,6 +820,132 @@ function Field({ label, children, align = 'start' }) {
         {label}
       </label>
       {children}
+    </div>
+  )
+}
+
+function CurrencySuffixSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const currency = normalizeCurrency(value)
+
+  useEffect(() => {
+    if (!open) return undefined
+    function onDoc(event) {
+      if (ref.current?.contains(event.target)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  return (
+    <div className="absolute right-1 top-1/2 z-10 -translate-y-1/2" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex h-7 min-w-[1.75rem] items-center justify-center rounded-lg px-1 text-[13px] font-semibold text-[var(--muted)] transition-colors hover:text-[#2563eb]"
+        title="Para birimi"
+        aria-expanded={open}
+      >
+        {currencySymbol(currency)}
+      </button>
+      {open ? (
+        <div className={`absolute right-0 top-full z-30 mt-1 w-28 p-1 ${PAGE_FILTER_MENU_CLASS}`}>
+          {QUOTE_CURRENCIES.map((option) => (
+            <button
+              key={option.code}
+              type="button"
+              onClick={() => {
+                onChange(option.code)
+                setOpen(false)
+              }}
+              className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[13px] transition-colors ${
+                currency === option.code ? 'text-[#2563eb]' : 'text-[var(--muted)]'
+              }`}
+            >
+              <span>{option.label}</span>
+              <span className="font-semibold">{option.symbol}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function VatRateInput({ value, onChange, options = vatRates }) {
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState(String(value ?? 20))
+  const ref = useRef(null)
+
+  useEffect(() => {
+    setText(String(value ?? 20))
+  }, [value])
+
+  useEffect(() => {
+    if (!open) return undefined
+    function onDoc(event) {
+      if (ref.current?.contains(event.target)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  function commit(raw) {
+    const cleaned = String(raw ?? '')
+      .replace(/\./g, '')
+      .replace(',', '.')
+      .replace(/[^\d.]/g, '')
+    const next = safeNumber(cleaned === '' ? 0 : cleaned, 0, 100)
+    setText(String(next))
+    onChange(next)
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={text}
+        onChange={(event) => {
+          const raw = event.target.value
+          if (raw !== '' && !/^\d*[.,]?\d*$/.test(raw)) return
+          setText(raw)
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => commit(text)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            commit(text)
+            setOpen(false)
+          }
+        }}
+        className="form-input text-center"
+        aria-expanded={open}
+      />
+      {open ? (
+        <div className={`absolute left-1/2 top-full z-30 mt-1 w-20 -translate-x-1/2 p-1 ${PAGE_FILTER_MENU_CLASS}`}>
+          {options.map((rate) => (
+            <button
+              key={rate}
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                commit(rate)
+                setOpen(false)
+              }}
+              className={`flex w-full items-center justify-center rounded-lg px-2 py-1.5 text-[13px] ${
+                Number(value) === Number(rate) ? 'text-[#2563eb]' : 'text-[var(--muted)]'
+              }`}
+            >
+              {rate}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -1164,6 +1305,7 @@ export default function QuotesPage() {
   const [pendingQuoteOrderAction, setPendingQuoteOrderAction] = useState(null)
   const quotePreviewRef = useRef(null)
   const syncedCustomerKeyRef = useRef('')
+  const { rates } = useExchangeRates()
 
   const selectedQuote =
     draftQuote || quotes.find((quote) => quote.id === selectedId) || quotes[0] || null
@@ -1171,7 +1313,7 @@ export default function QuotesPage() {
     selectedQuote?.customerId || selectedQuote?.customer
       ? findQuoteCustomer(selectedQuote.customerId || selectedQuote.customer)
       : null
-  const selectedTotals = selectedQuote ? documentTotals(selectedQuote) : null
+  const selectedTotals = selectedQuote ? documentTotals(selectedQuote, rates) : null
   const isDraftQuote = Boolean(draftQuote)
   const resolvedQuoteCode = useMemo(
     () =>
@@ -2750,13 +2892,12 @@ export default function QuotesPage() {
               <AppPagePanel className="customer-list-panel w-full" title="Ürün Seçimi :" dotColor="blue">
                 <div className="space-y-2">
                   {(selectedQuote.items || []).map((item) => {
-                    const totals = itemTotals(item)
+                    const totals = itemTotals(item, rates)
+                    const itemCurrency = normalizeCurrency(item.currency)
+                    const display = totals.display || totals
                     const itemImage = resolveQuoteItemImage(item)
                     return (
-                      <div
-                        key={item.id}
-                        className="document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent p-2.5"
-                      >
+                      <div key={item.id} className="py-1">
                         <div
                           className={`grid ${quoteItemFieldsGridClass} ${quoteItemFieldGapClass} items-end`}
                         >
@@ -2791,37 +2932,57 @@ export default function QuotesPage() {
                             />
                           </Field>
                           <Field label="Birim Fiyat" align="center">
-                            <NumericInput
-                              value={item.unitPrice}
-                              onChange={(value) => updateItem(item.id, 'unitPrice', value)}
-                              suffix="₺"
-                              formatMode="price"
-                              className="!text-center"
-                            />
+                            <div className="space-y-1">
+                              <NumericInput
+                                value={item.unitPrice}
+                                onChange={(value) => updateItem(item.id, 'unitPrice', value)}
+                                currency={itemCurrency}
+                                formatMode="price"
+                                className="!text-center"
+                                suffixNode={
+                                  <CurrencySuffixSelect
+                                    value={itemCurrency}
+                                    onChange={(nextCurrency) =>
+                                      updateItem(item.id, 'currency', nextCurrency)
+                                    }
+                                  />
+                                }
+                              />
+                              {itemCurrency !== 'TRY' && Number(item.unitPrice) > 0 ? (
+                                <p className="text-center text-[11px] font-normal tabular-nums text-[var(--muted)]">
+                                  {formatTL(totals.subtotal / Math.max(1, Number(item.quantity) || 1))}
+                                </p>
+                              ) : null}
+                            </div>
                           </Field>
                           <Field label="KDV %" align="center">
-                            <select
+                            <VatRateInput
                               value={item.vatRate ?? 20}
-                              onChange={(event) =>
-                                updateItem(item.id, 'vatRate', Number(event.target.value))
-                              }
-                              className="form-input text-center"
-                            >
-                              {vatRates.map((rate) => (
-                                <option key={rate} value={rate}>
-                                  {rate}
-                                </option>
-                              ))}
-                            </select>
+                              onChange={(value) => updateItem(item.id, 'vatRate', value)}
+                            />
                           </Field>
                           <Field label="KDV Hariç" align="center">
-                            <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
-                              {formatTL(totals.net)}
+                            <div className="space-y-1">
+                              <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
+                                {formatMoney(display.net, itemCurrency)}
+                              </div>
+                              {itemCurrency !== 'TRY' ? (
+                                <p className="text-center text-[11px] font-normal tabular-nums text-[var(--muted)]">
+                                  {formatTL(totals.net)}
+                                </p>
+                              ) : null}
                             </div>
                           </Field>
                           <Field label="KDV Dahil" align="center">
-                            <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
-                              {formatTL(totals.total)}
+                            <div className="space-y-1">
+                              <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
+                                {formatMoney(display.total, itemCurrency)}
+                              </div>
+                              {itemCurrency !== 'TRY' ? (
+                                <p className="text-center text-[11px] font-normal tabular-nums text-[var(--muted)]">
+                                  {formatTL(totals.total)}
+                                </p>
+                              ) : null}
                             </div>
                           </Field>
                           <div className="relative">
@@ -3143,7 +3304,8 @@ export default function QuotesPage() {
                             <span className="text-right">Tutar</span>
                           </div>
                           {previewQuote.items.map((item, index) => {
-                            const row = itemTotals(item)
+                            const row = itemTotals(item, rates)
+                            const itemCurrency = normalizeCurrency(item.currency)
                             const description = item.extraDescription || item.description
                             const previewImage = resolveQuoteItemImage(item)
                             return (
@@ -3177,7 +3339,14 @@ export default function QuotesPage() {
                                   {item.quantity}
                                 </span>
                                 <span className="text-right text-slate-700">
-                                  {formatTL(item.unitPrice)}
+                                  {formatMoney(item.unitPrice, itemCurrency)}
+                                  {itemCurrency !== 'TRY' ? (
+                                    <span className="mt-0.5 block text-[11px] text-slate-400">
+                                      {formatTL(
+                                        row.subtotal / Math.max(1, Number(item.quantity) || 1),
+                                      )}
+                                    </span>
+                                  ) : null}
                                 </span>
                                 <span className="text-right font-semibold text-slate-900">
                                   {formatTL(row.total)}

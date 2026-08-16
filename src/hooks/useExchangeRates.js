@@ -164,6 +164,11 @@ async function fetchLiveRates() {
   }
 }
 
+/** Senkron snapshot — PDF / paylaşım metni için (cache veya yedek kur). */
+export function getExchangeRatesSnapshot() {
+  return readCachedRates() || FALLBACK
+}
+
 export function useExchangeRates() {
   const [rates, setRates] = useState(() => readCachedRates() || FALLBACK)
   const [loading, setLoading] = useState(true)

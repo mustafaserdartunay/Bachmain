@@ -1,3 +1,5 @@
+import { amountToTry, normalizeCurrency } from './productPricing'
+
 export function safeNumber(value, min = 0, max = 999999999) {
   const number = Number(value)
   if (!Number.isFinite(number)) return min
@@ -21,9 +23,15 @@ function computeDocumentDiscountAmount(document, netBase) {
   return netBase * (safeNumber(document.documentDiscountRate, 0, 100) / 100)
 }
 
-export function itemTotals(item) {
+function itemUnitPriceTry(item, rates) {
+  return amountToTry(safeNumber(item.unitPrice), item.currency, rates)
+}
+
+export function itemTotals(item, rates = {}) {
   const quantity = safeNumber(item.quantity)
+  const currency = normalizeCurrency(item.currency)
   const unitPrice = safeNumber(item.unitPrice)
+  const unitPriceTry = itemUnitPriceTry(item, rates)
   const discountRate = item.showDiscount ? safeNumber(item.discountRate, 0, 100) : 0
   const exciseTaxRate = item.showExciseTax ? safeNumber(item.exciseTaxRate, 0, 100) : 0
   const accommodationTaxRate = item.showAccommodationTax
@@ -31,28 +39,39 @@ export function itemTotals(item) {
     : 0
   const vatRate = safeNumber(item.vatRate, 0, 100)
 
-  const subtotal = quantity * unitPrice
-  const discount = subtotal * (discountRate / 100)
-  const net = subtotal - discount
-  const exciseTax = net * (exciseTaxRate / 100)
-  const accommodationTax = net * (accommodationTaxRate / 100)
-  const vatBase = net + exciseTax + accommodationTax
-  const vat = vatBase * (vatRate / 100)
+  function compute(price) {
+    const subtotal = quantity * price
+    const discount = subtotal * (discountRate / 100)
+    const net = subtotal - discount
+    const exciseTax = net * (exciseTaxRate / 100)
+    const accommodationTax = net * (accommodationTaxRate / 100)
+    const vatBase = net + exciseTax + accommodationTax
+    const vat = vatBase * (vatRate / 100)
+    return {
+      subtotal,
+      discount,
+      net,
+      exciseTax,
+      accommodationTax,
+      vat,
+      total: vatBase + vat,
+    }
+  }
+
+  const native = compute(unitPrice)
+  const inTry = compute(unitPriceTry)
 
   return {
-    subtotal,
-    discount,
-    net,
-    exciseTax,
-    accommodationTax,
-    vat,
-    total: vatBase + vat,
+    ...inTry,
+    currency,
+    display: native,
+    try: inTry,
   }
 }
 
-export function documentTotals(document) {
+export function documentTotals(document, rates = {}) {
   const items = document.items || []
-  const rows = items.map(itemTotals)
+  const rows = items.map((item) => itemTotals(item, rates))
   const subtotal = rows.reduce((sum, row) => sum + row.subtotal, 0)
   const lineDiscount = rows.reduce((sum, row) => sum + row.discount, 0)
   const lineNet = rows.reduce((sum, row) => sum + row.net, 0)
@@ -91,10 +110,10 @@ export function documentTotals(document) {
  * Kalemlerde KDV yoksa (vatRate 0) iki tutar eşit gelir.
  * items yoksa amountNet / vatAmount / amount alanlarından okur.
  */
-export function documentMoneyParts(document) {
+export function documentMoneyParts(document, rates = {}) {
   const items = document?.items
   if (Array.isArray(items) && items.length > 0) {
-    const totals = documentTotals(document)
+    const totals = documentTotals(document, rates)
     const exclVat = totals.net + totals.exciseTax + totals.accommodationTax
     return {
       exclVat,

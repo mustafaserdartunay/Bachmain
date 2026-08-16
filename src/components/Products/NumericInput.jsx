@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react'
+import { formatPriceForCurrency, normalizeCurrency } from '../../utils/productPricing'
 
 export default function NumericInput({
   value,
   onChange,
   prefix,
   suffix,
+  suffixNode,
   readOnly = false,
   highlight = false,
   className = '',
   placeholder = '0',
   formatMode = 'plain',
+  currency = 'TRY',
   maxLength,
   allowEmpty = false,
 }) {
   const [text, setText] = useState('')
   const [focused, setFocused] = useState(false)
+  const moneyCurrency = normalizeCurrency(currency)
 
   useEffect(() => {
     if (!focused) {
@@ -28,7 +32,13 @@ export default function NumericInput({
   }, [value, focused, allowEmpty])
 
   function handleChange(raw) {
-    const v = raw.replace(/\./g, '').replace(',', '.')
+    let v = raw
+    if (moneyCurrency === 'USD') {
+      v = raw.replace(/,/g, '')
+    } else {
+      // TRY / EUR: nokta binlik, virgül ondalık
+      v = raw.replace(/\./g, '').replace(',', '.')
+    }
     if (v !== '' && !/^\d*\.?\d*$/.test(v)) return
     if (maxLength && v.replace('.', '').length > maxLength) return
     setText(v)
@@ -39,23 +49,21 @@ export default function NumericInput({
     }
   }
 
-  const inputClass = `${readOnly ? 'form-input-readonly' : 'form-input'} ${prefix ? 'pl-8' : ''} ${suffix ? 'pr-8' : ''} ${highlight ? 'border-accent-orange/50 text-accent-orange font-semibold' : ''} ${className}`
+  const hasSuffix = Boolean(suffixNode || suffix)
+  const inputClass = `${readOnly ? 'form-input-readonly' : 'form-input'} ${prefix ? 'pl-8' : ''} ${hasSuffix ? 'pr-8' : ''} ${highlight ? 'border-accent-orange/50 text-accent-orange font-semibold' : ''} ${className}`
   const displayValue =
     allowEmpty && (value === '' || value == null)
       ? ''
       : Number(value) === 0
         ? ''
         : formatMode === 'price'
-          ? new Intl.NumberFormat('tr-TR', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(Number(value) || 0)
+          ? formatPriceForCurrency(value, moneyCurrency)
           : String(value)
 
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-block w-full">
       {prefix && (
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
           {prefix}
         </span>
       )}
@@ -80,11 +88,12 @@ export default function NumericInput({
         }}
         className={inputClass}
       />
-      {suffix && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
-          {suffix}
-        </span>
-      )}
+      {suffixNode ||
+        (suffix ? (
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+            {suffix}
+          </span>
+        ) : null)}
     </div>
   )
 }

@@ -57,9 +57,55 @@ export function formatFx(value, currency) {
   }).format(Number(value) || 0)
 }
 
+export const QUOTE_CURRENCIES = [
+  { code: 'TRY', symbol: '₺', label: 'TL' },
+  { code: 'USD', symbol: '$', label: 'USD' },
+  { code: 'EUR', symbol: '€', label: 'EUR' },
+]
+
+export function normalizeCurrency(code) {
+  const value = String(code || 'TRY').toUpperCase()
+  return value === 'USD' || value === 'EUR' ? value : 'TRY'
+}
+
+export function currencySymbol(code) {
+  const currency = normalizeCurrency(code)
+  return QUOTE_CURRENCIES.find((item) => item.code === currency)?.symbol || '₺'
+}
+
+/** Birim fiyat / satır tutarını seçili para birimine göre biçimle. */
+export function formatMoney(value, currency = 'TRY') {
+  const code = normalizeCurrency(currency)
+  if (code === 'TRY') return formatTL(value)
+  return formatFx(value, code)
+}
+
+/** Odak dışı gösterim: para birimine göre ondalık ayırıcı. */
+export function formatPriceForCurrency(value, currency = 'TRY') {
+  const code = normalizeCurrency(currency)
+  const locales = { TRY: 'tr-TR', USD: 'en-US', EUR: 'de-DE' }
+  return new Intl.NumberFormat(locales[code] || 'tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value) || 0)
+}
+
 export function tryToForeign(tryAmount, tryPerUnit) {
   if (!tryPerUnit || tryPerUnit <= 0) return 0
   return (Number(tryAmount) || 0) / tryPerUnit
+}
+
+/** Döviz tutarını TL'ye çevir (rates.USD / rates.EUR = 1 birim döviz kaç TL). */
+export function foreignToTry(amount, tryPerUnit) {
+  if (!tryPerUnit || tryPerUnit <= 0) return Number(amount) || 0
+  return (Number(amount) || 0) * tryPerUnit
+}
+
+export function amountToTry(amount, currency, rates = {}) {
+  const code = normalizeCurrency(currency)
+  if (code === 'TRY') return Number(amount) || 0
+  const rate = Number(rates?.[code]) || 0
+  return foreignToTry(amount, rate)
 }
 
 export function getProductPricing(product) {
