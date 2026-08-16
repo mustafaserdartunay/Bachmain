@@ -88,7 +88,7 @@ export default function DocumentTermsEditor({
                       <button
                         type="button"
                         onClick={() => setPendingDeleteTerm(term)}
-                        className="mr-2 mt-2 shrink-0 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:text-[#e11d48]"
+                        className="mr-2 mt-1.5 glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:!text-[#e11d48]"
                         title="Hazır koşulu sil"
                       >
                         <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -113,7 +113,7 @@ export default function DocumentTermsEditor({
               <button
                 type="button"
                 onClick={() => saveTerm(customTerm)}
-                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[#2563eb] transition-all hover:font-bold"
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[#2563eb] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb]"
               >
                 <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                 Ekle
@@ -190,10 +190,10 @@ export default function DocumentTermsEditor({
                     <button
                       type="button"
                       onClick={() => setPendingDeleteTerm(term)}
-                      className="mr-2 mt-2 shrink-0 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-red-500/15 hover:text-red-300"
+                      className="mr-2 mt-1.5 glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors hover:!text-[#e11d48]"
                       title="Hazır koşulu sil"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
                     </button>
                   </div>
                 )}
@@ -215,9 +215,9 @@ export default function DocumentTermsEditor({
             <button
               type="button"
               onClick={() => saveTerm(customTerm)}
-              className="inline-flex h-10 shrink-0 items-center gap-1.5 px-2 text-[14px] font-medium text-[#2563eb] transition-opacity hover:opacity-80"
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[#2563eb] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb]"
             >
-              <Plus className="h-4 w-4" strokeWidth={2.25} />
+              <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
               Ekle
             </button>
           </div>
