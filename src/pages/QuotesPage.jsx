@@ -42,7 +42,6 @@ import {
   captureDeleteConfirmAnchor,
   DeleteConfirmOverlay,
   DeleteConfirmPopover,
-  ListInlineActionConfirm,
 } from '../components/Common/ListDeleteConfirmPanel'
 import NumericInput from '../components/Products/NumericInput'
 import { formatTL } from '../utils/productPricing'
@@ -234,9 +233,6 @@ const savedQuoteTerms = [
   'Ödeme koşulları sipariş onayı öncesinde karşılıklı mutabakat ile netleştirilir.',
 ]
 
-const quoteModuleBtnClass =
-  'inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2 text-[14px] font-normal text-orange-600 transition-colors hover:border-orange-500/45 hover:bg-orange-500/15'
-
 function QuoteListOrderModuleButton({
   quote,
   orderCreated,
@@ -247,12 +243,29 @@ function QuoteListOrderModuleButton({
   onConfirmUndo,
   onCancelPending,
 }) {
-  if (pendingAction === 'create' || pendingAction === 'undo') {
+  if (pendingAction === 'create') {
     return (
-      <ListInlineActionConfirm
-        message="Emin misin?"
-        tone="orange"
-        onConfirm={pendingAction === 'create' ? onConfirmCreate : onConfirmUndo}
+      <DeleteConfirmPopover
+        title="Sipariş oluşturulsun mu?"
+        description="Teklif siparişe aktarılacak."
+        confirmLabel="Evet"
+        cancelLabel="Vazgeç"
+        inline
+        onConfirm={onConfirmCreate}
+        onCancel={onCancelPending}
+      />
+    )
+  }
+
+  if (pendingAction === 'undo') {
+    return (
+      <DeleteConfirmPopover
+        title="Sipariş geri alınsın mı?"
+        description="Sipariş kaydı kaldırılır; teklif listede kalır."
+        confirmLabel="Geri al"
+        cancelLabel="Vazgeç"
+        inline
+        onConfirm={onConfirmUndo}
         onCancel={onCancelPending}
       />
     )
@@ -260,20 +273,21 @@ function QuoteListOrderModuleButton({
 
   if (orderCreated) {
     return (
-      <div className="flex max-w-[220px] flex-wrap items-center justify-end gap-1.5">
-        <span className="whitespace-nowrap text-[14px] font-normal text-[var(--muted)]">
-          Sipariş oluşturuldu
+      <span className="inline-flex items-center gap-1.5">
+        <span className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-2 text-[11px] font-bold text-emerald-700">
+          <ShoppingCart className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+          Sipariş Oluşturuldu
         </span>
         <button
           type="button"
           onClick={onRequestUndo}
-          className={quoteModuleBtnClass}
+          className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
           title="Siparişi geri al"
+          aria-label="Siparişi geri al"
         >
-          <Undo2 className="h-3 w-3" />
-          Geri Al
+          <Undo2 className="h-4 w-4" strokeWidth={2.25} />
         </button>
-      </div>
+      </span>
     )
   }
 
@@ -281,11 +295,12 @@ function QuoteListOrderModuleButton({
     <button
       type="button"
       onClick={onRequestCreate}
-      className={quoteModuleBtnClass}
+      className="inline-flex h-8 items-center gap-1 rounded-lg border border-ds-border bg-transparent px-2 text-[11px] font-semibold text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700"
       title={`${quote.customer || quote.id} teklifinden sipariş oluştur`}
+      aria-label="Sipariş oluştur"
     >
-      <ShoppingCart className="h-3 w-3 shrink-0" />
-      <span className="whitespace-nowrap">Sipariş Oluştur</span>
+      <ShoppingCart className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+      Sipariş Oluştur
     </button>
   )
 }
