@@ -53,7 +53,7 @@ export default function DocumentTermsEditor({
       <div className="grid grid-cols-2 items-stretch gap-3">
         <div className={`flex flex-col ${compact ? 'min-h-[220px]' : ''}`}>
           <div className="mb-2.5 flex shrink-0 items-center gap-2">
-            <AppPanelDot color="orange" />
+            <AppPanelDot color="blue" />
             <h2 className={APP_PANEL_TITLE_CLASS}>{leftHeader}</h2>
           </div>
           <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-[16px] border border-[var(--search-border)] bg-transparent p-3">
@@ -124,7 +124,7 @@ export default function DocumentTermsEditor({
 
         <div className="flex min-h-[180px] flex-col">
           <div className="mb-2.5 flex shrink-0 items-center gap-2">
-            <AppPanelDot color="orange" />
+            <AppPanelDot color="blue" />
             <h2 className={APP_PANEL_TITLE_CLASS}>Açıklama :</h2>
           </div>
           <textarea
@@ -225,7 +225,7 @@ export default function DocumentTermsEditor({
 
         <div className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-[332px]'}`}>
           <div className="mb-2 flex items-center gap-2">
-            <AppPanelDot color="orange" />
+            <AppPanelDot color="blue" />
             <h4 className={APP_PANEL_TITLE_CLASS}>Açıklama :</h4>
           </div>
           <div className="glass-inset flex min-h-0 flex-1 flex-col rounded-[16px] p-3">

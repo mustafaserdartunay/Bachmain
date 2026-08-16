@@ -195,7 +195,7 @@ const quoteItemFieldsGridClass =
   'grid-cols-[minmax(0,1.4fr)_64px_100px_56px_96px_96px_auto]'
 const quoteItemFieldGapClass = 'gap-x-2'
 const quoteLineActionBtnClass =
-  'glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl'
+  'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl'
 const quoteMsCtaClass =
   'inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[#2563eb] transition-all hover:font-bold hover:opacity-100'
 
@@ -807,7 +807,7 @@ function Field({ label, children, align = 'start' }) {
   )
 }
 
-function DateInlineField({ label, value, onChange, dotColor = 'orange' }) {
+function DateInlineField({ label, value, onChange, dotColor = 'blue' }) {
   const inputRef = useRef(null)
 
   function openPicker() {
@@ -2683,7 +2683,7 @@ export default function QuotesPage() {
               <AppPagePanel className="customer-list-panel w-full">
                 <div className="mb-4 flex min-w-0 items-center gap-3">
                   <div className="flex shrink-0 items-center gap-2">
-                    <AppPanelDot color="orange" />
+                    <AppPanelDot color="blue" />
                     <h2 className={APP_PANEL_TITLE_CLASS}>Teklif Bilgileri :</h2>
                   </div>
                   <div className="min-w-0 flex-1">
@@ -2696,7 +2696,7 @@ export default function QuotesPage() {
                   </div>
                   <div className="flex min-w-0 shrink-0 items-center gap-3">
                     <div className="flex shrink-0 items-center gap-2">
-                      <AppPanelDot color="orange" />
+                      <AppPanelDot color="blue" />
                       <h2 className={APP_PANEL_TITLE_CLASS}>Teklif Kodu :</h2>
                     </div>
                     <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
@@ -2734,7 +2734,7 @@ export default function QuotesPage() {
                 </div>
               </AppPagePanel>
 
-              <AppPagePanel className="customer-list-panel w-full" title="Ürün Seçimi :" dotColor="violet">
+              <AppPagePanel className="customer-list-panel w-full" title="Ürün Seçimi :" dotColor="blue">
                 <div className="space-y-2">
                   {(selectedQuote.items || []).map((item) => {
                     const totals = itemTotals(item)
@@ -2825,7 +2825,7 @@ export default function QuotesPage() {
                                     className={quoteLineActionBtnClass}
                                     title="Satıra alan ekle"
                                   >
-                                    <Plus className="h-4 w-4" strokeWidth={2.25} />
+                                    <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
                                   </button>
                                   <button
                                     type="button"
@@ -2833,7 +2833,7 @@ export default function QuotesPage() {
                                     className={`${quoteLineActionBtnClass} !text-red-300 hover:!text-red-200`}
                                     title="Satırı sil"
                                   >
-                                    <Trash2 className="h-4 w-4" strokeWidth={2.25} />
+                                    <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
                                   </button>
                                   {openItemMenuId === item.id && (
                                     <div
@@ -2999,16 +2999,14 @@ export default function QuotesPage() {
                     <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                     Ürün Ekle
                   </button>
+
+                  {selectedTotals ? (
+                    <div className="w-full max-w-[480px] pt-2 lg:ml-auto">
+                      <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
+                    </div>
+                  ) : null}
                 </div>
               </AppPagePanel>
-
-              {selectedQuote && selectedTotals ? (
-                <AppPagePanel className="customer-list-panel w-full">
-                  <div className="w-full max-w-[480px] lg:ml-auto">
-                    <DocumentTotalsPanel totals={selectedTotals} onPatch={patchSelected} />
-                  </div>
-                </AppPagePanel>
-              ) : null}
 
               {selectedQuote && (
                 <AppPagePanel className="customer-list-panel w-full">

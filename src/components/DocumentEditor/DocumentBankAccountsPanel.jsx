@@ -119,10 +119,10 @@ export default function DocumentBankAccountsPanel({
             <button
               type="button"
               onClick={() => setIsOpen(true)}
-              className="glass-sidebar-toggle flex h-8 w-8 shrink-0 self-center items-center justify-center rounded-xl"
+              className="glass-sidebar-toggle flex h-7 w-7 shrink-0 self-center items-center justify-center rounded-xl"
               title="Banka hesabı ekle / seç"
             >
-              <Plus className="h-4 w-4" strokeWidth={2.25} />
+              <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
             </button>
           </div>
         ) : (

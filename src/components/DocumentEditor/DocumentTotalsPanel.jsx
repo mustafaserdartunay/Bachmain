@@ -111,7 +111,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
     <div className={`flex h-full min-h-0 flex-col space-y-3 ${className}`.trim()}>
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="mb-2.5 flex min-w-0 items-center gap-2">
-          <AppPanelDot color="emerald" />
+          <AppPanelDot color="blue" />
           <span className={APP_PANEL_TITLE_CLASS}>Toplamlar :</span>
         </div>
         <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-2xl border border-[var(--search-border)] bg-transparent p-4">
