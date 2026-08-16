@@ -198,6 +198,7 @@ function HeaderBar({ onMenuClick }) {
   })
 
   const { counts: updateCounts } = useProductUpdateBadges()
+  const initials = profile.displayName?.slice(0, 1)?.toUpperCase() || 'Y'
 
   useEffect(() => {
     function syncProfile() {
