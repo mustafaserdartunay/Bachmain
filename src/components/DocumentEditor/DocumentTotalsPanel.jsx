@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import { AppPanelDot } from '../Layout/AppPageLayout'
 import { documentDropdownMenuClass } from './documentItemLayout'
 import NumericInput from '../Products/NumericInput'
 import { formatTL } from '../../utils/productPricing'
-import {
-  APP_PANEL_TITLE_CLASS,
-  YF_TEXT_CLASS,
-} from '../../utils/dashboardDesign'
+import { YF_TEXT_CLASS } from '../../utils/dashboardDesign'
 
 const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_minmax(7rem,1fr)_28px] items-center gap-x-2'
 const LABEL_CELL_CLASS = 'flex min-w-0 items-center gap-1.5 pl-2.5'
@@ -111,12 +107,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
 
   return (
     <div className={`flex h-full min-h-0 flex-col space-y-3 ${className}`.trim()}>
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="mb-2.5 flex min-w-0 items-center gap-2">
-          <AppPanelDot color="blue" />
-          <span className={APP_PANEL_TITLE_CLASS}>Toplamlar :</span>
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col space-y-2.5">
+      <div className="flex min-h-0 flex-1 flex-col space-y-2.5">
           <TotalRow
             label="Ara Toplam"
             value={totals.subtotal}
@@ -208,7 +199,6 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
             <span className={AMOUNT_CLASS}>{formatTL(totals.grandTotal)}</span>
             <span />
           </div>
-        </div>
       </div>
       {children}
     </div>

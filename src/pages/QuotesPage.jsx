@@ -2320,13 +2320,6 @@ export default function QuotesPage() {
                   {({ close }) => (
                     <>
                       <DropdownItem
-                        icon={Plus}
-                        label="Kaydet ve Yeni Ekle"
-                        tone="primary"
-                        close={close}
-                        onClick={() => saveCurrentQuote({ startNew: true })}
-                      />
-                      <DropdownItem
                         icon={Save}
                         label="Kaydet ve Düzenlemeye Devam Et"
                         tone="primary"
@@ -2343,6 +2336,28 @@ export default function QuotesPage() {
                           setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
                           setPendingHeaderQuoteDelete(true)
                         }}
+                      />
+                      <DropdownSeparator />
+                      <DropdownItem
+                        icon={FileText}
+                        label={isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
+                        tone="danger"
+                        close={close}
+                        onClick={() => downloadQuotePdf()}
+                      />
+                      <DropdownItem
+                        icon={Send}
+                        label="WhatsApp PDF Gönder"
+                        tone="success"
+                        close={close}
+                        onClick={() => sendQuoteByWhatsApp()}
+                      />
+                      <DropdownItem
+                        icon={Mail}
+                        label="Mail Gönder"
+                        tone="primary"
+                        close={close}
+                        onClick={() => sendQuoteByMail()}
                       />
                     </>
                   )}
@@ -3009,12 +3024,6 @@ export default function QuotesPage() {
                 </div>
               </AppPagePanel>
 
-              {selectedQuote && (
-                <AppPagePanel className="customer-list-panel w-full">
-                  <DocumentBankAccountsPanel quote={selectedQuote} onPatch={patchSelected} />
-                </AppPagePanel>
-              )}
-
               <AppPagePanel className="customer-list-panel w-full">
                 <DocumentTermsEditor
                   record={selectedQuote}
@@ -3026,35 +3035,13 @@ export default function QuotesPage() {
                   savedTermsTitle="Hazır Teklif Koşulları"
                   descriptionPlaceholder="Teklifin ödeme, teslimat, üretim veya özel açıklamalarını buraya yazın..."
                 />
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-[var(--search-border)] pt-4">
-                  <button
-                    type="button"
-                    onClick={downloadQuotePdf}
-                    disabled={isGeneratingPdf}
-                    className="group inline-flex items-center gap-1.5 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#e11d48] disabled:opacity-50"
-                  >
-                    <FileText className="h-4 w-4 text-[#e11d48]" strokeWidth={2.25} aria-hidden />
-                    {isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={sendQuoteByWhatsApp}
-                    disabled={isGeneratingPdf}
-                    className="group inline-flex items-center gap-1.5 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#10b981] disabled:opacity-50"
-                  >
-                    <Send className="h-4 w-4 text-[#10b981]" strokeWidth={2.25} aria-hidden />
-                    WhatsApp PDF Gönder
-                  </button>
-                  <button
-                    type="button"
-                    onClick={sendQuoteByMail}
-                    className="group inline-flex items-center gap-1.5 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#2563eb]"
-                  >
-                    <Mail className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} aria-hidden />
-                    Mail Gönder
-                  </button>
-                </div>
               </AppPagePanel>
+
+              {selectedQuote && (
+                <AppPagePanel className="customer-list-panel w-full">
+                  <DocumentBankAccountsPanel quote={selectedQuote} onPatch={patchSelected} />
+                </AppPagePanel>
+              )}
 
               {selectedQuote && selectedTotals && (
                 <section
