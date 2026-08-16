@@ -110,7 +110,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
           <AppPanelDot color="emerald" />
           <span className={APP_PANEL_TITLE_CLASS}>Toplamlar :</span>
         </div>
-        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-dark-500/45 bg-dark-700/35 p-4">
+        <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-2xl border border-dark-500/45 bg-transparent p-4">
           <TotalRow
             label="Ara Toplam"
             value={totals.subtotal}
@@ -194,7 +194,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
             <TotalRow key={label} label={label} value={value} />
           ))}
           <TotalRow label="KDV" value={totals.vat} />
-          <div className={`${ROW_GRID} mt-auto rounded-xl bg-emerald-500/10 py-3`}>
+          <div className={`${ROW_GRID} mt-auto rounded-xl border border-emerald-500/35 bg-transparent py-3`}>
             <span className="pl-2.5 text-sm font-bold text-emerald-300">Genel Toplam</span>
             <span className={`${AMOUNT_CLASS} customer-balance-positive`}>
               {formatTL(totals.grandTotal)}

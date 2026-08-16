@@ -2954,12 +2954,12 @@ export default function QuotesPage() {
                                 </select>
                               </Field>
                               <Field label="KDV Hariç" align="center">
-                                <div className="flex h-10 items-center justify-center rounded-lg bg-dark-700/40 px-1.5 text-center text-[12px] font-bold tabular-nums text-[var(--muted)]">
+                                <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-dark-500/40 px-1.5 text-center text-[12px] font-bold tabular-nums text-[var(--muted)]">
                                   {formatTL(totals.net)}
                                 </div>
                               </Field>
                               <Field label="KDV Dahil" align="center">
-                                <div className="flex h-10 items-center justify-center rounded-lg bg-emerald-500/10 px-1.5 text-center text-[12px] font-bold tabular-nums text-[var(--muted)]">
+                                <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-dark-500/40 px-1.5 text-center text-[12px] font-bold tabular-nums text-[var(--muted)]">
                                   {formatTL(totals.total)}
                                 </div>
                               </Field>
@@ -3148,7 +3148,7 @@ export default function QuotesPage() {
                   <button
                     type="button"
                     onClick={addItem}
-                    className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-dark-500/30 bg-white text-[14px] font-medium text-[#2563eb] transition-colors hover:bg-blue-50"
+                    className="document-frame-only flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-dark-500/40 bg-transparent text-[14px] font-medium text-[#2563eb] transition-colors hover:border-blue-500/50"
                   >
                     <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                     Ürün Ekle

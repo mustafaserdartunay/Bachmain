@@ -84,7 +84,7 @@ export default function DocumentBankAccountsPanel({
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-dark-500/50 transition-colors focus-within:border-accent-blue/50">
+      <div className="document-frame-only overflow-hidden rounded-xl border border-dark-500/50 bg-transparent transition-colors focus-within:border-accent-blue/50">
         {!isOpen ? (
           <div className={`flex w-full min-w-0 items-stretch gap-3 ${paddingClass}`}>
             {selectedAccounts.length > 0 ? (
@@ -92,7 +92,7 @@ export default function DocumentBankAccountsPanel({
                 {selectedAccounts.map((account) => (
                   <div
                     key={account.id}
-                    className="flex min-w-0 max-w-full items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2"
+                    className="document-frame-only flex min-w-0 max-w-full items-center gap-2 rounded-xl border border-emerald-500/40 bg-transparent px-3 py-2"
                   >
                     <Landmark className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
                     <div className="min-w-0">
@@ -110,7 +110,7 @@ export default function DocumentBankAccountsPanel({
               <button
                 type="button"
                 onClick={() => setIsOpen(true)}
-                className="flex min-h-[3.25rem] min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-dashed border-dark-500/50 bg-dark-700/30 px-4 text-center text-xs font-semibold text-gray-500 transition-colors hover:border-blue-500/35 hover:text-gray-300"
+                className="document-frame-only flex min-h-[3.25rem] min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-dashed border-dark-500/50 bg-transparent px-4 text-center text-xs font-semibold text-gray-500 transition-colors hover:border-blue-500/35 hover:text-gray-300"
               >
                 <Landmark className="h-3.5 w-3.5 shrink-0" />
                 Banka hesabı seçin veya ekleyin — teklifte birden fazla hesap seçilebilir

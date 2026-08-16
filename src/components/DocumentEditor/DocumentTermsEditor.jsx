@@ -69,7 +69,7 @@ export default function DocumentTermsEditor({
           </div>
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
             {savedTerms.map((term) => (
-              <div key={term} className="relative rounded-xl bg-dark-700/70">
+              <div key={term} className="document-frame-only relative rounded-xl border border-dark-500/40 bg-transparent">
                 {pendingDeleteTerm === term ? (
                   <DeleteConfirmPopover
                     description="Hazır koşul listeden kaldırılacak."
@@ -137,7 +137,7 @@ export default function DocumentTermsEditor({
               value={value}
               onChange={(event) => onPatch({ [field]: event.target.value })}
               placeholder={descriptionPlaceholder}
-              className="min-h-0 flex-1 resize-none rounded-2xl border border-dark-500/50 bg-dark-700/70 px-4 py-3 text-[14px] font-normal text-gray-200 placeholder-gray-500 outline-none transition-colors focus:border-blue-500/35 focus:bg-dark-700/80"
+              className="document-frame-only min-h-0 flex-1 resize-none rounded-2xl border border-dark-500/50 bg-transparent px-4 py-3 text-[14px] font-normal text-[var(--ink)] placeholder-[var(--muted)] outline-none transition-colors focus:border-blue-500/35"
             />
           </div>
         </div>

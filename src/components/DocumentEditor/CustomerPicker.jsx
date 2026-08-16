@@ -439,7 +439,7 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
           <button
             type="button"
             onClick={() => navigate('/musteriler/yeni')}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-dark-500/30 bg-white px-3 text-[14px] font-medium text-[#2563eb] transition-colors hover:bg-blue-50"
+            className="document-frame-only inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-dark-500/40 bg-transparent px-3 text-[14px] font-medium text-[#2563eb] transition-colors hover:border-blue-500/50"
           >
             <UserPlus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} aria-hidden />
             Yeni Müşteri Oluştur
