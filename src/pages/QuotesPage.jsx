@@ -12,18 +12,16 @@ import {
   Pencil,
   Plus,
   Printer,
-  Receipt,
   Save,
   Send,
   ShoppingCart,
   Trash2,
+  Undo2,
   Upload,
-  Users,
   X,
 } from 'lucide-react'
 import { DataTable, Dropdown, DropdownItem, DropdownSeparator } from '@bachmain/ui'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
-import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
 import {
   AppPageBackLink,
   AppPageHeader,
@@ -44,6 +42,7 @@ import {
   captureDeleteConfirmAnchor,
   DeleteConfirmOverlay,
   DeleteConfirmPopover,
+  ListInlineActionConfirm,
 } from '../components/Common/ListDeleteConfirmPanel'
 import NumericInput from '../components/Products/NumericInput'
 import { formatTL } from '../utils/productPricing'
@@ -62,7 +61,7 @@ import { customers as customerData } from '../data/mockData'
 import { getListCustomerDisplay, findCustomerProfile } from '../data/customerProfiles'
 import { vatRates } from '../data/productsData'
 import { getCatalogProducts } from '../utils/productCatalog'
-import { createOrderFromQuote, loadOrders, updateOrder } from '../utils/ordersStore'
+import { cancelOrderFromQuote, createOrderFromQuote, loadOrders, updateOrder } from '../utils/ordersStore'
 import { nextQuoteCode, resolveQuoteCode, sanitizeQuoteCode } from '../utils/documentCodes'
 import {
   readVoiceQuoteOpenId,
@@ -234,6 +233,62 @@ const savedQuoteTerms = [
   'Nakliye ve sevkiyat bedeli ayrıca hesaplanır.',
   'Ödeme koşulları sipariş onayı öncesinde karşılıklı mutabakat ile netleştirilir.',
 ]
+
+const quoteModuleBtnClass =
+  'inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2 text-[14px] font-normal text-orange-600 transition-colors hover:border-orange-500/45 hover:bg-orange-500/15'
+
+function QuoteListOrderModuleButton({
+  quote,
+  orderCreated,
+  pendingAction,
+  onRequestCreate,
+  onRequestUndo,
+  onConfirmCreate,
+  onConfirmUndo,
+  onCancelPending,
+}) {
+  if (pendingAction === 'create' || pendingAction === 'undo') {
+    return (
+      <ListInlineActionConfirm
+        message="Emin misin?"
+        tone="orange"
+        onConfirm={pendingAction === 'create' ? onConfirmCreate : onConfirmUndo}
+        onCancel={onCancelPending}
+      />
+    )
+  }
+
+  if (orderCreated) {
+    return (
+      <div className="flex max-w-[220px] flex-wrap items-center justify-end gap-1.5">
+        <span className="whitespace-nowrap text-[14px] font-normal text-[var(--muted)]">
+          Sipariş oluşturuldu
+        </span>
+        <button
+          type="button"
+          onClick={onRequestUndo}
+          className={quoteModuleBtnClass}
+          title="Siparişi geri al"
+        >
+          <Undo2 className="h-3 w-3" />
+          Geri Al
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onRequestCreate}
+      className={quoteModuleBtnClass}
+      title={`${quote.customer || quote.id} teklifinden sipariş oluştur`}
+    >
+      <ShoppingCart className="h-3 w-3 shrink-0" />
+      <span className="whitespace-nowrap">Sipariş Oluştur</span>
+    </button>
+  )
+}
 
 function normalizeQuoteStages(quote) {
   const stages = loadWorkflowStages()
@@ -1156,7 +1211,6 @@ export default function QuotesPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [pendingHeaderQuoteDelete, setPendingHeaderQuoteDelete] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
-  const [customerModalOpen, setCustomerModalOpen] = useState(false)
   const [stageInput, setStageInput] = useState('')
   const [pendingStageDeleteId, setPendingStageDeleteId] = useState(null)
   const [isStageEditorOpen, setIsStageEditorOpen] = useState(false)
@@ -1166,6 +1220,7 @@ export default function QuotesPage() {
   const [isActivityOpen, setIsActivityOpen] = useState(false)
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
+  const [pendingQuoteOrderAction, setPendingQuoteOrderAction] = useState(null)
   const quotePreviewRef = useRef(null)
   const syncedCustomerKeyRef = useRef('')
 
@@ -1494,11 +1549,33 @@ export default function QuotesPage() {
     return order
   }
 
+  function isQuoteOrderCreated(quote) {
+    const workflowStage = resolveListQuoteStage(quote)
+    return (
+      Boolean(quote.orderId) ||
+      isOrderReceivedStage(workflowStage) ||
+      linkedOrderQuoteIds.has(quote.id)
+    )
+  }
+
   function handleCreateOrderFromList(quote, event) {
     event?.stopPropagation?.()
-    if (Boolean(quote.orderId) || linkedOrderQuoteIds.has(quote.id)) return
-    const order = transferQuoteToOrder(quote)
-    if (order) navigate('/siparisler')
+    if (isQuoteOrderCreated(quote)) return
+    transferQuoteToOrder(quote)
+    setPendingQuoteOrderAction(null)
+  }
+
+  function handleUndoOrderFromList(quote, event) {
+    event?.stopPropagation?.()
+    const orders = loadOrders()
+    const order =
+      orders.find(
+        (item) =>
+          item.id === quote.id || item.quoteId === quote.id || item.id === quote.orderId,
+      ) || { id: quote.orderId || quote.id, quoteId: quote.id }
+    cancelOrderFromQuote(order)
+    setQuotes(reloadQuotesStore())
+    setPendingQuoteOrderAction(null)
   }
 
   function setQuoteStage(quote, stage) {
@@ -1636,11 +1713,6 @@ export default function QuotesPage() {
     setDraftQuote(next)
     setSelectedId(next.id)
     setViewMode('prepare')
-  }
-
-  function handleCreateWithCustomer(customer) {
-    setCustomerModalOpen(false)
-    addQuote(customerToDocumentPatch(customer))
   }
 
   useEffect(() => {
@@ -2201,54 +2273,16 @@ export default function QuotesPage() {
           centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
           titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
-            <div
-              className={`relative inline-flex overflow-hidden ${HEADER_ACTION_CTA_SHELL_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}
+            <button
+              type="button"
+              onClick={() => addQuote()}
+              className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}
             >
-              <button
-                type="button"
-                onClick={() => addQuote()}
-                className="inline-flex h-full items-center gap-2.5 bg-transparent px-3"
-              >
-                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                  <FileText className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-                </span>
-                <span className={YF_TEXT_ON_COLOR_CLASS}>Yeni Teklif Oluştur</span>
-              </button>
-              <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
-              <Dropdown
-                align="end"
-                className="h-full"
-                menuClassName={PAGE_FILTER_MENU_CLASS}
-                trigger={
-                  <button
-                    type="button"
-                    className="inline-flex h-full w-12 items-center justify-center bg-transparent"
-                    aria-label="Teklif seçenekleri"
-                  >
-                    <ChevronDown className={HEADER_ACTION_CTA_ICON_CLASS} aria-hidden="true" />
-                  </button>
-                }
-              >
-                {({ close }) => (
-                  <>
-                    <DropdownItem
-                      icon={Users}
-                      label="Müşteri Seçerek Oluştur"
-                      tone="primary"
-                      close={close}
-                      onClick={() => setCustomerModalOpen(true)}
-                    />
-                    <DropdownItem
-                      icon={Receipt}
-                      label="Hızlı Taslak Teklif"
-                      tone="success"
-                      close={close}
-                      onClick={() => addQuote()}
-                    />
-                  </>
-                )}
-              </Dropdown>
-            </div>
+              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                <FileText className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+              </span>
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Yeni Teklif Oluştur</span>
+            </button>
           }
         />
       ) : (
@@ -2606,43 +2640,56 @@ export default function QuotesPage() {
                     </span>
                   ),
                 },
+                {
+                  id: 'order-module',
+                  header: '',
+                  align: 'right',
+                  className: 'w-[1%] whitespace-nowrap !max-w-none',
+                  cell: (quote) => {
+                    const pending =
+                      pendingQuoteOrderAction?.id === quote.id
+                        ? pendingQuoteOrderAction.type
+                        : null
+                    return (
+                      <span onClick={(event) => event.stopPropagation()}>
+                        <QuoteListOrderModuleButton
+                          quote={quote}
+                          orderCreated={isQuoteOrderCreated(quote)}
+                          pendingAction={pending}
+                          onRequestCreate={() =>
+                            setPendingQuoteOrderAction({ id: quote.id, type: 'create' })
+                          }
+                          onRequestUndo={() =>
+                            setPendingQuoteOrderAction({ id: quote.id, type: 'undo' })
+                          }
+                          onConfirmCreate={() => handleCreateOrderFromList(quote)}
+                          onConfirmUndo={() => handleUndoOrderFromList(quote)}
+                          onCancelPending={() => setPendingQuoteOrderAction(null)}
+                        />
+                      </span>
+                    )
+                  },
+                },
               ]}
-              getRowActions={(quote) => {
-                const workflowStage = resolveListQuoteStage(quote)
-                const isOrderTransferred =
-                  Boolean(quote.orderId) || isOrderReceivedStage(workflowStage)
-                const orderCreated = isOrderTransferred || linkedOrderQuoteIds.has(quote.id)
-                return [
-                  {
-                    id: 'edit',
-                    label: 'Düzenle',
-                    icon: Pencil,
-                    tone: 'primary',
-                    onClick: () => editQuote(quote.id),
+              getRowActions={(quote) => [
+                {
+                  id: 'edit',
+                  label: 'Düzenle',
+                  icon: Pencil,
+                  tone: 'primary',
+                  onClick: () => editQuote(quote.id),
+                },
+                {
+                  id: 'delete',
+                  label: 'Sil',
+                  icon: Trash2,
+                  tone: 'danger',
+                  onClick: (event) => {
+                    setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+                    setPendingDeleteId(quote.id)
                   },
-                  ...(orderCreated
-                    ? []
-                    : [
-                        {
-                          id: 'order',
-                          label: 'Sipariş Oluştur',
-                          icon: ShoppingCart,
-                          tone: 'success',
-                          onClick: () => handleCreateOrderFromList(quote),
-                        },
-                      ]),
-                  {
-                    id: 'delete',
-                    label: 'Sil',
-                    icon: Trash2,
-                    tone: 'danger',
-                    onClick: (event) => {
-                      setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
-                      setPendingDeleteId(quote.id)
-                    },
-                  },
-                ]
-              }}
+                },
+              ]}
             />
           </AppPagePanel>
         </>
@@ -3324,13 +3371,6 @@ export default function QuotesPage() {
           setPendingHeaderQuoteDelete(false)
           setDeleteConfirmAnchor(null)
         }}
-      />
-
-      <CreateCustomerPickModal
-        open={customerModalOpen}
-        onClose={() => setCustomerModalOpen(false)}
-        onSelect={handleCreateWithCustomer}
-        description="Teklif oluşturmak için müşteri seçin."
       />
     </AppPageShell>
   )
