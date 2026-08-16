@@ -246,7 +246,7 @@ function QuoteListOrderModuleButton({
   if (pendingAction === 'create') {
     return (
       <DeleteConfirmPopover
-        title="Sipariş oluşturulsun mu?"
+        title="Sipariş oluşturmak istiyor musunuz?"
         description="Teklif siparişe aktarılacak."
         confirmLabel="Evet"
         cancelLabel="Hayır"
@@ -261,7 +261,7 @@ function QuoteListOrderModuleButton({
   if (pendingAction === 'undo') {
     return (
       <DeleteConfirmPopover
-        title="Sipariş geri alınsın mı?"
+        title="Siparişi geri almak istiyor musunuz?"
         description="Sipariş kaydı kaldırılır; teklif listede kalır."
         confirmLabel="Evet"
         cancelLabel="Hayır"

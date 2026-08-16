@@ -348,7 +348,7 @@ export default function ProductionLineDeliveryPanel({
                   {typeof onSendToDepo === 'function' ? (
                     pendingDepoRowId === row.id ? (
                       <DeleteConfirmPopover
-                        title="Depoya gönderilsin mi?"
+                        title="Depoya gönderim mi yapmak istiyorsunuz?"
                         description="Girilen adet depoya aktarılacak."
                         confirmLabel="Evet"
                         cancelLabel="Hayır"
@@ -363,7 +363,7 @@ export default function ProductionLineDeliveryPanel({
                     ) : row.depoItemId ? (
                       pendingUndoDepoRowId === row.id ? (
                         <DeleteConfirmPopover
-                          title="Gönderim geri alınsın mı?"
+                          title="Depo gönderimini geri almak istiyor musunuz?"
                           description="Depo kaydı kaldırılır; satır yeniden düzenlenebilir."
                           confirmLabel="Evet"
                           cancelLabel="Hayır"
