@@ -6,6 +6,7 @@ import { jsPDF } from 'jspdf'
 import {
   CheckCircle2,
   ChevronDown,
+  ChevronUp,
   ClipboardList,
   FileText,
   Mail,
@@ -205,7 +206,7 @@ const statusClasses = {
   Reddedildi: 'badge-red',
 }
 
-const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
+const filterAllOption = { label: 'Tümü', color: 'bg-gray-500', locked: true }
 const sortFilterOptions = [
   { label: 'Son işleme göre', color: 'bg-blue-500' },
   { label: 'Tarihe göre', color: 'bg-purple-500' },
@@ -1623,6 +1624,47 @@ export default function QuotesPage() {
     setFilters((current) => ({ ...current, [field]: value }))
   }
 
+  function cycleListFilter(field, options, direction) {
+    const labels = (options || []).map((option) => option.label).filter(Boolean)
+    if (!labels.length) return
+    const current = filters[field]
+    const index = labels.indexOf(current)
+    const from = index >= 0 ? index : 0
+    const next = labels[(from + direction + labels.length) % labels.length]
+    updateFilter(field, next)
+  }
+
+  function renderFilterCycleAccessory(field, options, label) {
+    return (
+      <span className="inline-flex flex-col items-center gap-0 leading-none">
+        <button
+          type="button"
+          className="rounded p-0.5 text-[var(--muted)] transition-colors hover:bg-black/5 hover:text-[var(--ink)]"
+          title={`${label}: önceki`}
+          aria-label={`${label}: önceki`}
+          onClick={(event) => {
+            event.stopPropagation()
+            cycleListFilter(field, options, -1)
+          }}
+        >
+          <ChevronUp className="h-3 w-3" strokeWidth={2.5} />
+        </button>
+        <button
+          type="button"
+          className="rounded p-0.5 text-[var(--muted)] transition-colors hover:bg-black/5 hover:text-[var(--ink)]"
+          title={`${label}: sonraki`}
+          aria-label={`${label}: sonraki`}
+          onClick={(event) => {
+            event.stopPropagation()
+            cycleListFilter(field, options, 1)
+          }}
+        >
+          <ChevronDown className="h-3 w-3" strokeWidth={2.5} />
+        </button>
+      </span>
+    )
+  }
+
   function handleQuoteStatusChange(quote, statusLabel) {
     if (!statusLabel) {
       patchQuote(quote.id, {
@@ -2451,13 +2493,13 @@ export default function QuotesPage() {
                     value={filters.priority}
                     options={quotePriorityFilterOptions}
                     includePlaceholderOption={false}
-                    editable={false}
                     buttonClassName={PAGE_FILTER_PILL_CLASS}
                     menuClassName={PAGE_FILTER_MENU_CLASS}
                     openKey="filter-priority"
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
                     onChange={(value) => updateFilter('priority', value)}
+                    onOptionsChange={(next) => updateOptionList('priority', next)}
                   />
                 </div>
                 <div className={PAGE_FILTER_FIELD_CLASS}>
@@ -2466,13 +2508,13 @@ export default function QuotesPage() {
                     value={filters.status}
                     options={quoteStatusFilterOptions}
                     includePlaceholderOption={false}
-                    editable={false}
                     buttonClassName={PAGE_FILTER_PILL_CLASS}
                     menuClassName={PAGE_FILTER_MENU_CLASS}
                     openKey="filter-status"
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
                     onChange={(value) => updateFilter('status', value)}
+                    onOptionsChange={(next) => updateOptionList('status', next)}
                   />
                 </div>
                 <div className={PAGE_FILTER_FIELD_CLASS}>
@@ -2601,14 +2643,19 @@ export default function QuotesPage() {
                 {
                   id: 'priority',
                   header: 'ÖNCELİK',
-                  className: 'w-[8.5rem] !max-w-none',
+                  align: 'center',
+                  className: 'w-[8.5rem] !max-w-none text-center',
                   hideOnMobile: true,
+                  headerAccessory: () =>
+                    renderFilterCycleAccessory('priority', quotePriorityFilterOptions, 'Öncelik'),
                   cell: (quote) => (
-                    <span onClick={(event) => event.stopPropagation()}>
+                    <span
+                      className="flex w-full items-center justify-center"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <EditableDropdownPill
                         value={resolveListColumnLabel(quote.priority, optionLists.priority)}
                         options={optionLists.priority}
-                        editable={false}
                         buttonClassName={PAGE_LIST_PILL_CLASS}
                         wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
                         menuClassName={PAGE_LIST_MENU_CLASS}
@@ -2617,6 +2664,7 @@ export default function QuotesPage() {
                         activeMenu={activeMenu}
                         setActiveMenu={setActiveMenu}
                         onChange={(value) => handleQuotePriorityChange(quote, value)}
+                        onOptionsChange={(next) => updateOptionList('priority', next)}
                       />
                     </span>
                   ),
@@ -2624,14 +2672,19 @@ export default function QuotesPage() {
                 {
                   id: 'status',
                   header: 'TEKLİF DURUMU',
-                  className: 'w-[9.5rem] !max-w-none',
+                  align: 'center',
+                  className: 'w-[9.5rem] !max-w-none text-center',
                   hideOnMobile: true,
+                  headerAccessory: () =>
+                    renderFilterCycleAccessory('status', quoteStatusFilterOptions, 'Teklif durumu'),
                   cell: (quote) => (
-                    <span onClick={(event) => event.stopPropagation()}>
+                    <span
+                      className="flex w-full items-center justify-center"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <EditableDropdownPill
                         value={resolveListColumnLabel(quote.status, optionLists.status)}
                         options={optionLists.status}
-                        editable={false}
                         buttonClassName={PAGE_LIST_PILL_CLASS}
                         wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
                         menuClassName={PAGE_LIST_MENU_CLASS}
@@ -2640,6 +2693,7 @@ export default function QuotesPage() {
                         activeMenu={activeMenu}
                         setActiveMenu={setActiveMenu}
                         onChange={(value) => handleQuoteStatusChange(quote, value)}
+                        onOptionsChange={(next) => updateOptionList('status', next)}
                       />
                     </span>
                   ),

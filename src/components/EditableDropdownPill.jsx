@@ -118,6 +118,7 @@ export default function EditableDropdownPill({
     )
 
   function startEdit(index) {
+    if (options[index]?.locked) return
     setAdding(false)
     setEditingIndex(index)
     setDraftName(options[index].label)
@@ -126,14 +127,14 @@ export default function EditableDropdownPill({
 
   function commitEdit() {
     const name = draftName.trim()
-    if (name && editingIndex != null) {
+    if (name && editingIndex != null && !options[editingIndex]?.locked) {
       const previous = options[editingIndex]
       const next = options.map((option, index) =>
         index === editingIndex
           ? { ...option, label: name, color: draftColor || option.color }
           : option,
       )
-      onOptionsChange(next)
+      onOptionsChange(next.filter((option) => !option.locked))
       if (previous.label === value) onChange(name)
     }
     setEditingIndex(null)
@@ -142,9 +143,10 @@ export default function EditableDropdownPill({
   }
 
   function removeOption(index) {
+    if (options[index]?.locked) return
     const removed = options[index]
     const next = options.filter((_, optionIndex) => optionIndex !== index)
-    onOptionsChange(next)
+    onOptionsChange(next.filter((option) => !option.locked))
     if (removed.label === value) onChange('')
     setConfirmIndex(null)
   }
@@ -153,7 +155,8 @@ export default function EditableDropdownPill({
     const name = newName.trim()
     if (name && !options.some((option) => option.label === name)) {
       const color = newColor || COLOR_PALETTE[options.length % COLOR_PALETTE.length]
-      onOptionsChange([...options, { label: name, color }])
+      const unlocked = options.filter((option) => !option.locked)
+      onOptionsChange([...unlocked, { label: name, color }])
       onChange(name)
     }
     setAdding(false)
@@ -314,7 +317,7 @@ export default function EditableDropdownPill({
                   <OptionLeading option={option} isLightMenu={isLightMenu} />
                   <span className="truncate">{option.label}</span>
                 </button>
-                {canEdit && (
+                {canEdit && !option.locked && (
                   <span className="flex shrink-0 items-center gap-0.5 pr-1.5 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       type="button"
@@ -337,7 +340,7 @@ export default function EditableDropdownPill({
                     </button>
                   </span>
                 )}
-                {confirmIndex === index ? (
+                {confirmIndex === index && !option.locked ? (
                   <DeleteConfirmPopover
                     inline={false}
                     title={`"${option.label}" silinsin mi?`}
