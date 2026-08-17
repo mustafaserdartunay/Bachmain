@@ -12,6 +12,7 @@ import {
   ClipboardList,
   FileText,
   Mail,
+  MoreHorizontal,
   Pencil,
   Plus,
   Printer,
@@ -2076,9 +2077,9 @@ export default function QuotesPage() {
     return true
   }
 
-  function getSafeQuoteForOutput() {
-    if (!selectedQuote) return null
-    const validation = validateQuoteForSave(selectedQuote)
+  function getSafeQuoteForOutput(quote = selectedQuote) {
+    if (!quote) return null
+    const validation = validateQuoteForSave(quote)
     if (!validation.ok) {
       window.alert(validation.message)
       return null
@@ -2086,12 +2087,39 @@ export default function QuotesPage() {
     return validation.quote
   }
 
-  async function downloadQuotePdf() {
-    const safeQuote = getSafeQuoteForOutput()
+  async function createQuotePdfFileFromQuote(quote) {
+    if (quotePreviewRef.current && selectedQuote?.id === quote.id) {
+      return createQuotePdfFile(quotePreviewRef.current, quote.id)
+    }
+    const host = document.createElement('section')
+    host.setAttribute('aria-hidden', 'true')
+    host.className = 'fixed left-[-10000px] top-0 w-[794px] overflow-hidden bg-white'
+    host.innerHTML = buildQuoteDocumentInnerHtml({
+      quote: sanitizeQuoteForSave(quote),
+      customer: getQuoteCustomerDetails(quote),
+      company: readCompanySettings(),
+      settings: readQuotePrintSettings(),
+      rates,
+    })
+    document.body.appendChild(host)
+    try {
+      return await createQuotePdfFile(host, quote.id)
+    } finally {
+      host.remove()
+    }
+  }
+
+  function printQuoteDocument(quote) {
+    if (!quote?.id) return
+    navigate(`/belge-merkezi/yazdir?type=quote&id=${encodeURIComponent(quote.id)}`)
+  }
+
+  async function downloadQuotePdf(quote = selectedQuote) {
+    const safeQuote = getSafeQuoteForOutput(quote)
     if (!safeQuote) return
     try {
       setIsGeneratingPdf(true)
-      const { blob, filename } = await createQuotePdfFile(quotePreviewRef.current, safeQuote.id)
+      const { blob, filename } = await createQuotePdfFileFromQuote(safeQuote)
       downloadBlob(blob, filename)
     } catch (error) {
       window.alert(`PDF oluşturulamadı: ${error.message}`)
@@ -2100,15 +2128,12 @@ export default function QuotesPage() {
     }
   }
 
-  async function sendQuoteByWhatsApp() {
-    const safeQuote = getSafeQuoteForOutput()
+  async function sendQuoteByWhatsApp(quote = selectedQuote) {
+    const safeQuote = getSafeQuoteForOutput(quote)
     if (!safeQuote) return
     try {
       setIsGeneratingPdf(true)
-      const { blob, filename, file } = await createQuotePdfFile(
-        quotePreviewRef.current,
-        safeQuote.id,
-      )
+      const { blob, filename, file } = await createQuotePdfFileFromQuote(safeQuote)
       if (navigator.canShare?.({ files: [file] }) && navigator.share) {
         await navigator.share({
           title: `${safeQuote.id} Fiyat Teklifi`,
@@ -2133,12 +2158,12 @@ export default function QuotesPage() {
     }
   }
 
-  async function sendQuoteByMail() {
-    const safeQuote = getSafeQuoteForOutput()
+  async function sendQuoteByMail(quote = selectedQuote) {
+    const safeQuote = getSafeQuoteForOutput(quote)
     if (!safeQuote) return
     try {
       setIsGeneratingPdf(true)
-      const { blob, filename } = await createQuotePdfFile(quotePreviewRef.current, safeQuote.id)
+      const { blob, filename } = await createQuotePdfFileFromQuote(safeQuote)
       downloadBlob(blob, filename)
       const customer = getQuoteCustomerDetails(safeQuote)
       const subject = encodeURIComponent(`${safeQuote.id} Fiyat Teklifi`)
@@ -2809,14 +2834,13 @@ export default function QuotesPage() {
                       onToggleSort={toggleListColumnSort}
                     />
                   </QuoteListCell>
-                  <QuoteListCell align="start">
+                  <QuoteListCell>
                     <QuoteListColumnHeader
                       label="Müşteri Adı"
                       sortable
                       sortKey="customer"
                       sort={listColumnSort}
                       onToggleSort={toggleListColumnSort}
-                      align="start"
                     />
                   </QuoteListCell>
                   {quoteSegmentTabs.map((tab) => (
@@ -2850,7 +2874,12 @@ export default function QuotesPage() {
                     />
                   </QuoteListCell>
                   <QuoteListCell>
-                    <QuoteListColumnHeader />
+                    <span
+                      className="pointer-events-none inline-flex h-control w-control min-h-control min-w-[var(--ds-control-h)] items-center justify-center rounded-ds-md text-ds-ink"
+                      aria-hidden
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                    </span>
                   </QuoteListCell>
                 </QuoteListRowPanel>
 
@@ -2902,8 +2931,8 @@ export default function QuotesPage() {
                             )}
                           </span>
                         </QuoteListCell>
-                        <QuoteListCell align="start">
-                          <span className="flex min-w-0 w-full flex-col items-start gap-0.5 py-0.5 text-left">
+                        <QuoteListCell>
+                          <span className="flex min-w-0 w-full flex-col items-center gap-0.5 py-0.5 text-center">
                             <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
                               {display.brandShortName || 'Müşteri girilmedi'}
                             </span>
@@ -2967,6 +2996,35 @@ export default function QuotesPage() {
                           <span onClick={(event) => event.stopPropagation()}>
                             <MoreMenu
                               items={[
+                                {
+                                  id: 'print',
+                                  label: 'Yazdır',
+                                  icon: Printer,
+                                  tone: 'primary',
+                                  onClick: () => printQuoteDocument(quote),
+                                },
+                                {
+                                  id: 'whatsapp',
+                                  label: isGeneratingPdf ? 'Hazırlanıyor...' : 'WhatsApp Gönder',
+                                  icon: Send,
+                                  tone: 'success',
+                                  onClick: () => sendQuoteByWhatsApp(quote),
+                                },
+                                {
+                                  id: 'mail',
+                                  label: isGeneratingPdf ? 'Hazırlanıyor...' : 'Mail Gönder',
+                                  icon: Mail,
+                                  tone: 'primary',
+                                  onClick: () => sendQuoteByMail(quote),
+                                },
+                                {
+                                  id: 'pdf',
+                                  label: isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir',
+                                  icon: FileText,
+                                  tone: 'danger',
+                                  onClick: () => downloadQuotePdf(quote),
+                                },
+                                { type: 'separator', id: 'quote-row-sep' },
                                 {
                                   id: 'edit',
                                   label: 'Düzenle',
