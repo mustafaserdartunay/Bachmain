@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Download, Printer } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../../components/Layout/AppPageLayout'
@@ -56,6 +56,7 @@ export default function DocPrintPage() {
   const [templateId, setTemplateId] = useState(initialTpl)
   const [busy, setBusy] = useState(false)
   const [printTick, setPrintTick] = useState(0)
+  const previewRef = useRef(null)
 
   useEffect(() => {
     ensureQuoteTemplate()
@@ -120,6 +121,42 @@ export default function DocPrintPage() {
     if (!selectedTpl) return { html: '<p>Şablon seçin</p>', errors: [] }
     return renderTemplateHtml(selectedTpl, context)
   }, [selectedTpl, context, docType, selectedDoc, printTick])
+
+  useEffect(() => {
+    const frame = previewRef.current
+    if (!frame) return undefined
+
+    function fit() {
+      const doc = frame.contentDocument
+      if (!doc) return
+      const height = Math.max(
+        doc.documentElement?.scrollHeight || 0,
+        doc.body?.scrollHeight || 0,
+      )
+      if (height > 0) frame.style.height = `${height}px`
+    }
+
+    function bindImages() {
+      const doc = frame.contentDocument
+      if (!doc) return
+      Array.from(doc.images || []).forEach((img) => {
+        if (!img.complete) img.addEventListener('load', fit, { once: true })
+      })
+    }
+
+    function onLoad() {
+      fit()
+      bindImages()
+    }
+
+    frame.addEventListener('load', onLoad)
+    onLoad()
+    const timer = window.setTimeout(fit, 80)
+    return () => {
+      frame.removeEventListener('load', onLoad)
+      window.clearTimeout(timer)
+    }
+  }, [rendered.html])
 
   async function handlePdf() {
     if (!selectedDoc) return
@@ -205,9 +242,15 @@ export default function DocPrintPage() {
         </label>
       </section>
 
-      <section className="card overflow-hidden p-0">
+      <section className="card overflow-visible p-0">
         <div className="border-b border-dark-500/40 px-4 py-3 text-xs font-black uppercase text-gray-400">Önizleme</div>
-        <iframe title="Yazdırma önizleme" className="min-h-[700px] w-full bg-white" srcDoc={rendered.html} />
+        <iframe
+          ref={previewRef}
+          title="Yazdırma önizleme"
+          scrolling="no"
+          className="block w-full overflow-hidden border-0 bg-white"
+          srcDoc={rendered.html}
+        />
       </section>
     </AppPageShell>
   )
