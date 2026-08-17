@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { Dropdown, DropdownItem, DropdownSeparator, EmptyState, MoreMenu } from '@bachmain/ui'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
+import QuoteDeletedArchivedPanel from '../components/Common/QuoteDeletedArchivedPanel'
 import {
   AppPageBackLink,
   AppPageHeader,
@@ -3453,6 +3454,13 @@ export default function QuotesPage() {
           )}
         </div>
       )}
+
+      {viewMode === 'list' ? (
+        <QuoteDeletedArchivedPanel
+          onRestored={() => setQuotes(loadQuotes())}
+          emptyMessage="Silinen teklif yok."
+        />
+      ) : null}
 
       <DeleteConfirmOverlay
         open={Boolean(pendingDeleteId) || pendingHeaderQuoteDelete}
