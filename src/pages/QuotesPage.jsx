@@ -1665,10 +1665,10 @@ export default function QuotesPage() {
 
   function renderFilterCycleAccessory(field, options, label) {
     return (
-      <span className="inline-flex flex-col items-center gap-0 leading-none">
+      <span className="inline-flex flex-col items-center gap-0 leading-none text-[var(--muted)]">
         <button
           type="button"
-          className="rounded p-0.5 text-[var(--muted)] transition-colors hover:bg-black/5 hover:text-[var(--ink)]"
+          className="inline-flex min-w-0 items-center gap-1 rounded p-0.5 opacity-40 transition-colors hover:text-[var(--ink)]"
           title={`${label}: önceki`}
           aria-label={`${label}: önceki`}
           onClick={(event) => {
@@ -1676,11 +1676,11 @@ export default function QuotesPage() {
             cycleListFilter(field, options, -1)
           }}
         >
-          <ChevronUp className="h-3 w-3" strokeWidth={2.5} />
+          <ChevronUp className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
         </button>
         <button
           type="button"
-          className="rounded p-0.5 text-[var(--muted)] transition-colors hover:bg-black/5 hover:text-[var(--ink)]"
+          className="inline-flex min-w-0 items-center gap-1 rounded p-0.5 opacity-40 transition-colors hover:text-[var(--ink)]"
           title={`${label}: sonraki`}
           aria-label={`${label}: sonraki`}
           onClick={(event) => {
@@ -1688,7 +1688,7 @@ export default function QuotesPage() {
             cycleListFilter(field, options, 1)
           }}
         >
-          <ChevronDown className="h-3 w-3" strokeWidth={2.5} />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
         </button>
       </span>
     )
