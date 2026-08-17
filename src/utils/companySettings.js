@@ -1,3 +1,5 @@
+import { readUserProfile } from './userProfile'
+
 const COMPANY_SETTINGS_KEY = 'erlenbox-company-settings'
 
 export const defaultCompanySettings = {
@@ -26,6 +28,21 @@ function readJson(key, fallback) {
 
 export function readCompanySettings() {
   return readJson(COMPANY_SETTINGS_KEY, defaultCompanySettings)
+}
+
+/** Teklif / belge şablonları: logo PNG-JPG data URL, firma detayı. Profil görseli yedek. */
+export function resolveCompanyBrand() {
+  const company = readCompanySettings()
+  const profile = readUserProfile() || {}
+  const logo = String(company.logoDataUrl || profile.avatarDataUrl || '').trim()
+  return {
+    ...company,
+    companyName: company.companyName || profile.companyName || '',
+    legalTitle: company.legalTitle || company.companyName || profile.companyName || '',
+    phone: company.phone || profile.phone || '',
+    email: company.email || profile.email || '',
+    logoDataUrl: logo,
+  }
 }
 
 export function saveCompanySettings(settings) {

@@ -1,5 +1,5 @@
 import { CALENDAR_MONTHS, parseCalendarIso } from './calendarUtils'
-import { readCompanySettings } from './companySettings'
+import { resolveCompanyBrand } from './companySettings'
 import { documentTotals, itemTotals } from './documentTotals'
 import { getCatalogProducts, resolveProductImage } from './productCatalog'
 import { formatMoney, formatTL, normalizeCurrency } from './productPricing'
@@ -73,17 +73,14 @@ function quoteStyles(imageSize) {
       font-family: ${SYSTEM_FONT}; font-size: 14px; font-weight: 400; line-height: 1.35; letter-spacing: normal; }
     .qd *, .qd *::before, .qd *::after { box-sizing: border-box; }
     .qd-bar { height: 3px; background: #2563eb; margin: -28px -32px 24px; }
-    .qd-top { display: grid; grid-template-columns: minmax(0,1.4fr) minmax(220px,0.8fr); gap: 24px; align-items: start; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
-    .qd-brand { display: flex; gap: 14px; align-items: center; min-width: 0; }
-    .qd-logo { width: 64px; height: 64px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 6px; }
-    .qd-logo-fallback { width: 64px; height: 64px; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #2563eb; font-weight: 700; }
-    .qd-company { min-width: 0; }
-    .qd-company-name { margin: 0; color: #334155; font-size: 14px; font-weight: 700; line-height: 1.3; }
-    .qd-meta { margin: 4px 0 0; color: #64748b; font-size: 14px; font-weight: 400; }
-    .qd-doc { text-align: right; }
-    .qd-kicker { margin: 0; color: #2563eb; font-size: 14px; font-weight: 400; }
-    .qd-title { margin: 4px 0 0; color: #334155; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+    .qd-top { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 24px; align-items: start; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+    .qd-brand { min-width: 0; }
+    .qd-logo { width: 96px; height: 96px; object-fit: contain; object-position: left center; background: #fff; display: block; }
+    .qd-logo-fallback { width: 96px; height: 96px; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #2563eb; font-weight: 700; }
+    .qd-doc { text-align: right; justify-self: end; min-width: 0; }
+    .qd-title { margin: 0; color: #334155; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
     .qd-no { margin: 6px 0 0; color: #64748b; font-size: 14px; }
+    .qd-meta { margin: 4px 0 0; color: #64748b; font-size: 14px; font-weight: 400; }
     .qd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
     .qd-panel { border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; }
     .qd-label { margin: 0 0 8px; color: #2563eb; font-size: 14px; font-weight: 400; }
@@ -93,10 +90,12 @@ function quoteStyles(imageSize) {
     .qd-date { border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; position: relative; }
     .qd-date-num { margin: 4px 0 0; color: #334155; font-size: 14px; font-weight: 700; }
     .qd-items { margin-top: 22px; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; }
-    .qd-item { display: grid; grid-template-columns: ${size}px minmax(0,1.5fr) 72px 110px 120px; gap: 14px; align-items: center; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
+    .qd-item { display: grid; grid-template-columns: ${size}px minmax(0,1.4fr) 64px minmax(132px,0.9fr) 110px; gap: 14px; align-items: center; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
     .qd-item:last-child { border-bottom: 0; }
-    .qd-item-head { display: grid; grid-template-columns: ${size}px minmax(0,1.5fr) 72px 110px 120px; gap: 14px; padding: 10px 16px; background: #f8fafc; color: #64748b; font-size: 14px; }
+    .qd-item-head { display: grid; grid-template-columns: ${size}px minmax(0,1.4fr) 64px minmax(132px,0.9fr) 110px; gap: 14px; padding: 10px 16px; background: #f8fafc; color: #64748b; font-size: 14px; }
     .qd-right { text-align: right; }
+    .qd-unit { display: flex; align-items: baseline; justify-content: flex-end; gap: 10px; white-space: nowrap; }
+    .qd-vat { color: #64748b; font-size: 14px; font-weight: 400; }
     .qd-img { width: ${size}px; height: ${size}px; object-fit: cover; object-position: center; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; display: block; }
     .qd-img-empty { width: ${size}px; height: ${size}px; border-radius: 12px; border: 1px dashed #e2e8f0; background: #f8fafc; }
     .qd-bottom { display: grid; grid-template-columns: minmax(0,1fr) 280px; gap: 20px; margin-top: 22px; align-items: start; }
@@ -118,21 +117,22 @@ function quoteStyles(imageSize) {
 export function buildQuoteDocumentInnerHtml({
   quote,
   customer = {},
-  company = readCompanySettings(),
+  company = resolveCompanyBrand(),
   settings = readQuotePrintSettings(),
   rates = getExchangeRatesSnapshot(),
 } = {}) {
   const totals = documentTotals(quote || {}, rates)
-  const banks = resolveBanks(quote, company)
+  const brand = resolveCompanyBrand()
   const terms = termLines(quote?.termsDescription)
   const created = formatPrintDate(quote?.createdAt)
   const valid = formatPrintDate(quote?.validUntil)
   const due = formatPrintDate(quote?.dueDate || quote?.validUntil)
   const imageSize = settings.productImageSize || 140
-  const companyName = company.legalTitle || company.companyName || 'Firma'
-  const logo = settings.showLogo ? company.logoDataUrl : ''
+  const companyName = brand.legalTitle || brand.companyName || 'Firma'
+  const logo = brand.logoDataUrl
   const representative = quote?.owner || customer.authorizedName || ''
   const items = Array.isArray(quote?.items) ? quote.items : []
+  const banks = resolveBanks(quote, brand)
 
   const itemRows = items
     .map((item) => {
@@ -156,14 +156,19 @@ export function buildQuoteDocumentInnerHtml({
           <div>
             <p class="qd-strong">${escapeHtml(item.product || 'Ürün seçilmedi')}</p>
             ${desc ? `<p class="qd-meta">${escapeHtml(desc)}</p>` : ''}
-            <p class="qd-meta">KDV %${escapeHtml(item.vatRate ?? 20)}</p>
           </div>
           <div class="qd-right">${escapeHtml(item.quantity ?? 1)}</div>
-          <div class="qd-right">${unit}${
-            currency !== 'TRY'
-              ? `<div class="qd-meta">${formatTL(row.subtotal / Math.max(1, Number(item.quantity) || 1))}</div>`
-              : ''
-          }</div>
+          <div class="qd-right">
+            <div class="qd-unit">
+              <span>${unit}</span>
+              <span class="qd-vat">%${escapeHtml(item.vatRate ?? 20)}</span>
+            </div>
+            ${
+              currency !== 'TRY'
+                ? `<div class="qd-meta">${formatTL(row.subtotal / Math.max(1, Number(item.quantity) || 1))}</div>`
+                : ''
+            }
+          </div>
           <div class="qd-right qd-strong">${formatTL(row.total)}</div>
         </div>`
     })
@@ -194,61 +199,43 @@ export function buildQuoteDocumentInnerHtml({
       <header class="qd-top">
         <div class="qd-brand">
           ${
-            settings.showCompany
+            settings.showLogo || settings.showCompany
               ? logo
-                ? `<img class="qd-logo" src="${escapeHtml(logo)}" alt="" />`
+                ? `<img class="qd-logo" src="${escapeHtml(logo)}" alt="${escapeHtml(companyName)}" />`
                 : `<div class="qd-logo-fallback">BM</div>`
-              : ''
-          }
-          ${
-            settings.showCompany
-              ? `<div class="qd-company">
-                  <p class="qd-company-name">${escapeHtml(companyName)}</p>
-                  ${company.address ? `<p class="qd-meta">${escapeHtml(company.address)}</p>` : ''}
-                  <p class="qd-meta">${[company.phone, company.email, company.website].filter(Boolean).map(escapeHtml).join(' · ')}</p>
-                  ${
-                    company.taxOffice || company.taxNumber
-                      ? `<p class="qd-meta">${[company.taxOffice, company.taxNumber].filter(Boolean).map(escapeHtml).join(' · ')}</p>`
-                      : ''
-                  }
-                </div>`
               : ''
           }
         </div>
         <div class="qd-doc">
-          <p class="qd-kicker">Fiyat Teklifi</p>
           <h1 class="qd-title">${escapeHtml(quote?.title || 'Teklif')}</h1>
           <p class="qd-no">${escapeHtml(quote?.id || '')}</p>
         </div>
       </header>
 
-      ${
-        settings.showCustomer || settings.showRepresentative
-          ? `<section class="qd-grid">
-              ${
-                settings.showCustomer
-                  ? `<div class="qd-panel">
-                      <p class="qd-label">Müşteri</p>
-                      <p class="qd-strong">${escapeHtml(customer.company || customer.unvan || '—')}</p>
-                      ${customer.contact ? `<p class="qd-meta">${escapeHtml(customer.contact)}</p>` : ''}
-                      ${customer.authorizedName ? `<div class="qd-row"><span>Yetkili</span><span>${escapeHtml(customer.authorizedName)}</span></div>` : ''}
-                      ${customer.address ? `<div class="qd-row"><span>Adres</span><span>${escapeHtml(customer.address)}</span></div>` : ''}
-                      ${customer.phone ? `<div class="qd-row"><span>Telefon</span><span>${escapeHtml(customer.phone)}</span></div>` : ''}
-                      ${customer.email ? `<div class="qd-row"><span>E-posta</span><span>${escapeHtml(customer.email)}</span></div>` : ''}
-                    </div>`
-                  : '<div></div>'
-              }
-              <div class="qd-panel">
-                ${
-                  settings.showRepresentative
-                    ? `<p class="qd-label">Temsilci</p><p class="qd-strong">${escapeHtml(representative || '—')}</p>`
-                    : ''
-                }
-                ${quote?.status ? `<div class="qd-row"><span>Durum</span><span>${escapeHtml(quote.status)}</span></div>` : ''}
-              </div>
-            </section>`
-          : ''
-      }
+      <section class="qd-grid">
+        <div class="qd-panel">
+          <p class="qd-label">Firma</p>
+          <p class="qd-strong">${escapeHtml(companyName)}</p>
+          ${brand.companyName && brand.legalTitle && brand.companyName !== brand.legalTitle ? `<p class="qd-meta">${escapeHtml(brand.companyName)}</p>` : ''}
+          ${brand.address ? `<div class="qd-row"><span>Adres</span><span>${escapeHtml(brand.address)}</span></div>` : ''}
+          ${brand.phone ? `<div class="qd-row"><span>Telefon</span><span>${escapeHtml(brand.phone)}</span></div>` : ''}
+          ${brand.email ? `<div class="qd-row"><span>E-posta</span><span>${escapeHtml(brand.email)}</span></div>` : ''}
+          ${brand.website ? `<div class="qd-row"><span>Web</span><span>${escapeHtml(brand.website)}</span></div>` : ''}
+          ${brand.taxOffice ? `<div class="qd-row"><span>Vergi Dairesi</span><span>${escapeHtml(brand.taxOffice)}</span></div>` : ''}
+          ${brand.taxNumber ? `<div class="qd-row"><span>Vergi No</span><span>${escapeHtml(brand.taxNumber)}</span></div>` : ''}
+          ${settings.showRepresentative && representative ? `<div class="qd-row"><span>Temsilci</span><span>${escapeHtml(representative)}</span></div>` : ''}
+        </div>
+        <div class="qd-panel">
+          <p class="qd-label">Müşteri</p>
+          <p class="qd-strong">${escapeHtml(customer.company || customer.unvan || '—')}</p>
+          ${customer.contact ? `<p class="qd-meta">${escapeHtml(customer.contact)}</p>` : ''}
+          ${customer.authorizedName ? `<div class="qd-row"><span>Yetkili</span><span>${escapeHtml(customer.authorizedName)}</span></div>` : ''}
+          ${customer.address ? `<div class="qd-row"><span>Adres</span><span>${escapeHtml(customer.address)}</span></div>` : ''}
+          ${customer.phone ? `<div class="qd-row"><span>Telefon</span><span>${escapeHtml(customer.phone)}</span></div>` : ''}
+          ${customer.email ? `<div class="qd-row"><span>E-posta</span><span>${escapeHtml(customer.email)}</span></div>` : ''}
+          ${quote?.status ? `<div class="qd-row"><span>Durum</span><span>${escapeHtml(quote.status)}</span></div>` : ''}
+        </div>
+      </section>
 
       ${
         settings.showDates
