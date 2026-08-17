@@ -31,14 +31,14 @@ import {
 } from '../../utils/dashboardFinanceCards'
 import { buildFinanceMetricCards } from '../Dashboard/StatusAnalysisBoard'
 import { readOptionLists, saveOptionList } from '../../utils/customerMeta'
+import {
+  QUOTE_SEGMENT_TABS_EVENT,
+  readQuoteSegmentTabs,
+  saveQuoteSegmentTabs,
+} from '../../utils/quoteSegmentTabs'
 
 const WORKFLOW_SEGMENTS = [
   { id: 'depo', label: 'Depo Süreçleri' },
-]
-
-const QUOTE_SEGMENTS = [
-  { id: 'quote', label: 'Teklif Süreci' },
-  { id: 'quoteStatus', label: 'Teklif Durumu' },
 ]
 
 const ORDER_SEGMENTS = [
@@ -51,7 +51,6 @@ const PRODUCTION_SEGMENTS = [
 ]
 
 const WORKFLOW_SEGMENT_TABS_KEY = 'bach-label-workflow-segment-tabs'
-const QUOTE_SEGMENT_TABS_KEY = 'bach-label-quote-segment-tabs'
 const ORDER_SEGMENT_TABS_KEY = 'bach-label-order-segment-tabs'
 const PRODUCTION_SEGMENT_TABS_KEY = 'bach-label-production-segment-tabs'
 
@@ -184,8 +183,10 @@ function SegmentTabs({
                 <input
                   value={editDraft}
                   onChange={(event) => setEditDraft(event.target.value)}
+                  onBlur={() => onRename(segment, editDraft)}
                   onKeyDown={(event) => {
                     if (event.key === 'Escape') {
+                      event.preventDefault()
                       setEditId(null)
                       setEditDraft('')
                     }
@@ -196,7 +197,13 @@ function SegmentTabs({
                 <button type="submit" className="rounded-md p-1 text-emerald-300 hover:bg-emerald-500/15" title="Kaydet">
                   <Check className="h-3 w-3" />
                 </button>
-                <button type="button" onClick={() => { setEditId(null); setEditDraft('') }} className="rounded-md p-1 text-gray-500 hover:bg-dark-600 hover:text-gray-300" title="Vazgeç">
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => { setEditId(null); setEditDraft('') }}
+                  className="rounded-md p-1 text-gray-500 hover:bg-dark-600 hover:text-gray-300"
+                  title="Vazgeç"
+                >
                   <X className="h-3 w-3" />
                 </button>
               </form>
@@ -264,7 +271,7 @@ export default function WorkflowStagesSettingsPanel() {
   const [depoStages, setDepoStages] = useState(() => loadDepoWorkflowStages())
   const [partDeliverySituations, setPartDeliverySituations] = useState(() => loadPartDeliverySituations())
   const [workflowSegmentTabs, setWorkflowSegmentTabs] = useState(() => readSegmentTabs(WORKFLOW_SEGMENT_TABS_KEY, WORKFLOW_SEGMENTS))
-  const [quoteSegmentTabs, setQuoteSegmentTabs] = useState(() => readSegmentTabs(QUOTE_SEGMENT_TABS_KEY, QUOTE_SEGMENTS))
+  const [quoteSegmentTabs, setQuoteSegmentTabs] = useState(() => readQuoteSegmentTabs())
   const [orderSegmentTabs, setOrderSegmentTabs] = useState(() => readSegmentTabs(ORDER_SEGMENT_TABS_KEY, ORDER_SEGMENTS))
   const [productionSegmentTabs, setProductionSegmentTabs] = useState(() => readSegmentTabs(PRODUCTION_SEGMENT_TABS_KEY, PRODUCTION_SEGMENTS))
   const [activeSegment, setActiveSegment] = useState('depo')
@@ -326,17 +333,22 @@ export default function WorkflowStagesSettingsPanel() {
     function refreshOptionLists() {
       setOptionLists(readOptionLists())
     }
+    function refreshQuoteSegmentTabs() {
+      setQuoteSegmentTabs(readQuoteSegmentTabs())
+    }
     window.addEventListener('bach:workflow-stages-updated', refresh)
     window.addEventListener('bach:depo-workflow-stages-updated', refreshDepoStages)
     window.addEventListener('bach:production-fulfillment-updated', refreshPartDelivery)
     window.addEventListener(DASHBOARD_FINANCE_CARDS_EVENT, refreshDashboardFinanceCards)
     window.addEventListener('bach:option-lists-updated', refreshOptionLists)
+    window.addEventListener(QUOTE_SEGMENT_TABS_EVENT, refreshQuoteSegmentTabs)
     return () => {
       window.removeEventListener('bach:workflow-stages-updated', refresh)
       window.removeEventListener('bach:depo-workflow-stages-updated', refreshDepoStages)
       window.removeEventListener('bach:production-fulfillment-updated', refreshPartDelivery)
       window.removeEventListener(DASHBOARD_FINANCE_CARDS_EVENT, refreshDashboardFinanceCards)
       window.removeEventListener('bach:option-lists-updated', refreshOptionLists)
+      window.removeEventListener(QUOTE_SEGMENT_TABS_EVENT, refreshQuoteSegmentTabs)
     }
   }, [])
 
@@ -825,8 +837,7 @@ export default function WorkflowStagesSettingsPanel() {
   }
 
   function updateQuoteSegmentTabs(nextTabs) {
-    setQuoteSegmentTabs(nextTabs)
-    saveSegmentTabs(QUOTE_SEGMENT_TABS_KEY, nextTabs)
+    setQuoteSegmentTabs(saveQuoteSegmentTabs(nextTabs))
   }
 
   function updateOrderSegmentTabs(nextTabs) {

@@ -115,6 +115,11 @@ import {
   resolveListColumnLabel,
 } from '../components/DocumentEditor/processPanelUtils'
 import {
+  isQuoteStatusSegment,
+  QUOTE_SEGMENT_TABS_EVENT,
+  readQuoteSegmentTabs,
+} from '../utils/quoteSegmentTabs'
+import {
   stageColors as processStageColors,
 } from '../components/DocumentEditor/stageColors'
 import CustomerPicker, {
@@ -1150,7 +1155,8 @@ export default function QuotesPage() {
   const [draftQuote, setDraftQuote] = useState(null)
   const [selectedId, setSelectedId] = useState(quotes[0]?.id || null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filters, setFilters] = useState({ priority: 'Tümü', status: 'Tümü', stage: 'Tümü' })
+  const [filters, setFilters] = useState({})
+  const [quoteSegmentTabs, setQuoteSegmentTabs] = useState(() => readQuoteSegmentTabs())
   const [sortMode, setSortMode] = useState('latest')
   const [viewMode, setViewMode] = useState('list')
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
@@ -1201,9 +1207,23 @@ export default function QuotesPage() {
   }, [quotes])
   const quoteStageOptions = getQuoteStageOptions(workflowStages)
   const orderStageOptions = getOrderStageOptions(workflowStages)
-  const quotePriorityFilterOptions = [filterAllOption, ...optionLists.priority]
-  const quoteStatusFilterOptions = [filterAllOption, ...optionLists.status]
-  const quoteStageFilterOptions = [filterAllOption, ...toStageDropdownOptions(quoteStageOptions)]
+
+  function processOptionsForTab(tab) {
+    return isQuoteStatusSegment(tab)
+      ? optionLists.status || []
+      : toStageDropdownOptions(quoteStageOptions)
+  }
+
+  function processFilterOptionsForTab(tab) {
+    return [filterAllOption, ...processOptionsForTab(tab)]
+  }
+
+  function processValueForQuote(tab, quote) {
+    if (isQuoteStatusSegment(tab)) {
+      return resolveListColumnLabel(quote.status, optionLists.status)
+    }
+    return resolveListQuoteStage(quote)?.label || ''
+  }
 
   function resolveListQuoteStage(quote) {
     return resolveQuoteActiveStage(quote, workflowStages)
@@ -1251,6 +1271,30 @@ export default function QuotesPage() {
     const saved = publishWorkflowStages(mergeQuoteStagesIntoWorkflow(fullStages, nextStages))
     setWorkflowStages([...(saved || loadWorkflowStages())])
   }
+
+  function handleProcessValueChange(tab, quote, value) {
+    if (isQuoteStatusSegment(tab)) {
+      handleQuoteStatusChange(quote, value)
+      return
+    }
+    handleQuoteStageLabelChange(quote, value)
+  }
+
+  function handleProcessOptionsChange(tab, next) {
+    if (isQuoteStatusSegment(tab)) {
+      updateOptionList('status', next)
+      return
+    }
+    updateQuoteStageOptions(next)
+  }
+
+  useEffect(() => {
+    function refreshQuoteSegmentTabs() {
+      setQuoteSegmentTabs(readQuoteSegmentTabs())
+    }
+    window.addEventListener(QUOTE_SEGMENT_TABS_EVENT, refreshQuoteSegmentTabs)
+    return () => window.removeEventListener(QUOTE_SEGMENT_TABS_EVENT, refreshQuoteSegmentTabs)
+  }, [])
 
   useEffect(() => {
     function refreshOptionLists() {
@@ -2242,11 +2286,13 @@ export default function QuotesPage() {
         (quote.customer || '').toLowerCase().includes(q) ||
         (quote.contact || '').toLowerCase().includes(q) ||
         (quote.tags || []).some((tag) => tag.toLowerCase().includes(q))
-      const matchesPriority = filters.priority === 'Tümü' || quote.priority === filters.priority
-      const matchesStatus = filters.status === 'Tümü' || quote.status === filters.status
-      const matchesStage =
-        filters.stage === 'Tümü' || quoteProcess.activeStage?.label === filters.stage
-      return matchesSearch && matchesPriority && matchesStatus && matchesStage
+      const matchesProcessTabs = quoteSegmentTabs.every((tab) => {
+        const selected = filters[tab.id] || 'Tümü'
+        if (selected === 'Tümü') return true
+        if (isQuoteStatusSegment(tab)) return quote.status === selected
+        return quoteProcess.activeStage?.label === selected
+      })
+      return matchesSearch && matchesProcessTabs
     })
     .sort((a, b) => {
       if (sortMode === 'date') return getQuoteSortDate(b) - getQuoteSortDate(a)
@@ -2446,51 +2492,23 @@ export default function QuotesPage() {
                 <span className={YF_TEXT_CLASS}>Filtre :</span>
               </div>
               <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div className={PAGE_FILTER_FIELD_CLASS}>
-                  <p className={PAGE_FILTER_LABEL_CLASS}>Öncelik :</p>
-                  <EditableDropdownPill
-                    value={filters.priority}
-                    options={quotePriorityFilterOptions}
-                    includePlaceholderOption={false}
-                    buttonClassName={PAGE_FILTER_PILL_CLASS}
-                    menuClassName={PAGE_FILTER_MENU_CLASS}
-                    openKey="filter-priority"
-                    activeMenu={activeMenu}
-                    setActiveMenu={setActiveMenu}
-                    onChange={(value) => updateFilter('priority', value)}
-                    onOptionsChange={(next) => updateOptionList('priority', next)}
-                  />
-                </div>
-                <div className={PAGE_FILTER_FIELD_CLASS}>
-                  <p className={PAGE_FILTER_LABEL_CLASS}>Süreç :</p>
-                  <EditableDropdownPill
-                    value={filters.stage}
-                    options={quoteStageFilterOptions}
-                    includePlaceholderOption={false}
-                    buttonClassName={PAGE_FILTER_PILL_CLASS}
-                    menuClassName={PAGE_FILTER_MENU_CLASS}
-                    openKey="filter-stage"
-                    activeMenu={activeMenu}
-                    setActiveMenu={setActiveMenu}
-                    onChange={(value) => updateFilter('stage', value)}
-                    onOptionsChange={updateQuoteStageOptions}
-                  />
-                </div>
-                <div className={PAGE_FILTER_FIELD_CLASS}>
-                  <p className={PAGE_FILTER_LABEL_CLASS}>Durum :</p>
-                  <EditableDropdownPill
-                    value={filters.status}
-                    options={quoteStatusFilterOptions}
-                    includePlaceholderOption={false}
-                    buttonClassName={PAGE_FILTER_PILL_CLASS}
-                    menuClassName={PAGE_FILTER_MENU_CLASS}
-                    openKey="filter-status"
-                    activeMenu={activeMenu}
-                    setActiveMenu={setActiveMenu}
-                    onChange={(value) => updateFilter('status', value)}
-                    onOptionsChange={(next) => updateOptionList('status', next)}
-                  />
-                </div>
+                {quoteSegmentTabs.map((tab) => (
+                  <div key={tab.id} className={PAGE_FILTER_FIELD_CLASS}>
+                    <p className={PAGE_FILTER_LABEL_CLASS}>{tab.label} :</p>
+                    <EditableDropdownPill
+                      value={filters[tab.id] || 'Tümü'}
+                      options={processFilterOptionsForTab(tab)}
+                      includePlaceholderOption={false}
+                      buttonClassName={PAGE_FILTER_PILL_CLASS}
+                      menuClassName={PAGE_FILTER_MENU_CLASS}
+                      openKey={`filter-${tab.id}`}
+                      activeMenu={activeMenu}
+                      setActiveMenu={setActiveMenu}
+                      onChange={(value) => updateFilter(tab.id, value)}
+                      onOptionsChange={(next) => handleProcessOptionsChange(tab, next)}
+                    />
+                  </div>
+                ))}
                 <div className={PAGE_FILTER_FIELD_CLASS}>
                   <p className={PAGE_FILTER_LABEL_CLASS}>Sıralama :</p>
                   <EditableDropdownPill
@@ -2614,96 +2632,39 @@ export default function QuotesPage() {
                     )
                   },
                 },
-                {
-                  id: 'priority',
-                  header: 'ÖNCELİK',
+                ...quoteSegmentTabs.map((tab) => ({
+                  id: `process-${tab.id}`,
+                  header: tab.label,
                   align: 'center',
-                  className: 'w-[8.5rem] !max-w-none text-center',
+                  className: 'w-[9.5rem] !max-w-none text-center',
                   hideOnMobile: true,
                   headerAccessory: () =>
-                    renderFilterCycleAccessory('priority', quotePriorityFilterOptions, 'Öncelik'),
+                    renderFilterCycleAccessory(
+                      tab.id,
+                      processFilterOptionsForTab(tab),
+                      tab.label,
+                    ),
                   cell: (quote) => (
                     <span
                       className="flex w-full items-center justify-center"
                       onClick={(event) => event.stopPropagation()}
                     >
                       <EditableDropdownPill
-                        value={resolveListColumnLabel(quote.priority, optionLists.priority)}
-                        options={optionLists.priority}
+                        value={processValueForQuote(tab, quote)}
+                        options={processOptionsForTab(tab)}
                         buttonClassName={PAGE_LIST_PILL_CLASS}
                         wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
                         menuClassName={PAGE_LIST_MENU_CLASS}
                         menuMatchWidth={false}
-                        openKey={`${quote.id}-priority`}
+                        openKey={`${quote.id}-${tab.id}`}
                         activeMenu={activeMenu}
                         setActiveMenu={setActiveMenu}
-                        onChange={(value) => handleQuotePriorityChange(quote, value)}
-                        onOptionsChange={(next) => updateOptionList('priority', next)}
+                        onChange={(value) => handleProcessValueChange(tab, quote, value)}
+                        onOptionsChange={(next) => handleProcessOptionsChange(tab, next)}
                       />
                     </span>
                   ),
-                },
-                {
-                  id: 'stage',
-                  header: 'TEKLİF SÜRECİ',
-                  align: 'center',
-                  className: 'w-[9.5rem] !max-w-none text-center',
-                  hideOnMobile: true,
-                  headerAccessory: () =>
-                    renderFilterCycleAccessory('stage', quoteStageFilterOptions, 'Teklif süreci'),
-                  cell: (quote) => {
-                    const activeStage = resolveListQuoteStage(quote)
-                    return (
-                      <span
-                        className="flex w-full items-center justify-center"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <EditableDropdownPill
-                          value={activeStage?.label || ''}
-                          options={toStageDropdownOptions(quoteStageOptions)}
-                          buttonClassName={PAGE_LIST_PILL_CLASS}
-                          wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
-                          menuClassName={PAGE_LIST_MENU_CLASS}
-                          menuMatchWidth={false}
-                          openKey={`${quote.id}-stage`}
-                          activeMenu={activeMenu}
-                          setActiveMenu={setActiveMenu}
-                          onChange={(value) => handleQuoteStageLabelChange(quote, value)}
-                          onOptionsChange={updateQuoteStageOptions}
-                        />
-                      </span>
-                    )
-                  },
-                },
-                {
-                  id: 'status',
-                  header: 'TEKLİF DURUMU',
-                  align: 'center',
-                  className: 'w-[9.5rem] !max-w-none text-center',
-                  hideOnMobile: true,
-                  headerAccessory: () =>
-                    renderFilterCycleAccessory('status', quoteStatusFilterOptions, 'Teklif durumu'),
-                  cell: (quote) => (
-                    <span
-                      className="flex w-full items-center justify-center"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <EditableDropdownPill
-                        value={resolveListColumnLabel(quote.status, optionLists.status)}
-                        options={optionLists.status}
-                        buttonClassName={PAGE_LIST_PILL_CLASS}
-                        wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
-                        menuClassName={PAGE_LIST_MENU_CLASS}
-                        menuMatchWidth={false}
-                        openKey={`${quote.id}-status`}
-                        activeMenu={activeMenu}
-                        setActiveMenu={setActiveMenu}
-                        onChange={(value) => handleQuoteStatusChange(quote, value)}
-                        onOptionsChange={(next) => updateOptionList('status', next)}
-                      />
-                    </span>
-                  ),
-                },
+                })),
                 {
                   id: 'amount',
                   header: 'TUTAR',
