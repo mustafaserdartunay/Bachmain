@@ -207,7 +207,7 @@ const quoteLineActionBtnClass =
 const quoteLineDeleteBtnClass =
   'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors'
 const quoteMsCtaClass =
-  'group inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[var(--muted)] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb] [&_svg]:text-[#2563eb]'
+  'quote-ms-cta group inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[var(--muted)] transition-all hover:scale-[1.03] hover:font-bold hover:!text-[#2563eb] [&_svg]:text-[#2563eb]'
 
 const statusClasses = {
   Taslak: 'badge-gray',

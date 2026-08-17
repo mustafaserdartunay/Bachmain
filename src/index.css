@@ -769,11 +769,24 @@ textarea:not(.form-input)::placeholder {
 
 .page-type-shell .document-compact-controls .document-totals-panel .form-input,
 .app-responsive .page-type-shell .document-compact-controls .document-totals-panel .form-input {
-  height: 1.75rem !important;
-  min-height: 1.75rem !important;
-  max-height: 1.75rem !important;
-  line-height: 1.75rem !important;
+  height: 1.25rem !important;
+  min-height: 1.25rem !important;
+  max-height: 1.25rem !important;
+  line-height: 1.25rem !important;
   font-size: 13px !important;
+}
+
+.page-type-shell .quote-ms-cta:hover,
+.page-type-shell .quote-ms-cta:hover span,
+.app-responsive .page-type-shell .quote-ms-cta:hover,
+.app-responsive .page-type-shell .quote-ms-cta:hover span {
+  color: #2563eb !important;
+  font-weight: 700 !important;
+}
+
+.page-type-shell .document-totals-amount,
+.app-responsive .page-type-shell .document-totals-amount {
+  font-weight: 700 !important;
 }
 
 /* Teklif / sipariş: form alanları şeffaf — teklif listesi araması gibi ince çerçeve */

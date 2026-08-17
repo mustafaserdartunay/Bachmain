@@ -8,7 +8,7 @@ import { YF_TEXT_CLASS } from '../../utils/dashboardDesign'
 const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_minmax(7rem,1fr)] items-center gap-x-2'
 const LABEL_CELL_CLASS = 'flex min-w-0 items-center gap-1 pl-2.5'
 const AMOUNT_CLASS =
-  'block w-full text-right text-[14px] font-bold tabular-nums leading-tight tracking-normal text-[var(--muted)]'
+  'document-totals-amount block w-full text-right text-[14px] font-bold tabular-nums leading-tight tracking-normal text-[var(--muted)]'
 const ROW_FRAME =
   'document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent py-2.5 pl-1 pr-2.5'
 
@@ -26,12 +26,14 @@ function TotalRow({ label, value, valueContent, labelAction }) {
 
 function DiscountModeToggle({ mode, onChange }) {
   return (
-    <div className="inline-flex h-6 shrink-0 items-center rounded-md border border-[var(--search-border)] p-0.5">
+    <div className="inline-flex h-5 shrink-0 items-center rounded-md border border-[var(--search-border)] p-px">
       <button
         type="button"
         onClick={() => onChange('percent')}
-        className={`flex h-5 min-w-[22px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
-          mode === 'percent' ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)]' : 'text-[var(--muted)]'
+        className={`flex h-4 min-w-[20px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
+          mode === 'percent'
+            ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)] hover:text-[#2563eb]'
+            : 'text-[var(--muted)]'
         }`}
       >
         %
@@ -39,8 +41,10 @@ function DiscountModeToggle({ mode, onChange }) {
       <button
         type="button"
         onClick={() => onChange('amount')}
-        className={`flex h-5 min-w-[22px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
-          mode === 'amount' ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)]' : 'text-[var(--muted)]'
+        className={`flex h-4 min-w-[20px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
+          mode === 'amount'
+            ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)] hover:text-[#2563eb]'
+            : 'text-[var(--muted)]'
         }`}
       >
         ₺
@@ -56,7 +60,7 @@ function CompactNumericInput({ value, onChange, suffix, formatMode = 'plain', wi
       onChange={onChange}
       suffix={suffix}
       formatMode={formatMode}
-      className={`!h-7 !min-h-0 !max-h-7 !py-0 !text-[13px] !font-normal ${wide ? '!px-2 !pr-8' : '!px-1.5 !pr-6'}`}
+      className={`!h-5 !min-h-0 !max-h-5 !py-0 !text-[13px] !font-normal ${wide ? '!px-2 !pr-7' : '!px-1.5 !pr-5'}`}
     />
   )
 }
@@ -109,7 +113,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
   const genelToplam = araToplam + kdvToplam
 
   const discountControls = onPatch ? (
-    <div className="flex min-w-0 shrink-0 items-center gap-1">
+    <div className="flex h-5 min-w-0 shrink-0 items-center gap-1">
       <button
         type="button"
         onClick={disableDocumentDiscount}
@@ -193,7 +197,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
             <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">
                 <TotalRow
-                  label=""
+                  label="İndirim Toplamı"
                   value={totals.documentDiscount}
                   labelAction={discountControls}
                 />
