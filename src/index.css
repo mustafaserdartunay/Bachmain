@@ -1778,6 +1778,19 @@ html body .customers-page-type .customer-list-panel .quote-order-undo-confirm,
 html body .app-responsive .customer-list-panel .quote-order-undo-confirm {
   height: 2.25rem !important;
   min-height: 2.25rem !important;
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-box,
+html body .customers-page-type .customer-list-panel .quote-order-undo-box,
+html body .app-responsive .customer-list-panel .quote-order-undo-box {
+  width: 100% !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+  height: 2.25rem !important;
+  box-sizing: border-box !important;
 }
 
 html body .page-type-shell .customer-list-panel .quote-order-undo-sil,

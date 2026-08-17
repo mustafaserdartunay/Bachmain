@@ -281,7 +281,7 @@ function QuoteOrderInlineConfirm({
       role="alertdialog"
       aria-label={ariaLabel}
     >
-      <div className="inline-flex h-9 items-center gap-0.5 rounded-xl border border-ds-border bg-transparent px-1">
+      <div className="quote-order-undo-box flex h-9 w-full items-center justify-between rounded-xl border border-ds-border bg-transparent px-1">
         <button
           type="button"
           onClick={onConfirm}
