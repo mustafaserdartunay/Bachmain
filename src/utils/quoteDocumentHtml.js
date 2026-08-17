@@ -66,8 +66,11 @@ function termLines(text) {
     .filter(Boolean)
 }
 
-function quoteStyles(imageSize) {
+function quoteStyles(imageSize, { showDiscountCol = false } = {}) {
   const size = Number(imageSize) || 140
+  const cols = showDiscountCol
+    ? `${size}px minmax(0,1.3fr) 64px 100px 72px 80px 100px`
+    : `${size}px minmax(0,1.3fr) 64px 100px 72px 100px`
   return `
     .qd { box-sizing: border-box; width: 100%; margin: 0; padding: 28px 32px 36px; background: #fff; color: #64748b;
       font-family: ${SYSTEM_FONT}; font-size: 14px; font-weight: 400; line-height: 1.35; letter-spacing: normal; }
@@ -90,14 +93,14 @@ function quoteStyles(imageSize) {
     .qd-date { border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; position: relative; }
     .qd-date-num { margin: 4px 0 0; color: #334155; font-size: 14px; font-weight: 700; }
     .qd-items { margin-top: 22px; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; }
-    .qd-item { display: grid; grid-template-columns: ${size}px minmax(0,1.4fr) 64px minmax(132px,0.9fr) 110px; gap: 14px; align-items: center; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
+    .qd-item, .qd-item-head { display: grid; grid-template-columns: ${cols}; gap: 10px; align-items: center; justify-items: center; text-align: center; padding: 14px 12px; }
+    .qd-item { border-bottom: 1px solid #e2e8f0; }
     .qd-item:last-child { border-bottom: 0; }
-    .qd-item-head { display: grid; grid-template-columns: ${size}px minmax(0,1.4fr) 64px minmax(132px,0.9fr) 110px; gap: 14px; padding: 10px 16px; background: #f8fafc; color: #64748b; font-size: 14px; }
-    .qd-right { text-align: right; }
-    .qd-unit { display: flex; align-items: baseline; justify-content: flex-end; gap: 10px; white-space: nowrap; }
-    .qd-vat { color: #64748b; font-size: 14px; font-weight: 400; }
-    .qd-img { width: ${size}px; height: ${size}px; object-fit: cover; object-position: center; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; display: block; }
-    .qd-img-empty { width: ${size}px; height: ${size}px; border-radius: 12px; border: 1px dashed #e2e8f0; background: #f8fafc; }
+    .qd-item-head { padding: 10px 12px; background: #f8fafc; color: #64748b; font-size: 14px; }
+    .qd-product { width: 100%; text-align: center; }
+    .qd-cell { width: 100%; text-align: center; }
+    .qd-img { width: ${size}px; height: ${size}px; object-fit: cover; object-position: center; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; display: block; margin: 0 auto; }
+    .qd-img-empty { width: ${size}px; height: ${size}px; border-radius: 12px; border: 1px dashed #e2e8f0; background: #f8fafc; margin: 0 auto; }
     .qd-bottom { display: grid; grid-template-columns: minmax(0,1fr) 280px; gap: 20px; margin-top: 22px; align-items: start; }
     .qd-list { margin: 0; padding: 0; list-style: none; }
     .qd-list li { position: relative; padding: 0 0 8px 14px; }
@@ -133,6 +136,9 @@ export function buildQuoteDocumentInnerHtml({
   const representative = quote?.owner || customer.authorizedName || ''
   const items = Array.isArray(quote?.items) ? quote.items : []
   const banks = resolveBanks(quote, brand)
+  const showDiscountCol = items.some(
+    (item) => item.showDiscount && (Number(item.discountRate) > 0 || Number(item.discountAmount) > 0),
+  )
 
   const itemRows = items
     .map((item) => {
@@ -144,6 +150,13 @@ export function buildQuoteDocumentInnerHtml({
         currency === 'TRY'
           ? formatTL(item.unitPrice)
           : `${formatMoney(item.unitPrice, currency)}`
+      const discountLabel = item.showDiscount
+        ? Number(item.discountRate) > 0
+          ? `%${item.discountRate}`
+          : Number(item.discountAmount) > 0
+            ? formatTL(item.discountAmount)
+            : '—'
+        : '—'
       return `
         <div class="qd-item">
           ${
@@ -153,23 +166,15 @@ export function buildQuoteDocumentInnerHtml({
                 : `<div class="qd-img-empty"></div>`
               : '<div></div>'
           }
-          <div>
+          <div class="qd-product">
             <p class="qd-strong">${escapeHtml(item.product || 'Ürün seçilmedi')}</p>
             ${desc ? `<p class="qd-meta">${escapeHtml(desc)}</p>` : ''}
           </div>
-          <div class="qd-right">${escapeHtml(item.quantity ?? 1)}</div>
-          <div class="qd-right">
-            <div class="qd-unit">
-              <span>${unit}</span>
-              <span class="qd-vat">%${escapeHtml(item.vatRate ?? 20)}</span>
-            </div>
-            ${
-              currency !== 'TRY'
-                ? `<div class="qd-meta">${formatTL(row.subtotal / Math.max(1, Number(item.quantity) || 1))}</div>`
-                : ''
-            }
-          </div>
-          <div class="qd-right qd-strong">${formatTL(row.total)}</div>
+          <div class="qd-cell">${escapeHtml(item.quantity ?? 1)}</div>
+          <div class="qd-cell">${unit}</div>
+          <div class="qd-cell">%${escapeHtml(item.vatRate ?? 20)}</div>
+          ${showDiscountCol ? `<div class="qd-cell">${discountLabel}</div>` : ''}
+          <div class="qd-cell qd-strong">${formatTL(row.total)}</div>
         </div>`
     })
     .join('')
@@ -193,7 +198,7 @@ export function buildQuoteDocumentInnerHtml({
     .join('')
 
   return `
-    <style>${quoteStyles(imageSize)}</style>
+    <style>${quoteStyles(imageSize, { showDiscountCol })}</style>
     <article class="qd">
       <div class="qd-bar"></div>
       <header class="qd-top">
@@ -208,7 +213,7 @@ export function buildQuoteDocumentInnerHtml({
         </div>
         <div class="qd-doc">
           <h1 class="qd-title">${escapeHtml(quote?.title || 'Teklif')}</h1>
-          <p class="qd-no">${escapeHtml(quote?.id || '')}</p>
+          <p class="qd-no">Teklif Numarası : ${escapeHtml(quote?.id || '')}</p>
         </div>
       </header>
 
@@ -251,9 +256,11 @@ export function buildQuoteDocumentInnerHtml({
         <div class="qd-item-head">
           <span>${settings.showProductImages ? 'Görsel' : ''}</span>
           <span>Ürün</span>
-          <span class="qd-right">Adet</span>
-          <span class="qd-right">Birim</span>
-          <span class="qd-right">Toplam</span>
+          <span>Adet</span>
+          <span>Birim</span>
+          <span>K.D.V.</span>
+          ${showDiscountCol ? '<span>İndirim</span>' : ''}
+          <span>Toplam</span>
         </div>
         ${itemRows || '<div class="qd-item"><div></div><p>Ürün satırı yok.</p></div>'}
       </section>
