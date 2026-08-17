@@ -32,8 +32,8 @@ function DiscountModeToggle({ mode, onChange }) {
         onClick={() => onChange('percent')}
         className={`flex h-4 min-w-[20px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
           mode === 'percent'
-            ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)] hover:text-[#2563eb]'
-            : 'text-[var(--muted)]'
+            ? 'text-[#2563eb]'
+            : 'text-[var(--muted)] hover:text-[#2563eb]'
         }`}
       >
         %
@@ -43,8 +43,8 @@ function DiscountModeToggle({ mode, onChange }) {
         onClick={() => onChange('amount')}
         className={`flex h-4 min-w-[20px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
           mode === 'amount'
-            ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)] hover:text-[#2563eb]'
-            : 'text-[var(--muted)]'
+            ? 'text-[#2563eb]'
+            : 'text-[var(--muted)] hover:text-[#2563eb]'
         }`}
       >
         ₺
