@@ -7963,7 +7963,90 @@ html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-orde
   transform: none !important;
 }
 
-/* BachMain Studio — Website OS gömülü panel */
+/* BachMain Studio — Dropelya /yonetim gömülü tam ekran */
+.web-studio-fullscreen {
+  position: relative;
+  display: flex;
+  min-height: 100dvh;
+  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--app-bg-soft, #e5eaf2);
+  opacity: 0;
+  transform: translateY(8px) scale(0.995);
+  transition:
+    opacity 280ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.web-studio-fullscreen.is-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.web-studio-backbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  height: 3rem;
+  min-height: 3rem;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.75));
+  background: var(--glass-bg-strong, rgba(255, 255, 255, 0.72));
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  padding: 0 0.75rem;
+}
+
+.web-studio-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.75));
+  background: rgba(255, 255, 255, 0.55);
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.web-studio-back-link:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(121, 166, 210, 0.45);
+}
+
+.web-studio-backbar-title {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.web-studio-embed-frame {
+  min-height: 0;
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: #fff;
+}
+
+/* Eski gömülü kabuk — geriye dönük */
 .web-studio-embed-shell {
   min-height: calc(100dvh - var(--ds-bottom-nav-h, 4rem) - (3 * var(--shell-gap)) - 3.5rem);
 }
@@ -7972,9 +8055,4 @@ html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-orde
   .web-studio-embed-shell {
     min-height: calc(100dvh - (2 * var(--shell-gap)) - 3.5rem);
   }
-}
-
-.web-studio-embed-frame {
-  min-height: 24rem;
-  background: #fff;
 }

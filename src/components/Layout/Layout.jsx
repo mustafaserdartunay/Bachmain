@@ -21,16 +21,18 @@ function readSidebarCollapsed() {
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
+  const isWebStudio =
+    pathname === '/web/studio' || pathname.startsWith('/web/studio/')
   const hideChrome =
     pathname === '/paketler' ||
     pathname.startsWith('/paketler/') ||
-    pathname === '/web/studio' ||
-    pathname.startsWith('/web/studio/')
+    isWebStudio
   const fullscreenWorkspace =
     pathname === '/otomasyon/designer' ||
     pathname.startsWith('/otomasyon/designer/') ||
     pathname === '/mes/operator' ||
-    pathname.startsWith('/mes/operator/')
+    pathname.startsWith('/mes/operator/') ||
+    isWebStudio
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed)
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(
@@ -124,8 +126,8 @@ export default function Layout({ children }) {
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
         <main
           className={
-            hideChrome && pathname.startsWith('/web/')
-              ? 'app-responsive flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-3 py-2 sm:px-4 lg:px-3 lg:py-3'
+            isWebStudio
+              ? 'min-h-screen w-full overflow-hidden p-0'
               : 'app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0'
           }
         >
