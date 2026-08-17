@@ -47,13 +47,9 @@ function resolveCustomer(ref) {
 export default function DocPrintPage() {
   const { user } = useAuth()
   const [params] = useSearchParams()
-  const initialType = params.get('type') || 'quote'
-  const initialDocId = params.get('id') || ''
-  const initialTpl = params.get('templateId') || ''
-
-  const [docType, setDocType] = useState(initialType)
-  const [documentId, setDocumentId] = useState(initialDocId)
-  const [templateId, setTemplateId] = useState(initialTpl)
+  const docType = params.get('type') || 'quote'
+  const documentId = params.get('id') || ''
+  const templateId = params.get('templateId') || ''
   const [busy, setBusy] = useState(false)
   const [printTick, setPrintTick] = useState(0)
   const previewRef = useRef(null)
@@ -209,38 +205,6 @@ export default function DocPrintPage() {
           </div>
         )}
       />
-
-      <section className="card grid gap-3 md:grid-cols-3">
-        <label className="block space-y-1.5">
-          <span className="text-[11px] font-black uppercase text-gray-500">Belge tipi</span>
-          <select className="form-input" value={docType} onChange={(e) => { setDocType(e.target.value); setDocumentId(''); setTemplateId('') }}>
-            <option value="quote">Teklif</option>
-            <option value="order">Sipariş</option>
-          </select>
-        </label>
-        <label className="block space-y-1.5">
-          <span className="text-[11px] font-black uppercase text-gray-500">Belge</span>
-          <select className="form-input" value={selectedDoc?.id || ''} onChange={(e) => setDocumentId(e.target.value)}>
-            {documents.length === 0 ? <option value="">Kayıt yok</option> : null}
-            {documents.map((doc) => (
-              <option key={doc.id} value={doc.id}>{doc.id}</option>
-            ))}
-          </select>
-        </label>
-        <label className="block space-y-1.5">
-          <span className="text-[11px] font-black uppercase text-gray-500">Şablon</span>
-          {docType === 'quote' ? (
-            <input className="form-input" value="BachMain Teklif" readOnly />
-          ) : (
-            <select className="form-input" value={selectedTpl?.id || ''} onChange={(e) => setTemplateId(e.target.value)}>
-              {templates.length === 0 ? <option value="">Şablon yok — önce oluşturun</option> : null}
-              {templates.map((tpl) => (
-                <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
-              ))}
-            </select>
-          )}
-        </label>
-      </section>
 
       <section className="card overflow-visible p-0">
         <div className="border-b border-dark-500/40 px-4 py-3 text-xs font-black uppercase text-gray-400">Önizleme</div>
