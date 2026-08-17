@@ -3325,11 +3325,25 @@ html body section.card.quote-list-row-panel.quote-list-header-panel {
   min-height: 4.75rem;
   padding-top: 0.75rem !important;
   padding-bottom: 0.75rem !important;
+  position: relative;
+  z-index: 4;
 }
 
-html body .quote-list-header-panel button {
+html body .quote-list-header-panel .quote-list-cell,
+html body .quote-list-header-panel .quote-list-header-btn,
+html body .quote-list-header-panel .quote-list-header-btn * {
   pointer-events: auto !important;
+}
+
+html body .quote-list-header-panel .quote-list-header-btn {
+  position: relative;
+  z-index: 5;
   cursor: pointer !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  min-height: 2.75rem;
+  width: 100%;
 }
 
 .quote-list-cell {

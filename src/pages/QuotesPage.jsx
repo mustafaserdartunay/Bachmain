@@ -318,57 +318,38 @@ function QuoteListColumnHeader({
   sortKey,
   sort,
   onToggleSort,
-  onAction,
-  actionTitle,
 }) {
   const title = formatQuoteListColumnLabel(label)
-  const clickable = Boolean(sortable || onAction)
-  const sortIcon = sortable ? (
-    sort?.key === sortKey ? (
+  if (!label) {
+    return <span className="inline-flex h-5 w-5" aria-hidden />
+  }
+
+  const sortIcon =
+    sortable && sort?.key === sortKey ? (
       sort.dir === 'asc' ? (
-        <ArrowUp className="h-3.5 w-3.5 shrink-0 opacity-40" />
+        <ArrowUp className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden="true" />
       ) : (
-        <ArrowDown className="h-3.5 w-3.5 shrink-0 opacity-40" />
+        <ArrowDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden="true" />
       )
     ) : (
       <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden="true" />
     )
-  ) : onAction ? (
-    <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden="true" />
-  ) : null
-
-  if (!label && !clickable) {
-    return <span className="inline-flex h-5 w-5" aria-hidden />
-  }
-
-  const inner = (
-    <>
-      <span className={`${YFB_TEXT_CLASS} quote-list-column-title`}>{title}</span>
-      {sortIcon}
-    </>
-  )
 
   return (
-    <div className="flex w-full min-w-0 items-center justify-center gap-2">
-      {clickable ? (
-        <button
-          type="button"
-          className="relative z-10 inline-flex min-w-0 items-center gap-1"
-          title={actionTitle || (sortable ? `${label} sırala` : undefined)}
-          aria-label={actionTitle || (sortable ? `${label} sırala` : undefined)}
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            if (sortable) onToggleSort?.(sortKey)
-            else onAction?.()
-          }}
-        >
-          {inner}
-        </button>
-      ) : (
-        inner
-      )}
-    </div>
+    <button
+      type="button"
+      className="quote-list-header-btn flex min-h-[2.75rem] w-full min-w-0 items-center justify-center gap-1"
+      title={`${label} sırala`}
+      aria-label={`${label} sırala`}
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        if (sortable) onToggleSort?.(sortKey)
+      }}
+    >
+      <span className={`${YFB_TEXT_CLASS} quote-list-column-title`}>{title}</span>
+      {sortIcon}
+    </button>
   )
 }
 
@@ -2810,10 +2791,10 @@ export default function QuotesPage() {
                     <QuoteListCell key={tab.id}>
                       <QuoteListColumnHeader
                         label={tab.label}
-                        onAction={() =>
-                          cycleListFilter(tab.id, processFilterOptionsForTab(tab), 1)
-                        }
-                        actionTitle={`${tab.label} filtresini değiştir`}
+                        sortable
+                        sortKey={`process-${tab.id}`}
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
                       />
                     </QuoteListCell>
                   ))}
