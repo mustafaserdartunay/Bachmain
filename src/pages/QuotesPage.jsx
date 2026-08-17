@@ -199,14 +199,14 @@ function StageColorSwatches({
 }
 
 const quoteItemFieldsGridClass =
-  'grid-cols-[minmax(0,1.4fr)_64px_100px_56px_96px_96px_auto]'
+  'grid-cols-[minmax(0,1.4fr)_64px_100px_56px_96px_auto]'
 const quoteItemFieldGapClass = 'gap-x-2'
 const quoteLineActionBtnClass =
   'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors'
 const quoteLineDeleteBtnClass =
   'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors'
 const quoteMsCtaClass =
-  'inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[#2563eb] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb]'
+  'inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[var(--muted)] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb] [&_svg]:transition-colors hover:[&_svg]:text-[#2563eb]'
 
 const statusClasses = {
   Taslak: 'badge-gray',
@@ -468,6 +468,7 @@ function sanitizeQuoteForSave(quote) {
       : getOptionLabels('status')[0] || 'Taslak',
     createdAt: quote.createdAt || todayIsoDate(),
     validUntil: quote.validUntil || defaultValidUntilDate(quote.createdAt || todayIsoDate()),
+    dueDate: quote.dueDate || quote.validUntil || defaultValidUntilDate(quote.createdAt || todayIsoDate()),
     tags: Array.isArray(quote.tags) ? quote.tags.map(safeText).filter(Boolean) : [],
     termsDescription: String(quote.termsDescription || '').trim(),
     terms: Array.isArray(quote.terms) ? quote.terms.map(safeText).filter(Boolean) : [],
@@ -1813,6 +1814,7 @@ export default function QuotesPage() {
       terms: [],
       createdAt,
       validUntil: defaultValidUntilDate(createdAt),
+      dueDate: defaultValidUntilDate(createdAt),
       currentStageId: getQuoteStageOptions(stages)[0]?.id || '',
       stages,
       items: [createEmptyQuoteItem()],
@@ -2873,19 +2875,30 @@ export default function QuotesPage() {
                     onPatch={patchSelected}
                     allowCreate={true}
                   />
-                  <DateInlineField
-                    label="Oluşturma Tarihi :"
-                    value={selectedQuote.createdAt || todayIsoDate()}
-                    onChange={(value) => patchSelected({ createdAt: value })}
-                  />
-                  <DateInlineField
-                    label="Geçerlilik Tarihi :"
-                    value={
-                      selectedQuote.validUntil ||
-                      defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())
-                    }
-                    onChange={(value) => patchSelected({ validUntil: value })}
-                  />
+                  <div className="col-span-2 grid grid-cols-3 gap-3">
+                    <DateInlineField
+                      label="Oluşturma Tarihi :"
+                      value={selectedQuote.createdAt || todayIsoDate()}
+                      onChange={(value) => patchSelected({ createdAt: value })}
+                    />
+                    <DateInlineField
+                      label="Geçerlilik Tarihi :"
+                      value={
+                        selectedQuote.validUntil ||
+                        defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())
+                      }
+                      onChange={(value) => patchSelected({ validUntil: value })}
+                    />
+                    <DateInlineField
+                      label="Vaade Tarihi :"
+                      value={
+                        selectedQuote.dueDate ||
+                        selectedQuote.validUntil ||
+                        defaultValidUntilDate(selectedQuote.createdAt || todayIsoDate())
+                      }
+                      onChange={(value) => patchSelected({ dueDate: value })}
+                    />
+                  </div>
                 </div>
               </AppPagePanel>
 
@@ -2961,19 +2974,7 @@ export default function QuotesPage() {
                               onChange={(value) => updateItem(item.id, 'vatRate', value)}
                             />
                           </Field>
-                          <Field label="KDV Hariç" align="center">
-                            <div className="space-y-1">
-                              <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
-                                {formatMoney(display.net, itemCurrency)}
-                              </div>
-                              {itemCurrency !== 'TRY' ? (
-                                <p className="text-center text-[11px] font-normal tabular-nums text-[var(--muted)]">
-                                  {formatTL(totals.net)}
-                                </p>
-                              ) : null}
-                            </div>
-                          </Field>
-                          <Field label="KDV Dahil" align="center">
+                          <Field label="Toplam" align="center">
                             <div className="space-y-1">
                               <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
                                 {formatMoney(display.total, itemCurrency)}
@@ -3172,7 +3173,7 @@ export default function QuotesPage() {
                     onClick={addItem}
                     className={`${quoteMsCtaClass} w-full`}
                   >
-                    <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
+                    <Plus className="h-4 w-4 text-[var(--muted)]" strokeWidth={2.25} />
                     Ürün Ekle
                   </button>
 

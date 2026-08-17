@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, Landmark } from 'lucide-react'
+import { CheckCircle2, ChevronDown, Landmark } from 'lucide-react'
 import BankAccountsDocumentEditor from './BankAccountsDocumentEditor'
 import { AppPanelDot } from '../Layout/AppPageLayout'
 import { createBankAccount, readCompanySettings, updateCompanySettings } from '../../utils/companySettings'
@@ -115,6 +115,12 @@ export default function DocumentBankAccountsPanel({
                           : 'border-[var(--search-border)] bg-transparent hover:border-[#10b981]/35'
                       }`}
                     >
+                      <CheckCircle2
+                        className={`h-3.5 w-3.5 shrink-0 ${
+                          isSelected ? 'text-[#10b981]' : 'text-[var(--muted)]'
+                        }`}
+                        strokeWidth={2.25}
+                      />
                       <Landmark
                         className={`h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-[#10b981]' : 'text-[var(--muted)]'}`}
                         strokeWidth={2.25}

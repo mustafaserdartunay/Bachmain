@@ -88,6 +88,9 @@ export function documentTotals(document, rates = {}) {
   const vat = lineVat * netRatio
   const discountFields = sanitizeDocumentDiscountFields(document)
 
+  const lineGrandTotal = rows.reduce((sum, row) => sum + row.total, 0)
+  const totalTax = vat + exciseTax + accommodationTax
+
   return {
     subtotal,
     lineDiscount,
@@ -97,6 +100,8 @@ export function documentTotals(document, rates = {}) {
     exciseTax,
     accommodationTax,
     vat,
+    lineGrandTotal,
+    totalTax,
     grandTotal: net + exciseTax + accommodationTax + vat,
     showDiscount: true,
     ...discountFields,

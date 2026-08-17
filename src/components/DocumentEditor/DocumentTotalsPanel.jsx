@@ -109,7 +109,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
       <div className="flex min-h-0 flex-1 flex-col space-y-2.5">
           <div className={`flex items-center gap-2 ${showAddField ? '' : 'pr-0'}`}>
             <div className="min-w-0 flex-1">
-              <TotalRow label="Ara Toplam" value={totals.subtotal} />
+              <TotalRow label="Ara Toplam" value={totals.lineGrandTotal ?? totals.subtotal} />
             </div>
             {showAddField ? (
               <div className="relative shrink-0" ref={menuRef}>
@@ -212,7 +212,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
           ))}
           <div className="flex items-center gap-2">
             <div className="min-w-0 flex-1">
-              <TotalRow label="KDV" value={totals.vat} />
+              <TotalRow label="KDV" value={totals.totalTax ?? totals.vat} />
             </div>
             <div className="w-7 shrink-0" aria-hidden />
           </div>
