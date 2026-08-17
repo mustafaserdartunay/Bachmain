@@ -90,6 +90,7 @@ import {
   resolveOrderPanelCurrentStageId,
   resolveQuoteActiveStage,
   resolveQuoteProcessRecord,
+  toStageDropdownOptions,
 } from '../utils/workflowStages'
 import {
   documentMoneyParts,
@@ -1202,6 +1203,7 @@ export default function QuotesPage() {
   const orderStageOptions = getOrderStageOptions(workflowStages)
   const quotePriorityFilterOptions = [filterAllOption, ...optionLists.priority]
   const quoteStatusFilterOptions = [filterAllOption, ...optionLists.status]
+  const quoteStageFilterOptions = [filterAllOption, ...toStageDropdownOptions(quoteStageOptions)]
 
   function resolveListQuoteStage(quote) {
     return resolveQuoteActiveStage(quote, workflowStages)
@@ -1226,6 +1228,28 @@ export default function QuotesPage() {
       ],
     })
     setActiveMenu(null)
+  }
+
+  function updateQuoteStageOptions(nextOptions) {
+    const fullStages = loadWorkflowStages()
+    const current = getQuoteStageOptions(fullStages)
+    const nextStages = (nextOptions || [])
+      .map((option, index) => {
+        const label = String(option?.label || '').trim()
+        if (!label) return null
+        const existing =
+          current.find((stage) => stage.id === option.id) ||
+          current.find((stage) => stage.label === label)
+        return {
+          id: existing?.id || option.id || `stage-${Date.now()}-${index}`,
+          label,
+          color: option.color || existing?.color || stageColors[index % stageColors.length],
+          note: existing?.note || 'Teklif süreci aşaması.',
+        }
+      })
+      .filter(Boolean)
+    const saved = publishWorkflowStages(mergeQuoteStagesIntoWorkflow(fullStages, nextStages))
+    setWorkflowStages([...(saved || loadWorkflowStages())])
   }
 
   useEffect(() => {
@@ -2421,7 +2445,7 @@ export default function QuotesPage() {
                 <AppPanelDot color="blue" />
                 <span className={YF_TEXT_CLASS}>Filtre :</span>
               </div>
-              <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className={PAGE_FILTER_FIELD_CLASS}>
                   <p className={PAGE_FILTER_LABEL_CLASS}>Öncelik :</p>
                   <EditableDropdownPill
@@ -2435,6 +2459,21 @@ export default function QuotesPage() {
                     setActiveMenu={setActiveMenu}
                     onChange={(value) => updateFilter('priority', value)}
                     onOptionsChange={(next) => updateOptionList('priority', next)}
+                  />
+                </div>
+                <div className={PAGE_FILTER_FIELD_CLASS}>
+                  <p className={PAGE_FILTER_LABEL_CLASS}>Süreç :</p>
+                  <EditableDropdownPill
+                    value={filters.stage}
+                    options={quoteStageFilterOptions}
+                    includePlaceholderOption={false}
+                    buttonClassName={PAGE_FILTER_PILL_CLASS}
+                    menuClassName={PAGE_FILTER_MENU_CLASS}
+                    openKey="filter-stage"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    onChange={(value) => updateFilter('stage', value)}
+                    onOptionsChange={updateQuoteStageOptions}
                   />
                 </div>
                 <div className={PAGE_FILTER_FIELD_CLASS}>
@@ -2603,6 +2642,38 @@ export default function QuotesPage() {
                       />
                     </span>
                   ),
+                },
+                {
+                  id: 'stage',
+                  header: 'TEKLİF SÜRECİ',
+                  align: 'center',
+                  className: 'w-[9.5rem] !max-w-none text-center',
+                  hideOnMobile: true,
+                  headerAccessory: () =>
+                    renderFilterCycleAccessory('stage', quoteStageFilterOptions, 'Teklif süreci'),
+                  cell: (quote) => {
+                    const activeStage = resolveListQuoteStage(quote)
+                    return (
+                      <span
+                        className="flex w-full items-center justify-center"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <EditableDropdownPill
+                          value={activeStage?.label || ''}
+                          options={toStageDropdownOptions(quoteStageOptions)}
+                          buttonClassName={PAGE_LIST_PILL_CLASS}
+                          wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                          menuClassName={PAGE_LIST_MENU_CLASS}
+                          menuMatchWidth={false}
+                          openKey={`${quote.id}-stage`}
+                          activeMenu={activeMenu}
+                          setActiveMenu={setActiveMenu}
+                          onChange={(value) => handleQuoteStageLabelChange(quote, value)}
+                          onOptionsChange={updateQuoteStageOptions}
+                        />
+                      </span>
+                    )
+                  },
                 },
                 {
                   id: 'status',

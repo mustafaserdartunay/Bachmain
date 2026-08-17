@@ -30,6 +30,7 @@ import {
   publishDashboardFinanceCards,
 } from '../../utils/dashboardFinanceCards'
 import { buildFinanceMetricCards } from '../Dashboard/StatusAnalysisBoard'
+import { readOptionLists, saveOptionList } from '../../utils/customerMeta'
 
 const WORKFLOW_SEGMENTS = [
   { id: 'depo', label: 'Depo Süreçleri' },
@@ -37,6 +38,7 @@ const WORKFLOW_SEGMENTS = [
 
 const QUOTE_SEGMENTS = [
   { id: 'quote', label: 'Teklif Süreci' },
+  { id: 'quoteStatus', label: 'Teklif Durumu' },
 ]
 
 const ORDER_SEGMENTS = [
@@ -92,7 +94,14 @@ function readSegmentTabs(storageKey, fallbackSegments) {
           sourceId: segment.sourceId || segment.id,
           builtIn: Boolean(segment.builtIn),
         }))
-      if (normalized.length) return normalized
+      if (normalized.length) {
+        const have = new Set(normalized.map((segment) => segment.sourceId || segment.id))
+        fallback.forEach((segment) => {
+          const key = segment.sourceId || segment.id
+          if (!have.has(key)) normalized.push(segment)
+        })
+        return normalized
+      }
     }
   } catch {
     // localStorage kapalıysa varsayılan sekmeleri kullan.
@@ -290,6 +299,7 @@ export default function WorkflowStagesSettingsPanel() {
   const [editingProductionSegmentId, setEditingProductionSegmentId] = useState(null)
   const [editingProductionSegmentDraft, setEditingProductionSegmentDraft] = useState('')
   const [pendingProductionSegmentDeleteId, setPendingProductionSegmentDeleteId] = useState(null)
+  const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [dashboardFinanceCards, setDashboardFinanceCards] = useState(() => loadDashboardFinanceCards())
   const [dashboardFinanceInput, setDashboardFinanceInput] = useState('')
   const [pendingDashboardFinanceDeleteId, setPendingDashboardFinanceDeleteId] = useState(null)
@@ -313,15 +323,20 @@ export default function WorkflowStagesSettingsPanel() {
     function refreshDashboardFinanceCards() {
       setDashboardFinanceCards(loadDashboardFinanceCards())
     }
+    function refreshOptionLists() {
+      setOptionLists(readOptionLists())
+    }
     window.addEventListener('bach:workflow-stages-updated', refresh)
     window.addEventListener('bach:depo-workflow-stages-updated', refreshDepoStages)
     window.addEventListener('bach:production-fulfillment-updated', refreshPartDelivery)
     window.addEventListener(DASHBOARD_FINANCE_CARDS_EVENT, refreshDashboardFinanceCards)
+    window.addEventListener('bach:option-lists-updated', refreshOptionLists)
     return () => {
       window.removeEventListener('bach:workflow-stages-updated', refresh)
       window.removeEventListener('bach:depo-workflow-stages-updated', refreshDepoStages)
       window.removeEventListener('bach:production-fulfillment-updated', refreshPartDelivery)
       window.removeEventListener(DASHBOARD_FINANCE_CARDS_EVENT, refreshDashboardFinanceCards)
+      window.removeEventListener('bach:option-lists-updated', refreshOptionLists)
     }
   }, [])
 
@@ -340,6 +355,7 @@ export default function WorkflowStagesSettingsPanel() {
   function getSegmentStages(segment = activeSegment) {
     if (segment === 'partDelivery') return partDeliverySituations
     if (segment === 'depo') return depoStages
+    if (segment === 'quoteStatus') return optionLists.status || []
     return getSegmentStagesFrom(workflowStages, segment)
   }
 
@@ -363,7 +379,7 @@ export default function WorkflowStagesSettingsPanel() {
       ? previewQuoteStageId
       : ''
     return { stages, currentStageId }
-  }, [workflowStages, activeQuoteSegmentSource, previewQuoteStageId])
+  }, [workflowStages, activeQuoteSegmentSource, previewQuoteStageId, optionLists])
 
   const orderSegmentRecord = useMemo(() => {
     const stages = getSegmentStages(activeOrderSegmentSource)
@@ -1095,32 +1111,48 @@ export default function WorkflowStagesSettingsPanel() {
         setPendingDeleteId={setPendingQuoteSegmentDeleteId}
       />
 
-      <div>
-        <h3 className="mb-1.5 text-xs font-black uppercase tracking-wider text-gray-500">
-          {activeQuoteSegmentMeta?.label || 'Teklif Süreci'}
-        </h3>
-        <ProcessPanelModule
-          key={activeQuoteSegment}
-          activeLabel="Aktif Süreç"
-          countSuffix="süreç tanımlı"
-          emptyMessage="Henüz teklif süreci eklenmedi."
-          addPlaceholder="Yeni teklif süreci adı..."
-          record={quoteSegmentRecord}
-          isOpen={isQuoteOpen}
-          onToggle={toggleQuoteEditor}
-          stageInput={quoteStageInput}
-          setStageInput={setQuoteStageInput}
-          onAddStage={addQuoteStage}
-          onSelectStage={selectQuoteStage}
-          onUpdateStageColor={updateQuoteStageColor}
-          onUpdateStageLabel={updateQuoteStageLabel}
-          onCopyStage={copyQuoteStage}
-          onReorderStages={reorderQuoteStages}
-          pendingStageDeleteId={pendingQuoteStageDeleteId}
-          setPendingStageDeleteId={setPendingQuoteStageDeleteId}
-          onRemoveStage={removeQuoteStage}
+      {activeQuoteSegmentSource === 'quoteStatus' ? (
+        <OptionListPanel
+          title="Teklif Durumu"
+          description="Taslak, onaylandı, reddedildi vb. Teklif listesi ve filtrelerine yansır."
+          options={optionLists.status || []}
+          onChange={(next) => {
+            saveOptionList('status', next)
+            setOptionLists(readOptionLists())
+          }}
+          placeholder="Yeni durum adı..."
+          activeLabel="Aktif Durum"
+          countSuffix="durum tanımlı"
+          emptyMessage="Henüz teklif durumu eklenmedi."
         />
-      </div>
+      ) : (
+        <div>
+          <h3 className="mb-1.5 text-xs font-black uppercase tracking-wider text-gray-500">
+            {activeQuoteSegmentMeta?.label || 'Teklif Süreci'}
+          </h3>
+          <ProcessPanelModule
+            key={activeQuoteSegment}
+            activeLabel="Aktif Süreç"
+            countSuffix="süreç tanımlı"
+            emptyMessage="Henüz teklif süreci eklenmedi."
+            addPlaceholder="Yeni teklif süreci adı..."
+            record={quoteSegmentRecord}
+            isOpen={isQuoteOpen}
+            onToggle={toggleQuoteEditor}
+            stageInput={quoteStageInput}
+            setStageInput={setQuoteStageInput}
+            onAddStage={addQuoteStage}
+            onSelectStage={selectQuoteStage}
+            onUpdateStageColor={updateQuoteStageColor}
+            onUpdateStageLabel={updateQuoteStageLabel}
+            onCopyStage={copyQuoteStage}
+            onReorderStages={reorderQuoteStages}
+            pendingStageDeleteId={pendingQuoteStageDeleteId}
+            setPendingStageDeleteId={setPendingQuoteStageDeleteId}
+            onRemoveStage={removeQuoteStage}
+          />
+        </div>
+      )}
     </section>
 
     <section className="card space-y-4">
