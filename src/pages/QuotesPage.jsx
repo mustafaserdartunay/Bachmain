@@ -15,7 +15,6 @@ import {
   Printer,
   Save,
   Send,
-  ShoppingCart,
   Trash2,
   Undo2,
   X,
@@ -312,16 +311,16 @@ function QuoteListOrderModuleButton({
     return (
       <span className="inline-flex items-center gap-1">
         <span
-          className="quote-order-chip inline-flex h-7 items-center gap-0.5 rounded-md border border-emerald-500/40 bg-emerald-500/15 px-1.5 text-[10px] font-bold leading-none text-emerald-700"
+          className="quote-order-chip inline-flex h-9 w-[3.75rem] flex-col items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-1 text-center text-[10px] font-bold leading-tight text-emerald-700"
           title="Sipariş oluşturuldu"
         >
-          <ShoppingCart className="h-3 w-3 shrink-0" strokeWidth={2.25} />
-          Oluştu
+          <span>Sipariş</span>
+          <span>Oluştu</span>
         </span>
         <button
           type="button"
           onClick={onRequestUndo}
-          className="glass-sidebar-toggle glass-sidebar-collapse flex h-7 w-7 items-center justify-center rounded-lg"
+          className="glass-sidebar-toggle glass-sidebar-collapse flex h-9 w-9 items-center justify-center rounded-xl"
           title="Siparişi geri al"
           aria-label="Siparişi geri al"
         >
@@ -335,12 +334,12 @@ function QuoteListOrderModuleButton({
     <button
       type="button"
       onClick={onRequestCreate}
-      className="quote-order-chip inline-flex h-7 items-center gap-0.5 rounded-md border border-ds-border bg-transparent px-1.5 text-[10px] font-semibold leading-none text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700"
+      className="quote-order-chip inline-flex h-9 w-[3.75rem] flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700"
       title={`${quote.customer || quote.id} teklifinden sipariş oluştur`}
       aria-label="Sipariş oluştur"
     >
-      <ShoppingCart className="h-3 w-3 shrink-0" strokeWidth={2.25} />
-      Oluştur
+      <span>Sipariş</span>
+      <span>Oluştur</span>
     </button>
   )
 }
