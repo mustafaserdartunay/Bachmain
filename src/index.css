@@ -3294,19 +3294,46 @@ html.special .app-page-metric {
   box-shadow: var(--special-card-glow) !important;
 }
 
-/* Teklif Listesi — sipariş satırı ile aynı zemin tokenları (bg-dark-800/55); tema remap’i geçerli */
-html body .page-type-shell section.card.quote-list-table-panel,
-html body .customers-page-type section.card.quote-list-table-panel,
-html body .app-responsive section.card.quote-list-table-panel,
-html.night body section.card.quote-list-table-panel,
-html.space body section.card.quote-list-table-panel,
-html.special body section.card.quote-list-table-panel {
-  box-shadow: none !important;
+/* Teklif Listesi — her sütun Filtre paneli gibi ayrı kart; satırlar subgrid ile hizalı */
+.quote-list-column-board {
+  display: grid;
+  width: 100%;
+  min-width: 56rem;
+  align-items: stretch;
+  gap: 0.75rem;
 }
 
-html body .quote-list-table-panel [class*='bg-dark-800'] {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+html body section.card.quote-list-column-panel {
+  display: grid !important;
+  grid-template-rows: subgrid;
+  grid-row: 1 / -1;
+  min-width: 0;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.quote-list-column-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+}
+
+.quote-list-column-cell.is-hovered {
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+}
+
+html body .page-type-shell .quote-list-column-panel .customer-name-primary,
+html body .customers-page-type .quote-list-column-panel .customer-name-primary,
+html body .app-responsive .quote-list-column-panel .customer-name-primary {
+  font-weight: 700 !important;
+}
+
+html body .page-type-shell .quote-list-column-panel .customer-balance-positive,
+html body .customers-page-type .quote-list-column-panel .customer-balance-positive,
+html body .app-responsive .quote-list-column-panel .customer-balance-positive {
+  color: #10b981 !important;
+  font-weight: 700 !important;
 }
 
 html.space [class*='rounded-2xl'][class*='border'][class*='bg-dark-800'] {
