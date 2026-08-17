@@ -30,9 +30,9 @@ function DiscountModeToggle({ mode, onChange }) {
       <button
         type="button"
         onClick={() => onChange('percent')}
-        className={`flex h-4 min-w-[20px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
+        className={`document-discount-mode-btn flex h-4 min-w-[20px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
           mode === 'percent'
-            ? 'text-[#2563eb]'
+            ? 'document-discount-mode-selected text-[#2563eb]'
             : 'text-[var(--muted)] hover:text-[#2563eb]'
         }`}
       >
@@ -41,9 +41,9 @@ function DiscountModeToggle({ mode, onChange }) {
       <button
         type="button"
         onClick={() => onChange('amount')}
-        className={`flex h-4 min-w-[20px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
+        className={`document-discount-mode-btn flex h-4 min-w-[20px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
           mode === 'amount'
-            ? 'text-[#2563eb]'
+            ? 'document-discount-mode-selected text-[#2563eb]'
             : 'text-[var(--muted)] hover:text-[#2563eb]'
         }`}
       >

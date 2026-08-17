@@ -440,7 +440,7 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
                     key={customer.id || customer.company}
                     type="button"
                     onClick={() => selectCustomer(customer)}
-                    className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-transform hover:scale-[1.02]"
+                    className="quote-customer-option group flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors"
                     data-tone="primary"
                   >
                     <div className="min-w-0">

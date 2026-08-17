@@ -801,6 +801,24 @@ textarea:not(.form-input)::placeholder {
   transform: none !important;
 }
 
+.page-type-shell .quote-customer-option:hover,
+.page-type-shell .quote-customer-option:hover .customer-name-primary,
+.page-type-shell .quote-customer-option:hover .customer-name-secondary,
+.page-type-shell .quote-customer-option:hover span,
+.app-responsive .page-type-shell .quote-customer-option:hover,
+.app-responsive .page-type-shell .quote-customer-option:hover .customer-name-primary,
+.app-responsive .page-type-shell .quote-customer-option:hover .customer-name-secondary,
+.app-responsive .page-type-shell .quote-customer-option:hover span {
+  color: #2563eb !important;
+  transform: none !important;
+}
+
+.page-type-shell .document-discount-mode-btn.document-discount-mode-selected,
+.app-responsive .page-type-shell .document-discount-mode-btn.document-discount-mode-selected {
+  color: #2563eb !important;
+  background: transparent !important;
+}
+
 .page-type-shell .document-term-chip:hover .document-term-check,
 .page-type-shell .document-term-chip:hover .document-term-label,
 .page-type-shell .document-term-chip.document-term-applied .document-term-check,
