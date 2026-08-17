@@ -21,7 +21,11 @@ function readSidebarCollapsed() {
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
-  const hideChrome = pathname === '/paketler' || pathname.startsWith('/paketler/')
+  const hideChrome =
+    pathname === '/paketler' ||
+    pathname.startsWith('/paketler/') ||
+    pathname === '/web/studio' ||
+    pathname.startsWith('/web/studio/')
   const fullscreenWorkspace =
     pathname === '/otomasyon/designer' ||
     pathname.startsWith('/otomasyon/designer/') ||
@@ -118,7 +122,13 @@ export default function Layout({ children }) {
       >
         {!hideChrome ? <Header onMenuClick={() => setMobileSidebarOpen(true)} /> : null}
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
-        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">
+        <main
+          className={
+            hideChrome && pathname.startsWith('/web/')
+              ? 'app-responsive flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-3 py-2 sm:px-4 lg:px-3 lg:py-3'
+              : 'app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0'
+          }
+        >
           {children}
         </main>
       </div>

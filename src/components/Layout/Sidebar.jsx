@@ -48,6 +48,7 @@ import {
   Container,
   LayoutDashboard,
   PackageCheck,
+  Globe2,
   Sparkles,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
@@ -73,8 +74,8 @@ import {
   DOCUMENT_CENTER_BASE,
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
+import { webSubMenus, isWebRoute, WEB_STUDIO_PATH } from '../../data/webMenu'
 import BrandLogo from './BrandLogo'
-import BachMainMascot from './BachMainMascot'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
 import { useAuth } from '../../auth/AuthContext'
@@ -224,6 +225,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isStockRouteActive = isStockRoute(location.pathname)
   const isFieldSalesRouteActive = isFieldSalesRoute(location.pathname)
   const isLogisticsRouteActive = isLogisticsRoute(location.pathname)
+  const isWebRouteActive = isWebRoute(location.pathname)
   const isHrRouteActive = isHrRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
@@ -240,6 +242,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     if (isCrmRouteActive) return 'crm'
     if (isHrRouteActive) return 'hr'
     if (isLogisticsRouteActive) return 'logistics'
+    if (isWebRouteActive) return 'web'
     if (isSettingsRoute) return 'settings'
     return null
   }
@@ -256,6 +259,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const projectsOpen = openMenuId === 'projects'
   const fieldSalesOpen = openMenuId === 'fieldSales'
   const logisticsOpen = openMenuId === 'logistics'
+  const webOpen = openMenuId === 'web'
   const hrOpen = openMenuId === 'hr'
   const crmOpen = openMenuId === 'crm'
   const settingsOpen = openMenuId === 'settings'
@@ -278,6 +282,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     isCrmRouteActive,
     isHrRouteActive,
     isLogisticsRouteActive,
+    isWebRouteActive,
     isSettingsRoute,
   ])
 
@@ -341,18 +346,15 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             title={brandLabel}
           >
             {company?.logoDataUrl ? (
-              <div className="brand-logo-with-mascot flex min-w-0 items-end">
-                <BachMainMascot collapsed={collapsed} />
-                <img
-                  src={company.logoDataUrl}
-                  alt={brandLabel}
-                  className={
-                    collapsed
-                      ? 'h-8 w-8 object-contain'
-                      : 'h-9 max-h-9 w-auto max-w-[7rem] shrink-0 object-contain object-center'
-                  }
-                />
-              </div>
+              <img
+                src={company.logoDataUrl}
+                alt={brandLabel}
+                className={
+                  collapsed
+                    ? 'h-8 w-8 object-contain'
+                    : 'h-9 max-h-9 w-auto max-w-[7rem] shrink-0 object-contain object-center'
+                }
+              />
             ) : (
               <BrandLogo collapsed={collapsed} />
             )}
@@ -836,6 +838,58 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                         <SubIcon className="h-3.5 w-3.5" />
                       </SubMenuIcon>
                     ) : null}
+                    {sub.label}
+                  </NavLink>
+                )
+              })}
+            </SidebarSubMenu>
+          )}
+        </div>
+
+        <SidebarSection label="WEB" collapsed={collapsed} />
+
+        <div className={`sidebar-menu-group ${webOpen ? 'is-open' : ''}`}>
+          <button
+            type="button"
+            onClick={() => toggleMenu('web')}
+            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              collapsed && isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <Globe2 className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && (
+              <>
+                <span className={menuLabelClass}>Web</span>
+                {webOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
+              </>
+            )}
+          </button>
+
+          {webOpen && !collapsed && (
+            <SidebarSubMenu>
+              {webSubMenus.map((sub) => {
+                const SubIcon = sub.icon === 'sparkles' ? Sparkles : Globe2
+                return (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    end={sub.path === WEB_STUDIO_PATH}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex items-center gap-2 ${
+                        isActive ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    <SubMenuIcon>
+                      <SubIcon className="h-3.5 w-3.5" />
+                    </SubMenuIcon>
                     {sub.label}
                   </NavLink>
                 )

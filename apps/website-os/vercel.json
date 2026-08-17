@@ -1,0 +1,14 @@
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://uygulama.bachmain.com https://*.bachmain.com http://localhost:* http://127.0.0.1:*"
+        }
+      ]
+    }
+  ]
+}

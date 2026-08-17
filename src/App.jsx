@@ -198,7 +198,7 @@ import {
   DocWhatsAppTemplatesPage,
   DocWorkflowPage,
 } from './pages/documentCenter/DocCenterModules'
-import WebsiteOsLaunchPage from './pages/WebsiteOsLaunchPage'
+import WebStudioPage from './pages/web/WebStudioPage'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -284,8 +284,10 @@ export default function App() {
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/finans" element={<FinanceCenterPage />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
-                      <Route path="/website-os" element={<WebsiteOsLaunchPage />} />
-                      <Route path="/website" element={<WebsiteOsLaunchPage />} />
+                      <Route path="/web" element={<Navigate to="/web/studio" replace />} />
+                      <Route path="/web/studio" element={<WebStudioPage />} />
+                      <Route path="/website-os" element={<Navigate to="/web/studio" replace />} />
+                      <Route path="/website" element={<Navigate to="/web/studio" replace />} />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
                       <Route path="/platform" element={<Navigate to="/" replace />} />
                       <Route path="/cekirdek" element={<Navigate to="/" replace />} />
