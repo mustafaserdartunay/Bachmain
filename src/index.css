@@ -1775,6 +1775,18 @@ html body .app-responsive .customer-list-panel .quote-order-undo-sil {
   transform: none !important;
 }
 
+html body .page-type-shell .customer-list-panel .quote-order-undo-evet,
+html body .customers-page-type .customer-list-panel .quote-order-undo-evet,
+html body .app-responsive .customer-list-panel .quote-order-undo-evet {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  color: #047857 !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
 html body .page-type-shell .customer-list-panel .quote-order-undo-close,
 html body .customers-page-type .customer-list-panel .quote-order-undo-close,
 html body .app-responsive .customer-list-panel .quote-order-undo-close,

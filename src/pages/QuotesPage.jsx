@@ -267,6 +267,42 @@ const savedQuoteTerms = [
   'Ödeme koşulları sipariş onayı öncesinde karşılıklı mutabakat ile netleştirilir.',
 ]
 
+function QuoteOrderInlineConfirm({
+  label,
+  labelClass,
+  ariaLabel,
+  onConfirm,
+  onCancel,
+}) {
+  return (
+    <div
+      className="quote-order-undo-confirm flex h-9 w-full items-center justify-center"
+      onClick={(event) => event.stopPropagation()}
+      role="alertdialog"
+      aria-label={ariaLabel}
+    >
+      <div className="inline-flex h-9 items-center gap-0.5 rounded-xl border border-ds-border bg-transparent px-1">
+        <button
+          type="button"
+          onClick={onConfirm}
+          className={`${labelClass} px-1.5 text-[11px] font-semibold leading-none`}
+        >
+          {label}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="quote-order-undo-close inline-flex h-7 w-7 items-center justify-center rounded-lg"
+          aria-label="Vazgeç"
+          title="Vazgeç"
+        >
+          <X className="h-3.5 w-3.5" strokeWidth={2.25} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function QuoteListOrderModuleButton({
   quote,
   orderCreated,
@@ -279,13 +315,10 @@ function QuoteListOrderModuleButton({
 }) {
   if (pendingAction === 'create') {
     return (
-      <DeleteConfirmPopover
-        title="Sipariş oluşturmak istiyor musunuz?"
-        description="Teklif siparişe aktarılacak."
-        confirmLabel="Evet"
-        cancelLabel="Hayır"
-        inline
-        compact
+      <QuoteOrderInlineConfirm
+        label="Evet"
+        labelClass="quote-order-undo-evet"
+        ariaLabel="Sipariş oluştur"
         onConfirm={onConfirmCreate}
         onCancel={onCancelPending}
       />
@@ -294,31 +327,13 @@ function QuoteListOrderModuleButton({
 
   if (pendingAction === 'undo') {
     return (
-      <div
-        className="quote-order-undo-confirm flex h-9 w-full items-center justify-center"
-        onClick={(event) => event.stopPropagation()}
-        role="alertdialog"
-        aria-label="Siparişi geri al"
-      >
-        <div className="inline-flex h-9 items-center gap-0.5 rounded-xl border border-ds-border bg-transparent px-1">
-          <button
-            type="button"
-            onClick={onConfirmUndo}
-            className="quote-order-undo-sil px-1.5 text-[11px] font-semibold leading-none"
-          >
-            Sil
-          </button>
-          <button
-            type="button"
-            onClick={onCancelPending}
-            className="quote-order-undo-close inline-flex h-7 w-7 items-center justify-center rounded-lg"
-            aria-label="Vazgeç"
-            title="Vazgeç"
-          >
-            <X className="h-3.5 w-3.5" strokeWidth={2.25} />
-          </button>
-        </div>
-      </div>
+      <QuoteOrderInlineConfirm
+        label="Sil"
+        labelClass="quote-order-undo-sil"
+        ariaLabel="Siparişi geri al"
+        onConfirm={onConfirmUndo}
+        onCancel={onCancelPending}
+      />
     )
   }
 
