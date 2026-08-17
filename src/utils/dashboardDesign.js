@@ -45,6 +45,10 @@ export const APP_FILTER_LABEL_CLASS =
 /* ——— Müşteriler kanonik sayfa tokenları (tüm liste/rapor ekranları) ——— */
 export const PAGE_TYPE_SHELL_CLASS = 'page-type-shell customers-page-type w-full'
 export const PAGE_CENTER_TITLE_CLASS = 'customer-page-center-title uppercase font-bold'
+export const PAGE_HEADER_CENTER_SLOT_CLASS =
+  'app-page-header-center pointer-events-none absolute left-1/2 top-1/2 z-0 w-max max-w-none -translate-x-1/2 -translate-y-1/2'
+export const PAGE_HEADER_CENTER_TITLE_CLASS =
+  'customer-page-center-title w-auto max-w-none shrink-0 whitespace-nowrap text-center text-[14px] font-bold uppercase leading-tight tracking-normal text-[var(--muted)]'
 export const PAGE_SUMMARY_METRICS_CLASS = 'customer-summary-metrics w-full'
 
 /* başlık panel — cam sayfa başlığı: sol geri linki / mutlak merkez başlık / sağ CTA */

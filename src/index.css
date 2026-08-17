@@ -1880,7 +1880,12 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   color: var(--muted) !important;
 }
 
-/* Müşteriler / sistem merkez başlık — bold */
+/* Müşteriler / sistem merkez başlık — bold, yazı genişliği */
+.app-page-header-center {
+  width: max-content;
+  max-width: none;
+}
+
 .page-type-shell .app-page-header h1.customer-page-center-title,
 .customers-page-type .app-page-header h1.customer-page-center-title {
   font-size: 14px !important;
