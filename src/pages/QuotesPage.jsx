@@ -2590,7 +2590,7 @@ export default function QuotesPage() {
             </div>
           </AppPagePanel>
 
-          <AppPagePanel className="customer-list-panel w-full">
+          <AppPagePanel className="customer-list-panel quote-list-table-panel w-full border-dark-500/45 bg-dark-800/55">
             <div className="mb-4 flex min-w-0 items-center gap-3">
               <div className="flex shrink-0 items-center gap-2">
                 <AppPanelDot color="blue" />
@@ -2612,6 +2612,11 @@ export default function QuotesPage() {
               emptyDescription="Arama veya filtreleri değiştirin."
               headerClassName={PAGE_TABLE_HEADER_CLASS}
               mobileHeaderClassName={PAGE_TABLE_HEADER_CLASS}
+              tableWrapClassName="hidden overflow-x-auto rounded-ds-lg border border-dark-500/45 bg-dark-800/55 md:block"
+              theadClassName="bg-dark-800/55"
+              rowClassName="border-t border-dark-500/45 transition-colors duration-hover hover:bg-dark-700/60"
+              selectedRowClassName="bg-dark-700/60"
+              mobileCardClassName="rounded-ds-lg border border-dark-500/45 bg-dark-800/55 p-4 transition-colors hover:bg-dark-700/60"
               data={filteredQuotes}
               defaultSort={{ key: null, dir: 'asc' }}
               getRowId={(quote) => quote.id}

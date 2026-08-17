@@ -82,6 +82,11 @@ export function DataTable({
   onRowMouseLeave,
   headerClassName = DEFAULT_TH_CLASS,
   mobileHeaderClassName = DEFAULT_MOBILE_HEADER_CLASS,
+  tableWrapClassName = 'hidden overflow-x-auto rounded-ds-lg border border-ds-border md:block',
+  theadClassName = 'bg-[var(--ds-surface-muted)]',
+  rowClassName = 'border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)]',
+  selectedRowClassName = 'bg-[var(--ds-surface-muted)]',
+  mobileCardClassName = 'rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs',
   /** İlk açılış / yeni oturum sıralaması — örn. { key: 'balance', dir: 'desc' } */
   defaultSort = { key: null, dir: 'asc' },
 }) {
@@ -112,9 +117,9 @@ export function DataTable({
   return (
     <div className={className}>
       {/* Desktop / tablet */}
-      <div className="hidden overflow-x-auto rounded-ds-lg border border-ds-border md:block">
+      <div className={tableWrapClassName}>
         <table className="w-full min-w-[640px] border-collapse text-left">
-          <thead className="bg-[var(--ds-surface-muted)]">
+          <thead className={theadClassName}>
             <tr>
               {selectionEnabled ? (
                 <th className={SELECT_CELL_CLASS} aria-label="Seç">
@@ -205,7 +210,7 @@ export function DataTable({
               return (
                 <tr
                   key={idKey}
-                  className={`border-t border-ds-border transition-colors duration-hover hover:bg-[var(--ds-surface-muted)] ${onRowClick && !selectionEnabled ? 'cursor-pointer' : ''} ${isSelected ? 'bg-[var(--ds-surface-muted)]' : ''}`}
+                  className={`${rowClassName} ${onRowClick && !selectionEnabled ? 'cursor-pointer' : ''} ${isSelected ? selectedRowClassName : ''}`}
                   onMouseEnter={() => onRowMouseEnter?.(row)}
                   onMouseLeave={() => onRowMouseLeave?.(row)}
                   onClick={() => {
@@ -313,7 +318,7 @@ export function DataTable({
           return (
             <article
               key={idKey}
-              className={`rounded-ds-lg border border-ds-border bg-ds-surface p-4 shadow-ds-xs ${onRowClick && !selectionEnabled ? 'cursor-pointer' : ''} ${isSelected ? 'ring-1 ring-[var(--ds-ink,#1e2338)]/20' : ''}`}
+              className={`${mobileCardClassName} ${onRowClick && !selectionEnabled ? 'cursor-pointer' : ''} ${isSelected ? 'ring-1 ring-[var(--ds-ink,#1e2338)]/20' : ''}`}
               onMouseEnter={() => onRowMouseEnter?.(row)}
               onMouseLeave={() => onRowMouseLeave?.(row)}
               onClick={() => {

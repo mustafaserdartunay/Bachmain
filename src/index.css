@@ -3294,6 +3294,21 @@ html.special .app-page-metric {
   box-shadow: var(--special-card-glow) !important;
 }
 
+/* Teklif Listesi — sipariş satırı ile aynı zemin tokenları (bg-dark-800/55); tema remap’i geçerli */
+html body .page-type-shell section.card.quote-list-table-panel,
+html body .customers-page-type section.card.quote-list-table-panel,
+html body .app-responsive section.card.quote-list-table-panel,
+html.night body section.card.quote-list-table-panel,
+html.space body section.card.quote-list-table-panel,
+html.special body section.card.quote-list-table-panel {
+  box-shadow: none !important;
+}
+
+html body .quote-list-table-panel [class*='bg-dark-800'] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 html.space [class*='rounded-2xl'][class*='border'][class*='bg-dark-800'] {
   background: var(--space-module-bg) !important;
   border-color: var(--space-module-border) !important;
