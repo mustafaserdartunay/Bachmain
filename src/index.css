@@ -1627,6 +1627,28 @@ html:not(.night) .app-responsive .page-type-shell .document-compact-controls .do
   color: var(--ink);
 }
 
+/* Liste sayfaları — panel arkasındaki gri cam/zemin tabakasını kaldır */
+.page-type-shell {
+  background: transparent !important;
+}
+
+.page-type-shell > .app-page-header,
+.page-type-shell > .card,
+.page-type-shell .customer-summary-metrics .app-page-metric,
+.page-type-shell section.card.quote-list-row-panel {
+  background: var(--surface) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58) !important;
+}
+
+html.night .page-type-shell > .app-page-header,
+html.night .page-type-shell > .card,
+html.night .page-type-shell .customer-summary-metrics .app-page-metric,
+html.night .page-type-shell section.card.quote-list-row-panel {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
 .customer-summary-metrics .app-page-metric {
   display: flex !important;
   height: var(--ds-header-h, 4.75rem);
