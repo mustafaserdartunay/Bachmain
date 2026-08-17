@@ -260,6 +260,11 @@ const sortLabelByMode = {
   name: 'İsme göre',
   price: 'Fiyata göre',
 }
+const orderStatusFilterOptions = [
+  { label: 'Tümü', color: 'bg-gray-500', locked: true },
+  { label: 'Oluşturuldu', color: 'bg-emerald-500' },
+  { label: 'Oluşturulmadı', color: 'bg-orange-500' },
+]
 const savedQuoteTerms = [
   'Fiyatlara KDV dahil değildir.',
   'Teklif geçerlilik süresi belirtilen tarih ile sınırlıdır.',
@@ -2481,7 +2486,13 @@ export default function QuotesPage() {
         }
         return quoteProcess.activeStage?.label === selected
       })
-      return matchesSearch && matchesProcessTabs
+      const orderStatus = filters.orderStatus || 'Tümü'
+      const orderCreated = isQuoteOrderCreated(quote)
+      const matchesOrderStatus =
+        orderStatus === 'Tümü' ||
+        (orderStatus === 'Oluşturuldu' && orderCreated) ||
+        (orderStatus === 'Oluşturulmadı' && !orderCreated)
+      return matchesSearch && matchesProcessTabs && matchesOrderStatus
     })
     .sort((a, b) => {
       if (sortMode === 'date') return getQuoteSortDate(b) - getQuoteSortDate(a)
@@ -2730,6 +2741,21 @@ export default function QuotesPage() {
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
                     onChange={(value) => setSortMode(sortModeByLabel[value] || 'latest')}
+                  />
+                </div>
+                <div className={PAGE_FILTER_FIELD_CLASS}>
+                  <p className={PAGE_FILTER_LABEL_CLASS}>Sipariş Durumu :</p>
+                  <EditableDropdownPill
+                    value={filters.orderStatus || 'Tümü'}
+                    options={orderStatusFilterOptions}
+                    includePlaceholderOption={false}
+                    editable={false}
+                    buttonClassName={PAGE_FILTER_PILL_CLASS}
+                    menuClassName={PAGE_FILTER_MENU_CLASS}
+                    openKey="filter-order-status"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    onChange={(value) => updateFilter('orderStatus', value)}
                   />
                 </div>
               </div>
