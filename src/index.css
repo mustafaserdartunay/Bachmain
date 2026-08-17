@@ -1869,6 +1869,39 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   transform-origin: left center;
 }
 
+html body .app-dropdown-portal button.dropdown-add-action,
+html body .customers-page-menu button.dropdown-add-action,
+html body .customer-filter-dropdown-menu button.dropdown-add-action,
+html body .customer-filter-dropdown-menu button.dropdown-add-action.flex.w-full,
+html body .customer-filter-dropdown-menu button.dropdown-add-action.flex.w-full:hover,
+html body .app-dropdown-portal button.dropdown-add-action:hover,
+html body .customers-page-menu button.dropdown-add-action:hover {
+  transform: none !important;
+  background: transparent !important;
+}
+
+html body .app-dropdown-portal button.dropdown-add-action svg,
+html body .customers-page-menu button.dropdown-add-action svg,
+html body .customer-filter-dropdown-menu button.dropdown-add-action svg,
+html body .app-dropdown-portal button.dropdown-add-action:hover svg,
+html body .customers-page-menu button.dropdown-add-action:hover svg,
+html body .customer-filter-dropdown-menu button.dropdown-add-action:hover svg {
+  color: #2563eb !important;
+  transform: none !important;
+}
+
+html body .app-dropdown-portal button.dropdown-add-action span,
+html body .customers-page-menu button.dropdown-add-action span,
+html body .customer-filter-dropdown-menu button.dropdown-add-action span {
+  color: var(--muted) !important;
+}
+
+html body .app-dropdown-portal button.dropdown-add-action:hover span,
+html body .customers-page-menu button.dropdown-add-action:hover span,
+html body .customer-filter-dropdown-menu button.dropdown-add-action:hover span {
+  color: #2563eb !important;
+}
+
 .customer-filter-dropdown-menu button.flex.w-full:hover span.truncate {
   font-weight: 400 !important;
 }

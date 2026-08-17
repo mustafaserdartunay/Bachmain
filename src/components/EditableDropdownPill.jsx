@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, ChevronRight, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Check, ChevronRight, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { DeleteConfirmPopover } from './Common/ListDeleteConfirmPanel'
 import { dropdownMenuShellClass } from './Common/DropdownMenu'
 import StageColorSwatches from './DocumentEditor/StageColorSwatches'
@@ -92,6 +92,10 @@ export default function EditableDropdownPill({
   const [newColor, setNewColor] = useState(() => COLOR_PALETTE[0] || 'bg-blue-500')
   const [confirmIndex, setConfirmIndex] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [draggedIndex, setDraggedIndex] = useState(null)
+  const [dragOverIndex, setDragOverIndex] = useState(null)
+  const draggedIndexRef = useRef(null)
+  const canReorder = canEdit && !searchTerm.trim()
 
   useEffect(() => {
     if (!isOpen) {
@@ -103,6 +107,9 @@ export default function EditableDropdownPill({
       setNewColor(COLOR_PALETTE[options.length % COLOR_PALETTE.length])
       setConfirmIndex(null)
       setSearchTerm('')
+      draggedIndexRef.current = null
+      setDraggedIndex(null)
+      setDragOverIndex(null)
     }
   }, [isOpen, options.length])
 
@@ -149,6 +156,49 @@ export default function EditableDropdownPill({
     onOptionsChange(next.filter((option) => !option.locked))
     if (removed.label === value) onChange('')
     setConfirmIndex(null)
+  }
+
+  function reorderOptions(fromIndex, toIndex) {
+    if (fromIndex == null || toIndex == null || fromIndex === toIndex) return
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= options.length || toIndex >= options.length) return
+    const next = [...options]
+    const [moved] = next.splice(fromIndex, 1)
+    next.splice(toIndex, 0, moved)
+    onOptionsChange(next.filter((option) => !option.locked))
+  }
+
+  function beginDrag(index, event) {
+    if (!canReorder || options[index]?.locked || editingIndex != null) return
+    draggedIndexRef.current = index
+    setDraggedIndex(index)
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(index))
+    if (event.dataTransfer.setDragImage && event.currentTarget instanceof HTMLElement) {
+      const row = event.currentTarget.closest('[data-option-row]')
+      if (row) event.dataTransfer.setDragImage(row, 16, 16)
+    }
+  }
+
+  function handleDrop(targetIndex, event) {
+    event.preventDefault()
+    event.stopPropagation()
+    if (!canReorder) return
+    const transferRaw = event.dataTransfer?.getData('text/plain')
+    const fromIndex = transferRaw !== '' && transferRaw != null
+      ? Number(transferRaw)
+      : draggedIndexRef.current
+    reorderOptions(fromIndex, targetIndex)
+    draggedIndexRef.current = null
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  function endDrag() {
+    window.setTimeout(() => {
+      draggedIndexRef.current = null
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+    }, 0)
   }
 
   function commitAdd() {
@@ -305,7 +355,36 @@ export default function EditableDropdownPill({
                 <OptionColorPicker value={draftColor} onChange={setDraftColor} />
               </div>
             ) : (
-              <div key={option.label} className="group relative flex items-center gap-1 rounded-xl">
+              <div
+                key={option.label}
+                data-option-row
+                onDragOver={(event) => {
+                  if (!canReorder || option.locked) return
+                  event.preventDefault()
+                  event.dataTransfer.dropEffect = 'move'
+                  setDragOverIndex(index)
+                }}
+                onDrop={(event) => handleDrop(index, event)}
+                className={`group relative flex items-center gap-0.5 rounded-xl ${
+                  draggedIndex === index ? 'opacity-45' : ''
+                } ${
+                  dragOverIndex === index && draggedIndex !== index
+                    ? 'bg-blue-500/10 ring-1 ring-blue-400/40'
+                    : ''
+                }`}
+              >
+                {canReorder && !option.locked && (
+                  <div
+                    draggable
+                    onDragStart={(event) => beginDrag(index, event)}
+                    onDragEnd={endDrag}
+                    className="cursor-grab px-1 py-2 text-gray-400 opacity-70 transition-opacity hover:text-gray-600 hover:opacity-100 active:cursor-grabbing"
+                    title="Sürükleyerek sırala"
+                    aria-label={`${option.label} sürükle`}
+                  >
+                    <GripVertical className="h-3.5 w-3.5 pointer-events-none" />
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -413,9 +492,10 @@ export default function EditableDropdownPill({
                   setNewColor(COLOR_PALETTE[options.length % COLOR_PALETTE.length])
                   setAdding(true)
                 }}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-semibold leading-tight tracking-normal text-blue-600 transition-colors hover:bg-[rgba(37,99,235,0.1)]"
+                className="dropdown-add-action flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-semibold leading-tight tracking-normal"
               >
-                <Plus className="h-4 w-4" /> Ekle
+                <Plus className="h-4 w-4 shrink-0" />
+                <span>Ekle</span>
               </button>
             )}
           </div>
