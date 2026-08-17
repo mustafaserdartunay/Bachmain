@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build",
+    "build:website-os": "npm --prefix apps/website-os install && npm --prefix apps/website-os run build && rm -rf public/website-os && cp -R apps/website-os/dist public/website-os",
+    "build": "npm run build:website-os && vite build",
     "preview": "vite preview --host",
     "start": "node server/index.js",
     "deploy": "npx vercel --prod",

@@ -19,7 +19,11 @@
       "permanent": false
     }
   ],
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "rewrites": [
+    { "source": "/website-os/assets/:path*", "destination": "/website-os/assets/:path*" },
+    { "source": "/website-os/:path*", "destination": "/website-os/index.html" },
+    { "source": "/((?!api/|website-os/).*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
@@ -50,6 +54,13 @@
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate"
         }
+      ]
+    },
+    {
+      "source": "/website-os/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
       ]
     },
     {
