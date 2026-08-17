@@ -351,7 +351,7 @@ function QuoteListColumnHeader({
 }
 
 const QUOTE_LIST_ROW_PANEL_CLASS =
-  'customer-filter-panel customer-list-panel quote-list-row-panel flex min-h-[4.75rem] w-full items-center'
+  'customer-filter-panel customer-list-panel quote-list-row-panel flex min-h-[3rem] w-full items-center !py-1.5'
 
 function QuoteListRowPanel({ header = false, gridTemplate, className = '', children }) {
   return (
@@ -1306,7 +1306,6 @@ export default function QuotesPage() {
   const [quoteCustomLists, setQuoteCustomLists] = useState(() => readQuoteCustomLists())
   const [sortMode, setSortMode] = useState('latest')
   const [listColumnSort, setListColumnSort] = useState({ key: null, dir: 'asc' })
-  const [hoveredQuoteId, setHoveredQuoteId] = useState(null)
   const [viewMode, setViewMode] = useState('list')
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
@@ -2743,7 +2742,7 @@ export default function QuotesPage() {
             </AppPagePanel>
           ) : (
             <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
-              <div className="quote-list-board" onMouseLeave={() => setHoveredQuoteId(null)}>
+              <div className="quote-list-board">
                 <QuoteListRowPanel header gridTemplate={quoteListColumnGrid}>
                   <QuoteListCell align="center">
                     <QuoteListColumnHeader
@@ -2814,7 +2813,6 @@ export default function QuotesPage() {
                       role="button"
                       tabIndex={0}
                       className="cursor-pointer"
-                      onMouseEnter={() => setHoveredQuoteId(quote.id)}
                       onClick={() => editQuote(quote.id)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
@@ -2823,10 +2821,7 @@ export default function QuotesPage() {
                         }
                       }}
                     >
-                      <QuoteListRowPanel
-                        gridTemplate={quoteListColumnGrid}
-                        className={hoveredQuoteId === quote.id ? 'is-hovered' : ''}
-                      >
+                      <QuoteListRowPanel gridTemplate={quoteListColumnGrid}>
                         <QuoteListCell align="center">
                           {stamp.date ? (
                             <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
