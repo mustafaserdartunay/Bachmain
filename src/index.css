@@ -784,6 +784,23 @@ textarea:not(.form-input)::placeholder {
   font-weight: 700 !important;
 }
 
+.page-type-shell .quote-ms-cta-plain:hover,
+.page-type-shell .quote-ms-cta-plain:focus,
+.page-type-shell .quote-ms-cta-plain:active,
+.page-type-shell .quote-ms-cta-plain:hover span,
+.page-type-shell .quote-ms-cta-plain:focus span,
+.page-type-shell .quote-ms-cta-plain:active span,
+.app-responsive .page-type-shell .quote-ms-cta-plain:hover,
+.app-responsive .page-type-shell .quote-ms-cta-plain:focus,
+.app-responsive .page-type-shell .quote-ms-cta-plain:active,
+.app-responsive .page-type-shell .quote-ms-cta-plain:hover span,
+.app-responsive .page-type-shell .quote-ms-cta-plain:focus span,
+.app-responsive .page-type-shell .quote-ms-cta-plain:active span {
+  color: #2563eb !important;
+  font-weight: 400 !important;
+  transform: none !important;
+}
+
 .page-type-shell .document-totals-amount,
 .app-responsive .page-type-shell .document-totals-amount {
   font-weight: 700 !important;

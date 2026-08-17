@@ -420,12 +420,10 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
           <button
             type="button"
             onClick={() => navigate('/musteriler/yeni')}
-            className="quote-ms-cta group inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[var(--muted)] transition-all hover:scale-[1.03] hover:font-bold hover:!text-[#2563eb] [&_svg]:text-[#2563eb]"
+            className="quote-ms-cta-plain group inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#2563eb] focus:text-[#2563eb] active:text-[#2563eb] [&_svg]:text-[#2563eb]"
           >
             <UserPlus className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-            <span className="transition-colors group-hover:text-[#2563eb] group-hover:font-bold">
-              Yeni Müşteri Oluştur
-            </span>
+            Yeni Müşteri Oluştur
           </button>
         ) : null}
       </div>
