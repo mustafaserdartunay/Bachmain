@@ -152,6 +152,7 @@ import {
   PAGE_LIST_PILL_CLASS,
   PAGE_LIST_PILL_WRAPPER_CLASS,
   YF_TEXT_CLASS,
+  YFB_TEXT_CLASS,
   YF_TEXT_ON_COLOR_CLASS,
 } from '../utils/dashboardDesign'
 
@@ -304,6 +305,13 @@ function QuoteOrderInlineConfirm({
   )
 }
 
+function formatQuoteListColumnLabel(label) {
+  const text = String(label || '').trim()
+  if (!text) return ''
+  const upper = text.replace(/\s*:\s*$/, '').toLocaleUpperCase('tr-TR')
+  return `${upper} :`
+}
+
 function QuoteListColumnHeader({
   label,
   sortable = false,
@@ -312,6 +320,7 @@ function QuoteListColumnHeader({
   onToggleSort,
   accessory,
 }) {
+  const title = formatQuoteListColumnLabel(label)
   return (
     <div className="flex min-h-[2.75rem] items-center gap-2 px-3">
       {label ? <AppPanelDot color="blue" /> : null}
@@ -321,7 +330,7 @@ function QuoteListColumnHeader({
           className="inline-flex min-w-0 items-center gap-1"
           onClick={() => onToggleSort(sortKey)}
         >
-          <span className={YF_TEXT_CLASS}>{label} :</span>
+          <span className={`${YFB_TEXT_CLASS} quote-list-column-title`}>{title}</span>
           {sort?.key === sortKey ? (
             sort.dir === 'asc' ? (
               <ArrowUp className="h-3.5 w-3.5 shrink-0 opacity-40" />
@@ -333,7 +342,7 @@ function QuoteListColumnHeader({
           )}
         </button>
       ) : label ? (
-        <span className={YF_TEXT_CLASS}>{label} :</span>
+        <span className={`${YFB_TEXT_CLASS} quote-list-column-title`}>{title}</span>
       ) : (
         <span className="inline-flex h-5 w-5" aria-hidden />
       )}

@@ -3326,7 +3326,24 @@ html body section.card.quote-list-column-panel {
 html body .page-type-shell .quote-list-column-panel .customer-name-primary,
 html body .customers-page-type .quote-list-column-panel .customer-name-primary,
 html body .app-responsive .quote-list-column-panel .customer-name-primary {
+  font-size: 14px !important;
   font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+}
+
+html body .page-type-shell .quote-list-column-panel .quote-list-column-title,
+html body .customers-page-type .quote-list-column-panel .quote-list-column-title,
+html body .app-responsive .quote-list-column-panel .quote-list-column-title,
+html body .page-type-shell .quote-list-column-panel button .quote-list-column-title,
+html body .customers-page-type .quote-list-column-panel button .quote-list-column-title,
+html body .app-responsive .quote-list-column-panel button .quote-list-column-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
 }
 
 html body .page-type-shell .quote-list-column-panel .customer-balance-positive,
