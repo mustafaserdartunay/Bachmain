@@ -104,6 +104,10 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
     })
   }
 
+  const araToplam = totals.net ?? totals.subtotal ?? 0
+  const kdvToplam = totals.totalTax ?? totals.vat ?? 0
+  const genelToplam = araToplam + kdvToplam
+
   const discountControls = onPatch ? (
     <div className="flex min-w-0 shrink-0 items-center gap-1">
       <button
@@ -215,7 +219,7 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
           <div className="flex items-center gap-2">
             <div className={`min-w-0 flex-1 ${ROW_FRAME} ${ROW_GRID}`}>
               <span className={`pl-2.5 ${YF_TEXT_CLASS}`}>Genel Toplam</span>
-              <span className={AMOUNT_CLASS}>{formatTL(totals.grandTotal)}</span>
+              <span className={AMOUNT_CLASS}>{formatTL(genelToplam)}</span>
             </div>
             <div className="w-7 shrink-0" aria-hidden />
           </div>
