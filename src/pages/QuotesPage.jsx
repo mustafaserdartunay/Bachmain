@@ -2894,14 +2894,13 @@ export default function QuotesPage() {
                       onToggleSort={toggleListColumnSort}
                     />
                   </QuoteListCell>
-                  <QuoteListCell align="end">
+                  <QuoteListCell>
                     <QuoteListColumnHeader
                       label="Sipariş"
                       sortable
                       sortKey="order"
                       sort={listColumnSort}
                       onToggleSort={toggleListColumnSort}
-                      align="end"
                     />
                   </QuoteListCell>
                   <QuoteListCell>
@@ -3002,9 +3001,9 @@ export default function QuotesPage() {
                             {formatTL(getQuoteListAmount(quote))}
                           </span>
                         </QuoteListCell>
-                        <QuoteListCell align="end">
+                        <QuoteListCell>
                           <span
-                            className="inline-flex w-full items-center justify-end"
+                            className="inline-flex w-full items-center justify-center"
                             onClick={(event) => event.stopPropagation()}
                           >
                             <QuoteListOrderModuleButton
