@@ -21,15 +21,19 @@ export function SummaryMetricCard({ title, value, icon: Icon, valueTone = 'white
 
   return (
     <div className="app-page-metric flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] items-center justify-center rounded-[18px] px-4 py-2">
-      <div className="flex min-w-0 flex-col items-center gap-1 text-center">
-        <div className="flex min-w-0 items-center justify-center gap-2 text-[var(--muted)]">
-          {Icon && <Icon className="h-4 w-4 shrink-0" />}
-          <span className={APP_LABEL_CLASS}>{title}</span>
+      <div className="flex w-full min-w-0 flex-col items-center justify-center gap-1 text-center">
+        <div className="inline-flex max-w-full items-center justify-center gap-1.5 text-[var(--muted)]">
+          {Icon ? (
+            <span className="metric-label-icon inline-flex h-[18px] w-4 shrink-0 items-center justify-center">
+              <Icon className="h-4 w-4" />
+            </span>
+          ) : null}
+          <span className={`${APP_LABEL_CLASS} text-center`}>{title}</span>
         </div>
-        <p className={`${APP_VALUE_CLASS} max-w-full truncate text-xl ${valueToneClass}`}>
+        <p className={`${APP_VALUE_CLASS} max-w-full truncate text-center text-xl ${valueToneClass}`}>
           {value}
         </p>
-        {subtitle && <p className={APP_LABEL_CLASS}>{subtitle}</p>}
+        {subtitle && <p className={`${APP_LABEL_CLASS} text-center`}>{subtitle}</p>}
       </div>
     </div>
   )
