@@ -1,5 +1,5 @@
 import { CALENDAR_MONTHS, parseCalendarIso } from './calendarUtils'
-import { resolveCompanyBrand } from './companySettings'
+import { resolveCompanyBrand, QUOTE_PRINT_LOGO_SIZE_PX } from './companySettings'
 import { documentTotals, itemTotals } from './documentTotals'
 import { getCatalogProducts, resolveProductImage } from './productCatalog'
 import { formatMoney, formatTL, normalizeCurrency } from './productPricing'
@@ -66,8 +66,9 @@ function termLines(text) {
     .filter(Boolean)
 }
 
-function quoteStyles(imageSize, { extraCols = [] } = {}) {
+function quoteStyles(imageSize, logoSize, { extraCols = [] } = {}) {
   const size = Number(imageSize) || 140
+  const logoPx = Number(logoSize) || QUOTE_PRINT_LOGO_SIZE_PX
   const extras = extraCols.map((col) => col.width).join(' ')
   const cols = extras
     ? `${size}px minmax(0,1.3fr) 64px 100px 72px ${extras} 100px`
@@ -79,8 +80,8 @@ function quoteStyles(imageSize, { extraCols = [] } = {}) {
     .qd-bar { height: 3px; background: #2563eb; margin: -28px -32px 24px; }
     .qd-top { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 24px; align-items: start; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
     .qd-brand { min-width: 0; }
-    .qd-logo { width: 96px; height: 96px; object-fit: contain; object-position: left center; background: #fff; display: block; }
-    .qd-logo-fallback { width: 96px; height: 96px; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #2563eb; font-weight: 700; }
+    .qd-logo { width: ${logoPx}px; height: ${logoPx}px; object-fit: contain; object-position: left center; background: #fff; display: block; }
+    .qd-logo-fallback { width: ${logoPx}px; height: ${logoPx}px; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #2563eb; font-size: ${Math.round(logoPx * 0.18)}px; font-weight: 700; }
     .qd-doc { text-align: right; justify-self: end; min-width: 0; }
     .qd-title { margin: 0; color: #334155; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
     .qd-no { margin: 6px 0 0; color: #64748b; font-size: 14px; }
@@ -218,7 +219,7 @@ export function buildQuoteDocumentInnerHtml({
     .join('')
 
   return `
-    <style>${quoteStyles(imageSize, { extraCols })}</style>
+    <style>${quoteStyles(imageSize, QUOTE_PRINT_LOGO_SIZE_PX, { extraCols })}</style>
     <article class="qd">
       <div class="qd-bar"></div>
       <header class="qd-top">

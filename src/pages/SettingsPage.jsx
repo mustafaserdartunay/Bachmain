@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom'
 import {
   defaultCompanySettings,
   readCompanySettings,
+  readImageFileAsPrintLogoDataUrl,
+  QUOTE_PRINT_LOGO_SIZE_LABEL,
   saveCompanySettings,
 } from '../utils/companySettings'
 import { BTN_SUCCESS } from '../utils/buttonStyles'
@@ -37,9 +39,13 @@ export default function SettingsPage() {
   function handleLogoUpload(event) {
     const file = event.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => updateField('logoDataUrl', String(reader.result || ''))
-    reader.readAsDataURL(file)
+    readImageFileAsPrintLogoDataUrl(file)
+      .then((dataUrl) => updateField('logoDataUrl', dataUrl))
+      .catch(() => {
+        const reader = new FileReader()
+        reader.onload = () => updateField('logoDataUrl', String(reader.result || ''))
+        reader.readAsDataURL(file)
+      })
   }
 
   function handleSave(event) {
@@ -82,11 +88,16 @@ export default function SettingsPage() {
                 <Building2 className="h-8 w-8 text-gray-600" />
               )}
             </div>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-dark-700 hover:text-white">
-              <ImagePlus className="h-4 w-4" />
-              Logo Yükle
-              <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-            </label>
+            <div className="flex flex-col gap-1">
+              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-dark-700 hover:text-white">
+                <ImagePlus className="h-4 w-4" />
+                Logo Yükle
+                <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+              </label>
+              <p className="text-[11px] font-semibold text-gray-500">
+                Önerilen ölçü: {QUOTE_PRINT_LOGO_SIZE_LABEL} (teklif yazdırma logosu)
+              </p>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
