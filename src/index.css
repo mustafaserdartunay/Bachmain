@@ -3327,6 +3327,11 @@ html body section.card.quote-list-row-panel.quote-list-header-panel {
   padding-bottom: 0.75rem !important;
 }
 
+html body .quote-list-header-panel button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
 .quote-list-cell {
   display: flex;
   min-width: 0;

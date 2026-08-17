@@ -318,34 +318,56 @@ function QuoteListColumnHeader({
   sortKey,
   sort,
   onToggleSort,
-  accessory,
+  onAction,
+  actionTitle,
 }) {
   const title = formatQuoteListColumnLabel(label)
+  const clickable = Boolean(sortable || onAction)
+  const sortIcon = sortable ? (
+    sort?.key === sortKey ? (
+      sort.dir === 'asc' ? (
+        <ArrowUp className="h-3.5 w-3.5 shrink-0 opacity-40" />
+      ) : (
+        <ArrowDown className="h-3.5 w-3.5 shrink-0 opacity-40" />
+      )
+    ) : (
+      <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden="true" />
+    )
+  ) : onAction ? (
+    <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden="true" />
+  ) : null
+
+  if (!label && !clickable) {
+    return <span className="inline-flex h-5 w-5" aria-hidden />
+  }
+
+  const inner = (
+    <>
+      <span className={`${YFB_TEXT_CLASS} quote-list-column-title`}>{title}</span>
+      {sortIcon}
+    </>
+  )
+
   return (
     <div className="flex w-full min-w-0 items-center justify-center gap-2">
-      {sortable ? (
+      {clickable ? (
         <button
           type="button"
-          className="inline-flex min-w-0 items-center gap-1"
-          onClick={() => onToggleSort(sortKey)}
+          className="relative z-10 inline-flex min-w-0 items-center gap-1"
+          title={actionTitle || (sortable ? `${label} sırala` : undefined)}
+          aria-label={actionTitle || (sortable ? `${label} sırala` : undefined)}
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            if (sortable) onToggleSort?.(sortKey)
+            else onAction?.()
+          }}
         >
-          <span className={`${YFB_TEXT_CLASS} quote-list-column-title`}>{title}</span>
-          {sort?.key === sortKey ? (
-            sort.dir === 'asc' ? (
-              <ArrowUp className="h-3.5 w-3.5 shrink-0 opacity-40" />
-            ) : (
-              <ArrowDown className="h-3.5 w-3.5 shrink-0 opacity-40" />
-            )
-          ) : (
-            <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" />
-          )}
+          {inner}
         </button>
-      ) : label ? (
-        <span className={`${YFB_TEXT_CLASS} quote-list-column-title`}>{title}</span>
       ) : (
-        <span className="inline-flex h-5 w-5" aria-hidden />
+        inner
       )}
-      {accessory}
     </div>
   )
 }
@@ -375,7 +397,14 @@ function QuoteListCell({ className = '', children }) {
   )
 }
 
-function sortQuoteListByColumn(rows, sort, quoteSegmentTabs, quotes, processValueForQuote) {
+function sortQuoteListByColumn(
+  rows,
+  sort,
+  quoteSegmentTabs,
+  quotes,
+  processValueForQuote,
+  isQuoteOrderCreated,
+) {
   if (!sort?.key) return rows
   const dir = sort.dir === 'desc' ? -1 : 1
   const quoteIds = quotes.map((item) => item.id)
@@ -388,6 +417,7 @@ function sortQuoteListByColumn(rows, sort, quoteSegmentTabs, quotes, processValu
         return display.brandShortName || display.companyTitle || quote.customer || ''
       }
       if (sort.key === 'amount') return getQuoteListAmount(quote)
+      if (sort.key === 'order') return isQuoteOrderCreated?.(quote) ? 1 : 0
       const tab = quoteSegmentTabs.find((item) => `process-${item.id}` === sort.key)
       if (tab) return processValueForQuote(tab, quote)
       return ''
@@ -2480,6 +2510,7 @@ export default function QuotesPage() {
     quoteSegmentTabs,
     quotes,
     processValueForQuote,
+    isQuoteOrderCreated,
   )
 
   const quoteListColumnGrid = [
@@ -2779,11 +2810,10 @@ export default function QuotesPage() {
                     <QuoteListCell key={tab.id}>
                       <QuoteListColumnHeader
                         label={tab.label}
-                        accessory={renderFilterCycleAccessory(
-                          tab.id,
-                          processFilterOptionsForTab(tab),
-                          tab.label,
-                        )}
+                        onAction={() =>
+                          cycleListFilter(tab.id, processFilterOptionsForTab(tab), 1)
+                        }
+                        actionTitle={`${tab.label} filtresini değiştir`}
                       />
                     </QuoteListCell>
                   ))}
@@ -2797,7 +2827,13 @@ export default function QuotesPage() {
                     />
                   </QuoteListCell>
                   <QuoteListCell>
-                    <QuoteListColumnHeader label="Sipariş" />
+                    <QuoteListColumnHeader
+                      label="Sipariş"
+                      sortable
+                      sortKey="order"
+                      sort={listColumnSort}
+                      onToggleSort={toggleListColumnSort}
+                    />
                   </QuoteListCell>
                   <QuoteListCell>
                     <QuoteListColumnHeader />
