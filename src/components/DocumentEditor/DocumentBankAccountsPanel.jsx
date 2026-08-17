@@ -109,9 +109,9 @@ export default function DocumentBankAccountsPanel({
                       type="button"
                       onClick={() => toggleSelect(account)}
                       aria-pressed={isSelected}
-                      className={`document-frame-only flex min-w-0 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${
+                      className={`document-bank-chip document-frame-only flex min-w-0 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${
                         isSelected
-                          ? 'border-[#10b981]/55 bg-[#10b981]/10'
+                          ? 'document-bank-chip-selected border-[#10b981]/55 bg-transparent'
                           : 'border-[var(--search-border)] bg-transparent hover:border-[#10b981]/35'
                       }`}
                     >
@@ -134,7 +134,13 @@ export default function DocumentBankAccountsPanel({
                           {[account.bankName, account.label].filter(Boolean).join(' · ') || 'Hesap'}
                         </p>
                         {account.iban ? (
-                          <p className="customer-name-secondary truncate">{account.iban}</p>
+                          <p
+                            className={`customer-name-secondary truncate ${
+                              isSelected ? '!text-[#10b981]' : ''
+                            }`}
+                          >
+                            {account.iban}
+                          </p>
                         ) : null}
                       </div>
                     </button>

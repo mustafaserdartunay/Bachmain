@@ -812,6 +812,17 @@ textarea:not(.form-input)::placeholder {
   color: #10b981 !important;
 }
 
+.page-type-shell .document-bank-chip.document-bank-chip-selected,
+.page-type-shell .document-bank-chip.document-bank-chip-selected p,
+.page-type-shell .document-bank-chip.document-bank-chip-selected span,
+.page-type-shell .document-bank-chip.document-bank-chip-selected svg,
+.app-responsive .page-type-shell .document-bank-chip.document-bank-chip-selected,
+.app-responsive .page-type-shell .document-bank-chip.document-bank-chip-selected p,
+.app-responsive .page-type-shell .document-bank-chip.document-bank-chip-selected span,
+.app-responsive .page-type-shell .document-bank-chip.document-bank-chip-selected svg {
+  color: #10b981 !important;
+}
+
 .page-type-shell .document-totals-amount,
 .app-responsive .page-type-shell .document-totals-amount {
   font-weight: 700 !important;
