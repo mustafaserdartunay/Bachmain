@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Download, Printer } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../../components/Layout/AppPageLayout'
-import { listTemplatesByDocType, getDocTemplateById } from '../../utils/docTemplatesStore'
+import { listTemplatesByDocType, getDocTemplateById, saveDocTemplate, loadDocTemplates } from '../../utils/docTemplatesStore'
 import { buildDocumentContext, renderTemplateHtml } from '../../utils/docVariableEngine'
 import { downloadPdfFromHtml, openPrintWindow } from '../../utils/docPrint'
 import { logPrintJob } from '../../utils/docPrintJobsStore'
@@ -14,6 +14,27 @@ import { findCustomerProfileByReference, getCustomerProfiles } from '../../data/
 import { getCustomerDisplay } from '../../utils/customerDisplay'
 import { BTN_SUCCESS } from '../../utils/buttonStyles'
 import { useAuth } from '../../auth/AuthContext'
+import { buildQuoteDocumentHtml } from '../../utils/quoteDocumentHtml'
+import { readQuotePrintSettings, DOC_PRINT_SETTINGS_EVENT } from '../../utils/docPrintSettingsStore'
+import { getExchangeRatesSnapshot } from '../../hooks/useExchangeRates'
+
+function ensureQuoteTemplate() {
+  const existing = loadDocTemplates().find((item) => item.id === 'tpl-quote-system')
+  if (existing) return existing
+  return saveDocTemplate({
+    id: 'tpl-quote-system',
+    name: 'BachMain Teklif',
+    docType: 'quote',
+    pageSize: 'A4',
+    orientation: 'portrait',
+    designMode: 'html',
+    status: 'published',
+    headerHtml: '',
+    bodyHtml: '',
+    footerHtml: '',
+    blocks: [],
+  })
+}
 
 function resolveCustomer(ref) {
   if (!ref) return {}
@@ -26,14 +47,21 @@ function resolveCustomer(ref) {
 export default function DocPrintPage() {
   const { user } = useAuth()
   const [params] = useSearchParams()
-  const initialType = params.get('type') || 'quote'
-  const initialDocId = params.get('id') || ''
-  const initialTpl = params.get('templateId') || ''
-
-  const [docType, setDocType] = useState(initialType)
-  const [documentId, setDocumentId] = useState(initialDocId)
-  const [templateId, setTemplateId] = useState(initialTpl)
+  const docType = params.get('type') || 'quote'
+  const documentId = params.get('id') || ''
+  const templateId = params.get('templateId') || ''
   const [busy, setBusy] = useState(false)
+  const [printTick, setPrintTick] = useState(0)
+  const previewRef = useRef(null)
+
+  useEffect(() => {
+    ensureQuoteTemplate()
+    function refresh() {
+      setPrintTick((n) => n + 1)
+    }
+    window.addEventListener(DOC_PRINT_SETTINGS_EVENT, refresh)
+    return () => window.removeEventListener(DOC_PRINT_SETTINGS_EVENT, refresh)
+  }, [])
 
   const templates = useMemo(() => listTemplatesByDocType(docType === 'generic' ? '' : docType), [docType])
   const documents = useMemo(() => {
@@ -65,12 +93,70 @@ export default function DocPrintPage() {
   }, [selectedDoc, user])
 
   const rendered = useMemo(() => {
+    if (docType === 'quote' && selectedDoc) {
+      const customer = resolveCustomer(selectedDoc.customer || selectedDoc.customerId || selectedDoc.customerName)
+      const display = getCustomerDisplay(customer)
+      return {
+        html: buildQuoteDocumentHtml({
+          quote: selectedDoc,
+          company: readCompanySettings(),
+          customer: {
+            company: display.brandShortName || customer.company || '',
+            contact: display.companyTitle || '',
+            authorizedName: selectedDoc.contact || customer.authorizedName || customer.contactName || '',
+            email: selectedDoc.email || customer.email || '',
+            phone: selectedDoc.phone || customer.phone || '',
+            address: customer.address || customer.city || '',
+          },
+          settings: readQuotePrintSettings(),
+          rates: getExchangeRatesSnapshot(),
+        }),
+        errors: [],
+      }
+    }
     if (!selectedTpl) return { html: '<p>Şablon seçin</p>', errors: [] }
     return renderTemplateHtml(selectedTpl, context)
-  }, [selectedTpl, context])
+  }, [selectedTpl, context, docType, selectedDoc, printTick])
+
+  useEffect(() => {
+    const frame = previewRef.current
+    if (!frame) return undefined
+
+    function fit() {
+      const doc = frame.contentDocument
+      if (!doc) return
+      const height = Math.max(
+        doc.documentElement?.scrollHeight || 0,
+        doc.body?.scrollHeight || 0,
+      )
+      if (height > 0) frame.style.height = `${height}px`
+    }
+
+    function bindImages() {
+      const doc = frame.contentDocument
+      if (!doc) return
+      Array.from(doc.images || []).forEach((img) => {
+        if (!img.complete) img.addEventListener('load', fit, { once: true })
+      })
+    }
+
+    function onLoad() {
+      fit()
+      bindImages()
+    }
+
+    frame.addEventListener('load', onLoad)
+    onLoad()
+    const timer = window.setTimeout(fit, 80)
+    return () => {
+      frame.removeEventListener('load', onLoad)
+      window.clearTimeout(timer)
+    }
+  }, [rendered.html])
 
   async function handlePdf() {
-    if (!selectedTpl || !selectedDoc) return
+    if (!selectedDoc) return
+    if (docType !== 'quote' && !selectedTpl) return
     setBusy(true)
     try {
       await downloadPdfFromHtml(rendered.html, `${selectedDoc.id || 'belge'}.pdf`)
@@ -78,8 +164,8 @@ export default function DocPrintPage() {
         kind: 'pdf',
         docType,
         documentId: selectedDoc.id,
-        templateId: selectedTpl.id,
-        templateName: selectedTpl.name,
+        templateId: selectedTpl?.id || 'tpl-quote-system',
+        templateName: selectedTpl?.name || 'BachMain Teklif',
         userEmail: user?.email || '',
       })
       await flushWorkspaceNow()
@@ -91,14 +177,14 @@ export default function DocPrintPage() {
   }
 
   async function handlePrint() {
-    if (!selectedTpl) return
+    if (docType !== 'quote' && !selectedTpl) return
     openPrintWindow(rendered.html)
     logPrintJob({
       kind: 'print',
       docType,
       documentId: selectedDoc?.id || '',
-      templateId: selectedTpl.id,
-      templateName: selectedTpl.name,
+      templateId: selectedTpl?.id || 'tpl-quote-system',
+      templateName: selectedTpl?.name || 'BachMain Teklif',
       userEmail: user?.email || '',
     })
     await flushWorkspaceNow()
@@ -110,47 +196,25 @@ export default function DocPrintPage() {
         title="Yazdır / PDF"
         actions={(
           <div className="flex gap-2">
-            <button type="button" disabled={busy || !selectedTpl} onClick={handlePrint} className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-black uppercase text-gray-300 disabled:opacity-40">
+            <button type="button" disabled={busy || !selectedDoc} onClick={handlePrint} className="inline-flex items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-black uppercase text-gray-300 disabled:opacity-40">
               <Printer className="h-4 w-4" /> Yazdır
             </button>
-            <button type="button" disabled={busy || !selectedTpl} onClick={handlePdf} className={`${BTN_SUCCESS} gap-2 px-4 py-2.5 text-sm disabled:opacity-40`}>
+            <button type="button" disabled={busy || !selectedDoc} onClick={handlePdf} className={`${BTN_SUCCESS} gap-2 px-4 py-2.5 text-sm disabled:opacity-40`}>
               <Download className="h-4 w-4" /> PDF
             </button>
           </div>
         )}
       />
 
-      <section className="card grid gap-3 md:grid-cols-3">
-        <label className="block space-y-1.5">
-          <span className="text-[11px] font-black uppercase text-gray-500">Belge tipi</span>
-          <select className="form-input" value={docType} onChange={(e) => { setDocType(e.target.value); setDocumentId(''); setTemplateId('') }}>
-            <option value="quote">Teklif</option>
-            <option value="order">Sipariş</option>
-          </select>
-        </label>
-        <label className="block space-y-1.5">
-          <span className="text-[11px] font-black uppercase text-gray-500">Belge</span>
-          <select className="form-input" value={selectedDoc?.id || ''} onChange={(e) => setDocumentId(e.target.value)}>
-            {documents.length === 0 ? <option value="">Kayıt yok</option> : null}
-            {documents.map((doc) => (
-              <option key={doc.id} value={doc.id}>{doc.id}</option>
-            ))}
-          </select>
-        </label>
-        <label className="block space-y-1.5">
-          <span className="text-[11px] font-black uppercase text-gray-500">Şablon</span>
-          <select className="form-input" value={selectedTpl?.id || ''} onChange={(e) => setTemplateId(e.target.value)}>
-            {templates.length === 0 ? <option value="">Şablon yok — önce oluşturun</option> : null}
-            {templates.map((tpl) => (
-              <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
-            ))}
-          </select>
-        </label>
-      </section>
-
-      <section className="card overflow-hidden p-0">
+      <section className="card overflow-visible p-0">
         <div className="border-b border-dark-500/40 px-4 py-3 text-xs font-black uppercase text-gray-400">Önizleme</div>
-        <iframe title="Yazdırma önizleme" className="min-h-[700px] w-full bg-white" srcDoc={rendered.html} />
+        <iframe
+          ref={previewRef}
+          title="Yazdırma önizleme"
+          scrolling="no"
+          className="block w-full overflow-hidden border-0 bg-white"
+          srcDoc={rendered.html}
+        />
       </section>
     </AppPageShell>
   )
