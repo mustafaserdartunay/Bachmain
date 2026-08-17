@@ -3294,50 +3294,49 @@ html.special .app-page-metric {
   box-shadow: var(--special-card-glow) !important;
 }
 
-/* Teklif Listesi — her sütun Filtre paneli gibi ayrı kart; satırlar subgrid ile hizalı */
-.quote-list-column-board {
-  display: grid;
+/* Teklif Listesi — yatay satırlar; her sütun ve başlık ayrı Filtre paneli */
+.quote-list-board {
+  display: flex;
   width: 100%;
   min-width: 56rem;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.quote-list-row {
+  display: grid;
+  width: 100%;
   align-items: stretch;
   gap: 0.75rem;
 }
 
-html body section.card.quote-list-column-panel {
-  display: grid !important;
-  grid-template-rows: subgrid;
-  grid-row: 1 / -1;
+html body section.card.quote-list-cell-panel {
   min-width: 0;
-  padding: 0 !important;
+  min-height: 4.75rem;
   overflow: visible !important;
 }
 
-.quote-list-column-cell {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  padding: 0.5rem 0.9rem;
+.quote-list-row.is-hovered section.card.quote-list-cell-panel {
+  box-shadow:
+    0 10px 36px -14px rgba(30, 35, 60, 0.18),
+    inset 0 0 0 1px color-mix(in srgb, var(--muted) 22%, transparent) !important;
 }
 
-.quote-list-column-cell.is-hovered {
-  background: color-mix(in srgb, var(--muted) 10%, transparent);
-}
-
-html body .page-type-shell .quote-list-column-panel .customer-name-primary,
-html body .customers-page-type .quote-list-column-panel .customer-name-primary,
-html body .app-responsive .quote-list-column-panel .customer-name-primary {
+html body .page-type-shell .quote-list-cell-panel .customer-name-primary,
+html body .customers-page-type .quote-list-cell-panel .customer-name-primary,
+html body .app-responsive .quote-list-cell-panel .customer-name-primary {
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1.25 !important;
   letter-spacing: normal !important;
 }
 
-html body .page-type-shell .quote-list-column-panel .quote-list-column-title,
-html body .customers-page-type .quote-list-column-panel .quote-list-column-title,
-html body .app-responsive .quote-list-column-panel .quote-list-column-title,
-html body .page-type-shell .quote-list-column-panel button .quote-list-column-title,
-html body .customers-page-type .quote-list-column-panel button .quote-list-column-title,
-html body .app-responsive .quote-list-column-panel button .quote-list-column-title {
+html body .page-type-shell .quote-list-header-panel .quote-list-column-title,
+html body .customers-page-type .quote-list-header-panel .quote-list-column-title,
+html body .app-responsive .quote-list-header-panel .quote-list-column-title,
+html body .page-type-shell .quote-list-header-panel button .quote-list-column-title,
+html body .customers-page-type .quote-list-header-panel button .quote-list-column-title,
+html body .app-responsive .quote-list-header-panel button .quote-list-column-title {
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1.25 !important;
@@ -3346,9 +3345,9 @@ html body .app-responsive .quote-list-column-panel button .quote-list-column-tit
   color: var(--muted) !important;
 }
 
-html body .page-type-shell .quote-list-column-panel .customer-balance-positive,
-html body .customers-page-type .quote-list-column-panel .customer-balance-positive,
-html body .app-responsive .quote-list-column-panel .customer-balance-positive {
+html body .page-type-shell .quote-list-cell-panel .customer-balance-positive,
+html body .customers-page-type .quote-list-cell-panel .customer-balance-positive,
+html body .app-responsive .quote-list-cell-panel .customer-balance-positive {
   color: #10b981 !important;
   font-weight: 700 !important;
 }

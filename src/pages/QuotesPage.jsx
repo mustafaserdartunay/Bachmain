@@ -322,7 +322,7 @@ function QuoteListColumnHeader({
 }) {
   const title = formatQuoteListColumnLabel(label)
   return (
-    <div className="flex min-h-[2.75rem] items-center gap-2 px-3">
+    <div className="flex w-full min-w-0 items-center gap-2">
       {label ? <AppPanelDot color="blue" /> : null}
       {sortable ? (
         <button
@@ -351,26 +351,18 @@ function QuoteListColumnHeader({
   )
 }
 
-function QuoteListColumnCell({ quote, hovered, align = 'start', onHover, onLeave, onEdit, children }) {
+const QUOTE_LIST_CELL_PANEL_CLASS =
+  'customer-filter-panel customer-list-panel quote-list-cell-panel flex min-h-[4.75rem] w-full items-center'
+
+function QuoteListCellPanel({ header = false, align = 'start', className = '', children }) {
   const alignClass =
-    align === 'center' ? 'justify-center text-center' : align === 'right' ? 'justify-end text-right' : 'justify-start text-left'
+    align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      className={`quote-list-column-cell ${alignClass} cursor-pointer ${hovered ? 'is-hovered' : ''}`}
-      onMouseEnter={onHover}
-      onMouseLeave={onLeave}
-      onClick={() => onEdit(quote.id)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          onEdit(quote.id)
-        }
-      }}
+    <AppPagePanel
+      className={`${QUOTE_LIST_CELL_PANEL_CLASS} ${header ? 'quote-list-header-panel' : ''} ${alignClass} ${className}`.trim()}
     >
       {children}
-    </div>
+    </AppPagePanel>
   )
 }
 
@@ -2746,34 +2738,88 @@ export default function QuotesPage() {
             </AppPagePanel>
           ) : (
             <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
-              <div
-                className="quote-list-column-board"
-                onMouseLeave={() => setHoveredQuoteId(null)}
-                style={{
-                  gridTemplateColumns: quoteListColumnGrid,
-                  gridTemplateRows: `auto repeat(${listQuotes.length}, minmax(3.5rem, auto))`,
-                }}
-              >
-                <AppPagePanel className="customer-filter-panel customer-list-panel quote-list-column-panel w-full">
-                  <QuoteListColumnHeader
-                    label="Tarih"
-                    sortable
-                    sortKey="date"
-                    sort={listColumnSort}
-                    onToggleSort={toggleListColumnSort}
-                  />
-                  {listQuotes.map((quote) => {
-                    const stamp = formatListDateParts(getQuoteListDateSource(quote))
-                    return (
-                      <QuoteListColumnCell
-                        key={quote.id}
-                        quote={quote}
-                        hovered={hoveredQuoteId === quote.id}
-                        align="center"
-                        onHover={() => setHoveredQuoteId(quote.id)}
-                        onLeave={() => setHoveredQuoteId(null)}
-                        onEdit={editQuote}
-                      >
+              <div className="quote-list-board" onMouseLeave={() => setHoveredQuoteId(null)}>
+                <div className="quote-list-row" style={{ gridTemplateColumns: quoteListColumnGrid }}>
+                  <QuoteListCellPanel header align="center">
+                    <QuoteListColumnHeader
+                      label="Tarih"
+                      sortable
+                      sortKey="date"
+                      sort={listColumnSort}
+                      onToggleSort={toggleListColumnSort}
+                    />
+                  </QuoteListCellPanel>
+                  <QuoteListCellPanel header>
+                    <QuoteListColumnHeader
+                      label="Kod"
+                      sortable
+                      sortKey="code"
+                      sort={listColumnSort}
+                      onToggleSort={toggleListColumnSort}
+                    />
+                  </QuoteListCellPanel>
+                  <QuoteListCellPanel header>
+                    <QuoteListColumnHeader
+                      label="Müşteri Adı"
+                      sortable
+                      sortKey="customer"
+                      sort={listColumnSort}
+                      onToggleSort={toggleListColumnSort}
+                    />
+                  </QuoteListCellPanel>
+                  {quoteSegmentTabs.map((tab) => (
+                    <QuoteListCellPanel key={tab.id} header align="center">
+                      <QuoteListColumnHeader
+                        label={tab.label}
+                        accessory={renderFilterCycleAccessory(
+                          tab.id,
+                          processFilterOptionsForTab(tab),
+                          tab.label,
+                        )}
+                      />
+                    </QuoteListCellPanel>
+                  ))}
+                  <QuoteListCellPanel header align="right">
+                    <QuoteListColumnHeader
+                      label="Tutar"
+                      sortable
+                      sortKey="amount"
+                      sort={listColumnSort}
+                      onToggleSort={toggleListColumnSort}
+                    />
+                  </QuoteListCellPanel>
+                  <QuoteListCellPanel header align="center">
+                    <QuoteListColumnHeader label="Sipariş" />
+                  </QuoteListCellPanel>
+                  <QuoteListCellPanel header align="center">
+                    <QuoteListColumnHeader />
+                  </QuoteListCellPanel>
+                </div>
+
+                {listQuotes.map((quote) => {
+                  const stamp = formatListDateParts(getQuoteListDateSource(quote))
+                  const display = getListCustomerDisplay(quote.customer)
+                  const pending =
+                    pendingQuoteOrderAction?.id === quote.id
+                      ? pendingQuoteOrderAction.type
+                      : null
+                  return (
+                    <div
+                      key={quote.id}
+                      role="button"
+                      tabIndex={0}
+                      className={`quote-list-row cursor-pointer ${hoveredQuoteId === quote.id ? 'is-hovered' : ''}`}
+                      style={{ gridTemplateColumns: quoteListColumnGrid }}
+                      onMouseEnter={() => setHoveredQuoteId(quote.id)}
+                      onClick={() => editQuote(quote.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          editQuote(quote.id)
+                        }
+                      }}
+                    >
+                      <QuoteListCellPanel align="center">
                         {stamp.date ? (
                           <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
                             <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
@@ -2790,57 +2836,16 @@ export default function QuotesPage() {
                             —
                           </span>
                         )}
-                      </QuoteListColumnCell>
-                    )
-                  })}
-                </AppPagePanel>
-
-                <AppPagePanel className="customer-filter-panel customer-list-panel quote-list-column-panel w-full">
-                  <QuoteListColumnHeader
-                    label="Kod"
-                    sortable
-                    sortKey="code"
-                    sort={listColumnSort}
-                    onToggleSort={toggleListColumnSort}
-                  />
-                  {listQuotes.map((quote) => (
-                    <QuoteListColumnCell
-                      key={quote.id}
-                      quote={quote}
-                      hovered={hoveredQuoteId === quote.id}
-                      onHover={() => setHoveredQuoteId(quote.id)}
-                      onLeave={() => setHoveredQuoteId(null)}
-                      onEdit={editQuote}
-                    >
-                      <span className={`${YF_TEXT_CLASS} tabular-nums`}>
-                        {resolveQuoteCode(
-                          quote.id,
-                          quotes.map((item) => item.id),
-                        )}
-                      </span>
-                    </QuoteListColumnCell>
-                  ))}
-                </AppPagePanel>
-
-                <AppPagePanel className="customer-filter-panel customer-list-panel quote-list-column-panel w-full">
-                  <QuoteListColumnHeader
-                    label="Müşteri Adı"
-                    sortable
-                    sortKey="customer"
-                    sort={listColumnSort}
-                    onToggleSort={toggleListColumnSort}
-                  />
-                  {listQuotes.map((quote) => {
-                    const display = getListCustomerDisplay(quote.customer)
-                    return (
-                      <QuoteListColumnCell
-                        key={quote.id}
-                        quote={quote}
-                        hovered={hoveredQuoteId === quote.id}
-                        onHover={() => setHoveredQuoteId(quote.id)}
-                        onLeave={() => setHoveredQuoteId(null)}
-                        onEdit={editQuote}
-                      >
+                      </QuoteListCellPanel>
+                      <QuoteListCellPanel>
+                        <span className={`${YF_TEXT_CLASS} tabular-nums`}>
+                          {resolveQuoteCode(
+                            quote.id,
+                            quotes.map((item) => item.id),
+                          )}
+                        </span>
+                      </QuoteListCellPanel>
+                      <QuoteListCellPanel>
                         <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
                           <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
                             {display.brandShortName || 'Müşteri girilmedi'}
@@ -2851,100 +2856,36 @@ export default function QuotesPage() {
                             </span>
                           ) : null}
                         </span>
-                      </QuoteListColumnCell>
-                    )
-                  })}
-                </AppPagePanel>
-
-                {quoteSegmentTabs.map((tab) => (
-                  <AppPagePanel
-                    key={tab.id}
-                    className="customer-filter-panel customer-list-panel quote-list-column-panel w-full"
-                  >
-                    <QuoteListColumnHeader
-                      label={tab.label}
-                      accessory={renderFilterCycleAccessory(
-                        tab.id,
-                        processFilterOptionsForTab(tab),
-                        tab.label,
-                      )}
-                    />
-                    {listQuotes.map((quote) => (
-                      <QuoteListColumnCell
-                        key={quote.id}
-                        quote={quote}
-                        hovered={hoveredQuoteId === quote.id}
-                        align="center"
-                        onHover={() => setHoveredQuoteId(quote.id)}
-                        onLeave={() => setHoveredQuoteId(null)}
-                        onEdit={editQuote}
-                      >
-                        <span
-                          className="flex w-full items-center justify-center"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <EditableDropdownPill
-                            value={processValueForQuote(tab, quote)}
-                            options={processOptionsForTab(tab)}
-                            includePlaceholderOption={false}
-                            buttonClassName={PAGE_LIST_PILL_CLASS}
-                            wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
-                            menuClassName={PAGE_LIST_MENU_CLASS}
-                            menuMatchWidth={false}
-                            openKey={`${quote.id}-${tab.id}`}
-                            activeMenu={activeMenu}
-                            setActiveMenu={setActiveMenu}
-                            onChange={(value) => handleProcessValueChange(tab, quote, value)}
-                            onOptionsChange={(next) => handleProcessOptionsChange(tab, next)}
-                          />
+                      </QuoteListCellPanel>
+                      {quoteSegmentTabs.map((tab) => (
+                        <QuoteListCellPanel key={tab.id} align="center">
+                          <span
+                            className="flex w-full items-center justify-center"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <EditableDropdownPill
+                              value={processValueForQuote(tab, quote)}
+                              options={processOptionsForTab(tab)}
+                              includePlaceholderOption={false}
+                              buttonClassName={PAGE_LIST_PILL_CLASS}
+                              wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                              menuClassName={PAGE_LIST_MENU_CLASS}
+                              menuMatchWidth={false}
+                              openKey={`${quote.id}-${tab.id}`}
+                              activeMenu={activeMenu}
+                              setActiveMenu={setActiveMenu}
+                              onChange={(value) => handleProcessValueChange(tab, quote, value)}
+                              onOptionsChange={(next) => handleProcessOptionsChange(tab, next)}
+                            />
+                          </span>
+                        </QuoteListCellPanel>
+                      ))}
+                      <QuoteListCellPanel align="right">
+                        <span className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}>
+                          {formatTL(getQuoteListAmount(quote))}
                         </span>
-                      </QuoteListColumnCell>
-                    ))}
-                  </AppPagePanel>
-                ))}
-
-                <AppPagePanel className="customer-filter-panel customer-list-panel quote-list-column-panel w-full">
-                  <QuoteListColumnHeader
-                    label="Tutar"
-                    sortable
-                    sortKey="amount"
-                    sort={listColumnSort}
-                    onToggleSort={toggleListColumnSort}
-                  />
-                  {listQuotes.map((quote) => (
-                    <QuoteListColumnCell
-                      key={quote.id}
-                      quote={quote}
-                      hovered={hoveredQuoteId === quote.id}
-                      align="right"
-                      onHover={() => setHoveredQuoteId(quote.id)}
-                      onLeave={() => setHoveredQuoteId(null)}
-                      onEdit={editQuote}
-                    >
-                      <span className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}>
-                        {formatTL(getQuoteListAmount(quote))}
-                      </span>
-                    </QuoteListColumnCell>
-                  ))}
-                </AppPagePanel>
-
-                <AppPagePanel className="customer-filter-panel customer-list-panel quote-list-column-panel w-full">
-                  <QuoteListColumnHeader label="Sipariş" />
-                  {listQuotes.map((quote) => {
-                    const pending =
-                      pendingQuoteOrderAction?.id === quote.id
-                        ? pendingQuoteOrderAction.type
-                        : null
-                    return (
-                      <QuoteListColumnCell
-                        key={quote.id}
-                        quote={quote}
-                        hovered={hoveredQuoteId === quote.id}
-                        align="center"
-                        onHover={() => setHoveredQuoteId(quote.id)}
-                        onLeave={() => setHoveredQuoteId(null)}
-                        onEdit={editQuote}
-                      >
+                      </QuoteListCellPanel>
+                      <QuoteListCellPanel align="center">
                         <span
                           className="block w-full text-center"
                           onClick={(event) => event.stopPropagation()}
@@ -2964,49 +2905,35 @@ export default function QuotesPage() {
                             onCancelPending={() => setPendingQuoteOrderAction(null)}
                           />
                         </span>
-                      </QuoteListColumnCell>
-                    )
-                  })}
-                </AppPagePanel>
-
-                <AppPagePanel className="customer-filter-panel customer-list-panel quote-list-column-panel w-full">
-                  <QuoteListColumnHeader />
-                  {listQuotes.map((quote) => (
-                    <QuoteListColumnCell
-                      key={quote.id}
-                      quote={quote}
-                      hovered={hoveredQuoteId === quote.id}
-                      align="center"
-                      onHover={() => setHoveredQuoteId(quote.id)}
-                      onLeave={() => setHoveredQuoteId(null)}
-                      onEdit={editQuote}
-                    >
-                      <span onClick={(event) => event.stopPropagation()}>
-                        <MoreMenu
-                          items={[
-                            {
-                              id: 'edit',
-                              label: 'Düzenle',
-                              icon: Pencil,
-                              tone: 'primary',
-                              onClick: () => editQuote(quote.id),
-                            },
-                            {
-                              id: 'delete',
-                              label: 'Sil',
-                              icon: Trash2,
-                              tone: 'danger',
-                              onClick: (event) => {
-                                setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
-                                setPendingDeleteId(quote.id)
+                      </QuoteListCellPanel>
+                      <QuoteListCellPanel align="center">
+                        <span onClick={(event) => event.stopPropagation()}>
+                          <MoreMenu
+                            items={[
+                              {
+                                id: 'edit',
+                                label: 'Düzenle',
+                                icon: Pencil,
+                                tone: 'primary',
+                                onClick: () => editQuote(quote.id),
                               },
-                            },
-                          ]}
-                        />
-                      </span>
-                    </QuoteListColumnCell>
-                  ))}
-                </AppPagePanel>
+                              {
+                                id: 'delete',
+                                label: 'Sil',
+                                icon: Trash2,
+                                tone: 'danger',
+                                onClick: (event) => {
+                                  setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+                                  setPendingDeleteId(quote.id)
+                                },
+                              },
+                            ]}
+                          />
+                        </span>
+                      </QuoteListCellPanel>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
