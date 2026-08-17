@@ -3294,7 +3294,7 @@ html.special .app-page-metric {
   box-shadow: var(--special-card-glow) !important;
 }
 
-/* Teklif Listesi — yatay satırlar; her sütun ve başlık ayrı Filtre paneli */
+/* Teklif Listesi — her satır soldan sağa tek Filtre paneli */
 .quote-list-board {
   display: flex;
   width: 100%;
@@ -3306,25 +3306,31 @@ html.special .app-page-metric {
 .quote-list-row {
   display: grid;
   width: 100%;
-  align-items: stretch;
-  gap: 0.75rem;
+  align-items: center;
+  column-gap: 0.75rem;
 }
 
-html body section.card.quote-list-cell-panel {
+html body section.card.quote-list-row-panel {
   min-width: 0;
   min-height: 4.75rem;
   overflow: visible !important;
 }
 
-.quote-list-row.is-hovered section.card.quote-list-cell-panel {
+.quote-list-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+html body section.card.quote-list-row-panel.is-hovered {
   box-shadow:
     0 10px 36px -14px rgba(30, 35, 60, 0.18),
     inset 0 0 0 1px color-mix(in srgb, var(--muted) 22%, transparent) !important;
 }
 
-html body .page-type-shell .quote-list-cell-panel .customer-name-primary,
-html body .customers-page-type .quote-list-cell-panel .customer-name-primary,
-html body .app-responsive .quote-list-cell-panel .customer-name-primary {
+html body .page-type-shell .quote-list-row-panel .customer-name-primary,
+html body .customers-page-type .quote-list-row-panel .customer-name-primary,
+html body .app-responsive .quote-list-row-panel .customer-name-primary {
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1.25 !important;
@@ -3345,9 +3351,9 @@ html body .app-responsive .quote-list-header-panel button .quote-list-column-tit
   color: var(--muted) !important;
 }
 
-html body .page-type-shell .quote-list-cell-panel .customer-balance-positive,
-html body .customers-page-type .quote-list-cell-panel .customer-balance-positive,
-html body .app-responsive .quote-list-cell-panel .customer-balance-positive {
+html body .page-type-shell .quote-list-row-panel .customer-balance-positive,
+html body .customers-page-type .quote-list-row-panel .customer-balance-positive,
+html body .app-responsive .quote-list-row-panel .customer-balance-positive {
   color: #10b981 !important;
   font-weight: 700 !important;
 }
