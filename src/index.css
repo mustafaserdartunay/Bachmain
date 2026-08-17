@@ -1890,6 +1890,19 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   color: var(--muted) !important;
 }
 
+html body .page-type-shell .app-page-header .customer-page-back-link,
+html body .page-type-shell .app-page-header .customer-page-back-link-label,
+html body .customers-page-type .app-page-header .customer-page-back-link,
+html body .customers-page-type .app-page-header .customer-page-back-link-label,
+html body .app-responsive .app-page-header .customer-page-back-link-label {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
+}
+
 /* Customer list table headers — yf (same as Yeni Müşteri Oluştur), uppercase */
 .page-type-shell .customer-list-panel table thead th,
 .page-type-shell .customer-list-panel table thead th span,
