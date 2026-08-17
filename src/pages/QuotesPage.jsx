@@ -278,12 +278,12 @@ function QuoteOrderInlineConfirm({
 }) {
   return (
     <div
-      className="quote-order-undo-confirm quote-order-action flex h-9 items-center justify-center"
+      className="quote-order-undo-confirm quote-order-action inline-flex h-9 items-center justify-center"
       onClick={(event) => event.stopPropagation()}
       role="alertdialog"
       aria-label={ariaLabel}
     >
-      <div className="quote-order-undo-box flex h-9 w-full items-center justify-between rounded-xl border border-ds-border bg-transparent px-1">
+      <div className="quote-order-undo-box flex h-9 w-[5.75rem] items-center justify-between rounded-xl border border-ds-border bg-transparent px-1">
         <button
           type="button"
           onClick={onConfirm}
@@ -2894,7 +2894,7 @@ export default function QuotesPage() {
                         </QuoteListCell>
                         <QuoteListCell>
                           <span
-                            className="block w-full text-center"
+                            className="inline-flex w-full items-center justify-center"
                             onClick={(event) => event.stopPropagation()}
                           >
                             <QuoteListOrderModuleButton

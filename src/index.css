@@ -1776,17 +1776,20 @@ html body .customers-page-type .customer-list-panel span.quote-order-chip * {
 html body .page-type-shell .customer-list-panel .quote-order-undo-confirm,
 html body .customers-page-type .customer-list-panel .quote-order-undo-confirm,
 html body .app-responsive .customer-list-panel .quote-order-undo-confirm {
+  display: inline-flex !important;
   height: 2.25rem !important;
   min-height: 2.25rem !important;
   width: 5.75rem !important;
   min-width: 5.75rem !important;
   max-width: 5.75rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 html body .page-type-shell .customer-list-panel .quote-order-undo-box,
 html body .customers-page-type .customer-list-panel .quote-order-undo-box,
 html body .app-responsive .customer-list-panel .quote-order-undo-box {
-  width: 100% !important;
+  width: 5.75rem !important;
   min-width: 5.75rem !important;
   max-width: 5.75rem !important;
   height: 2.25rem !important;
