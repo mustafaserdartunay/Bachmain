@@ -1799,15 +1799,16 @@ html body .app-responsive .customer-list-panel .quote-order-undo-confirm {
   width: 5.75rem !important;
   min-width: 5.75rem !important;
   max-width: 5.75rem !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
 }
 
 html body .page-type-shell .customer-list-panel .quote-order-undo-box,
 html body .customers-page-type .customer-list-panel .quote-order-undo-box,
 html body .app-responsive .customer-list-panel .quote-order-undo-box {
-  width: 5.75rem !important;
-  min-width: 5.75rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
   max-width: 5.75rem !important;
   height: 2.25rem !important;
   box-sizing: border-box !important;

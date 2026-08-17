@@ -290,7 +290,7 @@ function QuoteOrderInlineConfirm({
       role="alertdialog"
       aria-label={ariaLabel}
     >
-      <div className="quote-order-undo-box flex h-9 w-[5.75rem] items-center justify-between rounded-xl border border-ds-border bg-transparent px-1">
+      <div className="quote-order-undo-box flex h-9 w-full items-center justify-between rounded-xl border border-ds-border bg-transparent px-1">
         <button
           type="button"
           onClick={onConfirm}
@@ -425,12 +425,30 @@ function sortQuoteListByColumn(
   })
 }
 
-function getQuoteSortDateValue(quote) {
-  const lastActivityDate = (quote.activities || []).at(-1)?.date
-  const rawDate = lastActivityDate || quote.createdAt || ''
-  const normalized = String(rawDate).replace(' ', 'T')
+function parseQuoteListDateMs(value) {
+  if (!value) return 0
+  const raw = String(value).trim()
+  const tr = raw.match(
+    /^(\d{2})\.(\d{2})\.(\d{4})(?:[, ]+\s*(\d{1,2}):(\d{2})(?::(\d{2}))?)?/,
+  )
+  if (tr) {
+    const [, day, month, year, hours = '0', minutes = '0', seconds = '0'] = tr
+    return new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hours),
+      Number(minutes),
+      Number(seconds),
+    ).getTime()
+  }
+  const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T')
   const time = new Date(normalized).getTime()
   return Number.isNaN(time) ? 0 : time
+}
+
+function getQuoteSortDateValue(quote) {
+  return parseQuoteListDateMs(getQuoteListDateSource(quote))
 }
 
 function QuoteListOrderModuleButton({
@@ -1333,6 +1351,9 @@ export default function QuotesPage() {
   const [quoteCustomLists, setQuoteCustomLists] = useState(() => readQuoteCustomLists())
   const [sortMode, setSortMode] = useState('latest')
   const [listColumnSort, setListColumnSort] = useState({ key: null, dir: 'asc' })
+  const listColumnSortRef = useRef(listColumnSort)
+  listColumnSortRef.current = listColumnSort
+  const listColumnSortLockRef = useRef(false)
   const [viewMode, setViewMode] = useState('list')
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
@@ -2486,10 +2507,18 @@ export default function QuotesPage() {
   }
 
   function toggleListColumnSort(key) {
-    setListColumnSort((current) => {
-      if (current.key !== key) return { key, dir: 'asc' }
-      return { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
-    })
+    if (listColumnSortLockRef.current) return
+    listColumnSortLockRef.current = true
+    window.setTimeout(() => {
+      listColumnSortLockRef.current = false
+    }, 0)
+    const current = listColumnSortRef.current
+    const next =
+      current.key !== key
+        ? { key, dir: 'asc' }
+        : { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+    listColumnSortRef.current = next
+    setListColumnSort(next)
   }
 
   const filteredQuotes = quotes
@@ -2521,6 +2550,7 @@ export default function QuotesPage() {
       return matchesSearch && matchesProcessTabs && matchesOrderStatus
     })
     .sort((a, b) => {
+      if (listColumnSort.key) return 0
       if (sortMode === 'date') return getQuoteSortDate(b) - getQuoteSortDate(a)
       if (sortMode === 'name') return (a.customer || '').localeCompare(b.customer || '', 'tr')
       if (sortMode === 'price') return getQuoteListAmount(b) - getQuoteListAmount(a)
