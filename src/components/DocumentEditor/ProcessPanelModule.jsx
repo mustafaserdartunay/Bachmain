@@ -30,6 +30,7 @@ export default function ProcessPanelModule({
   emptySelectionLabel = '',
   allowDeselect = true,
   compact = false,
+  className = '',
 }) {
   const stages = filterWorkflowStageList(record?.stages || [])
   const panelRecord = { ...record, stages }
@@ -42,12 +43,12 @@ export default function ProcessPanelModule({
   const isPlaceholder = !activeDisplayLabel && selectedCount <= 1 && !activeStage && !stages[0] && Boolean(emptySelectionLabel)
 
   return (
-    <div className="overflow-hidden rounded-lg border border-dark-500/50 transition-colors focus-within:border-accent-blue/50">
-      <div className="sticky top-0 z-10 border-b border-transparent bg-dark-800/95 backdrop-blur-sm">
+    <div className={`overflow-hidden rounded-2xl border border-white/10 bg-dark-900/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors focus-within:border-blue-400/40 ${className}`}>
+      <div className="sticky top-0 z-10 border-b border-white/5 bg-dark-800/90 backdrop-blur-md">
         <button
           type="button"
           onClick={onToggle}
-          className={`w-full text-left transition-colors ${compact ? 'px-3 py-2' : 'px-3 py-2.5'}`}
+          className={`w-full text-left transition-colors hover:bg-white/[0.03] ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
         >
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">

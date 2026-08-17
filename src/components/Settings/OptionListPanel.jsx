@@ -29,6 +29,7 @@ export default function OptionListPanel({
   activeLabel = 'Aktif Seçenek',
   countSuffix = 'seçenek tanımlı',
   emptyMessage = 'Henüz seçenek eklenmedi.',
+  hideHeader = false,
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [stageInput, setStageInput] = useState('')
@@ -121,11 +122,14 @@ export default function OptionListPanel({
 
   return (
     <section className="space-y-3">
-      <div>
-        <h3 className="text-sm font-black text-white">{title}</h3>
-        {description ? <p className="mt-1 text-xs font-semibold text-gray-500">{description}</p> : null}
-      </div>
+      {hideHeader ? null : (
+        <div>
+          <h3 className="text-sm font-black text-white">{title}</h3>
+          {description ? <p className="mt-1 text-xs font-semibold text-gray-500">{description}</p> : null}
+        </div>
+      )}
       <ProcessPanelModule
+        className="rounded-2xl border-white/10 bg-dark-900/35 shadow-inner"
         activeLabel={activeLabel}
         countSuffix={countSuffix}
         emptyMessage={emptyMessage}

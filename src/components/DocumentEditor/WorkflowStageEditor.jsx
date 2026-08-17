@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Copy, GripVertical, Pencil, Plus, X } from 'lucide-react'
 import InlineDeleteConfirm from '../Common/InlineDeleteConfirm'
-import { BTN_PRIMARY } from '../../utils/buttonStyles'
 import StageColorSwatches from './StageColorSwatches'
 import { stageColors } from './stageColors'
 import { filterWorkflowStageList, isReservedPlaceholderLabel } from './processPanelUtils'
@@ -193,10 +192,8 @@ export default function WorkflowStageEditor({
     : (colorTargetStage?.color || newStageColor)
 
   function handleColorChange(color) {
-    if (isNewStageColorMode) {
-      setNewStageColor(color)
-      return
-    }
+    setNewStageColor(color)
+    if (isNewStageColorMode) return
     if (colorTargetStage) {
       onUpdateStageColor(colorTargetStage, color)
     }
@@ -373,33 +370,38 @@ export default function WorkflowStageEditor({
           )}
 
           <form
-            className="mt-3 flex gap-2 border-t border-dark-500/35 pt-3"
+            className="mt-3 flex items-stretch gap-2 border-t border-white/10 pt-3"
             onSubmit={handleAddStage}
           >
-            <input
-              type="text"
-              value={newStageName}
-              onChange={(event) => {
-                const nextValue = event.target.value
-                newStageNameRef.current = nextValue
-                setNewStageName(nextValue)
-                if (setStageInput) setStageInput(nextValue)
-                setIsNewStageColorMode(true)
-              }}
-              onFocus={() => setIsNewStageColorMode(true)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  handleAddStage(event)
-                }
-              }}
-              placeholder={addPlaceholder}
-              className="form-input h-9 min-w-0 flex-1"
-            />
+            <div className="relative min-w-0 flex-1">
+              <span
+                className={`pointer-events-none absolute left-3 top-1/2 z-10 h-2.5 w-2.5 -translate-y-1/2 rounded-full ${newStageColor || 'bg-blue-500'}`}
+              />
+              <input
+                type="text"
+                value={newStageName}
+                onChange={(event) => {
+                  const nextValue = event.target.value
+                  newStageNameRef.current = nextValue
+                  setNewStageName(nextValue)
+                  if (setStageInput) setStageInput(nextValue)
+                  setIsNewStageColorMode(true)
+                }}
+                onFocus={() => setIsNewStageColorMode(true)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    handleAddStage(event)
+                  }
+                }}
+                placeholder={addPlaceholder}
+                className="form-input h-12 min-h-12 max-h-12 w-full min-w-0 pl-8"
+              />
+            </div>
             <button
               type="button"
               onClick={handleAddStage}
-              className={`${BTN_PRIMARY} h-9 shrink-0 gap-1.5 px-3 text-xs`}
+              className="inline-flex h-12 min-h-12 max-h-12 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br from-sky-300 via-blue-400 to-blue-500 px-3 text-xs font-extrabold tracking-wide text-white shadow-[0_8px_20px_-12px_rgba(30,35,60,0.55)] transition-transform hover:-translate-y-0.5"
             >
               <Plus className="h-3.5 w-3.5" /> Ekle
             </button>

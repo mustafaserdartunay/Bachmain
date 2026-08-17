@@ -115,9 +115,16 @@ import {
   resolveListColumnLabel,
 } from '../components/DocumentEditor/processPanelUtils'
 import {
+  isQuoteCustomStatusSegment,
   isQuoteStatusSegment,
+  quoteCustomListOptions,
+  quoteSegmentFieldValue,
+  quoteSegmentSource,
+  QUOTE_CUSTOM_LISTS_EVENT,
   QUOTE_SEGMENT_TABS_EVENT,
+  readQuoteCustomLists,
   readQuoteSegmentTabs,
+  saveQuoteCustomList,
 } from '../utils/quoteSegmentTabs'
 import {
   stageColors as processStageColors,
@@ -481,13 +488,17 @@ function sanitizeQuoteForSave(quote) {
     email: safeText(quote.email),
     status: getOptionLabels('status').includes(quote.status)
       ? quote.status
-      : getOptionLabels('status')[0] || 'Taslak',
+      : getOptionLabels('status')[0] || '',
     createdAt: quote.createdAt || todayIsoDate(),
     validUntil: quote.validUntil || defaultValidUntilDate(quote.createdAt || todayIsoDate()),
     dueDate: quote.dueDate || quote.validUntil || defaultValidUntilDate(quote.createdAt || todayIsoDate()),
     tags: Array.isArray(quote.tags) ? quote.tags.map(safeText).filter(Boolean) : [],
     termsDescription: String(quote.termsDescription || '').trim(),
     terms: Array.isArray(quote.terms) ? quote.terms.map(safeText).filter(Boolean) : [],
+    segmentFieldValues:
+      quote.segmentFieldValues && typeof quote.segmentFieldValues === 'object'
+        ? quote.segmentFieldValues
+        : {},
     items,
     activities: Array.isArray(quote.activities) ? quote.activities : [],
     selectedBankAccountIds: Array.isArray(quote.selectedBankAccountIds)
@@ -1157,6 +1168,7 @@ export default function QuotesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState({})
   const [quoteSegmentTabs, setQuoteSegmentTabs] = useState(() => readQuoteSegmentTabs())
+  const [quoteCustomLists, setQuoteCustomLists] = useState(() => readQuoteCustomLists())
   const [sortMode, setSortMode] = useState('latest')
   const [viewMode, setViewMode] = useState('list')
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
@@ -1209,9 +1221,9 @@ export default function QuotesPage() {
   const orderStageOptions = getOrderStageOptions(workflowStages)
 
   function processOptionsForTab(tab) {
-    return isQuoteStatusSegment(tab)
-      ? optionLists.status || []
-      : toStageDropdownOptions(quoteStageOptions)
+    if (isQuoteStatusSegment(tab)) return optionLists.status || []
+    if (isQuoteCustomStatusSegment(tab)) return quoteCustomListOptions(quoteCustomLists, tab)
+    return toStageDropdownOptions(quoteStageOptions)
   }
 
   function processFilterOptionsForTab(tab) {
@@ -1221,6 +1233,12 @@ export default function QuotesPage() {
   function processValueForQuote(tab, quote) {
     if (isQuoteStatusSegment(tab)) {
       return resolveListColumnLabel(quote.status, optionLists.status)
+    }
+    if (isQuoteCustomStatusSegment(tab)) {
+      return resolveListColumnLabel(
+        quoteSegmentFieldValue(quote, tab),
+        quoteCustomListOptions(quoteCustomLists, tab),
+      )
     }
     return resolveListQuoteStage(quote)?.label || ''
   }
@@ -1277,12 +1295,27 @@ export default function QuotesPage() {
       handleQuoteStatusChange(quote, value)
       return
     }
+    if (isQuoteCustomStatusSegment(tab)) {
+      const sourceId = quoteSegmentSource(tab)
+      patchQuote(quote.id, {
+        segmentFieldValues: {
+          ...(quote.segmentFieldValues || {}),
+          [sourceId]: value,
+        },
+      })
+      setActiveMenu(null)
+      return
+    }
     handleQuoteStageLabelChange(quote, value)
   }
 
   function handleProcessOptionsChange(tab, next) {
     if (isQuoteStatusSegment(tab)) {
       updateOptionList('status', next)
+      return
+    }
+    if (isQuoteCustomStatusSegment(tab)) {
+      setQuoteCustomLists(saveQuoteCustomList(quoteSegmentSource(tab), next))
       return
     }
     updateQuoteStageOptions(next)
@@ -1292,8 +1325,15 @@ export default function QuotesPage() {
     function refreshQuoteSegmentTabs() {
       setQuoteSegmentTabs(readQuoteSegmentTabs())
     }
+    function refreshQuoteCustomLists() {
+      setQuoteCustomLists(readQuoteCustomLists())
+    }
     window.addEventListener(QUOTE_SEGMENT_TABS_EVENT, refreshQuoteSegmentTabs)
-    return () => window.removeEventListener(QUOTE_SEGMENT_TABS_EVENT, refreshQuoteSegmentTabs)
+    window.addEventListener(QUOTE_CUSTOM_LISTS_EVENT, refreshQuoteCustomLists)
+    return () => {
+      window.removeEventListener(QUOTE_SEGMENT_TABS_EVENT, refreshQuoteSegmentTabs)
+      window.removeEventListener(QUOTE_CUSTOM_LISTS_EVENT, refreshQuoteCustomLists)
+    }
   }, [])
 
   useEffect(() => {
@@ -1738,7 +1778,7 @@ export default function QuotesPage() {
       contact: '',
       phone: '',
       email: '',
-      status: 'Taslak',
+      status: (readOptionLists().status || [])[0]?.label || '',
       priority: 'Normal',
       source: 'Manuel',
       owner: '',
@@ -1750,6 +1790,7 @@ export default function QuotesPage() {
       validUntil: defaultValidUntilDate(createdAt),
       dueDate: defaultValidUntilDate(createdAt),
       currentStageId: getQuoteStageOptions(stages)[0]?.id || '',
+      segmentFieldValues: {},
       stages,
       items: [createEmptyQuoteItem()],
       showDocumentDiscount: false,
@@ -2290,6 +2331,9 @@ export default function QuotesPage() {
         const selected = filters[tab.id] || 'Tümü'
         if (selected === 'Tümü') return true
         if (isQuoteStatusSegment(tab)) return quote.status === selected
+        if (isQuoteCustomStatusSegment(tab)) {
+          return processValueForQuote(tab, quote) === selected
+        }
         return quoteProcess.activeStage?.label === selected
       })
       return matchesSearch && matchesProcessTabs
@@ -2652,6 +2696,7 @@ export default function QuotesPage() {
                       <EditableDropdownPill
                         value={processValueForQuote(tab, quote)}
                         options={processOptionsForTab(tab)}
+                        includePlaceholderOption={false}
                         buttonClassName={PAGE_LIST_PILL_CLASS}
                         wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
                         menuClassName={PAGE_LIST_MENU_CLASS}

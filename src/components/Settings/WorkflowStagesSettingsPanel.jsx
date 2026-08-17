@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Check, Copy, Eye, EyeOff, Pencil, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Copy, Eye, EyeOff, GripVertical, Pencil, Plus, X } from 'lucide-react'
 import ProcessPanelModule from '../DocumentEditor/ProcessPanelModule'
 import OptionListPanel from './OptionListPanel'
 import InlineDeleteConfirm from '../Common/InlineDeleteConfirm'
@@ -32,8 +32,16 @@ import {
 import { buildFinanceMetricCards } from '../Dashboard/StatusAnalysisBoard'
 import { readOptionLists, saveOptionList } from '../../utils/customerMeta'
 import {
+  QUOTE_CUSTOM_LISTS_EVENT,
   QUOTE_SEGMENT_TABS_EVENT,
+  deleteQuoteCustomList,
+  isQuoteCustomStatusSegment,
+  isQuoteStatusSegment,
+  isQuoteWorkflowSegment,
+  quoteSegmentSource,
+  readQuoteCustomLists,
   readQuoteSegmentTabs,
+  saveQuoteCustomList,
   saveQuoteSegmentTabs,
 } from '../../utils/quoteSegmentTabs'
 
@@ -129,6 +137,15 @@ function buildSegmentCopyLabel(label, tabs) {
   return `${base} ${index}`
 }
 
+function uniqueSegmentLabel(label, tabs) {
+  const base = String(label || 'Yeni Durum').trim()
+  const used = new Set((tabs || []).map((segment) => normalizeLabel(segment.label)))
+  if (!used.has(normalizeLabel(base))) return base
+  let index = 2
+  while (used.has(normalizeLabel(`${base} ${index}`))) index += 1
+  return `${base} ${index}`
+}
+
 function SegmentTabs({
   tabs,
   activeId,
@@ -136,6 +153,7 @@ function SegmentTabs({
   onCopy,
   onRename,
   onDelete,
+  onReorder,
   getCount,
   editId,
   setEditId,
@@ -144,10 +162,61 @@ function SegmentTabs({
   pendingDeleteId,
   setPendingDeleteId,
 }) {
+  const [draggedIndex, setDraggedIndex] = useState(null)
+  const [dragOverIndex, setDragOverIndex] = useState(null)
+  const draggedIndexRef = useRef(null)
+  const suppressClickRef = useRef(false)
+  const canReorder = typeof onReorder === 'function'
+
+  function beginDrag(index, event) {
+    if (!canReorder || editId) return
+    draggedIndexRef.current = index
+    setDraggedIndex(index)
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(index))
+    if (event.dataTransfer.setDragImage && event.currentTarget instanceof HTMLElement) {
+      const chip = event.currentTarget.closest('[data-segment-chip]')
+      if (chip) event.dataTransfer.setDragImage(chip, 24, 16)
+    }
+  }
+
+  function handleDrop(targetIndex, event) {
+    event.preventDefault()
+    event.stopPropagation()
+    if (!canReorder) return
+    const transferRaw = event.dataTransfer?.getData('text/plain')
+    const fromIndex = transferRaw !== '' && transferRaw != null
+      ? Number(transferRaw)
+      : draggedIndexRef.current
+    if (fromIndex == null || Number.isNaN(fromIndex) || fromIndex === targetIndex) {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+    const next = [...tabs]
+    const [moved] = next.splice(fromIndex, 1)
+    next.splice(targetIndex, 0, moved)
+    onReorder(next)
+    suppressClickRef.current = true
+    draggedIndexRef.current = null
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  function endDrag() {
+    window.setTimeout(() => {
+      draggedIndexRef.current = null
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+    }, 0)
+  }
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {tabs.map((segment) => {
+    <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+      {tabs.map((segment, index) => {
         const isActive = activeId === segment.id
+        const isDragging = draggedIndex === index
+        const isDragOver = dragOverIndex === index && draggedIndex !== index
         if (pendingDeleteId === segment.id) {
           return (
             <div
@@ -166,10 +235,22 @@ function SegmentTabs({
         return (
           <div
             key={segment.id}
-            className={`inline-flex items-center overflow-hidden rounded-xl border transition-colors ${
-              isActive
-                ? 'border-blue-500/50 bg-blue-500/15'
-                : 'border-dark-500/50 bg-dark-700/50'
+            data-segment-chip
+            onDragOver={(event) => {
+              if (!canReorder) return
+              event.preventDefault()
+              event.dataTransfer.dropEffect = 'move'
+              setDragOverIndex(index)
+            }}
+            onDrop={(event) => handleDrop(index, event)}
+            className={`inline-flex items-center overflow-hidden rounded-xl border transition-all ${
+              isDragging ? 'opacity-45' : ''
+            } ${
+              isDragOver
+                ? 'border-blue-400/70 bg-blue-500/20 ring-2 ring-blue-400/35'
+                : isActive
+                  ? 'border-blue-500/50 bg-blue-500/15 shadow-[0_0_18px_rgba(59,130,246,0.12)]'
+                  : 'border-white/10 bg-dark-800/80 hover:border-white/20'
             }`}
           >
             {editId === segment.id ? (
@@ -208,16 +289,36 @@ function SegmentTabs({
                 </button>
               </form>
             ) : (
-              <button
-                type="button"
-                onClick={() => onSelect(segment)}
-                className={`px-3 py-2 text-xs font-black uppercase tracking-wide transition-colors ${
-                  isActive ? 'text-blue-300' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {segment.label}
-                <span className="ml-1.5 text-[12px] font-bold text-gray-500">({getCount(segment)})</span>
-              </button>
+              <>
+                {canReorder && (
+                  <div
+                    draggable
+                    onDragStart={(event) => beginDrag(index, event)}
+                    onDragEnd={endDrag}
+                    className="cursor-grab px-1.5 py-2 text-gray-500 opacity-70 transition-opacity hover:text-gray-300 hover:opacity-100 active:cursor-grabbing"
+                    title="Sürükleyerek sırala"
+                    aria-label={`${segment.label} sürükle`}
+                  >
+                    <GripVertical className="h-3.5 w-3.5 pointer-events-none" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (suppressClickRef.current) {
+                      suppressClickRef.current = false
+                      return
+                    }
+                    onSelect(segment)
+                  }}
+                  className={`px-2.5 py-2 text-xs font-black uppercase tracking-wide transition-colors ${
+                    isActive ? 'text-blue-300' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {segment.label}
+                  <span className="ml-1.5 text-[12px] font-bold text-gray-500">({getCount(segment)})</span>
+                </button>
+              </>
             )}
             {editId !== segment.id && (
               <>
@@ -272,6 +373,7 @@ export default function WorkflowStagesSettingsPanel() {
   const [partDeliverySituations, setPartDeliverySituations] = useState(() => loadPartDeliverySituations())
   const [workflowSegmentTabs, setWorkflowSegmentTabs] = useState(() => readSegmentTabs(WORKFLOW_SEGMENT_TABS_KEY, WORKFLOW_SEGMENTS))
   const [quoteSegmentTabs, setQuoteSegmentTabs] = useState(() => readQuoteSegmentTabs())
+  const [quoteCustomLists, setQuoteCustomLists] = useState(() => readQuoteCustomLists())
   const [orderSegmentTabs, setOrderSegmentTabs] = useState(() => readSegmentTabs(ORDER_SEGMENT_TABS_KEY, ORDER_SEGMENTS))
   const [productionSegmentTabs, setProductionSegmentTabs] = useState(() => readSegmentTabs(PRODUCTION_SEGMENT_TABS_KEY, PRODUCTION_SEGMENTS))
   const [activeSegment, setActiveSegment] = useState('depo')
@@ -336,12 +438,16 @@ export default function WorkflowStagesSettingsPanel() {
     function refreshQuoteSegmentTabs() {
       setQuoteSegmentTabs(readQuoteSegmentTabs())
     }
+    function refreshQuoteCustomLists() {
+      setQuoteCustomLists(readQuoteCustomLists())
+    }
     window.addEventListener('bach:workflow-stages-updated', refresh)
     window.addEventListener('bach:depo-workflow-stages-updated', refreshDepoStages)
     window.addEventListener('bach:production-fulfillment-updated', refreshPartDelivery)
     window.addEventListener(DASHBOARD_FINANCE_CARDS_EVENT, refreshDashboardFinanceCards)
     window.addEventListener('bach:option-lists-updated', refreshOptionLists)
     window.addEventListener(QUOTE_SEGMENT_TABS_EVENT, refreshQuoteSegmentTabs)
+    window.addEventListener(QUOTE_CUSTOM_LISTS_EVENT, refreshQuoteCustomLists)
     return () => {
       window.removeEventListener('bach:workflow-stages-updated', refresh)
       window.removeEventListener('bach:depo-workflow-stages-updated', refreshDepoStages)
@@ -349,6 +455,7 @@ export default function WorkflowStagesSettingsPanel() {
       window.removeEventListener(DASHBOARD_FINANCE_CARDS_EVENT, refreshDashboardFinanceCards)
       window.removeEventListener('bach:option-lists-updated', refreshOptionLists)
       window.removeEventListener(QUOTE_SEGMENT_TABS_EVENT, refreshQuoteSegmentTabs)
+      window.removeEventListener(QUOTE_CUSTOM_LISTS_EVENT, refreshQuoteCustomLists)
     }
   }, [])
 
@@ -368,6 +475,7 @@ export default function WorkflowStagesSettingsPanel() {
     if (segment === 'partDelivery') return partDeliverySituations
     if (segment === 'depo') return depoStages
     if (segment === 'quoteStatus') return optionLists.status || []
+    if (String(segment).startsWith('quote-custom')) return quoteCustomLists[segment] || []
     return getSegmentStagesFrom(workflowStages, segment)
   }
 
@@ -391,7 +499,7 @@ export default function WorkflowStagesSettingsPanel() {
       ? previewQuoteStageId
       : ''
     return { stages, currentStageId }
-  }, [workflowStages, activeQuoteSegmentSource, previewQuoteStageId, optionLists])
+  }, [workflowStages, activeQuoteSegmentSource, previewQuoteStageId, optionLists, quoteCustomLists])
 
   const orderSegmentRecord = useMemo(() => {
     const stages = getSegmentStages(activeOrderSegmentSource)
@@ -990,9 +1098,32 @@ export default function WorkflowStagesSettingsPanel() {
     if (activeSegment === segment.id) selectWorkflowSegment(next[0])
   }
 
+  function reorderQuoteSegments(nextTabs) {
+    updateQuoteSegmentTabs(nextTabs)
+  }
+
+  function addQuoteStatusTab() {
+    const sourceId = createId('quote-custom')
+    const tab = {
+      id: sourceId,
+      label: uniqueSegmentLabel('Yeni Durum', quoteSegmentTabs),
+      sourceId,
+      builtIn: false,
+      kind: 'status',
+    }
+    setQuoteCustomLists(saveQuoteCustomList(sourceId, []))
+    updateQuoteSegmentTabs([...quoteSegmentTabs, tab])
+    selectQuoteSegment(tab)
+  }
+
   function deleteQuoteSegment(segment) {
     const next = quoteSegmentTabs.filter((item) => item.id !== segment.id)
     if (!next.length) return
+    const sourceId = quoteSegmentSource(segment)
+    const stillUsed = next.some((item) => quoteSegmentSource(item) === sourceId)
+    if (!stillUsed && isQuoteCustomStatusSegment(segment)) {
+      setQuoteCustomLists(deleteQuoteCustomList(sourceId))
+    }
     updateQuoteSegmentTabs(next)
     setPendingQuoteSegmentDeleteId(null)
     if (activeQuoteSegment === segment.id) selectQuoteSegment(next[0])
@@ -1098,51 +1229,47 @@ export default function WorkflowStagesSettingsPanel() {
 
   return (
     <>
-    <section className="card space-y-4">
-      <div>
-        <h2 className="text-base font-black text-white">Teklif Süreçleri</h2>
-        <p className="mt-1 text-xs font-semibold text-gray-500">
-          Teklif akışındaki süreç aşamaları bu ayrı panelden yönetilir.
+    <section className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-dark-800/95 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.35)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.18),transparent_46%)]" />
+      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(96,165,250,0.6),transparent)]" />
+      <div className="relative z-10">
+        <h2 className="text-4xl font-black tracking-tight text-blue-400 sm:text-5xl">Teklif Süreçleri</h2>
+        <p className="mt-2 max-w-2xl text-sm font-semibold text-gray-400">
+          Teklif akışındaki süreç aşamaları bu ayrı panelden yönetilir. Sekme sırası teklifler sayfasındaki kolon sırasını belirler.
         </p>
+
+      <div className="mt-5 flex items-start gap-2">
+        <SegmentTabs
+          tabs={quoteSegmentTabs}
+          activeId={activeQuoteSegment}
+          onSelect={selectQuoteSegment}
+          onCopy={copyQuoteSegment}
+          onRename={renameQuoteSegment}
+          onDelete={deleteQuoteSegment}
+          onReorder={reorderQuoteSegments}
+          getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
+          editId={editingQuoteSegmentId}
+          setEditId={setEditingQuoteSegmentId}
+          editDraft={editingQuoteSegmentDraft}
+          setEditDraft={setEditingQuoteSegmentDraft}
+          pendingDeleteId={pendingQuoteSegmentDeleteId}
+          setPendingDeleteId={setPendingQuoteSegmentDeleteId}
+        />
+        <button
+          type="button"
+          onClick={addQuoteStatusTab}
+          className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-xl border border-dashed border-blue-400/45 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-wide text-blue-300 transition-colors hover:border-blue-400/70 hover:bg-blue-500/20"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Durum Ekle
+        </button>
       </div>
 
-      <SegmentTabs
-        tabs={quoteSegmentTabs}
-        activeId={activeQuoteSegment}
-        onSelect={selectQuoteSegment}
-        onCopy={copyQuoteSegment}
-        onRename={renameQuoteSegment}
-        onDelete={deleteQuoteSegment}
-        getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
-        editId={editingQuoteSegmentId}
-        setEditId={setEditingQuoteSegmentId}
-        editDraft={editingQuoteSegmentDraft}
-        setEditDraft={setEditingQuoteSegmentDraft}
-        pendingDeleteId={pendingQuoteSegmentDeleteId}
-        setPendingDeleteId={setPendingQuoteSegmentDeleteId}
-      />
-
-      {activeQuoteSegmentSource === 'quoteStatus' ? (
-        <OptionListPanel
-          title="Teklif Durumu"
-          description="Taslak, onaylandı, reddedildi vb. Teklif listesi ve filtrelerine yansır."
-          options={optionLists.status || []}
-          onChange={(next) => {
-            saveOptionList('status', next)
-            setOptionLists(readOptionLists())
-          }}
-          placeholder="Yeni durum adı..."
-          activeLabel="Aktif Durum"
-          countSuffix="durum tanımlı"
-          emptyMessage="Henüz teklif durumu eklenmedi."
-        />
-      ) : (
-        <div>
-          <h3 className="mb-1.5 text-xs font-black uppercase tracking-wider text-gray-500">
-            {activeQuoteSegmentMeta?.label || 'Teklif Süreci'}
-          </h3>
+      <div className="mt-5">
+        {isQuoteWorkflowSegment(activeQuoteSegmentMeta) ? (
           <ProcessPanelModule
             key={activeQuoteSegment}
+            className="rounded-2xl border-white/10 bg-dark-900/35 shadow-inner"
             activeLabel="Aktif Süreç"
             countSuffix="süreç tanımlı"
             emptyMessage="Henüz teklif süreci eklenmedi."
@@ -1162,8 +1289,36 @@ export default function WorkflowStagesSettingsPanel() {
             setPendingStageDeleteId={setPendingQuoteStageDeleteId}
             onRemoveStage={removeQuoteStage}
           />
-        </div>
-      )}
+        ) : (
+          <OptionListPanel
+            hideHeader
+            title={activeQuoteSegmentMeta?.label || 'Teklif Durumu'}
+            description={
+              isQuoteStatusSegment(activeQuoteSegmentMeta)
+                ? 'Taslak, onaylandı, reddedildi vb. Teklif listesi ve filtrelerine yansır.'
+                : 'Bu duruma özel seçenekler teklifler sayfasında ayrı kolon olarak görünür.'
+            }
+            options={
+              isQuoteStatusSegment(activeQuoteSegmentMeta)
+                ? (optionLists.status || [])
+                : (quoteCustomLists[activeQuoteSegmentSource] || [])
+            }
+            onChange={(next) => {
+              if (isQuoteStatusSegment(activeQuoteSegmentMeta)) {
+                saveOptionList('status', next)
+                setOptionLists(readOptionLists())
+                return
+              }
+              setQuoteCustomLists(saveQuoteCustomList(activeQuoteSegmentSource, next))
+            }}
+            placeholder="Yeni durum adı..."
+            activeLabel="Aktif Durum"
+            countSuffix="durum tanımlı"
+            emptyMessage="Henüz teklif durumu eklenmedi."
+          />
+        )}
+      </div>
+      </div>
     </section>
 
     <section className="card space-y-4">
