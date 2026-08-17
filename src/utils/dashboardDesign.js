@@ -54,7 +54,7 @@ export const PAGE_HEADER_BACK_LINK_CLASS =
   'customer-page-back-link group inline-flex shrink-0 items-center gap-2 rounded-xl px-1 py-1 text-[var(--muted)] transition-opacity hover:opacity-80'
 export const PAGE_HEADER_BACK_LABEL_CLASS =
   'customer-page-back-link-label yfb min-w-0 truncate text-[14px] font-bold uppercase leading-tight tracking-normal text-[var(--muted)]'
-export const PAGE_HEADER_TITLE_SLOT_CLASS = '!min-w-0 !overflow-visible'
+export const PAGE_HEADER_TITLE_SLOT_CLASS = 'shrink-0 w-auto !overflow-visible'
 export const PAGE_FILTER_PANEL_CLASS =
   'customer-filter-panel flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] w-full items-center'
 export const PAGE_FILTER_BAR_CLASS =

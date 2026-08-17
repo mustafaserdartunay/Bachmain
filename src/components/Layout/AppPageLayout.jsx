@@ -157,15 +157,19 @@ export function AppPageHeader({
       : null
   const hasCenterTitle = Boolean(resolvedCenterTitle)
   const leftTitleNode = typeof title === 'string' ? null : title
+  const leftSlotClass =
+    hasCenterTitle || leftTitleNode
+      ? 'relative z-10 flex w-auto shrink-0 items-center gap-3'
+      : 'relative z-10 flex min-w-0 flex-1 items-center gap-3'
 
   return (
     <div className={PAGE_HEADER_SHELL_CLASS}>
-      <div className="relative z-10 flex min-w-0 flex-1 items-center gap-3">
+      <div className={leftSlotClass}>
         {showBack ? (
           <AppPageBackButton backTo={backTo} backLabel={backLabel} onBack={onBack} />
         ) : null}
         {leftTitleNode ? (
-          <div className={`flex min-w-0 items-center ${titleClassName}`.trim()}>
+          <div className={`flex w-auto shrink-0 items-center ${titleClassName}`.trim()}>
             {leftTitleNode}
           </div>
         ) : null}
