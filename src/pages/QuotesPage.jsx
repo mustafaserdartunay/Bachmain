@@ -4,9 +4,9 @@ import html2canvas from 'html2canvas'
 import SearchInput from '../components/Common/SearchInput'
 import { jsPDF } from 'jspdf'
 import {
+  ArrowUpDown,
   CheckCircle2,
   ChevronDown,
-  ChevronUp,
   ClipboardList,
   FileText,
   Mail,
@@ -1708,32 +1708,18 @@ export default function QuotesPage() {
 
   function renderFilterCycleAccessory(field, options, label) {
     return (
-      <span className="inline-flex flex-col items-center gap-0 leading-none text-[var(--muted)]">
-        <button
-          type="button"
-          className="inline-flex min-w-0 items-center gap-1 rounded p-0.5 opacity-40 transition-colors hover:text-[var(--ink)]"
-          title={`${label}: önceki`}
-          aria-label={`${label}: önceki`}
-          onClick={(event) => {
-            event.stopPropagation()
-            cycleListFilter(field, options, -1)
-          }}
-        >
-          <ChevronUp className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
-        </button>
-        <button
-          type="button"
-          className="inline-flex min-w-0 items-center gap-1 rounded p-0.5 opacity-40 transition-colors hover:text-[var(--ink)]"
-          title={`${label}: sonraki`}
-          aria-label={`${label}: sonraki`}
-          onClick={(event) => {
-            event.stopPropagation()
-            cycleListFilter(field, options, 1)
-          }}
-        >
-          <ChevronDown className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
-        </button>
-      </span>
+      <button
+        type="button"
+        className="inline-flex min-w-0 items-center gap-1 hover:text-d-ink"
+        title={`${label} filtresini değiştir`}
+        aria-label={`${label} filtresini değiştir`}
+        onClick={(event) => {
+          event.stopPropagation()
+          cycleListFilter(field, options, 1)
+        }}
+      >
+        <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden="true" />
+      </button>
     )
   }
 
