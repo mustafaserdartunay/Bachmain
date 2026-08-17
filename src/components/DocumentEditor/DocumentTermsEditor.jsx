@@ -1,9 +1,110 @@
 import { useState } from 'react'
-import { CheckCircle2, Plus, Trash2 } from 'lucide-react'
+import { CheckCircle2, Plus, Trash2, X } from 'lucide-react'
 import { DeleteConfirmPopover } from '../Common/ListDeleteConfirmPanel'
 import { AppPanelDot } from '../Layout/AppPageLayout'
 import { APP_PANEL_TITLE_CLASS } from '../../utils/dashboardDesign'
 import { loadSavedDocumentTerms, saveSavedDocumentTerms } from '../../utils/documentTermsStorage'
+
+function normalizeTermLine(line) {
+  return String(line || '')
+    .replace(/^[-•*]\s*/, '')
+    .trim()
+}
+
+function descriptionHasTerm(description, term) {
+  const needle = String(term || '').trim()
+  if (!needle) return false
+  return String(description)
+    .split(/\r?\n/)
+    .some((line) => normalizeTermLine(line) === needle)
+}
+
+function stripTermFromDescription(description, term) {
+  const needle = String(term || '').trim()
+  return String(description)
+    .split(/\r?\n/)
+    .filter((line) => normalizeTermLine(line) !== needle)
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+function TermRow({
+  term,
+  applied,
+  pendingDelete,
+  onApply,
+  onUnapply,
+  onAskDelete,
+  onConfirmDelete,
+  onCancelDelete,
+}) {
+  if (pendingDelete) {
+    return (
+      <div className="relative flex items-center gap-2">
+        <div className="document-frame-only min-w-0 flex-1 rounded-xl border border-[var(--search-border)] bg-transparent">
+          <DeleteConfirmPopover
+            description="Hazır koşul listeden kaldırılacak."
+            confirmLabel="Evet"
+            cancelLabel="Hayır"
+            compact
+            inline
+            onConfirm={() => onConfirmDelete(term)}
+            onCancel={onCancelDelete}
+            className="w-full"
+          />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative flex items-center gap-2">
+      <div
+        className={`document-term-chip group document-frame-only flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left transition-colors ${
+          applied ? 'document-term-applied' : ''
+        }`}
+        data-tone="primary"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            if (!applied) onApply(term)
+          }}
+          className="flex min-w-0 flex-1 items-start gap-2 text-left"
+        >
+          <CheckCircle2
+            className={`document-term-check mt-0.5 h-3.5 w-3.5 shrink-0 transition-colors ${
+              applied ? 'text-[#10b981]' : 'text-[var(--muted)]'
+            }`}
+            strokeWidth={2.25}
+          />
+          <span className={`document-term-label ${APP_PANEL_TITLE_CLASS}`}>{term}</span>
+        </button>
+        {applied ? (
+          <button
+            type="button"
+            onClick={() => onUnapply(term)}
+            className="document-term-unapply flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--muted)] transition-colors hover:text-[#ef4444]"
+            title="Açıklamadan kaldır"
+            aria-label="Açıklamadan kaldır"
+          >
+            <X className="h-3.5 w-3.5" strokeWidth={2.25} />
+          </button>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        onClick={() => onAskDelete(term)}
+        className="glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors"
+        data-tone="danger"
+        title="Hazır koşulu sil"
+      >
+        <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+      </button>
+    </div>
+  )
+}
 
 export default function DocumentTermsEditor({
   record,
@@ -24,13 +125,18 @@ export default function DocumentTermsEditor({
   const showTitle = Boolean(title) && !hideTitle
   const leftHeader = panelTitle || savedTermsTitle
 
-  function termIsApplied(term) {
-    const needle = String(term || '').trim()
-    if (!needle) return false
-    return String(value)
-      .split('\n')
-      .map((line) => line.replace(/^- /, '').trim())
-      .includes(needle)
+  function appendTermToDescription(term) {
+    if (descriptionHasTerm(value, term)) return
+    const currentText = value
+    const nextText = currentText.trim()
+      ? `${currentText.trimEnd()}\n- ${term}`
+      : `- ${term}`
+    onPatch({ [field]: nextText })
+  }
+
+  function removeTermFromDescription(term) {
+    if (!descriptionHasTerm(value, term)) return
+    onPatch({ [field]: stripTermFromDescription(value, term) })
   }
 
   function saveTerm(term) {
@@ -42,21 +148,26 @@ export default function DocumentTermsEditor({
     setCustomTerm('')
   }
 
-  function appendTermToDescription(term) {
-    if (termIsApplied(term)) return
-    const currentText = value
-    const nextText = currentText.trim()
-      ? `${currentText.trimEnd()}\n- ${term}`
-      : `- ${term}`
-    onPatch({ [field]: nextText })
-  }
-
   function deleteSavedTerm(term) {
     const nextTerms = savedTerms.filter((item) => item !== term)
     setSavedTerms(nextTerms)
     saveSavedDocumentTerms(nextTerms)
     setPendingDeleteTerm(null)
   }
+
+  const termRows = savedTerms.map((term) => (
+    <TermRow
+      key={term}
+      term={term}
+      applied={descriptionHasTerm(value, term)}
+      pendingDelete={pendingDeleteTerm === term}
+      onApply={appendTermToDescription}
+      onUnapply={removeTermFromDescription}
+      onAskDelete={setPendingDeleteTerm}
+      onConfirmDelete={deleteSavedTerm}
+      onCancelDelete={() => setPendingDeleteTerm(null)}
+    />
+  ))
 
   if (compact && alignDescriptionHeader) {
     return (
@@ -68,63 +179,7 @@ export default function DocumentTermsEditor({
           </div>
           <div className="document-frame-only flex min-h-0 flex-1 flex-col rounded-[16px] border border-[var(--search-border)] bg-transparent p-3">
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-              {savedTerms.map((term) => {
-                const applied = termIsApplied(term)
-                return (
-                <div key={term} className="relative flex items-center gap-2">
-                  {pendingDeleteTerm === term ? (
-                    <div className="document-frame-only min-w-0 flex-1 rounded-xl border border-[var(--search-border)] bg-transparent">
-                      <DeleteConfirmPopover
-                        description="Hazır koşul listeden kaldırılacak."
-                        confirmLabel="Evet"
-                        cancelLabel="Hayır"
-                        compact
-                        inline
-                        onConfirm={() => deleteSavedTerm(term)}
-                        onCancel={() => setPendingDeleteTerm(null)}
-                        className="w-full"
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => appendTermToDescription(term)}
-                        className="group document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left transition-colors"
-                        data-tone="primary"
-                      >
-                        <CheckCircle2
-                          className={`mt-0.5 h-3.5 w-3.5 shrink-0 transition-colors ${
-                            applied
-                              ? 'text-[#10b981]'
-                              : 'text-[var(--muted)] group-hover:text-[#10b981]'
-                          }`}
-                          strokeWidth={2.25}
-                        />
-                        <span
-                          className={`${APP_PANEL_TITLE_CLASS} transition-colors ${
-                            applied
-                              ? '!text-[#10b981]'
-                              : 'group-hover:!text-[#10b981]'
-                          }`.trim()}
-                        >
-                          {term}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPendingDeleteTerm(term)}
-                        className="glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors"
-                        data-tone="danger"
-                        title="Hazır koşulu sil"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
-                      </button>
-                    </>
-                  )}
-                </div>
-                )
-              })}
+              {termRows}
               {savedTerms.length === 0 && (
                 <div className="rounded-xl border border-dashed border-[var(--search-border)] px-3 py-4 text-center text-[14px] font-normal text-[var(--muted)]">
                   Henüz kayıtlı hazır koşul yok.
@@ -189,62 +244,7 @@ export default function DocumentTermsEditor({
             <h3 className={APP_PANEL_TITLE_CLASS}>{savedTermsTitle}</h3>
           </div>
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-            {savedTerms.map((term) => {
-              const applied = termIsApplied(term)
-              return (
-              <div key={term} className="relative flex items-center gap-2">
-                {pendingDeleteTerm === term ? (
-                  <div className="document-frame-only min-w-0 flex-1 rounded-xl border border-[var(--search-border)] bg-transparent">
-                    <DeleteConfirmPopover
-                      description="Hazır koşul listeden kaldırılacak."
-                      confirmLabel="Evet"
-                      cancelLabel="Hayır"
-                      compact
-                      inline
-                      onConfirm={() => deleteSavedTerm(term)}
-                      onCancel={() => setPendingDeleteTerm(null)}
-                      className="w-full"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => appendTermToDescription(term)}
-                      className="group document-frame-only flex min-w-0 flex-1 items-start gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 py-2 text-left text-[13px] font-medium transition-colors"
-                    >
-                      <CheckCircle2
-                        className={`mt-0.5 h-3.5 w-3.5 shrink-0 transition-colors ${
-                          applied
-                            ? 'text-[#10b981]'
-                            : 'text-[var(--muted)] group-hover:text-[#10b981]'
-                        }`}
-                        strokeWidth={2.25}
-                      />
-                      <span
-                        className={`transition-colors ${
-                          applied
-                            ? 'text-[#10b981]'
-                            : 'text-[var(--muted)] group-hover:text-[#10b981]'
-                        }`}
-                      >
-                        {term}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPendingDeleteTerm(term)}
-                      className="glass-sidebar-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition-colors"
-                      data-tone="danger"
-                      title="Hazır koşulu sil"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
-                    </button>
-                  </>
-                )}
-              </div>
-              )
-            })}
+            {termRows}
             {savedTerms.length === 0 && (
               <div className="rounded-xl border border-dashed border-dark-500/70 px-3 py-4 text-center text-[13px] font-medium text-[var(--muted)]">
                 Henüz kayıtlı hazır koşul yok.

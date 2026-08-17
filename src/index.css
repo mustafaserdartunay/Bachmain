@@ -801,6 +801,17 @@ textarea:not(.form-input)::placeholder {
   transform: none !important;
 }
 
+.page-type-shell .document-term-chip:hover .document-term-check,
+.page-type-shell .document-term-chip:hover .document-term-label,
+.page-type-shell .document-term-chip.document-term-applied .document-term-check,
+.page-type-shell .document-term-chip.document-term-applied .document-term-label,
+.app-responsive .page-type-shell .document-term-chip:hover .document-term-check,
+.app-responsive .page-type-shell .document-term-chip:hover .document-term-label,
+.app-responsive .page-type-shell .document-term-chip.document-term-applied .document-term-check,
+.app-responsive .page-type-shell .document-term-chip.document-term-applied .document-term-label {
+  color: #10b981 !important;
+}
+
 .page-type-shell .document-totals-amount,
 .app-responsive .page-type-shell .document-totals-amount {
   font-weight: 700 !important;
