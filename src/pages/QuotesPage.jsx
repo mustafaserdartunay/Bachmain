@@ -123,6 +123,8 @@ import CustomerPicker, {
 import ProductSearchSelect from '../components/DocumentEditor/ProductSearchSelect'
 import ModernDatePicker from '../components/Common/ModernDatePicker'
 import { readCompanySettings } from '../utils/companySettings'
+import { buildQuoteDocumentHtml, buildQuoteDocumentInnerHtml } from '../utils/quoteDocumentHtml'
+import { readQuotePrintSettings } from '../utils/docPrintSettingsStore'
 import {
   APP_PANEL_TITLE_CLASS,
   PAGE_BALANCE_AMOUNT_CLASS,
@@ -581,119 +583,13 @@ function buildQuoteShareText(quote, rates = getExchangeRatesSnapshot()) {
 
 function buildQuotePrintHtml(quote, rates = getExchangeRatesSnapshot()) {
   const safeQuote = sanitizeQuoteForSave(quote)
-  const totals = documentTotals(safeQuote, rates)
-  const customer = getQuoteCustomerDetails(safeQuote)
-  const bankAccounts = resolveQuoteBankAccounts(safeQuote)
-  const rows = safeQuote.items
-    .map((item, index) => {
-      const row = itemTotals(item, rates)
-      const currency = normalizeCurrency(item.currency)
-      const unitLabel =
-        currency === 'TRY'
-          ? formatTL(item.unitPrice)
-          : `${formatMoney(item.unitPrice, currency)}<br><small>${formatTL(row.subtotal / Math.max(1, Number(item.quantity) || 1))}</small>`
-      return `
-      <tr>
-        <td>${index + 1}</td>
-        <td><strong>${escapeHtml(item.product)}</strong>${item.extraDescription ? `<br><small>${escapeHtml(item.extraDescription)}</small>` : ''}</td>
-        <td>${escapeHtml(item.quantity)}</td>
-        <td>${unitLabel}</td>
-        <td>%${escapeHtml(item.vatRate)}</td>
-        <td>${formatTL(row.total)}</td>
-      </tr>
-    `
-    })
-    .join('')
-
-  return `
-    <!doctype html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>${escapeHtml(safeQuote.id)} - Teklif</title>
-        <style>
-          * { box-sizing: border-box; }
-          body { margin: 0; padding: 32px; font-family: Inter, Arial, sans-serif; color: #0f172a; background: #f8fafc; }
-          .quote { max-width: 960px; margin: 0 auto; background: white; border-radius: 28px; overflow: hidden; box-shadow: 0 24px 70px rgba(15, 23, 42, .12); }
-          .hero { padding: 34px; color: white; background: linear-gradient(135deg, #0f172a, #1e3a8a 54%, #065f46); }
-          .hero-top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
-          .brand { font-size: 13px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; opacity: .75; }
-          h1 { margin: 10px 0 0; font-size: 34px; letter-spacing: -.04em; }
-          .badge { border: 1px solid rgba(255,255,255,.24); border-radius: 16px; padding: 10px 14px; text-align: right; font-weight: 800; }
-          .content { padding: 28px 34px 34px; }
-          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
-          .card { border: 1px solid #e2e8f0; border-radius: 20px; padding: 18px; background: #f8fafc; }
-          .label { color: #64748b; font-size: 11px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
-          .value { margin-top: 7px; font-size: 15px; font-weight: 800; }
-          table { width: 100%; border-collapse: collapse; margin-top: 18px; overflow: hidden; border-radius: 18px; }
-          th { background: #0f172a; color: white; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 13px; text-align: left; }
-          td { border-bottom: 1px solid #e2e8f0; padding: 13px; font-size: 13px; vertical-align: top; }
-          small { color: #64748b; line-height: 1.4; }
-          .totals { margin-left: auto; margin-top: 22px; width: 360px; border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; }
-          .total-row { display: flex; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-          .grand { background: #064e3b; color: white; font-size: 18px; font-weight: 900; }
-          .terms { margin-top: 22px; white-space: pre-line; line-height: 1.6; }
-          @media print { body { background: white; padding: 0; } .quote { box-shadow: none; border-radius: 0; } }
-        </style>
-      </head>
-      <body>
-        <main class="quote">
-          <section class="hero">
-            <div class="hero-top">
-              <div>
-                <div class="brand">BACH</div>
-                <h1>${escapeHtml(safeQuote.title || 'Fiyat Teklifi')}</h1>
-              </div>
-              <div class="badge">
-                ${escapeHtml(safeQuote.id)}<br />
-                <span style="font-size:12px; opacity:.75;">${formatListDate(safeQuote.createdAt)}</span>
-              </div>
-            </div>
-          </section>
-          <section class="content">
-            <div class="grid">
-              <div class="card"><div class="label">Müşteri</div><div class="value">${escapeHtml(customer.company)}</div><small>${escapeHtml(customer.contact)} ${customer.email ? `· ${escapeHtml(customer.email)}` : ''}</small></div>
-              <div class="card"><div class="label">Geçerlilik</div><div class="value">${formatListDate(safeQuote.validUntil)}</div><small>Bu tarih sonuna kadar geçerlidir.</small></div>
-            </div>
-            <table>
-              <thead><tr><th>#</th><th>Ürün</th><th>Adet</th><th>Birim Fiyat</th><th>KDV</th><th>Toplam</th></tr></thead>
-              <tbody>${rows}</tbody>
-            </table>
-            <div class="totals">
-              <div class="total-row"><span>Ara Toplam</span><strong>${formatTL(totals.subtotal)}</strong></div>
-              ${totals.lineDiscount > 0 ? `<div class="total-row"><span>Satır İndirimi</span><strong>${formatTL(totals.lineDiscount)}</strong></div>` : ''}
-              ${totals.showDocumentDiscount ? `<div class="total-row"><span>Toplam İndirim</span><strong>${formatTL(totals.documentDiscount)}</strong></div>` : ''}
-              <div class="total-row"><span>ÖTV</span><strong>${formatTL(totals.exciseTax)}</strong></div>
-              <div class="total-row"><span>Konaklama Vergisi</span><strong>${formatTL(totals.accommodationTax)}</strong></div>
-              <div class="total-row"><span>KDV</span><strong>${formatTL(totals.vat)}</strong></div>
-              <div class="total-row grand"><span>Genel Toplam</span><strong>${formatTL(totals.grandTotal)}</strong></div>
-            </div>
-            ${safeQuote.termsDescription ? `<div class="terms"><div class="label">Teklif Koşulları</div>${escapeHtml(safeQuote.termsDescription)}</div>` : ''}
-            ${
-              bankAccounts.length > 0
-                ? `
-              <div class="terms">
-                <div class="label">Banka Hesapları</div>
-                ${bankAccounts
-                  .map(
-                    (account) => `
-                  <p style="margin:8px 0 0; font-size:13px; font-weight:700;">
-                    ${escapeHtml(account.bankName)}${account.label ? ` · ${escapeHtml(account.label)}` : ''}
-                  </p>
-                  ${account.branch ? `<p style="margin:4px 0 0; font-size:12px; color:#64748b;">Şube: ${escapeHtml(account.branch)}</p>` : ''}
-                  ${account.iban ? `<p style="margin:4px 0 0; font-size:12px; color:#64748b;">IBAN: ${escapeHtml(account.iban)}</p>` : ''}
-                `,
-                  )
-                  .join('')}
-              </div>
-            `
-                : ''
-            }
-          </section>
-        </main>
-      </body>
-    </html>
-  `
+  return buildQuoteDocumentHtml({
+    quote: safeQuote,
+    customer: getQuoteCustomerDetails(safeQuote),
+    company: readCompanySettings(),
+    settings: readQuotePrintSettings(),
+    rates,
+  })
 }
 
 async function createQuotePdfBlob(element) {
@@ -703,7 +599,7 @@ async function createQuotePdfBlob(element) {
   const canvas = await html2canvas(element, {
     scale: 3,
     useCORS: true,
-    backgroundColor: '#f8f2e9',
+    backgroundColor: '#ffffff',
     windowWidth: element.scrollWidth,
     windowHeight: element.scrollHeight,
   })
@@ -3173,245 +3069,17 @@ export default function QuotesPage() {
                 <section
                   ref={quotePreviewRef}
                   aria-hidden="true"
-                  className="fixed left-[-10000px] top-0 w-[1440px] overflow-hidden bg-white"
-                >
-                  {(() => {
-                    const previewQuote = sanitizeQuoteForSave(selectedQuote)
-                    const customer = getQuoteCustomerDetails(previewQuote)
-                    const previewBankAccounts = resolveQuoteBankAccounts(previewQuote)
-                    const activeStage = (previewQuote.stages || []).find(
-                      (stage) => stage.id === previewQuote.currentStageId,
-                    )
-                    const terms = (previewQuote.termsDescription || '')
-                      .split('\n')
-                      .map((line) => line.replace(/^- /, '').trim())
-                      .filter(Boolean)
-                    const representative = previewQuote.owner || 'Satış Ekibi'
-                    return (
-                      <div className="bg-white p-12 text-slate-900">
-                        <div className="mb-10 flex items-end justify-between border-b border-slate-200 pb-6">
-                          <div>
-                            <p className="text-[13px] font-semibold uppercase tracking-[0.28em] text-slate-400">
-                              Erlenbox
-                            </p>
-                            <h1 className="mt-2 text-4xl font-semibold tracking-tight text-slate-900">
-                              Fiyat Teklifi
-                            </h1>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
-                              Teklif No
-                            </p>
-                            <p className="mt-1 text-lg font-semibold text-slate-900">
-                              {previewQuote.id}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mb-8 grid grid-cols-3 gap-8">
-                          <div>
-                            <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">
-                              Müşteri
-                            </p>
-                            <div className="space-y-2 text-sm">
-                              {[
-                                ['Marka', customer.company],
-                                ['Ünvan', customer.contact],
-                                ['Yetkili', customer.authorizedName || '—'],
-                                ['Adres', customer.address || '—'],
-                                ['Telefon', customer.phone || '—'],
-                                ['E-posta', customer.email || '—'],
-                              ].map(([label, value]) => (
-                                <div key={label} className="grid grid-cols-[88px_1fr] gap-2">
-                                  <span className="text-slate-400">{label}</span>
-                                  <span className="font-medium text-slate-900">{value}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">
-                              Teklif Bilgileri
-                            </p>
-                            <div className="space-y-2 text-sm">
-                              {[
-                                ['Başlık', previewQuote.title || '—'],
-                                ['Tarih', formatListDate(previewQuote.createdAt)],
-                                ['Geçerlilik', formatListDate(previewQuote.validUntil)],
-                                ['Süreç', activeStage?.label || '—'],
-                                ['Para Birimi', 'TRY'],
-                              ].map(([label, value]) => (
-                                <div key={label} className="grid grid-cols-[88px_1fr] gap-2">
-                                  <span className="text-slate-400">{label}</span>
-                                  <span className="font-medium text-slate-900">{value}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">
-                              Temsilci
-                            </p>
-                            <p className="text-lg font-semibold text-slate-900">{representative}</p>
-                            <p className="mt-1 text-sm text-slate-500">Müşteri Temsilcisi</p>
-                          </div>
-                        </div>
-
-                        <div className="overflow-hidden rounded-lg border border-slate-200">
-                          <div className="grid grid-cols-[120px_minmax(0,1.4fr)_72px_110px_120px] border-b border-slate-200 px-4 py-3 text-[13px] font-semibold uppercase tracking-wider text-slate-500">
-                            <span>Görsel</span>
-                            <span>Ürün</span>
-                            <span className="text-right">Adet</span>
-                            <span className="text-right">Birim</span>
-                            <span className="text-right">Tutar</span>
-                          </div>
-                          {previewQuote.items.map((item, index) => {
-                            const row = itemTotals(item, rates)
-                            const itemCurrency = normalizeCurrency(item.currency)
-                            const description = item.extraDescription || item.description
-                            const previewImage = resolveQuoteItemImage(item)
-                            return (
-                              <div
-                                key={item.id}
-                                className={`grid grid-cols-[120px_minmax(0,1.4fr)_72px_110px_120px] items-center px-4 py-4 text-sm ${index < previewQuote.items.length - 1 ? 'border-b border-slate-100' : ''}`}
-                              >
-                                <div className="h-[88px] w-[88px] overflow-hidden rounded-md border border-slate-200">
-                                  {previewImage ? (
-                                    <img
-                                      src={previewImage}
-                                      alt=""
-                                      className="h-full w-full object-cover object-center"
-                                    />
-                                  ) : null}
-                                </div>
-                                <div className="pr-4">
-                                  <p className="font-semibold text-slate-900">
-                                    {item.product || 'Ürün seçilmedi'}
-                                  </p>
-                                  {description ? (
-                                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                                      {description}
-                                    </p>
-                                  ) : null}
-                                  <p className="mt-1 text-xs text-slate-400">
-                                    KDV %{item.vatRate ?? 20}
-                                  </p>
-                                </div>
-                                <span className="text-right font-medium text-slate-900">
-                                  {item.quantity}
-                                </span>
-                                <span className="text-right text-slate-700">
-                                  {formatMoney(item.unitPrice, itemCurrency)}
-                                  {itemCurrency !== 'TRY' ? (
-                                    <span className="mt-0.5 block text-[11px] text-slate-400">
-                                      {formatTL(
-                                        row.subtotal / Math.max(1, Number(item.quantity) || 1),
-                                      )}
-                                    </span>
-                                  ) : null}
-                                </span>
-                                <span className="text-right font-semibold text-slate-900">
-                                  {formatTL(row.total)}
-                                </span>
-                              </div>
-                            )
-                          })}
-                        </div>
-
-                        <div className="mt-8 grid grid-cols-[minmax(0,1fr)_300px] gap-8">
-                          <div>
-                            <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">
-                              Açıklama & Koşullar
-                            </p>
-                            <p className="whitespace-pre-line text-sm leading-7 text-slate-600">
-                              {previewQuote.termsDescription || 'Teklif koşulları belirtilmedi.'}
-                            </p>
-                            {terms.length > 0 && (
-                              <div className="mt-4 space-y-2">
-                                {terms.map((term) => (
-                                  <p key={term} className="text-sm text-slate-600">
-                                    • {term}
-                                  </p>
-                                ))}
-                              </div>
-                            )}
-                            {previewBankAccounts.length > 0 && (
-                              <div className="mt-6">
-                                <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-slate-400">
-                                  Banka Hesapları
-                                </p>
-                                <div className="space-y-3">
-                                  {previewBankAccounts.map((account) => (
-                                    <div key={account.id} className="text-sm text-slate-600">
-                                      <p className="font-semibold text-slate-900">
-                                        {account.bankName}
-                                        {account.label ? ` · ${account.label}` : ''}
-                                      </p>
-                                      {account.branch ? (
-                                        <p className="mt-0.5">Şube: {account.branch}</p>
-                                      ) : null}
-                                      {account.iban ? (
-                                        <p className="mt-0.5">IBAN: {account.iban}</p>
-                                      ) : null}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="border-t border-slate-200 pt-4">
-                            {[
-                              ['Ara Toplam', selectedTotals.subtotal],
-                              selectedTotals.lineDiscount > 0
-                                ? ['Satır İndirimi', selectedTotals.lineDiscount]
-                                : null,
-                              selectedTotals.showDocumentDiscount
-                                ? ['Toplam İndirim', selectedTotals.documentDiscount]
-                                : null,
-                              ['ÖTV', selectedTotals.exciseTax],
-                              ['Konaklama Vergisi', selectedTotals.accommodationTax],
-                              ['KDV', selectedTotals.vat],
-                            ]
-                              .filter(Boolean)
-                              .filter(
-                                ([label, value]) =>
-                                  label === 'Ara Toplam' || label === 'KDV' || Number(value) !== 0,
-                              )
-                              .map(([label, value]) => (
-                                <div
-                                  key={label}
-                                  className="mb-2 flex items-center justify-between text-sm"
-                                >
-                                  <span className="text-slate-500">{label}</span>
-                                  <span className="font-medium text-slate-900">
-                                    {formatTL(value)}
-                                  </span>
-                                </div>
-                              ))}
-                            <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
-                              <span className="text-sm font-semibold uppercase tracking-wider text-slate-900">
-                                Genel Toplam
-                              </span>
-                              <span className="text-xl font-semibold text-slate-900">
-                                {formatTL(selectedTotals.grandTotal)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-10 border-t border-slate-200 pt-6 text-xs text-slate-400">
-                          <p>
-                            Bu teklif yalnızca bilgilendirme amaçlıdır. Geçerlilik tarihi:{' '}
-                            {formatListDate(previewQuote.validUntil)}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </section>
+                  className="fixed left-[-10000px] top-0 w-[794px] overflow-hidden bg-white"
+                  dangerouslySetInnerHTML={{
+                    __html: buildQuoteDocumentInnerHtml({
+                      quote: sanitizeQuoteForSave(selectedQuote),
+                      customer: getQuoteCustomerDetails(selectedQuote),
+                      company: readCompanySettings(),
+                      settings: readQuotePrintSettings(),
+                      rates,
+                    }),
+                  }}
+                />
               )}
 
               <DocumentActivityPanel

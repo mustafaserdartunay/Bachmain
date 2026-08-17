@@ -27,6 +27,97 @@ import {
   runAiDesignLocal,
 } from '../../documents/localStore'
 import { publishDomainEvent } from '../../workflow/eventBus'
+import {
+  defaultQuotePrintSettings,
+  readQuotePrintSettings,
+  saveQuotePrintSettings,
+  DOC_PRINT_SETTINGS_EVENT,
+} from '../../utils/docPrintSettingsStore'
+
+function QuotePrintSettingsCard() {
+  const [settings, setSettings] = useState(readQuotePrintSettings)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    function sync() {
+      setSettings(readQuotePrintSettings())
+    }
+    window.addEventListener(DOC_PRINT_SETTINGS_EVENT, sync)
+    return () => window.removeEventListener(DOC_PRINT_SETTINGS_EVENT, sync)
+  }, [])
+
+  function toggle(field) {
+    setSettings((current) => ({ ...current, [field]: !current[field] }))
+  }
+
+  function handleSave() {
+    saveQuotePrintSettings(settings)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1600)
+  }
+
+  function handleReset() {
+    setSettings({ ...defaultQuotePrintSettings })
+    saveQuotePrintSettings(defaultQuotePrintSettings)
+  }
+
+  const checks = [
+    ['showCompany', 'Firma bilgileri'],
+    ['showLogo', 'Firma logosu'],
+    ['showCustomer', 'Müşteri bilgileri'],
+    ['showRepresentative', 'Temsilci'],
+    ['showDates', 'Tarih süreci (oluşturma, geçerlilik, vade)'],
+    ['showProductImages', 'Ürün görselleri (büyük)'],
+    ['showTerms', 'Koşullar'],
+    ['showBanks', 'Banka hesapları'],
+    ['showTotals', 'Toplamlar'],
+  ]
+
+  return (
+    <div className={`${APP_SURFACE_PANEL_CLASS} space-y-4 p-4`}>
+      <div>
+        <h2 className="text-[14px] font-normal text-[var(--muted)]">Teklif</h2>
+        <p className="mt-1 text-[14px] font-normal text-[var(--muted)]">
+          Yazdırma önizlemesi, PDF ve şablon bu ayarlarla üretilir. Font Inter / sistem yazı tipidir.
+        </p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {checks.map(([field, label]) => (
+          <label key={field} className="flex min-h-10 items-center gap-2 text-[14px] font-normal text-[var(--muted)]">
+            <input
+              type="checkbox"
+              checked={Boolean(settings[field])}
+              onChange={() => toggle(field)}
+            />
+            {label}
+          </label>
+        ))}
+      </div>
+      <label className="block max-w-xs space-y-1">
+        <span className="text-[14px] font-normal text-[var(--muted)]">Ürün görsel boyutu</span>
+        <select
+          className="form-input"
+          value={settings.productImageSize}
+          onChange={(event) =>
+            setSettings((current) => ({ ...current, productImageSize: Number(event.target.value) }))
+          }
+        >
+          <option value={120}>120 px</option>
+          <option value={140}>140 px</option>
+          <option value={180}>180 px</option>
+        </select>
+      </label>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={handleSave} className="min-h-10 rounded-xl border px-3 text-[14px] font-normal">
+          {saved ? 'Kaydedildi' : 'Kaydet'}
+        </button>
+        <button type="button" onClick={handleReset} className="min-h-10 rounded-xl border px-3 text-[14px] font-normal">
+          Varsayılan
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function Kpi({ label, value, to }) {
   const body = (
@@ -468,18 +559,17 @@ export default function DocumentCenterPage() {
       )}
 
       {tab === 'settings' && (
-        <div className={`${APP_SURFACE_PANEL_CLASS} space-y-2 p-4 text-sm`}>
-          <p>{DOCUMENT_ENGINE_RULE}</p>
-          <p>
-            Knowledge ayrı platformdır:{' '}
-            <Link className="font-bold underline" to="/bilgi-merkezi">
-              /bilgi-merkezi
-            </Link>
-          </p>
-          <p>
-            Spec:{' '}
-            <span className="font-mono text-xs">docs/86 · docs/87 · BACHMAIN_DOCUMENT_CENTER/</span>
-          </p>
+        <div className="space-y-4">
+          <QuotePrintSettingsCard />
+          <div className={`${APP_SURFACE_PANEL_CLASS} space-y-2 p-4 text-sm`}>
+            <p>{DOCUMENT_ENGINE_RULE}</p>
+            <p>
+              Knowledge ayrı platformdır:{' '}
+              <Link className="font-bold underline" to="/bilgi-merkezi">
+                /bilgi-merkezi
+              </Link>
+            </p>
+          </div>
         </div>
       )}
 
