@@ -121,6 +121,7 @@ import CustomerPicker, {
   findDocumentCustomer as findQuoteCustomer,
 } from '../components/DocumentEditor/CustomerPicker'
 import ProductSearchSelect from '../components/DocumentEditor/ProductSearchSelect'
+import ModernDatePicker from '../components/Common/ModernDatePicker'
 import { readCompanySettings } from '../utils/companySettings'
 import {
   APP_PANEL_TITLE_CLASS,
@@ -206,7 +207,7 @@ const quoteLineActionBtnClass =
 const quoteLineDeleteBtnClass =
   'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors'
 const quoteMsCtaClass =
-  'inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[var(--muted)] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb] [&_svg]:transition-colors hover:[&_svg]:text-[#2563eb]'
+  'group inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[var(--muted)] transition-all hover:scale-[1.03] hover:font-bold hover:text-[#2563eb] [&_svg]:text-[#2563eb]'
 
 const statusClasses = {
   Taslak: 'badge-gray',
@@ -952,52 +953,14 @@ function VatRateInput({ value, onChange, options = vatRates }) {
 }
 
 function DateInlineField({ label, value, onChange, dotColor = 'blue' }) {
-  const inputRef = useRef(null)
-
-  function openPicker() {
-    const node = inputRef.current
-    if (!node) return
-    if (typeof node.showPicker === 'function') {
-      try {
-        node.showPicker()
-        return
-      } catch {
-        /* fall through */
-      }
-    }
-    node.focus()
-    node.click()
-  }
-
   return (
-    <div
-      className="flex min-w-0 cursor-pointer items-center gap-3"
-      onClick={openPicker}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          openPicker()
-        }
-      }}
-      role="button"
-      tabIndex={0}
-    >
+    <div className="flex min-w-0 items-center gap-3">
       <div className="flex shrink-0 items-center gap-2">
         <AppPanelDot color={dotColor} />
         <h2 className={APP_PANEL_TITLE_CLASS}>{label}</h2>
       </div>
       <div className="min-w-0 flex-1">
-        <input
-          ref={inputRef}
-          type="date"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onClick={(event) => {
-            event.stopPropagation()
-            openPicker()
-          }}
-          className="form-input w-full cursor-pointer"
-        />
+        <ModernDatePicker value={value} onChange={onChange} />
       </div>
     </div>
   )
@@ -3173,7 +3136,7 @@ export default function QuotesPage() {
                     onClick={addItem}
                     className={`${quoteMsCtaClass} w-full`}
                   >
-                    <Plus className="h-4 w-4 text-[var(--muted)]" strokeWidth={2.25} />
+                    <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                     Ürün Ekle
                   </button>
 
