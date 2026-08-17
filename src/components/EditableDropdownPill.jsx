@@ -47,14 +47,6 @@ function OptionLeading({ option, empty = false, isLightMenu = false }) {
   )
 }
 
-function OptionColorPicker({ value, onChange }) {
-  return (
-    <div className="customer-filter-color-swatches pl-0.5">
-      <StageColorSwatches value={value} onChange={onChange} size="sm" />
-    </div>
-  )
-}
-
 export default function EditableDropdownPill({
   value,
   onChange,
@@ -225,8 +217,8 @@ export default function EditableDropdownPill({
     updatePosition,
   } = useAnchoredPortal(isOpen && usePortal && isInteractive, {
     placement: portalPlacement,
-    matchWidth: menuMatchWidth,
-    width: editorExpanded ? 320 : undefined,
+    matchWidth: editorExpanded ? false : menuMatchWidth,
+    width: undefined,
   })
 
   useEffect(() => {
@@ -273,11 +265,18 @@ export default function EditableDropdownPill({
 
   function renderMenu() {
     const expandedEditor = adding || editingIndex != null
+    const railColor = adding ? newColor : draftColor
+    const onRailColorChange = adding ? setNewColor : setDraftColor
     return (
       <div
         ref={usePortal ? menuRef : undefined}
-        className={`${menuShellClass} ${menuClassName} ${expandedEditor ? '!min-w-[20rem] !w-[20rem]' : ''}`.trim()}
+        className={`${menuShellClass} ${menuClassName} ${
+          expandedEditor
+            ? '!flex !h-auto !w-max !min-w-[210px] !max-w-none items-stretch overflow-visible'
+            : ''
+        }`.trim()}
       >
+        <div className={expandedEditor ? 'min-w-[13.125rem] flex-1' : undefined}>
         {searchable && (
           <input
             value={searchTerm}
@@ -352,7 +351,6 @@ export default function EditableDropdownPill({
                     <X className="h-3.5 w-3.5" strokeWidth={2.5} />
                   </button>
                 </div>
-                <OptionColorPicker value={draftColor} onChange={setDraftColor} />
               </div>
             ) : (
               <div
@@ -463,7 +461,6 @@ export default function EditableDropdownPill({
                     className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/55 px-2.5 py-1.5 text-xs font-bold text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[rgba(37,99,235,0.35)] focus:bg-white/70"
                   />
                 </div>
-                <OptionColorPicker value={newColor} onChange={setNewColor} />
                 <div className="flex items-center justify-end gap-1.5 pt-0.5">
                   <button
                     type="button"
@@ -500,6 +497,19 @@ export default function EditableDropdownPill({
             )}
           </div>
         )}
+        </div>
+        {expandedEditor ? (
+          <div className="dropdown-color-rail customer-filter-color-swatches flex w-8 shrink-0 flex-col items-center gap-2 self-stretch border-l border-dark-500/35 pl-2.5">
+            <span className="dropdown-color-rail-label shrink-0">Renk</span>
+            <StageColorSwatches
+              value={railColor}
+              onChange={onRailColorChange}
+              size="sm"
+              direction="vertical"
+              fill
+            />
+          </div>
+        ) : null}
       </div>
     )
   }

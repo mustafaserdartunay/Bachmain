@@ -2076,9 +2076,9 @@ html body .customer-filter-dropdown-menu button.dropdown-add-action:hover span {
 .customers-page-menu button[title='Düzenle']:not([data-tone]):hover,
 .app-dropdown-portal button.customer-option-edit-btn:hover,
 .app-dropdown-portal button[title='Düzenle']:not([data-tone]):hover {
-  background: transparent !important;
+  background: rgba(37, 99, 235, 0.16) !important;
   color: #1d4ed8 !important;
-  transform: scale(1.1);
+  transform: none !important;
 }
 
 .customer-filter-dropdown-menu button[title='Sil']:not([data-tone]),
@@ -2095,9 +2095,9 @@ html body .customer-filter-dropdown-menu button.dropdown-add-action:hover span {
 .customers-page-menu button[title='Sil']:not([data-tone]):hover,
 .app-dropdown-portal button.customer-option-delete-btn:hover,
 .app-dropdown-portal button[title='Sil']:not([data-tone]):hover {
-  background: transparent !important;
+  background: rgba(239, 68, 68, 0.15) !important;
   color: #dc2626 !important;
-  transform: scale(1.1);
+  transform: none !important;
 }
 
 /* Row MoreMenu tones — beat customers-page-menu muted !important */
@@ -2312,6 +2312,41 @@ html body .customer-filter-dropdown-menu button.dropdown-add-action:hover span {
 
 .customer-filter-color-swatches {
   max-width: 100%;
+}
+
+html body .app-dropdown-portal .dropdown-color-rail,
+html body .customers-page-menu .dropdown-color-rail,
+html body .customer-filter-dropdown-menu .dropdown-color-rail {
+  display: flex !important;
+  width: 2rem !important;
+  min-width: 2rem !important;
+  flex-shrink: 0 !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  align-self: stretch !important;
+  gap: 0.5rem !important;
+  border-left: 1px solid rgba(100, 116, 139, 0.35) !important;
+  padding-left: 0.625rem !important;
+}
+
+html body .app-dropdown-portal .dropdown-color-rail-label,
+html body .customers-page-menu .dropdown-color-rail-label,
+html body .customer-filter-dropdown-menu .dropdown-color-rail-label {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: #6b7280 !important;
+}
+
+html body .app-dropdown-portal .dropdown-color-rail button,
+html body .customers-page-menu .dropdown-color-rail button,
+html body .customer-filter-dropdown-menu .dropdown-color-rail button {
+  font-weight: 400 !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  transform: none !important;
 }
 
 .customer-filter-dropdown-menu button span.truncate {
