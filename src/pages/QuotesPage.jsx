@@ -318,6 +318,7 @@ function QuoteListColumnHeader({
   sortKey,
   sort,
   onToggleSort,
+  align = 'center',
 }) {
   const title = formatQuoteListColumnLabel(label)
   if (!label) {
@@ -335,10 +336,13 @@ function QuoteListColumnHeader({
       <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden="true" />
     )
 
+  const justify =
+    align === 'start' ? 'justify-start' : align === 'end' ? 'justify-end' : 'justify-center'
+
   return (
     <button
       type="button"
-      className="quote-list-header-btn flex min-h-[2.75rem] w-full min-w-0 items-center justify-center gap-1"
+      className={`quote-list-header-btn flex min-h-[2.75rem] w-full min-w-0 items-center ${justify} gap-1`}
       title={`${label} sırala`}
       aria-label={`${label} sırala`}
       onClick={(event) => {
@@ -370,9 +374,10 @@ function QuoteListRowPanel({ header = false, gridTemplate, className = '', child
   )
 }
 
-function QuoteListCell({ className = '', children }) {
+function QuoteListCell({ className = '', align = 'center', children }) {
+  const alignClass = align === 'start' ? 'is-start' : align === 'end' ? 'is-end' : ''
   return (
-    <div className={`quote-list-cell min-w-0 justify-center text-center ${className}`.trim()}>
+    <div className={`quote-list-cell min-w-0 ${alignClass} ${className}`.trim()}>
       {children}
     </div>
   )
@@ -2495,13 +2500,13 @@ export default function QuotesPage() {
   )
 
   const quoteListColumnGrid = [
-    '7.25rem',
-    '5.25rem',
-    'minmax(12rem, 1.6fr)',
-    ...quoteSegmentTabs.map(() => 'minmax(9.25rem, 0.72fr)'),
-    '7.5rem',
+    '6.5rem',
+    '4.75rem',
+    'minmax(16rem, 2.4fr)',
+    ...quoteSegmentTabs.map(() => 'minmax(9.25rem, 0.7fr)'),
     '6.75rem',
-    '3.25rem',
+    '6.5rem',
+    '3rem',
   ].join(' ')
 
   const openQuotes = filteredQuotes.filter((quote) => {
@@ -2778,13 +2783,14 @@ export default function QuotesPage() {
                       onToggleSort={toggleListColumnSort}
                     />
                   </QuoteListCell>
-                  <QuoteListCell>
+                  <QuoteListCell align="start">
                     <QuoteListColumnHeader
                       label="Müşteri Adı"
                       sortable
                       sortKey="customer"
                       sort={listColumnSort}
                       onToggleSort={toggleListColumnSort}
+                      align="start"
                     />
                   </QuoteListCell>
                   {quoteSegmentTabs.map((tab) => (
@@ -2807,13 +2813,14 @@ export default function QuotesPage() {
                       onToggleSort={toggleListColumnSort}
                     />
                   </QuoteListCell>
-                  <QuoteListCell>
+                  <QuoteListCell align="end">
                     <QuoteListColumnHeader
                       label="Sipariş"
                       sortable
                       sortKey="order"
                       sort={listColumnSort}
                       onToggleSort={toggleListColumnSort}
+                      align="end"
                     />
                   </QuoteListCell>
                   <QuoteListCell>
@@ -2869,8 +2876,8 @@ export default function QuotesPage() {
                             )}
                           </span>
                         </QuoteListCell>
-                        <QuoteListCell>
-                          <span className="flex min-w-0 flex-col items-center gap-0.5 py-0.5 text-center">
+                        <QuoteListCell align="start">
+                          <span className="flex min-w-0 w-full flex-col items-start gap-0.5 py-0.5 text-left">
                             <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
                               {display.brandShortName || 'Müşteri girilmedi'}
                             </span>
@@ -2909,9 +2916,9 @@ export default function QuotesPage() {
                             {formatTL(getQuoteListAmount(quote))}
                           </span>
                         </QuoteListCell>
-                        <QuoteListCell>
+                        <QuoteListCell align="end">
                           <span
-                            className="inline-flex w-full items-center justify-center"
+                            className="inline-flex w-full items-center justify-end"
                             onClick={(event) => event.stopPropagation()}
                           >
                             <QuoteListOrderModuleButton

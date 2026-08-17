@@ -3354,6 +3354,16 @@ html body .quote-list-header-panel .quote-list-header-btn {
   text-align: center;
 }
 
+.quote-list-cell.is-start {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.quote-list-cell.is-end {
+  justify-content: flex-end;
+  text-align: right;
+}
+
 html body .page-type-shell .quote-list-row-panel .customer-name-primary,
 html body .customers-page-type .quote-list-row-panel .customer-name-primary,
 html body .app-responsive .quote-list-row-panel .customer-name-primary {
