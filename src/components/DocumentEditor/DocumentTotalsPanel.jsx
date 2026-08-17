@@ -6,7 +6,7 @@ import { formatTL } from '../../utils/productPricing'
 import { YF_TEXT_CLASS } from '../../utils/dashboardDesign'
 
 const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_minmax(7rem,1fr)] items-center gap-x-2'
-const LABEL_CELL_CLASS = 'flex min-w-0 items-center gap-1.5 pl-2.5'
+const LABEL_CELL_CLASS = 'flex min-w-0 items-center gap-1 pl-2.5'
 const AMOUNT_CLASS =
   'block w-full text-right text-[14px] font-bold tabular-nums leading-tight tracking-normal text-[var(--muted)]'
 const ROW_FRAME =
@@ -15,8 +15,8 @@ const ROW_FRAME =
 function TotalRow({ label, value, valueContent, labelAction }) {
   return (
     <div className={`${ROW_FRAME} ${ROW_GRID}`}>
-      <div className={LABEL_CELL_CLASS}>
-        <span className={YF_TEXT_CLASS}>{label}</span>
+      <div className={`${LABEL_CELL_CLASS} ${labelAction ? 'flex-nowrap' : ''}`.trim()}>
+        {label ? <span className={`${YF_TEXT_CLASS} shrink-0`}>{label}</span> : null}
         {labelAction}
       </div>
       {valueContent || <span className={AMOUNT_CLASS}>{formatTL(value ?? 0)}</span>}
@@ -26,11 +26,11 @@ function TotalRow({ label, value, valueContent, labelAction }) {
 
 function DiscountModeToggle({ mode, onChange }) {
   return (
-    <div className="inline-flex shrink-0 rounded-md border border-[var(--search-border)] p-0.5">
+    <div className="inline-flex h-6 shrink-0 items-center rounded-md border border-[var(--search-border)] p-0.5">
       <button
         type="button"
         onClick={() => onChange('percent')}
-        className={`h-6 min-w-[28px] px-1.5 text-[14px] font-normal transition-colors ${
+        className={`flex h-5 min-w-[22px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
           mode === 'percent' ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)]' : 'text-[var(--muted)]'
         }`}
       >
@@ -39,7 +39,7 @@ function DiscountModeToggle({ mode, onChange }) {
       <button
         type="button"
         onClick={() => onChange('amount')}
-        className={`h-6 min-w-[28px] px-1.5 text-[14px] font-normal transition-colors ${
+        className={`flex h-5 min-w-[22px] items-center justify-center px-1 text-[12px] font-normal transition-colors ${
           mode === 'amount' ? 'rounded bg-[var(--glass-bg)] text-[var(--ink)]' : 'text-[var(--muted)]'
         }`}
       >
@@ -56,7 +56,7 @@ function CompactNumericInput({ value, onChange, suffix, formatMode = 'plain', wi
       onChange={onChange}
       suffix={suffix}
       formatMode={formatMode}
-      className={`!h-8 !min-h-0 !py-0 !text-[14px] !font-normal ${wide ? '!px-2.5 !pr-9' : '!px-2 !pr-7'}`}
+      className={`!h-7 !min-h-0 !max-h-7 !py-0 !text-[13px] !font-normal ${wide ? '!px-2 !pr-8' : '!px-1.5 !pr-6'}`}
     />
   )
 }
@@ -104,12 +104,46 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
     })
   }
 
+  const discountControls = onPatch ? (
+    <div className="flex min-w-0 shrink-0 items-center gap-1">
+      <button
+        type="button"
+        onClick={disableDocumentDiscount}
+        className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-[var(--muted)] transition-colors hover:text-[#e11d48]"
+        title="Toplam indirimi kaldır"
+      >
+        <X className="h-3 w-3" strokeWidth={2.25} />
+      </button>
+      <DiscountModeToggle
+        mode={discountMode}
+        onChange={(nextMode) => onPatch({ documentDiscountMode: nextMode })}
+      />
+      <div className={`shrink-0 ${discountMode === 'amount' ? 'w-[96px]' : 'w-[72px]'}`}>
+        {discountMode === 'percent' ? (
+          <CompactNumericInput
+            value={totals.documentDiscountRate || 0}
+            onChange={(value) => onPatch({ documentDiscountRate: value, showDocumentDiscount: true })}
+            suffix="%"
+          />
+        ) : (
+          <CompactNumericInput
+            value={totals.documentDiscountAmount || 0}
+            onChange={(value) => onPatch({ documentDiscountAmount: value, showDocumentDiscount: true })}
+            suffix="₺"
+            formatMode="price"
+            wide
+          />
+        )}
+      </div>
+    </div>
+  ) : null
+
   return (
-    <div className={`flex h-full min-h-0 flex-col space-y-3 ${className}`.trim()}>
+    <div className={`document-totals-panel flex h-full min-h-0 flex-col space-y-3 ${className}`.trim()}>
       <div className="flex min-h-0 flex-1 flex-col space-y-2.5">
           <div className={`flex items-center gap-2 ${showAddField ? '' : 'pr-0'}`}>
             <div className="min-w-0 flex-1">
-              <TotalRow label="Ara Toplam" value={totals.lineGrandTotal ?? totals.subtotal} />
+              <TotalRow label="Ara Toplam" value={totals.net ?? totals.subtotal} />
             </div>
             {showAddField ? (
               <div className="relative shrink-0" ref={menuRef}>
@@ -155,47 +189,9 @@ export default function DocumentTotalsPanel({ totals, onPatch, children, classNa
             <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">
                 <TotalRow
-                  label="Toplam İndirim"
+                  label=""
                   value={totals.documentDiscount}
-                  labelAction={
-                    onPatch ? (
-                      <div className="ml-1.5 flex shrink-0 items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={disableDocumentDiscount}
-                          className="inline-flex h-5 w-5 items-center justify-center text-[var(--muted)] transition-colors hover:text-[#e11d48]"
-                          title="Toplam indirimi kaldır"
-                        >
-                          <X className="h-3.5 w-3.5" strokeWidth={2.25} />
-                        </button>
-                        <DiscountModeToggle
-                          mode={discountMode}
-                          onChange={(nextMode) => onPatch({ documentDiscountMode: nextMode })}
-                        />
-                        <div className={discountMode === 'amount' ? 'w-[120px]' : 'w-[88px]'}>
-                          {discountMode === 'percent' ? (
-                            <CompactNumericInput
-                              value={totals.documentDiscountRate || 0}
-                              onChange={(value) =>
-                                onPatch({ documentDiscountRate: value, showDocumentDiscount: true })
-                              }
-                              suffix="%"
-                            />
-                          ) : (
-                            <CompactNumericInput
-                              value={totals.documentDiscountAmount || 0}
-                              onChange={(value) =>
-                                onPatch({ documentDiscountAmount: value, showDocumentDiscount: true })
-                              }
-                              suffix="₺"
-                              formatMode="price"
-                              wide
-                            />
-                          )}
-                        </div>
-                      </div>
-                    ) : null
-                  }
+                  labelAction={discountControls}
                 />
               </div>
               <div className="w-7 shrink-0" aria-hidden />

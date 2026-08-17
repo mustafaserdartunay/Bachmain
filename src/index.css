@@ -767,6 +767,15 @@ textarea:not(.form-input)::placeholder {
   padding-bottom: 0.625rem !important;
 }
 
+.page-type-shell .document-compact-controls .document-totals-panel .form-input,
+.app-responsive .page-type-shell .document-compact-controls .document-totals-panel .form-input {
+  height: 1.75rem !important;
+  min-height: 1.75rem !important;
+  max-height: 1.75rem !important;
+  line-height: 1.75rem !important;
+  font-size: 13px !important;
+}
+
 /* Teklif / sipariş: form alanları şeffaf — teklif listesi araması gibi ince çerçeve */
 .page-type-shell .document-compact-controls .form-input,
 .page-type-shell .document-compact-controls .form-input-readonly,
