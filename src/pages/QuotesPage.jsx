@@ -2702,14 +2702,13 @@ export default function QuotesPage() {
                 <div className="mb-4 flex min-w-0 items-center gap-3">
                   <div className="flex shrink-0 items-center gap-2">
                     <AppPanelDot color="blue" />
-                    <h2 className={APP_PANEL_TITLE_CLASS}>Teklif Bilgileri :</h2>
+                    <h2 className={APP_PANEL_TITLE_CLASS}>Teklif Başlığı :</h2>
                   </div>
                   <div className="min-w-0 flex-1">
                     <input
                       value={selectedQuote.title}
                       onChange={(e) => patchSelected({ title: e.target.value })}
                       className="form-input !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
-                      placeholder="Teklif başlığı"
                     />
                   </div>
                   <div className="flex min-w-0 shrink-0 items-center gap-3">
