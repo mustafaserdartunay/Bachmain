@@ -276,7 +276,7 @@ function QuoteOrderInlineConfirm({
 }) {
   return (
     <div
-      className="quote-order-undo-confirm flex h-9 w-full items-center justify-center"
+      className="quote-order-undo-confirm quote-order-action flex h-9 items-center justify-center"
       onClick={(event) => event.stopPropagation()}
       role="alertdialog"
       aria-label={ariaLabel}
@@ -339,7 +339,7 @@ function QuoteListOrderModuleButton({
 
   if (orderCreated) {
     return (
-      <span className="inline-flex items-center gap-1">
+      <span className="quote-order-action inline-flex h-9 items-center justify-between">
         <span
           className="quote-order-chip inline-flex h-9 w-[3.75rem] flex-col items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-1 text-center text-[10px] font-bold leading-tight text-emerald-700"
           title="Sipariş oluşturuldu"
@@ -364,7 +364,7 @@ function QuoteListOrderModuleButton({
     <button
       type="button"
       onClick={onRequestCreate}
-      className="quote-order-chip inline-flex h-9 w-[3.75rem] flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700"
+      className="quote-order-chip quote-order-action inline-flex h-9 flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700"
       title={`${quote.customer || quote.id} teklifinden sipariş oluştur`}
       aria-label="Sipariş oluştur"
     >

@@ -1715,6 +1715,23 @@ html:not(.night) .app-responsive .page-type-shell .document-compact-controls .do
   color: var(--muted) !important;
 }
 
+html body .page-type-shell .customer-list-panel .quote-order-action,
+html body .customers-page-type .customer-list-panel .quote-order-action,
+html body .app-responsive .customer-list-panel .quote-order-action {
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+  box-sizing: border-box !important;
+}
+
+html body .page-type-shell .customer-list-panel button.quote-order-chip.quote-order-action,
+html body .customers-page-type .customer-list-panel button.quote-order-chip.quote-order-action,
+html body .app-responsive .customer-list-panel button.quote-order-chip.quote-order-action {
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+}
+
 html body .page-type-shell .customer-list-panel .quote-order-chip,
 html body .customers-page-type .customer-list-panel .quote-order-chip,
 html body .app-responsive .customer-list-panel .quote-order-chip {
