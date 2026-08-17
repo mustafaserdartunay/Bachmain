@@ -66,10 +66,11 @@ function termLines(text) {
     .filter(Boolean)
 }
 
-function quoteStyles(imageSize, { showDiscountCol = false } = {}) {
+function quoteStyles(imageSize, { extraCols = [] } = {}) {
   const size = Number(imageSize) || 140
-  const cols = showDiscountCol
-    ? `${size}px minmax(0,1.3fr) 64px 100px 80px 72px 100px`
+  const extras = extraCols.map((col) => col.width).join(' ')
+  const cols = extras
+    ? `${size}px minmax(0,1.3fr) 64px 100px 72px ${extras} 100px`
     : `${size}px minmax(0,1.3fr) 64px 100px 72px 100px`
   return `
     .qd { box-sizing: border-box; width: 100%; margin: 0; padding: 28px 32px 36px; background: #fff; color: #64748b;
@@ -139,6 +140,17 @@ export function buildQuoteDocumentInnerHtml({
   const showDiscountCol = items.some(
     (item) => item.showDiscount && (Number(item.discountRate) > 0 || Number(item.discountAmount) > 0),
   )
+  const showExciseCol = items.some(
+    (item) => item.showExciseTax && Number(item.exciseTaxRate) > 0,
+  )
+  const showAccommodationCol = items.some(
+    (item) => item.showAccommodationTax && Number(item.accommodationTaxRate) > 0,
+  )
+  const extraCols = [
+    showDiscountCol ? { width: '72px', label: 'İndirim' } : null,
+    showExciseCol ? { width: '64px', label: 'ÖTV' } : null,
+    showAccommodationCol ? { width: '88px', label: 'Konaklama' } : null,
+  ].filter(Boolean)
 
   const itemRows = items
     .map((item) => {
@@ -157,6 +169,12 @@ export function buildQuoteDocumentInnerHtml({
             ? formatTL(item.discountAmount)
             : '—'
         : '—'
+      const exciseLabel =
+        item.showExciseTax && Number(item.exciseTaxRate) > 0 ? `%${item.exciseTaxRate}` : '—'
+      const accommodationLabel =
+        item.showAccommodationTax && Number(item.accommodationTaxRate) > 0
+          ? `%${item.accommodationTaxRate}`
+          : '—'
       return `
         <div class="qd-item">
           ${
@@ -172,8 +190,10 @@ export function buildQuoteDocumentInnerHtml({
           </div>
           <div class="qd-cell">${escapeHtml(item.quantity ?? 1)}</div>
           <div class="qd-cell">${unit}</div>
-          ${showDiscountCol ? `<div class="qd-cell">${discountLabel}</div>` : ''}
           <div class="qd-cell">%${escapeHtml(item.vatRate ?? 20)}</div>
+          ${showDiscountCol ? `<div class="qd-cell">${discountLabel}</div>` : ''}
+          ${showExciseCol ? `<div class="qd-cell">${exciseLabel}</div>` : ''}
+          ${showAccommodationCol ? `<div class="qd-cell">${accommodationLabel}</div>` : ''}
           <div class="qd-cell qd-strong">${formatTL(row.total)}</div>
         </div>`
     })
@@ -198,7 +218,7 @@ export function buildQuoteDocumentInnerHtml({
     .join('')
 
   return `
-    <style>${quoteStyles(imageSize, { showDiscountCol })}</style>
+    <style>${quoteStyles(imageSize, { extraCols })}</style>
     <article class="qd">
       <div class="qd-bar"></div>
       <header class="qd-top">
@@ -258,8 +278,8 @@ export function buildQuoteDocumentInnerHtml({
           <span>Ürün</span>
           <span>Adet</span>
           <span>Birim</span>
-          ${showDiscountCol ? '<span>İndirim</span>' : ''}
           <span>K.D.V.</span>
+          ${extraCols.map((col) => `<span>${col.label}</span>`).join('')}
           <span>Toplam</span>
         </div>
         ${itemRows || '<div class="qd-item"><div></div><p>Ürün satırı yok.</p></div>'}

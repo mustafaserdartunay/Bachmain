@@ -201,11 +201,16 @@ function StageColorSwatches({
   )
 }
 
-const quoteItemFieldsGridClass =
-  'grid-cols-[minmax(0,1.4fr)_64px_100px_56px_96px_auto]'
-const quoteItemFieldsGridWithDiscountClass =
-  'grid-cols-[minmax(0,1.4fr)_64px_100px_64px_56px_96px_auto]'
 const quoteItemFieldGapClass = 'gap-x-2'
+
+function quoteItemGridTemplate(item) {
+  const cols = ['minmax(0,1.4fr)', '64px', '100px', '56px']
+  if (item?.showDiscount) cols.push('64px')
+  if (item?.showExciseTax) cols.push('56px')
+  if (item?.showAccommodationTax) cols.push('88px')
+  cols.push('96px', 'auto')
+  return cols.join(' ')
+}
 const quoteLineActionBtnClass =
   'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors'
 const quoteLineDeleteBtnClass =
@@ -2772,11 +2777,8 @@ export default function QuotesPage() {
                     return (
                       <div key={item.id} className="py-1">
                         <div
-                          className={`grid ${
-                            item.showDiscount
-                              ? quoteItemFieldsGridWithDiscountClass
-                              : quoteItemFieldsGridClass
-                          } ${quoteItemFieldGapClass} items-end`}
+                          className={`grid ${quoteItemFieldGapClass} items-end`}
+                          style={{ gridTemplateColumns: quoteItemGridTemplate(item) }}
                         >
                           <Field label="Ürün" align="start">
                             <ProductSearchSelect
@@ -2832,6 +2834,12 @@ export default function QuotesPage() {
                               ) : null}
                             </div>
                           </Field>
+                          <Field label="KDV %" align="center">
+                            <VatRateInput
+                              value={item.vatRate ?? 20}
+                              onChange={(value) => updateItem(item.id, 'vatRate', value)}
+                            />
+                          </Field>
                           {item.showDiscount ? (
                             <Field label="İndirim %" align="center">
                               <NumericInput
@@ -2843,12 +2851,28 @@ export default function QuotesPage() {
                               />
                             </Field>
                           ) : null}
-                          <Field label="KDV %" align="center">
-                            <VatRateInput
-                              value={item.vatRate ?? 20}
-                              onChange={(value) => updateItem(item.id, 'vatRate', value)}
-                            />
-                          </Field>
+                          {item.showExciseTax ? (
+                            <Field label="ÖTV %" align="center">
+                              <NumericInput
+                                value={item.exciseTaxRate || 0}
+                                onChange={(value) =>
+                                  updateItem(item.id, 'exciseTaxRate', value)
+                                }
+                                className="!text-center"
+                              />
+                            </Field>
+                          ) : null}
+                          {item.showAccommodationTax ? (
+                            <Field label="Konaklama Vergisi %" align="center">
+                              <NumericInput
+                                value={item.accommodationTaxRate || 0}
+                                onChange={(value) =>
+                                  updateItem(item.id, 'accommodationTaxRate', value)
+                                }
+                                className="!text-center"
+                              />
+                            </Field>
+                          ) : null}
                           <Field label="Toplam" align="center">
                             <div className="space-y-1">
                               <div className="document-frame-only flex h-10 items-center justify-center rounded-lg border border-[var(--search-border)] px-1.5 text-center text-[14px] font-bold tabular-nums text-[var(--muted)]">
@@ -2926,6 +2950,38 @@ export default function QuotesPage() {
                                           <span className="truncate">İndirimi kaldır</span>
                                         </button>
                                       ) : null}
+                                      {item.showExciseTax ? (
+                                        <button
+                                          type="button"
+                                          data-tone="danger"
+                                          onClick={() => {
+                                            disableItemOption(item.id, 'showExciseTax', {
+                                              exciseTaxRate: 0,
+                                            })
+                                            setOpenItemMenuId(null)
+                                          }}
+                                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-400 transition-colors hover:bg-red-500/10"
+                                        >
+                                          <X className="h-3.5 w-3.5 shrink-0" />
+                                          <span className="truncate">ÖTV kaldır</span>
+                                        </button>
+                                      ) : null}
+                                      {item.showAccommodationTax ? (
+                                        <button
+                                          type="button"
+                                          data-tone="danger"
+                                          onClick={() => {
+                                            disableItemOption(item.id, 'showAccommodationTax', {
+                                              accommodationTaxRate: 0,
+                                            })
+                                            setOpenItemMenuId(null)
+                                          }}
+                                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-400 transition-colors hover:bg-red-500/10"
+                                        >
+                                          <X className="h-3.5 w-3.5 shrink-0" />
+                                          <span className="truncate">Konaklama vergisini kaldır</span>
+                                        </button>
+                                      ) : null}
                                     </div>
                                   )}
                                   {pendingItemDeleteId === item.id && (
@@ -2967,60 +3023,6 @@ export default function QuotesPage() {
                                 >
                                   <X className="h-3.5 w-3.5" />
                                 </button>
-                              </div>
-                            )}
-                            {(item.showExciseTax || item.showAccommodationTax) && (
-                              <div className={`grid grid-cols-2 ${quoteItemFieldGapClass} gap-y-2`}>
-                                {item.showExciseTax && (
-                                  <div className="document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent p-2">
-                                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                                      <Field label="ÖTV %">
-                                        <NumericInput
-                                          value={item.exciseTaxRate || 0}
-                                          onChange={(value) =>
-                                            updateItem(item.id, 'exciseTaxRate', value)
-                                          }
-                                        />
-                                      </Field>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          disableItemOption(item.id, 'showExciseTax', {
-                                            exciseTaxRate: 0,
-                                          })
-                                        }
-                                        className="mt-5 inline-flex h-10 items-center justify-center rounded-lg px-2 text-red-400 hover:bg-red-500/10"
-                                      >
-                                        <X className="h-3.5 w-3.5" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                                {item.showAccommodationTax && (
-                                  <div className="document-frame-only rounded-xl border border-[var(--search-border)] bg-transparent p-2">
-                                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                                      <Field label="Konaklama Vergisi %">
-                                        <NumericInput
-                                          value={item.accommodationTaxRate || 0}
-                                          onChange={(value) =>
-                                            updateItem(item.id, 'accommodationTaxRate', value)
-                                          }
-                                        />
-                                      </Field>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          disableItemOption(item.id, 'showAccommodationTax', {
-                                            accommodationTaxRate: 0,
-                                          })
-                                        }
-                                        className="mt-5 inline-flex h-10 items-center justify-center rounded-lg px-2 text-red-400 hover:bg-red-500/10"
-                                      >
-                                        <X className="h-3.5 w-3.5" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
                               </div>
                             )}
                       </div>
