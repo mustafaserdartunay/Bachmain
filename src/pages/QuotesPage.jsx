@@ -294,16 +294,31 @@ function QuoteListOrderModuleButton({
 
   if (pendingAction === 'undo') {
     return (
-      <DeleteConfirmPopover
-        title="Siparişi geri almak istiyor musunuz?"
-        description="Sipariş kaydı kaldırılır; teklif listede kalır."
-        confirmLabel="Evet"
-        cancelLabel="Hayır"
-        inline
-        compact
-        onConfirm={onConfirmUndo}
-        onCancel={onCancelPending}
-      />
+      <div
+        className="quote-order-undo-confirm flex h-9 w-full items-center justify-center"
+        onClick={(event) => event.stopPropagation()}
+        role="alertdialog"
+        aria-label="Siparişi geri al"
+      >
+        <div className="inline-flex h-9 items-center gap-0.5 rounded-xl border border-ds-border bg-transparent px-1">
+          <button
+            type="button"
+            onClick={onConfirmUndo}
+            className="quote-order-undo-sil px-1.5 text-[11px] font-semibold leading-none"
+          >
+            Sil
+          </button>
+          <button
+            type="button"
+            onClick={onCancelPending}
+            className="quote-order-undo-close inline-flex h-7 w-7 items-center justify-center rounded-lg"
+            aria-label="Vazgeç"
+            title="Vazgeç"
+          >
+            <X className="h-3.5 w-3.5" strokeWidth={2.25} />
+          </button>
+        </div>
+      </div>
     )
   }
 
@@ -2736,7 +2751,7 @@ export default function QuotesPage() {
                         ? pendingQuoteOrderAction.type
                         : null
                     return (
-                      <span onClick={(event) => event.stopPropagation()}>
+                      <span className="block w-full text-right" onClick={(event) => event.stopPropagation()}>
                         <QuoteListOrderModuleButton
                           quote={quote}
                           orderCreated={isQuoteOrderCreated(quote)}

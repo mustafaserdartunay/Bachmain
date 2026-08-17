@@ -1756,12 +1756,45 @@ html body .customers-page-type .customer-list-panel span.quote-order-chip * {
   color: #047857 !important;
 }
 
-html body .page-type-shell .customer-list-panel button.quote-order-chip:hover,
-html body .customers-page-type .customer-list-panel button.quote-order-chip:hover,
-html body .app-responsive .customer-list-panel button.quote-order-chip:hover,
-html body .page-type-shell .customer-list-panel button.quote-order-chip:hover *,
-html body .customers-page-type .customer-list-panel button.quote-order-chip:hover * {
-  color: #047857 !important;
+html body .page-type-shell .customer-list-panel .quote-order-undo-confirm,
+html body .customers-page-type .customer-list-panel .quote-order-undo-confirm,
+html body .app-responsive .customer-list-panel .quote-order-undo-confirm {
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-sil,
+html body .customers-page-type .customer-list-panel .quote-order-undo-sil,
+html body .app-responsive .customer-list-panel .quote-order-undo-sil {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  color: #dc2626 !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-close,
+html body .customers-page-type .customer-list-panel .quote-order-undo-close,
+html body .app-responsive .customer-list-panel .quote-order-undo-close,
+html body .page-type-shell .customer-list-panel .quote-order-undo-close svg,
+html body .customers-page-type .customer-list-panel .quote-order-undo-close svg,
+html body .app-responsive .customer-list-panel .quote-order-undo-close svg {
+  color: var(--muted) !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-close:hover,
+html body .customers-page-type .customer-list-panel .quote-order-undo-close:hover,
+html body .app-responsive .customer-list-panel .quote-order-undo-close:hover,
+html body .page-type-shell .customer-list-panel .quote-order-undo-close:hover svg,
+html body .customers-page-type .customer-list-panel .quote-order-undo-close:hover svg,
+html body .app-responsive .customer-list-panel .quote-order-undo-close:hover svg {
+  color: #dc2626 !important;
+  background: transparent !important;
+  transform: none !important;
 }
 html body .page-type-shell .customer-list-panel button.customer-bulk-delete-action,
 html body .customers-page-type .customer-list-panel button.customer-bulk-delete-action,
