@@ -74,6 +74,7 @@ import {
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import BrandLogo from './BrandLogo'
+import BachMainMascot from './BachMainMascot'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
 import { useAuth } from '../../auth/AuthContext'
@@ -340,15 +341,18 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             title={brandLabel}
           >
             {company?.logoDataUrl ? (
-              <img
-                src={company.logoDataUrl}
-                alt={brandLabel}
-                className={
-                  collapsed
-                    ? 'h-8 w-8 object-contain'
-                    : 'h-9 max-h-9 w-auto max-w-[7rem] shrink-0 object-contain object-center'
-                }
-              />
+              <div className="brand-logo-with-mascot flex min-w-0 items-end">
+                <BachMainMascot collapsed={collapsed} />
+                <img
+                  src={company.logoDataUrl}
+                  alt={brandLabel}
+                  className={
+                    collapsed
+                      ? 'h-8 w-8 object-contain'
+                      : 'h-9 max-h-9 w-auto max-w-[7rem] shrink-0 object-contain object-center'
+                  }
+                />
+              </div>
             ) : (
               <BrandLogo collapsed={collapsed} />
             )}

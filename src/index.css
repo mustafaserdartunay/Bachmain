@@ -6002,6 +6002,54 @@ html.special .badge-purple {
   user-select: none;
 }
 
+.brand-logo-with-mascot {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.bachmain-mascot-wrap {
+  display: inline-flex;
+  align-items: flex-end;
+  margin-right: -0.35rem;
+  animation: bachmain-mascot-point 3.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.bachmain-mascot {
+  display: block;
+  height: 2.75rem;
+  width: auto;
+  max-width: 2.35rem;
+  object-fit: contain;
+  object-position: bottom right;
+  filter: drop-shadow(0 6px 14px rgba(37, 99, 235, 0.18));
+  animation: bachmain-mascot-float 4.5s ease-in-out infinite;
+  transform-origin: bottom center;
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes bachmain-mascot-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.02);
+  }
+}
+
+@keyframes bachmain-mascot-point {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+}
+
 .brand-logo-collapsed {
   justify-content: flex-start;
   max-width: 2.75rem;
