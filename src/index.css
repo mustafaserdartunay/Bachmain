@@ -3318,10 +3318,18 @@ html body section.card.quote-list-row-panel {
   overflow: visible !important;
 }
 
+html body section.card.quote-list-row-panel.quote-list-header-panel {
+  min-height: 4.75rem;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
 .quote-list-cell {
   display: flex;
   min-width: 0;
   align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 html body .page-type-shell .quote-list-row-panel .customer-name-primary,

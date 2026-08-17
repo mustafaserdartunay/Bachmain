@@ -322,7 +322,7 @@ function QuoteListColumnHeader({
 }) {
   const title = formatQuoteListColumnLabel(label)
   return (
-    <div className="flex w-full min-w-0 items-center gap-2">
+    <div className="flex w-full min-w-0 items-center justify-center gap-2">
       {sortable ? (
         <button
           type="button"
@@ -351,12 +351,14 @@ function QuoteListColumnHeader({
 }
 
 const QUOTE_LIST_ROW_PANEL_CLASS =
-  'customer-filter-panel customer-list-panel quote-list-row-panel flex min-h-[3rem] w-full items-center !py-1.5'
+  'customer-filter-panel customer-list-panel quote-list-row-panel flex w-full items-center'
 
 function QuoteListRowPanel({ header = false, gridTemplate, className = '', children }) {
   return (
     <AppPagePanel
-      className={`${QUOTE_LIST_ROW_PANEL_CLASS} ${header ? 'quote-list-header-panel' : ''} ${className}`.trim()}
+      className={`${QUOTE_LIST_ROW_PANEL_CLASS} ${
+        header ? 'quote-list-header-panel min-h-[4.75rem]' : 'min-h-[3rem] !py-1.5'
+      } ${className}`.trim()}
     >
       <div className="quote-list-row w-full min-w-0" style={{ gridTemplateColumns: gridTemplate }}>
         {children}
@@ -365,10 +367,12 @@ function QuoteListRowPanel({ header = false, gridTemplate, className = '', child
   )
 }
 
-function QuoteListCell({ align = 'start', className = '', children }) {
-  const alignClass =
-    align === 'center' ? 'justify-center text-center' : align === 'right' ? 'justify-end text-right' : 'justify-start text-left'
-  return <div className={`quote-list-cell min-w-0 ${alignClass} ${className}`.trim()}>{children}</div>
+function QuoteListCell({ className = '', children }) {
+  return (
+    <div className={`quote-list-cell min-w-0 justify-center text-center ${className}`.trim()}>
+      {children}
+    </div>
+  )
 }
 
 function sortQuoteListByColumn(rows, sort, quoteSegmentTabs, quotes, processValueForQuote) {
@@ -2744,7 +2748,7 @@ export default function QuotesPage() {
             <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
               <div className="quote-list-board">
                 <QuoteListRowPanel header gridTemplate={quoteListColumnGrid}>
-                  <QuoteListCell align="center">
+                  <QuoteListCell>
                     <QuoteListColumnHeader
                       label="Tarih"
                       sortable
@@ -2772,7 +2776,7 @@ export default function QuotesPage() {
                     />
                   </QuoteListCell>
                   {quoteSegmentTabs.map((tab) => (
-                    <QuoteListCell key={tab.id} align="center">
+                    <QuoteListCell key={tab.id}>
                       <QuoteListColumnHeader
                         label={tab.label}
                         accessory={renderFilterCycleAccessory(
@@ -2783,7 +2787,7 @@ export default function QuotesPage() {
                       />
                     </QuoteListCell>
                   ))}
-                  <QuoteListCell align="right">
+                  <QuoteListCell>
                     <QuoteListColumnHeader
                       label="Tutar"
                       sortable
@@ -2792,10 +2796,10 @@ export default function QuotesPage() {
                       onToggleSort={toggleListColumnSort}
                     />
                   </QuoteListCell>
-                  <QuoteListCell align="center">
+                  <QuoteListCell>
                     <QuoteListColumnHeader label="Sipariş" />
                   </QuoteListCell>
-                  <QuoteListCell align="center">
+                  <QuoteListCell>
                     <QuoteListColumnHeader />
                   </QuoteListCell>
                 </QuoteListRowPanel>
@@ -2822,7 +2826,7 @@ export default function QuotesPage() {
                       }}
                     >
                       <QuoteListRowPanel gridTemplate={quoteListColumnGrid}>
-                        <QuoteListCell align="center">
+                        <QuoteListCell>
                           {stamp.date ? (
                             <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
                               <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
@@ -2849,7 +2853,7 @@ export default function QuotesPage() {
                           </span>
                         </QuoteListCell>
                         <QuoteListCell>
-                          <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
+                          <span className="flex min-w-0 flex-col items-center gap-0.5 py-0.5 text-center">
                             <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
                               {display.brandShortName || 'Müşteri girilmedi'}
                             </span>
@@ -2861,7 +2865,7 @@ export default function QuotesPage() {
                           </span>
                         </QuoteListCell>
                         {quoteSegmentTabs.map((tab) => (
-                          <QuoteListCell key={tab.id} align="center">
+                          <QuoteListCell key={tab.id}>
                             <span
                               className="flex w-full items-center justify-center"
                               onClick={(event) => event.stopPropagation()}
@@ -2883,12 +2887,12 @@ export default function QuotesPage() {
                             </span>
                           </QuoteListCell>
                         ))}
-                        <QuoteListCell align="right">
+                        <QuoteListCell>
                           <span className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}>
                             {formatTL(getQuoteListAmount(quote))}
                           </span>
                         </QuoteListCell>
-                        <QuoteListCell align="center">
+                        <QuoteListCell>
                           <span
                             className="block w-full text-center"
                             onClick={(event) => event.stopPropagation()}
@@ -2909,7 +2913,7 @@ export default function QuotesPage() {
                             />
                           </span>
                         </QuoteListCell>
-                        <QuoteListCell align="center">
+                        <QuoteListCell>
                           <span onClick={(event) => event.stopPropagation()}>
                             <MoreMenu
                               items={[
