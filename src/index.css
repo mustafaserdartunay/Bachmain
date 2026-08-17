@@ -7873,8 +7873,7 @@ html .customer-filter-dropdown-menu button.kalem-btn svg {
   color: currentColor !important;
 }
 
-/* --- Standart silme onayı (DeleteConfirmPopover) --- */
-/* Kırmızı gradient zemin, minimal ölçüler ve tüm katmanların üstünde konum. */
+/* --- Standart silme onayı — teklif sipariş geri al kutusu ile aynı --- */
 .delete-confirm-portal {
   z-index: 12000 !important;
 }
@@ -7884,122 +7883,108 @@ html .customer-filter-dropdown-menu button.kalem-btn svg {
   backdrop-filter: blur(2px);
 }
 
-html .delete-confirm-panel,
-html.night .delete-confirm-panel,
-html .app-responsive .delete-confirm-panel,
-html .app-dropdown-portal .delete-confirm-panel {
-  background-image: linear-gradient(to bottom right, #fda4af, #f43f5e, #e11d48) !important;
-  background-color: #f43f5e !important;
-  border-color: rgba(255, 255, 255, 0.35) !important;
-}
-
-html .delete-confirm-panel :where(p, span, button, svg),
-html.night .delete-confirm-panel :where(p, span, button, svg),
-html .app-responsive .delete-confirm-panel :where(p, span, button, svg),
-html .app-dropdown-portal .delete-confirm-panel :where(p, span, button, svg) {
-  color: #ffffff !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
-}
-
-html .delete-confirm-panel .delete-confirm-title {
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  line-height: 1.2 !important;
-}
-
-html .delete-confirm-panel .delete-confirm-desc {
-  font-size: 11px !important;
-  font-weight: 400 !important;
-  line-height: 1.25 !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-}
-
-html .delete-confirm-panel .delete-confirm-yes,
-html .delete-confirm-panel .delete-confirm-no {
-  font-size: 12px !important;
-  line-height: 1 !important;
-}
-
-html .delete-confirm-panel .delete-confirm-yes,
-html.night .delete-confirm-panel .delete-confirm-yes,
-html .app-responsive .delete-confirm-panel .delete-confirm-yes,
-html .app-dropdown-portal .delete-confirm-panel .delete-confirm-yes {
-  background: #ffffff !important;
-  color: #e11d48 !important;
-  font-weight: 700 !important;
-}
-
-html .delete-confirm-panel .delete-confirm-no,
-html.night .delete-confirm-panel .delete-confirm-no,
-html .app-responsive .delete-confirm-panel .delete-confirm-no,
-html .app-dropdown-portal .delete-confirm-panel .delete-confirm-no {
-  background: #ffffff !important;
-  border-color: #ffffff !important;
-  color: #e11d48 !important;
-  font-weight: 600 !important;
-}
-
-html .delete-confirm-panel-compact,
-html.night .delete-confirm-panel-compact,
-html .app-responsive .delete-confirm-panel-compact,
-html .customers-page-type .delete-confirm-panel-compact,
-html .page-type-shell .delete-confirm-panel-compact {
+html .delete-confirm-portal .delete-confirm-panel.quote-order-undo-confirm,
+html.night .delete-confirm-portal .delete-confirm-panel.quote-order-undo-confirm,
+html .app-responsive .delete-confirm-portal .delete-confirm-panel.quote-order-undo-confirm,
+html .app-dropdown-portal .delete-confirm-portal .delete-confirm-panel.quote-order-undo-confirm,
+html .delete-confirm-panel.quote-order-undo-confirm,
+html.night .delete-confirm-panel.quote-order-undo-confirm,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm {
   display: inline-flex !important;
-  flex-direction: column !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-height: 2.5rem !important;
-  max-height: 2.5rem !important;
-  width: max-content !important;
-  max-width: min(100vw, 18rem) !important;
-  gap: 0.125rem !important;
-  padding: 0.1875rem 0.5rem !important;
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+  margin: 0 !important;
   box-sizing: border-box !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  ring: none !important;
 }
 
-html .delete-confirm-panel-compact .delete-confirm-title,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-title,
-html .page-type-shell .delete-confirm-panel-compact .delete-confirm-title {
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  line-height: 1.2 !important;
-  white-space: normal !important;
-  text-align: center !important;
+html .delete-confirm-portal .quote-order-undo-box,
+html.night .delete-confirm-portal .quote-order-undo-box,
+html .app-responsive .delete-confirm-portal .quote-order-undo-box,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-box,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 5.75rem !important;
+  height: 2.25rem !important;
+  box-sizing: border-box !important;
+  background: transparent !important;
+  border-color: var(--ds-border, rgba(140, 145, 165, 0.35)) !important;
 }
 
-html .delete-confirm-panel-compact .delete-confirm-yes,
-html .delete-confirm-panel-compact .delete-confirm-no,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-yes,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-no {
-  height: 1.125rem !important;
-  min-height: 1.125rem !important;
-  padding: 0 0.375rem !important;
-  font-size: 10px !important;
-  line-height: 1 !important;
-  white-space: nowrap !important;
-}
-
-html .delete-confirm-panel-compact .delete-confirm-yes,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-yes,
-html .page-type-shell .delete-confirm-panel-compact .delete-confirm-yes {
-  background: #ffffff !important;
-  color: #16a34a !important;
-}
-
-html .delete-confirm-panel-compact .delete-confirm-no,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-no,
-html .page-type-shell .delete-confirm-panel-compact .delete-confirm-no {
-  background: #ffffff !important;
-  border-color: #ffffff !important;
-  color: #e11d48 !important;
-}
-
-html .delete-confirm-panel-compact .delete-confirm-sep,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-sep {
-  color: rgba(255, 255, 255, 0.8) !important;
-  font-size: 10px !important;
+html .delete-confirm-portal .quote-order-undo-sil,
+html.night .delete-confirm-portal .quote-order-undo-sil,
+html .app-responsive .delete-confirm-portal .quote-order-undo-sil,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-sil,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil {
+  font-size: 11px !important;
   font-weight: 700 !important;
   line-height: 1 !important;
+  letter-spacing: normal !important;
+  color: #dc2626 !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+html .delete-confirm-portal .quote-order-undo-close,
+html.night .delete-confirm-portal .quote-order-undo-close,
+html .app-responsive .delete-confirm-portal .quote-order-undo-close,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-close,
+html .delete-confirm-portal .quote-order-undo-close svg,
+html.night .delete-confirm-portal .quote-order-undo-close svg,
+html .app-responsive .delete-confirm-portal .quote-order-undo-close svg,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-close svg,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg {
+  color: var(--muted) !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+html .delete-confirm-portal .quote-order-undo-close:hover,
+html.night .delete-confirm-portal .quote-order-undo-close:hover,
+html .app-responsive .delete-confirm-portal .quote-order-undo-close:hover,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-close:hover,
+html .delete-confirm-portal .quote-order-undo-close:hover svg,
+html.night .delete-confirm-portal .quote-order-undo-close:hover svg,
+html .app-responsive .delete-confirm-portal .quote-order-undo-close:hover svg,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-close:hover svg,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg {
+  color: #dc2626 !important;
+  background: transparent !important;
+  transform: none !important;
 }
