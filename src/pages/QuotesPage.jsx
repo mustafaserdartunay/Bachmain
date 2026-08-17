@@ -2379,7 +2379,7 @@ export default function QuotesPage() {
           titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
             <div className="relative flex shrink-0 items-center gap-2" data-quote-dropdown>
-              {selectedQuote ? (
+              {selectedQuote && !isDraftQuote ? (
                 <Link
                   to={`/belge-merkezi/yazdir?type=quote&id=${encodeURIComponent(selectedQuote.id)}`}
                   className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.violet}`}

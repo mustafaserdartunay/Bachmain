@@ -14,11 +14,10 @@ import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 function formatPickerLabel(iso) {
   const date = parseCalendarIso(iso)
   if (!date) return 'Tarih seçin'
-  return date.toLocaleDateString('tr-TR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}.${month}.${year} - ${CALENDAR_MONTHS[date.getMonth()]}`
 }
 
 function SingleMonthCalendar({ viewDate, onViewDateChange, value, onSelectDate }) {
