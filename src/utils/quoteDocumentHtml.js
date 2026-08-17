@@ -69,7 +69,7 @@ function termLines(text) {
 function quoteStyles(imageSize, { showDiscountCol = false } = {}) {
   const size = Number(imageSize) || 140
   const cols = showDiscountCol
-    ? `${size}px minmax(0,1.3fr) 64px 100px 72px 80px 100px`
+    ? `${size}px minmax(0,1.3fr) 64px 100px 80px 72px 100px`
     : `${size}px minmax(0,1.3fr) 64px 100px 72px 100px`
   return `
     .qd { box-sizing: border-box; width: 100%; margin: 0; padding: 28px 32px 36px; background: #fff; color: #64748b;
@@ -172,8 +172,8 @@ export function buildQuoteDocumentInnerHtml({
           </div>
           <div class="qd-cell">${escapeHtml(item.quantity ?? 1)}</div>
           <div class="qd-cell">${unit}</div>
-          <div class="qd-cell">%${escapeHtml(item.vatRate ?? 20)}</div>
           ${showDiscountCol ? `<div class="qd-cell">${discountLabel}</div>` : ''}
+          <div class="qd-cell">%${escapeHtml(item.vatRate ?? 20)}</div>
           <div class="qd-cell qd-strong">${formatTL(row.total)}</div>
         </div>`
     })
@@ -258,8 +258,8 @@ export function buildQuoteDocumentInnerHtml({
           <span>Ürün</span>
           <span>Adet</span>
           <span>Birim</span>
-          <span>K.D.V.</span>
           ${showDiscountCol ? '<span>İndirim</span>' : ''}
+          <span>K.D.V.</span>
           <span>Toplam</span>
         </div>
         ${itemRows || '<div class="qd-item"><div></div><p>Ürün satırı yok.</p></div>'}
