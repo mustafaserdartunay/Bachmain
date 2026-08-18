@@ -884,6 +884,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   <NavLink
                     key={sub.path}
                     to={sub.path}
+                    state={{ fromApp: true }}
                     end={sub.path === WEB_STUDIO_PATH}
                     onClick={handleNavigate}
                     className={({ isActive }) =>

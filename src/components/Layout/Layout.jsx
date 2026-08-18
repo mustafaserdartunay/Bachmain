@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+
+const STUDIO_ENTER_MS = 580
 import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
@@ -47,6 +49,8 @@ export default function Layout({ children }) {
   const [isTablet, setIsTablet] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth >= 768 && window.innerWidth < 1024 : false,
   )
+  const [studioChromeVisible, setStudioChromeVisible] = useState(!isStudioManagement)
+  const [studioExiting, setStudioExiting] = useState(false)
 
   useEffect(() => {
     function syncViewport() {
@@ -64,6 +68,26 @@ export default function Layout({ children }) {
     syncViewport()
     window.addEventListener('resize', syncViewport)
     return () => window.removeEventListener('resize', syncViewport)
+  }, [])
+
+  useEffect(() => {
+    if (!isStudioManagement) {
+      setStudioChromeVisible(true)
+      setStudioExiting(false)
+      return undefined
+    }
+    if (studioExiting) return undefined
+    const timer = window.setTimeout(() => setStudioChromeVisible(false), STUDIO_ENTER_MS)
+    return () => window.clearTimeout(timer)
+  }, [isStudioManagement, studioExiting])
+
+  useEffect(() => {
+    function onStudioExit() {
+      setStudioExiting(true)
+      setStudioChromeVisible(true)
+    }
+    window.addEventListener('bach:studio-exit-start', onStudioExit)
+    return () => window.removeEventListener('bach:studio-exit-start', onStudioExit)
   }, [])
 
   function toggleSidebar() {
@@ -93,8 +117,16 @@ export default function Layout({ children }) {
   }
 
   const effectiveCollapsed = isTablet ? true : isMobile ? false : sidebarCollapsed
+  const studioActive = isStudioManagement && !studioChromeVisible && !studioExiting
+  const studioShellClass = [
+    isStudioManagement && studioChromeVisible && !studioExiting ? 'app-shell--to-studio' : '',
+    studioExiting ? 'app-shell--from-studio' : '',
+    studioActive ? 'app-shell--studio-active' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
-  if (fullscreenWorkspace) {
+  if (fullscreenWorkspace && !isStudioManagement) {
     return (
       <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))]">
         <main className="min-h-screen w-full overflow-hidden p-0">{children}</main>
@@ -103,7 +135,7 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))] transition-colors">
+    <div className={`app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))] transition-colors ${studioShellClass}`.trim()}>
       {mobileSidebarOpen && (
         <button
           type="button"

@@ -4206,23 +4206,216 @@ html.night .glass-sidebar .sidebar-submenu {
 }
 
 .studio-shell {
-  position: relative;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
   width: 100%;
   min-height: 100dvh;
+  overflow: auto;
 }
 
-.studio-shell--entered {
-  animation: studio-shell-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+.studio-shell > aside.app-sidebar:not(.glass-team-hub),
+.studio-shell .app-shell-content > header,
+.studio-shell > .glass-team-hub,
+.studio-shell .app-shell-content > main,
+.studio-shell .app-shell-content > div:not(header) {
+  will-change: transform, opacity;
 }
 
-@keyframes studio-shell-enter {
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) > aside.app-sidebar:not(.glass-team-hub),
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) .app-shell-content > header,
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) > .glass-team-hub,
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) .app-shell-content > main,
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) .app-shell-content > div:not(header) {
+  opacity: 0;
+}
+
+.studio-shell--entered > aside.app-sidebar:not(.glass-team-hub) {
+  animation: studio-in-left 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.studio-shell--entered .app-shell-content > header {
+  animation: studio-in-down 0.58s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
+}
+
+.studio-shell--entered > .glass-team-hub {
+  animation: studio-in-right 0.58s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+
+.studio-shell--entered .app-shell-content > main,
+.studio-shell--entered .app-shell-content > div:not(header) {
+  animation: studio-in-fade 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+.studio-shell--exiting > aside.app-sidebar:not(.glass-team-hub) {
+  animation: studio-out-left 0.48s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.studio-shell--exiting .app-shell-content > header {
+  animation: studio-out-up 0.45s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.studio-shell--exiting > .glass-team-hub {
+  animation: studio-out-right 0.48s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.studio-shell--exiting .app-shell-content > main,
+.studio-shell--exiting .app-shell-content > div:not(header) {
+  animation: studio-out-fade 0.4s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.app-shell--to-studio,
+.app-shell--from-studio {
+  overflow: hidden;
+}
+
+.app-shell--to-studio > aside.glass-sidebar.app-sidebar {
+  animation: studio-out-left 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.app-shell--to-studio > aside.glass-team-hub {
+  animation: studio-out-right 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.app-shell--to-studio .app-shell-content {
+  animation: studio-out-fade 0.42s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.app-shell--from-studio > aside.glass-sidebar.app-sidebar {
+  animation: studio-in-left 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-shell--from-studio > aside.glass-team-hub {
+  animation: studio-in-right 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both;
+}
+
+.app-shell--from-studio .app-shell-content {
+  animation: studio-in-fade 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+.app-shell--studio-active > aside.glass-sidebar,
+.app-shell--studio-active > aside.glass-team-hub,
+.app-shell--studio-active .app-header-banner,
+.app-shell--studio-active .app-shell-content > *:not(main) {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+.app-shell--studio-active .app-shell-content {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+@keyframes studio-in-left {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translate3d(-36px, 0, 0) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
+  }
+}
+
+@keyframes studio-out-left {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-42px, 0, 0) scale(0.98);
+  }
+}
+
+@keyframes studio-in-right {
+  from {
+    opacity: 0;
+    transform: translate3d(36px, 0, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes studio-out-right {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(42px, 0, 0) scale(0.98);
+  }
+}
+
+@keyframes studio-in-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes studio-out-up {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0);
+  }
+}
+
+@keyframes studio-in-fade {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes studio-out-fade {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-shell--entered > aside.app-sidebar:not(.glass-team-hub),
+  .studio-shell--entered .app-shell-content > header,
+  .studio-shell--entered > .glass-team-hub,
+  .studio-shell--entered .app-shell-content > main,
+  .studio-shell--entered .app-shell-content > div:not(header),
+  .studio-shell--exiting > aside.app-sidebar:not(.glass-team-hub),
+  .studio-shell--exiting .app-shell-content > header,
+  .studio-shell--exiting > .glass-team-hub,
+  .studio-shell--exiting .app-shell-content > main,
+  .studio-shell--exiting .app-shell-content > div:not(header),
+  .app-shell--to-studio > aside.glass-sidebar.app-sidebar,
+  .app-shell--to-studio > aside.glass-team-hub,
+  .app-shell--to-studio .app-shell-content,
+  .app-shell--from-studio > aside.glass-sidebar.app-sidebar,
+  .app-shell--from-studio > aside.glass-team-hub,
+  .app-shell--from-studio .app-shell-content {
+    animation: none !important;
   }
 }
 

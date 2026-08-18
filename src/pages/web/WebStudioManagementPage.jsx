@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   ChevronLeft,
   CreditCard,
@@ -36,6 +36,9 @@ const statCard =
   'rounded-[18px] border border-[#e9eef8] bg-[linear-gradient(180deg,#ffffff,rgba(244,247,252,0.92))] px-4 py-3'
 const softPill =
   'inline-flex items-center rounded-full border border-[#d8e2f0] bg-white/92 px-3 py-1 text-[11px] font-semibold text-[#203375]'
+
+const STUDIO_TRANSITION_MS = 520
+let keepStudioShell = false
 
 function titleForPath(pathname) {
   return NAV.find((item) => item.exact ? pathname === item.path : pathname === item.path || pathname.startsWith(`${item.path}/`))?.label || 'Studio Yönetim'
@@ -467,7 +470,10 @@ function renderPage(pathname, primarySite, sites, pages) {
 
 export default function WebStudioManagementPage() {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const [sites, setSites] = useState(() => getSites())
+  const [entered, setEntered] = useState(() => keepStudioShell)
+  const [exiting, setExiting] = useState(false)
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(
     () => localStorage.getItem('bach-team-hub-panel') !== 'expanded',
   )
@@ -479,6 +485,15 @@ export default function WebStudioManagementPage() {
       return next
     })
   }
+
+  useEffect(() => {
+    keepStudioShell = true
+    if (entered) return undefined
+    const frame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setEntered(true))
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [entered])
 
   useEffect(() => {
     const reload = () => setSites(getSites())
@@ -493,8 +508,19 @@ export default function WebStudioManagementPage() {
   const primarySite = sites[0] || null
   const pages = useMemo(() => (primarySite ? getPagesBySite(primarySite.id) : []), [primarySite?.id])
 
+  function handleBackToApp(event) {
+    event.preventDefault()
+    if (exiting) return
+    keepStudioShell = false
+    setExiting(true)
+    window.dispatchEvent(new CustomEvent('bach:studio-exit-start'))
+    window.setTimeout(() => navigate('/'), STUDIO_TRANSITION_MS)
+  }
+
+  const shellState = exiting ? 'studio-shell--exiting' : entered ? 'studio-shell--entered' : ''
+
   return (
-    <div className={`bach-admin studio-shell studio-shell--entered min-h-screen w-full ${shellBg} text-[#0f172a]`}>
+    <div className={`bach-admin studio-shell ${shellState} min-h-screen w-full ${shellBg} text-[#0f172a]`}>
       <aside className="app-sidebar fixed top-[var(--shell-gap)] left-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] w-[var(--ds-sidebar-expanded,17.5rem)] flex-col rounded-[26px] border border-white/16 bg-[linear-gradient(180deg,#29448b_0%,#233b7a_48%,#1c2f61_100%)] px-3 py-4 text-white shadow-[0_18px_44px_-18px_rgba(17,24,39,0.55)] lg:flex">
         <div className="mb-5 flex h-12 items-center gap-2 px-1 pt-1">
           <span className="text-[1.7rem] font-black tracking-[-0.04em] text-white">
@@ -513,6 +539,7 @@ export default function WebStudioManagementPage() {
           </p>
           <Link
             to="/"
+            onClick={handleBackToApp}
             className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-transparent px-3 py-2 text-xs font-semibold text-white/85 transition hover:bg-white/10 hover:text-white"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
