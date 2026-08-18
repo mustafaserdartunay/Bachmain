@@ -18,7 +18,7 @@ import { getPagesBySite, getSites } from '../../utils/webSiteStorage'
 import logoBusiness from '../../assets/bachmain-logo.png'
 
 const NAV = [
-  { path: '/web/studio/yonetim', label: 'Güncel Durum', icon: LayoutDashboard, exact: true },
+  { path: '/web/studio/yonetim/panel', label: 'Güncel Durum', icon: LayoutDashboard, exact: true },
   { path: '/web/studio/yonetim/domain-bagla', label: 'Domain Bağla', icon: Globe2 },
   { path: '/web/studio/yonetim/kategoriler', label: 'Kategoriler', icon: FolderTree },
   { path: '/web/studio/yonetim/urunler', label: 'Ürünler', icon: ShoppingBag },
@@ -464,6 +464,8 @@ function renderPage(pathname, primarySite, sites, pages) {
       return <ProfilePage primarySite={primarySite} />
     case '/web/studio/yonetim/odeme':
       return <PaymentPage primarySite={primarySite} pages={pages} />
+    case '/web/studio/yonetim/panel':
+      return <DashboardPage primarySite={primarySite} sites={sites} pages={pages} />
     default:
       return <DashboardPage primarySite={primarySite} sites={sites} pages={pages} />
   }
@@ -515,7 +517,7 @@ export default function WebStudioManagementPage() {
     keepStudioShell = false
     setExiting(true)
     window.dispatchEvent(new CustomEvent('bach:studio-exit-start'))
-    window.setTimeout(() => navigate('/'), STUDIO_TRANSITION_MS)
+    window.setTimeout(() => navigate('/web/studio/yonetim'), STUDIO_TRANSITION_MS)
   }
 
   const shellState = exiting ? 'studio-shell--exiting' : entered ? 'studio-shell--entered' : ''
@@ -546,7 +548,7 @@ export default function WebStudioManagementPage() {
             />
           </div>
           <Link
-            to="/"
+            to="/web/studio/yonetim"
             onClick={handleBackToApp}
             className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#bfdbfe] bg-[#eff6ff] px-3 py-2 text-xs font-semibold text-[#1d4ed8] transition hover:bg-[#dbeafe]"
           >
