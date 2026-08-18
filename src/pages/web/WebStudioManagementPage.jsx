@@ -512,7 +512,7 @@ export default function WebStudioManagementPage() {
     keepStudioShell = false
     setExiting(true)
     window.dispatchEvent(new CustomEvent('bach:studio-exit-start'))
-    window.setTimeout(() => navigate('/web/studio/yonetim'), STUDIO_TRANSITION_MS)
+    window.setTimeout(() => navigate('/'), STUDIO_TRANSITION_MS)
   }
 
   const shellState = exiting ? 'studio-shell--exiting' : entered ? 'studio-shell--entered' : ''

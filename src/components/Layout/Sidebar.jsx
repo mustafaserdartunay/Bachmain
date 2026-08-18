@@ -12,6 +12,7 @@ import {
   Percent,
   MessageCircle,
   Receipt,
+  FileText,
   BarChart3,
   Settings,
   FolderPlus,
@@ -50,9 +51,6 @@ import {
   PackageCheck,
   Globe2,
   Sparkles,
-  FileText,
-  Send,
-  Search,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -79,22 +77,14 @@ import {
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import {
-  webSubMenus,
   isWebRoute,
-  isWebAdminRoute,
-  isWebSettingsRoute,
   WEB_STUDIO_PATH,
-  WEB_STUDIO_MANAGEMENT_PATH,
-  WEB_STUDIO_ADMIN_PATH,
-  WEB_STUDIO_SETTINGS_PATH,
-  webAdminChildMenus,
-  webSettingsChildMenus,
 } from '../../data/webMenu'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
 import { useAuth } from '../../auth/AuthContext'
-import { filterMenuByEntitlements, hasModule } from '../../utils/entitlements'
+import { filterMenuByEntitlements } from '../../utils/entitlements'
 import { canUseMultiCompany } from '../../utils/orgScope'
 
 const projectsMenuGate = {
@@ -135,17 +125,6 @@ const expensesSubMenuIcons = {
   'bar-chart': BarChart3,
   wallet: Wallet,
   percent: Percent,
-}
-const eDocumentsSubMenuIcons = {
-  gauge: Gauge,
-  receipt: Receipt,
-  file: FileText,
-  inbox: Inbox,
-  send: Send,
-  draft: ScrollText,
-  ban: Ban,
-  search: Search,
-  settings: Settings,
 }
 const treasurySubMenuIcons = {
   landmark: Landmark,
@@ -277,10 +256,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
   const [openMenuId, setOpenMenuId] = useState(resolveOpenMenuId)
   const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
-  const [studioAdminOpen, setStudioAdminOpen] = useState(isWebAdminRoute(location.pathname))
-  const [studioSettingsOpen, setStudioSettingsOpen] = useState(
-    isWebSettingsRoute(location.pathname),
-  )
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
 
   const customerOpen = openMenuId === 'customer'
@@ -292,7 +267,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const projectsOpen = openMenuId === 'projects'
   const fieldSalesOpen = openMenuId === 'fieldSales'
   const logisticsOpen = openMenuId === 'logistics'
-  const webOpen = openMenuId === 'web'
   const hrOpen = openMenuId === 'hr'
   const crmOpen = openMenuId === 'crm'
   const settingsOpen = openMenuId === 'settings'
@@ -325,11 +299,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   }, [isDocumentCenterRouteActive])
 
   useEffect(() => {
-    if (isWebAdminRoute(location.pathname)) setStudioAdminOpen(true)
-    if (isWebSettingsRoute(location.pathname)) setStudioSettingsOpen(true)
-  }, [location.pathname])
-
-  useEffect(() => {
     function syncMessageBadge() {
       setMessageBadge(getMessageCenterBadge())
     }
@@ -351,8 +320,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const menuItems = filterMenuByEntitlements([courierMenuItem], user?.entitlements)
   const showProjects = filterMenuByEntitlements([projectsMenuGate], user?.entitlements).length > 0
   const showPos = filterMenuByEntitlements([posMenuItem], user?.entitlements).length > 0
-  const showEDocuments =
-    hasModule(user?.entitlements, 'einvoice') || hasModule(user?.entitlements, 'earchive')
   const showCourier = menuItems.length > 0
   const isPosActive =
     location.pathname === '/shopping' || location.pathname.startsWith('/shopping/')
@@ -581,57 +548,49 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           )}
         </div>
 
-        {showEDocuments ? (
-          <div className={`sidebar-menu-group ${eDocumentsOpen ? 'is-open' : ''}`}>
-            <button
-              type="button"
-              onClick={() => toggleMenu('edocuments')}
-              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-                collapsed && isEDocumentsRouteActive ? 'sidebar-menu-active font-medium' : ''
-              }`}
-            >
-              <MenuIcon collapsed={collapsed}>
-                <FileText className="w-4 h-4 shrink-0" />
-              </MenuIcon>
-              {!collapsed && (
-                <>
-                  <span className={menuLabelClass}>E-Belgeler</span>
-                  {eDocumentsOpen ? (
-                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  )}
-                </>
-              )}
-            </button>
-
-            {eDocumentsOpen && !collapsed && (
-              <SidebarSubMenu>
-                {eDocumentsSubMenus.map((sub) => {
-                  const SubIcon = sub.icon ? eDocumentsSubMenuIcons[sub.icon] : FileText
-                  return (
-                    <NavLink
-                      key={sub.path}
-                      to={sub.path}
-                      end={sub.path === '/e-belgeler'}
-                      onClick={handleNavigate}
-                      className={({ isActive }) =>
-                        `${subMenuButtonBase} flex items-center gap-2 ${
-                          isActive ? 'sidebar-menu-active font-medium' : ''
-                        }`
-                      }
-                    >
-                      <SubMenuIcon>
-                        <SubIcon className="h-3.5 w-3.5" />
-                      </SubMenuIcon>
-                      {sub.label}
-                    </NavLink>
-                  )
-                })}
-              </SidebarSubMenu>
+        {/* 3b. E-Belgeler */}
+        <div className={`sidebar-menu-group ${eDocumentsOpen ? 'is-open' : ''}`}>
+          <button
+            type="button"
+            onClick={() => toggleMenu('edocuments')}
+            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              collapsed && isEDocumentsRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <FileText className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && (
+              <>
+                <span className={menuLabelClass}>E-Belgeler</span>
+                {eDocumentsOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
+              </>
             )}
-          </div>
-        ) : null}
+          </button>
+          {eDocumentsOpen && !collapsed && (
+            <SidebarSubMenu>
+              {filterMenuByEntitlements(
+                eDocumentsSubMenus.map((item) => ({ ...item, moduleCode: 'einvoice' })),
+                user?.entitlements,
+              ).map((sub) => (
+                <NavLink
+                  key={sub.path}
+                  to={sub.path}
+                  onClick={handleNavigate}
+                  className={({ isActive }) =>
+                    `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
+                  }
+                >
+                  {sub.label}
+                </NavLink>
+              ))}
+            </SidebarSubMenu>
+          )}
+        </div>
 
         {/* 4. Nakit */}
         <div className={`sidebar-menu-group ${treasuryOpen ? 'is-open' : ''}`}>
@@ -941,154 +900,21 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
         <SidebarSection label="WEB" collapsed={collapsed} />
 
-        <div className={`sidebar-menu-group ${webOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('web')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <Globe2 className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Studio</span>
-                {webOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
-            )}
-          </button>
-
-          {webOpen && !collapsed && (
-            <SidebarSubMenu>
-              {webSubMenus.map((sub) => {
-                const SubIcon = sub.icon === 'gauge' ? Gauge : Sparkles
-                return (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    state={{ fromApp: true }}
-                    end={sub.path === WEB_STUDIO_MANAGEMENT_PATH || sub.path === WEB_STUDIO_PATH}
-                    onClick={handleNavigate}
-                    className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
-                    }
-                  >
-                    <SubMenuIcon>
-                      <SubIcon className="h-3.5 w-3.5" />
-                    </SubMenuIcon>
-                    {sub.label}
-                  </NavLink>
-                )
-              })}
-              <>
-                <div className="flex items-center gap-0.5">
-                  <NavLink
-                    to={WEB_STUDIO_ADMIN_PATH}
-                    end
-                    onClick={handleNavigate}
-                    className={() =>
-                      `${subMenuButtonBase} flex flex-1 items-center gap-2 ${
-                        isWebAdminRoute(location.pathname) ? 'sidebar-menu-active font-medium' : ''
-                      }`
-                    }
-                  >
-                    <SubMenuIcon>
-                      <FolderKanban className="h-3.5 w-3.5" />
-                    </SubMenuIcon>
-                    Yönetim
-                  </NavLink>
-                  <button
-                    type="button"
-                    onClick={() => setStudioAdminOpen((open) => !open)}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white/20"
-                    aria-label={studioAdminOpen ? 'Yönetim menüsünü kapat' : 'Yönetim menüsünü aç'}
-                  >
-                    {studioAdminOpen ? (
-                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                    ) : (
-                      <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                    )}
-                  </button>
-                </div>
-                {studioAdminOpen ? (
-                  <SidebarSubMenu className="sidebar-submenu--nested">
-                    {webAdminChildMenus.map((child) => (
-                      <NavLink
-                        key={child.path}
-                        to={child.path}
-                        onClick={handleNavigate}
-                        className={({ isActive }) =>
-                          `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
-                        }
-                      >
-                        {child.label}
-                      </NavLink>
-                    ))}
-                  </SidebarSubMenu>
-                ) : null}
-              </>
-              <>
-                <div className="flex items-center gap-0.5">
-                  <NavLink
-                    to={WEB_STUDIO_SETTINGS_PATH}
-                    end
-                    onClick={handleNavigate}
-                    className={() =>
-                      `${subMenuButtonBase} flex flex-1 items-center gap-2 ${
-                        isWebSettingsRoute(location.pathname)
-                          ? 'sidebar-menu-active font-medium'
-                          : ''
-                      }`
-                    }
-                  >
-                    <SubMenuIcon>
-                      <Settings className="h-3.5 w-3.5" />
-                    </SubMenuIcon>
-                    Ayarlar
-                  </NavLink>
-                  <button
-                    type="button"
-                    onClick={() => setStudioSettingsOpen((open) => !open)}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white/20"
-                    aria-label={
-                      studioSettingsOpen ? 'Ayarlar menüsünü kapat' : 'Ayarlar menüsünü aç'
-                    }
-                  >
-                    {studioSettingsOpen ? (
-                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                    ) : (
-                      <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                    )}
-                  </button>
-                </div>
-                {studioSettingsOpen ? (
-                  <SidebarSubMenu className="sidebar-submenu--nested">
-                    {webSettingsChildMenus.map((child) => (
-                      <NavLink
-                        key={child.path}
-                        to={child.path}
-                        onClick={handleNavigate}
-                        className={({ isActive }) =>
-                          `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
-                        }
-                      >
-                        {child.label}
-                      </NavLink>
-                    ))}
-                  </SidebarSubMenu>
-                ) : null}
-              </>
-            </SidebarSubMenu>
-          )}
-        </div>
+        <NavLink
+          to={WEB_STUDIO_PATH}
+          state={{ fromApp: true }}
+          onClick={handleNavigate}
+          className={({ isActive }) =>
+            `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              isActive || isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`
+          }
+        >
+          <MenuIcon collapsed={collapsed}>
+            <Globe2 className="w-4 h-4 shrink-0" />
+          </MenuIcon>
+          {!collapsed ? <span className={menuLabelClass}>Studio</span> : null}
+        </NavLink>
 
         <SidebarSection label="İK" collapsed={collapsed} />
 

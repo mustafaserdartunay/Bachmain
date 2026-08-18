@@ -59,9 +59,9 @@ import IncomingEInvoicesPage from './pages/expenses/IncomingEInvoicesPage'
 import IncomingEInvoiceDetailPage from './pages/expenses/IncomingEInvoiceDetailPage'
 import EDocumentsHubPage from './pages/edocuments/EDocumentsHubPage'
 import EDocumentListPage from './pages/edocuments/EDocumentListPage'
-import EDocumentSettingsPage from './pages/edocuments/EDocumentSettingsPage'
-import EDocumentComposePage from './pages/edocuments/EDocumentComposePage'
 import EDocumentDetailPage from './pages/edocuments/EDocumentDetailPage'
+import EDocumentComposePage from './pages/edocuments/EDocumentComposePage'
+import EDocumentSettingsPage from './pages/edocuments/EDocumentSettingsPage'
 import EDocumentSearchPage from './pages/edocuments/EDocumentSearchPage'
 import ExpensesReportPage from './pages/expenses/ExpensesReportPage'
 import PaymentsReportPage from './pages/expenses/PaymentsReportPage'
@@ -204,16 +204,7 @@ import {
   DocWhatsAppTemplatesPage,
   DocWorkflowPage,
 } from './pages/documentCenter/DocCenterModules'
-import WebStudioPage from './pages/web/WebStudioPage'
 import WebStudioManagementPage from './pages/web/WebStudioManagementPage'
-import WebStudioStatusPage from './pages/web/WebStudioStatusPage'
-import WebStudioAdminPage from './pages/web/WebStudioAdminPage'
-import WebStudioCategoryCreatePage from './pages/web/WebStudioCategoryCreatePage'
-import WebStudioProductCreatePage from './pages/web/WebStudioProductCreatePage'
-import WebStudioOrdersPage from './pages/web/WebStudioOrdersPage'
-import WebStudioSettingsPage from './pages/web/WebStudioSettingsPage'
-import WebStudioDomainConnectPage from './pages/web/WebStudioDomainConnectPage'
-import WebStudioTemplatePage from './pages/web/WebStudioTemplatePage'
 import WebStorefrontPublishPage from './pages/web/WebStorefrontPublishPage'
 
 function LegacyKasaAccountRedirect() {
@@ -265,11 +256,11 @@ export default function App() {
                 </RequireAuth>
               }
             />
-            <Route path="/vitrin" element={<WebStorefrontPublishPage />} />
-            <Route path="/vitrin/*" element={<WebStorefrontPublishPage />} />
             <Route path="/portal/:token" element={<CustomerPortalPage />} />
             <Route path="/kurye-takip/:trackingToken" element={<CustomerCourierTrackingPage />} />
             <Route path="/sevkiyat-takip/:token" element={<SevkiyatTrackingPage />} />
+            <Route path="/vitrin" element={<WebStorefrontPublishPage />} />
+            <Route path="/vitrin/*" element={<WebStorefrontPublishPage />} />
             <Route
               path="*"
               element={
@@ -302,28 +293,22 @@ export default function App() {
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/finans" element={<FinanceCenterPage />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
-                      <Route path="/web" element={<Navigate to="/web/studio" replace />} />
-                      <Route path="/web/studio" element={<WebStudioPage />} />
-                      <Route path="/web/studio/yonetim" element={<WebStudioStatusPage />} />
-                      <Route path="/web/studio/yonetim/yonetim" element={<WebStudioAdminPage />} />
-                      <Route
-                        path="/web/studio/yonetim/kategori-olustur"
-                        element={<WebStudioCategoryCreatePage />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/urun-olustur"
-                        element={<WebStudioProductCreatePage />}
-                      />
-                      <Route path="/web/studio/yonetim/siparisler" element={<WebStudioOrdersPage />} />
-                      <Route path="/web/studio/yonetim/template" element={<WebStudioTemplatePage />} />
-                      <Route path="/web/studio/yonetim/ayarlar" element={<WebStudioSettingsPage />} />
+                      <Route path="/web" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim/yonetim" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim/kategori-olustur" element={<Navigate to="/web/studio/yonetim/kategoriler" replace />} />
+                      <Route path="/web/studio/yonetim/urun-olustur" element={<Navigate to="/web/studio/yonetim/urunler" replace />} />
+                      <Route path="/web/studio/yonetim/siparisler" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim/template" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim/ayarlar" element={<Navigate to="/web/studio/yonetim/profil" replace />} />
                       <Route
                         path="/web/studio/yonetim/ayarlar/domain-bagla"
-                        element={<WebStudioDomainConnectPage />}
+                        element={<Navigate to="/web/studio/yonetim/profil" replace />}
                       />
                       <Route
                         path="/web/studio/yonetim/domain-bagla"
-                        element={<Navigate to="/web/studio/yonetim/ayarlar/domain-bagla" replace />}
+                        element={<Navigate to="/web/studio/yonetim/profil" replace />}
                       />
                       <Route
                         path="/web/studio/yonetim/panel"
@@ -345,8 +330,8 @@ export default function App() {
                         path="/web/studio/yonetim/odeme"
                         element={<WebStudioManagementPage />}
                       />
-                      <Route path="/website-os" element={<Navigate to="/web/studio" replace />} />
-                      <Route path="/website" element={<Navigate to="/web/studio" replace />} />
+                      <Route path="/website-os" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/website" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
                       <Route path="/platform" element={<Navigate to="/" replace />} />
                       <Route path="/cekirdek" element={<Navigate to="/" replace />} />
@@ -381,7 +366,6 @@ export default function App() {
                         element={<IncomingEInvoicesPage />}
                       />
                       <Route path="/e-belgeler" element={<EDocumentsHubPage />} />
-                      <Route path="/e-belgeler/yeni" element={<EDocumentComposePage />} />
                       <Route
                         path="/e-belgeler/e-fatura"
                         element={<EDocumentListPage title="E-Fatura" documentType="e-fatura" />}
@@ -404,20 +388,13 @@ export default function App() {
                       />
                       <Route
                         path="/e-belgeler/iptaller"
-                        element={
-                          <EDocumentListPage
-                            title="İptaller / İade"
-                            statusIn={['CANCELLED', 'REJECTED']}
-                          />
-                        }
+                        element={<EDocumentListPage title="İptaller / İade" status="CANCELLED" />}
                       />
                       <Route path="/e-belgeler/sorgula" element={<EDocumentSearchPage />} />
                       <Route path="/e-belgeler/ayarlar" element={<EDocumentSettingsPage />} />
-                      <Route
-                        path="/ayarlar/e-donusum"
-                        element={<Navigate to="/e-belgeler/ayarlar" replace />}
-                      />
+                      <Route path="/e-belgeler/yeni" element={<EDocumentComposePage />} />
                       <Route path="/e-belgeler/:id" element={<EDocumentDetailPage />} />
+                      <Route path="/ayarlar/e-donusum" element={<EDocumentSettingsPage />} />
                       <Route path="/giderler/tedarikciler" element={<SuppliersPage />} />
                       <Route path="/ik" element={<PdksDashboardPage />} />
                       <Route path="/ik/personeller" element={<PersonnelPage />} />
