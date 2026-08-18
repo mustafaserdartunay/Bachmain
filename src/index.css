@@ -4205,6 +4205,27 @@ html.night .glass-sidebar .sidebar-submenu {
   }
 }
 
+.studio-shell {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+}
+
+.studio-shell--entered {
+  animation: studio-shell-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes studio-shell-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .app-header-banner {
   min-height: var(--ds-header-h, 4.75rem);
   height: var(--ds-header-h, 4.75rem);

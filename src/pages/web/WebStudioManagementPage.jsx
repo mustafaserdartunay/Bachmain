@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Store,
 } from 'lucide-react'
+import TeamHubPanel from '../../components/Layout/TeamHubPanel'
 import { getPagesBySite, getSites } from '../../utils/webSiteStorage'
 
 const NAV = [
@@ -467,6 +468,17 @@ function renderPage(pathname, primarySite, sites, pages) {
 export default function WebStudioManagementPage() {
   const { pathname } = useLocation()
   const [sites, setSites] = useState(() => getSites())
+  const [teamHubCollapsed, setTeamHubCollapsed] = useState(
+    () => localStorage.getItem('bach-team-hub-panel') !== 'expanded',
+  )
+
+  function toggleTeamHub() {
+    setTeamHubCollapsed((collapsed) => {
+      const next = !collapsed
+      localStorage.setItem('bach-team-hub-panel', next ? 'collapsed' : 'expanded')
+      return next
+    })
+  }
 
   useEffect(() => {
     const reload = () => setSites(getSites())
@@ -482,8 +494,8 @@ export default function WebStudioManagementPage() {
   const pages = useMemo(() => (primarySite ? getPagesBySite(primarySite.id) : []), [primarySite?.id])
 
   return (
-    <div className={`bach-admin studio-shell studio-shell--entered min-h-screen ${shellBg} text-[#0f172a]`}>
-      <aside className="fixed bottom-[var(--shell-gap)] left-[var(--shell-gap)] top-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] w-[17.5rem] flex-col rounded-[26px] border border-white/16 bg-[linear-gradient(180deg,#29448b_0%,#233b7a_48%,#1c2f61_100%)] px-3 py-4 text-white shadow-[0_18px_44px_-18px_rgba(17,24,39,0.55)] lg:flex">
+    <div className={`bach-admin studio-shell studio-shell--entered min-h-screen w-full ${shellBg} text-[#0f172a]`}>
+      <aside className="app-sidebar fixed top-[var(--shell-gap)] left-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] w-[var(--ds-sidebar-expanded,17.5rem)] flex-col rounded-[26px] border border-white/16 bg-[linear-gradient(180deg,#29448b_0%,#233b7a_48%,#1c2f61_100%)] px-3 py-4 text-white shadow-[0_18px_44px_-18px_rgba(17,24,39,0.55)] lg:flex">
         <div className="mb-5 flex h-12 items-center gap-2 px-1 pt-1">
           <span className="text-[1.7rem] font-black tracking-[-0.04em] text-white">
             BACHMAIN<span className="text-[#E2BC0F]">.</span>
@@ -521,8 +533,12 @@ export default function WebStudioManagementPage() {
         </div>
       </aside>
 
-      <div className="min-h-screen p-[var(--shell-gap)] lg:ml-[20rem]">
-        <header className="relative z-40 flex min-h-[4.75rem] items-center gap-3 rounded-[26px] border border-white/14 bg-[linear-gradient(180deg,#27428a_0%,#223a78_48%,#203375_100%)] px-4 py-2 text-white shadow-[0_16px_40px_-18px_rgba(15,23,42,0.55)] sm:px-6">
+      <div
+        className="app-shell-content min-w-0 transition-all duration-page"
+        data-sidebar-collapsed="false"
+        data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
+      >
+        <header className="relative z-40 flex min-h-[var(--ds-header-h,4.75rem)] h-[var(--ds-header-h,4.75rem)] items-center gap-3 rounded-[26px] border border-white/14 bg-[linear-gradient(180deg,#27428a_0%,#223a78_48%,#203375_100%)] px-4 py-2 text-white shadow-[0_16px_40px_-18px_rgba(15,23,42,0.55)] sm:px-6">
           <div className="hidden min-w-0 flex-1 items-center gap-2 overflow-x-auto md:flex lg:hidden">
             {NAV.map((item) => (
               <Link key={item.path} to={item.path} className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${pathname === item.path || pathname.startsWith(`${item.path}/`) ? 'bg-white/20 text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
@@ -543,7 +559,7 @@ export default function WebStudioManagementPage() {
           </div>
         </header>
 
-        <div className="mt-4 flex gap-1.5 overflow-x-auto px-1 lg:hidden">
+        <div className="flex gap-1.5 overflow-x-auto px-1 lg:hidden">
           {NAV.map((item) => (
             <Link key={item.path} to={item.path} className={`shrink-0 rounded-xl px-3 py-2 text-xs font-semibold ${pathname === item.path || pathname.startsWith(`${item.path}/`) ? 'bg-[#203375] text-white' : 'border border-[#d8e2f0] bg-white/80 text-[#203375]'}`}>
               {item.label}
@@ -551,10 +567,12 @@ export default function WebStudioManagementPage() {
           ))}
         </div>
 
-        <main className="mt-4 min-w-0 flex-1 overflow-x-hidden">
+        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">
           {renderPage(pathname, primarySite, sites, pages)}
         </main>
       </div>
+
+      <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
     </div>
   )
 }
