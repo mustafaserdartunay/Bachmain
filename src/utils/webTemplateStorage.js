@@ -34,7 +34,7 @@ export function saveWebTemplate(patch) {
   const next = {
     ...getWebTemplate(),
     ...patch,
-    logoText: String((patch.logoText != null ? patch.logoText : getWebTemplate().logoText) || 'LOGO').trim() || 'LOGO',
+    logoText: String(patch.logoText !== undefined && patch.logoText !== null ? patch.logoText : (getWebTemplate().logoText || 'LOGO')).trim() || 'LOGO',
     updatedAt: new Date().toISOString(),
   }
   try {
