@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import TeamHubPanel from '../../components/Layout/TeamHubPanel'
 import { getPagesBySite, getSites } from '../../utils/webSiteStorage'
-import logoOnDark from '../../assets/bachmain-logo-on-dark.png'
 import logoBusiness from '../../assets/bachmain-logo.png'
 
 const NAV = [
@@ -524,15 +523,10 @@ export default function WebStudioManagementPage() {
   return (
     <div className={`bach-admin studio-shell ${shellState} min-h-screen w-full ${shellBg} text-[#0f172a]`}>
       <aside className="studio-gateway-surface app-sidebar overflow-hidden fixed top-[var(--shell-gap)] left-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] w-[var(--ds-sidebar-expanded,17.5rem)] flex-col rounded-[26px] border border-white/16 px-3 py-4 text-white shadow-[0_18px_44px_-18px_rgba(17,24,39,0.55)] lg:flex">
-        <div className="relative mb-5 flex items-center px-1 pt-1">
-          <img
-            src={logoOnDark}
-            alt="BACHMAIN"
-            width={200}
-            height={44}
-            className="h-[2.35rem] w-auto object-contain"
-            draggable={false}
-          />
+        <div className="relative mb-5 flex h-12 items-center px-1 pt-1">
+          <span className="select-none text-[1.7rem] font-black leading-none tracking-[-0.06em] text-white" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}>
+            STUDIO<span className="text-[#E2BC0F]">.</span>
+          </span>
         </div>
         <nav className="relative flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-0.5">
           {NAV.map((item) => {
