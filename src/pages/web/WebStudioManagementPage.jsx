@@ -74,7 +74,7 @@ function SidebarLink({ item, active }) {
           : 'border-transparent text-white/90 hover:border-white/15 hover:bg-white/10'
       }`}
     >
-      <span className={`inline-flex h-8 w-8 items-center justify-center rounded-xl ${active ? 'bg-white text-[#203375]' : 'bg-white/12 text-white'}`}>
+      <span className={`inline-flex h-8 w-8 items-center justify-center rounded-xl ${active ? 'bg-white/14 text-white' : 'bg-white/12 text-white'}`}>
         <Icon className="h-4 w-4" />
       </span>
       <span className="truncate">{item.label}</span>
@@ -427,25 +427,44 @@ export default function WebStudioManagementPage() {
   return (
     <div className={`bach-admin studio-shell studio-shell--entered min-h-screen ${shellBg} text-[#0f172a]`}>
       <aside className="fixed bottom-[var(--shell-gap)] left-[var(--shell-gap)] top-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] w-[17.5rem] flex-col rounded-[26px] border border-white/16 bg-[linear-gradient(180deg,#29448b_0%,#233b7a_48%,#1c2f61_100%)] px-3 py-4 text-white shadow-[0_18px_44px_-18px_rgba(17,24,39,0.55)] lg:flex">
-        <Link to="/web/studio" className="mb-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 px-2.5 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10 hover:text-white">
-          <ChevronLeft className="h-4 w-4" />
-          Domain Bağla
-        </Link>
-        <div className="mb-4 flex h-12 items-center gap-2 px-1 pt-1">
-          <span className="text-[1.7rem] font-black tracking-[-0.04em] text-white">BACHMAIN.</span>
+        <div className="mb-5 flex h-12 items-center gap-2 px-1 pt-1">
+          <span className="text-[1.7rem] font-black tracking-[-0.04em] text-white">
+            BACHMAIN<span className="text-[#E2BC0F]">.</span>
+          </span>
           <span className="inline-flex h-5 items-center rounded-md bg-white px-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#203375]">WEB</span>
         </div>
-        <p className="mx-[0.35rem] mb-[0.45rem] mt-[0.35rem] px-[0.35rem] text-[0.625rem] font-extrabold uppercase tracking-[0.16em] text-white/55">Studio</p>
+        <p className="mx-[0.35rem] mb-2 mt-1 px-[0.35rem] text-[0.625rem] font-extrabold uppercase tracking-[0.16em] text-white/55">Studio</p>
         <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-0.5">
           {NAV.map((item) => {
             const active = item.exact ? pathname === item.path : pathname === item.path || pathname.startsWith(`${item.path}/`)
             return <SidebarLink key={item.path} item={item} active={active} />
           })}
         </nav>
-        <div className="mt-3 rounded-2xl border border-white/15 bg-white/10 p-3">
-          <p className="truncate text-sm font-semibold text-white">{primarySite?.name || 'Studio Yönetim'}</p>
-          <p className="mt-0.5 truncate text-xs text-white/70">{primarySite?.domain || 'Domain bağlantısı bekleniyor'}</p>
-          <p className="mt-3 text-xs font-semibold text-white/80">↪ Çıkış</p>
+        <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-3.5">
+          <div className="flex items-center gap-2">
+            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[11px] font-black text-[#203375]">
+              BM
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white">{primarySite?.name || 'Studio Yönetim'}</p>
+              <p className="mt-0.5 truncate text-xs text-white/70">{primarySite?.domain || 'Domain bağlantısı bekleniyor'}</p>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-2">
+            <Link
+              to="/web/studio"
+              className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/12 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+            >
+              Domain Bağla
+            </Link>
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-transparent px-3 py-2 text-xs font-semibold text-white/85 transition hover:bg-white/10 hover:text-white"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Uygulamaya Dön
+            </Link>
+          </div>
         </div>
       </aside>
 
