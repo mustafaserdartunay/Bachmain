@@ -21,6 +21,8 @@ function readSidebarCollapsed() {
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
+  const isStudioManagement =
+    pathname === '/web/studio/yonetim' || pathname.startsWith('/web/studio/yonetim/')
 
   // Web Studio artık normal sayfa — özel tam ekran modundan çıkarıldı
   const hideChrome =
@@ -31,7 +33,8 @@ export default function Layout({ children }) {
     pathname === '/otomasyon/designer' ||
     pathname.startsWith('/otomasyon/designer/') ||
     pathname === '/mes/operator' ||
-    pathname.startsWith('/mes/operator/')
+    pathname.startsWith('/mes/operator/') ||
+    isStudioManagement
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed)
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(

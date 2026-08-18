@@ -74,7 +74,12 @@ import {
   DOCUMENT_CENTER_BASE,
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
-import { webSubMenus, isWebRoute, WEB_STUDIO_PATH } from '../../data/webMenu'
+import {
+  webSubMenus,
+  isWebRoute,
+  WEB_STUDIO_PATH,
+  WEB_STUDIO_MANAGEMENT_PATH,
+} from '../../data/webMenu'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'

@@ -199,6 +199,7 @@ import {
   DocWorkflowPage,
 } from './pages/documentCenter/DocCenterModules'
 import WebStudioPage from './pages/web/WebStudioPage'
+import WebStudioManagementPage from './pages/web/WebStudioManagementPage'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -286,6 +287,27 @@ export default function App() {
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
                       <Route path="/web" element={<Navigate to="/web/studio" replace />} />
                       <Route path="/web/studio" element={<WebStudioPage />} />
+                      <Route path="/web/studio/yonetim" element={<WebStudioManagementPage />} />
+                      <Route
+                        path="/web/studio/yonetim/kategoriler"
+                        element={<WebStudioManagementPage />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/urunler"
+                        element={<WebStudioManagementPage />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/siparisler"
+                        element={<WebStudioManagementPage />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/profil"
+                        element={<WebStudioManagementPage />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/odeme"
+                        element={<WebStudioManagementPage />}
+                      />
                       <Route path="/website-os" element={<Navigate to="/web/studio" replace />} />
                       <Route path="/website" element={<Navigate to="/web/studio" replace />} />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
