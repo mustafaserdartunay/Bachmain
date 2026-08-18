@@ -525,7 +525,7 @@ export default function WebStudioManagementPage() {
 
   return (
     <div className={`bach-admin studio-shell ${shellState} min-h-screen w-full ${shellBg} text-[#0f172a]`}>
-      <aside className={`app-sidebar relative overflow-hidden fixed top-[var(--shell-gap)] left-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] w-[var(--ds-sidebar-expanded,17.5rem)] flex-col rounded-[26px] border border-white/16 ${studioPanelBg} px-3 py-4 text-white shadow-[0_18px_44px_-18px_rgba(17,24,39,0.55)] lg:flex`}>
+      <aside className={`app-sidebar overflow-hidden fixed top-[var(--shell-gap)] left-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] w-[var(--ds-sidebar-expanded,17.5rem)] flex-col rounded-[26px] border border-white/16 ${studioPanelBg} px-3 py-4 text-white shadow-[0_18px_44px_-18px_rgba(17,24,39,0.55)] lg:flex`}>
         <div
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_70%_40%,black_20%,transparent_72%)]"
           aria-hidden
@@ -575,11 +575,11 @@ export default function WebStudioManagementPage() {
       </aside>
 
       <div
-        className="app-shell-content min-w-0 transition-all duration-page"
+        className="app-shell-content flex min-h-0 min-w-0 flex-col overflow-hidden transition-all duration-page"
         data-sidebar-collapsed="false"
         data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
       >
-        <header className={`relative z-40 flex min-h-[var(--ds-header-h,4.75rem)] h-[var(--ds-header-h,4.75rem)] items-center gap-3 overflow-hidden rounded-[26px] border border-white/14 ${studioPanelBg} px-4 py-2 text-white shadow-[0_16px_40px_-18px_rgba(15,23,42,0.55)] sm:px-6`}>
+        <header className={`relative z-40 flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center gap-3 overflow-hidden rounded-[26px] border border-white/14 ${studioPanelBg} px-4 py-2 text-white shadow-[0_16px_40px_-18px_rgba(15,23,42,0.55)] sm:px-6`}>
           <div
             className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_70%_40%,black_20%,transparent_72%)]"
             aria-hidden
@@ -604,7 +604,7 @@ export default function WebStudioManagementPage() {
           </div>
         </header>
 
-        <div className="flex gap-1.5 overflow-x-auto px-1 lg:hidden">
+        <div className="flex shrink-0 gap-1.5 overflow-x-auto px-1 lg:hidden">
           {NAV.map((item) => (
             <Link key={item.path} to={item.path} className={`shrink-0 rounded-xl px-3 py-2 text-xs font-semibold ${pathname === item.path || pathname.startsWith(`${item.path}/`) ? 'bg-[#203375] text-white' : 'border border-[#d8e2f0] bg-white/80 text-[#203375]'}`}>
               {item.label}
@@ -612,7 +612,7 @@ export default function WebStudioManagementPage() {
           ))}
         </div>
 
-        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">
+        <main className="app-responsive min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 sm:px-4 lg:px-0">
           {renderPage(pathname, primarySite, sites, pages)}
         </main>
       </div>
