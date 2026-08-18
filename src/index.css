@@ -4227,6 +4227,95 @@ html.night .glass-sidebar .sidebar-submenu {
   overflow-y: auto;
 }
 
+.studio-gateway-surface {
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+  background-color: #1d4ed8;
+  background-image: linear-gradient(155deg, #1d4ed8 0%, #2563eb 36%, #0ea5e9 68%, #38bdf8 100%);
+  background-size: 240% 240%;
+  animation: studio-gateway-flow 16s ease-in-out infinite;
+}
+
+.studio-gateway-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 70% 40%, black 20%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse at 70% 40%, black 20%, transparent 72%);
+}
+
+.studio-gateway-surface::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  width: 170%;
+  height: 110%;
+  left: -40%;
+  top: -28%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 28% 38%, rgba(56, 189, 248, 0.5), transparent 54%),
+    radial-gradient(ellipse at 78% 72%, rgba(29, 78, 216, 0.42), transparent 52%);
+  animation: studio-gateway-orb 11s ease-in-out infinite;
+}
+
+.studio-gateway-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.studio-shell > .glass-team-hub.studio-gateway-surface {
+  background-color: #1d4ed8 !important;
+  background-image: linear-gradient(155deg, #1d4ed8 0%, #2563eb 36%, #0ea5e9 68%, #38bdf8 100%) !important;
+  background-size: 240% 240%;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 18px 44px -18px rgba(17, 24, 39, 0.55) !important;
+  color: #fff;
+}
+
+.studio-shell > .glass-team-hub.studio-gateway-surface h2,
+.studio-shell > .glass-team-hub.studio-gateway-surface button,
+.studio-shell > .glass-team-hub.studio-gateway-surface span {
+  color: inherit;
+}
+
+@keyframes studio-gateway-flow {
+  0%,
+  100% {
+    background-position: 0% 32%;
+  }
+  50% {
+    background-position: 100% 68%;
+  }
+}
+
+@keyframes studio-gateway-orb {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(14px, -18px, 0) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-gateway-surface,
+  .studio-gateway-surface::after,
+  .studio-shell > .glass-team-hub.studio-gateway-surface {
+    animation: none;
+  }
+}
+
 .studio-shell > aside.app-sidebar:not(.glass-team-hub),
 .studio-shell .app-shell-content > header,
 .studio-shell > .glass-team-hub,

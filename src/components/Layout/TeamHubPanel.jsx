@@ -232,7 +232,7 @@ function TeamChatMessage({ message, member, onChanged }) {
   )
 }
 
-export default function TeamHubPanel({ collapsed, onToggle }) {
+export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
   const [activeTab, setActiveTab] = useState('chat')
   const [tick, setTick] = useState(0)
   const [messageDraft, setMessageDraft] = useState('')
@@ -327,7 +327,7 @@ export default function TeamHubPanel({ collapsed, onToggle }) {
   return (
     <aside
       data-collapsed={collapsed ? 'true' : 'false'}
-      className={`glass-team-hub app-sidebar fixed top-[var(--shell-gap)] bottom-[var(--shell-gap)] right-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] flex-col transition-all duration-300 lg:flex ${panelPaddingClass} ${panelWidthClass}`}
+      className={`glass-team-hub app-sidebar fixed top-[var(--shell-gap)] bottom-[var(--shell-gap)] right-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] flex-col transition-all duration-300 lg:flex ${panelPaddingClass} ${panelWidthClass} ${className}`}
     >
       <div
         className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-2 px-1'}`}

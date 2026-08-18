@@ -28,8 +28,6 @@ const NAV = [
   { path: '/web/studio/yonetim/odeme', label: 'Ödeme ayarları', icon: CreditCard },
 ]
 
-const studioPanelBg =
-  'bg-[linear-gradient(155deg,#1d4ed8_0%,#2563eb_42%,#0ea5e9_100%)]'
 const shellBg =
   'bg-[radial-gradient(700px_420px_at_10%_12%,rgba(52,211,153,0.08),transparent_60%),radial-gradient(820px_520px_at_92%_88%,rgba(96,165,250,0.12),transparent_62%),linear-gradient(180deg,#eff3fb_0%,#eef2f7_42%,#edf2f8_100%)]'
 const glassCard =
@@ -525,11 +523,7 @@ export default function WebStudioManagementPage() {
 
   return (
     <div className={`bach-admin studio-shell ${shellState} min-h-screen w-full ${shellBg} text-[#0f172a]`}>
-      <aside className={`app-sidebar overflow-hidden fixed top-[var(--shell-gap)] left-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] w-[var(--ds-sidebar-expanded,17.5rem)] flex-col rounded-[26px] border border-white/16 ${studioPanelBg} px-3 py-4 text-white shadow-[0_18px_44px_-18px_rgba(17,24,39,0.55)] lg:flex`}>
-        <div
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_70%_40%,black_20%,transparent_72%)]"
-          aria-hidden
-        />
+      <aside className="studio-gateway-surface app-sidebar overflow-hidden fixed top-[var(--shell-gap)] left-[var(--shell-gap)] z-50 hidden h-[calc(100dvh-(2*var(--shell-gap)))] w-[var(--ds-sidebar-expanded,17.5rem)] flex-col rounded-[26px] border border-white/16 px-3 py-4 text-white shadow-[0_18px_44px_-18px_rgba(17,24,39,0.55)] lg:flex">
         <div className="relative mb-5 flex flex-wrap items-center gap-2.5 px-1 pt-1">
           <img
             src={logoOnDark}
@@ -579,11 +573,7 @@ export default function WebStudioManagementPage() {
         data-sidebar-collapsed="false"
         data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
       >
-        <header className={`relative z-40 flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center gap-3 overflow-hidden rounded-[26px] border border-white/14 ${studioPanelBg} px-4 py-2 text-white shadow-[0_16px_40px_-18px_rgba(15,23,42,0.55)] sm:px-6`}>
-          <div
-            className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_70%_40%,black_20%,transparent_72%)]"
-            aria-hidden
-          />
+        <header className="studio-gateway-surface relative z-40 flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center gap-3 overflow-hidden rounded-[26px] border border-white/14 px-4 py-2 text-white shadow-[0_16px_40px_-18px_rgba(15,23,42,0.55)] sm:px-6">
           <div className="relative hidden min-w-0 flex-1 items-center gap-2 overflow-x-auto md:flex lg:hidden">
             {NAV.map((item) => (
               <Link key={item.path} to={item.path} className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${pathname === item.path || pathname.startsWith(`${item.path}/`) ? 'bg-white/20 text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
@@ -617,7 +607,7 @@ export default function WebStudioManagementPage() {
         </main>
       </div>
 
-      <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
+      <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} className="studio-gateway-surface" />
     </div>
   )
 }
