@@ -21,18 +21,17 @@ function readSidebarCollapsed() {
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
-  const isWebStudio =
-    pathname === '/web/studio' || pathname.startsWith('/web/studio/')
+
+  // Web Studio artık normal sayfa — özel tam ekran modundan çıkarıldı
   const hideChrome =
     pathname === '/paketler' ||
-    pathname.startsWith('/paketler/') ||
-    isWebStudio
+    pathname.startsWith('/paketler/')
+
   const fullscreenWorkspace =
     pathname === '/otomasyon/designer' ||
     pathname.startsWith('/otomasyon/designer/') ||
     pathname === '/mes/operator' ||
-    pathname.startsWith('/mes/operator/') ||
-    isWebStudio
+    pathname.startsWith('/mes/operator/')
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed)
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(
@@ -54,7 +53,6 @@ export default function Layout({ children }) {
       setIsMobile(mobile)
       setIsTablet(tablet)
       if (!mobile) setMobileSidebarOpen(false)
-      // Tablet: auto-collapse sidebar
       if (tablet) {
         setSidebarCollapsed(true)
       }
@@ -124,13 +122,7 @@ export default function Layout({ children }) {
       >
         {!hideChrome ? <Header onMenuClick={() => setMobileSidebarOpen(true)} /> : null}
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
-        <main
-          className={
-            isWebStudio
-              ? 'min-h-screen w-full overflow-hidden p-0'
-              : 'app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0'
-          }
-        >
+        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">
           {children}
         </main>
       </div>

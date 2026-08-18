@@ -1,46 +1,32 @@
 /**
  * Bach Main sürüm şeması: BM-V{major}.{ay}{yy}[.patch]
- *
- * Örnek: BM-V1.726 → major 1, Temmuz (7) 2026
- * Aynı ay içinde ek yayın: BM-V1.726.1, BM-V1.726.2
- * Sonraki ay: BM-V1.826 (Ağustos 2026)
  */
 
-export const APP_VERSION = 'BM-V1.826.148'
+export const APP_VERSION = 'BM-V1.826.149'
 
-/** Deploy içeriği damgası — sürüm kodu aynı kalsa bile yenilemeyi tetikler */
-export const APP_BUILD = '2026-08-18T10:28:00+03:00'
+export const APP_BUILD = '2026-08-18T10:47:00+03:00'
 
 export const APP_VERSION_META = {
   code: APP_VERSION,
   major: 1,
   month: 8,
   year: 2026,
-  patch: 148,
-  releasedAt: '2026-08-18T10:28:00+03:00',
+  patch: 149,
+  releasedAt: '2026-08-18T10:47:00+03:00',
   build: APP_BUILD,
   label: 'Ağustos 2026',
 }
 
-/** Yerel görülen sürüm + geçiş kaydı (workspace verisine dokunmaz) */
 export const VERSION_SEEN_KEY = 'bach-app-version-seen'
 export const VERSION_BUILD_SEEN_KEY = 'bach-app-build-seen'
 export const VERSION_TRANSITIONS_KEY = 'bach-app-version-transitions'
 
-/**
- * @param {{ major: number, month: number, year: number, patch?: number }} parts
- */
 export function formatBachVersion({ major, month, year, patch = 0 }) {
   const yy = String(year).slice(-2)
   const base = `BM-V${major}.${month}${yy}`
   return patch > 0 ? `${base}.${patch}` : base
 }
 
-/**
- * Bir sonraki ay sürümünü üretir (major aynı kalır; isteğe bağlı major artışı).
- * @param {{ major: number, month: number, year: number, patch?: number }} current
- * @param {{ bumpMajor?: boolean }} [options]
- */
 export function nextMonthVersion(current, options = {}) {
   let { major, month, year } = current
   if (options.bumpMajor) major += 1
@@ -58,10 +44,6 @@ export function nextMonthVersion(current, options = {}) {
   }
 }
 
-/**
- * Aynı ay içinde patch artırır.
- * @param {{ major: number, month: number, year: number, patch?: number }} current
- */
 export function nextPatchVersion(current) {
   const patch = (current.patch || 0) + 1
   return {
@@ -113,7 +95,6 @@ export function recordVersionTransition(from, to, at = new Date().toISOString())
   }
 }
 
-/** Bu tarayıcıda görülen sürümü kaydeder; değiştiyse geçiş ekler. Workspace silmez. */
 export function syncSeenVersion(version = APP_VERSION, build = APP_BUILD) {
   try {
     const seen = localStorage.getItem(VERSION_SEEN_KEY)
