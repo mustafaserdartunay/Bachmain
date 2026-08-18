@@ -861,7 +861,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </MenuIcon>
             {!collapsed && (
               <>
-                <span className={menuLabelClass}>Web</span>
+                <span className={menuLabelClass}>Studio</span>
                 {webOpen ? (
                   <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
                 ) : (

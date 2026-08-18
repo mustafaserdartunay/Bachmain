@@ -36,6 +36,10 @@ const btn =
 const btnPrimary = `${btn} bg-[${NAV_BLUE}] text-white hover:bg-[#18285c]`
 const btnSecondary = `${btn} border border-[var(--glass-border)] bg-white/70 text-[${NAV_BLUE}] hover:bg-white`
 const btnDanger = `${btn} border border-red-200 bg-red-50 text-red-700 hover:bg-red-100`
+const modalPanel =
+  'w-full overflow-hidden rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.88)] shadow-[0_32px_80px_-32px_rgba(32,51,117,0.45)] backdrop-blur-2xl'
+const fieldClass =
+  'w-full rounded-2xl border border-[#dbe4f1] bg-white/90 px-4 py-3 text-sm text-[#203375] outline-none transition focus:border-[#79a6d2] focus:ring-4 focus:ring-[#79a6d2]/15'
 
 // ── Domain validator ─────────────────────────────────────────────────
 function isDomainValid(d) {
@@ -89,50 +93,99 @@ function SiteFormDialog({ initial, onSave, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className={`${card} w-full max-w-md p-6`}>
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold" style={{ color: NAV_BLUE }}>
-            {initial ? 'Siteyi düzenle' : 'Yeni web sitesi'}
-          </h3>
-          <button className="rounded-lg p-1 hover:bg-black/5" onClick={onClose}><X className="h-4 w-4" /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,23,42,0.32)] px-4 backdrop-blur-md">
+      <div className={`${modalPanel} max-w-xl`}>
+        <div className="relative overflow-hidden border-b border-white/60 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.35),_transparent_36%),linear-gradient(135deg,#203375_0%,#3556b3_55%,#7aa6d5_100%)] px-6 py-6 text-white">
+          <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/70">
+                Studio
+              </p>
+              <h3 className="mt-1 text-2xl font-bold">
+                {initial ? 'Siteyi düzenle' : 'Yeni web sitesi'}
+              </h3>
+              <p className="mt-1.5 max-w-md text-sm text-white/78">
+                Domain, sayfalar ve yayın akışını tek panelden yöneteceğiniz yeni web alanını oluşturun.
+              </p>
+            </div>
+            <button
+              className="rounded-xl border border-white/20 bg-white/10 p-2 text-white transition hover:bg-white/20"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="mt-4 space-y-3">
-          <div>
-            <label className="mb-1 block text-xs font-semibold" style={{ color: NAV_BLUE }}>Site adı *</label>
-            <input
-              autoFocus
-              className="w-full rounded-xl border border-[#e2e8f0] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#79a6d2] focus:ring-2 focus:ring-[#79a6d2]/20"
-              placeholder="Şirket web sitem"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-            />
+        <div className="space-y-5 p-6">
+          <div className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
+            <div className="rounded-2xl border border-[#dbe4f1] bg-white/75 p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#203375] text-white shadow-lg shadow-[#203375]/20">
+                  <Globe2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: NAV_BLUE }}>Site bilgisi</p>
+                  <p className="text-xs text-[#64748b]">Panelde görünecek ana isim</p>
+                </div>
+              </div>
+              <label className="mb-1.5 block text-xs font-semibold" style={{ color: NAV_BLUE }}>Site adı *</label>
+              <input
+                autoFocus
+                className={fieldClass}
+                placeholder="Örn. BachMain Kurumsal"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              />
+            </div>
+
+            <div className="rounded-2xl border border-[#dbe4f1] bg-[linear-gradient(180deg,rgba(240,246,252,0.95),rgba(255,255,255,0.92))] p-4">
+              <p className="text-sm font-bold" style={{ color: NAV_BLUE }}>Hazır yapı</p>
+              <div className="mt-3 space-y-2 text-xs text-[#55657d]">
+                <div className="rounded-xl border border-white/80 bg-white/80 px-3 py-2">Domain bağlantısı</div>
+                <div className="rounded-xl border border-white/80 bg-white/80 px-3 py-2">Çoklu sayfa desteği</div>
+                <div className="rounded-xl border border-white/80 bg-white/80 px-3 py-2">Yayın akışı için hazırlık</div>
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold" style={{ color: NAV_BLUE }}>Domain (isteğe bağlı)</label>
+
+          <div className="rounded-2xl border border-[#dbe4f1] bg-white/75 p-4">
+            <label className="mb-1.5 block text-xs font-semibold" style={{ color: NAV_BLUE }}>
+              Domain (isteğe bağlı)
+            </label>
             <input
-              className={`w-full rounded-xl border bg-white/90 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#79a6d2]/20 ${domainErr ? 'border-red-400 focus:border-red-400' : 'border-[#e2e8f0] focus:border-[#79a6d2]'}`}
+              className={`${fieldClass} ${domainErr ? 'border-red-400 focus:border-red-400' : ''}`}
               placeholder="marka.com veya www.marka.com"
               value={domain}
               onChange={(e) => { setDomain(e.target.value); setDomainErr('') }}
             />
             {domainErr && <p className="mt-1 text-xs text-red-500">{domainErr}</p>}
-            <p className="mt-1 text-xs text-[var(--muted,#64748b)]">Daha sonra da ekleyebilirsiniz.</p>
+            <div className="mt-3 grid gap-2 md:grid-cols-3">
+              <div className="rounded-xl bg-[#f4f8fc] px-3 py-2 text-xs text-[#64748b]">Kendi domaininizi sonra da bağlayabilirsiniz.</div>
+              <div className="rounded-xl bg-[#f4f8fc] px-3 py-2 text-xs text-[#64748b]">İsterseniz subdomain ile başlayabilirsiniz.</div>
+              <div className="rounded-xl bg-[#f4f8fc] px-3 py-2 text-xs text-[#64748b]">Yayın öncesi DNS kontrolü eklenebilir.</div>
+            </div>
           </div>
-        </div>
 
-        <div className="mt-5 flex justify-end gap-2">
-          <button className={btnSecondary} onClick={onClose}>İptal</button>
-          <button
-            className={`${btnPrimary} ${saving || !name.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={saving || !name.trim()}
-            onClick={handleSave}
-          >
-            {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            {initial ? 'Kaydet' : 'Oluştur'}
-          </button>
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#dbe4f1] bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(244,248,252,0.95))] px-4 py-3">
+            <div>
+              <p className="text-sm font-bold" style={{ color: NAV_BLUE }}>Yeni geçiş</p>
+              <p className="text-xs text-[#64748b]">Site oluşturulduğunda hemen sayfa ekleme akışına geçilir.</p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button className={btnSecondary} onClick={onClose}>İptal</button>
+              <button
+                className={`${btnPrimary} min-w-[8rem] justify-center ${saving || !name.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={saving || !name.trim()}
+                onClick={handleSave}
+              >
+                {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {initial ? 'Kaydet' : 'Oluştur'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
