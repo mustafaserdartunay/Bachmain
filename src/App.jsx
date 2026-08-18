@@ -289,6 +289,10 @@ export default function App() {
                       <Route path="/web/studio" element={<WebStudioPage />} />
                       <Route path="/web/studio/yonetim" element={<WebStudioManagementPage />} />
                       <Route
+                        path="/web/studio/yonetim/domain-bagla"
+                        element={<WebStudioManagementPage />}
+                      />
+                      <Route
                         path="/web/studio/yonetim/kategoriler"
                         element={<WebStudioManagementPage />}
                       />

@@ -16,6 +16,7 @@ import {
 import { getPagesBySite, getSites } from '../../utils/webSiteStorage'
 
 const NAV = [
+  { path: '/web/studio/yonetim/domain-bagla', label: 'Domain Bağla', icon: Globe2 },
   { path: '/web/studio/yonetim', label: 'Güncel Durum', icon: LayoutDashboard, exact: true },
   { path: '/web/studio/yonetim/kategoriler', label: 'Kategoriler', icon: FolderTree },
   { path: '/web/studio/yonetim/urunler', label: 'Ürünler', icon: ShoppingBag },
@@ -213,6 +214,60 @@ function DashboardPage({ primarySite, sites, pages }) {
   )
 }
 
+function DomainConnectPage({ sites, pages }) {
+  return (
+    <div className="space-y-5">
+      <PanelTitle
+        title="Domain Bağla"
+        subtitle="Web sitelerinizi yönetin, domain bağlayın ve sayfa yapınızı tek akışta organize edin."
+        actions={<button className="inline-flex items-center rounded-full bg-[#61b6f6] px-4 py-2 text-xs font-semibold text-white">+ Yeni site</button>}
+      />
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className={`${sectionCard} p-5`}>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-[#203375]">Bağlı siteler</p>
+              <p className="text-xs text-[#8b97ad]">{sites.length} proje</p>
+            </div>
+            <span className={softPill}>DNS Hazır</span>
+          </div>
+          <div className="space-y-2">
+            {sites.length ? (
+              sites.map((site) => (
+                <RowCard
+                  key={site.id}
+                  title={site.name}
+                  subtitle={site.domain || 'Domain bağlantısı bekleniyor'}
+                  trailing={<span className="text-xs font-semibold text-[#203375]">{fmtDate(site.updatedAt)}</span>}
+                />
+              ))
+            ) : (
+              <p className="text-sm text-[#64748b]">Henüz oluşturulmuş site yok. İlk sitenizi oluşturup domain bağlantısını başlatın.</p>
+            )}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className={`${sectionCard} p-5`}>
+            <h3 className="text-sm font-bold text-[#203375]">DNS kayıtları</h3>
+            <div className="mt-3 space-y-2">
+              <RowCard title="CNAME" subtitle="www → sites.bachmain.com" />
+              <RowCard title="A Kaydı" subtitle="@ → 76.76.21.21" />
+              <RowCard title="SSL" subtitle="Bağlantı sonrası otomatik hazırlanır" />
+            </div>
+          </div>
+          <div className={`${sectionCard} p-5`}>
+            <h3 className="text-sm font-bold text-[#203375]">İçerik özeti</h3>
+            <div className="mt-3 grid gap-3">
+              <Stat label="Toplam sayfa" value={String(pages.length)} />
+              <Stat label="Yayına hazır site" value={String(sites.filter((site) => site.domain).length)} accent="text-emerald-700" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function CategoriesPage({ pages }) {
   const menuRows = pages.length
     ? pages.slice(0, 5).map((page) => [page.title.toUpperCase(), page.slug])
@@ -392,6 +447,8 @@ function PaymentPage({ primarySite, pages }) {
 
 function renderPage(pathname, primarySite, sites, pages) {
   switch (pathname) {
+    case '/web/studio/yonetim/domain-bagla':
+      return <DomainConnectPage sites={sites} pages={pages} />
     case '/web/studio/yonetim/kategoriler':
       return <CategoriesPage pages={pages} />
     case '/web/studio/yonetim/urunler':
@@ -442,8 +499,10 @@ export default function WebStudioManagementPage() {
         </nav>
         <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-3.5">
           <div className="flex items-center gap-2">
-            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[11px] font-black text-[#203375]">
-              BM
+            <div className="min-w-0">
+              <p className="text-sm font-black tracking-[-0.03em] text-white">
+                BACHMAIN<span className="text-[#E2BC0F]">.</span>
+              </p>
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">{primarySite?.name || 'Studio Yönetim'}</p>
@@ -451,12 +510,6 @@ export default function WebStudioManagementPage() {
             </div>
           </div>
           <div className="mt-3 grid gap-2">
-            <Link
-              to="/web/studio"
-              className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/12 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
-            >
-              Domain Bağla
-            </Link>
             <Link
               to="/"
               className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-transparent px-3 py-2 text-xs font-semibold text-white/85 transition hover:bg-white/10 hover:text-white"
