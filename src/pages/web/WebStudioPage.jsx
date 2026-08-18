@@ -200,7 +200,7 @@ function DomainDialog({ site, onSave, onClose }) {
           <button className={btnSecondary} onClick={onClose}>İptal</button>
           <button className={btnPrimary} onClick={handleSave}>
             <Link2 className="h-3.5 w-3.5" />
-            {domain.trim() ? 'Bağla' : 'Domain'i kaldır'}
+            {domain.trim() ? 'Bağla' : 'Domaini kaldır'}
           </button>
         </div>
       </div>
