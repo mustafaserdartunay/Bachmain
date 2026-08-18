@@ -23,7 +23,12 @@ import {
   X,
 } from 'lucide-react'
 import { getWebStoreProducts } from '../utils/webSiteStorage'
-import { getWebTemplate } from '../utils/webTemplateStorage'
+import { applyWebTemplateDesign, getWebTemplate } from '../utils/webTemplateStorage'
+import {
+  GIFT_DESIGN_FONTS_HREF,
+  normalizeGiftDesign,
+  parseDesignModule,
+} from './giftDesignPresets'
 import {
   findCategory,
   findProduct,
@@ -494,7 +499,7 @@ function SiteChrome({ preview, bag, products, children, searchOpen, setSearchOpe
 
   return (
     <>
-      <header className="sticky top-0 z-50">
+      <header className="sticky top-0 z-50" data-sf-block="header" data-sf-label="Üst bar">
         <div className={fullChrome ? '' : 'hidden'}>
           <div className="sf-announce" aria-label="Kampanya duyurusu">
             <div className="sf-announce-track">
@@ -592,7 +597,7 @@ function SiteChrome({ preview, bag, products, children, searchOpen, setSearchOpe
 
       {children}
 
-      <footer className="bg-[#1f3f66] text-white">
+      <footer className="bg-[#1f3f66] text-white" data-sf-block="footer" data-sf-label="Footer">
         <div className="sf-container border-b border-white/10 py-10 text-center sm:py-12">
           <p className="sf-serif text-2xl sm:text-3xl">{tpl.logoText || 'LOGO'}’dan haberdar olun</p>
           <p className="mt-2 text-sm text-white/60">Yeni koleksiyonlar ve özel gün fırsatları için bültene katılın.</p>
@@ -699,7 +704,7 @@ function FooterForm({ dark }) {
   )
 }
 
-function HomeView({ products, bag, onQuickView, logoText }) {
+function HomeView({ products, bag, onQuickView, logoText, bannerId }) {
   const [heroIndex, setHeroIndex] = useState(0)
   const [tab, setTab] = useState(GIFT_TABS[0].id)
   const [igIndex, setIgIndex] = useState(0)
@@ -735,7 +740,7 @@ function HomeView({ products, bag, onQuickView, logoText }) {
 
   return (
     <>
-      <section aria-label="Hediye kısayolları" className="w-full">
+      <section aria-label="Hediye kısayolları" className="w-full" data-sf-block="shortcuts" data-sf-label="Kısayollar">
         <div className="sf-container flex justify-center py-5">
           <div className="sf-hide-scroll flex w-max max-w-full justify-center gap-4 overflow-x-auto px-1 md:gap-7 xl:gap-9">
             {GIFT_SHORTCUTS.map((item) => (
@@ -752,17 +757,40 @@ function HomeView({ products, bag, onQuickView, logoText }) {
         </div>
       </section>
 
-      <section className="sf-container flex flex-col items-center gap-4 py-4 lg:gap-5 lg:py-6">
-        <div className="relative min-h-[420px] w-full overflow-hidden rounded-[28px] bg-[#1f3f66] sm:min-h-[480px] lg:min-h-[560px]">
-          <img src={slide.image} alt={slide.title} className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1f3f66]/80 via-[#1f3f66]/45 to-[#1f3f66]/10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1f3f66]/70 via-transparent to-[#1f3f66]/20" />
-          <div className="relative z-10 flex h-full min-h-[420px] flex-col justify-end p-6 sm:min-h-[480px] sm:p-10 lg:min-h-[560px] lg:p-12">
-            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#c9ad8a]">{slide.eyebrow}</p>
-            <h1 className="sf-serif mt-3 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-[#fcfaf7] sm:text-5xl lg:text-6xl">
+      <section className="sf-container flex flex-col items-center gap-4 py-4 lg:gap-5 lg:py-6" data-sf-block="hero" data-sf-label="Banner slayt">
+        <div className={`sf-hero sf-banner-${bannerId || 'classic'}`}>
+          <div className="sf-hero-media">
+            <img src={slide.image} alt={slide.title} className="sf-hero-img" />
+            <div className="sf-hero-shade-x" />
+            <div className="sf-hero-shade-y" />
+            <div className="sf-hero-nav">
+              <div className="flex gap-2">
+                {GIFT_HERO_SLIDES.map((item, index) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-label={`Slayt ${index + 1}`}
+                    onClick={() => setHeroIndex(index)}
+                    className={`h-1.5 rounded-full ${index === heroIndex ? 'w-8 bg-[#c9ad8a]' : 'w-2.5 bg-[#fcfaf7]/40'}`}
+                  />
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button type="button" aria-label="Önceki slayt" onClick={() => setHeroIndex((i) => (i - 1 + GIFT_HERO_SLIDES.length) % GIFT_HERO_SLIDES.length)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#fcfaf7]/25 bg-[#1f3f66]/40 text-[#fcfaf7]">
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button type="button" aria-label="Sonraki slayt" onClick={() => setHeroIndex((i) => (i + 1) % GIFT_HERO_SLIDES.length)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#fcfaf7]/25 bg-[#1f3f66]/40 text-[#fcfaf7]">
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="sf-hero-copy">
+            <p className="sf-hero-kicker text-[11px] font-medium uppercase tracking-[0.22em]">{slide.eyebrow}</p>
+            <h1 className="sf-hero-title sf-serif mt-3 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
               {slide.title}
             </h1>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-[#fcfaf7]/80 sm:text-base">{slide.description}</p>
+            <p className="sf-hero-lead mt-4 max-w-md text-sm leading-relaxed sm:text-base">{slide.description}</p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link to={sf(slide.href)} className="inline-flex h-12 items-center rounded-full bg-[#c9ad8a] px-7 text-sm font-semibold text-[#1f3f66]">
                 {slide.cta}
@@ -772,32 +800,11 @@ function HomeView({ products, bag, onQuickView, logoText }) {
                 { icon: Shield, label: 'Güvenli ödeme' },
                 { icon: Sparkles, label: 'Özenli paketleme' },
               ].map((perk) => (
-                <span key={perk.label} className="inline-flex items-center gap-1.5 rounded-full border border-[#fcfaf7]/20 bg-[#fcfaf7]/10 px-3 py-1.5 text-[11px] font-medium text-[#fcfaf7]/90">
+                <span key={perk.label} className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[11px] font-medium">
                   <perk.icon className="h-3.5 w-3.5 text-[#c9ad8a]" />
                   {perk.label}
                 </span>
               ))}
-            </div>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between p-4 sm:p-6">
-            <div className="flex gap-2">
-              {GIFT_HERO_SLIDES.map((item, index) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-label={`Slayt ${index + 1}`}
-                  onClick={() => setHeroIndex(index)}
-                  className={`h-1.5 rounded-full ${index === heroIndex ? 'w-8 bg-[#c9ad8a]' : 'w-2.5 bg-[#fcfaf7]/40'}`}
-                />
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <button type="button" aria-label="Önceki slayt" onClick={() => setHeroIndex((i) => (i - 1 + GIFT_HERO_SLIDES.length) % GIFT_HERO_SLIDES.length)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#fcfaf7]/25 bg-[#1f3f66]/40 text-[#fcfaf7]">
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button type="button" aria-label="Sonraki slayt" onClick={() => setHeroIndex((i) => (i + 1) % GIFT_HERO_SLIDES.length)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#fcfaf7]/25 bg-[#1f3f66]/40 text-[#fcfaf7]">
-                <ChevronRight className="h-5 w-5" />
-              </button>
             </div>
           </div>
         </div>
@@ -833,7 +840,7 @@ function HomeView({ products, bag, onQuickView, logoText }) {
         </div>
       </section>
 
-      <section aria-label="Ürün seçkisi" className="w-full">
+      <section aria-label="Ürün seçkisi" className="w-full" data-sf-block="gallery" data-sf-label="Ürün galerisi">
         <div className="sf-container py-10 lg:py-14">
           <div className="flex justify-center">
             <div role="tablist" className="sf-hide-scroll relative flex w-max max-w-full items-stretch justify-center overflow-x-auto border-b border-[#1f3f66]/10">
@@ -861,7 +868,7 @@ function HomeView({ products, bag, onQuickView, logoText }) {
         </div>
       </section>
 
-      <section aria-labelledby="lottery-title" className="w-full">
+      <section aria-labelledby="lottery-title" className="w-full" data-sf-block="lottery" data-sf-label="Çekiliş">
         <div className="sf-container py-12 lg:py-16">
           <div className="overflow-hidden rounded-[28px] border border-[#1f3f66]/8 bg-white">
             <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
@@ -955,7 +962,7 @@ function HomeView({ products, bag, onQuickView, logoText }) {
         </div>
       </section>
 
-      <section aria-labelledby="instagram-title" className="w-full">
+      <section aria-labelledby="instagram-title" className="w-full" data-sf-block="instagram" data-sf-label="Instagram">
         <div className="sf-container py-12 lg:py-16">
           <div className="mb-8 text-center">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#c9ad8a]">Sosyal</p>
@@ -984,7 +991,7 @@ function HomeView({ products, bag, onQuickView, logoText }) {
         </div>
       </section>
 
-      <section className="w-full bg-[#1f3f66] text-[#fcfaf7]">
+      <section className="w-full bg-[#1f3f66] text-[#fcfaf7]" data-sf-block="story" data-sf-label="Marka hikâyesi">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 lg:py-24">
           <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[#c9ad8a]">{logoText || 'LOGO'}</p>
           <h2 className="sf-serif mt-4 text-3xl leading-tight sm:text-5xl">Bir hediyeden daha fazlası.</h2>
@@ -1415,22 +1422,31 @@ function parseView(pathname) {
   return { name: 'home' }
 }
 
-export default function GiftStorefront({ preview = false }) {
+export default function GiftStorefront({ preview = false, editable = false, selectedBlock = '', onSelectBlock }) {
   const location = useLocation()
   const bag = useBag()
   const [quick, setQuick] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [tick, setTick] = useState(0)
+  const [dropOver, setDropOver] = useState(false)
+  const rootRef = useRef(null)
   const products = useMemo(() => catalogProducts(), [tick])
   const tpl = getWebTemplate()
+  const design = normalizeGiftDesign(tpl.design)
   const view = preview ? { name: 'home' } : parseView(location.pathname)
 
   useEffect(() => {
-    if (document.getElementById('gift-sf-fonts')) return undefined
+    if (document.getElementById('gift-sf-fonts')) {
+      const existing = document.getElementById('gift-sf-fonts')
+      if (existing && existing.getAttribute('href') !== GIFT_DESIGN_FONTS_HREF) {
+        existing.setAttribute('href', GIFT_DESIGN_FONTS_HREF)
+      }
+      return undefined
+    }
     const link = document.createElement('link')
     link.id = 'gift-sf-fonts'
     link.rel = 'stylesheet'
-    link.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800&display=swap'
+    link.href = GIFT_DESIGN_FONTS_HREF
     document.head.appendChild(link)
     return undefined
   }, [])
@@ -1439,13 +1455,23 @@ export default function GiftStorefront({ preview = false }) {
     const refresh = () => setTick((n) => n + 1)
     window.addEventListener('bach:web-catalog-updated', refresh)
     window.addEventListener('bach:web-template-updated', refresh)
+    window.addEventListener('storage', refresh)
     return () => {
       window.removeEventListener('bach:web-catalog-updated', refresh)
       window.removeEventListener('bach:web-template-updated', refresh)
+      window.removeEventListener('storage', refresh)
     }
   }, [])
 
-  let body = <HomeView products={products} bag={bag} onQuickView={setQuick} logoText={tpl.logoText} />
+  useEffect(() => {
+    if (!editable || !rootRef.current) return undefined
+    rootRef.current.querySelectorAll('[data-sf-block]').forEach((el) => {
+      el.classList.toggle('is-selected', el.getAttribute('data-sf-block') === selectedBlock)
+    })
+    return undefined
+  }, [editable, selectedBlock, tick])
+
+  let body = <HomeView products={products} bag={bag} onQuickView={setQuick} logoText={tpl.logoText} bannerId={design.bannerId} />
   if (view.name === 'categories') body = <CategoryIndex products={products} bag={bag} onQuickView={setQuick} />
   if (view.name === 'category') body = <CategoryPage slug={view.slug} products={products} bag={bag} onQuickView={setQuick} />
   if (view.name === 'product') body = <ProductPage slug={view.slug} products={products} bag={bag} />
@@ -1456,8 +1482,46 @@ export default function GiftStorefront({ preview = false }) {
   if (view.name === 'search') body = <SearchPage products={products} bag={bag} onQuickView={setQuick} />
   if (view.name === 'legal') body = <LegalPage slug={view.slug} />
 
+  function applyDropped(raw, blockId) {
+    const module = parseDesignModule(raw)
+    if (!module) return
+    if (blockId && onSelectBlock && module.kind === 'font') onSelectBlock(blockId)
+    if (module.kind === 'font') applyWebTemplateDesign({ fontId: module.id })
+    if (module.kind === 'banner') {
+      if (onSelectBlock) onSelectBlock('hero')
+      applyWebTemplateDesign({ bannerId: module.id })
+    }
+  }
+
   return (
-    <div className={`gift-sf ${preview ? 'overflow-hidden rounded-[24px] border border-[#e8edf4]' : 'sf-has-mobile-nav min-h-dvh'}`}>
+    <div
+      ref={rootRef}
+      className={`gift-sf sf-font-${design.fontId} ${preview ? 'overflow-hidden rounded-[24px] border border-[#e8edf4]' : 'sf-has-mobile-nav min-h-dvh'} ${editable ? 'sf-editable' : ''} ${dropOver ? 'sf-drop-over' : ''}`}
+      onClickCapture={(event) => {
+        if (!editable) return
+        const block = event.target.closest('[data-sf-block]')
+        if (!block) return
+        if (onSelectBlock) onSelectBlock(block.getAttribute('data-sf-block') || '')
+        const link = event.target.closest('a')
+        if (link) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      }}
+      onDragOver={(event) => {
+        if (!editable) return
+        event.preventDefault()
+        setDropOver(true)
+      }}
+      onDragLeave={() => setDropOver(false)}
+      onDrop={(event) => {
+        if (!editable) return
+        event.preventDefault()
+        setDropOver(false)
+        const block = event.target.closest('[data-sf-block]')
+        applyDropped(event.dataTransfer.getData('text/plain'), block ? block.getAttribute('data-sf-block') : '')
+      }}
+    >
       <SiteChrome preview={preview} bag={bag} products={products} searchOpen={searchOpen} setSearchOpen={setSearchOpen}>
         {body}
       </SiteChrome>

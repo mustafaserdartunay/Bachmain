@@ -14,6 +14,7 @@ import {
   WEB_STUDIO_DOMAIN_CONNECT_PATH,
 } from '../../data/webMenu'
 import GiftStorefront from '../../storefront/GiftStorefront'
+import GiftStorefrontDesigner from '../../storefront/GiftStorefrontDesigner'
 import { YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesign'
 import { getWebTemplate, saveWebTemplate, selectWebTemplate } from '../../utils/webTemplateStorage'
 
@@ -21,6 +22,7 @@ export default function WebStudioTemplatePage() {
   const [tpl, setTpl] = useState(() => getWebTemplate())
   const [logoText, setLogoText] = useState(tpl.logoText || 'LOGO')
   const [slogan, setSlogan] = useState(tpl.slogan || 'More Than a Gift')
+  const [selectedBlock, setSelectedBlock] = useState('hero')
 
   useEffect(() => {
     const refresh = () => {
@@ -91,9 +93,7 @@ export default function WebStudioTemplatePage() {
               />
             </FormFieldCompact>
             <p className="px-1 text-[12px] font-semibold text-[var(--muted)]">
-              {tpl.published
-                ? 'Şablon yayında. Domain bağlayınca ziyaretçiler bu vitrini görür. Kategori, ürün ve logo metnini istediğiniz zaman değiştirebilirsiniz.'
-                : 'Bu hediye vitrin şablonunu seçin, ardından domain bağlayarak canlı yayınlayın.'}
+              Vitrin üzerinde bir alanı seçin, sağdaki font veya banner kartını sürükleyip bırakın. Değişiklik canlı vitrine yazılır.
             </p>
           </div>
         </FormSectionPanel>
@@ -116,7 +116,15 @@ export default function WebStudioTemplatePage() {
         </div>
       </form>
 
-      <GiftStorefront preview />
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <GiftStorefront
+          preview
+          editable
+          selectedBlock={selectedBlock}
+          onSelectBlock={setSelectedBlock}
+        />
+        <GiftStorefrontDesigner selectedBlock={selectedBlock} onSelectBlock={setSelectedBlock} />
+      </div>
     </AppPageShell>
   )
 }
