@@ -76,8 +76,8 @@ function SidebarLink({ item, active }) {
           : 'border-transparent text-white/90 hover:border-white/15 hover:bg-white/10'
       }`}
     >
-      <span className={`inline-flex h-8 w-8 items-center justify-center rounded-xl ${active ? 'bg-white/14 text-white' : 'bg-white/12 text-white'}`}>
-        <Icon className="h-4 w-4" />
+      <span className={`inline-flex h-8 w-8 items-center justify-center rounded-xl text-white ${active ? 'bg-white/14' : 'bg-white/12'}`}>
+        <Icon className="h-4 w-4 text-white stroke-white" />
       </span>
       <span className="truncate">{item.label}</span>
     </Link>
@@ -500,9 +500,7 @@ export default function WebStudioManagementPage() {
           <span className="text-[1.7rem] font-black tracking-[-0.04em] text-white">
             BACHMAIN<span className="text-[#E2BC0F]">.</span>
           </span>
-          <span className="inline-flex h-5 items-center rounded-md bg-white px-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#203375]">WEB</span>
         </div>
-        <p className="mx-[0.35rem] mb-2 mt-1 px-[0.35rem] text-[0.625rem] font-extrabold uppercase tracking-[0.16em] text-white/55">Studio</p>
         <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-0.5">
           {NAV.map((item) => {
             const active = item.exact ? pathname === item.path : pathname === item.path || pathname.startsWith(`${item.path}/`)
