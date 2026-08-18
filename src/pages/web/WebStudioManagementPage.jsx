@@ -19,10 +19,8 @@ import logoBusiness from '../../assets/bachmain-logo.png'
 
 const NAV = [
   { path: '/web/studio/yonetim/panel', label: 'Güncel Durum', icon: LayoutDashboard, exact: true },
-  { path: '/web/studio/yonetim/domain-bagla', label: 'Domain Bağla', icon: Globe2 },
   { path: '/web/studio/yonetim/kategoriler', label: 'Kategoriler', icon: FolderTree },
   { path: '/web/studio/yonetim/urunler', label: 'Ürünler', icon: ShoppingBag },
-  { path: '/web/studio/yonetim/siparisler', label: 'Siparişler', icon: Package },
   { path: '/web/studio/yonetim/profil', label: 'Mağaza profili', icon: Store },
   { path: '/web/studio/yonetim/odeme', label: 'Ödeme ayarları', icon: CreditCard },
 ]
@@ -453,14 +451,10 @@ function PaymentPage({ primarySite, pages }) {
 
 function renderPage(pathname, primarySite, sites, pages) {
   switch (pathname) {
-    case '/web/studio/yonetim/domain-bagla':
-      return <DomainConnectPage sites={sites} pages={pages} />
     case '/web/studio/yonetim/kategoriler':
       return <CategoriesPage />
     case '/web/studio/yonetim/urunler':
       return <ProductsPage />
-    case '/web/studio/yonetim/siparisler':
-      return <OrdersPage />
     case '/web/studio/yonetim/profil':
       return <ProfilePage primarySite={primarySite} />
     case '/web/studio/yonetim/odeme':

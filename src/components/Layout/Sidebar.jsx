@@ -78,11 +78,13 @@ import {
   webSubMenus,
   isWebRoute,
   isWebAdminRoute,
+  isWebSettingsRoute,
   WEB_STUDIO_PATH,
   WEB_STUDIO_MANAGEMENT_PATH,
   WEB_STUDIO_ADMIN_PATH,
-  WEB_STUDIO_CATEGORY_CREATE_PATH,
-  WEB_STUDIO_PRODUCT_CREATE_PATH,
+  WEB_STUDIO_SETTINGS_PATH,
+  webAdminChildMenus,
+  webSettingsChildMenus,
 } from '../../data/webMenu'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
@@ -259,10 +261,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const [openMenuId, setOpenMenuId] = useState(resolveOpenMenuId)
   const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
   const [studioAdminOpen, setStudioAdminOpen] = useState(isWebAdminRoute(location.pathname))
-  const [studioCategoryOpen, setStudioCategoryOpen] = useState(
-    location.pathname === WEB_STUDIO_CATEGORY_CREATE_PATH ||
-      location.pathname === WEB_STUDIO_PRODUCT_CREATE_PATH,
-  )
+  const [studioSettingsOpen, setStudioSettingsOpen] = useState(isWebSettingsRoute(location.pathname))
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
 
   const customerOpen = openMenuId === 'customer'
@@ -306,12 +305,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
   useEffect(() => {
     if (isWebAdminRoute(location.pathname)) setStudioAdminOpen(true)
-    if (
-      location.pathname === WEB_STUDIO_CATEGORY_CREATE_PATH ||
-      location.pathname === WEB_STUDIO_PRODUCT_CREATE_PATH
-    ) {
-      setStudioCategoryOpen(true)
-    }
+    if (isWebSettingsRoute(location.pathname)) setStudioSettingsOpen(true)
   }, [location.pathname])
 
   useEffect(() => {
@@ -951,48 +945,65 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 </div>
                 {studioAdminOpen ? (
                   <SidebarSubMenu className="sidebar-submenu--nested">
-                    <>
-                      <div className="flex items-center gap-0.5">
-                        <NavLink
-                          to={WEB_STUDIO_CATEGORY_CREATE_PATH}
-                          onClick={handleNavigate}
-                          className={({ isActive }) =>
-                            `${subMenuButtonBase} flex-1 ${isActive ? 'sidebar-menu-active font-medium' : ''}`
-                          }
-                        >
-                          Kategori oluştur
-                        </NavLink>
-                        <button
-                          type="button"
-                          onClick={() => setStudioCategoryOpen((open) => !open)}
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white/20"
-                          aria-label={
-                            studioCategoryOpen
-                              ? 'Kategori menüsünü kapat'
-                              : 'Kategori menüsünü aç'
-                          }
-                        >
-                          {studioCategoryOpen ? (
-                            <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                          ) : (
-                            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                          )}
-                        </button>
-                      </div>
-                      {studioCategoryOpen ? (
-                        <SidebarSubMenu className="sidebar-submenu--nested">
-                          <NavLink
-                            to={WEB_STUDIO_PRODUCT_CREATE_PATH}
-                            onClick={handleNavigate}
-                            className={({ isActive }) =>
-                              `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
-                            }
-                          >
-                            Ürün oluştur
-                          </NavLink>
-                        </SidebarSubMenu>
-                      ) : null}
-                    </>
+                    {webAdminChildMenus.map((child) => (
+                      <NavLink
+                        key={child.path}
+                        to={child.path}
+                        onClick={handleNavigate}
+                        className={({ isActive }) =>
+                          `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
+                        }
+                      >
+                        {child.label}
+                      </NavLink>
+                    ))}
+                  </SidebarSubMenu>
+                ) : null}
+              </>
+              <>
+                <div className="flex items-center gap-0.5">
+                  <NavLink
+                    to={WEB_STUDIO_SETTINGS_PATH}
+                    end
+                    onClick={handleNavigate}
+                    className={() =>
+                      `${subMenuButtonBase} flex flex-1 items-center gap-2 ${
+                        isWebSettingsRoute(location.pathname) ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    <SubMenuIcon>
+                      <Settings className="h-3.5 w-3.5" />
+                    </SubMenuIcon>
+                    Ayarlar
+                  </NavLink>
+                  <button
+                    type="button"
+                    onClick={() => setStudioSettingsOpen((open) => !open)}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white/20"
+                    aria-label={studioSettingsOpen ? 'Ayarlar menüsünü kapat' : 'Ayarlar menüsünü aç'}
+                  >
+                    {studioSettingsOpen ? (
+                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                    )}
+                  </button>
+                </div>
+                {studioSettingsOpen ? (
+                  <SidebarSubMenu className="sidebar-submenu--nested">
+                    {webSettingsChildMenus.map((child) => (
+                      <NavLink
+                        key={child.path}
+                        to={child.path}
+                        onClick={handleNavigate}
+                        className={({ isActive }) =>
+                          `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
+                        }
+                      >
+                        {child.label}
+                      </NavLink>
+                    ))}
                   </SidebarSubMenu>
                 ) : null}
               </>

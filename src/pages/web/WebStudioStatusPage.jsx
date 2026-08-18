@@ -20,6 +20,10 @@ import {
 import { documentTotals } from '../../utils/documentTotals'
 import { loadOrders } from '../../utils/ordersStore'
 import { getCatalogProducts, getTotalStock } from '../../utils/productCatalog'
+import {
+  WEB_STUDIO_DOMAIN_CONNECT_PATH,
+  WEB_STUDIO_MANAGEMENT_PATH,
+} from '../../data/webMenu'
 import { getPages, getSites, getWebCategories, getWebStoreProducts } from '../../utils/webSiteStorage'
 
 const WEB_INBOX_KEY = 'bach-web-inbox'
@@ -304,7 +308,7 @@ export default function WebStudioStatusPage() {
           icon={Globe2}
           iconTone="bg-blue-500/10 text-blue-600"
           action={
-            <Link to="/web/studio/yonetim/domain-bagla" className="text-[10px] font-extrabold uppercase tracking-wide text-blue-600">
+            <Link to={WEB_STUDIO_DOMAIN_CONNECT_PATH} className="text-[10px] font-extrabold uppercase tracking-wide text-blue-600">
               Domain
             </Link>
           }
@@ -323,7 +327,7 @@ export default function WebStudioStatusPage() {
                 </Link>
               ))
             ) : (
-              <Link to="/web/studio/yonetim/domain-bagla" className={APP_METRIC_ROW_CLASS}>
+              <Link to={WEB_STUDIO_DOMAIN_CONNECT_PATH} className={APP_METRIC_ROW_CLASS}>
                 <span className={APP_LABEL_CLASS}>İlk web sitesini oluştur</span>
                 <span className={`${APP_VALUE_CLASS} text-blue-600`}>Bağla</span>
               </Link>

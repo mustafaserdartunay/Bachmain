@@ -204,6 +204,9 @@ import WebStudioStatusPage from './pages/web/WebStudioStatusPage'
 import WebStudioAdminPage from './pages/web/WebStudioAdminPage'
 import WebStudioCategoryCreatePage from './pages/web/WebStudioCategoryCreatePage'
 import WebStudioProductCreatePage from './pages/web/WebStudioProductCreatePage'
+import WebStudioOrdersPage from './pages/web/WebStudioOrdersPage'
+import WebStudioSettingsPage from './pages/web/WebStudioSettingsPage'
+import WebStudioDomainConnectPage from './pages/web/WebStudioDomainConnectPage'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -301,12 +304,18 @@ export default function App() {
                         path="/web/studio/yonetim/urun-olustur"
                         element={<WebStudioProductCreatePage />}
                       />
+                      <Route path="/web/studio/yonetim/siparisler" element={<WebStudioOrdersPage />} />
+                      <Route path="/web/studio/yonetim/ayarlar" element={<WebStudioSettingsPage />} />
                       <Route
-                        path="/web/studio/yonetim/panel"
-                        element={<WebStudioManagementPage />}
+                        path="/web/studio/yonetim/ayarlar/domain-bagla"
+                        element={<WebStudioDomainConnectPage />}
                       />
                       <Route
                         path="/web/studio/yonetim/domain-bagla"
+                        element={<Navigate to="/web/studio/yonetim/ayarlar/domain-bagla" replace />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/panel"
                         element={<WebStudioManagementPage />}
                       />
                       <Route
@@ -315,10 +324,6 @@ export default function App() {
                       />
                       <Route
                         path="/web/studio/yonetim/urunler"
-                        element={<WebStudioManagementPage />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/siparisler"
                         element={<WebStudioManagementPage />}
                       />
                       <Route

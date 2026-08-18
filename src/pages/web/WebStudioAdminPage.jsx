@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FolderPlus, LayoutDashboard, PackagePlus, ShoppingBag, Tags } from 'lucide-react'
+import { FolderPlus, LayoutDashboard, PackagePlus, ShoppingBag, ShoppingCart, Tags } from 'lucide-react'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import {
   WEB_STUDIO_CATEGORY_CREATE_PATH,
   WEB_STUDIO_MANAGEMENT_PATH,
+  WEB_STUDIO_ORDERS_PATH,
   WEB_STUDIO_PRODUCT_CREATE_PATH,
 } from '../../data/webMenu'
 import { APP_METRIC_ROW_CLASS, APP_LABEL_CLASS, APP_VALUE_CLASS } from '../../utils/dashboardDesign'
@@ -55,7 +56,7 @@ export default function WebStudioAdminPage() {
         ]}
       />
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-3">
         <Link
           to={WEB_STUDIO_CATEGORY_CREATE_PATH}
           className="card flex items-center justify-between gap-4 px-4 py-4 transition-colors hover:bg-white/40"
@@ -90,6 +91,24 @@ export default function WebStudioAdminPage() {
             </div>
           </div>
           <span className="text-[12px] font-extrabold text-emerald-600">Aç</span>
+        </Link>
+
+        <Link
+          to={WEB_STUDIO_ORDERS_PATH}
+          className="card flex items-center justify-between gap-4 px-4 py-4 transition-colors hover:bg-white/40"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
+              <ShoppingCart className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-black text-[var(--ink)]">Siparişler</p>
+              <p className="text-[12px] font-semibold text-[var(--muted)]">
+                Web vitrininden gelen siparişleri takip edin.
+              </p>
+            </div>
+          </div>
+          <span className="text-[12px] font-extrabold text-amber-600">Aç</span>
         </Link>
       </div>
 
