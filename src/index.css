@@ -4227,60 +4227,30 @@ html.night .glass-sidebar .sidebar-submenu {
   overflow-y: auto;
 }
 
-.studio-gateway-surface {
+.studio-shell .studio-gateway-surface,
+.studio-shell > aside.glass-team-hub.studio-gateway-surface.app-sidebar {
   isolation: isolate;
   overflow: hidden;
   color: #fff;
-  background-color: #2563eb !important;
-  background-image: linear-gradient(
-    130deg,
-    #1d4ed8 0%,
-    #2563eb 28%,
-    #0ea5e9 58%,
-    #38bdf8 100%
-  ) !important;
-  background-size: 280% 280%;
+  background: linear-gradient(155deg, #1d4ed8 0%, #2563eb 42%, #0ea5e9 100%) !important;
+  background-size: 180% 180% !important;
+  background-repeat: no-repeat !important;
   animation: studio-gateway-flow 18s ease-in-out infinite;
-  border-color: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
   box-shadow: 0 18px 44px -18px rgba(17, 24, 39, 0.55) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-.studio-gateway-surface::before {
-  display: none;
-}
-
+.studio-gateway-surface::before,
 .studio-gateway-surface::after {
-  content: '';
-  position: absolute;
-  inset: -35%;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 42% 30%, rgba(56, 189, 248, 0.38), transparent 62%);
-  animation: studio-gateway-orb 14s ease-in-out infinite;
+  display: none !important;
+  content: none !important;
 }
 
 .studio-gateway-surface > * {
   position: relative;
   z-index: 1;
-}
-
-.studio-shell > .glass-team-hub.studio-gateway-surface.app-sidebar {
-  background-color: #2563eb !important;
-  background-image: linear-gradient(
-    130deg,
-    #1d4ed8 0%,
-    #2563eb 28%,
-    #0ea5e9 58%,
-    #38bdf8 100%
-  ) !important;
-  background-size: 280% 280% !important;
-  background-repeat: no-repeat !important;
-  animation: studio-gateway-flow 18s ease-in-out infinite;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  box-shadow: 0 18px 44px -18px rgba(17, 24, 39, 0.55) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  color: #fff;
 }
 
 .studio-shell > .glass-team-hub.studio-gateway-surface h2,
@@ -4302,28 +4272,15 @@ html.night .glass-sidebar .sidebar-submenu {
 @keyframes studio-gateway-flow {
   0%,
   100% {
-    background-position: 0% 40%;
+    background-position: 0% 42%;
   }
   50% {
-    background-position: 100% 60%;
-  }
-}
-
-@keyframes studio-gateway-orb {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translate3d(18px, -22px, 0) scale(1.12);
-    opacity: 1;
+    background-position: 100% 58%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .studio-gateway-surface,
-  .studio-gateway-surface::after,
   .studio-shell > .glass-team-hub.studio-gateway-surface {
     animation: none;
   }
