@@ -6,6 +6,7 @@ export const WEB_STUDIO_ADMIN_PATH = '/web/studio/yonetim/yonetim'
 export const WEB_STUDIO_CATEGORY_CREATE_PATH = '/web/studio/yonetim/kategori-olustur'
 export const WEB_STUDIO_PRODUCT_CREATE_PATH = '/web/studio/yonetim/urun-olustur'
 export const WEB_STUDIO_ORDERS_PATH = '/web/studio/yonetim/siparisler'
+export const WEB_STUDIO_TEMPLATE_PATH = '/web/studio/yonetim/template'
 export const WEB_STUDIO_SETTINGS_PATH = '/web/studio/yonetim/ayarlar'
 export const WEB_STUDIO_DOMAIN_CONNECT_PATH = '/web/studio/yonetim/ayarlar/domain-bagla'
 
@@ -28,6 +29,7 @@ export const webAdminChildMenus = [
   { label: 'Kategori oluştur', path: WEB_STUDIO_CATEGORY_CREATE_PATH },
   { label: 'Ürün oluştur', path: WEB_STUDIO_PRODUCT_CREATE_PATH },
   { label: 'Siparişler', path: WEB_STUDIO_ORDERS_PATH },
+  { label: 'Template', path: WEB_STUDIO_TEMPLATE_PATH },
 ]
 
 export const webSettingsChildMenus = [
@@ -43,7 +45,8 @@ export function isWebAdminRoute(pathname) {
     pathname === WEB_STUDIO_ADMIN_PATH ||
     pathname === WEB_STUDIO_CATEGORY_CREATE_PATH ||
     pathname === WEB_STUDIO_PRODUCT_CREATE_PATH ||
-    pathname === WEB_STUDIO_ORDERS_PATH
+    pathname === WEB_STUDIO_ORDERS_PATH ||
+    pathname === WEB_STUDIO_TEMPLATE_PATH
   )
 }
 

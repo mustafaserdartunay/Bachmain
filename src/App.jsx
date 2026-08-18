@@ -207,6 +207,8 @@ import WebStudioProductCreatePage from './pages/web/WebStudioProductCreatePage'
 import WebStudioOrdersPage from './pages/web/WebStudioOrdersPage'
 import WebStudioSettingsPage from './pages/web/WebStudioSettingsPage'
 import WebStudioDomainConnectPage from './pages/web/WebStudioDomainConnectPage'
+import WebStudioTemplatePage from './pages/web/WebStudioTemplatePage'
+import WebStorefrontPublishPage from './pages/web/WebStorefrontPublishPage'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -257,6 +259,8 @@ export default function App() {
                 </RequireAuth>
               }
             />
+            <Route path="/vitrin" element={<WebStorefrontPublishPage />} />
+            <Route path="/vitrin/*" element={<WebStorefrontPublishPage />} />
             <Route path="/portal/:token" element={<CustomerPortalPage />} />
             <Route path="/kurye-takip/:trackingToken" element={<CustomerCourierTrackingPage />} />
             <Route path="/sevkiyat-takip/:token" element={<SevkiyatTrackingPage />} />
@@ -305,6 +309,7 @@ export default function App() {
                         element={<WebStudioProductCreatePage />}
                       />
                       <Route path="/web/studio/yonetim/siparisler" element={<WebStudioOrdersPage />} />
+                      <Route path="/web/studio/yonetim/template" element={<WebStudioTemplatePage />} />
                       <Route path="/web/studio/yonetim/ayarlar" element={<WebStudioSettingsPage />} />
                       <Route
                         path="/web/studio/yonetim/ayarlar/domain-bagla"
