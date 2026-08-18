@@ -17,8 +17,8 @@ import TeamHubPanel from '../../components/Layout/TeamHubPanel'
 import { getPagesBySite, getSites } from '../../utils/webSiteStorage'
 
 const NAV = [
-  { path: '/web/studio/yonetim/domain-bagla', label: 'Domain Bağla', icon: Globe2 },
   { path: '/web/studio/yonetim', label: 'Güncel Durum', icon: LayoutDashboard, exact: true },
+  { path: '/web/studio/yonetim/domain-bagla', label: 'Domain Bağla', icon: Globe2 },
   { path: '/web/studio/yonetim/kategoriler', label: 'Kategoriler', icon: FolderTree },
   { path: '/web/studio/yonetim/urunler', label: 'Ürünler', icon: ShoppingBag },
   { path: '/web/studio/yonetim/siparisler', label: 'Siparişler', icon: Package },
@@ -510,26 +510,16 @@ export default function WebStudioManagementPage() {
           })}
         </nav>
         <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-3.5">
-          <div className="flex items-center gap-2">
-            <div className="min-w-0">
-              <p className="text-sm font-black tracking-[-0.03em] text-white">
-                BACHMAIN<span className="text-[#E2BC0F]">.</span>
-              </p>
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">{primarySite?.name || 'Studio Yönetim'}</p>
-              <p className="mt-0.5 truncate text-xs text-white/70">{primarySite?.domain || 'Domain bağlantısı bekleniyor'}</p>
-            </div>
-          </div>
-          <div className="mt-3 grid gap-2">
-            <Link
-              to="/"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-transparent px-3 py-2 text-xs font-semibold text-white/85 transition hover:bg-white/10 hover:text-white"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              Uygulamaya Dön
-            </Link>
-          </div>
+          <p className="text-sm font-black tracking-[-0.03em] text-white">
+            BACHMAIN<span className="text-[#E2BC0F]">.</span>
+          </p>
+          <Link
+            to="/"
+            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-transparent px-3 py-2 text-xs font-semibold text-white/85 transition hover:bg-white/10 hover:text-white"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Uygulamaya Dön
+          </Link>
         </div>
       </aside>
 
