@@ -16,6 +16,7 @@ import {
 import TeamHubPanel from '../../components/Layout/TeamHubPanel'
 import { getPagesBySite, getSites } from '../../utils/webSiteStorage'
 import logoOnDark from '../../assets/bachmain-logo-on-dark.png'
+import logoBusiness from '../../assets/bachmain-logo.png'
 
 const NAV = [
   { path: '/web/studio/yonetim', label: 'Güncel Durum', icon: LayoutDashboard, exact: true },
@@ -548,19 +549,24 @@ export default function WebStudioManagementPage() {
             return <SidebarLink key={item.path} item={item} active={active} />
           })}
         </nav>
-        <div className="relative mt-4 rounded-2xl border border-white/15 bg-white/10 p-3.5">
-          <img
-            src={logoOnDark}
-            alt="BACHMAIN"
-            width={200}
-            height={44}
-            className="h-7 w-auto object-contain"
-            draggable={false}
-          />
+        <div className="relative mt-4 rounded-2xl border border-white/80 bg-white p-3.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <img
+              src={logoBusiness}
+              alt="BACHMAIN"
+              width={200}
+              height={44}
+              className="h-[2.35rem] w-auto object-contain"
+              draggable={false}
+            />
+            <span className="inline-flex items-center rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-[0.85rem] py-[0.35rem] text-[0.8rem] font-bold tracking-[0.02em] text-[#1d4ed8]">
+              Business
+            </span>
+          </div>
           <Link
             to="/"
             onClick={handleBackToApp}
-            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-transparent px-3 py-2 text-xs font-semibold text-white/85 transition hover:bg-white/10 hover:text-white"
+            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#bfdbfe] bg-[#eff6ff] px-3 py-2 text-xs font-semibold text-[#1d4ed8] transition hover:bg-[#dbeafe]"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             Uygulamaya Dön
