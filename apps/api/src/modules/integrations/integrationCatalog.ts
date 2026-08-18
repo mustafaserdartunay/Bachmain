@@ -242,6 +242,18 @@ export const CONNECTOR_CATALOG: ConnectorItem[] = [
     status: 'available',
     tags: ['file'],
   },
+  {
+    id: 'erp.nilvera',
+    slug: 'nilvera',
+    title: 'Nilvera e-Belge',
+    kind: 'erp',
+    protocol: 'REST',
+    summary: 'e-Fatura · e-Arşiv · GİB',
+    featured: true,
+    status: 'available',
+    deepLink: '/e-belgeler',
+    tags: ['einvoice', 'earchive', 'gib'],
+  },
 ]
 
 export function getIntegrationCatalog() {

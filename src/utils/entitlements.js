@@ -53,6 +53,7 @@ export const ROUTE_MODULE_MAP = {
   '/commerce': 'dashboard_basic',
   '/bayi': 'dashboard_basic',
   '/ayarlar/kurumsal-yapi': 'multi_company',
+  '/e-belgeler': 'einvoice',
 }
 
 /** Core paths always visible even without entitlements list (profile, billing, settings shell). */
@@ -86,6 +87,9 @@ export function canAccessPath(entitlements, pathname) {
   if (ALWAYS_ALLOWED_PATHS.has(pathname)) return true
   if (pathname.startsWith('/ayarlar/kurumsal-yapi')) {
     return hasModule(entitlements, 'multi_company')
+  }
+  if (pathname === '/e-belgeler' || pathname.startsWith('/e-belgeler/')) {
+    return hasModule(entitlements, 'einvoice') || hasModule(entitlements, 'earchive')
   }
   if (
     pathname.startsWith('/profil') ||

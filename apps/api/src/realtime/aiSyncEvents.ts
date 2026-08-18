@@ -18,7 +18,12 @@ export const AI_SYNC_EVENTS = {
  * @param {string} event
  * @param {{ id?: string, meta?: Record<string, unknown> }} payload
  */
-export function emitCompanyAiSync(io, companyId, event, payload = {}) {
+export function emitCompanyAiSync(
+  io: { to: (room: string) => { emit: (event: string, payload: unknown) => void } } | null,
+  companyId: string,
+  event: string,
+  payload: { id?: string; meta?: Record<string, unknown> } = {},
+) {
   const cid = String(companyId || '').trim()
   if (!io || !cid || !event) return false
   io.to(`company:${cid}`).emit(event, {

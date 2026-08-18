@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { FileText, Handshake, Receipt, Wifi } from 'lucide-react'
 import { DataTable } from '@bachmain/ui'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../../components/Layout/AppPageLayout'
@@ -144,9 +144,12 @@ export default function IncomingEInvoicesPage() {
             </p>
           </div>
         </div>
-        <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-extrabold tracking-wide text-blue-300">
-          Gelen kutusu açık
-        </span>
+        <Link
+          to="/e-belgeler/gelen"
+          className="rounded-xl bg-emerald-500/10 px-3 py-1.5 text-xs font-extrabold tracking-wide text-emerald-300 hover:bg-emerald-500/20"
+        >
+          Canlı Nilvera gelen kutusu
+        </Link>
       </div>
 
       <SummaryMetrics

@@ -32,6 +32,7 @@ import { handleAiosApi } from './aiosRoutes.mjs'
 import { handleQualityControl } from './qualityControl.mjs'
 import { handleSocialConnections } from './socialConnections.mjs'
 import { handlePlatformAdminApi } from './platformAdminRoutes.mjs'
+import { handleEdocumentsApi } from './edocumentsRoutes.mjs'
 import {
   addSupportReply,
   buildSupportModuleRows,
@@ -156,6 +157,16 @@ async function handle(req, res, url) {
         }
       }
       if (await handleAuthApi(req, res, apiPath, body)) return
+      if (
+        await handleEdocumentsApi(
+          req,
+          res,
+          apiPath,
+          body,
+          Object.fromEntries(url.searchParams.entries()),
+        )
+      )
+        return
       if (await handleLeadsApi(req, res, apiPath, body)) return
       if (await handleLegalApi(req, res, apiPath, body)) return
       if (await handleAnnouncementsApi(req, res, apiPath, body)) return

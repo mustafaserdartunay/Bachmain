@@ -275,6 +275,14 @@ export const navItems: NavItem[] = [
   { id: 'staff', label: 'Personel Yönetimi', path: '/personel', icon: UserCheck, group: 'Sistem' },
   { id: 'website', label: 'Web Sitesi Yönetimi', path: '/website', icon: Globe, group: 'Sistem' },
   { id: 'api', label: 'API ve Entegrasyonlar', path: '/api', icon: Plug, group: 'Sistem' },
+  {
+    id: 'edonusum',
+    label: 'E-Dönüşüm / Nilvera',
+    path: '/e-donusum',
+    icon: Receipt,
+    group: 'Sistem',
+    roles: ['super_admin', 'admin', 'support'],
+  },
   { id: 'settings', label: 'Genel Ayarlar', path: '/ayarlar', icon: Settings, group: 'Sistem' },
 ]
 

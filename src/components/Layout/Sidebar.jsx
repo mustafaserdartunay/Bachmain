@@ -50,11 +50,15 @@ import {
   PackageCheck,
   Globe2,
   Sparkles,
+  FileText,
+  Send,
+  Search,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
 import { visibleCustomerSubMenus, isSalesRoute } from '../../data/customerMenu'
 import { expensesSubMenus, isExpensesRoute } from '../../data/expensesMenu'
+import { eDocumentsSubMenus, isEDocumentsRoute } from '../../data/eDocumentsMenu'
 import { treasurySubMenus, isTreasuryRoute, CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/stockMenu'
 import {
@@ -90,7 +94,7 @@ import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
 import { useAuth } from '../../auth/AuthContext'
-import { filterMenuByEntitlements } from '../../utils/entitlements'
+import { filterMenuByEntitlements, hasModule } from '../../utils/entitlements'
 import { canUseMultiCompany } from '../../utils/orgScope'
 
 const projectsMenuGate = {
@@ -131,6 +135,17 @@ const expensesSubMenuIcons = {
   'bar-chart': BarChart3,
   wallet: Wallet,
   percent: Percent,
+}
+const eDocumentsSubMenuIcons = {
+  gauge: Gauge,
+  receipt: Receipt,
+  file: FileText,
+  inbox: Inbox,
+  send: Send,
+  draft: ScrollText,
+  ban: Ban,
+  search: Search,
+  settings: Settings,
 }
 const treasurySubMenuIcons = {
   landmark: Landmark,
@@ -232,6 +247,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const isSalesRouteActive = isSalesRoute(location.pathname)
   const isProcessRouteActive = isProcessRoute(location.pathname)
   const isExpensesRouteActive = isExpensesRoute(location.pathname)
+  const isEDocumentsRouteActive = isEDocumentsRoute(location.pathname)
   const isTreasuryRouteActive = isTreasuryRoute(location.pathname)
   const isStockRouteActive = isStockRoute(location.pathname)
   const isFieldSalesRouteActive = isFieldSalesRoute(location.pathname)
@@ -246,6 +262,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     if (isSalesRouteActive) return 'customer'
     if (isProcessRouteActive) return 'process'
     if (isExpensesRouteActive) return 'expenses'
+    if (isEDocumentsRouteActive) return 'edocuments'
     if (isTreasuryRouteActive) return 'treasury'
     if (isStockRouteActive) return 'stock'
     if (isProjectsRouteActive) return 'projects'
@@ -261,12 +278,15 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const [openMenuId, setOpenMenuId] = useState(resolveOpenMenuId)
   const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
   const [studioAdminOpen, setStudioAdminOpen] = useState(isWebAdminRoute(location.pathname))
-  const [studioSettingsOpen, setStudioSettingsOpen] = useState(isWebSettingsRoute(location.pathname))
+  const [studioSettingsOpen, setStudioSettingsOpen] = useState(
+    isWebSettingsRoute(location.pathname),
+  )
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
 
   const customerOpen = openMenuId === 'customer'
   const processOpen = openMenuId === 'process'
   const expensesOpen = openMenuId === 'expenses'
+  const eDocumentsOpen = openMenuId === 'edocuments'
   const treasuryOpen = openMenuId === 'treasury'
   const stockOpen = openMenuId === 'stock'
   const projectsOpen = openMenuId === 'projects'
@@ -288,6 +308,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     isSalesRouteActive,
     isProcessRouteActive,
     isExpensesRouteActive,
+    isEDocumentsRouteActive,
     isTreasuryRouteActive,
     isStockRouteActive,
     isProjectsRouteActive,
@@ -330,6 +351,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const menuItems = filterMenuByEntitlements([courierMenuItem], user?.entitlements)
   const showProjects = filterMenuByEntitlements([projectsMenuGate], user?.entitlements).length > 0
   const showPos = filterMenuByEntitlements([posMenuItem], user?.entitlements).length > 0
+  const showEDocuments =
+    hasModule(user?.entitlements, 'einvoice') || hasModule(user?.entitlements, 'earchive')
   const showCourier = menuItems.length > 0
   const isPosActive =
     location.pathname === '/shopping' || location.pathname.startsWith('/shopping/')
@@ -557,6 +580,58 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
+
+        {showEDocuments ? (
+          <div className={`sidebar-menu-group ${eDocumentsOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('edocuments')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isEDocumentsRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <FileText className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>E-Belgeler</span>
+                  {eDocumentsOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
+
+            {eDocumentsOpen && !collapsed && (
+              <SidebarSubMenu>
+                {eDocumentsSubMenus.map((sub) => {
+                  const SubIcon = sub.icon ? eDocumentsSubMenuIcons[sub.icon] : FileText
+                  return (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      end={sub.path === '/e-belgeler'}
+                      onClick={handleNavigate}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} flex items-center gap-2 ${
+                          isActive ? 'sidebar-menu-active font-medium' : ''
+                        }`
+                      }
+                    >
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                      {sub.label}
+                    </NavLink>
+                  )
+                })}
+              </SidebarSubMenu>
+            )}
+          </div>
+        ) : null}
 
         {/* 4. Nakit */}
         <div className={`sidebar-menu-group ${treasuryOpen ? 'is-open' : ''}`}>
@@ -968,7 +1043,9 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     onClick={handleNavigate}
                     className={() =>
                       `${subMenuButtonBase} flex flex-1 items-center gap-2 ${
-                        isWebSettingsRoute(location.pathname) ? 'sidebar-menu-active font-medium' : ''
+                        isWebSettingsRoute(location.pathname)
+                          ? 'sidebar-menu-active font-medium'
+                          : ''
                       }`
                     }
                   >
@@ -981,7 +1058,9 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     type="button"
                     onClick={() => setStudioSettingsOpen((open) => !open)}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white/20"
-                    aria-label={studioSettingsOpen ? 'Ayarlar menüsünü kapat' : 'Ayarlar menüsünü aç'}
+                    aria-label={
+                      studioSettingsOpen ? 'Ayarlar menüsünü kapat' : 'Ayarlar menüsünü aç'
+                    }
                   >
                     {studioSettingsOpen ? (
                       <ChevronDown className="h-3.5 w-3.5 opacity-60" />

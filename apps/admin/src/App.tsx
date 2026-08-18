@@ -29,6 +29,7 @@ import { LegalContentPage } from '@/pages/LegalContentPage'
 import { AnnouncementsAdminPage } from '@/pages/AnnouncementsAdminPage'
 import { QualityControlPage } from '@/pages/QualityControlPage'
 import { SocialConnectionsPage } from '@/pages/SocialConnectionsPage'
+import { EdonusumPage } from '@/pages/EdonusumPage'
 import { ModuleListPage } from '@/components/module/ModuleListPage'
 import { ModuleDetailPage } from '@/components/module/ModuleDetailPage'
 import { ModuleFormPage } from '@/components/module/ModuleFormPage'
@@ -54,6 +55,8 @@ export function AppRoutes() {
         <Route path="platform-ops" element={<PlatformOpsPage />} />
         <Route path="kalite-kontrol" element={<QualityControlPage />} />
         <Route path="sosyal-baglantilar" element={<SocialConnectionsPage />} />
+        <Route path="e-donusum" element={<EdonusumPage />} />
+        <Route path="ayarlar/e-donusum" element={<EdonusumPage />} />
         <Route path="user-management" element={<UserManagementPage />} />
         <Route path="audit-logs" element={<AuditLogPage />} />
         <Route path="guvenlik" element={<SecurityCenterPage />} />

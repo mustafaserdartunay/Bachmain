@@ -57,6 +57,12 @@ import ExpenseListPage from './pages/expenses/ExpenseListPage'
 import LoanPaymentsPage from './pages/expenses/LoanPaymentsPage'
 import IncomingEInvoicesPage from './pages/expenses/IncomingEInvoicesPage'
 import IncomingEInvoiceDetailPage from './pages/expenses/IncomingEInvoiceDetailPage'
+import EDocumentsHubPage from './pages/edocuments/EDocumentsHubPage'
+import EDocumentListPage from './pages/edocuments/EDocumentListPage'
+import EDocumentSettingsPage from './pages/edocuments/EDocumentSettingsPage'
+import EDocumentComposePage from './pages/edocuments/EDocumentComposePage'
+import EDocumentDetailPage from './pages/edocuments/EDocumentDetailPage'
+import EDocumentSearchPage from './pages/edocuments/EDocumentSearchPage'
 import ExpensesReportPage from './pages/expenses/ExpensesReportPage'
 import PaymentsReportPage from './pages/expenses/PaymentsReportPage'
 import VatReportPage from './pages/expenses/VatReportPage'
@@ -374,6 +380,44 @@ export default function App() {
                         path="/giderler/gelen-e-faturalar"
                         element={<IncomingEInvoicesPage />}
                       />
+                      <Route path="/e-belgeler" element={<EDocumentsHubPage />} />
+                      <Route path="/e-belgeler/yeni" element={<EDocumentComposePage />} />
+                      <Route
+                        path="/e-belgeler/e-fatura"
+                        element={<EDocumentListPage title="E-Fatura" documentType="e-fatura" />}
+                      />
+                      <Route
+                        path="/e-belgeler/e-arsiv"
+                        element={<EDocumentListPage title="E-Arşiv" documentType="e-arsiv" />}
+                      />
+                      <Route
+                        path="/e-belgeler/gelen"
+                        element={<EDocumentListPage title="Gelen Faturalar" direction="incoming" />}
+                      />
+                      <Route
+                        path="/e-belgeler/giden"
+                        element={<EDocumentListPage title="Giden Faturalar" direction="outgoing" />}
+                      />
+                      <Route
+                        path="/e-belgeler/taslaklar"
+                        element={<EDocumentListPage title="Taslaklar" status="DRAFT" />}
+                      />
+                      <Route
+                        path="/e-belgeler/iptaller"
+                        element={
+                          <EDocumentListPage
+                            title="İptaller / İade"
+                            statusIn={['CANCELLED', 'REJECTED']}
+                          />
+                        }
+                      />
+                      <Route path="/e-belgeler/sorgula" element={<EDocumentSearchPage />} />
+                      <Route path="/e-belgeler/ayarlar" element={<EDocumentSettingsPage />} />
+                      <Route
+                        path="/ayarlar/e-donusum"
+                        element={<Navigate to="/e-belgeler/ayarlar" replace />}
+                      />
+                      <Route path="/e-belgeler/:id" element={<EDocumentDetailPage />} />
                       <Route path="/giderler/tedarikciler" element={<SuppliersPage />} />
                       <Route path="/ik" element={<PdksDashboardPage />} />
                       <Route path="/ik/personeller" element={<PersonnelPage />} />

@@ -32,6 +32,7 @@ import { startEmailChange, deleteMembershipAccount } from '../server/emailChange
 import { handleQualityControl } from '../server/qualityControl.mjs'
 import { handleSocialConnections } from '../server/socialConnections.mjs'
 import { handlePlatformAdminApi } from '../server/platformAdminRoutes.mjs'
+import { handleEdocumentsApi } from '../server/edocumentsRoutes.mjs'
 import { handleSecurityApi } from '../server/securityRoutes.mjs'
 import { handleAiosApi } from '../server/aiosRoutes.mjs'
 import {
@@ -279,6 +280,7 @@ export default async function handler(req, res) {
     if (await handlePaymentsApi(req, res, path, body)) return
     if (await handleWhatsAppApi(req, res, path, body)) return
     if (await handleTenantApi(req, res, path, body)) return
+    if (await handleEdocumentsApi(req, res, path, body, getQuery(req))) return
     if (await handleMailApi(req, res, path, body)) return
 
     // CRM destek talebi — staff gate öncesi (üyelik Bearer yeterli)
@@ -325,7 +327,9 @@ export default async function handler(req, res) {
     // Single-segment ticket detail (Vercel-safe): /api/support-ticket?id=
     if (path === 'support-ticket') {
       const id = String(query.id || query.ticketId || body.id || '').trim()
-      const op = String(query.op || (method === 'GET' ? 'get' : '')).trim().toLowerCase()
+      const op = String(query.op || (method === 'GET' ? 'get' : ''))
+        .trim()
+        .toLowerCase()
       if (!id) {
         return sendJson(req, res, 400, { error: 'MISSING_ID', message: 'Ticket id zorunlu' })
       }
@@ -355,7 +359,10 @@ export default async function handler(req, res) {
             return sendJson(req, res, 404, { error: 'Ticket bulunamadı' })
           }
           if (error?.message === 'INVALID_STATUS' || error?.message === 'INVALID_PRIORITY') {
-            return sendJson(req, res, 400, { error: error.message, message: 'Geçersiz alan değeri' })
+            return sendJson(req, res, 400, {
+              error: error.message,
+              message: 'Geçersiz alan değeri',
+            })
           }
           throw error
         }
@@ -506,9 +513,7 @@ export default async function handler(req, res) {
             id: n.id,
             title: n.title,
             type: n.type || 'Bildirim',
-            sent: n.createdAt
-              ? new Date(n.createdAt).toLocaleString('tr-TR')
-              : '—',
+            sent: n.createdAt ? new Date(n.createdAt).toLocaleString('tr-TR') : '—',
             recipients: 'admin@bachmain.com',
             status: 'Yönetim',
             body: n.body || '',
@@ -525,9 +530,12 @@ export default async function handler(req, res) {
               label: 'Satın alma',
               value: String(
                 staffOnly.filter((n) =>
-                  ['package_purchase', 'kontor_purchase', 'module_purchase', 'payment_request'].includes(
-                    n.type,
-                  ),
+                  [
+                    'package_purchase',
+                    'kontor_purchase',
+                    'module_purchase',
+                    'payment_request',
+                  ].includes(n.type),
                 ).length,
               ),
             },
@@ -550,7 +558,9 @@ export default async function handler(req, res) {
             },
             {
               label: 'Yüksek',
-              value: String(rows.filter((r) => r.priority === 'Yüksek' || r.priority === 'Kritik').length),
+              value: String(
+                rows.filter((r) => r.priority === 'Yüksek' || r.priority === 'Kritik').length,
+              ),
               change: 'Öncelik',
               trend: 'down',
             },

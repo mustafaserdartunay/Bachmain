@@ -31,6 +31,7 @@ import { analyticsRoutes } from './modules/analytics/analyticsRoutes.js'
 import { platformRoutes } from './modules/platform/platformRoutes.js'
 import { marketplaceRoutes } from './modules/marketplace/marketplaceRoutes.js'
 import { integrationRoutes } from './modules/integrations/integrationRoutes.js'
+import { edocumentRoutes } from './modules/edocuments/edocumentRoutes.js'
 import { registerMetrics } from './shared/metrics.js'
 import { captureApiException, initApiSentry } from './shared/sentry.js'
 
@@ -71,7 +72,9 @@ async function main() {
       req.url.startsWith('/v1/health') ||
       req.url.startsWith('/metrics') ||
       req.url.startsWith('/v1/billing/webhooks/') ||
-      req.url.startsWith('/v1/social/webhooks/'),
+      req.url.startsWith('/v1/social/webhooks/') ||
+      req.url.startsWith('/v1/edocuments/webhooks/') ||
+      req.url.startsWith('/v1/edocuments/cron/'),
     keyGenerator: (req) => req.ip,
   })
 
@@ -82,7 +85,9 @@ async function main() {
       req.url.startsWith('/v1/health') ||
       req.url.startsWith('/metrics') ||
       req.url.startsWith('/v1/billing/webhooks/') ||
-      req.url.startsWith('/v1/social/webhooks/')
+      req.url.startsWith('/v1/social/webhooks/') ||
+      req.url.startsWith('/v1/edocuments/webhooks/') ||
+      req.url.startsWith('/v1/edocuments/cron/')
     )
       return
     const { hitDistributedRateLimit } = await import('./shared/redisRateLimit.js')
@@ -144,6 +149,7 @@ async function main() {
   await app.register(platformRoutes)
   await app.register(marketplaceRoutes)
   await app.register(integrationRoutes)
+  await app.register(edocumentRoutes)
 
   await app.ready()
 

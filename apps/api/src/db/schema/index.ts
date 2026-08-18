@@ -2827,3 +2827,124 @@ export const smcWebhookEvents = pgTable(
     index('smc_webhook_events_company_idx').on(t.companyId, t.createdAt),
   ],
 )
+
+/** E-Dönüşüm / e-belge — provider-based (Nilvera first). companyId is text. */
+export const eDocumentConnections = pgTable(
+  'e_document_connections',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: text('company_id').notNull(),
+    branchId: text('branch_id'),
+    provider: text('provider').default('nilvera').notNull(),
+    environment: text('environment').default('TEST').notNull(),
+    encryptedApiKey: text('encrypted_api_key'),
+    apiKeyFingerprint: text('api_key_fingerprint'),
+    status: text('status').default('disconnected').notNull(),
+    lastTestAt: timestamp('last_test_at', { withTimezone: true }),
+    lastSyncAt: timestamp('last_sync_at', { withTimezone: true }),
+    lastError: text('last_error'),
+    companyTitle: text('company_title'),
+    taxNumber: text('tax_number'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('e_doc_conn_company_provider_env_uidx').on(
+      t.companyId,
+      t.provider,
+      t.environment,
+      t.branchId,
+    ),
+    index('e_doc_conn_company_idx').on(t.companyId, t.status),
+  ],
+)
+
+export const eDocuments = pgTable(
+  'e_documents',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: text('company_id').notNull(),
+    branchId: text('branch_id'),
+    invoiceId: text('invoice_id'),
+    provider: text('provider').default('nilvera').notNull(),
+    documentType: text('document_type').notNull(),
+    direction: text('direction').default('outgoing').notNull(),
+    externalId: text('external_id'),
+    uuid: text('uuid'),
+    invoiceNumber: text('invoice_number'),
+    status: text('status').default('DRAFT').notNull(),
+    providerStatus: text('provider_status'),
+    answerCode: text('answer_code'),
+    currency: text('currency').default('TRY').notNull(),
+    amount: numeric('amount', { precision: 18, scale: 2 }).default('0'),
+    taxAmount: numeric('tax_amount', { precision: 18, scale: 2 }).default('0'),
+    issueDate: timestamp('issue_date', { withTimezone: true }),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+    receivedAt: timestamp('received_at', { withTimezone: true }),
+    partyName: text('party_name'),
+    partyTaxNumber: text('party_tax_number'),
+    pdfUrl: text('pdf_url'),
+    xmlUrl: text('xml_url'),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('e_docs_company_uuid_uidx').on(t.companyId, t.provider, t.uuid),
+    uniqueIndex('e_docs_company_invoice_uidx').on(t.companyId, t.invoiceId, t.direction),
+    index('e_docs_company_status_idx').on(t.companyId, t.status, t.createdAt),
+    index('e_docs_company_dir_idx').on(t.companyId, t.direction, t.documentType),
+  ],
+)
+
+export const eDocumentEvents = pgTable(
+  'e_document_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eDocumentId: uuid('e_document_id')
+      .notNull()
+      .references(() => eDocuments.id),
+    companyId: text('company_id').notNull(),
+    eventType: text('event_type').notNull(),
+    oldStatus: text('old_status'),
+    newStatus: text('new_status'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+    errorMessage: text('error_message'),
+    ...timestamps,
+  },
+  (t) => [index('e_doc_events_doc_idx').on(t.eDocumentId, t.createdAt)],
+)
+
+export const eDocumentSyncLogs = pgTable(
+  'e_document_sync_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: text('company_id').notNull(),
+    provider: text('provider').default('nilvera').notNull(),
+    syncType: text('sync_type').notNull(),
+    status: text('status').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+    recordsProcessed: integer('records_processed').default(0).notNull(),
+    error: text('error'),
+    ...timestamps,
+  },
+  (t) => [index('e_doc_sync_company_idx').on(t.companyId, t.startedAt)],
+)
+
+export const eDocumentApiLogs = pgTable(
+  'e_document_api_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: text('company_id').notNull(),
+    provider: text('provider').default('nilvera').notNull(),
+    requestType: text('request_type').notNull(),
+    endpoint: text('endpoint').notNull(),
+    durationMs: integer('duration_ms'),
+    success: boolean('success').default(false).notNull(),
+    httpStatus: integer('http_status'),
+    externalUuid: text('external_uuid'),
+    error: text('error'),
+    ...timestamps,
+  },
+  (t) => [index('e_doc_api_logs_company_idx').on(t.companyId, t.createdAt)],
+)
