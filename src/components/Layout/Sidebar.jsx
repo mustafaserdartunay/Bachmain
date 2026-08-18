@@ -77,8 +77,12 @@ import { getMessageCenterBadge } from '../../omnichannel/store'
 import {
   webSubMenus,
   isWebRoute,
+  isWebAdminRoute,
   WEB_STUDIO_PATH,
   WEB_STUDIO_MANAGEMENT_PATH,
+  WEB_STUDIO_ADMIN_PATH,
+  WEB_STUDIO_CATEGORY_CREATE_PATH,
+  WEB_STUDIO_PRODUCT_CREATE_PATH,
 } from '../../data/webMenu'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
@@ -254,6 +258,11 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
   const [openMenuId, setOpenMenuId] = useState(resolveOpenMenuId)
   const [documentCenterOpen, setDocumentCenterOpen] = useState(isDocumentCenterRouteActive)
+  const [studioAdminOpen, setStudioAdminOpen] = useState(isWebAdminRoute(location.pathname))
+  const [studioCategoryOpen, setStudioCategoryOpen] = useState(
+    location.pathname === WEB_STUDIO_CATEGORY_CREATE_PATH ||
+      location.pathname === WEB_STUDIO_PRODUCT_CREATE_PATH,
+  )
   const [messageBadge, setMessageBadge] = useState(() => getMessageCenterBadge())
 
   const customerOpen = openMenuId === 'customer'
@@ -294,6 +303,16 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   useEffect(() => {
     if (isDocumentCenterRouteActive) setDocumentCenterOpen(true)
   }, [isDocumentCenterRouteActive])
+
+  useEffect(() => {
+    if (isWebAdminRoute(location.pathname)) setStudioAdminOpen(true)
+    if (
+      location.pathname === WEB_STUDIO_CATEGORY_CREATE_PATH ||
+      location.pathname === WEB_STUDIO_PRODUCT_CREATE_PATH
+    ) {
+      setStudioCategoryOpen(true)
+    }
+  }, [location.pathname])
 
   useEffect(() => {
     function syncMessageBadge() {
@@ -879,13 +898,13 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           {webOpen && !collapsed && (
             <SidebarSubMenu>
               {webSubMenus.map((sub) => {
-                const SubIcon = sub.icon === 'sparkles' ? Sparkles : Globe2
+                const SubIcon = sub.icon === 'gauge' ? Gauge : Sparkles
                 return (
                   <NavLink
                     key={sub.path}
                     to={sub.path}
                     state={{ fromApp: true }}
-                    end={sub.path === WEB_STUDIO_PATH}
+                    end={sub.path === WEB_STUDIO_MANAGEMENT_PATH || sub.path === WEB_STUDIO_PATH}
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} flex items-center gap-2 ${
@@ -900,6 +919,83 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                   </NavLink>
                 )
               })}
+              <>
+                <div className="flex items-center gap-0.5">
+                  <NavLink
+                    to={WEB_STUDIO_ADMIN_PATH}
+                    end
+                    onClick={handleNavigate}
+                    className={() =>
+                      `${subMenuButtonBase} flex flex-1 items-center gap-2 ${
+                        isWebAdminRoute(location.pathname) ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    <SubMenuIcon>
+                      <FolderKanban className="h-3.5 w-3.5" />
+                    </SubMenuIcon>
+                    Yönetim
+                  </NavLink>
+                  <button
+                    type="button"
+                    onClick={() => setStudioAdminOpen((open) => !open)}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white/20"
+                    aria-label={studioAdminOpen ? 'Yönetim menüsünü kapat' : 'Yönetim menüsünü aç'}
+                  >
+                    {studioAdminOpen ? (
+                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                    )}
+                  </button>
+                </div>
+                {studioAdminOpen ? (
+                  <SidebarSubMenu className="sidebar-submenu--nested">
+                    <>
+                      <div className="flex items-center gap-0.5">
+                        <NavLink
+                          to={WEB_STUDIO_CATEGORY_CREATE_PATH}
+                          onClick={handleNavigate}
+                          className={({ isActive }) =>
+                            `${subMenuButtonBase} flex-1 ${isActive ? 'sidebar-menu-active font-medium' : ''}`
+                          }
+                        >
+                          Kategori oluştur
+                        </NavLink>
+                        <button
+                          type="button"
+                          onClick={() => setStudioCategoryOpen((open) => !open)}
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white/20"
+                          aria-label={
+                            studioCategoryOpen
+                              ? 'Kategori menüsünü kapat'
+                              : 'Kategori menüsünü aç'
+                          }
+                        >
+                          {studioCategoryOpen ? (
+                            <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                          ) : (
+                            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                          )}
+                        </button>
+                      </div>
+                      {studioCategoryOpen ? (
+                        <SidebarSubMenu className="sidebar-submenu--nested">
+                          <NavLink
+                            to={WEB_STUDIO_PRODUCT_CREATE_PATH}
+                            onClick={handleNavigate}
+                            className={({ isActive }) =>
+                              `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
+                            }
+                          >
+                            Ürün oluştur
+                          </NavLink>
+                        </SidebarSubMenu>
+                      ) : null}
+                    </>
+                  </SidebarSubMenu>
+                ) : null}
+              </>
             </SidebarSubMenu>
           )}
         </div>

@@ -14,7 +14,7 @@ import {
   Store,
 } from 'lucide-react'
 import TeamHubPanel from '../../components/Layout/TeamHubPanel'
-import { getPagesBySite, getSites } from '../../utils/webSiteStorage'
+import { getPagesBySite, getSites, getWebCategories, getWebStoreProducts } from '../../utils/webSiteStorage'
 import logoBusiness from '../../assets/bachmain-logo.png'
 
 const NAV = [
@@ -273,10 +273,8 @@ function DomainConnectPage({ sites, pages }) {
   )
 }
 
-function CategoriesPage({ pages }) {
-  const menuRows = pages.length
-    ? pages.slice(0, 5).map((page) => [page.title.toUpperCase(), page.slug])
-    : [['ANA SAYFA', 'ana-sayfa'], ['KURUMSAL', 'kurumsal'], ['İLETİŞİM', 'iletisim']]
+function CategoriesPage() {
+  const categories = getWebCategories()
   return (
     <div className="space-y-5">
       <PanelTitle title="Kategoriler" subtitle="Soldan kategori seç → üst menü, açılır menü, banner ve filtre mantığında web menü kurgusunu yönet." />
@@ -284,11 +282,11 @@ function CategoriesPage({ pages }) {
         <div className={`${sectionCard} p-4`}>
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#94a3b8]">Üst Menü</p>
-            <button className="text-xs font-semibold text-[#203375]">+ Ekle</button>
+            <Link to="/web/studio/yonetim/kategori-olustur" className="text-xs font-semibold text-[#203375]">+ Ekle</Link>
           </div>
           <div className="space-y-2">
-            {menuRows.map(([title]) => (
-              <div key={title} className="rounded-[18px] border border-[#edf2f7] bg-white/90 px-4 py-3 text-sm font-semibold text-[#203375]">{title}</div>
+            {(categories.length ? categories : [{ id: 'empty', name: 'Henüz kategori yok', slug: 'kategori-olustur' }]).map((item) => (
+              <div key={item.id} className="rounded-[18px] border border-[#edf2f7] bg-white/90 px-4 py-3 text-sm font-semibold text-[#203375]">{item.name}</div>
             ))}
           </div>
         </div>
@@ -296,12 +294,12 @@ function CategoriesPage({ pages }) {
           <div className={`${sectionCard} p-4`}>
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <p className="text-lg font-bold text-[#203375]">Çikolata</p>
-                <p className="text-xs text-[#94a3b8]">/kategoriler/cikolata</p>
+                <p className="text-lg font-bold text-[#203375]">{categories[0]?.name || 'Kategori oluştur'}</p>
+                <p className="text-xs text-[#94a3b8]">/{categories[0]?.slug || 'kategori-olustur'}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className={softPill}>Vitrin</span>
-                <button className="rounded-full bg-[#61b6f6] px-4 py-2 text-xs font-semibold text-white">Kaydet</button>
+                {categories[0]?.showcase ? <span className={softPill}>Vitrin</span> : null}
+                <Link to="/web/studio/yonetim/kategori-olustur" className="rounded-full bg-[#61b6f6] px-4 py-2 text-xs font-semibold text-white">Düzenle</Link>
               </div>
             </div>
             <div className="space-y-3">
@@ -329,23 +327,26 @@ function CategoriesPage({ pages }) {
   )
 }
 
-function ProductsPage({ pages }) {
-  const rows = pages.length
-    ? pages.map((page, index) => [page.title, `/${page.slug}`, String((index + 1) * 2), 'Düzenle'])
-    : [
-        ['Ana Sayfa Hero', '/ana-sayfa', '6', 'Düzenle'],
-        ['Kurumsal Blok', '/kurumsal', '4', 'Düzenle'],
-        ['İletişim Formu', '/iletisim', '2', 'Düzenle'],
-      ]
+function ProductsPage() {
+  const products = getWebStoreProducts()
+  const categories = getWebCategories()
+  const rows = products.length
+    ? products.map((item) => [
+        item.name,
+        `/${item.slug}`,
+        String(item.stock ?? 0),
+        item.published ? 'Yayında' : 'Taslak',
+      ])
+    : [['Henüz ürün yok', '/urun-olustur', '0', 'Oluştur']]
   return (
     <div className="space-y-5">
       <PanelTitle
         title="Ürünler"
-        subtitle={`${rows.length} kayıt`}
-        actions={<button className="rounded-full bg-[#61b6f6] px-4 py-2 text-xs font-semibold text-white">+ Yeni ürün</button>}
+        subtitle={`${products.length} kayıt · ${categories.length} kategori`}
+        actions={<Link to="/web/studio/yonetim/urun-olustur" className="rounded-full bg-[#61b6f6] px-4 py-2 text-xs font-semibold text-white">+ Yeni ürün</Link>}
       />
       <div className={`${sectionCard} overflow-hidden`}>
-        <DataTable columns={['Ürün', 'Slug', 'Stok', 'İşlem']} rows={rows} />
+        <DataTable columns={['Ürün', 'Slug', 'Stok', 'Durum']} rows={rows} />
       </div>
     </div>
   )
@@ -455,9 +456,9 @@ function renderPage(pathname, primarySite, sites, pages) {
     case '/web/studio/yonetim/domain-bagla':
       return <DomainConnectPage sites={sites} pages={pages} />
     case '/web/studio/yonetim/kategoriler':
-      return <CategoriesPage pages={pages} />
+      return <CategoriesPage />
     case '/web/studio/yonetim/urunler':
-      return <ProductsPage pages={pages} />
+      return <ProductsPage />
     case '/web/studio/yonetim/siparisler':
       return <OrdersPage />
     case '/web/studio/yonetim/profil':

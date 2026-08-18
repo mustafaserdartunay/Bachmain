@@ -201,6 +201,9 @@ import {
 import WebStudioPage from './pages/web/WebStudioPage'
 import WebStudioManagementPage from './pages/web/WebStudioManagementPage'
 import WebStudioStatusPage from './pages/web/WebStudioStatusPage'
+import WebStudioAdminPage from './pages/web/WebStudioAdminPage'
+import WebStudioCategoryCreatePage from './pages/web/WebStudioCategoryCreatePage'
+import WebStudioProductCreatePage from './pages/web/WebStudioProductCreatePage'
 
 function LegacyKasaAccountRedirect() {
   const { accountId } = useParams()
@@ -289,6 +292,15 @@ export default function App() {
                       <Route path="/web" element={<Navigate to="/web/studio" replace />} />
                       <Route path="/web/studio" element={<WebStudioPage />} />
                       <Route path="/web/studio/yonetim" element={<WebStudioStatusPage />} />
+                      <Route path="/web/studio/yonetim/yonetim" element={<WebStudioAdminPage />} />
+                      <Route
+                        path="/web/studio/yonetim/kategori-olustur"
+                        element={<WebStudioCategoryCreatePage />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/urun-olustur"
+                        element={<WebStudioProductCreatePage />}
+                      />
                       <Route
                         path="/web/studio/yonetim/panel"
                         element={<WebStudioManagementPage />}

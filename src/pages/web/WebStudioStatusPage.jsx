@@ -20,7 +20,7 @@ import {
 import { documentTotals } from '../../utils/documentTotals'
 import { loadOrders } from '../../utils/ordersStore'
 import { getCatalogProducts, getTotalStock } from '../../utils/productCatalog'
-import { getPages, getSites } from '../../utils/webSiteStorage'
+import { getPages, getSites, getWebCategories, getWebStoreProducts } from '../../utils/webSiteStorage'
 
 const WEB_INBOX_KEY = 'bach-web-inbox'
 
@@ -124,6 +124,7 @@ export default function WebStudioStatusPage() {
       'bach:web-sites-updated',
       'bach:web-pages-updated',
       'bach:products-updated',
+      'bach:web-catalog-updated',
     ]
     events.forEach((event) => window.addEventListener(event, refresh))
     return () => events.forEach((event) => window.removeEventListener(event, refresh))
@@ -134,6 +135,8 @@ export default function WebStudioStatusPage() {
     const pages = getPages()
     const orders = loadOrders()
     const products = getCatalogProducts()
+    const catalogProducts = getWebStoreProducts()
+    const catalogCategories = getWebCategories()
     const inbox = readInbox()
     const incoming = [...orders]
       .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
@@ -162,6 +165,8 @@ export default function WebStudioStatusPage() {
       inbox,
       unread,
       productCount: products.length,
+      catalogProductCount: catalogProducts.length,
+      catalogCategoryCount: catalogCategories.length,
     }
   }, [tick])
 
@@ -188,6 +193,12 @@ export default function WebStudioStatusPage() {
               {snapshot.connected ? 'Yayında' : 'Domain bekliyor'}
             </span>
             <Link
+              to="/web/studio/yonetim/yonetim"
+              className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg bg-white/45 px-2.5 text-[10px] font-extrabold text-blue-600 transition-colors hover:bg-white/70"
+            >
+              Yönetim
+            </Link>
+            <Link
               to="/web/studio/yonetim/panel"
               className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg bg-white/45 px-2.5 text-[10px] font-extrabold text-blue-600 transition-colors hover:bg-white/70"
             >
@@ -201,7 +212,7 @@ export default function WebStudioStatusPage() {
           <MetricCell label="Gelen sipariş" value={String(snapshot.incoming.length)} hint={money(snapshot.orderTotal)} tone="text-emerald-600" />
           <MetricCell label="Stok ürün" value={String(snapshot.productCount)} hint={`${snapshot.lowStock} kritik`} tone="text-amber-600" />
           <MetricCell label="Müşteri mesajı" value={String(snapshot.inbox.length)} hint={`${snapshot.unread} okunmadı`} tone="text-sky-600" />
-          <MetricCell label="Site / sayfa" value={`${snapshot.sites.length} / ${snapshot.pages.length}`} hint={`${snapshot.connected} domain`} tone="text-blue-600" />
+          <MetricCell label="Site / sayfa" value={`${snapshot.sites.length} / ${snapshot.pages.length}`} hint={`${snapshot.catalogCategoryCount} kategori · ${snapshot.catalogProductCount} ürün`} tone="text-blue-600" />
         </div>
       </section>
 

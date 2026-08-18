@@ -5,6 +5,8 @@
 
 export const WEB_SITES_KEY = 'bach-web-sites'
 export const WEB_PAGES_KEY = 'bach-web-pages'
+export const WEB_CATEGORIES_KEY = 'bach-web-categories'
+export const WEB_STORE_PRODUCTS_KEY = 'bach-web-store-products'
 
 // ── Defaults ────────────────────────────────────────────────────────
 const DEFAULT_SITES = []
@@ -130,17 +132,192 @@ export function deletePage(id) {
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
-function slugify(text) {
+export function slugify(text, fallback = 'sayfa') {
   return text
     .toLowerCase()
     .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
     .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-    || 'sayfa'
+    || fallback
+}
+
+function uid(prefix) {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+}
+
+function readList(key) {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function writeList(key, list, eventName) {
+  try {
+    localStorage.setItem(key, JSON.stringify(list))
+    window.dispatchEvent(new CustomEvent(eventName))
+  } catch {
+    // ignore quota
+  }
+}
+
+// ── Categories ────────────────────────────────────────────────────────
+
+/** @returns {WebCategory[]} */
+export function getWebCategories() {
+  return readList(WEB_CATEGORIES_KEY)
+}
+
+/** @param {WebCategory[]} categories */
+export function saveWebCategories(categories) {
+  writeList(WEB_CATEGORIES_KEY, categories, 'bach:web-catalog-updated')
+}
+
+/**
+ * @param {{ name: string, slug?: string, parentId?: string, description?: string, image?: string, showInMenu?: boolean, showcase?: boolean }} data
+ * @returns {WebCategory}
+ */
+export function createWebCategory({
+  name,
+  slug,
+  parentId = '',
+  description = '',
+  image = '',
+  showInMenu = true,
+  showcase = false,
+}) {
+  const now = new Date().toISOString()
+  const category = {
+    id: uid('cat'),
+    name: name.trim(),
+    slug: slugify(slug || name, 'kategori'),
+    parentId: parentId || '',
+    description: description.trim(),
+    image: image.trim(),
+    showInMenu: Boolean(showInMenu),
+    showcase: Boolean(showcase),
+    createdAt: now,
+    updatedAt: now,
+  }
+  saveWebCategories([...getWebCategories(), category])
+  return category
+}
+
+/** @param {string} id @param {Partial<WebCategory>} patch */
+export function updateWebCategory(id, patch) {
+  saveWebCategories(
+    getWebCategories().map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            ...patch,
+            name: patch.name != null ? String(patch.name).trim() : item.name,
+            slug: patch.slug != null ? slugify(patch.slug, item.slug) : item.slug,
+            updatedAt: nowIso(),
+          }
+        : item,
+    ),
+  )
+}
+
+/** @param {string} id */
+export function deleteWebCategory(id) {
+  saveWebCategories(
+    getWebCategories()
+      .filter((item) => item.id !== id)
+      .map((item) => (item.parentId === id ? { ...item, parentId: '' } : item)),
+  )
+  saveWebStoreProducts(
+    getWebStoreProducts().map((item) => (item.categoryId === id ? { ...item, categoryId: '' } : item)),
+  )
+}
+
+export function getWebCategoryById(id) {
+  return getWebCategories().find((item) => item.id === id) || null
+}
+
+// ── Store products ────────────────────────────────────────────────────
+
+/** @returns {WebStoreProduct[]} */
+export function getWebStoreProducts() {
+  return readList(WEB_STORE_PRODUCTS_KEY)
+}
+
+/** @param {WebStoreProduct[]} products */
+export function saveWebStoreProducts(products) {
+  writeList(WEB_STORE_PRODUCTS_KEY, products, 'bach:web-catalog-updated')
+}
+
+/**
+ * @param {{ name: string, slug?: string, sku?: string, categoryId?: string, price?: number, stock?: number, description?: string, image?: string, published?: boolean }} data
+ * @returns {WebStoreProduct}
+ */
+export function createWebStoreProduct({
+  name,
+  slug,
+  sku = '',
+  categoryId = '',
+  price = 0,
+  stock = 0,
+  description = '',
+  image = '',
+  published = true,
+}) {
+  const now = new Date().toISOString()
+  const product = {
+    id: uid('wprod'),
+    name: name.trim(),
+    slug: slugify(slug || name, 'urun'),
+    sku: sku.trim(),
+    categoryId: categoryId || '',
+    price: Number(price) || 0,
+    stock: Number(stock) || 0,
+    description: description.trim(),
+    image: image.trim(),
+    published: Boolean(published),
+    createdAt: now,
+    updatedAt: now,
+  }
+  saveWebStoreProducts([...getWebStoreProducts(), product])
+  return product
+}
+
+/** @param {string} id @param {Partial<WebStoreProduct>} patch */
+export function updateWebStoreProduct(id, patch) {
+  saveWebStoreProducts(
+    getWebStoreProducts().map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            ...patch,
+            name: patch.name != null ? String(patch.name).trim() : item.name,
+            slug: patch.slug != null ? slugify(patch.slug, item.slug) : item.slug,
+            price: patch.price != null ? Number(patch.price) || 0 : item.price,
+            stock: patch.stock != null ? Number(patch.stock) || 0 : item.stock,
+            updatedAt: nowIso(),
+          }
+        : item,
+    ),
+  )
+}
+
+/** @param {string} id */
+export function deleteWebStoreProduct(id) {
+  saveWebStoreProducts(getWebStoreProducts().filter((item) => item.id !== id))
+}
+
+function nowIso() {
+  return new Date().toISOString()
 }
 
 /**
  * @typedef {{ id: string, name: string, domain: string, status: string, createdAt: string, updatedAt: string }} WebSite
  * @typedef {{ id: string, siteId: string, title: string, slug: string, type: string, status: string, content: string, createdAt: string, updatedAt: string }} WebPage
+ * @typedef {{ id: string, name: string, slug: string, parentId: string, description: string, image: string, showInMenu: boolean, showcase: boolean, createdAt: string, updatedAt: string }} WebCategory
+ * @typedef {{ id: string, name: string, slug: string, sku: string, categoryId: string, price: number, stock: number, description: string, image: string, published: boolean, createdAt: string, updatedAt: string }} WebStoreProduct
  */

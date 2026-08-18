@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-
-const STUDIO_ENTER_MS = 580
+import { isStudioFullscreenRoute } from '../../data/webMenu'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
 import BottomNav from './BottomNav'
 
+const STUDIO_ENTER_MS = 580
 const SIDEBAR_KEY = 'bach-sidebar'
 const LEGACY_SIDEBAR_KEY = 'erlenbox-sidebar'
 
@@ -23,7 +23,7 @@ function readSidebarCollapsed() {
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
-  const isStudioManagement = pathname.startsWith('/web/studio/yonetim/')
+  const isStudioManagement = isStudioFullscreenRoute(pathname)
 
   // Web Studio artık normal sayfa — özel tam ekran modundan çıkarıldı
   const hideChrome =
