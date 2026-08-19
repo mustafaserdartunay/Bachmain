@@ -374,8 +374,36 @@ async function getConn(companyId) {
 async function getPlatform() {
   const sql = getSql()
   const rows = await sql`SELECT * FROM e_document_platform WHERE id = 'nilvera' LIMIT 1`
-  if (rows[0]) return rows[0]
-  await sql`INSERT INTO e_document_platform (id) VALUES ('nilvera') ON CONFLICT (id) DO NOTHING`
+  if (!rows[0]) {
+    await sql`INSERT INTO e_document_platform (id) VALUES ('nilvera') ON CONFLICT (id) DO NOTHING`
+  }
+  const testEnv = sanitizeApiKey(
+    process.env.NILVERA_PLATFORM_API_KEY_TEST || process.env.NILVERA_PLATFORM_API_KEY || '',
+  )
+  const liveEnv = sanitizeApiKey(process.env.NILVERA_PLATFORM_API_KEY_LIVE || '')
+  if (testEnv.length >= 16 || liveEnv.length >= 16) {
+    const current =
+      (await sql`SELECT * FROM e_document_platform WHERE id = 'nilvera' LIMIT 1`)[0] || {}
+    if (testEnv.length >= 16 && !current.encrypted_api_key_test) {
+      const enc = encryptApiKey(testEnv)
+      const fp = fingerprint(testEnv)
+      await sql`UPDATE e_document_platform SET encrypted_api_key_test = ${enc}, fingerprint_test = ${fp}, updated_at = now() WHERE id = 'nilvera'`
+      try {
+        const company = await fetchCompanyInfo({ apiKey: testEnv, environment: 'TEST' })
+        await sql`UPDATE e_document_platform SET
+          status = 'connected', last_test_at = now(), last_error = null,
+          company_title = ${company?.Name || null}, tax_number = ${company?.TaxNumber || null},
+          updated_at = now() WHERE id = 'nilvera'`
+      } catch (err) {
+        await sql`UPDATE e_document_platform SET status = 'error', last_test_at = now(), last_error = ${err.message}, updated_at = now() WHERE id = 'nilvera'`
+      }
+    }
+    if (liveEnv.length >= 16 && !current.encrypted_api_key_live) {
+      const enc = encryptApiKey(liveEnv)
+      const fp = fingerprint(liveEnv)
+      await sql`UPDATE e_document_platform SET encrypted_api_key_live = ${enc}, fingerprint_live = ${fp}, updated_at = now() WHERE id = 'nilvera'`
+    }
+  }
   const again = await sql`SELECT * FROM e_document_platform WHERE id = 'nilvera' LIMIT 1`
   return again[0] || null
 }
@@ -1307,6 +1335,7 @@ export async function handleEdocumentsApi(req, res, path, body = {}, query = {})
 
   try {
     await ensureEdocSchema()
+    await getPlatform()
     const op = parseOp(path, query) || (req.method === 'POST' ? 'create' : 'list')
     const idMatch = String(path).match(/edocuments\/([0-9a-f-]{16,})/i)
     if (idMatch && !query.id) query.id = idMatch[1]
