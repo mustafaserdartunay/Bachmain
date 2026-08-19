@@ -7,6 +7,8 @@ import {
   resetPasswordWithToken,
   verifyEmailWithToken,
 } from '../../utils/platformAuth'
+import { acceptTeamInvite, loadInvitePreview } from '../../utils/teamUsersApi'
+import { MODULE_LEVELS } from '../../data/appModules'
 import {
   isLocalDevHost,
   MARKETING_LOGIN_URL,
@@ -365,6 +367,154 @@ export function ResetPasswordPage() {
           {busy ? 'Kaydediliyor…' : 'Şifreyi güncelle'}
         </button>
       </form>
+    </AuthShell>
+  )
+}
+
+export function AcceptInvitePage() {
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
+  const token = params.get('token') || ''
+  const [preview, setPreview] = useState(null)
+  const [password, setPassword] = useState('')
+  const [password2, setPassword2] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function run() {
+      if (!token) {
+        setError('Davet bağlantısı eksik')
+        setLoading(false)
+        return
+      }
+      try {
+        const data = await loadInvitePreview(token)
+        if (!cancelled) {
+          setPreview(data)
+          setFullName(data.fullName || '')
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Davet yüklenemedi')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [token])
+
+  async function onSubmit(event) {
+    event.preventDefault()
+    if (preview?.requiresPassword !== false) {
+      if (password !== password2) {
+        setError('Şifreler eşleşmiyor')
+        return
+      }
+    }
+    setBusy(true)
+    setError('')
+    try {
+      await acceptTeamInvite({ token, password, fullName })
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(err.message || 'Davet onaylanamadı')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <AuthShell
+      title="Firma daveti"
+      subtitle={
+        preview
+          ? `${preview.companyName || 'Firma'} sizi uygulamaya davet etti`
+          : 'Davet bilgileri yükleniyor'
+      }
+      footer={
+        <Link className="font-semibold text-[#1d4ed8] hover:underline" to="/giris">
+          Zaten hesabım var, giriş yap
+        </Link>
+      }
+    >
+      {loading ? <p className="text-sm text-slate-600">Davet kontrol ediliyor…</p> : null}
+      {error && !preview ? (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+      ) : null}
+      {preview ? (
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <div className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700">
+            <p>
+              <strong>{preview.email}</strong> adresiyle katılacaksınız.
+            </p>
+            {preview.jobTitle ? <p className="mt-1 text-slate-500">{preview.jobTitle}</p> : null}
+            {Array.isArray(preview.modules) && preview.modules.length ? (
+              <ul className="mt-2 space-y-1 text-xs text-slate-500">
+                {preview.modules.map((mod) => (
+                  <li key={mod.code}>
+                    {mod.label} · {MODULE_LEVELS[mod.level]?.label || mod.level}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+          <label className="block text-sm font-medium text-slate-700">
+            Ad soyad
+            <input
+              className={fieldClass}
+              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+          </label>
+          {preview.requiresPassword !== false ? (
+            <>
+              <label className="block text-sm font-medium text-slate-700">
+                Şifre
+                <input
+                  className={fieldClass}
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </label>
+              <label className="block text-sm font-medium text-slate-700">
+                Şifre tekrar
+                <input
+                  className={fieldClass}
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  value={password2}
+                  onChange={(e) => setPassword2(e.target.value)}
+                />
+              </label>
+            </>
+          ) : (
+            <p className="text-sm text-slate-600">
+              Mevcut hesabınızın e-posta ve şifresiyle giriş yapmaya devam edeceksiniz.
+            </p>
+          )}
+          {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full rounded-xl bg-[#0b1f3a] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {busy ? 'Onaylanıyor…' : 'Daveti onayla ve gir'}
+          </button>
+        </form>
+      ) : null}
     </AuthShell>
   )
 }
