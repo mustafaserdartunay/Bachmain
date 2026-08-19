@@ -251,6 +251,10 @@ function normalizeTax(value) {
   return String(value || '').replace(/\D/g, '')
 }
 
+function hasCounterpartyTestKey() {
+  return sanitizeApiKey(process.env.NILVERA_TEST_COUNTERPARTY_API_KEY_TEST || '').length >= 16
+}
+
 const NILVERA_TEST_PARTIES = {
   sender: {
     code: 'test01',
@@ -275,6 +279,7 @@ function publicPlatform(row) {
       configured: false,
       hasTestKey: false,
       hasLiveKey: false,
+      hasTestIncomingKey: hasCounterpartyTestKey(),
       status: 'disconnected',
       ...parties,
     }
@@ -290,6 +295,7 @@ function publicPlatform(row) {
     lastError: row.last_error,
     companyTitle: row.company_title,
     taxNumber: row.tax_number,
+    hasTestIncomingKey: hasCounterpartyTestKey(),
     ...parties,
   }
 }
@@ -334,6 +340,10 @@ function publicConn(row, platform = null) {
     nilveraMatched: Boolean(meta.nilveraMatched),
     platformReady,
     hasAssignedKey: Boolean(row.encrypted_api_key),
+    canTestIncoming:
+      env === 'TEST' &&
+      row.status === 'connected' &&
+      normalizeTax(row.tax_number) === NILVERA_TEST_PARTIES.sender.taxNumber,
     nextStep: tenantNextStep(row, platformReady),
     meta,
   }
@@ -682,8 +692,8 @@ function toModel(payload, kind) {
     TaxNumber: p.taxNumber || '',
     Name: p.name || '',
     TaxOffice: p.taxOffice || null,
-    Address: p.address || null,
-    District: p.district || null,
+    Address: p.address || 'Test Mahallesi',
+    District: p.district || p.city || 'Kadıköy',
     City: p.city || 'İstanbul',
     Country: p.country || 'Türkiye',
     PostalCode: p.postalCode || null,
@@ -694,7 +704,7 @@ function toModel(payload, kind) {
     InvoiceInfo: {
       UUID: uuid,
       InvoiceType: payload.invoiceType || 'SATIS',
-      InvoiceSerieOrNumber: payload.invoiceNo || null,
+      InvoiceSerieOrNumber: payload.invoiceNo || `GIB${new Date().getFullYear()}000000001`,
       IssueDate: payload.issueDate || new Date().toISOString(),
       CurrencyCode: payload.currency || 'TRY',
       InvoiceProfile:
@@ -731,6 +741,187 @@ function toModel(payload, kind) {
         amount: invoice.InvoiceInfo.PayableAmount,
         tax: invoice.InvoiceInfo.KdvTotal,
       }
+}
+
+async function nextInvoiceNumber(apiKey, environment) {
+  const data = await nilveraFetch({
+    apiKey,
+    environment,
+    path: '/einvoice/Series',
+    query: { Page: 1, PageSize: 100 },
+  })
+  const list = asList(data)
+  const year = String(new Date().getFullYear())
+  const series =
+    list.find((row) => row.IsDefault && row.IsActive !== false) ||
+    list.find((row) => row.IsActive !== false && String(row.Name || '').length === 3) ||
+    list[0]
+  const name = String(series?.Name || '')
+    .slice(0, 3)
+    .toUpperCase()
+  if (name.length !== 3) {
+    const err = new Error(
+      'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Firmada e-Fatura serisi yok. Nilvera portalında seri tanımlayın.',
+    )
+    err.status = 409
+    err.code = 'NILVERA_NOT_CONFIGURED'
+    throw err
+  }
+  const details = Array.isArray(series.Details) ? series.Details : []
+  const yearRow = details.find((row) => String(row.Year) === year)
+  const next = Number(yearRow?.OrdinalNumber || 0) + 1
+  return `${name}${year}${String(next).padStart(9, '0')}`
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function resolveReceiverAlias(apiKey, taxNumber) {
+  const official = NILVERA_TEST_PARTIES.sender.aliasPk
+  try {
+    const rows = await nilveraFetch({
+      apiKey,
+      environment: 'TEST',
+      path: `/general/GlobalCompany/Check/TaxNumber/${taxNumber}`,
+      query: { globalUserType: 'Invoice' },
+    })
+    const list = Array.isArray(rows) ? rows : []
+    const aliases = list
+      .map((row) => String(row.Alias || row.alias || row.Name || ''))
+      .filter(Boolean)
+    const exact = aliases.find((alias) => alias.toLowerCase() === official.toLowerCase())
+    if (exact) return exact
+    const nilvera = aliases.find((alias) => alias.toLowerCase().includes('@nilvera.com'))
+    if (nilvera) return nilvera
+    return aliases[0] || official
+  } catch {
+    return official
+  }
+}
+
+async function sendNilveraTestIncoming({ companyId = null } = {}) {
+  const counterpartyKey = sanitizeApiKey(process.env.NILVERA_TEST_COUNTERPARTY_API_KEY_TEST || '')
+  if (counterpartyKey.length < 16) {
+    const err = new Error(
+      'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Test Kurum 2 API anahtarı yok. NILVERA_TEST_COUNTERPARTY_API_KEY_TEST tanımlanmalı.',
+    )
+    err.status = 409
+    err.code = 'NILVERA_NOT_CONFIGURED'
+    throw err
+  }
+
+  const sender = await fetchCompanyInfo({ apiKey: counterpartyKey, environment: 'TEST' })
+  if (normalizeTax(sender?.TaxNumber) !== NILVERA_TEST_PARTIES.receiver.taxNumber) {
+    const err = new Error(
+      'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Karşı taraf anahtarı Test Kurum 2 (VKN 1234567802) değil.',
+    )
+    err.status = 409
+    err.code = 'NILVERA_NOT_CONFIGURED'
+    throw err
+  }
+
+  let live = null
+  if (companyId) {
+    live = await requireLive(companyId)
+    if (live.environment !== 'TEST') {
+      const err = new Error('Örnek gelen fatura yalnız TEST ortamında gönderilir.')
+      err.status = 400
+      throw err
+    }
+    const tenantTax = normalizeTax(live.row.tax_number)
+    if (tenantTax !== NILVERA_TEST_PARTIES.sender.taxNumber) {
+      const err = new Error(
+        'Örnek gelen fatura Test Kurum 1 (VKN 1234567801) olarak bağlı üyeye kesilir. Ayarlar’dan Test Kurum 1’i doldurup Nilvera kontrolünü geçin.',
+      )
+      err.status = 409
+      throw err
+    }
+  }
+
+  const receiverTax = NILVERA_TEST_PARTIES.sender.taxNumber
+  const receiverName = live?.row?.company_title || NILVERA_TEST_PARTIES.sender.name
+  const customerAlias = await resolveReceiverAlias(counterpartyKey, receiverTax)
+  const payload = {
+    invoiceNo: await nextInvoiceNumber(counterpartyKey, 'TEST'),
+    invoiceType: 'SATIS',
+    invoiceProfile: 'TICARIFATURA',
+    issueDate: new Date().toISOString(),
+    currency: 'TRY',
+    notes: ['Bachmain TEST gelen fatura örneği — Test Kurum 2 → Test Kurum 1'],
+    company: {
+      taxNumber: NILVERA_TEST_PARTIES.receiver.taxNumber,
+      name: sender?.Name || NILVERA_TEST_PARTIES.receiver.name,
+      address: 'Nilvera Test Mahallesi',
+      district: 'Kadıköy',
+      city: 'İstanbul',
+      country: 'Türkiye',
+    },
+    customer: {
+      taxNumber: receiverTax,
+      name: receiverName,
+      address: 'Nilvera Test Mahallesi',
+      district: 'Kadıköy',
+      city: 'İstanbul',
+      country: 'Türkiye',
+    },
+    lines: [
+      {
+        name: 'Bachmain test gelen fatura kalemi',
+        quantity: 1,
+        unitType: 'C62',
+        price: 100,
+        kdvPercent: 20,
+        kdvTotal: 20,
+      },
+    ],
+  }
+  const mapped = toModel(payload, 'e-fatura')
+  const sent = await nilveraFetch({
+    apiKey: counterpartyKey,
+    environment: 'TEST',
+    method: 'POST',
+    path: '/einvoice/Send/Model',
+    body: { EInvoice: mapped.EInvoice, CustomerAlias: customerAlias },
+  })
+  const uuid = sent?.UUID || mapped.uuid
+  if (companyId) {
+    await logApi(companyId, 'test_incoming', 'POST /einvoice/Send/Model', true, { uuid })
+  }
+
+  let sync = null
+  let document = null
+  if (companyId) {
+    for (let i = 0; i < 5; i += 1) {
+      await sleep(1500)
+      sync = await syncInboxForCompany(companyId)
+      const sql = getSql()
+      const rows =
+        await sql`SELECT * FROM e_documents WHERE company_id = ${companyId} AND uuid = ${uuid} AND direction = 'incoming' AND deleted_at IS NULL LIMIT 1`
+      if (rows[0]) {
+        document = rows[0]
+        break
+      }
+    }
+  }
+
+  return {
+    ok: true,
+    uuid,
+    invoiceNumber: sent?.InvoiceNumber || null,
+    sender: {
+      name: sender?.Name || NILVERA_TEST_PARTIES.receiver.name,
+      taxNumber: sender?.TaxNumber,
+    },
+    receiver: { name: receiverName, taxNumber: receiverTax },
+    document,
+    sync,
+    message: document
+      ? 'Test Kurum 2, Test Kurum 1’e e-fatura kesti. Gelen kutusu güncellendi.'
+      : companyId
+        ? 'Fatura Nilvera’ya gitti. Gelen henüz görünmüyorsa birkaç saniye sonra “Nilvera’dan çek” deneyin.'
+        : 'Fatura Nilvera’ya gitti. CRM’de Test Kurum 1 bağlıysa “Nilvera’dan çek” ile Gelen dolar.',
+  }
 }
 
 async function logApi(companyId, requestType, endpoint, ok, extra = {}) {
@@ -1020,6 +1211,9 @@ async function handleTenantOp(req, res, session, op, body, query) {
       documentType = Array.isArray(rows) && rows.length ? 'e-fatura' : 'e-arsiv'
     }
     const asDraft = Boolean(body.asDraft)
+    if (!payload.invoiceNo) {
+      payload.invoiceNo = await nextInvoiceNumber(live.apiKey, live.environment)
+    }
     const mapped = toModel(payload, documentType)
     const path = asDraft
       ? documentType === 'e-arsiv'
@@ -1095,6 +1289,22 @@ async function handleTenantOp(req, res, session, op, body, query) {
   if (op === 'sync') {
     const result = await syncInboxForCompany(companyId)
     return sendJson(req, res, 200, result)
+  }
+
+  if (op === 'test-incoming') {
+    try {
+      const result = await sendNilveraTestIncoming({ companyId })
+      return sendJson(req, res, 200, result)
+    } catch (err) {
+      await logApi(companyId, 'test_incoming', 'POST /einvoice/Send/Model', false, {
+        error: err.message,
+      }).catch(() => {})
+      return sendJson(req, res, err.status || 400, {
+        ok: false,
+        error: err.code || 'TEST_INCOMING_FAILED',
+        message: err.message,
+      })
+    }
   }
 
   if (op === 'pdf' || op === 'xml') {
@@ -1306,6 +1516,27 @@ async function handleAdminOp(req, res, op, body = {}, query = {}) {
     const connection = await matchTenantToNilvera(companyId)
     return sendJson(req, res, 200, { ok: true, connection })
   }
+  if (op === 'admin-test-incoming') {
+    const sql = getSql()
+    let companyId = body.companyId || query.companyId || ''
+    if (!companyId) {
+      const rows = await sql`SELECT company_id FROM e_document_connections
+          WHERE deleted_at IS NULL AND status = 'connected' AND environment = 'TEST'
+          AND regexp_replace(coalesce(tax_number, ''), '[^0-9]', '', 'g') = ${NILVERA_TEST_PARTIES.sender.taxNumber}
+          ORDER BY updated_at DESC LIMIT 1`
+      companyId = rows[0]?.company_id || ''
+    }
+    try {
+      const result = await sendNilveraTestIncoming({ companyId: companyId || null })
+      return sendJson(req, res, 200, { ...result, companyId: companyId || null })
+    } catch (err) {
+      return sendJson(req, res, err.status || 400, {
+        ok: false,
+        error: err.code || 'TEST_INCOMING_FAILED',
+        message: err.message,
+      })
+    }
+  }
   return false
 }
 
@@ -1398,6 +1629,7 @@ export async function handleEdocumentsApi(req, res, path, body = {}, query = {})
         'admin-platform-test',
         'admin-recheck',
         'admin-assign-key',
+        'admin-test-incoming',
       ].includes(op)
     ) {
       const staff = getStaffSession(req)

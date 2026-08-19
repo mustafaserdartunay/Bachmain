@@ -29,8 +29,11 @@ export default function EDocumentListPage({
   const [rows, setRows] = useState([])
   const [search, setSearch] = useState('')
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
+  const [connection, setConnection] = useState(null)
+  const [testingIncoming, setTestingIncoming] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -56,6 +59,12 @@ export default function EDocumentListPage({
 
   useEffect(() => {
     void load()
+    if (direction === 'incoming') {
+      edocumentsApi
+        .connection()
+        .then((data) => setConnection(data.connection || null))
+        .catch(() => setConnection(null))
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [direction, documentType, status, Array.isArray(statusIn) ? statusIn.join(',') : ''])
 
@@ -158,6 +167,7 @@ export default function EDocumentListPage({
             onClick={async () => {
               setSyncing(true)
               setError('')
+              setNotice('')
               try {
                 await edocumentsApi.sync()
                 await load()
@@ -170,14 +180,46 @@ export default function EDocumentListPage({
           >
             {syncing ? 'Çekiliyor…' : 'Nilvera’dan çek'}
           </button>
+          {direction === 'incoming' && connection?.environment !== 'PRODUCTION' ? (
+            <button
+              type="button"
+              className={`${BTN_PRIMARY} px-3 text-xs`}
+              disabled={testingIncoming}
+              onClick={async () => {
+                setTestingIncoming(true)
+                setError('')
+                setNotice('')
+                try {
+                  const data = await edocumentsApi.testIncoming()
+                  setNotice(
+                    `${data.message || 'Test faturası gönderildi.'}${
+                      data.uuid ? `\nUUID ${data.uuid}` : ''
+                    }`,
+                  )
+                  await load()
+                } catch (err) {
+                  setError(formatEdocError(err))
+                } finally {
+                  setTestingIncoming(false)
+                }
+              }}
+            >
+              {testingIncoming ? 'Gönderiliyor…' : 'Örnek gelen fatura (TEST)'}
+            </button>
+          ) : null}
         </div>
         <EdocAlert>{error}</EdocAlert>
+        <EdocAlert tone="emerald">{notice}</EdocAlert>
         {loading ? (
           <p className="mb-3 text-sm text-[var(--muted)]">Yükleniyor…</p>
         ) : (
           <DataTable
             emptyTitle="Belge bulunamadı"
-            emptyDescription="Nilvera’dan çekin veya yeni fatura oluşturun. Önce Ayarlar’dan firma bilgisi ve Nilvera kontrolü gerekir."
+            emptyDescription={
+              direction === 'incoming'
+                ? 'Gelen kutu, size kesilmiş e-faturaları Nilvera’dan çeker. Testte “Örnek gelen fatura (TEST)” Test Kurum 2’den Test Kurum 1’e gerçek fatura keser.'
+                : 'Nilvera’dan çekin veya yeni fatura oluşturun. Önce Ayarlar’dan firma bilgisi ve Nilvera kontrolü gerekir.'
+            }
             data={filtered}
             getRowId={(row) => row.id}
             onRowClick={(row) => navigate(`/e-belgeler/${row.id}`)}

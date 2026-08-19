@@ -51,6 +51,7 @@ export const edocumentsApi = {
   create: (body) => request('create', { method: 'POST', body }),
   confirm: (id) => request('confirm', { method: 'POST', body: { id } }),
   sync: () => request('sync', { method: 'POST', body: {} }),
+  testIncoming: () => request('test-incoming', { method: 'POST', body: {} }),
   file: (id, kind) => request(kind, { query: { id } }),
 }
 

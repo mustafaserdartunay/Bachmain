@@ -11,6 +11,7 @@ type Platform = {
   configured?: boolean
   hasTestKey?: boolean
   hasLiveKey?: boolean
+  hasTestIncomingKey?: boolean
   fingerprintTest?: string | null
   fingerprintLive?: string | null
   status?: string
@@ -133,6 +134,33 @@ export function EdonusumPage() {
     }
   }
 
+  async function testIncoming() {
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      const data = await api.post<{
+        message?: string
+        uuid?: string
+        invoiceNumber?: string | null
+        document?: { id?: string } | null
+        companyId?: string | null
+      }>('/edocuments?op=admin-test-incoming', {
+        companyId: assignCompanyId || undefined,
+      })
+      setMessage(
+        `${data.message || 'Test gelen faturası gönderildi.'}${
+          data.uuid ? ` UUID ${data.uuid}` : ''
+        }${data.invoiceNumber ? ` · ${data.invoiceNumber}` : ''}`,
+      )
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gelen test faturası gönderilemedi')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function recheck(companyId: string) {
     setBusy(true)
     setError('')
@@ -192,7 +220,8 @@ export function EdonusumPage() {
           <p className="text-sm text-text-muted">
             Test ortamı iki firmadır. Bachmain şu an Test Kurum 1 (VKN 1234567801) olarak bağlıdır.
             Test Kurum 2 (VKN 1234567802) alıcıdır: Uygulama → E-Belgeler → Yeni E-Fatura → “Test
-            Kurum 2’yi alıcı yap”. Gelen kutu için Kurum 2’nin Kurum 1’e fatura kesmesi gerekir.
+            Kurum 2’yi alıcı yap”. Gelen kutu için aşağıdaki TEST butonu Kurum 2’den Kurum 1’e
+            gerçek e-fatura keser.
           </p>
           <p className="text-text-muted">
             TEST anahtarı {platform?.hasTestKey ? platform.fingerprintTest : 'yok'} · Canlı{' '}
@@ -227,6 +256,9 @@ export function EdonusumPage() {
             </Button>
             <Button variant="secondary" disabled={busy} onClick={() => void testPlatform()}>
               Platformu test et
+            </Button>
+            <Button variant="secondary" disabled={busy} onClick={() => void testIncoming()}>
+              Örnek gelen fatura (TEST)
             </Button>
           </div>
         </div>
