@@ -302,7 +302,7 @@ export default function App() {
                       <Route path="/web/studio/yonetim/yonetim" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
                       <Route path="/web/studio/yonetim/kategori-olustur" element={<Navigate to="/web/studio/yonetim/kategoriler" replace />} />
                       <Route path="/web/studio/yonetim/urun-olustur" element={<Navigate to="/web/studio/yonetim/urunler" replace />} />
-                      <Route path="/web/studio/yonetim/template" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim/siparisler" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
                       <Route path="/web/studio/yonetim/ayarlar" element={<Navigate to="/web/studio/yonetim/profil" replace />} />
                       <Route
                         path="/web/studio/yonetim/ayarlar/domain-bagla"
@@ -322,10 +322,6 @@ export default function App() {
                       />
                       <Route
                         path="/web/studio/yonetim/urunler"
-                        element={<WebStudioManagementPage />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/siparisler"
                         element={<WebStudioManagementPage />}
                       />
                       <Route
