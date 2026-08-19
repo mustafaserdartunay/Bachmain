@@ -80,6 +80,19 @@ export async function submitSupportTicket(payload) {
   return authRequest('support/tickets', { method: 'POST', body: payload })
 }
 
+export async function fetchMySupportTicket(ticketId) {
+  const data = await authRequest(`support/my-ticket?id=${encodeURIComponent(ticketId)}`)
+  return data?.ticket || null
+}
+
+export async function submitMySupportAction({ ticketId, action, message }) {
+  const data = await authRequest('support/my-ticket', {
+    method: 'POST',
+    body: { id: ticketId, action, message },
+  })
+  return data?.ticket || null
+}
+
 export async function registerAccount(payload) {
   const data = await authRequest('auth/register', { method: 'POST', body: payload })
   persistSession({ token: data.token, user: data.user })
@@ -126,6 +139,32 @@ export async function updateCompanyUserAccess({ email, accessLevel }) {
     body: { email, accessLevel },
   })
   return Array.isArray(data.users) ? data.users : []
+}
+
+export async function inviteCompanyUser(payload) {
+  return authRequest('auth/company/invite', { method: 'POST', body: payload })
+}
+
+export async function updateCompanyTeamUser(payload) {
+  return authRequest('auth/company/users', { method: 'PUT', body: payload })
+}
+
+export async function resendCompanyInvite(accountId) {
+  return authRequest('auth/company/invite/resend', { method: 'POST', body: { accountId } })
+}
+
+export async function removeCompanyTeamUser(accountId) {
+  return authRequest('auth/company/users', { method: 'DELETE', body: { accountId } })
+}
+
+export async function fetchInvitePreview(token) {
+  return authRequest(`auth/invite/${encodeURIComponent(token)}`)
+}
+
+export async function acceptInviteWithToken(payload) {
+  const data = await authRequest('auth/invite/accept', { method: 'POST', body: payload })
+  if (data.token || data.user) persistSession({ token: data.token, user: data.user })
+  return data
 }
 
 export async function publishB2bPortal({
