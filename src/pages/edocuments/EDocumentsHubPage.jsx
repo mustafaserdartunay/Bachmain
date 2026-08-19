@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FileText, Inbox, Send, Settings, ShieldAlert, Wifi } from 'lucide-react'
+import { FileText, Inbox, Send, Settings, Wifi } from 'lucide-react'
 import {
   AppPageBackLink,
   AppPageHeader,
@@ -11,8 +11,6 @@ import SummaryMetrics from '../../components/Common/SummaryMetrics'
 import { APP_SURFACE_PANEL_CLASS } from '../../utils/dashboardDesign'
 import { BTN_PRIMARY } from '../../utils/buttonStyles'
 import { eDocumentsSubMenus } from '../../data/eDocumentsMenu'
-import { useAuth } from '../../auth/AuthContext'
-import { hasModule } from '../../utils/entitlements'
 import { formatTL } from '../../utils/productPricing'
 import { edocumentsApi } from '../../utils/edocumentsApi'
 import {
@@ -24,9 +22,6 @@ import {
 } from './eDocumentShared'
 
 export default function EDocumentsHubPage() {
-  const { user } = useAuth()
-  const allowed =
-    hasModule(user?.entitlements, 'einvoice') || hasModule(user?.entitlements, 'earchive')
   const [connection, setConnection] = useState(null)
   const [rows, setRows] = useState([])
   const [error, setError] = useState('')
@@ -55,12 +50,11 @@ export default function EDocumentsHubPage() {
         if (!cancelled) setLoading(false)
       }
     }
-    if (allowed) void load()
-    else setLoading(false)
+    void load()
     return () => {
       cancelled = true
     }
-  }, [allowed])
+  }, [])
 
   const stats = useMemo(() => {
     const incoming = rows.filter((row) => docField(row, 'direction', 'direction') === 'incoming')
@@ -76,24 +70,6 @@ export default function EDocumentsHubPage() {
       amount,
     }
   }, [rows])
-
-  if (!allowed) {
-    return (
-      <AppPageShell>
-        <AppPageHeader
-          title={<AppPageBackLink to="/" label="Güncel Durum" />}
-          centerTitle="E-Belgeler"
-          showBack={false}
-        />
-        <div
-          className={`${APP_SURFACE_PANEL_CLASS} flex items-center gap-3 p-6 text-sm text-rose-200`}
-        >
-          <ShieldAlert className="h-5 w-5" />
-          E-Fatura paketinizde etkin değil.
-        </div>
-      </AppPageShell>
-    )
-  }
 
   return (
     <AppPageShell>

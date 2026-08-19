@@ -16,9 +16,24 @@ export function maskAuthorizationHeader(value: string) {
 }
 
 export function fingerprintApiKey(apiKey: string) {
-  const raw = String(apiKey || '').trim()
+  const raw = String(apiKey || '')
+    .trim()
+    .replace(/^Bearer\s+/i, '')
+    .replace(/\s+/g, '')
   if (raw.length < 8) return '****'
   return `${raw.slice(0, 4)}…${raw.slice(-4)}`
+}
+
+function sanitizeApiKey(raw: string) {
+  let value = String(raw || '').trim()
+  value = value.replace(/^Bearer\s+/i, '').trim()
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1).trim()
+  }
+  return value.replace(/\s+/g, '')
 }
 
 type NilveraRequest = {
@@ -63,7 +78,7 @@ export async function nilveraRequest<T = unknown>(
       const res = await fetch(url.toString(), {
         method,
         headers: {
-          Authorization: `Bearer ${input.apiKey}`,
+          Authorization: `Bearer ${sanitizeApiKey(input.apiKey)}`,
           Accept: input.accept || (input.binary ? 'application/octet-stream' : 'application/json'),
           ...(input.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
         },

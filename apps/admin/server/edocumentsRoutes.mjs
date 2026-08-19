@@ -8,11 +8,22 @@ import { sendJson } from './authRoutes.mjs'
 import { getBearerOrCookieToken, getAccountFromToken } from './auth.mjs'
 import { loadStore } from './store.mjs'
 import { getStaffSession, staffAuthEnabled } from './staffAuth.mjs'
-import { entitlementPayloadForCustomer, seedBillingIfEmpty } from './subscriptionService.mjs'
 
 const BASE = {
   TEST: 'https://apitest.nilvera.com',
   PRODUCTION: 'https://api.nilvera.com',
+}
+
+function sanitizeApiKey(raw) {
+  let value = String(raw || '').trim()
+  value = value.replace(/^Bearer\s+/i, '').trim()
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1).trim()
+  }
+  return value.replace(/\s+/g, '')
 }
 
 function encKey() {
@@ -46,14 +57,18 @@ function decryptApiKey(payload) {
 }
 
 function fingerprint(apiKey) {
-  const raw = String(apiKey || '').trim()
+  const raw = sanitizeApiKey(apiKey)
   if (raw.length < 8) return '****'
   return `${raw.slice(0, 4)}…${raw.slice(-4)}`
 }
 
 function userError(status, body) {
-  if (status === 401 || status === 403)
-    return 'API anahtarı geçersiz veya gerekli yetki bulunmuyor.'
+  if (status === 401) {
+    return 'Nilvera API anahtarı geçersiz. Portal şifresi değil, API Tanımları’ndan üretilen anahtarı yapıştırın. TEST anahtarı yalnızca Test ortamında, canlı anahtar yalnızca Canlı ortamda çalışır.'
+  }
+  if (status === 403) {
+    return 'API anahtarının Company / e-Fatura yetkisi yok. Nilvera Portal → API Tanımları’nda yetkileri açıp yeni anahtar üretin.'
+  }
   if (status === 404) return 'Belge veya kayıt Nilvera üzerinde bulunamadı.'
   if (status === 409)
     return 'Bu fatura daha önce gönderilmiş olabilir. Yinelenen gönderim engellendi.'
@@ -70,6 +85,7 @@ function userError(status, body) {
 }
 
 async function nilveraFetch({ apiKey, environment, method = 'GET', path, query, body, binary }) {
+  const key = sanitizeApiKey(apiKey)
   const url = new URL(path.replace(/^\//, ''), `${BASE[environment] || BASE.TEST}/`)
   if (query) {
     for (const [k, v] of Object.entries(query)) {
@@ -83,7 +99,7 @@ async function nilveraFetch({ apiKey, environment, method = 'GET', path, query, 
       const res = await fetch(url.toString(), {
         method,
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${key}`,
           Accept: binary ? 'application/octet-stream' : 'application/json',
           ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
         },
@@ -123,6 +139,11 @@ async function nilveraFetch({ apiKey, environment, method = 'GET', path, query, 
 async function ensureEdocSchema() {
   const sql = getSql()
   if (!sql) return false
+  try {
+    await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto`
+  } catch {
+    /* Neon often already has gen_random_uuid() */
+  }
   await sql`CREATE TABLE IF NOT EXISTS e_document_connections (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     company_id text NOT NULL,
@@ -258,22 +279,6 @@ async function tenantSession(req) {
   return session
 }
 
-function hasEinvoiceEntitlement(store, session) {
-  seedBillingIfEmpty(store)
-  const payload = entitlementPayloadForCustomer(
-    store,
-    session.customer?.id || session.account?.customerId,
-  )
-  const codes = payload?.entitlements || session.user?.entitlements || []
-  if (!Array.isArray(codes) || codes.length === 0) return true
-  return (
-    codes.includes('einvoice') ||
-    codes.includes('earchive') ||
-    codes.includes('all') ||
-    codes.includes('finance')
-  )
-}
-
 async function getConn(companyId) {
   const sql = getSql()
   const rows = await sql`SELECT * FROM e_document_connections
@@ -294,14 +299,50 @@ async function requireLive(companyId) {
   }
   return {
     row,
-    apiKey: decryptApiKey(row.encrypted_api_key),
+    apiKey: sanitizeApiKey(decryptApiKey(row.encrypted_api_key)),
     environment: row.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST',
   }
 }
 
 function asList(data) {
   if (Array.isArray(data)) return data
-  return data?.Content || data?.content || []
+  return data?.Content || data?.content || data?.Companies || data?.companies || []
+}
+
+function pickCompany(data) {
+  if (!data) return null
+  if (Array.isArray(data)) return pickCompany(data[0])
+  const nested = data.Content || data.content || data.Companies || data.companies
+  if (Array.isArray(nested) && nested[0] && !data.Name && !data.TaxNumber) {
+    return pickCompany(nested[0])
+  }
+  if (typeof data !== 'object') return null
+  return {
+    ...data,
+    Name: data.Name || data.name || data.Title || data.title || null,
+    TaxNumber: data.TaxNumber || data.taxNumber || data.VKN || null,
+  }
+}
+
+async function fetchCompanyInfo({ apiKey, environment }) {
+  try {
+    return pickCompany(
+      await nilveraFetch({
+        apiKey,
+        environment,
+        path: '/general/Company',
+      }),
+    )
+  } catch (err) {
+    if (err.status === 401) throw err
+    return pickCompany(
+      await nilveraFetch({
+        apiKey,
+        environment,
+        path: '/general/Company/List',
+      }),
+    )
+  }
 }
 
 function toModel(payload, kind) {
@@ -459,14 +500,6 @@ async function syncInboxForCompany(companyId) {
 async function handleTenantOp(req, res, session, op, body, query) {
   const companyId = session.user.tenantCode
   const sql = getSql()
-  const store = await loadStore()
-  if (!hasEinvoiceEntitlement(store, session) && !['connection', 'admin-overview'].includes(op)) {
-    return sendJson(req, res, 402, {
-      ok: false,
-      error: 'FEATURE_LOCKED',
-      message: 'E-Fatura paketinizde etkin değil.',
-    })
-  }
 
   if (op === 'connection' && req.method === 'GET') {
     return sendJson(req, res, 200, { ok: true, connection: publicConn(await getConn(companyId)) })
@@ -475,10 +508,17 @@ async function handleTenantOp(req, res, session, op, body, query) {
   if (op === 'connection' && (req.method === 'PUT' || req.method === 'POST')) {
     const environment = body.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
     const existing = await getConn(companyId)
-    const encrypted = body.apiKey
-      ? encryptApiKey(String(body.apiKey).trim())
-      : existing?.encrypted_api_key
-    const fp = body.apiKey ? fingerprint(body.apiKey) : existing?.api_key_fingerprint
+    const nextKey = body.apiKey ? sanitizeApiKey(body.apiKey) : ''
+    if (body.apiKey && nextKey.length < 16) {
+      return sendJson(req, res, 400, {
+        ok: false,
+        error: 'INVALID_API_KEY',
+        message:
+          'API anahtarı çok kısa. Portal şifresi değil, Nilvera → API Tanımları’ndan üretilen anahtarı yapıştırın.',
+      })
+    }
+    const encrypted = nextKey ? encryptApiKey(nextKey) : existing?.encrypted_api_key
+    const fp = nextKey ? fingerprint(nextKey) : existing?.api_key_fingerprint
     if (existing) {
       await sql`UPDATE e_document_connections SET
         environment = ${environment},
@@ -497,16 +537,16 @@ async function handleTenantOp(req, res, session, op, body, query) {
   if (op === 'test') {
     const live = await requireLive(companyId)
     try {
-      const company = await nilveraFetch({
+      const company = await fetchCompanyInfo({
         apiKey: live.apiKey,
         environment: live.environment,
-        path: '/general/Company',
       })
-      const credits = await nilveraFetch({
+      const creditsRaw = await nilveraFetch({
         apiKey: live.apiKey,
         environment: live.environment,
         path: '/general/Credits',
       }).catch(() => [])
+      const credits = asList(creditsRaw)
       const meta = JSON.stringify({ company, credits })
       await sql`UPDATE e_document_connections SET status = 'connected', last_test_at = now(), last_error = null,
         company_title = ${company?.Name || null}, tax_number = ${company?.TaxNumber || null},
@@ -560,7 +600,7 @@ async function handleTenantOp(req, res, session, op, body, query) {
       environment: live.environment,
       path: '/general/Credits',
     })
-    return sendJson(req, res, 200, { ok: true, credits: Array.isArray(credits) ? credits : [] })
+    return sendJson(req, res, 200, { ok: true, credits: asList(credits) })
   }
 
   if (op === 'list') {

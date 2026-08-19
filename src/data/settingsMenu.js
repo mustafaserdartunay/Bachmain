@@ -7,5 +7,5 @@ export const settingsSubMenus = [
   { label: 'Vergi ve KDV Yönetimi', path: '/ayarlar/vergi-kdv' },
   { label: 'Sektörel Ayarlar', path: '/ayarlar/sektorel' },
   { label: 'Süreçler Yönetimi', path: '/ayarlar/etiketler' },
-  { label: 'E-Dönüşüm / Nilvera', path: '/e-belgeler/ayarlar', moduleCode: 'einvoice' },
+  { label: 'E-Dönüşüm / Nilvera', path: '/e-belgeler/ayarlar' },
 ]

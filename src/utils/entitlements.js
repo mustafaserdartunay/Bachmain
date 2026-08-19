@@ -89,7 +89,7 @@ export function canAccessPath(entitlements, pathname) {
     return hasModule(entitlements, 'multi_company')
   }
   if (pathname === '/e-belgeler' || pathname.startsWith('/e-belgeler/')) {
-    return hasModule(entitlements, 'einvoice') || hasModule(entitlements, 'earchive')
+    return true
   }
   if (
     pathname.startsWith('/profil') ||

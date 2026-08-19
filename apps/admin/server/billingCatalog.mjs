@@ -70,6 +70,8 @@ export const STARTER_MODULES = [
   'appointments',
   'dashboard_basic',
   'reports_basic',
+  'einvoice',
+  'earchive',
 ]
 
 export const PROFESSIONAL_EXTRA = [
@@ -483,7 +485,8 @@ export const STORE_MODULES = [
     icon: 'FolderKanban',
     iconColor: '#0EA5E9',
     description: 'Projeleri, kilometre taşlarını ve ekipleri tek yerden yönetin.',
-    longDescription: 'Proje panoları, görev dağılımı ve ilerleme takibi ile proje yönetimini sadeleştirin.',
+    longDescription:
+      'Proje panoları, görev dağılımı ve ilerleme takibi ile proje yönetimini sadeleştirin.',
     audience: 'Proje ve operasyon ekipleri',
     features: ['Proje panosu', 'Kilometre taşı', 'Ekip atama', 'İlerleme'],
     monthlyPrice: 199,
@@ -500,7 +503,8 @@ export const STORE_MODULES = [
     icon: 'CheckSquare',
     iconColor: '#3B82F6',
     description: 'Görevleri atayın, önceliklendirin ve tamamlanma durumunu izleyin.',
-    longDescription: 'Görev listeleri, öncelikler, son tarihler ve hatırlatmalarla ekip iş yükünü yönetin.',
+    longDescription:
+      'Görev listeleri, öncelikler, son tarihler ve hatırlatmalarla ekip iş yükünü yönetin.',
     audience: 'Tüm ekipler',
     features: ['Görev atama', 'Öncelik', 'Son tarih', 'Hatırlatma'],
     monthlyPrice: 129,
@@ -517,7 +521,8 @@ export const STORE_MODULES = [
     icon: 'Calendar',
     iconColor: '#F59E0B',
     description: 'Müşteri ve iç toplantı randevularını takvimden yönetin.',
-    longDescription: 'Randevu planlama, hatırlatma ve müşteri eşleştirmesi ile ajandanızı düzenleyin.',
+    longDescription:
+      'Randevu planlama, hatırlatma ve müşteri eşleştirmesi ile ajandanızı düzenleyin.',
     audience: 'Satış, servis ve ofis ekipleri',
     features: ['Takvim', 'Hatırlatma', 'Müşteri bağlama', 'Tekrarlayan randevu'],
     monthlyPrice: 99,

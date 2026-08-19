@@ -129,7 +129,7 @@ export default function EDocumentSettingsPage() {
               placeholder={
                 connection?.hasApiKey
                   ? 'Kayıtlı anahtar var — değiştirmek için yeni anahtar yazın'
-                  : 'Portal → API Tanımları'
+                  : 'Örn. 9EE05B65… (Portal şifresi değil)'
               }
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
@@ -164,8 +164,9 @@ export default function EDocumentSettingsPage() {
             </div>
           ) : null}
           <p className="text-xs text-[var(--muted)]">
-            Portal şifresi API anahtarı değildir. TEST key: portaltest.nilvera.com → API Tanımları.
-            Canlı gönderim için Nilvera çözüm ortaklığı gerekir.
+            Portal şifresi API anahtarı değildir. Anahtar yalnızca bir kez gösterilir: TEST için
+            portaltest.nilvera.com → API Tanımları → Yeni Anahtar. Canlı anahtar yalnızca Canlı
+            ortamda çalışır. Canlı gönderim için Nilvera çözüm ortaklığı gerekir.
           </p>
         </div>
       </AppPagePanel>

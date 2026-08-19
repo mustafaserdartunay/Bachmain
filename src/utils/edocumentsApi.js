@@ -1,37 +1,32 @@
-import { getPlatformApiBase } from './platformApi'
+import { getPlatformApiBase, getStoredSession } from './platformAuth'
 
-function apiBase() {
-  return getPlatformApiBase()
+function bearerToken() {
+  const { token } = getStoredSession()
+  if (!token) return null
+  try {
+    return decodeURIComponent(token)
+  } catch {
+    return token
+  }
 }
 
 async function request(op, { method = 'GET', query = {}, body } = {}) {
-  const base = apiBase()
+  const base = getPlatformApiBase()
   if (!base) {
     const err = new Error('NO_API')
     err.code = 'NO_API'
     throw err
   }
-  let token = null
-  try {
-    token =
-      localStorage.getItem('bachmain_auth_token') ||
-      document.cookie
-        ?.split(';')
-        .map((c) => c.trim())
-        .find((c) => c.startsWith('bachmain_token='))
-        ?.split('=')[1] ||
-      null
-  } catch {
-    token = null
-  }
+  const token = bearerToken()
   const params = new URLSearchParams({ op, ...query })
+  const headers = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
   const res = await fetch(`${base.replace(/\/$/, '')}/edocuments?${params.toString()}`, {
     method,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${decodeURIComponent(token)}` } : {}),
-    },
+    headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
   const data = await res.json().catch(() => ({}))

@@ -58,8 +58,11 @@ export function extractNilveraMessages(body: unknown): string[] {
 }
 
 export function userFacingNilveraError(httpStatus: number, body: unknown): string {
-  if (httpStatus === 401 || httpStatus === 403) {
-    return 'API anahtarı geçersiz veya gerekli yetki bulunmuyor.'
+  if (httpStatus === 401) {
+    return 'Nilvera API anahtarı geçersiz. Portal şifresi değil, API Tanımları’ndan üretilen anahtarı yapıştırın. TEST anahtarı yalnızca Test ortamında, canlı anahtar yalnızca Canlı ortamda çalışır.'
+  }
+  if (httpStatus === 403) {
+    return 'API anahtarının Company / e-Fatura yetkisi yok. Nilvera Portal → API Tanımları’nda yetkileri açıp yeni anahtar üretin.'
   }
   if (httpStatus === 404) return 'Belge veya kayıt Nilvera üzerinde bulunamadı.'
   if (httpStatus === 409) {

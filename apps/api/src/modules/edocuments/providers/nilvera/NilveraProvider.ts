@@ -23,11 +23,22 @@ export const nilveraProvider: EDocumentProvider = {
   id: 'nilvera',
 
   async testConnection(apiKey, environment) {
-    const company = await nilveraRequest<ProviderCompanyInfo>({
-      apiKey,
-      environment,
-      path: '/general/Company',
-    })
+    let company
+    try {
+      company = await nilveraRequest<ProviderCompanyInfo>({
+        apiKey,
+        environment,
+        path: '/general/Company',
+      })
+    } catch (err) {
+      const status = (err as { statusCode?: number })?.statusCode
+      if (status === 401) throw err
+      company = await nilveraRequest<ProviderCompanyInfo>({
+        apiKey,
+        environment,
+        path: '/general/Company/List',
+      })
+    }
     const credits = await nilveraRequest<ProviderCredit[]>({
       apiKey,
       environment,
