@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Eye, ShieldOff } from 'lucide-react'
 import { useAuth } from './AuthContext'
-import { canEditPath, canViewPath, moduleCodeForPath } from '../../utils/moduleAccess'
+import { canEditPath, canViewPath, moduleCodeForPath } from '../utils/moduleAccess'
 
 export default function ModuleAccessGate({ children }) {
   const { user } = useAuth()
