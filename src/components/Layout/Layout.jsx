@@ -7,6 +7,7 @@ import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
 import BottomNav from './BottomNav'
 import AppGuidedTour from '../Onboarding/AppGuidedTour'
+import { GUIDED_TOUR_SIDEBAR_EVENT } from '../Onboarding/guidedTourStorage'
 
 const STUDIO_ENTER_MS = 580
 const SIDEBAR_KEY = 'bach-sidebar'
@@ -51,6 +52,7 @@ export default function Layout({ children }) {
   )
   const [studioChromeVisible, setStudioChromeVisible] = useState(!isStudioManagement)
   const [studioExiting, setStudioExiting] = useState(false)
+  const [tourUnlockSidebar, setTourUnlockSidebar] = useState(false)
 
   useEffect(() => {
     function syncViewport() {
@@ -90,6 +92,24 @@ export default function Layout({ children }) {
     return () => window.removeEventListener('bach:studio-exit-start', onStudioExit)
   }, [])
 
+  useEffect(() => {
+    function onTourSidebar(event) {
+      const expand = event.detail?.expand
+      if (expand) {
+        setTourUnlockSidebar(true)
+        setSidebarCollapsed(false)
+        setMobileSidebarOpen(true)
+        return
+      }
+      if (expand === false) {
+        setTourUnlockSidebar(false)
+        setMobileSidebarOpen(false)
+      }
+    }
+    window.addEventListener(GUIDED_TOUR_SIDEBAR_EVENT, onTourSidebar)
+    return () => window.removeEventListener(GUIDED_TOUR_SIDEBAR_EVENT, onTourSidebar)
+  }, [])
+
   function toggleSidebar() {
     if (isMobile) {
       setMobileSidebarOpen((open) => !open)
@@ -116,7 +136,7 @@ export default function Layout({ children }) {
     })
   }
 
-  const effectiveCollapsed = isTablet ? true : isMobile ? false : sidebarCollapsed
+  const effectiveCollapsed = tourUnlockSidebar ? false : isTablet ? true : isMobile ? false : sidebarCollapsed
   const studioActive = isStudioManagement && !studioChromeVisible && !studioExiting
   const studioShellClass = [
     isStudioManagement && studioChromeVisible && !studioExiting ? 'app-shell--to-studio' : '',

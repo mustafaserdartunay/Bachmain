@@ -5,20 +5,19 @@ import {
   Building2,
   Check,
   FileText,
-  ImagePlus,
   Package,
-  Sparkles,
   UserRound,
 } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { isStudioFullscreenRoute } from '../../data/webMenu'
 import {
   consumeTourForceFlag,
+  GUIDED_TOUR_SIDEBAR_EVENT,
+  GUIDED_TOUR_START_EVENT,
   isTourBlockedPath,
   markTourFinished,
   shouldAutoStartTour,
   TOUR_STEPS,
-  GUIDED_TOUR_START_EVENT,
 } from './guidedTourStorage'
 import './app-guided-tour.css'
 
@@ -41,9 +40,9 @@ function measureTarget(selector) {
 function placeCard(rect) {
   const vw = window.innerWidth
   const vh = window.innerHeight
-  const cardW = Math.min(360, vw - 24)
-  const cardH = 300
-  const gap = 16
+  const cardW = Math.min(344, vw - 24)
+  const cardH = 268
+  const gap = 18
   if (!rect) {
     return { left: Math.max(12, (vw - cardW) / 2), top: Math.max(12, vh * 0.16) }
   }
@@ -55,21 +54,18 @@ function placeCard(rect) {
     top = rect.top + rect.height + gap
     if (top + cardH > vh - 12) top = Math.max(12, rect.top - cardH - gap)
   }
-  top = Math.max(12, Math.min(top, vh - Math.min(cardH, vh * 0.55) - 12))
+  top = Math.max(12, Math.min(top, vh - Math.min(cardH, vh * 0.52) - 12))
   left = Math.max(12, Math.min(left, vw - cardW - 12))
   return { left, top }
 }
 
 function pointerPoint(rect) {
   if (!rect) {
-    return {
-      x: window.innerWidth / 2,
-      y: window.innerHeight * 0.42,
-    }
+    return { x: window.innerWidth / 2, y: window.innerHeight * 0.42 }
   }
   return {
-    x: rect.left + Math.min(48, rect.width * 0.55),
-    y: rect.top + Math.min(36, rect.height * 0.55),
+    x: rect.left + Math.min(42, Math.max(18, rect.width * 0.62)),
+    y: rect.top + Math.min(34, Math.max(16, rect.height * 0.58)),
   }
 }
 
@@ -92,58 +88,12 @@ function DimWithHole({ rect }) {
   )
 }
 
-function SceneMark({ id }) {
-  if (id === 'company-logo' || id === 'company-save') {
-    return (
-      <svg viewBox="0 0 64 64" aria-hidden>
-        <rect x="10" y="12" width="44" height="40" rx="8" fill="none" stroke="#93c5fd" strokeWidth="2.2" />
-        <path d="M18 40l10-11 8 7 10-14" fill="none" stroke="#a78bfa" strokeWidth="2.4" strokeLinecap="round" />
-        <circle cx="24" cy="24" r="4" fill="#60a5fa" />
-      </svg>
-    )
-  }
-  if (id === 'customer-form') {
-    return (
-      <svg viewBox="0 0 64 64" aria-hidden>
-        <circle cx="24" cy="22" r="8" fill="none" stroke="#93c5fd" strokeWidth="2.2" />
-        <path d="M10 46c2-8 8-12 14-12s12 4 14 12" fill="none" stroke="#93c5fd" strokeWidth="2.2" />
-        <circle cx="44" cy="24" r="6" fill="none" stroke="#a78bfa" strokeWidth="2" />
-        <path d="M36 46c1.4-6 6-9 10-9 3 0 6 1.5 8 5" fill="none" stroke="#a78bfa" strokeWidth="2" />
-      </svg>
-    )
-  }
-  if (id === 'product-create') {
-    return (
-      <svg viewBox="0 0 64 64" aria-hidden>
-        <path d="M12 24l20-10 20 10v22L32 56 12 46V24z" fill="none" stroke="#93c5fd" strokeWidth="2.2" />
-        <path d="M12 24l20 10 20-10M32 34v22" fill="none" stroke="#a78bfa" strokeWidth="2" />
-      </svg>
-    )
-  }
-  if (id === 'quote-create') {
-    return (
-      <svg viewBox="0 0 64 64" aria-hidden>
-        <rect x="14" y="10" width="30" height="42" rx="4" fill="none" stroke="#93c5fd" strokeWidth="2.2" />
-        <path d="M22 22h14M22 30h14M22 38h8" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="46" cy="44" r="10" fill="#1d4ed8" />
-        <path d="M41 44l3.2 3.2 7-7" fill="none" stroke="#dbeafe" strokeWidth="2.2" strokeLinecap="round" />
-      </svg>
-    )
-  }
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden>
-      <rect x="12" y="16" width="40" height="32" rx="6" fill="none" stroke="#93c5fd" strokeWidth="2.2" />
-      <path d="M20 28h24M20 36h16" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 function WelcomeArt() {
   const nodes = [
-    { label: 'Profil', caption: 'Logo + bilgiler', Icon: Building2 },
-    { label: 'Müşteri', caption: 'Kart açın', Icon: UserRound },
-    { label: 'Ürün', caption: 'Kalem ekleyin', Icon: Package },
-    { label: 'Teklif', caption: 'Süreci başlatın', Icon: FileText },
+    { label: 'Profil', caption: 'Ayarlar sayfası', Icon: Building2 },
+    { label: 'Müşteri', caption: 'Yeni kart', Icon: UserRound },
+    { label: 'Ürün', caption: 'Stok listesi', Icon: Package },
+    { label: 'Teklif', caption: 'Süreç ekranı', Icon: FileText },
   ]
   return (
     <div className="agt-timeline">
@@ -160,6 +110,17 @@ function WelcomeArt() {
   )
 }
 
+function syncTourChrome(step) {
+  window.dispatchEvent(
+    new CustomEvent(GUIDED_TOUR_SIDEBAR_EVENT, {
+      detail: {
+        expand: Boolean(step?.expandSidebar),
+        menu: step?.openMenu || null,
+      },
+    }),
+  )
+}
+
 export default function AppGuidedTour() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -168,7 +129,6 @@ export default function AppGuidedTour() {
   const [stepIndex, setStepIndex] = useState(0)
   const [hole, setHole] = useState(null)
   const [clicking, setClicking] = useState(false)
-  const dwellRef = useRef(null)
   const pollRef = useRef(null)
   const clickRef = useRef(null)
   const autoStartedRef = useRef(false)
@@ -185,7 +145,6 @@ export default function AppGuidedTour() {
   const progressPct = ((stepIndex + 1) / TOUR_STEPS.length) * 100
 
   const stopTimers = useCallback(() => {
-    window.clearTimeout(dwellRef.current)
     window.clearInterval(pollRef.current)
     window.clearTimeout(clickRef.current)
   }, [])
@@ -195,6 +154,9 @@ export default function AppGuidedTour() {
       stopTimers()
       markTourFinished(user, { skipped })
       consumeTourForceFlag()
+      window.dispatchEvent(
+        new CustomEvent(GUIDED_TOUR_SIDEBAR_EVENT, { detail: { expand: false, menu: null } }),
+      )
       setActive(false)
       setStepIndex(0)
       setHole(null)
@@ -270,6 +232,7 @@ export default function AppGuidedTour() {
     if (isTourBlockedPath(location.pathname) || isStudioFullscreenRoute(location.pathname)) {
       return undefined
     }
+    syncTourChrome(current)
     if (current.path && location.pathname !== current.path) {
       navigate(current.path)
       return undefined
@@ -287,25 +250,29 @@ export default function AppGuidedTour() {
       const next = measureTarget(current.target)
       if (next) {
         const el = document.querySelector(current.target)
-        el?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' })
-        setHole(measureTarget(current.target) || next)
+        el?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+        window.setTimeout(() => {
+          setHole(measureTarget(current.target) || next)
+        }, 80)
         setClicking(false)
         window.clearTimeout(clickRef.current)
-        clickRef.current = window.setTimeout(() => setClicking(true), 520)
+        clickRef.current = window.setTimeout(() => setClicking(true), 480)
         return true
       }
       return false
     }
 
-    if (!syncHole()) {
-      pollRef.current = window.setInterval(() => {
-        tries += 1
-        if (syncHole() || tries > 25) {
-          window.clearInterval(pollRef.current)
-          if (tries > 25) setHole(null)
-        }
-      }, 90)
-    }
+    const first = window.setTimeout(() => {
+      if (!syncHole()) {
+        pollRef.current = window.setInterval(() => {
+          tries += 1
+          if (syncHole() || tries > 30) {
+            window.clearInterval(pollRef.current)
+            if (tries > 30) setHole(null)
+          }
+        }, 100)
+      }
+    }, 60)
 
     const onMove = () => {
       if (current.kind === 'spotlight') {
@@ -316,18 +283,14 @@ export default function AppGuidedTour() {
     window.addEventListener('resize', onMove)
     window.addEventListener('scroll', onMove, true)
 
-    if (current.dwellMs > 0) {
-      dwellRef.current = window.setTimeout(() => goTo(stepIndex + 1), current.dwellMs)
-    }
-
     return () => {
+      window.clearTimeout(first)
       window.removeEventListener('resize', onMove, true)
       window.removeEventListener('scroll', onMove, true)
       window.clearInterval(pollRef.current)
-      window.clearTimeout(dwellRef.current)
       window.clearTimeout(clickRef.current)
     }
-  }, [active, goTo, location.pathname, navigate, stepIndex])
+  }, [active, location.pathname, navigate, stepIndex])
 
   if (!active || typeof document === 'undefined') return null
   if (isTourBlockedPath(location.pathname) || isStudioFullscreenRoute(location.pathname)) return null
@@ -335,6 +298,7 @@ export default function AppGuidedTour() {
   const point = pointerPoint(hole)
   const cardPos = placeCard(hole)
   const chapterIndex = Math.max(0, CHAPTERS.indexOf(step.chapter || 'Profil'))
+  const nextLabel = stepIndex >= TOUR_STEPS.length - 2 ? 'Bitir' : 'Devam et'
 
   return createPortal(
     <div className="agt-root" role="dialog" aria-modal="true" aria-label="Uygulama eğitim turu">
@@ -342,6 +306,10 @@ export default function AppGuidedTour() {
         <i style={{ width: `${progressPct}%` }} />
       </div>
       <DimWithHole rect={step.kind === 'spotlight' ? hole : null} />
+
+      {step.kind === 'spotlight' && hole ? (
+        <div className="agt-beacon" style={{ top: hole.top, left: hole.left }} aria-hidden />
+      ) : null}
 
       {step.kind === 'spotlight' ? (
         <div
@@ -353,12 +321,12 @@ export default function AppGuidedTour() {
           }}
           aria-hidden
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
             <path
               d="M5 3.5l14.5 8.4-6.4 1.5-3.2 6.6L5 3.5z"
-              fill="#f8fafc"
-              stroke="#1d4ed8"
-              strokeWidth="1.4"
+              fill="#fff"
+              stroke="#ea580c"
+              strokeWidth="1.6"
               strokeLinejoin="round"
             />
           </svg>
@@ -366,9 +334,12 @@ export default function AppGuidedTour() {
       ) : null}
 
       {step.kind === 'welcome' ? (
-        <div className="agt-welcome">
+        <div className="agt-welcome agt-skin">
+          <div className="agt-wordmark">
+            BACHMAIN <b>.</b>
+          </div>
           <span className="agt-kicker">
-            <Sparkles className="h-3 w-3" />
+            <span className="agt-kicker-dot" />
             Canlı eğitim
           </span>
           <h2 className="agt-title">{step.title}</h2>
@@ -390,7 +361,7 @@ export default function AppGuidedTour() {
       {step.kind === 'spotlight' ? (
         <div
           key={step.id}
-          className="agt-card"
+          className="agt-card agt-skin"
           style={{ left: cardPos.left, top: cardPos.top }}
         >
           <div className="agt-step-index">
@@ -406,17 +377,9 @@ export default function AppGuidedTour() {
               </span>
             ))}
           </div>
-          <div className="agt-scene">
-            <SceneMark id={step.id} />
-          </div>
           <h2 className="agt-title">{step.title}</h2>
           <p className="agt-body">{step.body}</p>
-          {step.hint ? (
-            <div className="agt-hint">
-              {step.id === 'company-logo' ? <ImagePlus className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
-              {step.hint}
-            </div>
-          ) : null}
+          {step.action ? <p className="agt-action">{step.action}</p> : null}
           <div className="agt-actions">
             <button type="button" className="agt-btn agt-btn--ghost" onClick={() => finish(true)}>
               Atla
@@ -428,7 +391,7 @@ export default function AppGuidedTour() {
                 </button>
               ) : null}
               <button type="button" className="agt-btn agt-btn--next" onClick={() => goTo(stepIndex + 1)}>
-                Devam
+                {nextLabel}
               </button>
             </div>
           </div>
@@ -436,7 +399,7 @@ export default function AppGuidedTour() {
       ) : null}
 
       {step.kind === 'complete' ? (
-        <div className="agt-complete">
+        <div className="agt-complete agt-skin">
           <div className="agt-burst">
             <span>
               <Check className="h-7 w-7" strokeWidth={2.6} />

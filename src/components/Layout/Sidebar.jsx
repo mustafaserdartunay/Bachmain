@@ -67,6 +67,7 @@ import {
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { visibleProcessSubMenus, isProcessRoute } from '../../data/processMenu'
+import { GUIDED_TOUR_SIDEBAR_EVENT } from '../Onboarding/guidedTourStorage'
 import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
 import { projectsSubMenus, isProjectsRoute, PROJECTS_HOME_PATH } from '../../data/projectsMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
@@ -76,7 +77,10 @@ import {
   DOCUMENT_CENTER_BASE,
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
-import { isWebRoute, WEB_STUDIO_PATH } from '../../data/webMenu'
+import {
+  isWebRoute,
+  WEB_STUDIO_PATH,
+} from '../../data/webMenu'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
@@ -314,6 +318,15 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     }
   }, [])
 
+  useEffect(() => {
+    function onTourSidebar(event) {
+      const menu = event.detail?.menu
+      if (menu) setOpenMenuId(menu)
+    }
+    window.addEventListener(GUIDED_TOUR_SIDEBAR_EVENT, onTourSidebar)
+    return () => window.removeEventListener(GUIDED_TOUR_SIDEBAR_EVENT, onTourSidebar)
+  }, [])
+
   const menuItems = filterMenuByEntitlements([courierMenuItem], user?.entitlements)
   const showProjects = filterMenuByEntitlements([projectsMenuGate], user?.entitlements).length > 0
   const showPos = filterMenuByEntitlements([posMenuItem], user?.entitlements).length > 0
@@ -431,6 +444,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     key={sub.path}
                     to={sub.path}
                     end={sub.path === '/musteriler'}
+                    data-tour={sub.path === '/musteriler' ? 'nav-customers' : undefined}
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} flex items-center gap-2 ${
@@ -481,6 +495,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                 <NavLink
                   key={sub.path}
                   to={sub.path}
+                  data-tour={sub.path === '/teklifler' ? 'nav-quotes' : undefined}
                   onClick={handleNavigate}
                   className={({ isActive }) =>
                     `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
@@ -570,7 +585,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </button>
           {eDocumentsOpen && !collapsed && (
             <SidebarSubMenu>
-              {eDocumentsSubMenus.map((sub) => (
+              {filterMenuByEntitlements(
+                eDocumentsSubMenus.map((item) => ({ ...item, moduleCode: 'einvoice' })),
+                user?.entitlements,
+              ).map((sub) => (
                 <NavLink
                   key={sub.path}
                   to={sub.path}
@@ -672,6 +690,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     key={sub.path}
                     to={sub.path}
                     end={sub.path === STOCK_PRODUCTS_PATH}
+                    data-tour={sub.path === STOCK_PRODUCTS_PATH ? 'nav-products' : undefined}
                     onClick={() => {
                       handleNavigate()
                       if (sub.openProductsList) {
@@ -1072,6 +1091,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     key={sub.path}
                     to={sub.path}
                     end={sub.path === '/ayarlar'}
+                    data-tour={sub.path === '/ayarlar' ? 'nav-settings' : undefined}
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
