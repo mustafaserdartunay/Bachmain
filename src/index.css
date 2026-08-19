@@ -4368,6 +4368,52 @@ html.night .glass-sidebar .sidebar-submenu {
   animation: studio-in-fade 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
 }
 
+.studio-enter-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background:
+    radial-gradient(720px 480px at 18% 20%, rgba(14, 165, 233, 0.35), transparent 62%),
+    linear-gradient(155deg, #1d4ed8 0%, #2563eb 46%, #0ea5e9 100%);
+  animation: studio-veil-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.studio-enter-veil-mark {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.studio-enter-veil-mark span {
+  color: #e2bc0f;
+}
+
+@keyframes studio-veil-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-enter-veil {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 .app-shell--studio-active > aside.glass-sidebar,
 .app-shell--studio-active > aside.glass-team-hub,
 .app-shell--studio-active .app-header-banner,
