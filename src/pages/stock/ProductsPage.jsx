@@ -448,7 +448,8 @@ export default function ProductsPage() {
         <AppPageHeader
           title="Hizmet ve Ürünler"
           actions={
-            <SplitCreateButton
+            <div data-tour="product-create">
+              <SplitCreateButton
               label="Yeni Ürün Oluştur"
               onPrimaryClick={handleNew}
               menuAriaLabel="Ürün seçenekleri"
@@ -469,6 +470,7 @@ export default function ProductsPage() {
                 },
               ]}
             />
+            </div>
           }
         />
       ) : (

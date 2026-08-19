@@ -6,6 +6,7 @@ import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
 import BottomNav from './BottomNav'
+import AppGuidedTour from '../Onboarding/AppGuidedTour'
 
 const STUDIO_ENTER_MS = 580
 const SIDEBAR_KEY = 'bach-sidebar'
@@ -162,6 +163,7 @@ export default function Layout({ children }) {
       </div>
       <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
       {!hideChrome ? <BottomNav /> : null}
+      {!hideChrome && !isStudioManagement ? <AppGuidedTour /> : null}
     </div>
   )
 }

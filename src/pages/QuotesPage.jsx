@@ -2602,6 +2602,7 @@ export default function QuotesPage() {
           actions={
             <button
               type="button"
+              data-tour="quote-create"
               onClick={() => addQuote()}
               className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}
             >

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { ExternalLink, GraduationCap, PlayCircle } from 'lucide-react'
+import { ExternalLink, GraduationCap, PlayCircle, Sparkles } from 'lucide-react'
 import { AppPageHeader, AppPagePanel, AppPageShell } from '../components/Layout/AppPageLayout'
 import FormSectionPanel from '../components/Common/FormSectionPanel'
 import { APP_METRIC_ROW_CLASS, APP_SUBLABEL_CLASS, YF_TEXT_CLASS } from '../utils/dashboardDesign'
 import { openTrainingVideo, TRAINING_SECTIONS } from '../data/trainingMenu'
+import { requestGuidedTourStart } from '../components/Onboarding/guidedTourStorage'
 import {
   fetchProductUpdates,
   filterChannel,
@@ -63,6 +64,25 @@ export default function TrainingPage() {
   return (
     <AppPageShell>
       <AppPageHeader title="Eğitim" />
+
+      <AppPagePanel
+        title={
+          <span className="inline-flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[#2563eb]" />
+            Canlı uygulama turu
+          </span>
+        }
+        description="Yeni üye akışı: profil ve logo, müşteri girişi, ürün girişi, ardından teklif süreci. Ekran üzerinde animasyonlu anlatılır."
+        dotColor="blue"
+      >
+        <button
+          type="button"
+          onClick={() => requestGuidedTourStart()}
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-blue-500/25"
+        >
+          Turu başlat
+        </button>
+      </AppPagePanel>
 
       {notices.length ? (
         <AppPagePanel

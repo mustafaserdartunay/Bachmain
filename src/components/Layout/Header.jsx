@@ -304,6 +304,7 @@ function HeaderBar({ onMenuClick }) {
             <button
               type="button"
               data-header-popover-trigger="user-menu"
+              data-tour="header-account"
               onClick={() => {
                 toggleMenu()
                 setPendingLogout(false)

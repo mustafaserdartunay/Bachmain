@@ -76,7 +76,10 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 rounded-2xl border border-dark-500/40 bg-dark-700/30 p-4 sm:flex-row sm:items-center">
+          <div
+            data-tour="company-logo"
+            className="flex flex-col gap-4 rounded-2xl border border-dark-500/40 bg-dark-700/30 p-4 sm:flex-row sm:items-center"
+          >
             <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dark-500/50 bg-dark-800">
               {settings.logoDataUrl ? (
                 <img
@@ -100,7 +103,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div data-tour="company-fields" className="grid gap-4 sm:grid-cols-2">
             <Field label="Firma Adı">
               <input
                 value={settings.companyName}
@@ -180,6 +183,7 @@ export default function SettingsPage() {
             </button>
             <button
               type="submit"
+              data-tour="company-save"
               className={`${BTN_SUCCESS} gap-2 px-4 py-3 text-xs uppercase tracking-wide`}
             >
               <Save className="h-4 w-4" />

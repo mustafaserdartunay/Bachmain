@@ -717,6 +717,7 @@ export default function CustomerCreatePage() {
         ) : null}
 
         <div className="space-y-5">
+        <div data-tour="customer-form">
           <FormSectionPanel
             compact
             title={isSupplierForm ? 'Tedarikçi Bilgileri' : 'Müşteri Bilgileri'}
@@ -782,6 +783,7 @@ export default function CustomerCreatePage() {
               </div>
             </div>
           </FormSectionPanel>
+        </div>
 
           <FormSectionPanel compact icon={Building2} title="Firma Bilgileri" dotColor="violet">
             <div className={FORM_FIELD_RULED_STACK_CLASS}>

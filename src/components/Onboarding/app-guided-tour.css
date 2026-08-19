@@ -1,0 +1,438 @@
+.agt-root {
+  position: fixed;
+  inset: 0;
+  z-index: 14000;
+  pointer-events: none;
+}
+
+.agt-dim {
+  position: fixed;
+  background: rgba(7, 11, 24, 0.62);
+  backdrop-filter: blur(1.5px);
+  pointer-events: auto;
+  transition: opacity 0.35s ease;
+}
+
+.agt-dim--full {
+  inset: 0;
+}
+
+.agt-ring {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 2px rgba(96, 165, 250, 0.95),
+    0 0 0 8px rgba(59, 130, 246, 0.22),
+    0 18px 50px rgba(37, 99, 235, 0.28);
+  animation: agt-ring-pulse 1.8s ease-in-out infinite;
+  transition:
+    top 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    left 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.4s ease;
+}
+
+.agt-ring--round {
+  border-radius: 999px;
+}
+
+.agt-pointer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.45));
+}
+
+.agt-pointer.is-clicking {
+  animation: agt-pointer-click 0.7s ease;
+}
+
+.agt-card {
+  position: fixed;
+  z-index: 3;
+  width: min(22.5rem, calc(100vw - 1.5rem));
+  pointer-events: auto;
+  border-radius: 22px;
+  padding: 1.05rem 1.1rem 1rem;
+  color: #eef3ff;
+  background:
+    linear-gradient(180deg, rgba(28, 41, 78, 0.96), rgba(14, 20, 38, 0.96));
+  border: 1px solid rgba(147, 197, 253, 0.22);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: agt-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.agt-welcome,
+.agt-complete {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: min(34rem, calc(100vw - 1.75rem));
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  border-radius: 28px;
+  padding: 1.5rem 1.45rem 1.25rem;
+  color: #eef3ff;
+  background:
+    radial-gradient(120% 80% at 10% 0%, rgba(59, 130, 246, 0.28), transparent 55%),
+    linear-gradient(180deg, rgba(24, 36, 68, 0.97), rgba(10, 16, 32, 0.97));
+  border: 1px solid rgba(147, 197, 253, 0.24);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  animation: agt-welcome-in 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.agt-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.16);
+  border: 1px solid rgba(96, 165, 250, 0.28);
+}
+
+.agt-title {
+  margin: 0.7rem 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.agt-card .agt-title {
+  font-size: 1.05rem;
+  margin-top: 0.45rem;
+}
+
+.agt-body {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 255, 0.78);
+  font-weight: 600;
+}
+
+.agt-progress {
+  display: flex;
+  gap: 0.35rem;
+  margin: 1rem 0 0.85rem;
+}
+
+.agt-progress span {
+  height: 4px;
+  flex: 1;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.agt-progress span i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa);
+}
+
+.agt-progress span.is-done i,
+.agt-progress span.is-active i {
+  width: 100%;
+}
+
+.agt-progress span.is-active i {
+  animation: agt-bar-fill 0.7s ease;
+}
+
+.agt-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.agt-actions-right {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.agt-btn {
+  border: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.agt-btn--ghost {
+  background: transparent;
+  color: rgba(226, 232, 255, 0.62);
+}
+
+.agt-btn--ghost:hover {
+  color: #fff;
+}
+
+.agt-btn--next {
+  color: #08101f;
+  background: linear-gradient(135deg, #93c5fd, #60a5fa 40%, #818cf8);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+}
+
+.agt-btn--next:hover {
+  filter: brightness(1.06);
+}
+
+.agt-timeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 1.15rem 0 0.35rem;
+}
+
+.agt-node {
+  position: relative;
+  min-height: 5.6rem;
+  border-radius: 16px;
+  padding: 0.7rem 0.55rem 0.55rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.agt-node::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.12) 45%, transparent 70%);
+  transform: translateX(-120%);
+  animation: agt-sheen 3.2s ease-in-out infinite;
+}
+
+.agt-node:nth-child(2)::after {
+  animation-delay: 0.35s;
+}
+.agt-node:nth-child(3)::after {
+  animation-delay: 0.7s;
+}
+.agt-node:nth-child(4)::after {
+  animation-delay: 1.05s;
+}
+
+.agt-node strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.agt-node em {
+  display: block;
+  margin-top: 0.12rem;
+  font-style: normal;
+  font-size: 0.62rem;
+  color: rgba(226, 232, 255, 0.55);
+  font-weight: 650;
+}
+
+.agt-node-icon {
+  display: inline-flex;
+  height: 1.85rem;
+  width: 1.85rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
+}
+
+.agt-scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 4.4rem;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.agt-scene svg {
+  width: 4.6rem;
+  height: 4.6rem;
+  overflow: visible;
+}
+
+.agt-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #93c5fd;
+}
+
+.agt-step-index {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(147, 197, 253, 0.8);
+}
+
+.agt-burst {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.4rem;
+}
+
+.agt-burst span {
+  display: flex;
+  height: 3.4rem;
+  width: 3.4rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #86efac, #22c55e);
+  color: #052e16;
+  animation: agt-burst 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.agt-rail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 4;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.agt-rail i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa, #34d399);
+  transition: width 0.45s ease;
+}
+
+@keyframes agt-ring-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(96, 165, 250, 0.95),
+      0 0 0 8px rgba(59, 130, 246, 0.18),
+      0 18px 50px rgba(37, 99, 235, 0.28);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(167, 139, 250, 0.95),
+      0 0 0 12px rgba(129, 140, 248, 0.2),
+      0 18px 50px rgba(37, 99, 235, 0.38);
+  }
+}
+
+@keyframes agt-pointer-click {
+  0%,
+  100% {
+    transform: translate(var(--agt-x), var(--agt-y)) scale(1);
+  }
+  40% {
+    transform: translate(var(--agt-x), var(--agt-y)) scale(0.82);
+  }
+}
+
+@keyframes agt-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes agt-welcome-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes agt-sheen {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes agt-bar-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes agt-burst {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes agt-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.agt-scene svg {
+  animation: agt-float 2.4s ease-in-out infinite;
+}
+
+@media (max-width: 640px) {
+  .agt-timeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .agt-title {
+    font-size: 1.15rem;
+  }
+}
