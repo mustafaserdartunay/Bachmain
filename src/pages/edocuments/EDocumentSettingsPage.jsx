@@ -99,6 +99,33 @@ export default function EDocumentSettingsPage() {
     }
   }
 
+  async function bindTestKurum1() {
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      setEnvironment('TEST')
+      setCompanyTitle(NILVERA_TEST_SENDER.name)
+      setTaxNumber(NILVERA_TEST_SENDER.taxNumber)
+      setSignatureType('MALIMUHUR')
+      setSignatureDeclared(true)
+      const data = await edocumentsApi.bindTest()
+      applyConnection(data.connection)
+      if (data.connection?.status === 'connected') {
+        setMessage(
+          `✓ Test Kurum 1 bağlandı\n${data.connection.nextStep || 'Gelen / Giden kutusu kullanılabilir.'}`,
+        )
+      } else {
+        setError(data.connection?.nextStep || data.connection?.lastError || 'Kontrol tamamlanmadı')
+      }
+    } catch (err) {
+      setError(`✕ Test Kurum 1 bağlanamadı\n${formatEdocError(err)}`)
+      if (err.payload?.connection) applyConnection(err.payload.connection)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function check() {
     setBusy(true)
     setError('')
@@ -276,15 +303,9 @@ export default function EDocumentSettingsPage() {
               type="button"
               className="rounded-xl border border-dark-500/40 px-4 py-2 text-xs font-black uppercase tracking-wide text-gray-300"
               disabled={busy}
-              onClick={() => {
-                setEnvironment('TEST')
-                setCompanyTitle(NILVERA_TEST_SENDER.name)
-                setTaxNumber(NILVERA_TEST_SENDER.taxNumber)
-                setSignatureType('MALIMUHUR')
-                setSignatureDeclared(true)
-              }}
+              onClick={() => void bindTestKurum1()}
             >
-              Test Kurum 1’i doldur
+              Test Kurum 1 ile bağla
             </button>
           </div>
           <p className="text-xs text-[var(--muted)]">

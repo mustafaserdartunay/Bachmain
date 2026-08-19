@@ -473,7 +473,7 @@ async function requireLive(companyId) {
   if (row?.status !== 'connected') {
     const err = new Error(
       row?.last_error ||
-        'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: E-Belge Ayarları’na firma bilgilerinizi girip Nilvera kontrolünden geçin.',
+        'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: E-Belgeler → Ayarlar’da “Test Kurum 1 ile bağla”ya basın; TEST’te bu hesabı Test Kurum 1 (VKN 1234567801) yapar.',
     )
     err.status = 409
     err.code = 'NILVERA_NOT_CONFIGURED'
@@ -490,6 +490,51 @@ async function requireLive(companyId) {
     throw err
   }
   return { row, apiKey: platform.apiKey, environment, source: 'platform' }
+}
+
+async function ensureTestOnboarding(companyId) {
+  const sql = getSql()
+  const platform = await getPlatformKey('TEST')
+  if (!platform) return null
+  let platformTax = normalizeTax(platform.row?.tax_number)
+  if (!platformTax) {
+    const self = await fetchCompanyInfo({
+      apiKey: platform.apiKey,
+      environment: 'TEST',
+    }).catch(() => null)
+    platformTax = normalizeTax(self?.TaxNumber)
+  }
+  if (platformTax !== NILVERA_TEST_PARTIES.sender.taxNumber) return null
+
+  const row = await getConn(companyId)
+  const tax = normalizeTax(row?.tax_number)
+  if (row?.status === 'connected' && tax === platformTax) {
+    return publicConn(row, await getPlatform())
+  }
+
+  const meta = JSON.stringify({
+    ...(row?.meta || {}),
+    signatureType: row?.meta?.signatureType || 'MALIMUHUR',
+    signatureDeclared: true,
+    testAutoFilled: true,
+    address: row?.meta?.address || 'Nilvera Test Mahallesi',
+    district: row?.meta?.district || 'Kadıköy',
+    city: row?.meta?.city || 'İstanbul',
+  })
+  const title = row?.company_title || NILVERA_TEST_PARTIES.sender.name
+  if (!row) {
+    await sql`INSERT INTO e_document_connections (company_id, provider, environment, company_title, tax_number, status, meta)
+      VALUES (${companyId}, 'nilvera', 'TEST', ${title}, ${platformTax}, 'submitted', ${meta}::jsonb)`
+  } else {
+    await sql`UPDATE e_document_connections SET
+      environment = 'TEST',
+      company_title = ${title},
+      tax_number = ${platformTax},
+      meta = ${meta}::jsonb,
+      updated_at = now()
+      WHERE id = ${row.id}`
+  }
+  return matchTenantToNilvera(companyId)
 }
 
 async function matchTenantToNilvera(companyId) {
@@ -823,6 +868,7 @@ async function sendNilveraTestIncoming({ companyId = null } = {}) {
 
   let live = null
   if (companyId) {
+    await ensureTestOnboarding(companyId)
     live = await requireLive(companyId)
     if (live.environment !== 'TEST') {
       const err = new Error('Örnek gelen fatura yalnız TEST ortamında gönderilir.')
@@ -1060,6 +1106,33 @@ async function handleTenantOp(req, res, session, op, body, query) {
     })
   }
 
+  if (op === 'bind-test') {
+    try {
+      const connection = await ensureTestOnboarding(companyId)
+      if (!connection) {
+        return sendJson(req, res, 409, {
+          ok: false,
+          error: 'NILVERA_NOT_CONFIGURED',
+          message:
+            'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Platform TEST firması Test Kurum 1 değil veya henüz bağlı değil.',
+          connection: publicConn(await getConn(companyId), await getPlatform()),
+        })
+      }
+      return sendJson(req, res, 200, {
+        ok: connection.status === 'connected',
+        connection,
+        environment: connection.environment,
+      })
+    } catch (err) {
+      return sendJson(req, res, err.status || 400, {
+        ok: false,
+        error: err.code || 'CONNECTION_FAILED',
+        message: err.message,
+        connection: publicConn(await getConn(companyId), await getPlatform()),
+      })
+    }
+  }
+
   if (op === 'test' || op === 'onboard') {
     try {
       const connection = await matchTenantToNilvera(companyId)
@@ -1287,12 +1360,14 @@ async function handleTenantOp(req, res, session, op, body, query) {
   }
 
   if (op === 'sync') {
+    await ensureTestOnboarding(companyId)
     const result = await syncInboxForCompany(companyId)
     return sendJson(req, res, 200, result)
   }
 
   if (op === 'test-incoming') {
     try {
+      await ensureTestOnboarding(companyId)
       const result = await sendNilveraTestIncoming({ companyId })
       return sendJson(req, res, 200, result)
     } catch (err) {

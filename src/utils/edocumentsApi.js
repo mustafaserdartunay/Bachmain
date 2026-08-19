@@ -44,6 +44,7 @@ export const edocumentsApi = {
   connection: () => request('connection'),
   saveConnection: (body) => request('connection', { method: 'POST', body }),
   testConnection: () => request('test', { method: 'POST', body: {} }),
+  bindTest: () => request('bind-test', { method: 'POST', body: {} }),
   taxpayer: (taxNumber) => request('taxpayer', { query: { taxNumber } }),
   credits: () => request('credits'),
   list: (query = {}) => request('list', { query }),
