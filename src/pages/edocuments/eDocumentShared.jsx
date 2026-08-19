@@ -64,9 +64,11 @@ export function EdocAlert({ tone = 'rose', children }) {
 }
 
 export function connectionStatusLabel(connection) {
-  if (!connection) return 'Nilvera bağlı değil'
-  if (connection.status === 'connected') return `Bağlı · ${connection.environment || 'TEST'}`
-  if (connection.status === 'error') return `Hata · ${connection.lastError || 'test başarısız'}`
-  if (connection.hasApiKey) return `Anahtar kayıtlı · ${connection.environment || 'TEST'}`
-  return 'Nilvera bağlı değil'
+  if (!connection) return 'Nilvera kontrolü bekleniyor'
+  if (connection.status === 'connected') return `Çalışır · ${connection.environment || 'TEST'}`
+  if (connection.status === 'pending' || connection.status === 'submitted') {
+    return `Beklemede · ${connection.environment || 'TEST'}`
+  }
+  if (connection.status === 'error') return `Hata · ${connection.lastError || 'kontrol başarısız'}`
+  return 'Nilvera kontrolü bekleniyor'
 }

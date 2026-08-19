@@ -2948,3 +2948,19 @@ export const eDocumentApiLogs = pgTable(
   },
   (t) => [index('e_doc_api_logs_company_idx').on(t.companyId, t.createdAt)],
 )
+
+/** Single Bachmain integrator Nilvera connection (not per tenant). */
+export const eDocumentPlatform = pgTable('e_document_platform', {
+  id: text('id').primaryKey(),
+  encryptedApiKeyTest: text('encrypted_api_key_test'),
+  encryptedApiKeyLive: text('encrypted_api_key_live'),
+  fingerprintTest: text('fingerprint_test'),
+  fingerprintLive: text('fingerprint_live'),
+  status: text('status').default('disconnected').notNull(),
+  lastTestAt: timestamp('last_test_at', { withTimezone: true }),
+  lastError: text('last_error'),
+  companyTitle: text('company_title'),
+  taxNumber: text('tax_number'),
+  meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})

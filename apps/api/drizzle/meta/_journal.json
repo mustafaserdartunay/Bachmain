@@ -134,6 +134,13 @@
       "when": 1784720000000,
       "tag": "0020_e_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1784730000000,
+      "tag": "0021_e_document_platform",
+      "breakpoints": true
     }
   ]
 }

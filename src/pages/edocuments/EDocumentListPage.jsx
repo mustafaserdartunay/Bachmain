@@ -177,7 +177,7 @@ export default function EDocumentListPage({
         ) : (
           <DataTable
             emptyTitle="Belge bulunamadı"
-            emptyDescription="Nilvera’dan çekin, yeni fatura oluşturun veya API anahtarını Ayarlar’dan kaydedin."
+            emptyDescription="Nilvera’dan çekin veya yeni fatura oluşturun. Önce Ayarlar’dan firma bilgisi ve Nilvera kontrolü gerekir."
             data={filtered}
             getRowId={(row) => row.id}
             onRowClick={(row) => navigate(`/e-belgeler/${row.id}`)}

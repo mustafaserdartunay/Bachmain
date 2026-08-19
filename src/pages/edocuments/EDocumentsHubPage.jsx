@@ -98,7 +98,7 @@ export default function EDocumentsHubPage() {
             <p className="truncate text-[11px] font-semibold text-gray-500">
               {connection?.companyTitle || connection?.taxNumber
                 ? `${connection.companyTitle || 'Şirket'} · ${connection.taxNumber || 'VKN yok'}`
-                : 'API anahtarı tarayıcıya gönderilmez. Ayarlardan Nilvera key kaydedin.'}
+                : 'Firma bilgisi ve imza beyanını Ayarlar’dan girin; Nilvera kontrolü yönetim üzerinden geçer.'}
             </p>
           </div>
         </div>

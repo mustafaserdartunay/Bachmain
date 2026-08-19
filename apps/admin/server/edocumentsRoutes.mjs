@@ -230,28 +230,112 @@ async function ensureEdocSchema() {
   await sql`CREATE INDEX IF NOT EXISTS e_doc_conn_company_idx ON e_document_connections (company_id, status)`
   await sql`CREATE INDEX IF NOT EXISTS e_docs_company_status_idx ON e_documents (company_id, status, created_at)`
   await sql`CREATE INDEX IF NOT EXISTS e_docs_company_uuid_idx ON e_documents (company_id, uuid)`
+  await sql`CREATE TABLE IF NOT EXISTS e_document_platform (
+    id text PRIMARY KEY,
+    encrypted_api_key_test text,
+    encrypted_api_key_live text,
+    fingerprint_test text,
+    fingerprint_live text,
+    status text NOT NULL DEFAULT 'disconnected',
+    last_test_at timestamptz,
+    last_error text,
+    company_title text,
+    tax_number text,
+    meta jsonb NOT NULL DEFAULT '{}'::jsonb,
+    updated_at timestamptz NOT NULL DEFAULT now()
+  )`
   return true
 }
 
-function publicConn(row) {
-  if (!row) return null
+function normalizeTax(value) {
+  return String(value || '').replace(/\D/g, '')
+}
+
+function publicPlatform(row) {
+  if (!row) {
+    return {
+      configured: false,
+      hasTestKey: false,
+      hasLiveKey: false,
+      status: 'disconnected',
+    }
+  }
+  return {
+    configured: Boolean(row.encrypted_api_key_test || row.encrypted_api_key_live),
+    hasTestKey: Boolean(row.encrypted_api_key_test),
+    hasLiveKey: Boolean(row.encrypted_api_key_live),
+    fingerprintTest: row.fingerprint_test,
+    fingerprintLive: row.fingerprint_live,
+    status: row.status,
+    lastTestAt: row.last_test_at,
+    lastError: row.last_error,
+    companyTitle: row.company_title,
+    taxNumber: row.tax_number,
+  }
+}
+
+function publicConn(row, platform = null) {
+  if (!row) {
+    return {
+      status: 'disconnected',
+      platformReady: Boolean(platform?.encrypted_api_key_test || platform?.encrypted_api_key_live),
+      nextStep:
+        'Firma bilgilerinizi kaydedin. Nilvera API anahtarı üye paneline girilmez; bağlantı yönetim sistemindedir.',
+    }
+  }
   const meta = { ...(row.meta || {}) }
   delete meta.apiKey
+  delete meta.certificatePassword
+  const env = row.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
+  const platformReady = Boolean(
+    env === 'PRODUCTION' ? platform?.encrypted_api_key_live : platform?.encrypted_api_key_test,
+  )
+  const signatureDeclared = Boolean(meta.signatureDeclared)
   return {
     id: row.id,
     companyId: row.company_id,
     provider: row.provider,
     environment: row.environment,
     status: row.status,
-    hasApiKey: Boolean(row.encrypted_api_key),
-    apiKeyFingerprint: row.api_key_fingerprint,
     lastTestAt: row.last_test_at,
     lastSyncAt: row.last_sync_at,
     lastError: row.last_error,
     companyTitle: row.company_title,
     taxNumber: row.tax_number,
+    taxOffice: meta.taxOffice || '',
+    address: meta.address || '',
+    district: meta.district || '',
+    city: meta.city || '',
+    postalCode: meta.postalCode || '',
+    phone: meta.phone || '',
+    email: meta.email || '',
+    signatureType: meta.signatureType || '',
+    signatureDeclared,
+    nilveraMatched: Boolean(meta.nilveraMatched),
+    platformReady,
+    hasAssignedKey: Boolean(row.encrypted_api_key),
+    nextStep: tenantNextStep(row, platformReady),
     meta,
   }
+}
+
+function tenantNextStep(row, platformReady) {
+  if (!platformReady) {
+    return 'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Yönetim paneli henüz Bachmain Nilvera bağlantısını yapmadı.'
+  }
+  if (!normalizeTax(row?.tax_number) || !row?.company_title) {
+    return 'VKN/TCKN ve resmi unvanı kaydedin, mali mühür / e-imza / mobil imza beyanını işaretleyin, ardından Nilvera kontrolünü çalıştırın.'
+  }
+  if (!row?.meta?.signatureDeclared) {
+    return 'e-Fatura için mali mühür (tüzel) veya e-imza / mobil imza (şahıs) sizin tarafınızdan alınır. Bachmain satmaz. Beyanı işaretleyip kontrol edin.'
+  }
+  if (row.status === 'connected') {
+    return 'Nilvera kontrolü geçti. e-Fatura / e-Arşiv bu şirkette kullanılabilir.'
+  }
+  return (
+    row.last_error ||
+    'Nilvera kontrolü henüz tamamlanmadı. Kontrolü çalıştırın; eşleşme yoksa yönetim Nilvera portalında firmayı açar.'
+  )
 }
 
 function mapStatus({ statusCode, answerCode, isCancel, direction }) {
@@ -287,21 +371,203 @@ async function getConn(companyId) {
   return rows[0] || null
 }
 
+async function getPlatform() {
+  const sql = getSql()
+  const rows = await sql`SELECT * FROM e_document_platform WHERE id = 'nilvera' LIMIT 1`
+  if (rows[0]) return rows[0]
+  await sql`INSERT INTO e_document_platform (id) VALUES ('nilvera') ON CONFLICT (id) DO NOTHING`
+  const again = await sql`SELECT * FROM e_document_platform WHERE id = 'nilvera' LIMIT 1`
+  return again[0] || null
+}
+
+async function getPlatformKey(environment) {
+  const row = await getPlatform()
+  const env = environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
+  const enc = env === 'PRODUCTION' ? row?.encrypted_api_key_live : row?.encrypted_api_key_test
+  if (!enc) return null
+  return {
+    row,
+    apiKey: sanitizeApiKey(decryptApiKey(enc)),
+    environment: env,
+  }
+}
+
 async function requireLive(companyId) {
   const row = await getConn(companyId)
-  if (!row?.encrypted_api_key) {
+  const environment = row?.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
+  if (row?.encrypted_api_key) {
+    return {
+      row,
+      apiKey: sanitizeApiKey(decryptApiKey(row.encrypted_api_key)),
+      environment,
+      source: 'assigned',
+    }
+  }
+  const platform = await getPlatformKey(environment)
+  if (!platform) {
     const err = new Error(
-      'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: E-Belge Ayarları üzerinden API anahtarı kaydedin.',
+      'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Yönetim paneli → E-Dönüşüm üzerinden Bachmain Nilvera bağlantısı yapılmalı.',
     )
     err.status = 409
     err.code = 'NILVERA_NOT_CONFIGURED'
     throw err
   }
-  return {
-    row,
-    apiKey: sanitizeApiKey(decryptApiKey(row.encrypted_api_key)),
-    environment: row.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST',
+  if (row?.status !== 'connected') {
+    const err = new Error(
+      row?.last_error ||
+        'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: E-Belge Ayarları’na firma bilgilerinizi girip Nilvera kontrolünden geçin.',
+    )
+    err.status = 409
+    err.code = 'NILVERA_NOT_CONFIGURED'
+    throw err
   }
+  const platformTax = normalizeTax(platform.row?.tax_number)
+  const tenantTax = normalizeTax(row.tax_number)
+  if (!platformTax || platformTax !== tenantTax) {
+    const err = new Error(
+      'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Bu VKN, Bachmain Nilvera hesabının kendi firması değil. Yönetim, Nilvera portalında firmayı açıp bu üyeye özel anahtar atamalı.',
+    )
+    err.status = 409
+    err.code = 'NILVERA_NOT_CONFIGURED'
+    throw err
+  }
+  return { row, apiKey: platform.apiKey, environment, source: 'platform' }
+}
+
+async function matchTenantToNilvera(companyId) {
+  const sql = getSql()
+  const row = await getConn(companyId)
+  const tax = normalizeTax(row?.tax_number)
+  if (!row || tax.length < 10 || !row.company_title) {
+    const err = new Error('VKN/TCKN (10 veya 11 hane) ve resmi unvan zorunludur.')
+    err.status = 400
+    throw err
+  }
+  const environment = row.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
+  const platform = await getPlatformKey(environment)
+  if (!platform) {
+    const err = new Error(
+      'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Yönetim paneli henüz Bachmain Nilvera API anahtarını kaydetmedi.',
+    )
+    err.status = 409
+    err.code = 'NILVERA_NOT_CONFIGURED'
+    throw err
+  }
+
+  let assignedCompany = null
+  if (row.encrypted_api_key) {
+    assignedCompany = await fetchCompanyInfo({
+      apiKey: sanitizeApiKey(decryptApiKey(row.encrypted_api_key)),
+      environment,
+    })
+  }
+
+  const self = await fetchCompanyInfo({
+    apiKey: platform.apiKey,
+    environment,
+  }).catch(() => null)
+  let list = []
+  try {
+    list = asList(
+      await nilveraFetch({
+        apiKey: platform.apiKey,
+        environment,
+        path: '/general/Company/List',
+      }),
+    ).map((item) => pickCompany(item))
+  } catch {
+    list = []
+  }
+
+  const assignedTax = normalizeTax(assignedCompany?.TaxNumber)
+  const selfTax = normalizeTax(self?.TaxNumber)
+  const listHit = list.find((item) => normalizeTax(item?.TaxNumber) === tax)
+  const signatureDeclared = Boolean(row.meta?.signatureDeclared)
+  const signatureType = row.meta?.signatureType || ''
+
+  let certificates = []
+  const keyForCerts = row.encrypted_api_key
+    ? sanitizeApiKey(decryptApiKey(row.encrypted_api_key))
+    : selfTax === tax
+      ? platform.apiKey
+      : null
+  if (keyForCerts) {
+    certificates = asList(
+      await nilveraFetch({
+        apiKey: keyForCerts,
+        environment,
+        path: '/general/Company/Certificate',
+      }).catch(() => []),
+    )
+  }
+
+  const certOk = certificates.some((c) =>
+    ['MALIMUHUR', 'EIMZA', 'HSM'].includes(String(c.Type || c.type || '').toUpperCase()),
+  )
+
+  let status = 'pending'
+  let lastError = null
+  let matched = false
+  let title = row.company_title
+
+  if (assignedTax && assignedTax === tax) {
+    matched = true
+    title = assignedCompany?.Name || title
+    status = certOk || signatureDeclared ? 'connected' : 'pending'
+    if (status === 'pending') {
+      lastError =
+        'Firma anahtarı eşleşti ancak Nilvera’da mali mühür / e-imza sertifikası görünmüyor. Sertifika portalda tanımlanmalı.'
+    }
+  } else if (selfTax && selfTax === tax) {
+    matched = true
+    title = self?.Name || title
+    status = certOk || signatureDeclared ? 'connected' : 'pending'
+    if (status === 'pending') {
+      lastError =
+        'Bachmain Nilvera firması bu VKN ile eşleşti; sertifika henüz Nilvera’da yok. Mali mühür / e-imza / mobil imza GİB sürecini tamamlayın.'
+    }
+  } else if (listHit) {
+    matched = true
+    title = listHit.Name || title
+    status = 'pending'
+    lastError =
+      'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: VKN Nilvera Company/List içinde görünüyor. Gönderim bu firmanın GİB kimliğiyle olmalı; yönetim o firmaya özel API anahtarını E-Dönüşüm’den atamalı.'
+  } else {
+    status = 'pending'
+    lastError =
+      'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Bu VKN Nilvera’da yok. Çözüm ortağı portalında firma açılmalı, GİB e-Fatura/e-Arşiv aktivasyonu ve mali mühür veya e-imza / mobil imza tamamlanmalı.'
+  }
+
+  if (!signatureDeclared && status === 'connected') {
+    status = 'pending'
+    lastError =
+      'Mali mühür / e-imza / mobil imza beyanı işaretlenmeden e-belge açılmaz. Bachmain bu imzayı satmaz.'
+  }
+
+  const meta = JSON.stringify({
+    ...(row.meta || {}),
+    nilveraMatched: matched,
+    nilveraCompany: assignedCompany || self || listHit || null,
+    certificates: certificates.map((c) => ({
+      Type: c.Type || c.type,
+      SerialNo: c.SerialNo || c.serialNo,
+      EndDate: c.EndDate || c.endDate,
+    })),
+    signatureType,
+    signatureDeclared,
+    lastCheckAt: new Date().toISOString(),
+  })
+
+  await sql`UPDATE e_document_connections SET
+    status = ${status},
+    last_test_at = now(),
+    last_error = ${lastError},
+    company_title = ${title},
+    meta = ${meta}::jsonb,
+    updated_at = now()
+    WHERE id = ${row.id}`
+
+  return publicConn(await getConn(companyId), await getPlatform())
 }
 
 function asList(data) {
@@ -502,80 +768,108 @@ async function handleTenantOp(req, res, session, op, body, query) {
   const sql = getSql()
 
   if (op === 'connection' && req.method === 'GET') {
-    return sendJson(req, res, 200, { ok: true, connection: publicConn(await getConn(companyId)) })
+    return sendJson(req, res, 200, {
+      ok: true,
+      connection: publicConn(await getConn(companyId), await getPlatform()),
+      platform: publicPlatform(await getPlatform()),
+    })
   }
 
   if (op === 'connection' && (req.method === 'PUT' || req.method === 'POST')) {
     const environment = body.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
     const existing = await getConn(companyId)
-    const nextKey = body.apiKey ? sanitizeApiKey(body.apiKey) : ''
-    if (body.apiKey && nextKey.length < 16) {
+    const taxNumber = normalizeTax(body.taxNumber)
+    const companyTitle = String(body.companyTitle || body.name || '').trim()
+    const signatureType = ['MALIMUHUR', 'EIMZA', 'MOBIL_IMZA'].includes(body.signatureType)
+      ? body.signatureType
+      : existing?.meta?.signatureType || ''
+    const signatureDeclared = Boolean(body.signatureDeclared)
+    if (taxNumber && taxNumber.length !== 10 && taxNumber.length !== 11) {
       return sendJson(req, res, 400, {
         ok: false,
-        error: 'INVALID_API_KEY',
-        message:
-          'API anahtarı çok kısa. Portal şifresi değil, Nilvera → API Tanımları’ndan üretilen anahtarı yapıştırın.',
+        message: 'VKN 10, TCKN 11 haneli olmalıdır.',
       })
     }
-    const encrypted = nextKey ? encryptApiKey(nextKey) : existing?.encrypted_api_key
-    const fp = nextKey ? fingerprint(nextKey) : existing?.api_key_fingerprint
+    const meta = JSON.stringify({
+      ...(existing?.meta || {}),
+      taxOffice: body.taxOffice || '',
+      address: body.address || '',
+      district: body.district || '',
+      city: body.city || '',
+      postalCode: body.postalCode || '',
+      phone: body.phone || '',
+      email: body.email || '',
+      signatureType,
+      signatureDeclared,
+    })
     if (existing) {
       await sql`UPDATE e_document_connections SET
         environment = ${environment},
-        encrypted_api_key = ${encrypted || null},
-        api_key_fingerprint = ${fp || null},
-        status = ${encrypted ? 'configured' : 'disconnected'},
+        company_title = ${companyTitle || existing.company_title},
+        tax_number = ${taxNumber || existing.tax_number},
+        status = ${existing.status === 'connected' ? 'connected' : 'submitted'},
+        meta = ${meta}::jsonb,
         updated_at = now()
         WHERE id = ${existing.id}`
     } else {
-      await sql`INSERT INTO e_document_connections (company_id, provider, environment, encrypted_api_key, api_key_fingerprint, status)
-        VALUES (${companyId}, 'nilvera', ${environment}, ${encrypted || null}, ${fp || null}, ${encrypted ? 'configured' : 'disconnected'})`
+      await sql`INSERT INTO e_document_connections (company_id, provider, environment, company_title, tax_number, status, meta)
+        VALUES (${companyId}, 'nilvera', ${environment}, ${companyTitle || null}, ${taxNumber || null}, 'submitted', ${meta}::jsonb)`
     }
-    return sendJson(req, res, 200, { ok: true, connection: publicConn(await getConn(companyId)) })
+    return sendJson(req, res, 200, {
+      ok: true,
+      connection: publicConn(await getConn(companyId), await getPlatform()),
+    })
   }
 
-  if (op === 'test') {
-    const live = await requireLive(companyId)
+  if (op === 'test' || op === 'onboard') {
     try {
-      const company = await fetchCompanyInfo({
-        apiKey: live.apiKey,
-        environment: live.environment,
-      })
-      const creditsRaw = await nilveraFetch({
-        apiKey: live.apiKey,
-        environment: live.environment,
-        path: '/general/Credits',
-      }).catch(() => [])
-      const credits = asList(creditsRaw)
-      const meta = JSON.stringify({ company, credits })
-      await sql`UPDATE e_document_connections SET status = 'connected', last_test_at = now(), last_error = null,
-        company_title = ${company?.Name || null}, tax_number = ${company?.TaxNumber || null},
-        meta = ${meta}::jsonb, updated_at = now()
-        WHERE id = ${live.row.id}`
-      await logApi(companyId, 'test_connection', 'GET /general/Company', true)
+      const connection = await matchTenantToNilvera(companyId)
+      await logApi(
+        companyId,
+        'nilvera_check',
+        'GET /general/Company',
+        connection.status === 'connected',
+      )
       return sendJson(req, res, 200, {
-        ok: true,
-        company,
-        credits,
-        environment: live.environment,
-        connection: publicConn(await getConn(companyId)),
+        ok: connection.status === 'connected',
+        connection,
+        environment: connection.environment,
       })
     } catch (err) {
-      await sql`UPDATE e_document_connections SET status = 'error', last_test_at = now(), last_error = ${err.message}, updated_at = now() WHERE id = ${live.row.id}`
-      await logApi(companyId, 'test_connection', 'GET /general/Company', false, {
+      const existing = await getConn(companyId)
+      if (existing) {
+        await sql`UPDATE e_document_connections SET status = 'error', last_test_at = now(), last_error = ${err.message}, updated_at = now() WHERE id = ${existing.id}`
+      }
+      await logApi(companyId, 'nilvera_check', 'GET /general/Company', false, {
         error: err.message,
       })
       return sendJson(req, res, err.status || 400, {
         ok: false,
-        error: 'CONNECTION_FAILED',
+        error: err.code || 'CONNECTION_FAILED',
         message: err.message,
+        connection: publicConn(await getConn(companyId), await getPlatform()),
       })
     }
   }
 
   if (op === 'taxpayer') {
     const taxNumber = String(query.taxNumber || body.taxNumber || '').replace(/\D/g, '')
-    const live = await requireLive(companyId)
+    let live
+    try {
+      live = await requireLive(companyId)
+    } catch {
+      const row = await getConn(companyId)
+      const env = row?.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
+      live = await getPlatformKey(env)
+    }
+    if (!live) {
+      return sendJson(req, res, 409, {
+        ok: false,
+        error: 'NILVERA_NOT_CONFIGURED',
+        message:
+          'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Yönetim paneli Bachmain Nilvera bağlantısını yapmalı.',
+      })
+    }
     const rows = await nilveraFetch({
       apiKey: live.apiKey,
       environment: live.environment,
@@ -792,7 +1086,7 @@ async function handleTenantOp(req, res, session, op, body, query) {
   })
 }
 
-async function handleAdminOp(req, res, op) {
+async function handleAdminOp(req, res, op, body = {}, query = {}) {
   const sql = getSql()
   if (op === 'admin-overview') {
     const connected =
@@ -818,6 +1112,7 @@ async function handleAdminOp(req, res, op) {
       sentToday: sentToday[0]?.c || 0,
       incomingToday: incomingToday[0]?.c || 0,
       failedToday: failedToday[0]?.c || 0,
+      platform: publicPlatform(await getPlatform()),
       errorRows: errorRows.map((r) => ({
         id: r.id,
         companyId: r.company_id,
@@ -833,7 +1128,7 @@ async function handleAdminOp(req, res, op) {
   }
   if (op === 'admin-connections') {
     const rows =
-      await sql`SELECT id, company_id, environment, status, last_error, last_test_at, last_sync_at, company_title, tax_number, api_key_fingerprint, created_at
+      await sql`SELECT id, company_id, environment, status, last_error, last_test_at, last_sync_at, company_title, tax_number, encrypted_api_key, created_at, meta
       FROM e_document_connections WHERE deleted_at IS NULL ORDER BY updated_at DESC LIMIT 500`
     return sendJson(req, res, 200, {
       ok: true,
@@ -847,17 +1142,121 @@ async function handleAdminOp(req, res, op) {
         lastSyncAt: r.last_sync_at,
         companyTitle: r.company_title,
         taxNumber: r.tax_number,
-        apiKeyFingerprint: r.api_key_fingerprint,
-        hasApiKey: true,
+        hasAssignedKey: Boolean(r.encrypted_api_key),
+        signatureType: r.meta?.signatureType || '',
+        signatureDeclared: Boolean(r.meta?.signatureDeclared),
+        nilveraMatched: Boolean(r.meta?.nilveraMatched),
       })),
     })
   }
-  if (op === 'admin-retest') {
-    return sendJson(req, res, 400, {
-      ok: false,
-      message:
-        'Yeniden test şirket bağlamında E-Belge Ayarları üzerinden yapılmalıdır. Yönetim paneli müşteri API anahtarını çözmez.',
-    })
+  if (op === 'admin-platform') {
+    if (req.method === 'GET') {
+      return sendJson(req, res, 200, { ok: true, platform: publicPlatform(await getPlatform()) })
+    }
+    const environment = body.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
+    const nextKey = body.apiKey ? sanitizeApiKey(body.apiKey) : ''
+    if (body.apiKey && nextKey.length < 16) {
+      return sendJson(req, res, 400, {
+        ok: false,
+        message:
+          'API anahtarı çok kısa. portaltest.nilvera.com / portal.nilvera.com → API Tanımları.',
+      })
+    }
+    const row = await getPlatform()
+    if (!row) {
+      return sendJson(req, res, 500, { ok: false, message: 'Platform kaydı oluşturulamadı' })
+    }
+    const fp = nextKey ? fingerprint(nextKey) : null
+    const enc = nextKey ? encryptApiKey(nextKey) : null
+    if (environment === 'PRODUCTION') {
+      await sql`UPDATE e_document_platform SET
+        encrypted_api_key_live = COALESCE(${enc}, encrypted_api_key_live),
+        fingerprint_live = COALESCE(${fp}, fingerprint_live),
+        updated_at = now()
+        WHERE id = 'nilvera'`
+    } else {
+      await sql`UPDATE e_document_platform SET
+        encrypted_api_key_test = COALESCE(${enc}, encrypted_api_key_test),
+        fingerprint_test = COALESCE(${fp}, fingerprint_test),
+        updated_at = now()
+        WHERE id = 'nilvera'`
+    }
+    return sendJson(req, res, 200, { ok: true, platform: publicPlatform(await getPlatform()) })
+  }
+  if (op === 'admin-platform-test') {
+    const environment = body.environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
+    const live = await getPlatformKey(environment)
+    if (!live) {
+      return sendJson(req, res, 409, {
+        ok: false,
+        error: 'NILVERA_NOT_CONFIGURED',
+        message:
+          'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: Bu ortam için Bachmain API anahtarı kaydedilmedi.',
+      })
+    }
+    try {
+      const company = await fetchCompanyInfo({
+        apiKey: live.apiKey,
+        environment,
+      })
+      const meta = JSON.stringify({ company })
+      await sql`UPDATE e_document_platform SET
+        status = 'connected',
+        last_test_at = now(),
+        last_error = null,
+        company_title = ${company?.Name || null},
+        tax_number = ${company?.TaxNumber || null},
+        meta = ${meta}::jsonb,
+        updated_at = now()
+        WHERE id = 'nilvera'`
+      return sendJson(req, res, 200, {
+        ok: true,
+        company,
+        platform: publicPlatform(await getPlatform()),
+      })
+    } catch (err) {
+      await sql`UPDATE e_document_platform SET status = 'error', last_test_at = now(), last_error = ${err.message}, updated_at = now() WHERE id = 'nilvera'`
+      return sendJson(req, res, err.status || 400, {
+        ok: false,
+        error: 'CONNECTION_FAILED',
+        message: err.message,
+        platform: publicPlatform(await getPlatform()),
+      })
+    }
+  }
+  if (op === 'admin-recheck' || op === 'admin-retest') {
+    const companyId = body.companyId || query.companyId
+    if (!companyId) {
+      return sendJson(req, res, 400, { ok: false, message: 'companyId gerekli' })
+    }
+    const connection = await matchTenantToNilvera(companyId)
+    return sendJson(req, res, 200, { ok: true, connection })
+  }
+  if (op === 'admin-assign-key') {
+    const companyId = body.companyId
+    const nextKey = sanitizeApiKey(body.apiKey || '')
+    if (!companyId || nextKey.length < 16) {
+      return sendJson(req, res, 400, {
+        ok: false,
+        message: 'Üye companyId ve o firmanın Nilvera API anahtarı gerekli.',
+      })
+    }
+    const existing = await getConn(companyId)
+    if (!existing) {
+      return sendJson(req, res, 404, {
+        ok: false,
+        message: 'Üye e-belge kaydı yok. Önce üye panelinden firma bilgisi girmeli.',
+      })
+    }
+    const enc = encryptApiKey(nextKey)
+    const fp = fingerprint(nextKey)
+    await sql`UPDATE e_document_connections SET
+      encrypted_api_key = ${enc},
+      api_key_fingerprint = ${fp},
+      updated_at = now()
+      WHERE id = ${existing.id}`
+    const connection = await matchTenantToNilvera(companyId)
+    return sendJson(req, res, 200, { ok: true, connection })
   }
   return false
 }
@@ -875,6 +1274,8 @@ function parseOp(path, query) {
     return 'admin-overview'
   if (path === 'v1/admin/edocuments/connections' || path === 'edocuments/admin/connections')
     return 'admin-connections'
+  if (path === 'edocuments/admin/platform' || path === 'v1/admin/edocuments/platform')
+    return 'admin-platform'
   const file = path.match(/edocuments\/([^/]+)\/(pdf|xml)$/)
   if (file) return file[2]
   const send = path.match(/edocuments\/([^/]+)\/send$/)
@@ -939,13 +1340,23 @@ export async function handleEdocumentsApi(req, res, path, body = {}, query = {})
       return true
     }
 
-    if (op === 'admin-overview' || op === 'admin-connections' || op === 'admin-retest') {
+    if (
+      [
+        'admin-overview',
+        'admin-connections',
+        'admin-retest',
+        'admin-platform',
+        'admin-platform-test',
+        'admin-recheck',
+        'admin-assign-key',
+      ].includes(op)
+    ) {
       const staff = getStaffSession(req)
       if (!staff && staffAuthEnabled() && process.env.STAFF_AUTH_REQUIRED !== '0') {
         sendJson(req, res, 401, { ok: false, message: 'Staff oturumu gerekli' })
         return true
       }
-      await handleAdminOp(req, res, op)
+      await handleAdminOp(req, res, op, body, query)
       return true
     }
 
