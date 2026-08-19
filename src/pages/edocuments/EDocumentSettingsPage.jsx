@@ -7,6 +7,7 @@ import {
 } from '../../components/Layout/AppPageLayout'
 import { BTN_PRIMARY, BTN_SUCCESS } from '../../utils/buttonStyles'
 import { readCompanySettings } from '../../utils/companySettings'
+import { NILVERA_TEST_SENDER } from '../../data/nilveraTestParties'
 import { edocumentsApi } from '../../utils/edocumentsApi'
 import {
   connectionStatusLabel,
@@ -250,6 +251,10 @@ export default function EDocumentSettingsPage() {
               Bachmain bu imzayı satmaz.
             </span>
           </label>
+          <p className="text-xs text-[var(--muted)]">
+            Test ortamında Bachmain = Test Kurum 1 (VKN 1234567801). Test Kurum 2 alıcıdır; fatura
+            keserken Yeni E-Fatura ekranından doldurulur. Canlıda kendi VKN’niz kullanılır.
+          </p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -266,6 +271,20 @@ export default function EDocumentSettingsPage() {
               onClick={() => void check()}
             >
               Nilvera kontrolü
+            </button>
+            <button
+              type="button"
+              className="rounded-xl border border-dark-500/40 px-4 py-2 text-xs font-black uppercase tracking-wide text-gray-300"
+              disabled={busy}
+              onClick={() => {
+                setEnvironment('TEST')
+                setCompanyTitle(NILVERA_TEST_SENDER.name)
+                setTaxNumber(NILVERA_TEST_SENDER.taxNumber)
+                setSignatureType('MALIMUHUR')
+                setSignatureDeclared(true)
+              }}
+            >
+              Test Kurum 1’i doldur
             </button>
           </div>
           <p className="text-xs text-[var(--muted)]">

@@ -13,6 +13,11 @@ import { getCustomerProfiles } from '../../data/customerProfiles'
 import { readSalesInvoices } from '../../utils/salesInvoicesStore'
 import { edocumentsApi } from '../../utils/edocumentsApi'
 import { EdocAlert, EDocumentsSubnav, formatEdocError } from './eDocumentShared'
+import {
+  NILVERA_TEST_RECEIVER,
+  NILVERA_TEST_SENDER,
+  nilveraTestPartyFields,
+} from '../../data/nilveraTestParties'
 
 const FIELD =
   'w-full rounded-xl border border-dark-500/50 bg-dark-800 px-3 py-2 text-sm text-gray-200'
@@ -240,6 +245,13 @@ export default function EDocumentComposePage() {
             <legend className="text-xs font-black uppercase tracking-wide text-gray-500">
               Gönderen şirket
             </legend>
+            <button
+              type="button"
+              className="rounded-xl border border-dark-500/40 px-3 py-2 text-xs font-black uppercase tracking-wide text-gray-300"
+              onClick={() => setCompany(nilveraTestPartyFields(NILVERA_TEST_SENDER))}
+            >
+              Test Kurum 1’i gönderen yap
+            </button>
             <Field label="Unvan">
               <input
                 className={FIELD}
@@ -273,6 +285,30 @@ export default function EDocumentComposePage() {
             <legend className="text-xs font-black uppercase tracking-wide text-gray-500">
               Alıcı
             </legend>
+            <button
+              type="button"
+              className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-emerald-200"
+              onClick={() => {
+                setCustomerId('')
+                setCustomer(nilveraTestPartyFields(NILVERA_TEST_RECEIVER))
+                setDocumentType('e-fatura')
+                setTaxpayerHint(
+                  `Test Kurum 2 · VKN ${NILVERA_TEST_RECEIVER.taxNumber} · e-Fatura alıcısı (PK ${NILVERA_TEST_RECEIVER.aliasPk})`,
+                )
+                if (!lines.some((line) => String(line.name || '').trim())) {
+                  setLines([
+                    emptyLine({
+                      name: 'Nilvera test kalemi',
+                      quantity: 1,
+                      price: 100,
+                      kdvPercent: 20,
+                    }),
+                  ])
+                }
+              }}
+            >
+              Test Kurum 2’yi alıcı yap
+            </button>
             <Field label="Kayıtlı müşteri">
               <select
                 className={FIELD}

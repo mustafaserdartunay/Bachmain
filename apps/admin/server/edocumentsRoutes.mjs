@@ -251,13 +251,32 @@ function normalizeTax(value) {
   return String(value || '').replace(/\D/g, '')
 }
 
+const NILVERA_TEST_PARTIES = {
+  sender: {
+    code: 'test01',
+    name: 'Test Kurum Bir',
+    taxNumber: '1234567801',
+    aliasPk: 'urn:mail:defaultpk@nilvera.com',
+    aliasGb: 'urn:mail:defaultgb@nilvera.com',
+  },
+  receiver: {
+    code: 'test02',
+    name: 'Test Kurum İki',
+    taxNumber: '1234567802',
+    aliasPk: 'urn:mail:defaultpk@nilvera.com',
+    aliasGb: 'urn:mail:defaultgb@nilvera.com',
+  },
+}
+
 function publicPlatform(row) {
+  const parties = { testParties: NILVERA_TEST_PARTIES }
   if (!row) {
     return {
       configured: false,
       hasTestKey: false,
       hasLiveKey: false,
       status: 'disconnected',
+      ...parties,
     }
   }
   return {
@@ -271,6 +290,7 @@ function publicPlatform(row) {
     lastError: row.last_error,
     companyTitle: row.company_title,
     taxNumber: row.tax_number,
+    ...parties,
   }
 }
 

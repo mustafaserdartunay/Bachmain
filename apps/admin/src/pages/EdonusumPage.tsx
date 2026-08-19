@@ -189,6 +189,11 @@ export function EdonusumPage() {
             Durum: <Badge>{platform?.status || 'disconnected'}</Badge> ·{' '}
             {platform?.companyTitle || 'şirket yok'} · VKN {platform?.taxNumber || '—'}
           </p>
+          <p className="text-sm text-text-muted">
+            Test ortamı iki firmadır. Bachmain şu an Test Kurum 1 (VKN 1234567801) olarak bağlıdır.
+            Test Kurum 2 (VKN 1234567802) alıcıdır: Uygulama → E-Belgeler → Yeni E-Fatura → “Test
+            Kurum 2’yi alıcı yap”. Gelen kutu için Kurum 2’nin Kurum 1’e fatura kesmesi gerekir.
+          </p>
           <p className="text-text-muted">
             TEST anahtarı {platform?.hasTestKey ? platform.fingerprintTest : 'yok'} · Canlı{' '}
             {platform?.hasLiveKey ? platform.fingerprintLive : 'yok'}
