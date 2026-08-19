@@ -1,14 +1,15 @@
-import { useEffect } from 'react'
-import { startStudioJump } from '../../utils/dropelyaStudio'
+import { useLocation } from 'react-router-dom'
+import { dropelyaPathForStudio, getDropelyaPageUrl } from '../../utils/dropelyaStudio'
 
 export default function WebStudioManagementPage() {
-  useEffect(() => {
-    startStudioJump()
-  }, [])
+  const { pathname } = useLocation()
+  const src = getDropelyaPageUrl(dropelyaPathForStudio(pathname))
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#e8eef6]">
-      <p className="text-sm font-semibold text-[#203375]">Studio yönetim açılıyor…</p>
-    </div>
+    <iframe
+      title="Studio Yönetim"
+      src={src}
+      className="block h-[calc(100dvh-(2*var(--shell-gap)))] min-h-[36rem] w-full border-0 bg-[#eef0f4]"
+    />
   )
 }

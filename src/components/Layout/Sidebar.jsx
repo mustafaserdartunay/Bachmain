@@ -17,6 +17,8 @@ import {
   Settings,
   FolderPlus,
   FolderKanban,
+  CreditCard,
+  Store,
   List,
   PlayCircle,
   CheckCircle2,
@@ -52,7 +54,7 @@ import {
   Globe2,
   Sparkles,
 } from 'lucide-react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
 import { visibleCustomerSubMenus, isSalesRoute } from '../../data/customerMenu'
 import { expensesSubMenus, isExpensesRoute } from '../../data/expensesMenu'
@@ -77,8 +79,8 @@ import {
   DOCUMENT_CENTER_BASE,
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
-import { isWebRoute } from '../../data/webMenu'
-import { getDropelyaPageUrl, startStudioJump, STUDIO_ADMIN_PAGES } from '../../utils/dropelyaStudio'
+import { isWebRoute, WEB_STUDIO_PATH } from '../../data/webMenu'
+import { STUDIO_ADMIN_PAGES } from '../../utils/dropelyaStudio'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
@@ -165,6 +167,13 @@ const logisticsSubMenuIcons = {
   docs: PackageCheck,
   dashboard: LayoutDashboard,
 }
+const studioSubMenuIcons = {
+  dashboard: LayoutDashboard,
+  folder: FolderKanban,
+  bag: ShoppingBag,
+  store: Store,
+  card: CreditCard,
+}
 const hrSubMenuIcons = {
   gauge: Gauge,
   users: Users,
@@ -221,6 +230,7 @@ function SidebarSection({ label, collapsed }) {
 
 export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, onToggle }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const allow = (code) => canViewModule(user, code)
   const [company, setCompany] = useState(() => readCompanySettings())
@@ -939,14 +949,16 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           <button
             type="button"
             onClick={() => {
+              handleNavigate()
               if (collapsed) {
-                startStudioJump(undefined, '/yonetim')
+                navigate(WEB_STUDIO_PATH)
                 return
               }
-              toggleMenu('web')
+              if (!webOpen) toggleMenu('web')
+              navigate(WEB_STUDIO_PATH)
             }}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
+              isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
             }`}
           >
             <MenuIcon collapsed={collapsed}>
@@ -966,19 +978,29 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
           {webOpen && !collapsed && (
             <SidebarSubMenu>
-              {STUDIO_ADMIN_PAGES.map((sub) => (
-                <a
-                  key={sub.href}
-                  href={getDropelyaPageUrl(sub.href)}
-                  onClick={(event) => {
-                    handleNavigate()
-                    startStudioJump(event, sub.href)
-                  }}
-                  className={`${subMenuButtonBase} flex items-center gap-2`}
-                >
-                  {sub.label}
-                </a>
-              ))}
+              {STUDIO_ADMIN_PAGES.map((sub) => {
+                const SubIcon = sub.icon ? studioSubMenuIcons[sub.icon] : null
+                return (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    end={Boolean(sub.exact)}
+                    onClick={handleNavigate}
+                    className={({ isActive }) =>
+                      `${subMenuButtonBase} flex items-center gap-2 ${
+                        isActive ? 'sidebar-menu-active font-medium' : ''
+                      }`
+                    }
+                  >
+                    {SubIcon ? (
+                      <SubMenuIcon>
+                        <SubIcon className="h-3.5 w-3.5" />
+                      </SubMenuIcon>
+                    ) : null}
+                    {sub.label}
+                  </NavLink>
+                )
+              })}
             </SidebarSubMenu>
           )}
         </div>
