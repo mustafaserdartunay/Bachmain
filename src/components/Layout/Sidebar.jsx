@@ -77,8 +77,7 @@ import {
   DOCUMENT_CENTER_BASE,
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
-import { isWebRoute } from '../../data/webMenu'
-import { getDropelyaYonetimUrl, startStudioJump } from '../../utils/dropelyaStudio'
+import { isWebRoute, STUDIO_NAV } from '../../data/webMenu'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
@@ -271,6 +270,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const hrOpen = openMenuId === 'hr'
   const crmOpen = openMenuId === 'crm'
   const settingsOpen = openMenuId === 'settings'
+  const webOpen = openMenuId === 'web'
 
   function toggleMenu(menuId) {
     setOpenMenuId((current) => (current === menuId ? null : menuId))
@@ -934,21 +934,49 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <>
         <SidebarSection label="WEB" collapsed={collapsed} />
 
-        <a
-          href={getDropelyaYonetimUrl()}
-          onClick={(event) => {
-            handleNavigate()
-            startStudioJump(event)
-          }}
-          className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-            isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
-          }`}
-        >
-          <MenuIcon collapsed={collapsed}>
-            <Globe2 className="w-4 h-4 shrink-0" />
-          </MenuIcon>
-          {!collapsed ? <span className={menuLabelClass}>Studio</span> : null}
-        </a>
+        <div className={`sidebar-menu-group ${webOpen ? 'is-open' : ''}`}>
+          <button
+            type="button"
+            onClick={() => toggleMenu('web')}
+            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              collapsed && isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <Globe2 className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && (
+              <>
+                <span className={menuLabelClass}>Studio</span>
+                {webOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                )}
+              </>
+            )}
+          </button>
+
+          {webOpen && !collapsed && (
+            <SidebarSubMenu>
+              {STUDIO_NAV.map((sub) => (
+                <NavLink
+                  key={sub.path}
+                  to={sub.path}
+                  end={Boolean(sub.exact)}
+                  onClick={handleNavigate}
+                  className={({ isActive }) =>
+                    `${subMenuButtonBase} flex items-center gap-2 ${
+                      isActive ? 'sidebar-menu-active font-medium' : ''
+                    }`
+                  }
+                >
+                  {sub.label}
+                </NavLink>
+              ))}
+            </SidebarSubMenu>
+          )}
+        </div>
         </>
         ) : null}
 

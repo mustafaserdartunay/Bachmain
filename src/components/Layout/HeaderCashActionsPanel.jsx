@@ -1,14 +1,20 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
+  ExternalLink,
+  Eye,
   Handshake,
   Inbox,
   ReceiptText,
+  Rocket,
   UserPlus,
   Wallet,
 } from 'lucide-react'
 import { CASH_BASE_PATH } from '../../data/treasuryMenu'
+import { isStudioFullscreenRoute } from '../../data/webMenu'
+import { dispatchStudioCommand } from '../../utils/dropelyaStudio'
 import { getTreasuryAccounts } from '../../utils/treasuryStore'
 import { YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesign'
 
@@ -144,6 +150,88 @@ export function HeaderQuickActionCard({ action, fixed = false, className = '' })
 }
 
 export default function HeaderCashActionsPanel() {
+  const { pathname } = useLocation()
+  const isStudio = isStudioFullscreenRoute(pathname)
+  const [liveUrl, setLiveUrl] = useState('https://dropelya.com')
+  const [userName, setUserName] = useState('Yönetici')
+  const [publishing, setPublishing] = useState(false)
+
+  useEffect(() => {
+    if (!isStudio) return undefined
+    function onStatus(event) {
+      const data = event.detail || {}
+      if (data.liveUrl) setLiveUrl(data.liveUrl)
+      if (data.userName) setUserName(data.userName)
+      if (data.action === 'publish-start') setPublishing(true)
+      if (data.action === 'publish-end') setPublishing(false)
+    }
+    window.addEventListener('bach:studio-status', onStatus)
+    return () => window.removeEventListener('bach:studio-status', onStatus)
+  }, [isStudio])
+
+  if (isStudio) {
+    const studioActions = [
+      {
+        id: 'preview',
+        title: 'Ön izleme',
+        icon: Eye,
+        gradient: HEADER_ACTION_GRADIENTS.primary,
+        onClick: () => dispatchStudioCommand('preview'),
+      },
+      {
+        id: 'live',
+        title: 'Canlı vitrine git',
+        icon: ExternalLink,
+        gradient: HEADER_ACTION_GRADIENTS.success,
+        href: liveUrl,
+      },
+      {
+        id: 'publish',
+        title: publishing ? 'Taşınıyor…' : 'Kaydet ve canlıya taşı',
+        icon: Rocket,
+        gradient: HEADER_ACTION_GRADIENTS.amber,
+        onClick: () => dispatchStudioCommand('publish'),
+      },
+    ]
+
+    return (
+      <section className="app-header-banner flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center px-4 py-2 sm:px-6">
+        <div className="flex w-full items-center gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {studioActions.map((action) => {
+            const Icon = action.icon
+            const className = `${HEADER_QUICK_ACTION_CHIP_FIXED_CLASS} ${action.gradient}`
+            const inner = (
+              <>
+                <span className={HEADER_QUICK_ACTION_CHIP_ICON_CLASS}>
+                  <Icon className="h-4 w-4 shrink-0 text-[#ffffff]" strokeWidth={2.25} aria-hidden />
+                </span>
+                <span className={YF_TEXT_ON_COLOR_CLASS}>{action.title}</span>
+              </>
+            )
+            if (action.href) {
+              return (
+                <a key={action.id} href={action.href} target="_blank" rel="noopener noreferrer" title={action.title} className={className}>
+                  {inner}
+                </a>
+              )
+            }
+            return (
+              <button key={action.id} type="button" title={action.title} onClick={action.onClick} className={className}>
+                {inner}
+              </button>
+            )
+          })}
+          <div className={`${HEADER_QUICK_ACTION_CHIP_FIXED_CLASS} ${HEADER_ACTION_GRADIENTS.violet} ml-auto`}>
+            <span className={HEADER_QUICK_ACTION_CHIP_ICON_CLASS}>
+              <span className="text-xs font-black text-white">{(userName || 'Y').slice(0, 1)}</span>
+            </span>
+            <span className={YF_TEXT_ON_COLOR_CLASS}>{userName || 'Studio Yönetici'}</span>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="app-header-banner flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center px-4 py-2 sm:px-6">
       <div className="flex w-full gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-7 lg:gap-2 lg:overflow-visible">

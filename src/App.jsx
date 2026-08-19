@@ -13,6 +13,7 @@ import {
   ForgotPasswordPage,
   ResetPasswordPage,
   VerifyEmailPage,
+  AcceptInvitePage,
 } from './pages/auth/AuthPages'
 import LicensePage from './pages/auth/LicensePage'
 import TrialExpiredPage from './pages/auth/TrialExpiredPage'
@@ -112,6 +113,7 @@ import CostCalculatorRoute, {
 } from './pages/stock/CostCalculatorRoute'
 import DeliveredPage from './pages/process/DeliveredPage'
 import SettingsPage from './pages/SettingsPage'
+import TeamUsersPage from './pages/settings/TeamUsersPage'
 import {
   OrgHubPage,
   OrgCompaniesPage,
@@ -239,6 +241,7 @@ export default function App() {
             <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
             <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
             <Route path="/eposta-dogrula" element={<VerifyEmailPage />} />
+            <Route path="/davet" element={<AcceptInvitePage />} />
             <Route path="/hesap/lisans" element={<LicensePage />} />
             <Route
               path="/deneme-bitti"
@@ -293,42 +296,14 @@ export default function App() {
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/finans" element={<FinanceCenterPage />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
-                      <Route
-                        path="/web"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
-                      <Route
-                        path="/web/studio"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/yonetim"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/kategori-olustur"
-                        element={<Navigate to="/web/studio/yonetim/kategoriler" replace />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/urun-olustur"
-                        element={<Navigate to="/web/studio/yonetim/urunler" replace />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/siparisler"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/template"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/ayarlar"
-                        element={<Navigate to="/web/studio/yonetim/profil" replace />}
-                      />
+                      <Route path="/web" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim/yonetim" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim/kategori-olustur" element={<Navigate to="/web/studio/yonetim/kategoriler" replace />} />
+                      <Route path="/web/studio/yonetim/urun-olustur" element={<Navigate to="/web/studio/yonetim/urunler" replace />} />
+                      <Route path="/web/studio/yonetim/template" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/web/studio/yonetim/ayarlar" element={<Navigate to="/web/studio/yonetim/profil" replace />} />
                       <Route
                         path="/web/studio/yonetim/ayarlar/domain-bagla"
                         element={<Navigate to="/web/studio/yonetim/profil" replace />}
@@ -350,6 +325,10 @@ export default function App() {
                         element={<WebStudioManagementPage />}
                       />
                       <Route
+                        path="/web/studio/yonetim/siparisler"
+                        element={<WebStudioManagementPage />}
+                      />
+                      <Route
                         path="/web/studio/yonetim/profil"
                         element={<WebStudioManagementPage />}
                       />
@@ -357,14 +336,8 @@ export default function App() {
                         path="/web/studio/yonetim/odeme"
                         element={<WebStudioManagementPage />}
                       />
-                      <Route
-                        path="/website-os"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
-                      <Route
-                        path="/website"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
+                      <Route path="/website-os" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route path="/website" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
                       <Route path="/platform" element={<Navigate to="/" replace />} />
                       <Route path="/cekirdek" element={<Navigate to="/" replace />} />
@@ -421,12 +394,7 @@ export default function App() {
                       />
                       <Route
                         path="/e-belgeler/iptaller"
-                        element={
-                          <EDocumentListPage
-                            title="İptaller / İade"
-                            statusIn={['CANCELLED', 'REJECTED']}
-                          />
-                        }
+                        element={<EDocumentListPage title="İptaller / İade" status="CANCELLED" />}
                       />
                       <Route path="/e-belgeler/sorgula" element={<EDocumentSearchPage />} />
                       <Route path="/e-belgeler/ayarlar" element={<EDocumentSettingsPage />} />
@@ -724,6 +692,7 @@ export default function App() {
                         element={<ProjectsListPage scope="cancelled" />}
                       />
                       <Route path="/ayarlar" element={<SettingsPage />} />
+                      <Route path="/ayarlar/kullanicilar" element={<TeamUsersPage />} />
                       <Route path="/ayarlar/master-data" element={<MasterDataHubPage />} />
                       <Route path="/otomasyon" element={<WorkflowHubPage />} />
                       <Route
