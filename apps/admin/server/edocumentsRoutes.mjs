@@ -401,31 +401,43 @@ async function getConn(companyId) {
   return rows[0] || null
 }
 
+function testEnvApiKey() {
+  return sanitizeApiKey(
+    process.env.NILVERA_PLATFORM_API_KEY_TEST || process.env.NILVERA_PLATFORM_API_KEY || '',
+  )
+}
+
 async function getPlatform() {
   const sql = getSql()
   const rows = await sql`SELECT * FROM e_document_platform WHERE id = 'nilvera' LIMIT 1`
   if (!rows[0]) {
     await sql`INSERT INTO e_document_platform (id) VALUES ('nilvera') ON CONFLICT (id) DO NOTHING`
   }
-  const testEnv = sanitizeApiKey(
-    process.env.NILVERA_PLATFORM_API_KEY_TEST || process.env.NILVERA_PLATFORM_API_KEY || '',
-  )
+  const testEnv = testEnvApiKey()
   const liveEnv = sanitizeApiKey(process.env.NILVERA_PLATFORM_API_KEY_LIVE || '')
   if (testEnv.length >= 16 || liveEnv.length >= 16) {
     const current =
       (await sql`SELECT * FROM e_document_platform WHERE id = 'nilvera' LIMIT 1`)[0] || {}
-    if (testEnv.length >= 16 && !current.encrypted_api_key_test) {
-      const enc = encryptApiKey(testEnv)
+    if (testEnv.length >= 16) {
       const fp = fingerprint(testEnv)
-      await sql`UPDATE e_document_platform SET encrypted_api_key_test = ${enc}, fingerprint_test = ${fp}, updated_at = now() WHERE id = 'nilvera'`
-      try {
-        const company = await fetchCompanyInfo({ apiKey: testEnv, environment: 'TEST' })
-        await sql`UPDATE e_document_platform SET
-          status = 'connected', last_test_at = now(), last_error = null,
-          company_title = ${company?.Name || null}, tax_number = ${company?.TaxNumber || null},
-          updated_at = now() WHERE id = 'nilvera'`
-      } catch (err) {
-        await sql`UPDATE e_document_platform SET status = 'error', last_test_at = now(), last_error = ${err.message}, updated_at = now() WHERE id = 'nilvera'`
+      const keyChanged = !current.encrypted_api_key_test || current.fingerprint_test !== fp
+      if (keyChanged) {
+        const enc = encryptApiKey(testEnv)
+        await sql`UPDATE e_document_platform SET encrypted_api_key_test = ${enc}, fingerprint_test = ${fp}, updated_at = now() WHERE id = 'nilvera'`
+      }
+      if (keyChanged || !current.tax_number || current.status !== 'connected') {
+        try {
+          const company = await fetchCompanyInfo({ apiKey: testEnv, environment: 'TEST' })
+          await sql`UPDATE e_document_platform SET
+            status = 'connected', last_test_at = now(), last_error = null,
+            company_title = ${company?.Name || current.company_title || null},
+            tax_number = ${company?.TaxNumber || current.tax_number || null},
+            updated_at = now() WHERE id = 'nilvera'`
+        } catch (err) {
+          if (!current.tax_number) {
+            await sql`UPDATE e_document_platform SET last_test_at = now(), last_error = ${err.message}, updated_at = now() WHERE id = 'nilvera'`
+          }
+        }
       }
     }
     if (liveEnv.length >= 16 && !current.encrypted_api_key_live) {
@@ -441,6 +453,12 @@ async function getPlatform() {
 async function getPlatformKey(environment) {
   const row = await getPlatform()
   const env = environment === 'PRODUCTION' ? 'PRODUCTION' : 'TEST'
+  if (env === 'TEST') {
+    const testEnv = testEnvApiKey()
+    if (testEnv.length >= 16) {
+      return { row: row || {}, apiKey: testEnv, environment: env }
+    }
+  }
   const enc = env === 'PRODUCTION' ? row?.encrypted_api_key_live : row?.encrypted_api_key_test
   if (!enc) return null
   return {
@@ -470,10 +488,25 @@ async function requireLive(companyId) {
     err.code = 'NILVERA_NOT_CONFIGURED'
     throw err
   }
+  if (environment === 'TEST') {
+    await ensureTestOnboarding(companyId)
+    const bound = (await getConn(companyId)) || row
+    return {
+      row: bound || {
+        tax_number: NILVERA_TEST_PARTIES.sender.taxNumber,
+        company_title: NILVERA_TEST_PARTIES.sender.name,
+        environment: 'TEST',
+        status: 'connected',
+      },
+      apiKey: platform.apiKey,
+      environment: 'TEST',
+      source: 'platform',
+    }
+  }
   if (row?.status !== 'connected') {
     const err = new Error(
       row?.last_error ||
-        'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: E-Belgeler → Ayarlar’da “Test Kurum 1 ile bağla”ya basın; TEST’te bu hesabı Test Kurum 1 (VKN 1234567801) yapar.',
+        'NİLVERA MANUEL KONFİGÜRASYONU GEREKİYOR: E-Belgeler → Ayarlar’da firma bilgilerinizi girip Nilvera kontrolünden geçin.',
     )
     err.status = 409
     err.code = 'NILVERA_NOT_CONFIGURED'
@@ -496,22 +529,16 @@ async function ensureTestOnboarding(companyId) {
   const sql = getSql()
   const platform = await getPlatformKey('TEST')
   if (!platform) return null
-  let platformTax = normalizeTax(platform.row?.tax_number)
-  if (!platformTax) {
-    const self = await fetchCompanyInfo({
-      apiKey: platform.apiKey,
-      environment: 'TEST',
-    }).catch(() => null)
-    platformTax = normalizeTax(self?.TaxNumber)
+  const officialTax = NILVERA_TEST_PARTIES.sender.taxNumber
+  let title = NILVERA_TEST_PARTIES.sender.name
+  try {
+    const self = await fetchCompanyInfo({ apiKey: platform.apiKey, environment: 'TEST' })
+    if (self?.Name) title = self.Name
+  } catch {
+    /* TEST sandbox identity is official Test Kurum 1 even if Company lookup fails */
   }
-  if (platformTax !== NILVERA_TEST_PARTIES.sender.taxNumber) return null
 
   const row = await getConn(companyId)
-  const tax = normalizeTax(row?.tax_number)
-  if (row?.status === 'connected' && tax === platformTax) {
-    return publicConn(row, await getPlatform())
-  }
-
   const meta = JSON.stringify({
     ...(row?.meta || {}),
     signatureType: row?.meta?.signatureType || 'MALIMUHUR',
@@ -521,20 +548,22 @@ async function ensureTestOnboarding(companyId) {
     district: row?.meta?.district || 'Kadıköy',
     city: row?.meta?.city || 'İstanbul',
   })
-  const title = row?.company_title || NILVERA_TEST_PARTIES.sender.name
   if (!row) {
-    await sql`INSERT INTO e_document_connections (company_id, provider, environment, company_title, tax_number, status, meta)
-      VALUES (${companyId}, 'nilvera', 'TEST', ${title}, ${platformTax}, 'submitted', ${meta}::jsonb)`
+    await sql`INSERT INTO e_document_connections (company_id, provider, environment, company_title, tax_number, status, last_error, meta)
+      VALUES (${companyId}, 'nilvera', 'TEST', ${title}, ${officialTax}, 'connected', null, ${meta}::jsonb)`
   } else {
     await sql`UPDATE e_document_connections SET
       environment = 'TEST',
       company_title = ${title},
-      tax_number = ${platformTax},
+      tax_number = ${officialTax},
+      status = 'connected',
+      last_error = null,
+      last_test_at = now(),
       meta = ${meta}::jsonb,
       updated_at = now()
       WHERE id = ${row.id}`
   }
-  return matchTenantToNilvera(companyId)
+  return publicConn(await getConn(companyId), await getPlatform())
 }
 
 async function matchTenantToNilvera(companyId) {
