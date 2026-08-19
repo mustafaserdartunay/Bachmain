@@ -1,13 +1,18 @@
-const TRANSITION_MS = 560
-
 export function getDropelyaAdminBase() {
-  const envUrl = String(import.meta.env.VITE_DROPELYA_ADMIN_URL || '').trim().replace(/\/$/, '')
-  if (envUrl) return envUrl
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname
-    if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:3000'
+  const host = typeof window === 'undefined' ? '' : window.location.hostname
+  const isLocal = host === 'localhost' || host === '127.0.0.1'
+  if (isLocal) return 'http://localhost:3000'
+  const envUrl = String(import.meta.env.VITE_DROPELYA_ADMIN_URL || '')
+    .trim()
+    .replace(/\/$/, '')
+  if (
+    envUrl &&
+    !envUrl.includes('localhost') &&
+    !/https?:\/\/(www\.)?dropelya\.com$/i.test(envUrl)
+  ) {
+    return envUrl
   }
-  return 'https://dropelya.com'
+  return 'http://localhost:3000'
 }
 
 export function getDropelyaYonetimUrl() {
@@ -17,20 +22,7 @@ export function getDropelyaYonetimUrl() {
       : 'https://uygulama.bachmain.com/'
   const url = new URL('/yonetim', `${getDropelyaAdminBase()}/`)
   url.searchParams.set('from', 'bachmain')
+  url.searchParams.set('embed', '1')
   url.searchParams.set('back', back)
   return url.toString()
 }
-
-let studioJumpLocked = false
-
-export function startStudioJump() {
-  if (studioJumpLocked) return false
-  studioJumpLocked = true
-  window.dispatchEvent(new CustomEvent('bach:studio-enter-start'))
-  window.setTimeout(() => {
-    window.location.assign(getDropelyaYonetimUrl())
-  }, TRANSITION_MS)
-  return true
-}
-
-export const STUDIO_JUMP_MS = TRANSITION_MS

@@ -52,7 +52,7 @@ export default function Layout({ children }) {
     typeof window !== 'undefined' ? window.innerWidth >= 768 && window.innerWidth < 1024 : false,
   )
   const [studioChromeVisible, setStudioChromeVisible] = useState(!isStudioManagement)
-  const [studioEntering, setStudioEntering] = useState(false)
+  const [studioExiting, setStudioExiting] = useState(false)
   const [tourUnlockSidebar, setTourUnlockSidebar] = useState(false)
 
   useEffect(() => {
@@ -89,15 +89,8 @@ export default function Layout({ children }) {
       setStudioExiting(true)
       setStudioChromeVisible(true)
     }
-    function onStudioEnter() {
-      setStudioEntering(true)
-    }
     window.addEventListener('bach:studio-exit-start', onStudioExit)
-    window.addEventListener('bach:studio-enter-start', onStudioEnter)
-    return () => {
-      window.removeEventListener('bach:studio-exit-start', onStudioExit)
-      window.removeEventListener('bach:studio-enter-start', onStudioEnter)
-    }
+    return () => window.removeEventListener('bach:studio-exit-start', onStudioExit)
   }, [])
 
   useEffect(() => {
@@ -147,9 +140,7 @@ export default function Layout({ children }) {
   const effectiveCollapsed = tourUnlockSidebar ? false : isTablet ? true : isMobile ? false : sidebarCollapsed
   const studioActive = isStudioManagement && !studioChromeVisible && !studioExiting
   const studioShellClass = [
-    (isStudioManagement && studioChromeVisible && !studioExiting) || studioEntering
-      ? 'app-shell--to-studio'
-      : '',
+    isStudioManagement && studioChromeVisible && !studioExiting ? 'app-shell--to-studio' : '',
     studioExiting ? 'app-shell--from-studio' : '',
     studioActive ? 'app-shell--studio-active' : '',
   ]
@@ -194,13 +185,6 @@ export default function Layout({ children }) {
       <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
       {!hideChrome ? <BottomNav /> : null}
       {!hideChrome && !isStudioManagement ? <AppGuidedTour /> : null}
-      {studioEntering ? (
-        <div className="studio-enter-veil" aria-hidden="true">
-          <p className="studio-enter-veil-mark">
-            STUDIO<span>.</span>
-          </p>
-        </div>
-      ) : null}
     </div>
   )
 }

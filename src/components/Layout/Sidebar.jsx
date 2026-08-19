@@ -79,8 +79,8 @@ import {
 import { getMessageCenterBadge } from '../../omnichannel/store'
 import {
   isWebRoute,
+  WEB_STUDIO_PATH,
 } from '../../data/webMenu'
-import { getDropelyaYonetimUrl, startStudioJump } from '../../utils/dropelyaStudio'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
@@ -936,26 +936,21 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <>
         <SidebarSection label="WEB" collapsed={collapsed} />
 
-        <a
-          href={getDropelyaYonetimUrl()}
-          onClick={(event) => {
-            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
-              handleNavigate()
-              return
-            }
-            event.preventDefault()
-            handleNavigate()
-            startStudioJump()
-          }}
-          className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-            isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
-          }`}
+        <NavLink
+          to={WEB_STUDIO_PATH}
+          state={{ fromApp: true }}
+          onClick={handleNavigate}
+          className={({ isActive }) =>
+            `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+              isActive || isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
+            }`
+          }
         >
           <MenuIcon collapsed={collapsed}>
             <Globe2 className="w-4 h-4 shrink-0" />
           </MenuIcon>
           {!collapsed ? <span className={menuLabelClass}>Studio</span> : null}
-        </a>
+        </NavLink>
         </>
         ) : null}
 
