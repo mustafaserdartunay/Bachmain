@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ExternalLink, LayoutTemplate, Save } from 'lucide-react'
+import { LayoutTemplate, Save } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../../components/Layout/AppPageLayout'
 import {
   HEADER_ACTION_CTA_CLASS,
@@ -104,12 +104,6 @@ export default function WebStudioTemplatePage() {
             </span>
             <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet</span>
           </button>
-          <Link to="/vitrin" target="_blank" rel="noreferrer" className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.cash}`}>
-            <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-              <ExternalLink className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
-            </span>
-            <span className={YF_TEXT_ON_COLOR_CLASS}>Canlı vitrin</span>
-          </Link>
           <Link to={WEB_STUDIO_DOMAIN_CONNECT_PATH} className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.violet}`}>
             <span className={YF_TEXT_ON_COLOR_CLASS}>Domain bağla</span>
           </Link>

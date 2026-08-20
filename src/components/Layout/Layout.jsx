@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { isStudioFullscreenRoute } from '../../data/webMenu'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
 import BottomNav from './BottomNav'
 import AppGuidedTour from '../Onboarding/AppGuidedTour'
-import ModuleAccessGate from '../../auth/ModuleAccessGate'
 import { GUIDED_TOUR_SIDEBAR_EVENT } from '../Onboarding/guidedTourStorage'
 
 const SIDEBAR_KEY = 'bach-sidebar'
@@ -25,12 +23,10 @@ function readSidebarCollapsed() {
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
-  const isStudioManagement = isStudioFullscreenRoute(pathname)
 
   const hideChrome =
     pathname === '/paketler' ||
     pathname.startsWith('/paketler/')
-  const hideAppHeader = isStudioManagement
 
   const fullscreenWorkspace =
     pathname === '/otomasyon/designer' ||
@@ -118,7 +114,7 @@ export default function Layout({ children }) {
   if (fullscreenWorkspace) {
     return (
       <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))]">
-        <main className="min-h-screen w-full overflow-hidden p-0">{children}</main>
+        <main className="min-h-screen w-full overflow-auto p-0">{children}</main>
       </div>
     )
   }
@@ -144,23 +140,17 @@ export default function Layout({ children }) {
         data-sidebar-collapsed={!isMobile && effectiveCollapsed ? 'true' : 'false'}
         data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
       >
-        {!hideChrome && !hideAppHeader ? (
+        {!hideChrome ? (
           <Header onMenuClick={() => setMobileSidebarOpen(true)} />
         ) : null}
-        {!hideChrome && !hideAppHeader ? <HeaderCashActionsPanel /> : null}
-        <main
-          className={
-            hideAppHeader
-              ? 'app-responsive min-w-0 flex-1 overflow-hidden p-0'
-              : 'app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0'
-          }
-        >
-          <ModuleAccessGate>{children}</ModuleAccessGate>
+        {!hideChrome ? <HeaderCashActionsPanel /> : null}
+        <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">
+          {children}
         </main>
       </div>
       <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
       {!hideChrome ? <BottomNav /> : null}
-      {!hideChrome && !isStudioManagement ? <AppGuidedTour /> : null}
+      {!hideChrome ? <AppGuidedTour /> : null}
     </div>
   )
 }

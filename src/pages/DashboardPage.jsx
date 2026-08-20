@@ -715,7 +715,7 @@ function DashboardNotesPanel({ entries, onSubmit, onDelete, onReorder, onToggleC
   )
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({ studioMode = false }) {
   const [taxDetail, setTaxDetail] = useState(null)
   const [financeTick, setFinanceTick] = useState(0)
   const [taxSettingsTick, setTaxSettingsTick] = useState(0)
@@ -755,6 +755,7 @@ export default function DashboardPage() {
   return (
     <>
       <ModernDashboard
+        studioMode={studioMode}
         financeCards={financeCards}
         issuedInvoiceAnalytics={issuedInvoiceAnalytics}
         supplierPurchaseAnalytics={supplierPurchaseAnalytics}

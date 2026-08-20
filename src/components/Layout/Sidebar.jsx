@@ -17,8 +17,6 @@ import {
   Settings,
   FolderPlus,
   FolderKanban,
-  CreditCard,
-  Store,
   List,
   PlayCircle,
   CheckCircle2,
@@ -51,8 +49,12 @@ import {
   Container,
   LayoutDashboard,
   PackageCheck,
+  Bike,
   Globe2,
   Sparkles,
+  CreditCard,
+  Store,
+  Palette,
 } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -79,14 +81,16 @@ import {
   DOCUMENT_CENTER_BASE,
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
-import { isWebRoute, WEB_STUDIO_PATH } from '../../data/webMenu'
+import {
+  isWebRoute,
+  WEB_STUDIO_PATH,
+} from '../../data/webMenu'
 import { STUDIO_ADMIN_PAGES } from '../../utils/dropelyaStudio'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
 import { useAuth } from '../../auth/AuthContext'
 import { filterMenuByEntitlements } from '../../utils/entitlements'
-import { canViewModule, canViewPath, filterByModuleAccess } from '../../utils/moduleAccess'
 import { canUseMultiCompany } from '../../utils/orgScope'
 
 const projectsMenuGate = {
@@ -100,13 +104,6 @@ const posMenuItem = {
   label: 'POS',
   path: '/shopping',
   moduleCode: 'pos',
-}
-
-const courierMenuItem = {
-  icon: Truck,
-  label: 'Kurye Takip',
-  path: '/kurye-takip',
-  moduleCode: 'courier',
 }
 
 const customerSubMenuIcons = {
@@ -166,9 +163,11 @@ const logisticsSubMenuIcons = {
   delivery: MapPinned,
   docs: PackageCheck,
   dashboard: LayoutDashboard,
+  bike: Bike,
 }
 const studioSubMenuIcons = {
   dashboard: LayoutDashboard,
+  palette: Palette,
   folder: FolderKanban,
   bag: ShoppingBag,
   store: Store,
@@ -232,7 +231,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const allow = (code) => canViewModule(user, code)
   const [company, setCompany] = useState(() => readCompanySettings())
   const isSalesRouteActive = isSalesRoute(location.pathname)
   const isProcessRouteActive = isProcessRoute(location.pathname)
@@ -341,11 +339,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const menuItems = filterMenuByEntitlements([courierMenuItem], user?.entitlements)
   const showProjects = filterMenuByEntitlements([projectsMenuGate], user?.entitlements).length > 0
   const showPos = filterMenuByEntitlements([posMenuItem], user?.entitlements).length > 0
-  const showCourier = menuItems.length > 0
   const isPosActive =
     location.pathname === '/shopping' || location.pathname.startsWith('/shopping/')
-  const isCourierActive =
-    location.pathname === '/kurye-takip' || location.pathname.startsWith('/kurye-takip/')
   const isMessageCenterActive =
     location.pathname === '/mesajlar' || location.pathname.startsWith('/mesajlar/')
   const brandLabel = company.companyName || 'Bach'
@@ -404,7 +399,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         className={`flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 ${collapsed ? 'px-0' : 'px-1'}`}
       >
         {/* Ana: Güncel Durum */}
-        {allow('dashboard_basic') ? (
         <NavLink
           to="/"
           end
@@ -420,12 +414,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </MenuIcon>
           {!collapsed ? <span className={menuLabelClass}>Güncel Durum</span> : null}
         </NavLink>
-        ) : null}
 
         <SidebarSection label="ERP" collapsed={collapsed} />
 
         {/* 2. Satışlar */}
-        {allow('crm') ? (
         <div className={`sidebar-menu-group ${customerOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -478,10 +470,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        ) : null}
 
         {/* 2b. Süreç Yönetimi (Satışlar altında, bağımsız grup) */}
-        {visibleProcessSubMenus.some((sub) => canViewPath(user, sub.path)) ? (
         <div className={`sidebar-menu-group ${processOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -507,7 +497,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
           {processOpen && !collapsed && (
             <SidebarSubMenu>
-              {visibleProcessSubMenus.filter((sub) => canViewPath(user, sub.path)).map((sub) => (
+              {visibleProcessSubMenus.map((sub) => (
                 <NavLink
                   key={sub.path}
                   to={sub.path}
@@ -523,10 +513,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        ) : null}
 
         {/* 3. Giderler */}
-        {allow('expenses') ? (
         <div className={`sidebar-menu-group ${expensesOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -577,10 +565,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        ) : null}
 
         {/* 3b. E-Belgeler */}
-        {allow('einvoice') ? (
         <div className={`sidebar-menu-group ${eDocumentsOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -623,10 +609,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        ) : null}
 
         {/* 4. Nakit */}
-        {allow('finance') ? (
         <div className={`sidebar-menu-group ${treasuryOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -678,10 +662,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        ) : null}
 
         {/* 5. Stok */}
-        {allow('stock') || allow('warehouse') ? (
         <div className={`sidebar-menu-group ${stockOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -739,9 +721,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        ) : null}
 
-        {showProjects && allow('projects') && (
+        {showProjects && (
           <div className={`sidebar-menu-group ${projectsOpen ? 'is-open' : ''}`}>
             <button
               type="button"
@@ -795,7 +776,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </div>
         )}
 
-        {showPos && allow('pos') ? (
+        {showPos ? (
           <NavLink
             to={posMenuItem.path}
             onClick={handleNavigate}
@@ -813,7 +794,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <SidebarSection label="CRM" collapsed={collapsed} />
 
         {/* Ajanda (görev / not / randevu) */}
-        {(allow('tasks') || allow('notes') || allow('appointments')) ? (
         <div className={`sidebar-menu-group ${crmOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -855,9 +835,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        ) : null}
 
-        {allow('whatsapp') ? (
+        {/* Mesaj Merkezi — always visible */}
         <NavLink
           to="/mesajlar"
           onClick={handleNavigate}
@@ -884,10 +863,8 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
               </span>
             ))}
         </NavLink>
-        ) : null}
 
         {/* Saha Satış */}
-        {allow('field_sales') ? (
         <div className={`sidebar-menu-group ${fieldSalesOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -939,10 +916,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        ) : null}
 
-        {allow('web') ? (
-        <>
         <SidebarSection label="WEB" collapsed={collapsed} />
 
         <div className={`sidebar-menu-group ${webOpen ? 'is-open' : ''}`}>
@@ -1004,13 +978,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        </>
-        ) : null}
 
         <SidebarSection label="İK" collapsed={collapsed} />
 
         {/* İnsan Kaynakları / PDKS */}
-        {allow('hr') ? (
         <div className={`sidebar-menu-group ${hrOpen ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -1062,10 +1033,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        ) : null}
 
-        {allow('logistics') ? (
-        <>
         <SidebarSection label="LOJİSTİK" collapsed={collapsed} />
 
         {/* Lojistik */}
@@ -1117,23 +1085,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             </SidebarSubMenu>
           )}
         </div>
-        </>
-        ) : null}
-
-        {showCourier && allow('courier') ? (
-          <NavLink
-            to={courierMenuItem.path}
-            onClick={handleNavigate}
-            className={`${menuButtonBase} relative ${collapsed ? 'justify-center' : ''} ${
-              isCourierActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <Truck className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed ? <span className={menuLabelClass}>Kurye Takip</span> : null}
-          </NavLink>
-        ) : null}
 
         <SidebarSection label="AYARLAR" collapsed={collapsed} />
 
@@ -1163,10 +1114,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
           {settingsOpen && !collapsed && (
             <SidebarSubMenu>
-              {filterByModuleAccess(
-                filterMenuByEntitlements(settingsSubMenus, user?.entitlements),
-                user,
-              )
+              {filterMenuByEntitlements(settingsSubMenus, user?.entitlements)
                 .filter((sub) => {
                   if (sub.moduleCode === 'multi_company') {
                     return canUseMultiCompany(user?.entitlements, user?.planCode)

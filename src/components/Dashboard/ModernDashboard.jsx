@@ -50,6 +50,7 @@ import {
   APP_VALUE_CLASS,
 } from '../../utils/dashboardDesign'
 import MonthEndCapacityPanel from './MonthEndCapacityPanel'
+import WebStudioDashboardPanels from '../web/WebStudioDashboardPanels'
 
 const FINANCE_METRIC_COLORS = {
   cash: { text: 'text-emerald-600', stroke: '#10b981' },
@@ -712,6 +713,7 @@ export default function ModernDashboard({
   estimatedIncomeTaxDue,
   onOpenIssuedTax,
   onOpenSupplierTax,
+  studioMode = false,
 }) {
   const metricCards = useMemo(() => enrichFinanceCards(financeCards), [financeCards])
   const [layout, setLayout] = useState(() => loadDashboardLayout())
@@ -728,7 +730,7 @@ export default function ModernDashboard({
     }
   }, [])
 
-  const showFinance = isDashboardSectionVisible(layout, 'finance')
+  const showFinance = !studioMode && isDashboardSectionVisible(layout, 'finance')
   const showQuickActions = isDashboardSectionVisible(layout, 'quick-actions')
   const showCustomBlocks = isDashboardSectionVisible(layout, 'custom-blocks')
   const showTimeline = isDashboardSectionVisible(layout, 'timeline')
@@ -791,7 +793,7 @@ export default function ModernDashboard({
 
   return (
     <div className="modern-dashboard">
-      <MonthEndCapacityPanel />
+      {studioMode ? <WebStudioDashboardPanels /> : <MonthEndCapacityPanel />}
 
       {showCustomBlocks && layout.customBlocks?.length ? (
         <CustomDashboardBlocks blocks={layout.customBlocks} />

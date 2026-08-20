@@ -206,7 +206,14 @@ import {
   DocWhatsAppTemplatesPage,
   DocWorkflowPage,
 } from './pages/documentCenter/DocCenterModules'
-import WebStudioManagementPage from './pages/web/WebStudioManagementPage'
+import WebStudioPaymentPage from './pages/web/WebStudioPaymentPage'
+import WebStudioSettingsPage from './pages/web/WebStudioSettingsPage'
+import WebStudioCategoryCreatePage from './pages/web/WebStudioCategoryCreatePage'
+import WebStudioProductCreatePage from './pages/web/WebStudioProductCreatePage'
+import WebStudioTemplatePage from './pages/web/WebStudioTemplatePage'
+import WebStudioOrdersPage from './pages/web/WebStudioOrdersPage'
+import WebStudioDomainConnectPage from './pages/web/WebStudioDomainConnectPage'
+import WebStudioPage from './pages/web/WebStudioPage'
 import WebStorefrontPublishPage from './pages/web/WebStorefrontPublishPage'
 
 function LegacyKasaAccountRedirect() {
@@ -302,36 +309,18 @@ export default function App() {
                       <Route path="/web/studio/yonetim/yonetim" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
                       <Route path="/web/studio/yonetim/kategori-olustur" element={<Navigate to="/web/studio/yonetim/kategoriler" replace />} />
                       <Route path="/web/studio/yonetim/urun-olustur" element={<Navigate to="/web/studio/yonetim/urunler" replace />} />
-                      <Route path="/web/studio/yonetim/siparisler" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
                       <Route path="/web/studio/yonetim/ayarlar" element={<Navigate to="/web/studio/yonetim/profil" replace />} />
-                      <Route
-                        path="/web/studio/yonetim/ayarlar/domain-bagla"
-                        element={<Navigate to="/web/studio/yonetim/profil" replace />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/domain-bagla"
-                        element={<Navigate to="/web/studio/yonetim/profil" replace />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/panel"
-                        element={<WebStudioManagementPage />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/kategoriler"
-                        element={<WebStudioManagementPage />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/urunler"
-                        element={<WebStudioManagementPage />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/profil"
-                        element={<WebStudioManagementPage />}
-                      />
-                      <Route
-                        path="/web/studio/yonetim/odeme"
-                        element={<WebStudioManagementPage />}
-                      />
+                      <Route path="/web/studio/yonetim/ayarlar/domain-bagla" element={<Navigate to="/web/studio/yonetim/domain-bagla" replace />} />
+                      <Route path="/web/studio/yonetim/template" element={<Navigate to="/web/studio/yonetim/tasarim" replace />} />
+                      <Route path="/web/studio/yonetim/panel" element={<DashboardPage studioMode />} />
+                      <Route path="/web/studio/yonetim/tasarim" element={<WebStudioTemplatePage />} />
+                      <Route path="/web/studio/yonetim/kategoriler" element={<WebStudioCategoryCreatePage />} />
+                      <Route path="/web/studio/yonetim/urunler" element={<WebStudioProductCreatePage />} />
+                      <Route path="/web/studio/yonetim/profil" element={<WebStudioSettingsPage />} />
+                      <Route path="/web/studio/yonetim/odeme" element={<WebStudioPaymentPage />} />
+                      <Route path="/web/studio/yonetim/siparisler" element={<WebStudioOrdersPage />} />
+                      <Route path="/web/studio/yonetim/domain-bagla" element={<WebStudioDomainConnectPage />} />
+                      <Route path="/web/studio/siteler" element={<WebStudioPage />} />
                       <Route path="/website-os" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
                       <Route path="/website" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
