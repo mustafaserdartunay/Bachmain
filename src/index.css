@@ -3760,6 +3760,18 @@ html body .app-responsive .quote-list-row-panel .customer-balance-positive {
 
 .quote-deleted-header-panel {
   overflow: visible !important;
+  height: 4.75rem !important;
+  min-height: 4.75rem !important;
+  max-height: 4.75rem !important;
+  box-sizing: border-box !important;
+}
+
+html body section.card.quote-list-row-panel.quote-deleted-header-panel {
+  height: 4.75rem !important;
+  min-height: 4.75rem !important;
+  max-height: 4.75rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
 }
 
 .quote-deleted-panel-wrap.quote-deleted-panel-receive .quote-deleted-header-panel {

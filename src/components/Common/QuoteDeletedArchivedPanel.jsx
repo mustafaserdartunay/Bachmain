@@ -6,11 +6,10 @@ import { permanentlyDeleteQuote, restoreDeletedQuote } from '../../utils/quotesS
 import { getListCustomerDisplay } from '../../data/customerProfiles'
 import { formatTL } from '../../utils/productPricing'
 import {
-  APP_LABEL_CLASS,
   PAGE_BALANCE_AMOUNT_CLASS,
+  APP_LABEL_CLASS,
   SP_CHEVRON_CLASS,
   SP_EMPTY_CLASS,
-  SP_HEADER_BUTTON_CLASS,
   YF_TEXT_CLASS,
 } from '../../utils/dashboardDesign'
 import { COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
@@ -48,6 +47,40 @@ function formatListDate(value) {
   } catch {
     return value
   }
+}
+
+function formatListDateParts(value) {
+  if (!value) return { date: '', time: '' }
+  const raw = String(value).trim()
+  const trMatch = raw.match(/^(\d{2}\.\d{2}\.\d{4})(?:[, ]+\s*(\d{1,2}:\d{2}))/)
+  if (trMatch) {
+    const [hours, minutes] = (trMatch[2] || '').split(':')
+    return {
+      date: trMatch[1],
+      time: hours && minutes ? `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}` : '',
+    }
+  }
+
+  try {
+    const d = new Date(raw)
+    if (!Number.isNaN(d.getTime())) {
+      return {
+        date: d.toLocaleDateString('tr-TR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        }),
+        time: d.toLocaleTimeString('tr-TR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+
+  return { date: formatListDate(raw), time: '' }
 }
 
 function quoteAmount(quote) {
@@ -114,7 +147,7 @@ const PERMANENT_DELETE_WARNING =
   'Bu kayıtlar silinenler / arşiv alanından kaldırılacak ve kullanıcı tarafından geri getirilemez.'
 
 const DELETED_LIST_GRID =
-  'minmax(7.5rem,0.9fr) minmax(4.5rem,0.55fr) minmax(9rem,1.35fr) minmax(7rem,0.9fr) minmax(6.5rem,0.8fr) minmax(5.75rem,0.75fr)'
+  '6.5rem 4.75rem minmax(16rem, 2.4fr) minmax(9.25rem, 0.7fr) 6.75rem 6.5rem'
 
 const DATA_ROW_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-list-row flex w-full items-center min-h-[4.75rem] quote-list-data-panel'
@@ -123,10 +156,15 @@ const DATA_ROW_PANEL_CLASS =
 const DELETED_CK_BUTTON_CLASS =
   'quote-deleted-ck-btn customer-permanent-delete-action inline-flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full bg-transparent text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600'
 
+/** Ana liste satırı ile aynı 76px kart */
 const DELETED_HEADER_PANEL_CLASS =
-  'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-header-panel flex w-full items-center min-h-[4.75rem] p-0'
+  'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-header-panel quote-list-data-panel flex h-[4.75rem] min-h-[4.75rem] max-h-[4.75rem] w-full items-center'
 
-const DELETED_PANEL_WRAP_CLASS = 'quote-deleted-panel-wrap customer-deleted-archived-panel w-full space-y-3'
+const DELETED_HEADER_BUTTON_CLASS =
+  'flex h-full min-h-0 w-full items-center justify-between gap-3 bg-transparent px-0 py-0 text-left'
+
+const DELETED_PANEL_WRAP_CLASS =
+  'quote-deleted-panel-wrap customer-deleted-archived-panel w-full space-y-3'
 
 function DeletedListCell({ className = '', children }) {
   return <div className={`quote-list-cell min-w-0 ${className}`.trim()}>{children}</div>
@@ -247,7 +285,7 @@ export default function QuoteDeletedArchivedPanel({
   }
 
   const allSelected = entries.length > 0 && selectedIds.length === entries.length
-  const gridTemplate = bulkSelectMode ? `2.25rem ${DELETED_LIST_GRID}` : DELETED_LIST_GRID
+  const gridTemplate = bulkSelectMode ? `2.75rem ${DELETED_LIST_GRID}` : DELETED_LIST_GRID
 
   const headerActions = bulkSelectMode
     ? [
@@ -293,11 +331,11 @@ export default function QuoteDeletedArchivedPanel({
       }`.trim()}
     >
       <AppPagePanel className={DELETED_HEADER_PANEL_CLASS}>
-        <div className="relative flex min-h-[4.75rem] w-full items-stretch">
+        <div className="relative flex h-full min-h-0 w-full items-center">
           <button
             type="button"
             onClick={() => setOpen((current) => !current)}
-            className={`${SP_HEADER_BUTTON_CLASS} min-w-0 flex-1 rounded-[inherit]`}
+            className={`${DELETED_HEADER_BUTTON_CLASS} min-w-0 flex-1`}
           >
             <span className="flex min-w-0 items-center gap-2">
               <RedPingDot />
@@ -376,6 +414,7 @@ export default function QuoteDeletedArchivedPanel({
                   {entries.map((item, rowIndex) => {
                     const display = getListCustomerDisplay(item.record?.customer)
                     const amount = quoteAmount(item.record)
+                    const stamp = formatListDateParts(item.at)
                     const isSelected = selectedIds.includes(item.id)
                     const isRestoring = restoringIds.includes(item.id)
                     const isTrashing = trashingIds.includes(item.id)
@@ -418,23 +457,40 @@ export default function QuoteDeletedArchivedPanel({
                               </DeletedListCell>
                             ) : null}
                             <DeletedListCell>
-                              <span className={YF_TEXT_CLASS}>{formatListDate(item.at)}</span>
+                              {stamp.date ? (
+                                <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
+                                  <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+                                    {stamp.date}
+                                  </span>
+                                  {stamp.time ? (
+                                    <span className="text-[12px] font-normal leading-tight text-[var(--muted)]/75">
+                                      {stamp.time}
+                                    </span>
+                                  ) : null}
+                                </span>
+                              ) : (
+                                <span className="block text-center text-[14px] font-normal text-[var(--muted)]">
+                                  —
+                                </span>
+                              )}
                             </DeletedListCell>
                             <DeletedListCell>
-                              <span className={YF_TEXT_CLASS}>{item.record?.id || '—'}</span>
+                              <span className={`${YF_TEXT_CLASS} tabular-nums`}>
+                                {item.record?.id || '—'}
+                              </span>
                             </DeletedListCell>
-                            <DeletedListCell className="is-start">
-                              <div className="min-w-0 text-left">
-                                <p className="customer-name-primary truncate text-[14px] font-semibold leading-tight text-[var(--ink)]">
+                            <DeletedListCell>
+                              <span className="flex min-w-0 w-full flex-col items-center gap-0.5 py-0.5 text-center">
+                                <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
                                   {display.brandShortName || item.label}
-                                </p>
+                                </span>
                                 {display.companyTitle &&
                                 display.companyTitle !== display.brandShortName ? (
-                                  <p className={`${YF_TEXT_CLASS} truncate`}>
+                                  <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
                                     {display.companyTitle}
-                                  </p>
+                                  </span>
                                 ) : null}
-                              </div>
+                              </span>
                             </DeletedListCell>
                             <DeletedListCell>
                               <span className={YF_TEXT_CLASS}>
@@ -466,7 +522,7 @@ export default function QuoteDeletedArchivedPanel({
                                         type="button"
                                         onClick={() => handleRestore(item)}
                                         disabled={isRestoring || isTrashing}
-                                        className="glass-sidebar-toggle glass-sidebar-collapse flex h-9 w-9 items-center justify-center rounded-full"
+                                        className="glass-sidebar-toggle glass-sidebar-collapse flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full"
                                         title="Geri yükle"
                                         aria-label={`${item.label} geri yükle`}
                                       >
