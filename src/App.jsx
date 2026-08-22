@@ -78,6 +78,7 @@ import ShoppingPage from './pages/ShoppingPage'
 const QuotesPage = lazyPage(() => import('./pages/QuotesPage'))
 const OrdersPage = lazyPage(() => import('./pages/OrdersPage'))
 const ProductionPage = lazyPage(() => import('./pages/ProductionPage'))
+const ProcessReportsPage = lazyPage(() => import('./pages/ProcessReportsPage'))
 const DepoPageLazy = lazyPage(() => import('./pages/process/DepoPage'))
 const SevkiyatPageLazy = lazyPage(() => import('./pages/process/SevkiyatPage'))
 const WorkflowDesignerPage = lazyPage(() => import('./pages/WorkflowDesignerPage'))
@@ -303,26 +304,80 @@ export default function App() {
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/finans" element={<FinanceCenterPage />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
-                      <Route path="/web" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
-                      <Route path="/web/studio" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
-                      <Route path="/web/studio/yonetim" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
-                      <Route path="/web/studio/yonetim/yonetim" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
-                      <Route path="/web/studio/yonetim/kategori-olustur" element={<Navigate to="/web/studio/yonetim/kategoriler" replace />} />
-                      <Route path="/web/studio/yonetim/urun-olustur" element={<Navigate to="/web/studio/yonetim/urunler" replace />} />
-                      <Route path="/web/studio/yonetim/ayarlar" element={<Navigate to="/web/studio/yonetim/profil" replace />} />
-                      <Route path="/web/studio/yonetim/ayarlar/domain-bagla" element={<Navigate to="/web/studio/yonetim/domain-bagla" replace />} />
-                      <Route path="/web/studio/yonetim/template" element={<Navigate to="/web/studio/yonetim/tasarim" replace />} />
-                      <Route path="/web/studio/yonetim/panel" element={<DashboardPage studioMode />} />
-                      <Route path="/web/studio/yonetim/tasarim" element={<WebStudioTemplatePage />} />
-                      <Route path="/web/studio/yonetim/kategoriler" element={<WebStudioCategoryCreatePage />} />
-                      <Route path="/web/studio/yonetim/urunler" element={<WebStudioProductCreatePage />} />
-                      <Route path="/web/studio/yonetim/profil" element={<WebStudioSettingsPage />} />
+                      <Route
+                        path="/web"
+                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
+                      />
+                      <Route
+                        path="/web/studio"
+                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim"
+                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/yonetim"
+                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/kategori-olustur"
+                        element={<Navigate to="/web/studio/yonetim/kategoriler" replace />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/urun-olustur"
+                        element={<Navigate to="/web/studio/yonetim/urunler" replace />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/ayarlar"
+                        element={<Navigate to="/web/studio/yonetim/profil" replace />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/ayarlar/domain-bagla"
+                        element={<Navigate to="/web/studio/yonetim/domain-bagla" replace />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/template"
+                        element={<Navigate to="/web/studio/yonetim/tasarim" replace />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/panel"
+                        element={<DashboardPage studioMode />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/tasarim"
+                        element={<WebStudioTemplatePage />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/kategoriler"
+                        element={<WebStudioCategoryCreatePage />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/urunler"
+                        element={<WebStudioProductCreatePage />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/profil"
+                        element={<WebStudioSettingsPage />}
+                      />
                       <Route path="/web/studio/yonetim/odeme" element={<WebStudioPaymentPage />} />
-                      <Route path="/web/studio/yonetim/siparisler" element={<WebStudioOrdersPage />} />
-                      <Route path="/web/studio/yonetim/domain-bagla" element={<WebStudioDomainConnectPage />} />
+                      <Route
+                        path="/web/studio/yonetim/siparisler"
+                        element={<WebStudioOrdersPage />}
+                      />
+                      <Route
+                        path="/web/studio/yonetim/domain-bagla"
+                        element={<WebStudioDomainConnectPage />}
+                      />
                       <Route path="/web/studio/siteler" element={<WebStudioPage />} />
-                      <Route path="/website-os" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
-                      <Route path="/website" element={<Navigate to="/web/studio/yonetim/panel" replace />} />
+                      <Route
+                        path="/website-os"
+                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
+                      />
+                      <Route
+                        path="/website"
+                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
+                      />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
                       <Route path="/platform" element={<Navigate to="/" replace />} />
                       <Route path="/cekirdek" element={<Navigate to="/" replace />} />
@@ -568,6 +623,14 @@ export default function App() {
                       <Route path="/siparis-deposu" element={<Navigate to="/depo" replace />} />
                       <Route path="/stok-deposu" element={<Navigate to="/depo" replace />} />
                       <Route path="/teslim-edilenler" element={<DeliveredPage />} />
+                      <Route
+                        path="/surecler-raporlari"
+                        element={
+                          <PageSuspense>
+                            <ProcessReportsPage />
+                          </PageSuspense>
+                        }
+                      />
                       <Route
                         path="/lojistik"
                         element={
