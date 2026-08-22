@@ -6,7 +6,7 @@ import {
   restoreDeletedRecord,
   permanentlyDeleteRecord,
 } from './deletedRecordsStore'
-import { withQuotePreparedBy } from './quotePreparedBy'
+import { withQuotePreparedBy, getActiveUserLabel } from './quotePreparedBy'
 import { readUserProfile } from './userProfile'
 
 const STORAGE_KEY = 'erlenbox-quotes'
@@ -59,9 +59,10 @@ export function softDeleteQuote(quote) {
   const next = quotes.filter((item) => item.id !== quote.id)
   if (!saveQuotes(next)) return null
   const profile = readUserProfile()
+  const deletedBy = getActiveUserLabel() || profile?.displayName || profile?.email || ''
   softDeleteRecord(DELETED_COLLECTION, existing, {
     entityLabel: existing.customer || existing.title || existing.id || 'Teklif',
-    deletedBy: profile?.displayName || profile?.email || '',
+    deletedBy,
     lastRestoredAt: existing.lastRestoredFromDeletedAt || '',
   })
   return existing

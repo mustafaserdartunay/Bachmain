@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, MoreHorizontal, Trash2, Undo2, X } from 'lucide-react'
-import { Button, Dropdown, DropdownItem, DropdownSeparator } from '@bachmain/ui'
+import { Button, Dropdown, DropdownSeparator } from '@bachmain/ui'
 import { DELETED_RECORDS_EVENT, getDeletedRecords } from '../../utils/deletedRecordsStore'
 import { permanentlyDeleteQuote, restoreDeletedQuote } from '../../utils/quotesStore'
 import { resolveQuoteCode } from '../../utils/documentCodes'
@@ -26,7 +26,8 @@ import {
   getQuoteCreatedSource,
 } from '../../utils/quoteListDateFormat'
 
-const ROW_EXIT_MS = 720
+const ROW_EXIT_MS = 880
+const MENU_DELETE_ANIM_MS = 580
 
 function formatWhen(value) {
   return formatQuoteDisplayWhen(value)
@@ -137,6 +138,17 @@ function DeletedListDateCell({ record }) {
 
 function QuoteDeletedRowMoreMenu({ item, disabled, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteAnimating, setDeleteAnimating] = useState(false)
+
+  const handleConfirmDelete = (close) => {
+    setDeleteAnimating(true)
+    window.setTimeout(() => {
+      setDeleteAnimating(false)
+      setConfirmDelete(false)
+      close()
+      onDelete()
+    }, MENU_DELETE_ANIM_MS)
+  }
 
   return (
     <Dropdown
@@ -149,7 +161,10 @@ function QuoteDeletedRowMoreMenu({ item, disabled, onDelete }) {
           className="hover:!bg-transparent"
           aria-label={`${item.label} diğer işlemler`}
           disabled={disabled}
-          onClick={() => setConfirmDelete(false)}
+          onClick={() => {
+            setConfirmDelete(false)
+            setDeleteAnimating(false)
+          }}
         >
           <MoreHorizontal className="h-5 w-5" />
         </Button>
@@ -161,32 +176,47 @@ function QuoteDeletedRowMoreMenu({ item, disabled, onDelete }) {
           <DropdownSeparator />
           {confirmDelete ? (
             <div
-              className="quote-menu-delete-confirm px-2 py-2"
+              className={`quote-menu-delete-confirm px-2 py-2${
+                deleteAnimating ? ' is-vanishing' : ''
+              }`}
               onClick={(event) => event.stopPropagation()}
               role="menuitem"
             >
               <p className="mb-2 text-[11px] font-medium leading-snug text-rose-600">
                 {PERMANENT_DELETE_ROW_WARNING}
               </p>
-              <InlineSilConfirm
-                ariaLabel={`${item.label} kalıcı sil`}
-                onConfirm={() => {
-                  onDelete()
-                  setConfirmDelete(false)
-                  close()
-                }}
-                onCancel={() => setConfirmDelete(false)}
-              />
+              <div className="quote-meta-delete-suck-target">
+                <Trash2
+                  className={`quote-meta-delete-suck-icon h-5 w-5 text-[#ef4444]${
+                    deleteAnimating ? ' is-sucking' : ''
+                  }`}
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
+              </div>
+              {!deleteAnimating ? (
+                <InlineSilConfirm
+                  ariaLabel={`${item.label} kalıcı sil`}
+                  onConfirm={() => handleConfirmDelete(close)}
+                  onCancel={() => setConfirmDelete(false)}
+                />
+              ) : null}
             </div>
           ) : (
-            <DropdownItem
-              icon={Trash2}
-              label="Sil"
-              tone="danger"
-              close={close}
-              closeOnClick={false}
+            <button
+              type="button"
+              role="menuitem"
+              aria-label="Sil"
+              className="quote-record-meta-delete-item flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-normal leading-tight tracking-normal transition-colors hover:bg-transparent"
               onClick={() => setConfirmDelete(true)}
-            />
+            >
+              <Trash2
+                className="h-[14px] w-[14px] shrink-0 text-[var(--muted)]"
+                strokeWidth={2.25}
+                aria-hidden
+              />
+              <span className="min-w-0 truncate text-[#ef4444]">Sil</span>
+            </button>
           )}
         </>
       )}
@@ -548,7 +578,7 @@ export default function QuoteDeletedArchivedPanel({
                 const isTrashing = trashingIds.includes(item.id)
 
                 let wrapClass
-                if (isTrashing) wrapClass = 'quote-list-row-into-trash-wrap'
+                if (isTrashing) wrapClass = 'quote-deleted-row-collapse-wrap'
                 else if (isRestoring) wrapClass = 'quote-list-row-restore-wrap'
 
                 return (

@@ -1,5 +1,5 @@
 import { formatQuoteDisplayWhen, getQuoteCreatedSource } from '../../utils/quoteListDateFormat'
-import { getQuotePreparedByLabel } from '../../utils/quotePreparedBy'
+import { getQuotePreparedByLabel, getQuoteDeletedByLabel } from '../../utils/quotePreparedBy'
 
 export function getQuoteRestoredAtLabel(record, entryMeta = {}) {
   const restored =
@@ -18,7 +18,7 @@ export default function QuoteRecordMetaPanel({ quote, deletedAt, entryMeta = {},
   const deletedLabel = deletedAt ? formatQuoteDisplayWhen(deletedAt) : '—'
   const restoredLabel = getQuoteRestoredAtLabel(quote, entryMeta)
   const preparedBy = getQuotePreparedByLabel(quote)
-  const deletedBy = entryMeta.deletedBy || '—'
+  const deletedBy = getQuoteDeletedByLabel(entryMeta)
 
   return (
     <div className={`quote-record-meta-panel space-y-1 px-2 py-2 ${className}`.trim()}>
