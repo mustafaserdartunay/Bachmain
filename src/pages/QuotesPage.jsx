@@ -341,62 +341,75 @@ function QuoteListRowMoreMenu({
         </Button>
       }
     >
-      {({ close }) =>
-        confirmDelete ? (
-          <div
-            className="quote-menu-delete-confirm flex w-full items-center justify-center px-1 py-1"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <QuoteOrderInlineConfirm
-              label="Sil"
-              labelClass="quote-order-undo-sil"
-              ariaLabel="Teklif sil"
-              onConfirm={() => {
-                onDelete()
-                setConfirmDelete(false)
-                close()
-              }}
-              onCancel={() => setConfirmDelete(false)}
-            />
-          </div>
-        ) : (
-          <>
-            <DropdownItem
-              icon={Printer}
-              label="Yazdır"
-              tone="primary"
-              close={close}
-              onClick={onPrint}
-            />
-            <DropdownItem
-              icon={Send}
-              label={isGeneratingPdf ? 'Hazırlanıyor...' : 'WhatsApp Gönder'}
-              tone="success"
-              close={close}
-              onClick={onWhatsApp}
-            />
-            <DropdownItem
-              icon={Mail}
-              label={isGeneratingPdf ? 'Hazırlanıyor...' : 'Mail Gönder'}
-              tone="primary"
-              close={close}
-              onClick={onMail}
-            />
-            <DropdownItem
-              icon={FileText}
-              label={isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
-              tone="danger"
-              close={close}
-              onClick={onPdf}
-            />
-            <DropdownSeparator />
-            <DropdownItem
-              icon={Pencil}
-              label="Düzenle"
-              tone="primary"
-              close={close}
-              onClick={onEdit}
-            />
+      {({ close }) => (
+        <>
+          <DropdownItem
+            icon={Printer}
+            label="Yazdır"
+            tone="primary"
+            close={close}
+            onClick={onPrint}
+          />
+          <DropdownItem
+            icon={Send}
+            label={isGeneratingPdf ? 'Hazırlanıyor...' : 'WhatsApp Gönder'}
+            tone="success"
+            close={close}
+            onClick={onWhatsApp}
+          />
+          <DropdownItem
+            icon={Mail}
+            label={isGeneratingPdf ? 'Hazırlanıyor...' : 'Mail Gönder'}
+            tone="primary"
+            close={close}
+            onClick={onMail}
+          />
+          <DropdownItem
+            icon={FileText}
+            label={isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
+            tone="danger"
+            close={close}
+            onClick={onPdf}
+          />
+          <DropdownSeparator />
+          <DropdownItem
+            icon={Pencil}
+            label="Düzenle"
+            tone="primary"
+            close={close}
+            onClick={onEdit}
+          />
+          {confirmDelete ? (
+            <div
+              className="quote-menu-delete-confirm flex w-full items-center justify-between gap-2 rounded-xl px-2 py-1.5"
+              onClick={(event) => event.stopPropagation()}
+              role="menuitem"
+              aria-label="Silmeyi onayla"
+            >
+              <button
+                type="button"
+                className={`${COP_KUTUSU_BUTTON_CLASS} customer-permanent-delete-action`}
+                title="Sil"
+                aria-label="Teklifi sil"
+                onClick={() => {
+                  onDelete()
+                  setConfirmDelete(false)
+                  close()
+                }}
+              >
+                <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="quote-order-undo-close inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)]"
+                aria-label="Vazgeç"
+                title="Vazgeç"
+              >
+                <X className="h-3.5 w-3.5" strokeWidth={2.25} />
+              </button>
+            </div>
+          ) : (
             <DropdownItem
               icon={Trash2}
               label="Sil"
@@ -405,9 +418,9 @@ function QuoteListRowMoreMenu({
               closeOnClick={false}
               onClick={() => setConfirmDelete(true)}
             />
-          </>
-        )
-      }
+          )}
+        </>
+      )}
     </Dropdown>
   )
 }

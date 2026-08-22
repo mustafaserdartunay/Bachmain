@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, RotateCcw, Trash2 } from 'lucide-react'
+import { ChevronDown, Trash2, Undo2 } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { DELETED_RECORDS_EVENT, getDeletedRecords } from '../../utils/deletedRecordsStore'
 import { permanentlyDeleteQuote, restoreDeletedQuote } from '../../utils/quotesStore'
@@ -7,26 +7,18 @@ import { getListCustomerDisplay } from '../../data/customerProfiles'
 import { formatTL } from '../../utils/productPricing'
 import {
   APP_LABEL_CLASS,
+  PAGE_BALANCE_AMOUNT_CLASS,
   SP_BODY_CLASS,
   SP_CHEVRON_CLASS,
   SP_EMPTY_CLASS,
   SP_HEADER_BUTTON_CLASS,
   SP_PANEL_SHELL_CLASS,
-  SP_ROW_ACTIONS_CLASS,
-  SP_ROW_CLASS,
-  SP_ROW_DETAILS_CLASS,
-  SP_ROW_LIST_CLASS,
-  SP_ROW_META_CLASS,
-  SP_ROW_TITLE_CLASS,
   YF_TEXT_CLASS,
+  YFB_TEXT_CLASS,
 } from '../../utils/dashboardDesign'
-import {
-  COP_KUTUSU_BUTTON_CLASS,
-  COP_KUTUSU_ICON_CLASS,
-  GERI_YUKLE_BUTTON_CLASS,
-  GERI_YUKLE_ICON_CLASS,
-} from '../../utils/buttonStyles'
+import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
 import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from './ListDeleteConfirmPanel'
+import { AppPagePanel } from '../Layout/AppPageLayout'
 
 function formatWhen(value) {
   if (!value) return '—'
@@ -44,6 +36,21 @@ function formatWhen(value) {
   }
 }
 
+function formatListDate(value) {
+  if (!value) return '—'
+  try {
+    return new Date(value).toLocaleString('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return value
+  }
+}
+
 function quoteAmount(quote) {
   const candidates = [quote?.grandTotal, quote?.total, quote?.amount, quote?.amountNet]
   for (const value of candidates) {
@@ -51,20 +58,6 @@ function quoteAmount(quote) {
     if (Number.isFinite(n) && n > 0) return n
   }
   return 0
-}
-
-function quoteDetails(record = {}) {
-  const display = getListCustomerDisplay(record.customer)
-  const amount = quoteAmount(record)
-  return [
-    record.id ? `Kod: ${record.id}` : null,
-    display.companyTitle && display.companyTitle !== display.brandShortName
-      ? display.companyTitle
-      : null,
-    record.status ? `Durum: ${record.status}` : null,
-    amount ? `Tutar: ${formatTL(amount)}` : null,
-    record.contact ? `Yetkili: ${record.contact}` : null,
-  ].filter(Boolean)
 }
 
 function quoteTitle(record, fallbackLabel) {
@@ -91,6 +84,24 @@ function RedPingDot() {
 const PERMANENT_DELETE_WARNING =
   'Bu kayıtlar silinenler / arşiv alanından kaldırılacak ve kullanıcı tarafından geri getirilemez.'
 
+const DELETED_LIST_GRID =
+  'minmax(7.5rem,0.9fr) minmax(4.5rem,0.55fr) minmax(9rem,1.35fr) minmax(7rem,0.9fr) minmax(6.5rem,0.8fr) minmax(5.5rem,0.7fr)'
+
+const ROW_PANEL_CLASS =
+  'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-list-row flex w-full items-center min-h-[4.75rem]'
+
+function DeletedListCell({ className = '', children }) {
+  return <div className={`quote-list-cell min-w-0 ${className}`.trim()}>{children}</div>
+}
+
+function DeletedColumnTitle({ label }) {
+  return (
+    <span className={`${YFB_TEXT_CLASS} quote-list-column-title uppercase text-[var(--muted)]`}>
+      {`${String(label).toLocaleUpperCase('tr-TR')} :`}
+    </span>
+  )
+}
+
 export default function QuoteDeletedArchivedPanel({
   title = 'Silinenler ve Arşivlenenler',
   onRestored,
@@ -107,6 +118,7 @@ export default function QuoteDeletedArchivedPanel({
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const [restoringIds, setRestoringIds] = useState([])
   const bulkDeleteButtonRef = useRef(null)
 
   useEffect(() => {
@@ -161,16 +173,20 @@ export default function QuoteDeletedArchivedPanel({
   function toggleSelectAll() {
     const keys = entries.map((item) => item.id)
     setSelectedIds((current) => {
-      const allSelected = keys.length > 0 && keys.every((id) => current.includes(id))
-      return allSelected ? [] : keys
+      const allOn = keys.length > 0 && keys.every((id) => current.includes(id))
+      return allOn ? [] : keys
     })
   }
 
   function handleRestore(item) {
-    if (!item?.record?.id) return
-    const restored = restoreDeletedQuote(item.record.id)
-    if (restored) onRestored?.(restored, item)
-    setVersion((current) => current + 1)
+    if (!item?.record?.id || restoringIds.includes(item.id)) return
+    setRestoringIds((current) => [...current, item.id])
+    window.setTimeout(() => {
+      const restored = restoreDeletedQuote(item.record.id)
+      if (restored) onRestored?.(restored, item)
+      setRestoringIds((current) => current.filter((id) => id !== item.id))
+      setVersion((current) => current + 1)
+    }, 720)
   }
 
   function handlePermanentDelete(item) {
@@ -301,73 +317,153 @@ export default function QuoteDeletedArchivedPanel({
                 </div>
               ) : null}
 
-              {bulkSelectMode ? (
-                <label className={`mb-2 flex cursor-pointer items-center gap-2 ${YF_TEXT_CLASS}`}>
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleSelectAll}
-                    className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
-                  />
-                  Tümünü seç
-                </label>
-              ) : null}
-
-              <div className={SP_ROW_LIST_CLASS}>
-                {entries.map((item) => {
-                  const details = quoteDetails(item.record)
-                  const isSelected = selectedIds.includes(item.id)
-                  return (
+              <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
+                <div className="quote-list-board quote-deleted-list-board">
+                  <AppPagePanel className={`${ROW_PANEL_CLASS} quote-list-header-panel`}>
                     <div
-                      key={item.id}
-                      className={`${SP_ROW_CLASS} ${isSelected ? 'ring-1 ring-rose-400/40' : ''}`}
-                      onClick={bulkSelectMode ? () => toggleSelect(item.id) : undefined}
+                      className="quote-list-row w-full min-w-0"
+                      style={{
+                        gridTemplateColumns: bulkSelectMode
+                          ? `2.25rem ${DELETED_LIST_GRID}`
+                          : DELETED_LIST_GRID,
+                      }}
                     >
                       {bulkSelectMode ? (
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleSelect(item.id)}
-                          onClick={(event) => event.stopPropagation()}
-                          aria-label={`${item.label} seç`}
-                          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
-                        />
-                      ) : (
-                        <RedPingDot />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className={SP_ROW_TITLE_CLASS}>{item.label}</p>
-                        <p className={SP_ROW_META_CLASS}>Silindi · {formatWhen(item.at)}</p>
-                        {details.length ? (
-                          <p className={SP_ROW_DETAILS_CLASS}>{details.join(' · ')}</p>
-                        ) : null}
-                      </div>
-                      {!bulkSelectMode ? (
-                        <div className={SP_ROW_ACTIONS_CLASS}>
-                          <button
-                            type="button"
-                            onClick={() => handleRestore(item)}
-                            className={GERI_YUKLE_BUTTON_CLASS}
-                          >
-                            <RotateCcw className={GERI_YUKLE_ICON_CLASS} /> Geri Yükle
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
-                              setPendingPermanentDelete(item)
-                            }}
-                            className={`customer-permanent-delete-action ${COP_KUTUSU_BUTTON_CLASS}`}
-                            aria-label={`${item.label} kalıcı olarak sil`}
-                            title="Sil"
-                          >
-                            <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
-                          </button>
-                        </div>
+                        <DeletedListCell>
+                          <input
+                            type="checkbox"
+                            checked={allSelected}
+                            onChange={toggleSelectAll}
+                            className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
+                            aria-label="Tümünü seç"
+                          />
+                        </DeletedListCell>
                       ) : null}
+                      <DeletedListCell>
+                        <DeletedColumnTitle label="Tarih" />
+                      </DeletedListCell>
+                      <DeletedListCell>
+                        <DeletedColumnTitle label="Kod" />
+                      </DeletedListCell>
+                      <DeletedListCell>
+                        <DeletedColumnTitle label="Müşteri Adı" />
+                      </DeletedListCell>
+                      <DeletedListCell>
+                        <DeletedColumnTitle label="Durum" />
+                      </DeletedListCell>
+                      <DeletedListCell>
+                        <DeletedColumnTitle label="Tutar" />
+                      </DeletedListCell>
+                      <DeletedListCell>
+                        <DeletedColumnTitle label="İşlem" />
+                      </DeletedListCell>
                     </div>
-                  )
-                })}
+                  </AppPagePanel>
+
+                  {entries.map((item) => {
+                    const display = getListCustomerDisplay(item.record?.customer)
+                    const amount = quoteAmount(item.record)
+                    const isSelected = selectedIds.includes(item.id)
+                    const isRestoring = restoringIds.includes(item.id)
+                    const grid = bulkSelectMode ? `2.25rem ${DELETED_LIST_GRID}` : DELETED_LIST_GRID
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={isRestoring ? 'quote-list-row-exit-wrap' : undefined}
+                      >
+                        <AppPagePanel
+                          className={`${ROW_PANEL_CLASS} quote-list-data-panel ${
+                            isSelected ? 'ring-1 ring-rose-400/40' : ''
+                          }`}
+                        >
+                          <div
+                            className="quote-list-row w-full min-w-0"
+                            style={{ gridTemplateColumns: grid }}
+                            onClick={bulkSelectMode ? () => toggleSelect(item.id) : undefined}
+                          >
+                            {bulkSelectMode ? (
+                              <DeletedListCell>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleSelect(item.id)}
+                                  onClick={(event) => event.stopPropagation()}
+                                  aria-label={`${item.label} seç`}
+                                  className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
+                                />
+                              </DeletedListCell>
+                            ) : null}
+                            <DeletedListCell>
+                              <span className={YF_TEXT_CLASS}>{formatListDate(item.at)}</span>
+                            </DeletedListCell>
+                            <DeletedListCell>
+                              <span className={YF_TEXT_CLASS}>{item.record?.id || '—'}</span>
+                            </DeletedListCell>
+                            <DeletedListCell align="start" className="is-start">
+                              <div className="min-w-0 text-left">
+                                <p className="customer-name-primary truncate text-[14px] font-semibold leading-tight text-[var(--ink)]">
+                                  {display.brandShortName || item.label}
+                                </p>
+                                {display.companyTitle &&
+                                display.companyTitle !== display.brandShortName ? (
+                                  <p className={`${YF_TEXT_CLASS} truncate`}>
+                                    {display.companyTitle}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </DeletedListCell>
+                            <DeletedListCell>
+                              <span className={YF_TEXT_CLASS}>
+                                {item.record?.status || 'Silindi'}
+                              </span>
+                            </DeletedListCell>
+                            <DeletedListCell>
+                              <span
+                                className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
+                              >
+                                {amount ? formatTL(amount) : '—'}
+                              </span>
+                            </DeletedListCell>
+                            <DeletedListCell>
+                              {!bulkSelectMode ? (
+                                <span
+                                  className="inline-flex w-full items-center justify-center gap-1.5"
+                                  onClick={(event) => event.stopPropagation()}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRestore(item)}
+                                    disabled={isRestoring}
+                                    className="glass-sidebar-toggle glass-sidebar-collapse flex h-9 w-9 items-center justify-center rounded-xl"
+                                    title="Geri yükle"
+                                    aria-label={`${item.label} geri yükle`}
+                                  >
+                                    <Undo2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(event) => {
+                                      setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+                                      setPendingPermanentDelete(item)
+                                    }}
+                                    className={`customer-permanent-delete-action ${COP_KUTUSU_BUTTON_CLASS}`}
+                                    aria-label={`${item.label} kalıcı olarak sil`}
+                                    title="Sil"
+                                  >
+                                    <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+                                  </button>
+                                </span>
+                              ) : (
+                                <span className={YF_TEXT_CLASS}>{formatWhen(item.at)}</span>
+                              )}
+                            </DeletedListCell>
+                          </div>
+                        </AppPagePanel>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </>
           )}

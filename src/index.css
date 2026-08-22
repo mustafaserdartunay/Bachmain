@@ -1941,42 +1941,31 @@ html body .app-responsive .customer-list-panel .quote-order-undo-close:hover svg
   transform: none !important;
 }
 
-/* Teklif satır menüsü — Sil onayı menü içinde */
-.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-confirm {
-  display: inline-flex !important;
-  height: 2.25rem !important;
-  min-height: 2.25rem !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  box-sizing: border-box !important;
+/* Teklif satır menüsü — Sil yerinde çk onay */
+.app-dropdown-portal .quote-menu-delete-confirm {
+  min-height: 37px;
 }
 
-.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-box {
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  height: 2.25rem !important;
-  box-sizing: border-box !important;
+.app-dropdown-portal .quote-menu-delete-confirm .cop-kutusu-btn,
+.app-dropdown-portal .quote-menu-delete-confirm .customer-permanent-delete-action {
+  transform: none !important;
 }
 
-.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-sil {
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  line-height: 1 !important;
+.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-close:hover {
   color: #dc2626 !important;
-  background: transparent !important;
 }
 
-.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-close,
-.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-close svg {
-  color: var(--muted) !important;
-  background: transparent !important;
+/* Silinenler listesi — teklif board ile aynı satır paneli */
+.quote-deleted-list-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: max-content;
+  width: 100%;
 }
 
-.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-close:hover,
-.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-close:hover svg {
-  color: #dc2626 !important;
+.quote-deleted-list-board .quote-deleted-list-row .quote-list-row {
+  align-items: center;
 }
 
 html body .page-type-shell .customer-list-panel button.customer-bulk-delete-action,
@@ -2013,6 +2002,15 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   line-height: 1.25 !important;
   letter-spacing: normal !important;
   text-transform: uppercase !important;
+  color: var(--muted) !important;
+}
+
+html body .page-type-shell .app-page-header h1.customer-page-center-title.yfb,
+html body .customers-page-type .app-page-header h1.customer-page-center-title.yfb {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
   color: var(--muted) !important;
 }
 
