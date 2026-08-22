@@ -146,8 +146,19 @@ function InlineSilConfirm({ onConfirm, onCancel, ariaLabel = 'Kalıcı sil' }) {
 const PERMANENT_DELETE_WARNING =
   'Bu kayıtlar silinenler / arşiv alanından kaldırılacak ve kullanıcı tarafından geri getirilemez.'
 
-const DELETED_LIST_GRID =
-  '6.5rem 4.75rem minmax(16rem, 2.4fr) minmax(9.25rem, 0.7fr) 6.75rem 6.5rem'
+/** Ana teklif listesi ile aynı sütun iskeleti (segment sayısı üstten gelir) */
+function buildDeletedListGrid(segmentCount = 1) {
+  const segments = Math.max(1, Number(segmentCount) || 1)
+  return [
+    '6.5rem',
+    '4.75rem',
+    'minmax(16rem, 2.4fr)',
+    ...Array.from({ length: segments }, () => 'minmax(9.25rem, 0.7fr)'),
+    '6.75rem',
+    '6.5rem',
+    '3rem',
+  ].join(' ')
+}
 
 const DATA_ROW_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-list-row flex w-full items-center min-h-[4.75rem] quote-list-data-panel'
@@ -176,6 +187,9 @@ export default function QuoteDeletedArchivedPanel({
   emptyMessage = 'Silinen teklif yok.',
   className = '',
   receivePulseKey = 0,
+  segmentTabs = [],
+  getProcessValue,
+  columnGrid,
 }) {
   const panelRef = useRef(null)
   const [open, setOpen] = useState(false)
@@ -285,7 +299,19 @@ export default function QuoteDeletedArchivedPanel({
   }
 
   const allSelected = entries.length > 0 && selectedIds.length === entries.length
-  const gridTemplate = bulkSelectMode ? `2.75rem ${DELETED_LIST_GRID}` : DELETED_LIST_GRID
+  const resolvedSegmentTabs = Array.isArray(segmentTabs) ? segmentTabs : []
+  const baseGrid =
+    columnGrid ||
+    buildDeletedListGrid(resolvedSegmentTabs.length || 1)
+  const gridTemplate = bulkSelectMode ? `2.75rem ${baseGrid}` : baseGrid
+
+  function processLabelForRecord(record, tab) {
+    if (typeof getProcessValue === 'function') {
+      return getProcessValue(record, tab) || '—'
+    }
+    if (!record) return '—'
+    return record.status || '—'
+  }
 
   const headerActions = bulkSelectMode
     ? [
@@ -492,17 +518,25 @@ export default function QuoteDeletedArchivedPanel({
                                 ) : null}
                               </span>
                             </DeletedListCell>
-                            <DeletedListCell>
-                              <span className={YF_TEXT_CLASS}>
-                                {item.record?.status || 'Silindi'}
-                              </span>
-                            </DeletedListCell>
+                            {(resolvedSegmentTabs.length
+                              ? resolvedSegmentTabs
+                              : [{ id: 'status', label: 'Durum' }]
+                            ).map((tab) => (
+                              <DeletedListCell key={tab.id || tab.label}>
+                                <span className={YF_TEXT_CLASS}>
+                                  {processLabelForRecord(item.record, tab)}
+                                </span>
+                              </DeletedListCell>
+                            ))}
                             <DeletedListCell>
                               <span
                                 className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
                               >
                                 {amount ? formatTL(amount) : '—'}
                               </span>
+                            </DeletedListCell>
+                            <DeletedListCell>
+                              <span className={YF_TEXT_CLASS}>—</span>
                             </DeletedListCell>
                             <DeletedListCell>
                               {!bulkSelectMode ? (

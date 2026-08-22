@@ -3781,8 +3781,8 @@ html body section.card.quote-list-row-panel.quote-deleted-header-panel {
 .quote-deleted-list-board {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  min-width: max-content;
+  gap: 1.25rem;
+  min-width: 56rem;
   width: 100%;
 }
 

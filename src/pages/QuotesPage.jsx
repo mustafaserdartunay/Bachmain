@@ -3760,6 +3760,17 @@ export default function QuotesPage() {
           emptyMessage="Silinen teklif yok."
           receivePulseKey={archiveReceiveKey}
           className="customer-deleted-archived-panel w-full"
+          segmentTabs={quoteSegmentTabs}
+          getProcessValue={(quote, tab) => processValueForQuote(tab, quote)}
+          columnGrid={[
+            '6.5rem',
+            '4.75rem',
+            'minmax(16rem, 2.4fr)',
+            ...quoteSegmentTabs.map(() => 'minmax(9.25rem, 0.7fr)'),
+            '6.75rem',
+            '6.5rem',
+            '3rem',
+          ].join(' ')}
         />
       ) : null}
 
