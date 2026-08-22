@@ -366,8 +366,8 @@ const QUOTE_LIST_ROW_PANEL_CLASS =
 function QuoteListRowPanel({ header = false, gridTemplate, className = '', children }) {
   return (
     <AppPagePanel
-      className={`${QUOTE_LIST_ROW_PANEL_CLASS} ${
-        header ? 'quote-list-header-panel min-h-[4.75rem]' : 'min-h-[3rem] !py-1.5'
+      className={`${QUOTE_LIST_ROW_PANEL_CLASS} min-h-[4.75rem] ${
+        header ? 'quote-list-header-panel' : 'quote-list-data-panel'
       } ${className}`.trim()}
     >
       <div className="quote-list-row w-full min-w-0" style={{ gridTemplateColumns: gridTemplate }}>
