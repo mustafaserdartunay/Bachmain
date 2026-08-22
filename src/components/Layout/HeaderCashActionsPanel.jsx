@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
+  FileText,
   Handshake,
   Inbox,
   ReceiptText,
@@ -36,6 +37,8 @@ export const HEADER_ACTION_GRADIENTS = {
   expense: 'from-[#ffb25e] via-[#ff8a65] to-[#ff5e62]',
   /** Yeni Müşteri — blue */
   primary: 'from-[#93c5fd] via-[#3b82f6] to-[#2563eb]',
+  /** Yeni Teklif — cyan → teal */
+  quote: 'from-[#67e8f9] via-[#2dd4bf] to-[#0d9488]',
   /** Yeni Tedarikçi — amber → orange */
   amber: 'from-[#ffd27f] via-[#f59e0b] to-[#ea580c]',
   /** Yeni Fatura — violet */
@@ -65,6 +68,13 @@ export const HEADER_QUICK_ACTIONS = [
     title: 'Gider Ekle',
     icon: ArrowUpFromLine,
     gradient: HEADER_ACTION_GRADIENTS.expense,
+  },
+  {
+    id: 'quote',
+    to: () => '/teklifler?yeni=1',
+    title: 'Yeni Teklif Oluştur',
+    icon: FileText,
+    gradient: HEADER_ACTION_GRADIENTS.quote,
   },
   {
     id: 'customer',
@@ -146,7 +156,7 @@ export function HeaderQuickActionCard({ action, fixed = false, className = '' })
 export default function HeaderCashActionsPanel() {
   return (
     <section className="app-header-banner flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center px-4 py-2 sm:px-6">
-      <div className="flex w-full gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-7 lg:gap-2 lg:overflow-visible">
+      <div className="flex w-full gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-8 lg:gap-2 lg:overflow-visible">
         {HEADER_QUICK_ACTIONS.map((action) => (
           <HeaderQuickActionCard key={action.id} action={action} />
         ))}
