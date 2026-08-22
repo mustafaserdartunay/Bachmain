@@ -149,6 +149,7 @@ export function AppPageHeader({
   showBack = true,
   titleClassName = '',
   centerTitleClassName = '',
+  shellClassName = PAGE_HEADER_SHELL_CLASS,
 }) {
   const hasExplicitCenter =
     centerTitle != null && centerTitle !== false && String(centerTitle).trim() !== ''
@@ -165,7 +166,7 @@ export function AppPageHeader({
       : 'relative z-10 flex min-w-0 flex-1 items-center gap-3'
 
   return (
-    <div className={PAGE_HEADER_SHELL_CLASS}>
+    <div className={shellClassName}>
       <div className={leftSlotClass}>
         {showBack ? (
           <AppPageBackButton backTo={backTo} backLabel={backLabel} onBack={onBack} />

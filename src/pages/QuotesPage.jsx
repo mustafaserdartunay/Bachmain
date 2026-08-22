@@ -152,6 +152,7 @@ import {
   PAGE_FILTER_MENU_CLASS,
   PAGE_FILTER_PILL_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
+  QUOTE_PAGE_HEADER_SHELL_CLASS,
   PAGE_LIST_MENU_CLASS,
   PAGE_LIST_PILL_CLASS,
   PAGE_LIST_PILL_WRAPPER_CLASS,
@@ -2658,6 +2659,7 @@ export default function QuotesPage() {
       {viewMode === 'list' ? (
         <AppPageHeader
           showBack={false}
+          shellClassName={QUOTE_PAGE_HEADER_SHELL_CLASS}
           title={<AppPageBackLink />}
           centerTitle="TEKLİFLER"
           centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
@@ -2679,6 +2681,7 @@ export default function QuotesPage() {
       ) : (
         <AppPageHeader
           showBack={false}
+          shellClassName={QUOTE_PAGE_HEADER_SHELL_CLASS}
           title={<AppPageBackLink to={false} onClick={returnToQuoteList} label="Teklifler" />}
           centerTitle={isDraftQuote ? 'YENİ TEKLİF OLUŞTUR' : 'TEKLİF DÜZENLE'}
           centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
