@@ -3772,6 +3772,25 @@ html body section.card.quote-list-row-panel.quote-deleted-header-panel {
   max-height: 4.75rem !important;
   padding-top: 0.75rem !important;
   padding-bottom: 0.75rem !important;
+  transition:
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+html body section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open,
+html body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open {
+  background: color-mix(in srgb, #f43f5e 10%, var(--surface)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    inset 0 0 0 1px rgba(244, 63, 94, 0.14) !important;
+}
+
+html.night body section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open,
+html.night body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open {
+  background: color-mix(in srgb, #f43f5e 14%, var(--surface)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(244, 63, 94, 0.2) !important;
 }
 
 .quote-deleted-header-row .quote-deleted-header-title-cell {
@@ -3795,7 +3814,7 @@ html body section.card.quote-list-row-panel.quote-deleted-header-panel {
   transform: none !important;
 }
 
-/* Silinenler çk — geri yükle (glass-sidebar-collapse) ile aynı 1.75rem yuvarlak */
+/* Silinenler çk — son sütun, more menü ile aynı hiz */
 html body .customer-deleted-archived-panel .quote-deleted-ck-btn,
 html body .customer-deleted-archived-panel .quote-deleted-ck-btn:hover {
   width: 1.75rem !important;

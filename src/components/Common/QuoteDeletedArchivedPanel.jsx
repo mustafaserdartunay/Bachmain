@@ -182,10 +182,18 @@ function getDeletedRecordDateSource(record) {
   return record?.activities?.[0]?.date || record?.createdAt || ''
 }
 
-function DeletedOrderStatusDisplay({ orderCreated }) {
-  if (orderCreated) {
-    return (
-      <span className="quote-order-action inline-flex h-9 items-center justify-center">
+function DeletedOrderRestoreCell({
+  orderCreated,
+  onRestore,
+  disabled = false,
+  restoreLabel = 'Geri yükle',
+}) {
+  return (
+    <span
+      className="quote-order-action inline-flex h-9 items-center justify-between"
+      onClick={(event) => event.stopPropagation()}
+    >
+      {orderCreated ? (
         <span
           className="quote-order-chip inline-flex h-9 w-[3.75rem] flex-col items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-1 text-center text-[10px] font-bold leading-tight text-emerald-700"
           title="Sipariş oluşturuldu"
@@ -193,19 +201,55 @@ function DeletedOrderStatusDisplay({ orderCreated }) {
           <span>Sipariş</span>
           <span>Oluştu</span>
         </span>
+      ) : (
+        <span
+          className="quote-order-chip quote-order-action inline-flex h-9 flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)]"
+          title="Sipariş oluşturulmamış"
+        >
+          <span>Sipariş</span>
+          <span>Oluştur</span>
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onRestore}
+        disabled={disabled}
+        className="glass-sidebar-toggle glass-sidebar-collapse flex h-9 w-9 items-center justify-center rounded-xl"
+        title="Geri yükle"
+        aria-label={restoreLabel}
+      >
+        <Undo2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+      </button>
+    </span>
+  )
+}
+
+function DeletedDateCell({ record, deletedAt }) {
+  const createdStamp = formatListDateParts(getDeletedRecordDateSource(record))
+  const deletedStamp = formatListDateParts(deletedAt)
+  const createdLine = [createdStamp.date, createdStamp.time].filter(Boolean).join(' ')
+  const deletedLine = [deletedStamp.date, deletedStamp.time].filter(Boolean).join(' ')
+
+  if (!createdLine && !deletedLine) {
+    return (
+      <span className="block text-center text-[11px] font-normal leading-tight text-[var(--muted)]">
+        —
       </span>
     )
   }
 
   return (
-    <span className="quote-order-create-reveal inline-flex w-full items-center justify-center overflow-hidden">
-      <span
-        className="quote-order-chip quote-order-action inline-flex h-9 flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)]"
-        title="Sipariş oluşturulmamış"
-      >
-        <span>Sipariş</span>
-        <span>Oluştur</span>
-      </span>
+    <span className="flex max-w-full flex-col items-center justify-center gap-0.5 tabular-nums leading-tight">
+      {createdLine ? (
+        <span className="text-[11px] font-normal tracking-normal text-[var(--muted)]">
+          {createdLine}
+        </span>
+      ) : null}
+      {deletedLine ? (
+        <span className="text-[10px] font-normal tracking-normal text-[var(--muted)]/70">
+          {deletedLine}
+        </span>
+      ) : null}
     </span>
   )
 }
@@ -403,7 +447,9 @@ export default function QuoteDeletedArchivedPanel({
         receiveActive ? 'quote-deleted-panel-receive' : ''
       }`.trim()}
     >
-      <AppPagePanel className={DELETED_HEADER_PANEL_CLASS}>
+      <AppPagePanel
+        className={`${DELETED_HEADER_PANEL_CLASS}${open ? ' quote-deleted-header-panel-open' : ''}`}
+      >
         <div
           className="quote-list-row quote-deleted-header-row w-full min-w-0"
           style={{ gridTemplateColumns: gridTemplate }}
@@ -508,9 +554,6 @@ export default function QuoteDeletedArchivedPanel({
                       ? getListAmount(item.record)
                       : quoteAmount(item.record)
                     const orderCreated = isOrderCreated?.(item.record) ?? false
-                    const stamp = formatListDateParts(
-                      getDeletedRecordDateSource(item.record) || item.at,
-                    )
                     const isSelected = selectedIds.includes(item.id)
                     const isRestoring = restoringIds.includes(item.id)
                     const isTrashing = trashingIds.includes(item.id)
@@ -553,22 +596,7 @@ export default function QuoteDeletedArchivedPanel({
                               </DeletedListCell>
                             ) : null}
                             <DeletedListCell>
-                              {stamp.date ? (
-                                <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
-                                  <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
-                                    {stamp.date}
-                                  </span>
-                                  {stamp.time ? (
-                                    <span className="text-[12px] font-normal leading-tight text-[var(--muted)]/75">
-                                      {stamp.time}
-                                    </span>
-                                  ) : null}
-                                </span>
-                              ) : (
-                                <span className="block text-center text-[14px] font-normal text-[var(--muted)]">
-                                  —
-                                </span>
-                              )}
+                              <DeletedDateCell record={item.record} deletedAt={item.at} />
                             </DeletedListCell>
                             <DeletedListCell>
                               <span className={`${YF_TEXT_CLASS} tabular-nums`}>
@@ -624,7 +652,12 @@ export default function QuoteDeletedArchivedPanel({
                             </DeletedListCell>
                             <DeletedListCell>
                               <span className="inline-flex w-full items-center justify-center">
-                                <DeletedOrderStatusDisplay orderCreated={orderCreated} />
+                                <DeletedOrderRestoreCell
+                                  orderCreated={orderCreated}
+                                  disabled={isRestoring || isTrashing}
+                                  restoreLabel={`${item.label} geri yükle`}
+                                  onRestore={() => handleRestore(item)}
+                                />
                               </span>
                             </DeletedListCell>
                             <DeletedListCell>
@@ -640,31 +673,19 @@ export default function QuoteDeletedArchivedPanel({
                                       onCancel={() => setPendingDeleteId(null)}
                                     />
                                   ) : (
-                                    <span className="inline-flex items-center justify-center gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleRestore(item)}
-                                        disabled={isRestoring || isTrashing}
-                                        className="glass-sidebar-toggle glass-sidebar-collapse flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full"
-                                        title="Geri yükle"
-                                        aria-label={`${item.label} geri yükle`}
-                                      >
-                                        <Undo2 className="h-3.5 w-3.5" strokeWidth={2.25} />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => setPendingDeleteId(item.id)}
-                                        disabled={isRestoring || isTrashing}
-                                        className={DELETED_CK_BUTTON_CLASS}
-                                        aria-label={`${item.label} kalıcı olarak sil`}
-                                        title="Sil"
-                                      >
-                                        <Trash2
-                                          className={COP_KUTUSU_ICON_CLASS}
-                                          strokeWidth={2.25}
-                                        />
-                                      </button>
-                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setPendingDeleteId(item.id)}
+                                      disabled={isRestoring || isTrashing}
+                                      className={DELETED_CK_BUTTON_CLASS}
+                                      aria-label={`${item.label} kalıcı olarak sil`}
+                                      title="Sil"
+                                    >
+                                      <Trash2
+                                        className={COP_KUTUSU_ICON_CLASS}
+                                        strokeWidth={2.25}
+                                      />
+                                    </button>
                                   )}
                                 </span>
                               ) : (
