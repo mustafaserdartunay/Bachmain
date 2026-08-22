@@ -1677,27 +1677,35 @@ html.night .page-type-shell section.card.quote-list-row-panel {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Teklifler başlık — cam zemin üzerine hafif mavi radial geçiş */
-.page-type-shell > .app-page-header.quote-page-header-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 46%);
-  pointer-events: none;
-  z-index: 0;
+html body .page-type-shell .customer-list-panel button.quote-order-chip.quote-order-action:hover,
+html
+  body
+  .customers-page-type
+  .customer-list-panel
+  button.quote-order-chip.quote-order-action:hover,
+html body .app-responsive .customer-list-panel button.quote-order-chip.quote-order-action:hover {
+  border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
-.page-type-shell > .app-page-header.quote-page-header-panel::after {
-  content: '';
-  position: absolute;
-  left: 2rem;
-  right: 2rem;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(96, 165, 250, 0.35), transparent);
-  pointer-events: none;
-  z-index: 1;
+html
+  body
+  .page-type-shell
+  .customer-list-panel
+  button.quote-order-chip.quote-order-action:hover
+  span,
+html
+  body
+  .customers-page-type
+  .customer-list-panel
+  button.quote-order-chip.quote-order-action:hover
+  span,
+html
+  body
+  .app-responsive
+  .customer-list-panel
+  button.quote-order-chip.quote-order-action:hover
+  span {
+  color: #047857 !important;
 }
 
 .customer-summary-metrics .app-page-metric {

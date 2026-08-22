@@ -143,6 +143,10 @@ import ModernDatePicker from '../components/Common/ModernDatePicker'
 import { readCompanySettings } from '../utils/companySettings'
 import { buildQuoteDocumentHtml, buildQuoteDocumentInnerHtml } from '../utils/quoteDocumentHtml'
 import { readQuotePrintSettings } from '../utils/docPrintSettingsStore'
+import { openPrintWindow } from '../utils/docPrint'
+import { emailService } from '../omnichannel/services/emailService'
+import { readChannelConfig } from '../omnichannel/store'
+import { sendWhatsAppServerMessage } from '../utils/whatsappChannelApi'
 import {
   APP_PANEL_TITLE_CLASS,
   PAGE_BALANCE_AMOUNT_CLASS,
@@ -152,7 +156,6 @@ import {
   PAGE_FILTER_MENU_CLASS,
   PAGE_FILTER_PILL_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
-  QUOTE_PAGE_HEADER_SHELL_CLASS,
   PAGE_LIST_MENU_CLASS,
   PAGE_LIST_PILL_CLASS,
   PAGE_LIST_PILL_WRAPPER_CLASS,
@@ -2147,8 +2150,16 @@ export default function QuotesPage() {
   }
 
   function printQuoteDocument(quote) {
-    if (!quote?.id) return
-    navigate(`/belge-merkezi/yazdir?type=quote&id=${encodeURIComponent(quote.id)}`)
+    const safeQuote = getSafeQuoteForOutput(quote)
+    if (!safeQuote) return
+    const html = buildQuoteDocumentHtml({
+      quote: sanitizeQuoteForSave(safeQuote),
+      company: readCompanySettings(),
+      customer: getQuoteCustomerDetails(safeQuote),
+      settings: readQuotePrintSettings(),
+      rates,
+    })
+    openPrintWindow(html)
   }
 
   async function downloadQuotePdf(quote = selectedQuote) {
@@ -2168,26 +2179,36 @@ export default function QuotesPage() {
   async function sendQuoteByWhatsApp(quote = selectedQuote) {
     const safeQuote = getSafeQuoteForOutput(quote)
     if (!safeQuote) return
+    const customer = getQuoteCustomerDetails(safeQuote)
+    const phoneDigits = String(customer.phone || '').replace(/\D/g, '')
+    const messageText = buildQuoteShareText(safeQuote)
+
     try {
       setIsGeneratingPdf(true)
+      if (phoneDigits.length >= 10) {
+        try {
+          await sendWhatsAppServerMessage({ to: phoneDigits, text: messageText })
+          return
+        } catch {
+          /* API yoksa veya hata — paylaşım yollarına devam */
+        }
+      }
+
       const { blob, filename, file } = await createQuotePdfFileFromQuote(safeQuote)
       if (navigator.canShare?.({ files: [file] }) && navigator.share) {
         await navigator.share({
           title: `${safeQuote.id} Fiyat Teklifi`,
-          text: 'PDF kalitesinde teklif sunumu ekte.',
+          text: messageText,
           files: [file],
         })
         return
       }
 
+      const waUrl = phoneDigits
+        ? `https://wa.me/${phoneDigits}?text=${encodeURIComponent(messageText)}`
+        : `https://wa.me/?text=${encodeURIComponent(messageText)}`
+      window.open(waUrl, '_blank', 'noopener,noreferrer')
       downloadBlob(blob, filename)
-      window.alert(
-        'Tarayıcınız WhatsApp’a dosyayı otomatik eklemeyi desteklemiyor. Aynı PDF indirildi; açılan WhatsApp sohbetine bu PDF dosyasını ek olarak seçip gönderebilirsiniz.',
-      )
-      const message = encodeURIComponent(
-        `Merhaba, ${safeQuote.id} numaralı PDF teklif sunumunu iletiyorum. PDF dosyasını bu sohbete ek olarak gönderiyorum.`,
-      )
-      window.open(`https://wa.me/?text=${message}`, '_blank', 'noopener,noreferrer')
     } catch (error) {
       window.alert(`WhatsApp paylaşımı hazırlanamadı: ${error.message}`)
     } finally {
@@ -2198,18 +2219,26 @@ export default function QuotesPage() {
   async function sendQuoteByMail(quote = selectedQuote) {
     const safeQuote = getSafeQuoteForOutput(quote)
     if (!safeQuote) return
+    const customer = getQuoteCustomerDetails(safeQuote)
+    if (!customer.email) {
+      window.alert('Müşteri e-posta adresi bulunamadı.')
+      return
+    }
     try {
       setIsGeneratingPdf(true)
       const { blob, filename } = await createQuotePdfFileFromQuote(safeQuote)
-      downloadBlob(blob, filename)
-      const customer = getQuoteCustomerDetails(safeQuote)
-      const subject = encodeURIComponent(`${safeQuote.id} Fiyat Teklifi`)
-      const body = encodeURIComponent(
-        `${buildQuoteShareText(safeQuote)}\n\nNot: Aynı premium PDF teklif dosyası indirildi. Lütfen e-postaya ek olarak "${filename}" dosyasını ekleyiniz.`,
-      )
-      window.location.href = `mailto:${customer.email || ''}?subject=${subject}&body=${body}`
+      const config = readChannelConfig()?.email || {}
+      const company = readCompanySettings()
+      await emailService.sendMail({
+        smtpHost: config.smtpHost || '',
+        from: config.fromEmail || company.email || '',
+        to: customer.email,
+        subject: `${safeQuote.id} Fiyat Teklifi`,
+        body: buildQuoteShareText(safeQuote),
+        attachments: [{ filename, blob }],
+      })
     } catch (error) {
-      window.alert(`Mail PDF'i hazırlanamadı: ${error.message}`)
+      window.alert(`Mail gönderilemedi: ${error.message}`)
     } finally {
       setIsGeneratingPdf(false)
     }
@@ -2659,7 +2688,6 @@ export default function QuotesPage() {
       {viewMode === 'list' ? (
         <AppPageHeader
           showBack={false}
-          shellClassName={QUOTE_PAGE_HEADER_SHELL_CLASS}
           title={<AppPageBackLink />}
           centerTitle="TEKLİFLER"
           centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
@@ -2681,7 +2709,6 @@ export default function QuotesPage() {
       ) : (
         <AppPageHeader
           showBack={false}
-          shellClassName={QUOTE_PAGE_HEADER_SHELL_CLASS}
           title={<AppPageBackLink to={false} onClick={returnToQuoteList} label="Teklifler" />}
           centerTitle={isDraftQuote ? 'YENİ TEKLİF OLUŞTUR' : 'TEKLİF DÜZENLE'}
           centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
@@ -3153,57 +3180,70 @@ export default function QuotesPage() {
                           </span>
                         </QuoteListCell>
                         <QuoteListCell>
-                          <span onClick={(event) => event.stopPropagation()}>
-                            <MoreMenu
-                              items={[
-                                {
-                                  id: 'print',
-                                  label: 'Yazdır',
-                                  icon: Printer,
-                                  tone: 'primary',
-                                  onClick: () => printQuoteDocument(quote),
-                                },
-                                {
-                                  id: 'whatsapp',
-                                  label: isGeneratingPdf ? 'Hazırlanıyor...' : 'WhatsApp Gönder',
-                                  icon: Send,
-                                  tone: 'success',
-                                  onClick: () => sendQuoteByWhatsApp(quote),
-                                },
-                                {
-                                  id: 'mail',
-                                  label: isGeneratingPdf ? 'Hazırlanıyor...' : 'Mail Gönder',
-                                  icon: Mail,
-                                  tone: 'primary',
-                                  onClick: () => sendQuoteByMail(quote),
-                                },
-                                {
-                                  id: 'pdf',
-                                  label: isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir',
-                                  icon: FileText,
-                                  tone: 'danger',
-                                  onClick: () => downloadQuotePdf(quote),
-                                },
-                                { type: 'separator', id: 'quote-row-sep' },
-                                {
-                                  id: 'edit',
-                                  label: 'Düzenle',
-                                  icon: Pencil,
-                                  tone: 'primary',
-                                  onClick: () => editQuote(quote.id),
-                                },
-                                {
-                                  id: 'delete',
-                                  label: 'Sil',
-                                  icon: Trash2,
-                                  tone: 'danger',
-                                  onClick: (event) => {
-                                    setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
-                                    setPendingDeleteId(quote.id)
+                          <span
+                            className="inline-flex w-full items-center justify-center"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {pendingDeleteId === quote.id ? (
+                              <QuoteOrderInlineConfirm
+                                label="Sil"
+                                labelClass="quote-order-undo-sil"
+                                ariaLabel="Teklif sil"
+                                onConfirm={() => {
+                                  deleteQuote(quote, { skipConfirm: true })
+                                  setPendingDeleteId(null)
+                                }}
+                                onCancel={() => setPendingDeleteId(null)}
+                              />
+                            ) : (
+                              <MoreMenu
+                                items={[
+                                  {
+                                    id: 'print',
+                                    label: 'Yazdır',
+                                    icon: Printer,
+                                    tone: 'primary',
+                                    onClick: () => printQuoteDocument(quote),
                                   },
-                                },
-                              ]}
-                            />
+                                  {
+                                    id: 'whatsapp',
+                                    label: isGeneratingPdf ? 'Hazırlanıyor...' : 'WhatsApp Gönder',
+                                    icon: Send,
+                                    tone: 'success',
+                                    onClick: () => sendQuoteByWhatsApp(quote),
+                                  },
+                                  {
+                                    id: 'mail',
+                                    label: isGeneratingPdf ? 'Hazırlanıyor...' : 'Mail Gönder',
+                                    icon: Mail,
+                                    tone: 'primary',
+                                    onClick: () => sendQuoteByMail(quote),
+                                  },
+                                  {
+                                    id: 'pdf',
+                                    label: isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir',
+                                    icon: FileText,
+                                    tone: 'danger',
+                                    onClick: () => downloadQuotePdf(quote),
+                                  },
+                                  { type: 'separator', id: 'quote-row-sep' },
+                                  {
+                                    id: 'edit',
+                                    label: 'Düzenle',
+                                    icon: Pencil,
+                                    tone: 'primary',
+                                    onClick: () => editQuote(quote.id),
+                                  },
+                                  {
+                                    id: 'delete',
+                                    label: 'Sil',
+                                    icon: Trash2,
+                                    tone: 'danger',
+                                    onClick: () => setPendingDeleteId(quote.id),
+                                  },
+                                ]}
+                              />
+                            )}
                           </span>
                         </QuoteListCell>
                       </QuoteListRowPanel>
@@ -3622,26 +3662,20 @@ export default function QuotesPage() {
       ) : null}
 
       <DeleteConfirmOverlay
-        open={Boolean(pendingDeleteId) || pendingHeaderQuoteDelete}
+        open={pendingHeaderQuoteDelete}
         anchorRect={deleteConfirmAnchor}
         title="Teklif silinsin mi?"
         description="Teklif silinenlere taşınır; geri alınabilir."
         confirmLabel="Evet, Sil"
         cancelLabel="Vazgeç"
         onCancel={() => {
-          setPendingDeleteId(null)
           setPendingHeaderQuoteDelete(false)
           setDeleteConfirmAnchor(null)
         }}
         onConfirm={() => {
           if (pendingHeaderQuoteDelete && selectedQuote) {
             deleteQuote(selectedQuote, { navigateToList: true, skipConfirm: true })
-          } else {
-            const quote = quotes.find((item) => item.id === pendingDeleteId)
-            if (quote) deleteQuote(quote, { skipConfirm: true })
-            else setPendingDeleteId(null)
           }
-          setPendingDeleteId(null)
           setPendingHeaderQuoteDelete(false)
           setDeleteConfirmAnchor(null)
         }}

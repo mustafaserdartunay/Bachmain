@@ -54,8 +54,6 @@ export const PAGE_SUMMARY_METRICS_CLASS = 'customer-summary-metrics w-full'
 /* başlık panel — cam sayfa başlığı: sol geri linki / mutlak merkez başlık / sağ CTA */
 export const PAGE_HEADER_SHELL_CLASS =
   'app-page-header relative z-30 flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center justify-between gap-3 overflow-visible px-4 py-2 sm:px-6'
-/** Teklifler başlık — WorkflowStagesSettingsPanel hafif mavi radial geçiş */
-export const QUOTE_PAGE_HEADER_SHELL_CLASS = `${PAGE_HEADER_SHELL_CLASS} quote-page-header-panel`
 export const PAGE_HEADER_BACK_LINK_CLASS =
   'customer-page-back-link group inline-flex shrink-0 items-center gap-2 rounded-xl px-1 py-1 text-[var(--muted)] transition-opacity hover:opacity-80'
 export const PAGE_HEADER_BACK_LABEL_CLASS =
