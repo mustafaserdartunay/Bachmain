@@ -2982,7 +2982,7 @@ export default function QuotesPage() {
                         labelClass="quote-order-undo-sil"
                         ariaLabel={`${selectedQuoteIds.length} teklif silinsin mi?`}
                         onConfirm={handleBulkDeleteQuotes}
-                        onCancel={() => setSelectedQuoteIds([])}
+                        onCancel={exitBulkSelectMode}
                       />
                     ) : (
                       <button
