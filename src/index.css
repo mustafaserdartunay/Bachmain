@@ -4002,6 +4002,12 @@ html body section.card.quote-list-row-panel.quote-deleted-list-row {
   }
 }
 
+.quote-record-meta-dropdown .quote-menu-delete-confirm .quote-order-action {
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+}
+
 .quote-teklifler-list-stack {
   min-width: 56rem;
   width: 100%;

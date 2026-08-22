@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, MoreHorizontal, Trash2, Undo2, X } from 'lucide-react'
-import { Button, Dropdown, DropdownSeparator } from '@bachmain/ui'
+import { ChevronDown, MoreHorizontal, Trash2, Undo2 } from 'lucide-react'
+import { Button, Dropdown, DropdownItem, DropdownSeparator } from '@bachmain/ui'
 import { DELETED_RECORDS_EVENT, getDeletedRecords } from '../../utils/deletedRecordsStore'
 import { permanentlyDeleteQuote, restoreDeletedQuote } from '../../utils/quotesStore'
 import { resolveQuoteCode } from '../../utils/documentCodes'
@@ -16,7 +16,7 @@ import {
   YF_TEXT_CLASS,
 } from '../../utils/dashboardDesign'
 import { COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
-import { DeleteConfirmOverlay } from './ListDeleteConfirmPanel'
+import QuoteOrderInlineConfirm from './QuoteOrderInlineConfirm'
 import QuoteRecordMetaPanel from './QuoteRecordMetaPanel'
 import { AppPagePanel } from '../Layout/AppPageLayout'
 import EditableDropdownPill from '../EditableDropdownPill'
@@ -27,7 +27,6 @@ import {
 } from '../../utils/quoteListDateFormat'
 
 const ROW_EXIT_MS = 880
-const MENU_DELETE_ANIM_MS = 580
 
 function formatWhen(value) {
   return formatQuoteDisplayWhen(value)
@@ -63,43 +62,67 @@ function RedPingDot() {
   )
 }
 
-function InlineSilConfirm({ onConfirm, onCancel, ariaLabel = 'Kalıcı sil' }) {
+function QuoteDeletedRowMoreMenu({ item, disabled, onDelete }) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
   return (
-    <div
-      className="quote-order-undo-confirm quote-order-action inline-flex h-9 items-center justify-center"
-      onClick={(event) => event.stopPropagation()}
-      role="alertdialog"
-      aria-label={ariaLabel}
+    <Dropdown
+      align="end"
+      menuClassName="az customer-filter-dropdown-menu customers-page-menu quote-record-meta-dropdown min-w-[15rem]"
+      trigger={
+        <Button
+          variant="ghost"
+          size="iconOnly"
+          className="hover:!bg-transparent"
+          aria-label={`${item.label} diğer işlemler`}
+          disabled={disabled}
+          onClick={() => setConfirmDelete(false)}
+        >
+          <MoreHorizontal className="h-5 w-5" />
+        </Button>
+      }
     >
-      <div className="quote-order-undo-box flex h-9 w-full items-center justify-between rounded-xl border border-ds-border bg-transparent px-1">
-        <button
-          type="button"
-          onClick={onConfirm}
-          className="quote-order-undo-sil px-1.5 text-[11px] font-semibold leading-none"
-        >
-          Sil
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="quote-order-undo-close inline-flex h-7 w-7 items-center justify-center rounded-lg"
-          aria-label="Vazgeç"
-          title="Vazgeç"
-        >
-          <X className="h-3.5 w-3.5" strokeWidth={2.25} />
-        </button>
-      </div>
-    </div>
+      {({ close }) => (
+        <>
+          <QuoteRecordMetaPanel quote={item.record} deletedAt={item.at} entryMeta={item} />
+          <DropdownSeparator />
+          {confirmDelete ? (
+            <div
+              className="quote-menu-delete-confirm flex w-full items-center justify-center px-1 py-1"
+              onClick={(event) => event.stopPropagation()}
+              role="menuitem"
+              aria-label="Silmeyi onayla"
+            >
+              <QuoteOrderInlineConfirm
+                label="Sil"
+                labelClass="quote-order-undo-sil"
+                ariaLabel={`${item.label} kalıcı sil`}
+                onConfirm={() => {
+                  onDelete()
+                  setConfirmDelete(false)
+                  close()
+                }}
+                onCancel={() => setConfirmDelete(false)}
+              />
+            </div>
+          ) : (
+            <DropdownItem
+              icon={Trash2}
+              label="Sil"
+              tone="danger"
+              close={close}
+              closeOnClick={false}
+              onClick={() => setConfirmDelete(true)}
+            />
+          )}
+        </>
+      )}
+    </Dropdown>
   )
 }
 
-const PERMANENT_DELETE_ROW_WARNING = 'Bu teklif kalıcı olarak silinecek. Geri alınamaz.'
-
-const PERMANENT_DELETE_WARNING =
-  'Bu kayıtlar silinenler / arşiv alanından kaldırılacak ve kullanıcı tarafından geri getirilemez.'
-
 /** Ana teklif listesi ile aynı sütun iskeleti (segment sayısı üstten gelir) */
-function buildDeletedListGrid(segmentCount = 1) {
+function buildDeletedListGrid(segmentCount = 1, actionCol = '3rem') {
   const segments = Math.max(1, Number(segmentCount) || 1)
   return [
     '6.5rem',
@@ -108,7 +131,7 @@ function buildDeletedListGrid(segmentCount = 1) {
     ...Array.from({ length: segments }, () => 'minmax(9.25rem, 0.7fr)'),
     '6.75rem',
     '6.5rem',
-    '3rem',
+    actionCol,
   ].join(' ')
 }
 
@@ -133,94 +156,6 @@ function DeletedListDateCell({ record }) {
         </span>
       ) : null}
     </span>
-  )
-}
-
-function QuoteDeletedRowMoreMenu({ item, disabled, onDelete }) {
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleteAnimating, setDeleteAnimating] = useState(false)
-
-  const handleConfirmDelete = (close) => {
-    setDeleteAnimating(true)
-    window.setTimeout(() => {
-      setDeleteAnimating(false)
-      setConfirmDelete(false)
-      close()
-      onDelete()
-    }, MENU_DELETE_ANIM_MS)
-  }
-
-  return (
-    <Dropdown
-      align="end"
-      menuClassName="az customer-filter-dropdown-menu customers-page-menu quote-record-meta-dropdown min-w-[15rem]"
-      trigger={
-        <Button
-          variant="ghost"
-          size="iconOnly"
-          className="hover:!bg-transparent"
-          aria-label={`${item.label} diğer işlemler`}
-          disabled={disabled}
-          onClick={() => {
-            setConfirmDelete(false)
-            setDeleteAnimating(false)
-          }}
-        >
-          <MoreHorizontal className="h-5 w-5" />
-        </Button>
-      }
-    >
-      {({ close }) => (
-        <>
-          <QuoteRecordMetaPanel quote={item.record} deletedAt={item.at} entryMeta={item} />
-          <DropdownSeparator />
-          {confirmDelete ? (
-            <div
-              className={`quote-menu-delete-confirm px-2 py-2${
-                deleteAnimating ? ' is-vanishing' : ''
-              }`}
-              onClick={(event) => event.stopPropagation()}
-              role="menuitem"
-            >
-              <p className="mb-2 text-[11px] font-medium leading-snug text-rose-600">
-                {PERMANENT_DELETE_ROW_WARNING}
-              </p>
-              <div className="quote-meta-delete-suck-target">
-                <Trash2
-                  className={`quote-meta-delete-suck-icon h-5 w-5 text-[#ef4444]${
-                    deleteAnimating ? ' is-sucking' : ''
-                  }`}
-                  strokeWidth={2.25}
-                  aria-hidden
-                />
-              </div>
-              {!deleteAnimating ? (
-                <InlineSilConfirm
-                  ariaLabel={`${item.label} kalıcı sil`}
-                  onConfirm={() => handleConfirmDelete(close)}
-                  onCancel={() => setConfirmDelete(false)}
-                />
-              ) : null}
-            </div>
-          ) : (
-            <button
-              type="button"
-              role="menuitem"
-              aria-label="Sil"
-              className="quote-record-meta-delete-item flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-normal leading-tight tracking-normal transition-colors hover:bg-transparent"
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash2
-                className="h-[14px] w-[14px] shrink-0 text-[var(--muted)]"
-                strokeWidth={2.25}
-                aria-hidden
-              />
-              <span className="min-w-0 truncate text-[#ef4444]">Sil</span>
-            </button>
-          )}
-        </>
-      )}
-    </Dropdown>
   )
 }
 
@@ -300,11 +235,8 @@ export default function QuoteDeletedArchivedPanel({
   const [version, setVersion] = useState(0)
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
-  const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
-  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [restoringIds, setRestoringIds] = useState([])
   const [trashingIds, setTrashingIds] = useState([])
-  const bulkDeleteButtonRef = useRef(null)
 
   useEffect(() => {
     function refresh() {
@@ -348,7 +280,6 @@ export default function QuoteDeletedArchivedPanel({
   function exitBulkSelectMode() {
     setBulkSelectMode(false)
     setSelectedIds([])
-    setPendingBulkDelete(false)
   }
 
   function toggleSelect(entryId) {
@@ -391,8 +322,6 @@ export default function QuoteDeletedArchivedPanel({
     const selected = entries.filter((item) => selectedIds.includes(item.id) && item.record?.id)
     if (!selected.length) return
     const ids = selected.map((item) => item.id)
-    setPendingBulkDelete(false)
-    setDeleteConfirmAnchor(null)
     setTrashingIds((current) => [...current, ...ids])
     window.setTimeout(() => {
       selected.forEach((item) => permanentlyDeleteQuote(item.record.id))
@@ -404,8 +333,16 @@ export default function QuoteDeletedArchivedPanel({
 
   const allSelected = entries.length > 0 && selectedIds.length === entries.length
   const resolvedSegmentTabs = Array.isArray(segmentTabs) ? segmentTabs : []
-  const baseGrid = columnGrid || buildDeletedListGrid(resolvedSegmentTabs.length || 1)
-  const gridTemplate = bulkSelectMode ? `2.75rem ${baseGrid}` : baseGrid
+  const bulkActionCol = bulkSelectMode && selectedIds.length > 0 ? '6.5rem' : '3rem'
+  const baseCols = (
+    columnGrid || buildDeletedListGrid(resolvedSegmentTabs.length || 1, bulkActionCol)
+  )
+    .trim()
+    .split(/\s+/)
+  if (bulkSelectMode) {
+    baseCols[baseCols.length - 1] = bulkActionCol
+  }
+  const gridTemplate = bulkSelectMode ? `2.75rem ${baseCols.join(' ')}` : baseCols.join(' ')
   const titleColumnSpan = (bulkSelectMode ? 1 : 0) + 3 + resolvedSegmentTabs.length + 1
 
   const deletedQuoteIds = useMemo(
@@ -448,52 +385,6 @@ export default function QuoteDeletedArchivedPanel({
         receiveActive ? 'quote-deleted-panel-receive' : ''
       }`.trim()}
     >
-      {open && bulkSelectMode ? (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1 py-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              onChange={toggleSelectAll}
-              className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
-              aria-label="Tümünü seç"
-            />
-            <p className={YF_TEXT_CLASS}>
-              {selectedIds.length > 0
-                ? `${selectedIds.length} kayıt seçildi`
-                : 'Kalıcı silmek için kayıt seçin'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={exitBulkSelectMode}
-              className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 transition-colors hover:bg-black/5`}
-            >
-              İptal
-            </button>
-            <button
-              ref={bulkDeleteButtonRef}
-              type="button"
-              disabled={selectedIds.length === 0}
-              onClick={() => setPendingBulkDelete(true)}
-              className="customer-bulk-delete-action inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-1.5 text-[14px] font-bold leading-tight tracking-normal transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
-            >
-              <Trash2
-                className="h-3.5 w-3.5 shrink-0"
-                strokeWidth={2.25}
-                aria-hidden
-                style={{ color: '#ffffff', stroke: '#ffffff' }}
-              />
-              <span style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
-                Seçilenleri Sil
-              </span>
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       <div className={scrollShellClass}>
         <div className="quote-list-board quote-deleted-list-board w-full">
           <section
@@ -510,7 +401,21 @@ export default function QuoteDeletedArchivedPanel({
               className="quote-list-row quote-deleted-header-row w-full min-w-0"
               style={{ gridTemplateColumns: gridTemplate }}
             >
-              {bulkSelectMode ? <DeletedListCell aria-hidden /> : null}
+              {bulkSelectMode ? (
+                <DeletedListCell
+                  data-deleted-header-interactive
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    onClick={(event) => event.stopPropagation()}
+                    className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
+                    aria-label="Tümünü seç"
+                  />
+                </DeletedListCell>
+              ) : null}
               <DeletedListCell
                 className="is-start quote-deleted-header-title-cell"
                 style={{ gridColumn: `span ${titleColumnSpan}` }}
@@ -532,9 +437,11 @@ export default function QuoteDeletedArchivedPanel({
               >
                 {entries.length > 0 ? (
                   bulkSelectMode && selectedIds.length > 0 ? (
-                    <InlineSilConfirm
-                      ariaLabel={`${selectedIds.length} kayıt kalıcı sil`}
-                      onConfirm={() => setPendingBulkDelete(true)}
+                    <QuoteOrderInlineConfirm
+                      label="Sil"
+                      labelClass="quote-order-undo-sil"
+                      ariaLabel={`${selectedIds.length} kayıt kalıcı silinsin mi?`}
+                      onConfirm={handleBulkPermanentDelete}
                       onCancel={exitBulkSelectMode}
                     />
                   ) : (
@@ -543,15 +450,15 @@ export default function QuoteDeletedArchivedPanel({
                       className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
                       title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
                       aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
-                      onClick={() => {
+                      onClick={(event) => {
+                        event.stopPropagation()
                         if (!bulkSelectMode) {
                           setOpen(true)
                           setBulkSelectMode(true)
                           setSelectedIds([])
-                          setPendingBulkDelete(false)
-                        } else {
-                          exitBulkSelectMode()
+                          return
                         }
+                        exitBulkSelectMode()
                       }}
                     >
                       <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} aria-hidden />
@@ -702,21 +609,6 @@ export default function QuoteDeletedArchivedPanel({
             : null}
         </div>
       </div>
-
-      <DeleteConfirmOverlay
-        open={pendingBulkDelete && selectedIds.length > 0}
-        anchorRef={bulkDeleteButtonRef}
-        anchorRect={deleteConfirmAnchor}
-        title={`${selectedIds.length} teklif kalıcı olarak silinsin mi?`}
-        description={`${PERMANENT_DELETE_WARNING} Bu işlem kullanıcı tarafında geri alınamaz.`}
-        confirmLabel="Evet, Sil"
-        cancelLabel="Vazgeç"
-        onCancel={() => {
-          setPendingBulkDelete(false)
-          setDeleteConfirmAnchor(null)
-        }}
-        onConfirm={handleBulkPermanentDelete}
-      />
     </div>
   )
 }
