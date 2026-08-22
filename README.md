@@ -1,4 +1,4 @@
-# ERLENBOX ERP - CRM & Muhasebe Programı
+# BACHMAIN ERP - CRM & Muhasebe Programı
 
 Görseldeki tasarıma uygun, web tabanlı ERP/CRM dashboard uygulaması.
 
