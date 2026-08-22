@@ -1956,14 +1956,6 @@ html body .app-responsive .customer-list-panel .quote-order-undo-close:hover svg
 }
 
 /* Silinenler listesi — teklif board ile aynı satır paneli */
-.quote-deleted-list-board {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  min-width: max-content;
-  width: 100%;
-}
-
 .quote-deleted-list-board .quote-deleted-list-row .quote-list-row {
   align-items: center;
 }
@@ -1996,7 +1988,11 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 }
 
 .page-type-shell .app-page-header h1.customer-page-center-title,
-.customers-page-type .app-page-header h1.customer-page-center-title {
+.customers-page-type .app-page-header h1.customer-page-center-title,
+.page-type-shell .app-page-header span.customer-page-center-title,
+.customers-page-type .app-page-header span.customer-page-center-title,
+.page-type-shell .app-page-header [data-page-center-title],
+.customers-page-type .app-page-header [data-page-center-title] {
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1.25 !important;
@@ -2006,7 +2002,11 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 }
 
 html body .page-type-shell .app-page-header h1.customer-page-center-title.yfb,
-html body .customers-page-type .app-page-header h1.customer-page-center-title.yfb {
+html body .customers-page-type .app-page-header h1.customer-page-center-title.yfb,
+html body .page-type-shell .app-page-header span.customer-page-center-title.yfb,
+html body .customers-page-type .app-page-header span.customer-page-center-title.yfb,
+html body .page-type-shell .app-page-header [data-page-center-title],
+html body .customers-page-type .app-page-header [data-page-center-title] {
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1.25 !important;
@@ -3583,9 +3583,25 @@ html body .app-responsive .quote-list-row-panel .customer-balance-positive {
 .quote-list-row-exit-wrap {
   overflow: hidden;
   pointer-events: none;
-  animation: quote-list-row-archive 0.72s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-  transform-origin: center top;
-  will-change: transform, opacity, max-height;
+  animation: quote-list-row-into-trash 0.72s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  transform-origin: 85% center;
+  will-change: transform, opacity, max-height, filter;
+}
+
+.quote-list-row-into-trash-wrap {
+  overflow: hidden;
+  pointer-events: none;
+  animation: quote-list-row-into-trash 0.72s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  transform-origin: 92% 60%;
+  will-change: transform, opacity, max-height, filter;
+}
+
+.quote-list-row-restore-wrap {
+  overflow: hidden;
+  pointer-events: none;
+  animation: quote-list-row-restore-up 0.72s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  transform-origin: center bottom;
+  will-change: transform, opacity, max-height, filter;
 }
 
 @keyframes quote-list-row-archive {
@@ -3609,6 +3625,96 @@ html body .app-responsive .quote-list-row-panel .customer-balance-positive {
     margin-bottom: 0;
     filter: blur(1px);
   }
+}
+
+@keyframes quote-list-row-into-trash {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    max-height: 6rem;
+    filter: blur(0);
+  }
+  35% {
+    opacity: 0.9;
+    transform: translate(0.35rem, 1.1rem) scale(0.92) rotate(-2deg);
+    max-height: 5.25rem;
+    filter: blur(0);
+  }
+  70% {
+    opacity: 0.45;
+    transform: translate(1.6rem, 3.4rem) scale(0.55) rotate(4deg);
+    max-height: 2.5rem;
+    filter: blur(0.6px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(2.4rem, 5.2rem) scale(0.22) rotate(8deg);
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    filter: blur(2px);
+  }
+}
+
+@keyframes quote-list-row-restore-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 6rem;
+    filter: blur(0);
+  }
+  45% {
+    opacity: 0.75;
+    transform: translateY(-2.4rem) scale(0.94);
+    max-height: 4.5rem;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-5.75rem) scale(0.82);
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    filter: blur(1px);
+  }
+}
+
+/* Silinenler gövde — ekstra kart zemini yok; sadece sütun etiketleri */
+.quote-deleted-body-plain {
+  background: transparent !important;
+}
+
+.quote-deleted-list-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: max-content;
+  width: 100%;
+}
+
+.quote-deleted-columns-header {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.quote-deleted-columns-header .quote-list-row {
+  align-items: center;
+  min-height: 2.25rem;
+}
+
+.quote-deleted-ck-btn {
+  transform: none !important;
+}
+
+html body .customer-deleted-archived-panel .quote-deleted-ck-btn,
+html body .customer-deleted-archived-panel .quote-deleted-ck-btn:hover {
+  transform: none !important;
+  border-radius: 9999px !important;
+}
+
+html body .customer-deleted-archived-panel .quote-deleted-ck-btn:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
 }
 
 .customer-deleted-archived-panel.quote-deleted-panel-receive {

@@ -381,33 +381,22 @@ function QuoteListRowMoreMenu({
           />
           {confirmDelete ? (
             <div
-              className="quote-menu-delete-confirm flex w-full items-center justify-between gap-2 rounded-xl px-2 py-1.5"
+              className="quote-menu-delete-confirm flex w-full items-center justify-center px-1 py-1"
               onClick={(event) => event.stopPropagation()}
               role="menuitem"
               aria-label="Silmeyi onayla"
             >
-              <button
-                type="button"
-                className={`${COP_KUTUSU_BUTTON_CLASS} customer-permanent-delete-action`}
-                title="Sil"
-                aria-label="Teklifi sil"
-                onClick={() => {
+              <QuoteOrderInlineConfirm
+                label="Sil"
+                labelClass="quote-order-undo-sil"
+                ariaLabel="Teklif sil"
+                onConfirm={() => {
                   onDelete()
                   setConfirmDelete(false)
                   close()
                 }}
-              >
-                <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                className="quote-order-undo-close inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)]"
-                aria-label="Vazgeç"
-                title="Vazgeç"
-              >
-                <X className="h-3.5 w-3.5" strokeWidth={2.25} />
-              </button>
+                onCancel={() => setConfirmDelete(false)}
+              />
             </div>
           ) : (
             <DropdownItem
@@ -2699,6 +2688,21 @@ export default function QuotesPage() {
     }, 720)
   }
 
+  function softDeleteQuoteWithAnimation(quote) {
+    if (!quote?.id || animatingDeleteIds.includes(String(quote.id))) return
+    const id = String(quote.id)
+    setAnimatingDeleteIds((current) => [...current, id])
+    window.setTimeout(() => {
+      softDeleteQuote(quote)
+      setQuotes(loadQuotes())
+      setAnimatingDeleteIds((current) => current.filter((item) => item !== id))
+      setArchiveReceiveKey((current) => current + 1)
+      if (selectedId === quote.id) {
+        setSelectedId(loadQuotes()[0]?.id || null)
+      }
+    }, 720)
+  }
+
   function getQuoteSortDate(quote) {
     return getQuoteSortDateValue(quote)
   }
@@ -3170,7 +3174,7 @@ export default function QuotesPage() {
                       key={quote.id}
                       className={
                         isAnimatingOut
-                          ? 'quote-list-row-exit-wrap'
+                          ? 'quote-list-row-into-trash-wrap'
                           : bulkSelectMode
                             ? undefined
                             : 'cursor-pointer'
@@ -3312,7 +3316,7 @@ export default function QuotesPage() {
                               onMail={() => sendQuoteByMail(quote)}
                               onPdf={() => downloadQuotePdf(quote)}
                               onEdit={() => editQuote(quote.id)}
-                              onDelete={() => deleteQuote(quote, { skipConfirm: true })}
+                              onDelete={() => softDeleteQuoteWithAnimation(quote)}
                             />
                           </span>
                         </QuoteListCell>

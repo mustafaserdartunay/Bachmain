@@ -184,9 +184,12 @@ export function AppPageHeader({
       </div>
       {hasCenterTitle ? (
         <div className={PAGE_HEADER_CENTER_SLOT_CLASS}>
-          <h1 className={`${PAGE_HEADER_CENTER_TITLE_CLASS} ${centerTitleClassName}`.trim()}>
+          <span
+            className={`${PAGE_HEADER_CENTER_TITLE_CLASS} ${centerTitleClassName}`.trim()}
+            data-page-center-title
+          >
             {resolvedCenterTitle}
-          </h1>
+          </span>
         </div>
       ) : null}
       {actions ? (

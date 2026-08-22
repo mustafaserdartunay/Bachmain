@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, Trash2, Undo2 } from 'lucide-react'
+import { ChevronDown, Trash2, Undo2, X } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { DELETED_RECORDS_EVENT, getDeletedRecords } from '../../utils/deletedRecordsStore'
 import { permanentlyDeleteQuote, restoreDeletedQuote } from '../../utils/quotesStore'
@@ -16,9 +16,11 @@ import {
   YF_TEXT_CLASS,
   YFB_TEXT_CLASS,
 } from '../../utils/dashboardDesign'
-import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
+import { COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
 import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from './ListDeleteConfirmPanel'
 import { AppPagePanel } from '../Layout/AppPageLayout'
+
+const ROW_EXIT_MS = 720
 
 function formatWhen(value) {
   if (!value) return '—'
@@ -81,14 +83,48 @@ function RedPingDot() {
   )
 }
 
+function InlineSilConfirm({ onConfirm, onCancel, ariaLabel = 'Kalıcı sil' }) {
+  return (
+    <div
+      className="quote-order-undo-confirm quote-order-action inline-flex h-9 items-center justify-center"
+      onClick={(event) => event.stopPropagation()}
+      role="alertdialog"
+      aria-label={ariaLabel}
+    >
+      <div className="quote-order-undo-box flex h-9 w-full items-center justify-between rounded-xl border border-ds-border bg-transparent px-1">
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="quote-order-undo-sil px-1.5 text-[11px] font-semibold leading-none"
+        >
+          Sil
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="quote-order-undo-close inline-flex h-7 w-7 items-center justify-center rounded-lg"
+          aria-label="Vazgeç"
+          title="Vazgeç"
+        >
+          <X className="h-3.5 w-3.5" strokeWidth={2.25} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const PERMANENT_DELETE_WARNING =
   'Bu kayıtlar silinenler / arşiv alanından kaldırılacak ve kullanıcı tarafından geri getirilemez.'
 
 const DELETED_LIST_GRID =
-  'minmax(7.5rem,0.9fr) minmax(4.5rem,0.55fr) minmax(9rem,1.35fr) minmax(7rem,0.9fr) minmax(6.5rem,0.8fr) minmax(5.5rem,0.7fr)'
+  'minmax(7.5rem,0.9fr) minmax(4.5rem,0.55fr) minmax(9rem,1.35fr) minmax(7rem,0.9fr) minmax(6.5rem,0.8fr) minmax(5.75rem,0.75fr)'
 
-const ROW_PANEL_CLASS =
-  'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-list-row flex w-full items-center min-h-[4.75rem]'
+const DATA_ROW_PANEL_CLASS =
+  'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-list-row flex w-full items-center min-h-[4.75rem] quote-list-data-panel'
+
+/** Geri yükle ile aynı ölçü — yuvarlak kırmızı hover */
+const DELETED_CK_BUTTON_CLASS =
+  'quote-deleted-ck-btn customer-permanent-delete-action inline-flex h-9 w-9 items-center justify-center rounded-full bg-transparent text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600'
 
 function DeletedListCell({ className = '', children }) {
   return <div className={`quote-list-cell min-w-0 ${className}`.trim()}>{children}</div>
@@ -113,12 +149,13 @@ export default function QuoteDeletedArchivedPanel({
   const [open, setOpen] = useState(false)
   const [receiveActive, setReceiveActive] = useState(false)
   const [version, setVersion] = useState(0)
-  const [pendingPermanentDelete, setPendingPermanentDelete] = useState(null)
-  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [restoringIds, setRestoringIds] = useState([])
+  const [trashingIds, setTrashingIds] = useState([])
   const bulkDeleteButtonRef = useRef(null)
 
   useEffect(() => {
@@ -179,33 +216,45 @@ export default function QuoteDeletedArchivedPanel({
   }
 
   function handleRestore(item) {
-    if (!item?.record?.id || restoringIds.includes(item.id)) return
+    if (!item?.record?.id || restoringIds.includes(item.id) || trashingIds.includes(item.id)) return
     setRestoringIds((current) => [...current, item.id])
     window.setTimeout(() => {
       const restored = restoreDeletedQuote(item.record.id)
       if (restored) onRestored?.(restored, item)
       setRestoringIds((current) => current.filter((id) => id !== item.id))
       setVersion((current) => current + 1)
-    }, 720)
+    }, ROW_EXIT_MS)
   }
 
-  function handlePermanentDelete(item) {
-    if (!item?.record?.id) return
-    permanentlyDeleteQuote(item.record.id)
-    setPendingPermanentDelete(null)
-    setVersion((current) => current + 1)
+  function runPermanentDelete(item) {
+    if (!item?.record?.id || trashingIds.includes(item.id)) return
+    setPendingDeleteId(null)
+    setTrashingIds((current) => [...current, item.id])
+    window.setTimeout(() => {
+      permanentlyDeleteQuote(item.record.id)
+      setTrashingIds((current) => current.filter((id) => id !== item.id))
+      setVersion((current) => current + 1)
+    }, ROW_EXIT_MS)
   }
 
   function handleBulkPermanentDelete() {
-    const selected = new Set(selectedIds)
-    entries
-      .filter((item) => selected.has(item.id) && item.record?.id)
-      .forEach((item) => permanentlyDeleteQuote(item.record.id))
-    exitBulkSelectMode()
-    setVersion((current) => current + 1)
+    const selected = entries.filter((item) => selectedIds.includes(item.id) && item.record?.id)
+    if (!selected.length) return
+    const ids = selected.map((item) => item.id)
+    setPendingBulkDelete(false)
+    setDeleteConfirmAnchor(null)
+    setTrashingIds((current) => [...current, ...ids])
+    window.setTimeout(() => {
+      selected.forEach((item) => permanentlyDeleteQuote(item.record.id))
+      setTrashingIds([])
+      exitBulkSelectMode()
+      setVersion((current) => current + 1)
+    }, ROW_EXIT_MS)
   }
 
   const allSelected = entries.length > 0 && selectedIds.length === entries.length
+  const gridTemplate = bulkSelectMode ? `2.25rem ${DELETED_LIST_GRID}` : DELETED_LIST_GRID
+
   const headerActions = bulkSelectMode
     ? [
         {
@@ -275,13 +324,13 @@ export default function QuoteDeletedArchivedPanel({
       </div>
 
       {open ? (
-        <div className={SP_BODY_CLASS}>
+        <div className={`${SP_BODY_CLASS} quote-deleted-body-plain`}>
           {entries.length === 0 ? (
             <div className={SP_EMPTY_CLASS}>{emptyMessage}</div>
           ) : (
             <>
               {bulkSelectMode ? (
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1 py-1">
                   <p className={YF_TEXT_CLASS}>
                     {selectedIds.length > 0
                       ? `${selectedIds.length} kayıt seçildi`
@@ -319,14 +368,11 @@ export default function QuoteDeletedArchivedPanel({
 
               <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
                 <div className="quote-list-board quote-deleted-list-board">
-                  <AppPagePanel className={`${ROW_PANEL_CLASS} quote-list-header-panel`}>
+                  {/* Sütun başlıkları — kart/arka zemin yok */}
+                  <div className="quote-deleted-columns-header min-h-[2.5rem] w-full px-4">
                     <div
                       className="quote-list-row w-full min-w-0"
-                      style={{
-                        gridTemplateColumns: bulkSelectMode
-                          ? `2.25rem ${DELETED_LIST_GRID}`
-                          : DELETED_LIST_GRID,
-                      }}
+                      style={{ gridTemplateColumns: gridTemplate }}
                     >
                       {bulkSelectMode ? (
                         <DeletedListCell>
@@ -358,28 +404,38 @@ export default function QuoteDeletedArchivedPanel({
                         <DeletedColumnTitle label="İşlem" />
                       </DeletedListCell>
                     </div>
-                  </AppPagePanel>
+                  </div>
 
-                  {entries.map((item) => {
+                  {entries.map((item, rowIndex) => {
                     const display = getListCustomerDisplay(item.record?.customer)
                     const amount = quoteAmount(item.record)
                     const isSelected = selectedIds.includes(item.id)
                     const isRestoring = restoringIds.includes(item.id)
-                    const grid = bulkSelectMode ? `2.25rem ${DELETED_LIST_GRID}` : DELETED_LIST_GRID
+                    const isTrashing = trashingIds.includes(item.id)
+                    const pendingConfirm = pendingDeleteId === item.id
+
+                    let wrapClass
+                    if (isTrashing) wrapClass = 'quote-list-row-into-trash-wrap'
+                    else if (isRestoring) wrapClass = 'quote-list-row-restore-wrap'
 
                     return (
                       <div
                         key={item.id}
-                        className={isRestoring ? 'quote-list-row-exit-wrap' : undefined}
+                        className={wrapClass}
+                        style={
+                          isTrashing || isRestoring
+                            ? { animationDelay: `${Math.min(rowIndex, 5) * 50}ms` }
+                            : undefined
+                        }
                       >
                         <AppPagePanel
-                          className={`${ROW_PANEL_CLASS} quote-list-data-panel ${
+                          className={`${DATA_ROW_PANEL_CLASS} ${
                             isSelected ? 'ring-1 ring-rose-400/40' : ''
                           }`}
                         >
                           <div
                             className="quote-list-row w-full min-w-0"
-                            style={{ gridTemplateColumns: grid }}
+                            style={{ gridTemplateColumns: gridTemplate }}
                             onClick={bulkSelectMode ? () => toggleSelect(item.id) : undefined}
                           >
                             {bulkSelectMode ? (
@@ -400,7 +456,7 @@ export default function QuoteDeletedArchivedPanel({
                             <DeletedListCell>
                               <span className={YF_TEXT_CLASS}>{item.record?.id || '—'}</span>
                             </DeletedListCell>
-                            <DeletedListCell align="start" className="is-start">
+                            <DeletedListCell className="is-start">
                               <div className="min-w-0 text-left">
                                 <p className="customer-name-primary truncate text-[14px] font-semibold leading-tight text-[var(--ink)]">
                                   {display.brandShortName || item.label}
@@ -431,28 +487,39 @@ export default function QuoteDeletedArchivedPanel({
                                   className="inline-flex w-full items-center justify-center gap-1.5"
                                   onClick={(event) => event.stopPropagation()}
                                 >
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRestore(item)}
-                                    disabled={isRestoring}
-                                    className="glass-sidebar-toggle glass-sidebar-collapse flex h-9 w-9 items-center justify-center rounded-xl"
-                                    title="Geri yükle"
-                                    aria-label={`${item.label} geri yükle`}
-                                  >
-                                    <Undo2 className="h-3.5 w-3.5" strokeWidth={2.25} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(event) => {
-                                      setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
-                                      setPendingPermanentDelete(item)
-                                    }}
-                                    className={`customer-permanent-delete-action ${COP_KUTUSU_BUTTON_CLASS}`}
-                                    aria-label={`${item.label} kalıcı olarak sil`}
-                                    title="Sil"
-                                  >
-                                    <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
-                                  </button>
+                                  {pendingConfirm ? (
+                                    <InlineSilConfirm
+                                      ariaLabel={`${item.label} kalıcı sil`}
+                                      onConfirm={() => runPermanentDelete(item)}
+                                      onCancel={() => setPendingDeleteId(null)}
+                                    />
+                                  ) : (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRestore(item)}
+                                        disabled={isRestoring || isTrashing}
+                                        className="glass-sidebar-toggle glass-sidebar-collapse flex h-9 w-9 items-center justify-center rounded-full"
+                                        title="Geri yükle"
+                                        aria-label={`${item.label} geri yükle`}
+                                      >
+                                        <Undo2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setPendingDeleteId(item.id)}
+                                        disabled={isRestoring || isTrashing}
+                                        className={DELETED_CK_BUTTON_CLASS}
+                                        aria-label={`${item.label} kalıcı olarak sil`}
+                                        title="Sil"
+                                      >
+                                        <Trash2
+                                          className={COP_KUTUSU_ICON_CLASS}
+                                          strokeWidth={2.25}
+                                        />
+                                      </button>
+                                    </>
+                                  )}
                                 </span>
                               ) : (
                                 <span className={YF_TEXT_CLASS}>{formatWhen(item.at)}</span>
@@ -471,23 +538,6 @@ export default function QuoteDeletedArchivedPanel({
       ) : null}
 
       <DeleteConfirmOverlay
-        open={Boolean(pendingPermanentDelete) && !pendingBulkDelete}
-        anchorRect={deleteConfirmAnchor}
-        title="Teklif kalıcı olarak silinsin mi?"
-        description={`${pendingPermanentDelete?.label || 'Bu teklif'} silinenler alanından kaldırılacak. Kullanıcı tarafından geri getirilemez.`}
-        confirmLabel="Evet, Sil"
-        cancelLabel="Vazgeç"
-        onCancel={() => {
-          setPendingPermanentDelete(null)
-          setDeleteConfirmAnchor(null)
-        }}
-        onConfirm={() => {
-          handlePermanentDelete(pendingPermanentDelete)
-          setDeleteConfirmAnchor(null)
-        }}
-      />
-
-      <DeleteConfirmOverlay
         open={pendingBulkDelete && selectedIds.length > 0}
         anchorRef={bulkDeleteButtonRef}
         anchorRect={deleteConfirmAnchor}
@@ -499,10 +549,7 @@ export default function QuoteDeletedArchivedPanel({
           setPendingBulkDelete(false)
           setDeleteConfirmAnchor(null)
         }}
-        onConfirm={() => {
-          handleBulkPermanentDelete()
-          setDeleteConfirmAnchor(null)
-        }}
+        onConfirm={handleBulkPermanentDelete}
       />
     </section>
   )
