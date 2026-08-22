@@ -1,7 +1,12 @@
 import { defaultQuoteStages, initialQuotes } from '../data/quotesData'
 import { nextQuoteCode } from './documentCodes'
 import { getQuoteStageOptions, loadWorkflowStages } from './workflowStages'
-import { softDeleteRecord, restoreDeletedRecord, permanentlyDeleteRecord } from './deletedRecordsStore'
+import {
+  softDeleteRecord,
+  restoreDeletedRecord,
+  permanentlyDeleteRecord,
+} from './deletedRecordsStore'
+import { withQuotePreparedBy } from './quotePreparedBy'
 import { readUserProfile } from './userProfile'
 
 const STORAGE_KEY = 'erlenbox-quotes'
@@ -57,6 +62,7 @@ export function softDeleteQuote(quote) {
   softDeleteRecord(DELETED_COLLECTION, existing, {
     entityLabel: existing.customer || existing.title || existing.id || 'Teklif',
     deletedBy: profile?.displayName || profile?.email || '',
+    lastRestoredAt: existing.lastRestoredFromDeletedAt || '',
   })
   return existing
 }
@@ -64,10 +70,35 @@ export function softDeleteQuote(quote) {
 export function restoreDeletedQuote(quoteId) {
   const record = restoreDeletedRecord(DELETED_COLLECTION, quoteId)
   if (!record) return null
+  const restoredAt = new Date().toISOString()
+  const restoredRecord = normalizeQuoteStages(
+    withQuotePreparedBy({
+      ...record,
+      lastRestoredFromDeletedAt: restoredAt,
+      activities: [
+        ...(record.activities || []),
+        {
+          id: `act-${Date.now()}`,
+          date: new Date().toLocaleString('tr-TR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          text: 'Silinenlerden geri yüklendi.',
+        },
+      ],
+    }),
+  )
   const quotes = loadQuotes()
-  if (quotes.some((item) => item.id === record.id)) return record
-  saveQuotes([normalizeQuoteStages(record), ...quotes])
-  return record
+  if (quotes.some((item) => item.id === restoredRecord.id)) {
+    const next = quotes.map((item) => (item.id === restoredRecord.id ? restoredRecord : item))
+    saveQuotes(next)
+    return restoredRecord
+  }
+  saveQuotes([restoredRecord, ...quotes])
+  return restoredRecord
 }
 
 export function permanentlyDeleteQuote(quoteId) {
@@ -107,7 +138,7 @@ export function createVoiceQuote(payload = {}) {
         )
       : [createEmptyQuoteItem()]
 
-  const quote = {
+  const quote = withQuotePreparedBy({
     ...(initialQuotes[0] || {}),
     id: nextId,
     title: payload.title || '',
@@ -135,7 +166,7 @@ export function createVoiceQuote(payload = {}) {
         text: 'Sesli asistan ile teklif oluşturuldu.',
       },
     ],
-  }
+  })
 
   saveQuotes([quote, ...quotes.filter((item) => item.id !== quote.id)])
   return quote

@@ -1929,9 +1929,24 @@ html body .app-responsive .customer-list-panel .quote-order-create-reveal {
   overflow: hidden !important;
 }
 
-html body .page-type-shell .customer-list-panel .quote-order-create-reveal.is-revealing .quote-order-chip,
-html body .customers-page-type .customer-list-panel .quote-order-create-reveal.is-revealing .quote-order-chip,
-html body .app-responsive .customer-list-panel .quote-order-create-reveal.is-revealing .quote-order-chip {
+html
+  body
+  .page-type-shell
+  .customer-list-panel
+  .quote-order-create-reveal.is-revealing
+  .quote-order-chip,
+html
+  body
+  .customers-page-type
+  .customer-list-panel
+  .quote-order-create-reveal.is-revealing
+  .quote-order-chip,
+html
+  body
+  .app-responsive
+  .customer-list-panel
+  .quote-order-create-reveal.is-revealing
+  .quote-order-chip {
   animation: quote-order-create-slide-in 0.48s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
@@ -1981,7 +1996,11 @@ html body .page-type-shell .quote-deleted-header-panel button.quote-list-bulk-tr
 html body .customers-page-type .quote-deleted-header-panel button.quote-list-bulk-trash-btn:hover,
 html body .app-responsive .quote-deleted-header-panel button.quote-list-bulk-trash-btn:hover,
 html body .page-type-shell .quote-deleted-header-panel button.quote-list-bulk-trash-btn.is-active,
-html body .customers-page-type .quote-deleted-header-panel button.quote-list-bulk-trash-btn.is-active,
+html
+  body
+  .customers-page-type
+  .quote-deleted-header-panel
+  button.quote-list-bulk-trash-btn.is-active,
 html body .app-responsive .quote-deleted-header-panel button.quote-list-bulk-trash-btn.is-active {
   background: rgba(239, 68, 68, 0.15) !important;
   color: #dc2626 !important;
@@ -3792,8 +3811,13 @@ html body section.card.quote-list-row-panel.quote-deleted-header-panel {
     box-shadow 0.22s ease;
 }
 
-html body section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open,
-html body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open {
+html
+  body
+  section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open,
+html
+  body
+  .page-type-shell
+  section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open {
   background: color-mix(in srgb, #f43f5e 10%, var(--surface)) !important;
   border: none !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58) !important;
@@ -3803,8 +3827,13 @@ html.night body section.card.quote-list-row-panel.quote-deleted-header-panel {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
-html.night body section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open,
-html.night body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open {
+html.night
+  body
+  section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open,
+html.night
+  body
+  .page-type-shell
+  section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open {
   background: color-mix(in srgb, #f43f5e 14%, var(--surface)) !important;
   border: none !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
@@ -3828,12 +3857,13 @@ html body section.card.quote-list-row-panel.quote-deleted-list-row {
   min-width: 5.75rem;
 }
 
-.quote-deleted-list-row .quote-order-action .glass-sidebar-toggle {
+.quote-deleted-list-row .quote-order-action .glass-sidebar-toggle.glass-sidebar-collapse {
   flex-shrink: 0;
-  width: 2.25rem !important;
-  height: 2.25rem !important;
-  min-width: 2.25rem !important;
-  min-height: 2.25rem !important;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  min-width: 1.75rem !important;
+  min-height: 1.75rem !important;
+  padding: 0 !important;
 }
 
 .quote-record-meta-panel {

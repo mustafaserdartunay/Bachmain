@@ -86,6 +86,7 @@ import {
   saveQuotes as persistQuotesStore,
   loadQuotes as reloadQuotesStore,
 } from '../utils/quotesStore'
+import { withQuotePreparedBy } from '../utils/quotePreparedBy'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
 import { publishWorkflowStages } from '../utils/workflowStagePublish'
 import {
@@ -2100,7 +2101,7 @@ export default function QuotesPage() {
   function createQuoteDraft(baseQuotes = quotes) {
     const stages = loadWorkflowStages()
     const createdAt = todayIsoDate()
-    return {
+    return withQuotePreparedBy({
       ...initialQuotes[0],
       id: nextQuoteCode(baseQuotes.map((quote) => quote.id)),
       title: '',
@@ -2135,7 +2136,7 @@ export default function QuotesPage() {
           text: 'Yeni teklif oluşturuldu.',
         },
       ],
-    }
+    })
   }
 
   function addQuote(customerPatch = {}) {
@@ -2185,7 +2186,7 @@ export default function QuotesPage() {
       ? 'Teklif güncellenerek kaydedildi.'
       : 'Teklif güvenli kontrollerden geçirilerek kaydedildi.'
 
-    const safeQuote = {
+    const safeQuote = withQuotePreparedBy({
       ...(existingQuote || {}),
       ...validation.quote,
       id: code,
@@ -2210,7 +2211,7 @@ export default function QuotesPage() {
           text: activityText,
         },
       ],
-    }
+    })
 
     const nextQuotes = [
       safeQuote,
@@ -3110,269 +3111,273 @@ export default function QuotesPage() {
             <div className="quote-teklifler-list-stack flex min-w-[56rem] w-full flex-col gap-5">
               {listQuotes.length > 0 ? (
                 <div className="quote-list-board">
-                <QuoteListRowPanel header gridTemplate={quoteListColumnGrid}>
-                  {bulkSelectMode ? (
+                  <QuoteListRowPanel header gridTemplate={quoteListColumnGrid}>
+                    {bulkSelectMode ? (
+                      <QuoteListCell>
+                        <QuoteListSelectionCheckbox
+                          checked={allVisibleQuotesSelected}
+                          indeterminate={someVisibleQuotesSelected}
+                          aria-label="Tümünü seç"
+                          onChange={() => toggleBulkQuoteSelectAll(listQuoteIds)}
+                        />
+                      </QuoteListCell>
+                    ) : null}
                     <QuoteListCell>
-                      <QuoteListSelectionCheckbox
-                        checked={allVisibleQuotesSelected}
-                        indeterminate={someVisibleQuotesSelected}
-                        aria-label="Tümünü seç"
-                        onChange={() => toggleBulkQuoteSelectAll(listQuoteIds)}
-                      />
-                    </QuoteListCell>
-                  ) : null}
-                  <QuoteListCell>
-                    <QuoteListColumnHeader
-                      label="Tarih"
-                      sortable
-                      sortKey="date"
-                      sort={listColumnSort}
-                      onToggleSort={toggleListColumnSort}
-                    />
-                  </QuoteListCell>
-                  <QuoteListCell>
-                    <QuoteListColumnHeader
-                      label="Kod"
-                      sortable
-                      sortKey="code"
-                      sort={listColumnSort}
-                      onToggleSort={toggleListColumnSort}
-                    />
-                  </QuoteListCell>
-                  <QuoteListCell>
-                    <QuoteListColumnHeader
-                      label="Müşteri Adı"
-                      sortable
-                      sortKey="customer"
-                      sort={listColumnSort}
-                      onToggleSort={toggleListColumnSort}
-                    />
-                  </QuoteListCell>
-                  {quoteSegmentTabs.map((tab) => (
-                    <QuoteListCell key={tab.id}>
                       <QuoteListColumnHeader
-                        label={tab.label}
+                        label="Tarih"
                         sortable
-                        sortKey={`process-${tab.id}`}
+                        sortKey="date"
                         sort={listColumnSort}
                         onToggleSort={toggleListColumnSort}
                       />
                     </QuoteListCell>
-                  ))}
-                  <QuoteListCell>
-                    <QuoteListColumnHeader
-                      label="Tutar"
-                      sortable
-                      sortKey="amount"
-                      sort={listColumnSort}
-                      onToggleSort={toggleListColumnSort}
-                    />
-                  </QuoteListCell>
-                  <QuoteListCell>
-                    <QuoteListColumnHeader
-                      label="Sipariş"
-                      sortable
-                      sortKey="order"
-                      sort={listColumnSort}
-                      onToggleSort={toggleListColumnSort}
-                    />
-                  </QuoteListCell>
-                  <QuoteListCell>
-                    {bulkSelectMode && selectedQuoteIds.length > 0 ? (
-                      <QuoteOrderInlineConfirm
-                        label="Sil"
-                        labelClass="quote-order-undo-sil"
-                        ariaLabel={`${selectedQuoteIds.length} teklif silinsin mi?`}
-                        onConfirm={handleBulkDeleteQuotes}
-                        onCancel={exitBulkSelectMode}
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Kod"
+                        sortable
+                        sortKey="code"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
                       />
-                    ) : (
-                      <button
-                        type="button"
-                        className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
-                        title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
-                        aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          if (!bulkSelectMode) {
-                            setBulkSelectMode(true)
-                            setSelectedQuoteIds([])
-                            return
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Müşteri Adı"
+                        sortable
+                        sortKey="customer"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    {quoteSegmentTabs.map((tab) => (
+                      <QuoteListCell key={tab.id}>
+                        <QuoteListColumnHeader
+                          label={tab.label}
+                          sortable
+                          sortKey={`process-${tab.id}`}
+                          sort={listColumnSort}
+                          onToggleSort={toggleListColumnSort}
+                        />
+                      </QuoteListCell>
+                    ))}
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Tutar"
+                        sortable
+                        sortKey="amount"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Sipariş"
+                        sortable
+                        sortKey="order"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      {bulkSelectMode && selectedQuoteIds.length > 0 ? (
+                        <QuoteOrderInlineConfirm
+                          label="Sil"
+                          labelClass="quote-order-undo-sil"
+                          ariaLabel={`${selectedQuoteIds.length} teklif silinsin mi?`}
+                          onConfirm={handleBulkDeleteQuotes}
+                          onCancel={exitBulkSelectMode}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
+                          title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
+                          aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            if (!bulkSelectMode) {
+                              setBulkSelectMode(true)
+                              setSelectedQuoteIds([])
+                              return
+                            }
+                            exitBulkSelectMode()
+                          }}
+                        >
+                          <Trash2
+                            className={COP_KUTUSU_ICON_CLASS}
+                            strokeWidth={2.25}
+                            aria-hidden
+                          />
+                        </button>
+                      )}
+                    </QuoteListCell>
+                  </QuoteListRowPanel>
+
+                  {listQuotes.map((quote, rowIndex) => {
+                    const stamp = formatListDateParts(getQuoteListDateSource(quote))
+                    const display = getListCustomerDisplay(quote.customer)
+                    const pending =
+                      pendingQuoteOrderAction?.id === quote.id ? pendingQuoteOrderAction.type : null
+                    const quoteKey = String(quote.id)
+                    const isBulkSelected = selectedQuoteIds.includes(quoteKey)
+                    const isAnimatingOut = animatingDeleteIds.includes(quoteKey)
+                    return (
+                      <div
+                        key={quote.id}
+                        className={
+                          isAnimatingOut
+                            ? 'quote-list-row-into-trash-wrap'
+                            : bulkSelectMode
+                              ? undefined
+                              : 'cursor-pointer'
+                        }
+                        style={
+                          isAnimatingOut
+                            ? { animationDelay: `${Math.min(rowIndex, 6) * 70}ms` }
+                            : undefined
+                        }
+                        role={bulkSelectMode && !isAnimatingOut ? undefined : 'button'}
+                        tabIndex={bulkSelectMode && !isAnimatingOut ? undefined : 0}
+                        onClick={() => {
+                          if (isAnimatingOut) return
+                          if (bulkSelectMode) toggleBulkQuoteSelect(quote.id)
+                          else editQuote(quote.id)
+                        }}
+                        onKeyDown={(event) => {
+                          if (bulkSelectMode || isAnimatingOut) return
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            editQuote(quote.id)
                           }
-                          exitBulkSelectMode()
                         }}
                       >
-                        <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-                      </button>
-                    )}
-                  </QuoteListCell>
-                </QuoteListRowPanel>
-
-                {listQuotes.map((quote, rowIndex) => {
-                  const stamp = formatListDateParts(getQuoteListDateSource(quote))
-                  const display = getListCustomerDisplay(quote.customer)
-                  const pending =
-                    pendingQuoteOrderAction?.id === quote.id ? pendingQuoteOrderAction.type : null
-                  const quoteKey = String(quote.id)
-                  const isBulkSelected = selectedQuoteIds.includes(quoteKey)
-                  const isAnimatingOut = animatingDeleteIds.includes(quoteKey)
-                  return (
-                    <div
-                      key={quote.id}
-                      className={
-                        isAnimatingOut
-                          ? 'quote-list-row-into-trash-wrap'
-                          : bulkSelectMode
-                            ? undefined
-                            : 'cursor-pointer'
-                      }
-                      style={
-                        isAnimatingOut
-                          ? { animationDelay: `${Math.min(rowIndex, 6) * 70}ms` }
-                          : undefined
-                      }
-                      role={bulkSelectMode && !isAnimatingOut ? undefined : 'button'}
-                      tabIndex={bulkSelectMode && !isAnimatingOut ? undefined : 0}
-                      onClick={() => {
-                        if (isAnimatingOut) return
-                        if (bulkSelectMode) toggleBulkQuoteSelect(quote.id)
-                        else editQuote(quote.id)
-                      }}
-                      onKeyDown={(event) => {
-                        if (bulkSelectMode || isAnimatingOut) return
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault()
-                          editQuote(quote.id)
-                        }
-                      }}
-                    >
-                      <QuoteListRowPanel
-                        gridTemplate={quoteListColumnGrid}
-                        className={isBulkSelected ? 'ring-1 ring-blue-400/35' : ''}
-                      >
-                        {bulkSelectMode ? (
+                        <QuoteListRowPanel
+                          gridTemplate={quoteListColumnGrid}
+                          className={isBulkSelected ? 'ring-1 ring-blue-400/35' : ''}
+                        >
+                          {bulkSelectMode ? (
+                            <QuoteListCell>
+                              <QuoteListSelectionCheckbox
+                                checked={isBulkSelected}
+                                aria-label={`${resolveQuoteCode(
+                                  quote.id,
+                                  quotes.map((item) => item.id),
+                                )} teklifini seç`}
+                                onChange={() => toggleBulkQuoteSelect(quote.id)}
+                              />
+                            </QuoteListCell>
+                          ) : null}
                           <QuoteListCell>
-                            <QuoteListSelectionCheckbox
-                              checked={isBulkSelected}
-                              aria-label={`${resolveQuoteCode(
+                            {stamp.date ? (
+                              <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
+                                <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+                                  {stamp.date}
+                                </span>
+                                {stamp.time ? (
+                                  <span className="text-[12px] font-normal leading-tight text-[var(--muted)]/75">
+                                    {stamp.time}
+                                  </span>
+                                ) : null}
+                              </span>
+                            ) : (
+                              <span className="block text-center text-[14px] font-normal text-[var(--muted)]">
+                                —
+                              </span>
+                            )}
+                          </QuoteListCell>
+                          <QuoteListCell>
+                            <span className={`${YF_TEXT_CLASS} tabular-nums`}>
+                              {resolveQuoteCode(
                                 quote.id,
                                 quotes.map((item) => item.id),
-                              )} teklifini seç`}
-                              onChange={() => toggleBulkQuoteSelect(quote.id)}
-                            />
+                              )}
+                            </span>
                           </QuoteListCell>
-                        ) : null}
-                        <QuoteListCell>
-                          {stamp.date ? (
-                            <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
-                              <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
-                                {stamp.date}
+                          <QuoteListCell>
+                            <span className="flex min-w-0 w-full flex-col items-center gap-0.5 py-0.5 text-center">
+                              <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                                {display.brandShortName || 'Müşteri girilmedi'}
                               </span>
-                              {stamp.time ? (
-                                <span className="text-[12px] font-normal leading-tight text-[var(--muted)]/75">
-                                  {stamp.time}
+                              {display.companyTitle ? (
+                                <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
+                                  {display.companyTitle}
                                 </span>
                               ) : null}
                             </span>
-                          ) : (
-                            <span className="block text-center text-[14px] font-normal text-[var(--muted)]">
-                              —
-                            </span>
-                          )}
-                        </QuoteListCell>
-                        <QuoteListCell>
-                          <span className={`${YF_TEXT_CLASS} tabular-nums`}>
-                            {resolveQuoteCode(
-                              quote.id,
-                              quotes.map((item) => item.id),
-                            )}
-                          </span>
-                        </QuoteListCell>
-                        <QuoteListCell>
-                          <span className="flex min-w-0 w-full flex-col items-center gap-0.5 py-0.5 text-center">
-                            <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
-                              {display.brandShortName || 'Müşteri girilmedi'}
-                            </span>
-                            {display.companyTitle ? (
-                              <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
-                                {display.companyTitle}
+                          </QuoteListCell>
+                          {quoteSegmentTabs.map((tab) => (
+                            <QuoteListCell key={tab.id}>
+                              <span
+                                className="flex w-full items-center justify-center"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <EditableDropdownPill
+                                  value={processValueForQuote(tab, quote)}
+                                  options={processOptionsForTab(tab)}
+                                  includePlaceholderOption={false}
+                                  buttonClassName={PAGE_LIST_PILL_CLASS}
+                                  wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                                  menuClassName={PAGE_LIST_MENU_CLASS}
+                                  menuMatchWidth={false}
+                                  openKey={`${quote.id}-${tab.id}`}
+                                  activeMenu={activeMenu}
+                                  setActiveMenu={setActiveMenu}
+                                  onChange={(value) => handleProcessValueChange(tab, quote, value)}
+                                  onOptionsChange={(next) => handleProcessOptionsChange(tab, next)}
+                                />
                               </span>
-                            ) : null}
-                          </span>
-                        </QuoteListCell>
-                        {quoteSegmentTabs.map((tab) => (
-                          <QuoteListCell key={tab.id}>
+                            </QuoteListCell>
+                          ))}
+                          <QuoteListCell>
                             <span
-                              className="flex w-full items-center justify-center"
+                              className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
+                            >
+                              {formatTL(getQuoteListAmount(quote))}
+                            </span>
+                          </QuoteListCell>
+                          <QuoteListCell>
+                            <span
+                              className="inline-flex w-full items-center justify-center"
                               onClick={(event) => event.stopPropagation()}
                             >
-                              <EditableDropdownPill
-                                value={processValueForQuote(tab, quote)}
-                                options={processOptionsForTab(tab)}
-                                includePlaceholderOption={false}
-                                buttonClassName={PAGE_LIST_PILL_CLASS}
-                                wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
-                                menuClassName={PAGE_LIST_MENU_CLASS}
-                                menuMatchWidth={false}
-                                openKey={`${quote.id}-${tab.id}`}
-                                activeMenu={activeMenu}
-                                setActiveMenu={setActiveMenu}
-                                onChange={(value) => handleProcessValueChange(tab, quote, value)}
-                                onOptionsChange={(next) => handleProcessOptionsChange(tab, next)}
+                              <QuoteListOrderModuleButton
+                                quote={quote}
+                                orderCreated={isQuoteOrderCreated(quote)}
+                                pendingAction={pending}
+                                revealCreate={orderCreateRevealIds.includes(quoteKey)}
+                                onRequestCreate={() =>
+                                  setPendingQuoteOrderAction({ id: quote.id, type: 'create' })
+                                }
+                                onRequestUndo={() =>
+                                  setPendingQuoteOrderAction({ id: quote.id, type: 'undo' })
+                                }
+                                onConfirmCreate={() => handleCreateOrderFromList(quote)}
+                                onConfirmUndo={() => handleUndoOrderFromList(quote)}
+                                onCancelPending={() => setPendingQuoteOrderAction(null)}
                               />
                             </span>
                           </QuoteListCell>
-                        ))}
-                        <QuoteListCell>
-                          <span
-                            className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
-                          >
-                            {formatTL(getQuoteListAmount(quote))}
-                          </span>
-                        </QuoteListCell>
-                        <QuoteListCell>
-                          <span
-                            className="inline-flex w-full items-center justify-center"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <QuoteListOrderModuleButton
-                              quote={quote}
-                              orderCreated={isQuoteOrderCreated(quote)}
-                              pendingAction={pending}
-                              revealCreate={orderCreateRevealIds.includes(quoteKey)}
-                              onRequestCreate={() =>
-                                setPendingQuoteOrderAction({ id: quote.id, type: 'create' })
-                              }
-                              onRequestUndo={() =>
-                                setPendingQuoteOrderAction({ id: quote.id, type: 'undo' })
-                              }
-                              onConfirmCreate={() => handleCreateOrderFromList(quote)}
-                              onConfirmUndo={() => handleUndoOrderFromList(quote)}
-                              onCancelPending={() => setPendingQuoteOrderAction(null)}
-                            />
-                          </span>
-                        </QuoteListCell>
-                        <QuoteListCell>
-                          <span
-                            className="inline-flex w-full items-center justify-center"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <QuoteListRowMoreMenu
-                              quote={quote}
-                              isGeneratingPdf={isGeneratingPdf}
-                              onPrint={() => printQuoteDocument(quote)}
-                              onWhatsApp={() => sendQuoteByWhatsApp(quote)}
-                              onMail={() => sendQuoteByMail(quote)}
-                              onPdf={() => downloadQuotePdf(quote)}
-                              onEdit={() => editQuote(quote.id)}
-                              onDelete={() => softDeleteQuoteWithAnimation(quote)}
-                            />
-                          </span>
-                        </QuoteListCell>
-                      </QuoteListRowPanel>
-                    </div>
-                  )
-                })}
+                          <QuoteListCell>
+                            <span
+                              className="inline-flex w-full items-center justify-center"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <QuoteListRowMoreMenu
+                                quote={quote}
+                                isGeneratingPdf={isGeneratingPdf}
+                                onPrint={() => printQuoteDocument(quote)}
+                                onWhatsApp={() => sendQuoteByWhatsApp(quote)}
+                                onMail={() => sendQuoteByMail(quote)}
+                                onPdf={() => downloadQuotePdf(quote)}
+                                onEdit={() => editQuote(quote.id)}
+                                onDelete={() => softDeleteQuoteWithAnimation(quote)}
+                              />
+                            </span>
+                          </QuoteListCell>
+                        </QuoteListRowPanel>
+                      </div>
+                    )
+                  })}
                 </div>
               ) : null}
 

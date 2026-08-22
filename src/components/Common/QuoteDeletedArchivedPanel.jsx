@@ -20,72 +20,16 @@ import { DeleteConfirmOverlay } from './ListDeleteConfirmPanel'
 import QuoteRecordMetaPanel from './QuoteRecordMetaPanel'
 import { AppPagePanel } from '../Layout/AppPageLayout'
 import EditableDropdownPill from '../EditableDropdownPill'
+import {
+  formatListDateParts,
+  formatQuoteDisplayWhen,
+  getQuoteCreatedSource,
+} from '../../utils/quoteListDateFormat'
 
 const ROW_EXIT_MS = 720
 
 function formatWhen(value) {
-  if (!value) return '—'
-  try {
-    return new Date(value).toLocaleString('tr-TR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
-  } catch {
-    return value
-  }
-}
-
-function formatListDate(value) {
-  if (!value) return '—'
-  try {
-    return new Date(value).toLocaleString('tr-TR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return value
-  }
-}
-
-function formatListDateParts(value) {
-  if (!value) return { date: '', time: '' }
-  const raw = String(value).trim()
-  const trMatch = raw.match(/^(\d{2}\.\d{2}\.\d{4})(?:[, ]+\s*(\d{1,2}:\d{2}))/)
-  if (trMatch) {
-    const [hours, minutes] = (trMatch[2] || '').split(':')
-    return {
-      date: trMatch[1],
-      time: hours && minutes ? `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}` : '',
-    }
-  }
-
-  try {
-    const d = new Date(raw)
-    if (!Number.isNaN(d.getTime())) {
-      return {
-        date: d.toLocaleDateString('tr-TR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        }),
-        time: d.toLocaleTimeString('tr-TR', {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-
-  return { date: formatListDate(raw), time: '' }
+  return formatQuoteDisplayWhen(value)
 }
 
 function quoteAmount(quote) {
@@ -148,6 +92,8 @@ function InlineSilConfirm({ onConfirm, onCancel, ariaLabel = 'Kalıcı sil' }) {
   )
 }
 
+const PERMANENT_DELETE_ROW_WARNING = 'Bu teklif kalıcı olarak silinecek. Geri alınamaz.'
+
 const PERMANENT_DELETE_WARNING =
   'Bu kayıtlar silinenler / arşiv alanından kaldırılacak ve kullanıcı tarafından geri getirilemez.'
 
@@ -169,12 +115,10 @@ const DATA_ROW_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-list-row flex w-full items-center min-h-[4.75rem] quote-list-data-panel'
 
 function DeletedListDateCell({ record }) {
-  const stamp = formatListDateParts(getDeletedRecordDateSource(record))
+  const stamp = formatListDateParts(getQuoteCreatedSource(record))
 
   if (!stamp.date) {
-    return (
-      <span className="block text-center text-[14px] font-normal text-[var(--muted)]">—</span>
-    )
+    return <span className="block text-center text-[14px] font-normal text-[var(--muted)]">—</span>
   }
 
   return (
@@ -213,18 +157,17 @@ function QuoteDeletedRowMoreMenu({ item, disabled, onDelete }) {
     >
       {({ close }) => (
         <>
-          <QuoteRecordMetaPanel
-            quote={item.record}
-            deletedAt={item.at}
-            entryMeta={item}
-          />
+          <QuoteRecordMetaPanel quote={item.record} deletedAt={item.at} entryMeta={item} />
           <DropdownSeparator />
           {confirmDelete ? (
             <div
-              className="quote-menu-delete-confirm flex w-full items-center justify-center px-1 py-1"
+              className="quote-menu-delete-confirm px-2 py-2"
               onClick={(event) => event.stopPropagation()}
               role="menuitem"
             >
+              <p className="mb-2 text-[11px] font-medium leading-snug text-rose-600">
+                {PERMANENT_DELETE_ROW_WARNING}
+              </p>
               <InlineSilConfirm
                 ariaLabel={`${item.label} kalıcı sil`}
                 onConfirm={() => {
@@ -255,12 +198,7 @@ function QuoteDeletedRowMoreMenu({ item, disabled, onDelete }) {
 const DELETED_HEADER_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-header-panel quote-list-data-panel flex h-[4.75rem] min-h-[4.75rem] max-h-[4.75rem] w-full items-center'
 
-const DELETED_PANEL_WRAP_CLASS =
-  'quote-deleted-panel-wrap customer-deleted-archived-panel w-full'
-
-function getDeletedRecordDateSource(record) {
-  return record?.activities?.[0]?.date || record?.createdAt || ''
-}
+const DELETED_PANEL_WRAP_CLASS = 'quote-deleted-panel-wrap customer-deleted-archived-panel w-full'
 
 function DeletedOrderRestoreCell({
   orderCreated,
@@ -369,6 +307,7 @@ export default function QuoteDeletedArchivedPanel({
           label: quoteTitle(record, entry.entityLabel),
           at: entry.deletedAt,
           deletedBy: entry.deletedBy,
+          lastRestoredAt: entry.lastRestoredAt || '',
           restoredAt: entry.restoredAt || entry.restoredFromPurgeAt,
         }
       })
@@ -435,12 +374,9 @@ export default function QuoteDeletedArchivedPanel({
 
   const allSelected = entries.length > 0 && selectedIds.length === entries.length
   const resolvedSegmentTabs = Array.isArray(segmentTabs) ? segmentTabs : []
-  const baseGrid =
-    columnGrid ||
-    buildDeletedListGrid(resolvedSegmentTabs.length || 1)
+  const baseGrid = columnGrid || buildDeletedListGrid(resolvedSegmentTabs.length || 1)
   const gridTemplate = bulkSelectMode ? `2.75rem ${baseGrid}` : baseGrid
-  const titleColumnSpan =
-    (bulkSelectMode ? 1 : 0) + 3 + resolvedSegmentTabs.length + 1
+  const titleColumnSpan = (bulkSelectMode ? 1 : 0) + 3 + resolvedSegmentTabs.length + 1
 
   const deletedQuoteIds = useMemo(
     () => entries.map((entry) => entry.record?.id).filter(Boolean),
@@ -471,7 +407,9 @@ export default function QuoteDeletedArchivedPanel({
   }
 
   const scrollShellClass =
-    layoutMode === 'inline' ? 'quote-deleted-inline-shell w-full' : 'w-full min-w-0 overflow-x-auto overflow-y-visible'
+    layoutMode === 'inline'
+      ? 'quote-deleted-inline-shell w-full'
+      : 'w-full min-w-0 overflow-x-auto overflow-y-visible'
 
   return (
     <div
@@ -602,137 +540,135 @@ export default function QuoteDeletedArchivedPanel({
 
           {open
             ? entries.map((item, rowIndex) => {
-                    const display = getListCustomerDisplay(item.record?.customer)
-                    const amount = getListAmount
-                      ? getListAmount(item.record)
-                      : quoteAmount(item.record)
-                    const orderCreated = isOrderCreated?.(item.record) ?? false
-                    const isSelected = selectedIds.includes(item.id)
-                    const isRestoring = restoringIds.includes(item.id)
-                    const isTrashing = trashingIds.includes(item.id)
+                const display = getListCustomerDisplay(item.record?.customer)
+                const amount = getListAmount ? getListAmount(item.record) : quoteAmount(item.record)
+                const orderCreated = isOrderCreated?.(item.record) ?? false
+                const isSelected = selectedIds.includes(item.id)
+                const isRestoring = restoringIds.includes(item.id)
+                const isTrashing = trashingIds.includes(item.id)
 
-                    let wrapClass
-                    if (isTrashing) wrapClass = 'quote-list-row-into-trash-wrap'
-                    else if (isRestoring) wrapClass = 'quote-list-row-restore-wrap'
+                let wrapClass
+                if (isTrashing) wrapClass = 'quote-list-row-into-trash-wrap'
+                else if (isRestoring) wrapClass = 'quote-list-row-restore-wrap'
 
-                    return (
+                return (
+                  <div
+                    key={item.id}
+                    className={wrapClass}
+                    style={
+                      isTrashing || isRestoring
+                        ? { animationDelay: `${Math.min(rowIndex, 5) * 50}ms` }
+                        : undefined
+                    }
+                  >
+                    <AppPagePanel
+                      className={`${DATA_ROW_PANEL_CLASS} ${
+                        isSelected ? 'ring-1 ring-rose-400/40' : ''
+                      }`}
+                    >
                       <div
-                        key={item.id}
-                        className={wrapClass}
-                        style={
-                          isTrashing || isRestoring
-                            ? { animationDelay: `${Math.min(rowIndex, 5) * 50}ms` }
-                            : undefined
-                        }
+                        className="quote-list-row w-full min-w-0"
+                        style={{ gridTemplateColumns: gridTemplate }}
+                        onClick={bulkSelectMode ? () => toggleSelect(item.id) : undefined}
                       >
-                        <AppPagePanel
-                          className={`${DATA_ROW_PANEL_CLASS} ${
-                            isSelected ? 'ring-1 ring-rose-400/40' : ''
-                          }`}
-                        >
-                          <div
-                            className="quote-list-row w-full min-w-0"
-                            style={{ gridTemplateColumns: gridTemplate }}
-                            onClick={bulkSelectMode ? () => toggleSelect(item.id) : undefined}
-                          >
-                            {bulkSelectMode ? (
-                              <DeletedListCell>
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
-                                  onChange={() => toggleSelect(item.id)}
-                                  onClick={(event) => event.stopPropagation()}
-                                  aria-label={`${item.label} seç`}
-                                  className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
-                                />
-                              </DeletedListCell>
+                        {bulkSelectMode ? (
+                          <DeletedListCell>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelect(item.id)}
+                              onClick={(event) => event.stopPropagation()}
+                              aria-label={`${item.label} seç`}
+                              className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
+                            />
+                          </DeletedListCell>
+                        ) : null}
+                        <DeletedListCell>
+                          <DeletedListDateCell record={item.record} />
+                        </DeletedListCell>
+                        <DeletedListCell>
+                          <span className={`${YF_TEXT_CLASS} tabular-nums`}>
+                            {item.record?.id
+                              ? resolveQuoteCode(item.record.id, deletedQuoteIds)
+                              : '—'}
+                          </span>
+                        </DeletedListCell>
+                        <DeletedListCell>
+                          <span className="flex min-w-0 w-full flex-col items-center gap-0.5 py-0.5 text-center">
+                            <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                              {display.brandShortName || item.label}
+                            </span>
+                            {display.companyTitle &&
+                            display.companyTitle !== display.brandShortName ? (
+                              <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
+                                {display.companyTitle}
+                              </span>
                             ) : null}
-                            <DeletedListCell>
-                              <DeletedListDateCell record={item.record} />
-                            </DeletedListCell>
-                            <DeletedListCell>
-                              <span className={`${YF_TEXT_CLASS} tabular-nums`}>
-                                {item.record?.id
-                                  ? resolveQuoteCode(item.record.id, deletedQuoteIds)
-                                  : '—'}
-                              </span>
-                            </DeletedListCell>
-                            <DeletedListCell>
-                              <span className="flex min-w-0 w-full flex-col items-center gap-0.5 py-0.5 text-center">
-                                <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
-                                  {display.brandShortName || item.label}
-                                </span>
-                                {display.companyTitle &&
-                                display.companyTitle !== display.brandShortName ? (
-                                  <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
-                                    {display.companyTitle}
-                                  </span>
-                                ) : null}
-                              </span>
-                            </DeletedListCell>
-                            {(resolvedSegmentTabs.length
-                              ? resolvedSegmentTabs
-                              : [{ id: 'status', label: 'Durum' }]
-                            ).map((tab) => (
-                              <DeletedListCell key={tab.id || tab.label}>
-                                <span
-                                  className="flex w-full items-center justify-center"
-                                  onClick={(event) => event.stopPropagation()}
-                                >
-                                  <EditableDropdownPill
-                                    value={processLabelForRecord(item.record, tab)}
-                                    options={getProcessOptions?.(tab) || []}
-                                    includePlaceholderOption={false}
-                                    editable={false}
-                                    disabled
-                                    buttonClassName={PAGE_LIST_PILL_CLASS}
-                                    wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
-                                    openKey={`deleted-${item.id}-${tab.id}`}
-                                    activeMenu={null}
-                                    setActiveMenu={() => {}}
-                                    onChange={() => {}}
-                                  />
-                                </span>
-                              </DeletedListCell>
-                            ))}
-                            <DeletedListCell>
-                              <span
-                                className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
-                              >
-                                {amount ? formatTL(amount) : '—'}
-                              </span>
-                            </DeletedListCell>
-                            <DeletedListCell>
-                              <span className="inline-flex w-full items-center justify-center">
-                                <DeletedOrderRestoreCell
-                                  orderCreated={orderCreated}
-                                  disabled={isRestoring || isTrashing}
-                                  restoreLabel={`${item.label} geri yükle`}
-                                  onRestore={() => handleRestore(item)}
-                                />
-                              </span>
-                            </DeletedListCell>
-                            <DeletedListCell>
-                              {!bulkSelectMode ? (
-                                <span
-                                  className="inline-flex w-full items-center justify-center"
-                                  onClick={(event) => event.stopPropagation()}
-                                >
-                                  <QuoteDeletedRowMoreMenu
-                                    item={item}
-                                    disabled={isRestoring || isTrashing}
-                                    onDelete={() => runPermanentDelete(item)}
-                                  />
-                                </span>
-                              ) : (
-                                <span className={YF_TEXT_CLASS}>{formatWhen(item.at)}</span>
-                              )}
-                            </DeletedListCell>
-                          </div>
-                        </AppPagePanel>
+                          </span>
+                        </DeletedListCell>
+                        {(resolvedSegmentTabs.length
+                          ? resolvedSegmentTabs
+                          : [{ id: 'status', label: 'Durum' }]
+                        ).map((tab) => (
+                          <DeletedListCell key={tab.id || tab.label}>
+                            <span
+                              className="flex w-full items-center justify-center"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <EditableDropdownPill
+                                value={processLabelForRecord(item.record, tab)}
+                                options={getProcessOptions?.(tab) || []}
+                                includePlaceholderOption={false}
+                                editable={false}
+                                disabled
+                                buttonClassName={PAGE_LIST_PILL_CLASS}
+                                wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                                openKey={`deleted-${item.id}-${tab.id}`}
+                                activeMenu={null}
+                                setActiveMenu={() => {}}
+                                onChange={() => {}}
+                              />
+                            </span>
+                          </DeletedListCell>
+                        ))}
+                        <DeletedListCell>
+                          <span
+                            className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
+                          >
+                            {amount ? formatTL(amount) : '—'}
+                          </span>
+                        </DeletedListCell>
+                        <DeletedListCell>
+                          <span className="inline-flex w-full items-center justify-center">
+                            <DeletedOrderRestoreCell
+                              orderCreated={orderCreated}
+                              disabled={isRestoring || isTrashing}
+                              restoreLabel={`${item.label} geri yükle`}
+                              onRestore={() => handleRestore(item)}
+                            />
+                          </span>
+                        </DeletedListCell>
+                        <DeletedListCell>
+                          {!bulkSelectMode ? (
+                            <span
+                              className="inline-flex w-full items-center justify-center"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <QuoteDeletedRowMoreMenu
+                                item={item}
+                                disabled={isRestoring || isTrashing}
+                                onDelete={() => runPermanentDelete(item)}
+                              />
+                            </span>
+                          ) : (
+                            <span className={YF_TEXT_CLASS}>{formatWhen(item.at)}</span>
+                          )}
+                        </DeletedListCell>
                       </div>
-                    )
-                  })
+                    </AppPagePanel>
+                  </div>
+                )
+              })
             : null}
         </div>
       </div>
