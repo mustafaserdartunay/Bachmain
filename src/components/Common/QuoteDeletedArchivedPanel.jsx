@@ -123,9 +123,7 @@ export default function QuoteDeletedArchivedPanel({
 
   useEffect(() => {
     if (!receivePulseKey) return undefined
-    setOpen(true)
     setReceiveActive(true)
-    panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     const timer = window.setTimeout(() => setReceiveActive(false), 900)
     return () => window.clearTimeout(timer)
   }, [receivePulseKey])
