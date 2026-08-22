@@ -3,11 +3,14 @@ import { ChevronDown, Trash2, Undo2, X } from 'lucide-react'
 import { MoreMenu } from '@bachmain/ui'
 import { DELETED_RECORDS_EVENT, getDeletedRecords } from '../../utils/deletedRecordsStore'
 import { permanentlyDeleteQuote, restoreDeletedQuote } from '../../utils/quotesStore'
+import { resolveQuoteCode } from '../../utils/documentCodes'
 import { getListCustomerDisplay } from '../../data/customerProfiles'
 import { formatTL } from '../../utils/productPricing'
 import {
   PAGE_BALANCE_AMOUNT_CLASS,
   APP_LABEL_CLASS,
+  PAGE_LIST_PILL_CLASS,
+  PAGE_LIST_PILL_WRAPPER_CLASS,
   SP_CHEVRON_CLASS,
   SP_EMPTY_CLASS,
   YF_TEXT_CLASS,
@@ -171,14 +174,30 @@ const DELETED_CK_BUTTON_CLASS =
 const DELETED_HEADER_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-header-panel quote-list-data-panel flex h-[4.75rem] min-h-[4.75rem] max-h-[4.75rem] w-full items-center'
 
-const DELETED_HEADER_BUTTON_CLASS =
-  'flex h-full min-h-0 w-full items-center justify-between gap-3 bg-transparent px-0 py-0 text-left'
-
 const DELETED_PANEL_WRAP_CLASS =
   'quote-deleted-panel-wrap customer-deleted-archived-panel w-full space-y-3'
 
-function DeletedListCell({ className = '', children }) {
-  return <div className={`quote-list-cell min-w-0 ${className}`.trim()}>{children}</div>
+function getDeletedRecordDateSource(record) {
+  return record?.activities?.[0]?.date || record?.createdAt || ''
+}
+
+function DeletedProcessPill({ label }) {
+  const text = String(label || '').trim() || '—'
+  return (
+    <span className="flex w-full items-center justify-center">
+      <span className={`${PAGE_LIST_PILL_WRAPPER_CLASS} quote-deleted-process-pill-wrap`}>
+        <span className={`${PAGE_LIST_PILL_CLASS} quote-deleted-process-pill`}>{text}</span>
+      </span>
+    </span>
+  )
+}
+
+function DeletedListCell({ className = '', style, children }) {
+  return (
+    <div className={`quote-list-cell min-w-0 ${className}`.trim()} style={style}>
+      {children}
+    </div>
+  )
 }
 
 export default function QuoteDeletedArchivedPanel({
@@ -304,6 +323,13 @@ export default function QuoteDeletedArchivedPanel({
     columnGrid ||
     buildDeletedListGrid(resolvedSegmentTabs.length || 1)
   const gridTemplate = bulkSelectMode ? `2.75rem ${baseGrid}` : baseGrid
+  const titleColumnSpan =
+    (bulkSelectMode ? 1 : 0) + 3 + resolvedSegmentTabs.length + 1
+
+  const deletedQuoteIds = useMemo(
+    () => entries.map((entry) => entry.record?.id).filter(Boolean),
+    [entries],
+  )
 
   function processLabelForRecord(record, tab) {
     if (typeof getProcessValue === 'function') {
@@ -357,29 +383,47 @@ export default function QuoteDeletedArchivedPanel({
       }`.trim()}
     >
       <AppPagePanel className={DELETED_HEADER_PANEL_CLASS}>
-        <div className="relative flex h-full min-h-0 w-full items-center">
-          <button
-            type="button"
-            onClick={() => setOpen((current) => !current)}
-            className={`${DELETED_HEADER_BUTTON_CLASS} min-w-0 flex-1`}
+        <div
+          className="quote-list-row quote-deleted-header-row w-full min-w-0"
+          style={{ gridTemplateColumns: gridTemplate }}
+        >
+          {bulkSelectMode ? <DeletedListCell aria-hidden /> : null}
+          <DeletedListCell
+            className="is-start quote-deleted-header-title-cell"
+            style={{ gridColumn: `span ${titleColumnSpan}` }}
           >
-            <span className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setOpen((current) => !current)}
+              className="flex min-w-0 items-center gap-2 rounded-lg bg-transparent px-0 py-0 text-left"
+            >
               <RedPingDot />
               <span className={APP_LABEL_CLASS}>{title}</span>
-            </span>
-            <span className="flex shrink-0 items-center gap-3 pr-12">
+            </button>
+          </DeletedListCell>
+          <DeletedListCell>
+            <button
+              type="button"
+              onClick={() => setOpen((current) => !current)}
+              className="inline-flex w-full items-center justify-center gap-2 bg-transparent"
+              aria-expanded={open}
+            >
               <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
               <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
-            </span>
-          </button>
-          {entries.length > 0 ? (
-            <div
-              className="absolute right-3 top-1/2 z-10 -translate-y-1/2"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <MoreMenu items={headerActions} aria-label="Silinen teklif işlemleri" />
-            </div>
-          ) : null}
+            </button>
+          </DeletedListCell>
+          <DeletedListCell>
+            {entries.length > 0 ? (
+              <span
+                className="inline-flex w-full items-center justify-center"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <MoreMenu items={headerActions} aria-label="Silinen teklif işlemleri" />
+              </span>
+            ) : (
+              <span className="inline-flex h-9 w-9" aria-hidden />
+            )}
+          </DeletedListCell>
         </div>
       </AppPagePanel>
 
@@ -440,7 +484,9 @@ export default function QuoteDeletedArchivedPanel({
                   {entries.map((item, rowIndex) => {
                     const display = getListCustomerDisplay(item.record?.customer)
                     const amount = quoteAmount(item.record)
-                    const stamp = formatListDateParts(item.at)
+                    const stamp = formatListDateParts(
+                      getDeletedRecordDateSource(item.record) || item.at,
+                    )
                     const isSelected = selectedIds.includes(item.id)
                     const isRestoring = restoringIds.includes(item.id)
                     const isTrashing = trashingIds.includes(item.id)
@@ -502,7 +548,9 @@ export default function QuoteDeletedArchivedPanel({
                             </DeletedListCell>
                             <DeletedListCell>
                               <span className={`${YF_TEXT_CLASS} tabular-nums`}>
-                                {item.record?.id || '—'}
+                                {item.record?.id
+                                  ? resolveQuoteCode(item.record.id, deletedQuoteIds)
+                                  : '—'}
                               </span>
                             </DeletedListCell>
                             <DeletedListCell>
@@ -523,9 +571,7 @@ export default function QuoteDeletedArchivedPanel({
                               : [{ id: 'status', label: 'Durum' }]
                             ).map((tab) => (
                               <DeletedListCell key={tab.id || tab.label}>
-                                <span className={YF_TEXT_CLASS}>
-                                  {processLabelForRecord(item.record, tab)}
-                                </span>
+                                <DeletedProcessPill label={processLabelForRecord(item.record, tab)} />
                               </DeletedListCell>
                             ))}
                             <DeletedListCell>
@@ -541,7 +587,7 @@ export default function QuoteDeletedArchivedPanel({
                             <DeletedListCell>
                               {!bulkSelectMode ? (
                                 <span
-                                  className="inline-flex w-full items-center justify-center gap-1.5"
+                                  className="inline-flex w-full items-center justify-center"
                                   onClick={(event) => event.stopPropagation()}
                                 >
                                   {pendingConfirm ? (
@@ -551,7 +597,7 @@ export default function QuoteDeletedArchivedPanel({
                                       onCancel={() => setPendingDeleteId(null)}
                                     />
                                   ) : (
-                                    <>
+                                    <span className="inline-flex items-center justify-center gap-1">
                                       <button
                                         type="button"
                                         onClick={() => handleRestore(item)}
@@ -575,7 +621,7 @@ export default function QuoteDeletedArchivedPanel({
                                           strokeWidth={2.25}
                                         />
                                       </button>
-                                    </>
+                                    </span>
                                   )}
                                 </span>
                               ) : (
