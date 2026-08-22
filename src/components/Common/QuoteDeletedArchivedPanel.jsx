@@ -465,7 +465,6 @@ export default function QuoteDeletedArchivedPanel({
       }`.trim()}
     >
       <section
-        type="button"
         role="button"
         tabIndex={0}
         aria-expanded={open}
