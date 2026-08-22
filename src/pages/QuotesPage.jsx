@@ -2804,14 +2804,19 @@ export default function QuotesPage() {
     isQuoteOrderCreated,
   )
 
-  const quoteListColumnGrid = [
-    ...(bulkSelectMode ? ['2.75rem'] : []),
+  const quoteListBaseColumnGrid = [
     '6.5rem',
     '4.75rem',
     'minmax(16rem, 2.4fr)',
     ...quoteSegmentTabs.map(() => 'minmax(9.25rem, 0.7fr)'),
     '6.75rem',
     '6.5rem',
+    '3rem',
+  ]
+
+  const quoteListColumnGrid = [
+    ...(bulkSelectMode ? ['2.75rem'] : []),
+    ...quoteListBaseColumnGrid.slice(0, -1),
     bulkSelectMode && selectedQuoteIds.length > 0 ? '6.5rem' : '3rem',
   ].join(' ')
 
@@ -3095,9 +3100,12 @@ export default function QuotesPage() {
                 description="Arama veya filtreleri değiştirin."
               />
             </AppPagePanel>
-          ) : (
-            <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
-              <div className="quote-list-board">
+          ) : null}
+
+          <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
+            <div className="quote-teklifler-list-stack flex min-w-[56rem] w-full flex-col gap-5">
+              {listQuotes.length > 0 ? (
+                <div className="quote-list-board">
                 <QuoteListRowPanel header gridTemplate={quoteListColumnGrid}>
                   {bulkSelectMode ? (
                     <QuoteListCell>
@@ -3360,9 +3368,24 @@ export default function QuotesPage() {
                     </div>
                   )
                 })}
-              </div>
+                </div>
+              ) : null}
+
+              <QuoteDeletedArchivedPanel
+                layoutMode="inline"
+                onRestored={() => setQuotes(loadQuotes())}
+                emptyMessage="Silinen teklif yok."
+                receivePulseKey={archiveReceiveKey}
+                className="customer-deleted-archived-panel w-full"
+                segmentTabs={quoteSegmentTabs}
+                getProcessValue={(quote, tab) => processValueForQuote(tab, quote)}
+                getProcessOptions={(tab) => processOptionsForTab(tab)}
+                getListAmount={getQuoteListAmount}
+                isOrderCreated={(quote) => isQuoteOrderCreated(quote)}
+                columnGrid={quoteListBaseColumnGrid.join(' ')}
+              />
             </div>
-          )}
+          </div>
         </>
       ) : (
         <div className="space-y-5 document-compact-controls">
@@ -3761,29 +3784,6 @@ export default function QuotesPage() {
           )}
         </div>
       )}
-
-      {viewMode === 'list' ? (
-        <QuoteDeletedArchivedPanel
-          onRestored={() => setQuotes(loadQuotes())}
-          emptyMessage="Silinen teklif yok."
-          receivePulseKey={archiveReceiveKey}
-          className="customer-deleted-archived-panel w-full"
-          segmentTabs={quoteSegmentTabs}
-          getProcessValue={(quote, tab) => processValueForQuote(tab, quote)}
-          getProcessOptions={(tab) => processOptionsForTab(tab)}
-          getListAmount={getQuoteListAmount}
-          isOrderCreated={(quote) => isQuoteOrderCreated(quote)}
-          columnGrid={[
-            '6.5rem',
-            '4.75rem',
-            'minmax(16rem, 2.4fr)',
-            ...quoteSegmentTabs.map(() => 'minmax(9.25rem, 0.7fr)'),
-            '6.75rem',
-            '6.5rem',
-            '3rem',
-          ].join(' ')}
-        />
-      ) : null}
 
       <DeleteConfirmOverlay
         open={pendingHeaderQuoteDelete}

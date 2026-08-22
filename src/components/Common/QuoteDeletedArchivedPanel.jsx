@@ -176,7 +176,7 @@ const DELETED_HEADER_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-header-panel quote-list-data-panel flex h-[4.75rem] min-h-[4.75rem] max-h-[4.75rem] w-full items-center'
 
 const DELETED_PANEL_WRAP_CLASS =
-  'quote-deleted-panel-wrap customer-deleted-archived-panel w-full flex flex-col gap-5'
+  'quote-deleted-panel-wrap customer-deleted-archived-panel w-full'
 
 function getDeletedRecordDateSource(record) {
   return record?.activities?.[0]?.date || record?.createdAt || ''
@@ -231,24 +231,18 @@ function DeletedDateCell({ record, deletedAt }) {
   const deletedLine = [deletedStamp.date, deletedStamp.time].filter(Boolean).join(' ')
 
   return (
-    <span className="quote-deleted-date-cell flex max-w-full flex-col items-center justify-center leading-none">
-      <span className="flex w-full max-w-[6.5rem] flex-col items-center gap-px">
-        <span className="text-[8px] font-normal leading-tight text-[var(--muted)]/55">
-          Oluşturulma tarihi
-        </span>
-        <span className="text-[9px] font-normal tabular-nums leading-tight text-[var(--muted)]">
-          {createdLine || '—'}
-        </span>
+    <span className="quote-deleted-date-cell flex w-full max-w-[6.5rem] flex-col items-center justify-center leading-none">
+      <span className="quote-deleted-date-block w-full text-center">
+        <span className="quote-deleted-date-label block truncate">Oluşturulma tarihi</span>
+        <span className="quote-deleted-date-value block tabular-nums">{createdLine || '—'}</span>
       </span>
       <span
-        className="my-0.5 h-px w-full max-w-[4.75rem] shrink-0 bg-[var(--glass-border)]/80"
+        className="quote-deleted-date-separator my-0.5 block h-px w-full max-w-[4.25rem] bg-[var(--glass-border)]/75"
         aria-hidden
       />
-      <span className="flex w-full max-w-[6.5rem] flex-col items-center gap-px">
-        <span className="text-[8px] font-normal leading-tight text-[var(--muted)]/55">
-          Silinme tarihi
-        </span>
-        <span className="text-[9px] font-normal tabular-nums leading-tight text-[var(--muted)]/70">
+      <span className="quote-deleted-date-block w-full text-center">
+        <span className="quote-deleted-date-label block truncate">Silinme tarihi</span>
+        <span className="quote-deleted-date-value block tabular-nums opacity-80">
           {deletedLine || '—'}
         </span>
       </span>
@@ -276,6 +270,7 @@ export default function QuoteDeletedArchivedPanel({
   getListAmount,
   isOrderCreated,
   columnGrid,
+  layoutMode = 'standalone',
 }) {
   const panelRef = useRef(null)
   const [open, setOpen] = useState(false)
@@ -457,6 +452,9 @@ export default function QuoteDeletedArchivedPanel({
     }
   }
 
+  const scrollShellClass =
+    layoutMode === 'inline' ? 'quote-deleted-inline-shell w-full' : 'w-full min-w-0 overflow-x-auto overflow-y-visible'
+
   return (
     <div
       ref={panelRef}
@@ -464,107 +462,106 @@ export default function QuoteDeletedArchivedPanel({
         receiveActive ? 'quote-deleted-panel-receive' : ''
       }`.trim()}
     >
-      <section
-        role="button"
-        tabIndex={0}
-        aria-expanded={open}
-        onClick={handleHeaderPanelClick}
-        onKeyDown={handleHeaderPanelKeyDown}
-        className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS}${
-          open ? ' quote-deleted-header-panel-open' : ''
-        } cursor-pointer`}
-      >
-        <div
-          className="quote-list-row quote-deleted-header-row w-full min-w-0"
-          style={{ gridTemplateColumns: gridTemplate }}
-        >
-          {bulkSelectMode ? <DeletedListCell aria-hidden /> : null}
-          <DeletedListCell
-            className="is-start quote-deleted-header-title-cell"
-            style={{ gridColumn: `span ${titleColumnSpan}` }}
-          >
-            <span className="flex min-w-0 items-center gap-2 px-0 py-0 text-left">
-              <RedPingDot />
-              <span className={APP_LABEL_CLASS}>{title}</span>
-            </span>
-          </DeletedListCell>
-          <DeletedListCell>
-            <span className="inline-flex w-full items-center justify-center gap-2">
-              <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
-              <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
-            </span>
-          </DeletedListCell>
-          <DeletedListCell>
-            {entries.length > 0 ? (
-              <span
-                data-deleted-header-interactive
-                className="inline-flex w-full items-center justify-center"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <MoreMenu items={headerActions} aria-label="Silinen teklif işlemleri" />
+      {open && bulkSelectMode ? (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1 py-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleSelectAll}
+              className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
+              aria-label="Tümünü seç"
+            />
+            <p className={YF_TEXT_CLASS}>
+              {selectedIds.length > 0
+                ? `${selectedIds.length} kayıt seçildi`
+                : 'Kalıcı silmek için kayıt seçin'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={exitBulkSelectMode}
+              className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 transition-colors hover:bg-black/5`}
+            >
+              İptal
+            </button>
+            <button
+              ref={bulkDeleteButtonRef}
+              type="button"
+              disabled={selectedIds.length === 0}
+              onClick={() => setPendingBulkDelete(true)}
+              className="customer-bulk-delete-action inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-1.5 text-[14px] font-bold leading-tight tracking-normal transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
+            >
+              <Trash2
+                className="h-3.5 w-3.5 shrink-0"
+                strokeWidth={2.25}
+                aria-hidden
+                style={{ color: '#ffffff', stroke: '#ffffff' }}
+              />
+              <span style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
+                Seçilenleri Sil
               </span>
-            ) : (
-              <span className="inline-flex h-9 w-9" aria-hidden />
-            )}
-          </DeletedListCell>
+            </button>
+          </div>
         </div>
-      </section>
+      ) : null}
 
-      {open ? (
-        <div className="quote-deleted-body-plain w-full">
-          {entries.length === 0 ? (
-            <div className={SP_EMPTY_CLASS}>{emptyMessage}</div>
-          ) : (
-            <>
-              {bulkSelectMode ? (
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1 py-1">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
-                      aria-label="Tümünü seç"
-                    />
-                    <p className={YF_TEXT_CLASS}>
-                      {selectedIds.length > 0
-                        ? `${selectedIds.length} kayıt seçildi`
-                        : 'Kalıcı silmek için kayıt seçin'}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={exitBulkSelectMode}
-                      className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 transition-colors hover:bg-black/5`}
-                    >
-                      İptal
-                    </button>
-                    <button
-                      ref={bulkDeleteButtonRef}
-                      type="button"
-                      disabled={selectedIds.length === 0}
-                      onClick={() => setPendingBulkDelete(true)}
-                      className="customer-bulk-delete-action inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-1.5 text-[14px] font-bold leading-tight tracking-normal transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-                      style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
-                    >
-                      <Trash2
-                        className="h-3.5 w-3.5 shrink-0"
-                        strokeWidth={2.25}
-                        aria-hidden
-                        style={{ color: '#ffffff', stroke: '#ffffff' }}
-                      />
-                      <span style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
-                        Seçilenleri Sil
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              ) : null}
+      <div className={scrollShellClass}>
+        <div className="quote-list-board quote-deleted-list-board w-full">
+          <section
+            role="button"
+            tabIndex={0}
+            aria-expanded={open}
+            onClick={handleHeaderPanelClick}
+            onKeyDown={handleHeaderPanelKeyDown}
+            className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS}${
+              open ? ' quote-deleted-header-panel-open' : ''
+            } cursor-pointer`}
+          >
+            <div
+              className="quote-list-row quote-deleted-header-row w-full min-w-0"
+              style={{ gridTemplateColumns: gridTemplate }}
+            >
+              {bulkSelectMode ? <DeletedListCell aria-hidden /> : null}
+              <DeletedListCell
+                className="is-start quote-deleted-header-title-cell"
+                style={{ gridColumn: `span ${titleColumnSpan}` }}
+              >
+                <span className="flex min-w-0 items-center gap-2 px-0 py-0 text-left">
+                  <RedPingDot />
+                  <span className={APP_LABEL_CLASS}>{title}</span>
+                </span>
+              </DeletedListCell>
+              <DeletedListCell>
+                <span className="inline-flex w-full items-center justify-center gap-2">
+                  <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
+                  <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
+                </span>
+              </DeletedListCell>
+              <DeletedListCell>
+                {entries.length > 0 ? (
+                  <span
+                    data-deleted-header-interactive
+                    className="inline-flex w-full items-center justify-center"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <MoreMenu items={headerActions} aria-label="Silinen teklif işlemleri" />
+                  </span>
+                ) : (
+                  <span className="inline-flex h-9 w-9" aria-hidden />
+                )}
+              </DeletedListCell>
+            </div>
+          </section>
 
-              <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
-                <div className="quote-list-board">
-                  {entries.map((item, rowIndex) => {
+          {open && entries.length === 0 ? (
+            <div className={`${SP_EMPTY_CLASS} px-4`}>{emptyMessage}</div>
+          ) : null}
+
+          {open
+            ? entries.map((item, rowIndex) => {
                     const display = getListCustomerDisplay(item.record?.customer)
                     const amount = getListAmount
                       ? getListAmount(item.record)
@@ -712,13 +709,10 @@ export default function QuoteDeletedArchivedPanel({
                         </AppPagePanel>
                       </div>
                     )
-                  })}
-                </div>
-              </div>
-            </>
-          )}
+                  })
+            : null}
         </div>
-      ) : null}
+      </div>
 
       <DeleteConfirmOverlay
         open={pendingBulkDelete && selectedIds.length > 0}

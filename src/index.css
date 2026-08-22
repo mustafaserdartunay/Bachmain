@@ -3774,22 +3774,28 @@ html body section.card.quote-list-row-panel.quote-deleted-header-panel {
   padding-bottom: 0.75rem !important;
   border: none !important;
   outline: none !important;
-  box-shadow: none !important;
-  transition: background-color 0.22s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58) !important;
+  transition:
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 html body section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open,
 html body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open {
   background: color-mix(in srgb, #f43f5e 10%, var(--surface)) !important;
   border: none !important;
-  box-shadow: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58) !important;
+}
+
+html.night body section.card.quote-list-row-panel.quote-deleted-header-panel {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 html.night body section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open,
 html.night body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel.quote-deleted-header-panel-open {
   background: color-mix(in srgb, #f43f5e 14%, var(--surface)) !important;
   border: none !important;
-  box-shadow: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 html body section.card.quote-list-row-panel.quote-deleted-list-row {
@@ -3798,12 +3804,33 @@ html body section.card.quote-list-row-panel.quote-deleted-list-row {
   max-height: 4.75rem !important;
   padding-top: 0.75rem !important;
   padding-bottom: 0.75rem !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .quote-deleted-date-cell {
-  max-height: 3.25rem;
-  overflow: hidden;
+  max-width: 6.5rem;
+}
+
+.quote-deleted-date-label {
+  font-size: 7px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: normal;
+  color: var(--muted);
+  opacity: 0.55;
+}
+
+.quote-deleted-date-value {
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: normal;
+  color: var(--muted);
+}
+
+.quote-teklifler-list-stack {
+  min-width: 56rem;
+  width: 100%;
 }
 
 .quote-deleted-header-row .quote-deleted-header-title-cell {
@@ -3819,7 +3846,7 @@ html body section.card.quote-list-row-panel.quote-deleted-list-row {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  min-width: 56rem;
+  min-width: 0;
   width: 100%;
 }
 
@@ -3827,7 +3854,6 @@ html body section.card.quote-list-row-panel.quote-deleted-list-row {
   transform: none !important;
 }
 
-/* Silinenler çk — son sütun, more menü ile aynı hiz */
 html body .customer-deleted-archived-panel .quote-deleted-ck-btn,
 html body .customer-deleted-archived-panel .quote-deleted-ck-btn:hover {
   width: 1.75rem !important;
