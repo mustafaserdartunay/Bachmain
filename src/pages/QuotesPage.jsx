@@ -8,7 +8,6 @@ import {
   ArrowUp,
   ArrowUpDown,
   CheckCircle2,
-  CheckSquare2,
   ChevronDown,
   ClipboardList,
   FileText,
@@ -107,7 +106,7 @@ import {
   safeNumber,
   sanitizeDocumentDiscountFields,
 } from '../utils/documentTotals'
-import { BTN_PRIMARY } from '../utils/buttonStyles'
+import { BTN_PRIMARY, COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../utils/buttonStyles'
 import DocumentActivityPanel from '../components/DocumentEditor/DocumentActivityPanel'
 import DocumentTermsEditor from '../components/DocumentEditor/DocumentTermsEditor'
 import DocumentTotalsPanel from '../components/DocumentEditor/DocumentTotalsPanel'
@@ -1373,7 +1372,6 @@ export default function QuotesPage() {
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedQuoteIds, setSelectedQuoteIds] = useState([])
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
-  const bulkDeleteButtonRef = useRef(null)
   const [openItemMenuId, setOpenItemMenuId] = useState(null)
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
@@ -2622,7 +2620,7 @@ export default function QuotesPage() {
     ...quoteSegmentTabs.map(() => 'minmax(9.25rem, 0.7fr)'),
     '6.75rem',
     '6.5rem',
-    '3rem',
+    pendingBulkDelete && selectedQuoteIds.length > 0 ? '6.5rem' : '3rem',
   ].join(' ')
 
   const listQuoteIds = listQuotes.map((quote) => String(quote.id))
@@ -2906,33 +2904,13 @@ export default function QuotesPage() {
                       ? `${selectedQuoteIds.length} teklif seçildi`
                       : 'Silmek istediğiniz teklifleri seçin'}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={exitBulkSelectMode}
-                      className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 transition-colors hover:bg-black/5`}
-                    >
-                      İptal
-                    </button>
-                    <button
-                      ref={bulkDeleteButtonRef}
-                      type="button"
-                      disabled={selectedQuoteIds.length === 0}
-                      onClick={() => setPendingBulkDelete(true)}
-                      className="customer-bulk-delete-action inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-1.5 text-[14px] font-bold leading-tight tracking-normal transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-                      style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
-                    >
-                      <Trash2
-                        className="h-3.5 w-3.5 shrink-0"
-                        strokeWidth={2.25}
-                        aria-hidden
-                        style={{ color: '#ffffff', stroke: '#ffffff' }}
-                      />
-                      <span style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
-                        Seçilenleri Sil
-                      </span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={exitBulkSelectMode}
+                    className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 transition-colors hover:bg-black/5`}
+                  >
+                    İptal
+                  </button>
                 </div>
               ) : null}
               <div className="quote-list-board">
@@ -3004,77 +2982,41 @@ export default function QuotesPage() {
                     />
                   </QuoteListCell>
                   <QuoteListCell>
-                    <Dropdown
-                      align="end"
-                      menuClassName={PAGE_FILTER_MENU_CLASS}
-                      trigger={
-                        <button
-                          type="button"
-                          className={`quote-list-header-btn inline-flex h-control w-control min-h-control min-w-[var(--ds-control-h)] items-center justify-center rounded-ds-md transition-colors ${
-                            bulkSelectMode
-                              ? 'bg-blue-500/15 text-blue-700'
-                              : 'text-[var(--muted)] hover:bg-black/5'
-                          }`}
-                          title="Tümünü seç"
-                          aria-label="Tümünü seç"
-                        >
-                          <CheckSquare2 className="h-5 w-5" strokeWidth={2.25} aria-hidden />
-                        </button>
-                      }
-                    >
-                      {({ close }) => (
-                        <>
-                          {!bulkSelectMode ? (
-                            <DropdownItem
-                              icon={CheckSquare2}
-                              label="Seçim modunu aç"
-                              tone="primary"
-                              close={close}
-                              onClick={() => {
-                                setBulkSelectMode(true)
-                                setSelectedQuoteIds([])
-                                setPendingBulkDelete(false)
-                              }}
-                            />
-                          ) : (
-                            <>
-                              <DropdownItem
-                                icon={CheckSquare2}
-                                label="Tümünü seç"
-                                tone="primary"
-                                close={close}
-                                onClick={() => toggleBulkQuoteSelectAll(listQuoteIds)}
-                              />
-                              <DropdownItem
-                                label="Seçimi kaldır"
-                                close={close}
-                                onClick={() => setSelectedQuoteIds([])}
-                              />
-                              <DropdownSeparator />
-                              <DropdownItem
-                                icon={Trash2}
-                                label={
-                                  selectedQuoteIds.length > 0
-                                    ? `Seçilenleri Sil (${selectedQuoteIds.length})`
-                                    : 'Seçilenleri Sil'
-                                }
-                                tone="danger"
-                                close={close}
-                                onClick={() => {
-                                  if (selectedQuoteIds.length > 0) setPendingBulkDelete(true)
-                                }}
-                              />
-                              <DropdownSeparator />
-                              <DropdownItem
-                                label="Seçim modunu kapat"
-                                close={close}
-                                onClick={exitBulkSelectMode}
-                              />
-                            </>
-                          )}
-                        </>
-                      )}
-                    </Dropdown>
+                    {pendingBulkDelete && selectedQuoteIds.length > 0 ? (
+                      <QuoteOrderInlineConfirm
+                        label="Sil"
+                        labelClass="quote-order-undo-sil"
+                        ariaLabel={`${selectedQuoteIds.length} teklif silinsin mi?`}
+                        onConfirm={() => {
+                          handleBulkDeleteQuotes()
+                          setPendingBulkDelete(false)
+                        }}
+                        onCancel={() => setPendingBulkDelete(false)}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className={`${COP_KUTUSU_BUTTON_CLASS}${bulkSelectMode ? ' bg-red-500/15' : ''}`}
+                        title={bulkSelectMode ? 'Seçilenleri sil' : 'Toplu sil'}
+                        aria-label={bulkSelectMode ? 'Seçilenleri sil' : 'Toplu sil modu'}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          if (!bulkSelectMode) {
+                            setBulkSelectMode(true)
+                            setSelectedQuoteIds([])
+                            setPendingBulkDelete(false)
+                            return
+                          }
+                          if (selectedQuoteIds.length > 0) {
+                            setPendingBulkDelete(true)
+                            return
+                          }
+                          exitBulkSelectMode()
+                        }}
+                      >
+                        <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                      </button>
+                    )}
                   </QuoteListCell>
                 </QuoteListRowPanel>
 
@@ -3699,17 +3641,6 @@ export default function QuotesPage() {
           setPendingHeaderQuoteDelete(false)
           setDeleteConfirmAnchor(null)
         }}
-      />
-
-      <DeleteConfirmOverlay
-        open={pendingBulkDelete && selectedQuoteIds.length > 0}
-        anchorRef={bulkDeleteButtonRef}
-        title={`${selectedQuoteIds.length} teklif silinsin mi?`}
-        description="Seçilen teklifler silinenlere taşınır; geri alınabilir."
-        confirmLabel="Evet, Sil"
-        cancelLabel="Vazgeç"
-        onCancel={() => setPendingBulkDelete(false)}
-        onConfirm={handleBulkDeleteQuotes}
       />
     </AppPageShell>
   )
