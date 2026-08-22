@@ -152,7 +152,6 @@ import { sendWhatsAppServerMessage } from '../utils/whatsappChannelApi'
 import {
   APP_PANEL_TITLE_CLASS,
   PAGE_BALANCE_AMOUNT_CLASS,
-  PAGE_CENTER_TITLE_CLASS,
   PAGE_FILTER_FIELD_CLASS,
   PAGE_FILTER_LABEL_CLASS,
   PAGE_FILTER_MENU_CLASS,
@@ -2808,7 +2807,6 @@ export default function QuotesPage() {
           showBack={false}
           title={<AppPageBackLink />}
           centerTitle="TEKLİFLER"
-          centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
           titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
             <button
@@ -2829,7 +2827,6 @@ export default function QuotesPage() {
           showBack={false}
           title={<AppPageBackLink to={false} onClick={returnToQuoteList} label="Teklifler" />}
           centerTitle={isDraftQuote ? 'YENİ TEKLİF OLUŞTUR' : 'TEKLİF DÜZENLE'}
-          centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
           titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
             <div className="relative flex shrink-0 items-center gap-2" data-quote-dropdown>

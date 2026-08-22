@@ -6,8 +6,7 @@ import {
   APP_DOT_COLORS,
   PAGE_HEADER_BACK_LABEL_CLASS,
   PAGE_HEADER_BACK_LINK_CLASS,
-  PAGE_HEADER_CENTER_SLOT_CLASS,
-  PAGE_HEADER_CENTER_TITLE_CLASS,
+  PAGE_HEADER_CENTER_TITLE_CELL_CLASS,
   PAGE_HEADER_SHELL_CLASS,
 } from '../../utils/dashboardDesign'
 
@@ -183,14 +182,12 @@ export function AppPageHeader({
         ) : null}
       </div>
       {hasCenterTitle ? (
-        <div className={PAGE_HEADER_CENTER_SLOT_CLASS}>
-          <span
-            className={`${PAGE_HEADER_CENTER_TITLE_CLASS} ${centerTitleClassName}`.trim()}
-            data-page-center-title
-          >
-            {resolvedCenterTitle}
-          </span>
-        </div>
+        <span
+          className={`${PAGE_HEADER_CENTER_TITLE_CELL_CLASS} ${centerTitleClassName}`.trim()}
+          data-page-center-title
+        >
+          {resolvedCenterTitle}
+        </span>
       ) : null}
       {actions ? (
         <div className="relative z-40 flex shrink-0 flex-wrap items-center justify-end gap-2 overflow-visible">

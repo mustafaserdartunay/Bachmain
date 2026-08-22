@@ -1981,8 +1981,9 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   color: var(--muted) !important;
 }
 
-/* Müşteriler / sistem merkez başlık — bold, yazı genişliği */
-.app-page-header-center {
+/* Müşteriler / sistem merkez başlık — tek seçilebilir yazı hücresi */
+.app-page-header-center,
+.app-page-center-title-cell {
   width: max-content;
   max-width: none;
 }
@@ -1991,6 +1992,8 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 .customers-page-type .app-page-header h1.customer-page-center-title,
 .page-type-shell .app-page-header span.customer-page-center-title,
 .customers-page-type .app-page-header span.customer-page-center-title,
+.page-type-shell .app-page-header .app-page-center-title-cell,
+.customers-page-type .app-page-header .app-page-center-title-cell,
 .page-type-shell .app-page-header [data-page-center-title],
 .customers-page-type .app-page-header [data-page-center-title] {
   font-size: 14px !important;
@@ -2005,6 +2008,8 @@ html body .page-type-shell .app-page-header h1.customer-page-center-title.yfb,
 html body .customers-page-type .app-page-header h1.customer-page-center-title.yfb,
 html body .page-type-shell .app-page-header span.customer-page-center-title.yfb,
 html body .customers-page-type .app-page-header span.customer-page-center-title.yfb,
+html body .page-type-shell .app-page-header .app-page-center-title-cell,
+html body .customers-page-type .app-page-header .app-page-center-title-cell,
 html body .page-type-shell .app-page-header [data-page-center-title],
 html body .customers-page-type .app-page-header [data-page-center-title] {
   font-size: 14px !important;
