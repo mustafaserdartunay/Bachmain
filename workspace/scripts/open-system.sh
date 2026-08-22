@@ -21,12 +21,27 @@ ensure_admin_env() {
   fi
 }
 
+uygulama_server_root() {
+  local pid
+  pid=$(lsof -tiTCP:5173 -sTCP:LISTEN 2>/dev/null | head -1 || true)
+  [[ -z "$pid" ]] && return 1
+  lsof -p "$pid" 2>/dev/null | awk '$4=="cwd"{print $9; exit}'
+}
+
 start_if_needed() {
   local key="$1"
   case "$key" in
     uygulama)
-      port_listen 5173 && return 0
-      echo "→ UYGULAMA - BACHMAIN başlatılıyor…"
+      local running_root
+      running_root=$(uygulama_server_root || true)
+      if [[ -n "$running_root" && "$running_root" != "$ROOT" ]]; then
+        echo "→ Eski UYGULAMA sunucusu kapatılıyor ($running_root)…"
+        for pid in $(lsof -tiTCP:5173 -sTCP:LISTEN 2>/dev/null); do kill "$pid" 2>/dev/null || true; done
+        sleep 1
+      elif port_listen 5173; then
+        return 0
+      fi
+      echo "→ UYGULAMA - BACHMAIN başlatılıyor ($ROOT)…"
       (cd "$ROOT" && nohup npm run dev >>"$LOG_DIR/uygulama.log" 2>&1 &)
       ;;
     yonetim)

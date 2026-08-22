@@ -8,11 +8,11 @@ import {
   ArrowUp,
   ArrowUpDown,
   CheckCircle2,
+  CheckSquare2,
   ChevronDown,
   ClipboardList,
   FileText,
   Mail,
-  MoreHorizontal,
   Pencil,
   Plus,
   Printer,
@@ -70,7 +70,12 @@ import { customers as customerData } from '../data/mockData'
 import { getListCustomerDisplay, findCustomerProfile } from '../data/customerProfiles'
 import { vatRates } from '../data/productsData'
 import { getCatalogProducts, resolveProductImage } from '../utils/productCatalog'
-import { cancelOrderFromQuote, createOrderFromQuote, loadOrders, updateOrder } from '../utils/ordersStore'
+import {
+  cancelOrderFromQuote,
+  createOrderFromQuote,
+  loadOrders,
+  updateOrder,
+} from '../utils/ordersStore'
 import { nextQuoteCode, resolveQuoteCode, sanitizeQuoteCode } from '../utils/documentCodes'
 import {
   readVoiceQuoteOpenId,
@@ -129,9 +134,7 @@ import {
   readQuoteSegmentTabs,
   saveQuoteCustomList,
 } from '../utils/quoteSegmentTabs'
-import {
-  stageColors as processStageColors,
-} from '../components/DocumentEditor/stageColors'
+import { stageColors as processStageColors } from '../components/DocumentEditor/stageColors'
 import CustomerPicker, {
   DOCUMENT_SIDE_ACTION_WIDTH,
   findDocumentCustomer as findQuoteCustomer,
@@ -276,13 +279,7 @@ const savedQuoteTerms = [
   'Ödeme koşulları sipariş onayı öncesinde karşılıklı mutabakat ile netleştirilir.',
 ]
 
-function QuoteOrderInlineConfirm({
-  label,
-  labelClass,
-  ariaLabel,
-  onConfirm,
-  onCancel,
-}) {
+function QuoteOrderInlineConfirm({ label, labelClass, ariaLabel, onConfirm, onCancel }) {
   return (
     <div
       className="quote-order-undo-confirm quote-order-action inline-flex h-9 items-center justify-center"
@@ -384,9 +381,28 @@ function QuoteListRowPanel({ header = false, gridTemplate, className = '', child
 function QuoteListCell({ className = '', align = 'center', children }) {
   const alignClass = align === 'start' ? 'is-start' : align === 'end' ? 'is-end' : ''
   return (
-    <div className={`quote-list-cell min-w-0 ${alignClass} ${className}`.trim()}>
-      {children}
-    </div>
+    <div className={`quote-list-cell min-w-0 ${alignClass} ${className}`.trim()}>{children}</div>
+  )
+}
+
+function QuoteListSelectionCheckbox({
+  checked,
+  indeterminate = false,
+  onChange,
+  'aria-label': ariaLabel,
+}) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      ref={(node) => {
+        if (node) node.indeterminate = Boolean(indeterminate)
+      }}
+      onChange={onChange}
+      onClick={(event) => event.stopPropagation()}
+      aria-label={ariaLabel}
+      className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
+    />
   )
 }
 
@@ -428,9 +444,7 @@ function sortQuoteListByColumn(
 function parseQuoteListDateMs(value) {
   if (!value) return 0
   const raw = String(value).trim()
-  const tr = raw.match(
-    /^(\d{2})\.(\d{2})\.(\d{4})(?:[, ]+\s*(\d{1,2}):(\d{2})(?::(\d{2}))?)?/,
-  )
+  const tr = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})(?:[, ]+\s*(\d{1,2}):(\d{2})(?::(\d{2}))?)?/)
   if (tr) {
     const [, day, month, year, hours = '0', minutes = '0', seconds = '0'] = tr
     return new Date(
@@ -633,8 +647,7 @@ function sanitizeQuoteItem(item) {
     exciseTaxRate: safeNumber(item.exciseTaxRate, 0, 100),
     accommodationTaxRate: safeNumber(item.accommodationTaxRate, 0, 100),
     vatRate: safeNumber(item.vatRate, 0, 100),
-    showDescription:
-      item.showDescription === true || Boolean(safeText(item.extraDescription)),
+    showDescription: item.showDescription === true || Boolean(safeText(item.extraDescription)),
     showDiscount: Boolean(item.showDiscount),
     showExciseTax: Boolean(item.showExciseTax),
     showAccommodationTax: Boolean(item.showAccommodationTax),
@@ -671,7 +684,8 @@ function sanitizeQuoteForSave(quote) {
       : getOptionLabels('status')[0] || '',
     createdAt: quote.createdAt || todayIsoDate(),
     validUntil: quote.validUntil || defaultValidUntilDate(quote.createdAt || todayIsoDate()),
-    dueDate: quote.dueDate || quote.validUntil || defaultValidUntilDate(quote.createdAt || todayIsoDate()),
+    dueDate:
+      quote.dueDate || quote.validUntil || defaultValidUntilDate(quote.createdAt || todayIsoDate()),
     tags: Array.isArray(quote.tags) ? quote.tags.map(safeText).filter(Boolean) : [],
     termsDescription: String(quote.termsDescription || '').trim(),
     terms: Array.isArray(quote.terms) ? quote.terms.map(safeText).filter(Boolean) : [],
@@ -916,9 +930,7 @@ function Field({ label, children, align = 'start' }) {
   const center = align === 'center'
   return (
     <div className={`min-w-0 ${center ? 'text-center' : ''}`.trim()}>
-      <label
-        className={`${YF_TEXT_CLASS} mb-1 block ${center ? 'w-full text-center' : ''}`.trim()}
-      >
+      <label className={`${YF_TEXT_CLASS} mb-1 block ${center ? 'w-full text-center' : ''}`.trim()}>
         {label}
       </label>
       {children}
@@ -1029,7 +1041,9 @@ function VatRateInput({ value, onChange, options = vatRates }) {
         aria-expanded={open}
       />
       {open ? (
-        <div className={`absolute left-1/2 top-full z-30 mt-1 w-20 -translate-x-1/2 p-1 ${PAGE_FILTER_MENU_CLASS}`}>
+        <div
+          className={`absolute left-1/2 top-full z-30 mt-1 w-20 -translate-x-1/2 p-1 ${PAGE_FILTER_MENU_CLASS}`}
+        >
           {options.map((rate) => (
             <button
               key={rate}
@@ -1231,7 +1245,6 @@ function QuoteProcessManagement({
   )
 }
 
-
 function MiniButton({ children, onClick, danger = false }) {
   return (
     <button
@@ -1357,6 +1370,10 @@ export default function QuotesPage() {
   const [viewMode, setViewMode] = useState('list')
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
+  const [bulkSelectMode, setBulkSelectMode] = useState(false)
+  const [selectedQuoteIds, setSelectedQuoteIds] = useState([])
+  const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const bulkDeleteButtonRef = useRef(null)
   const [openItemMenuId, setOpenItemMenuId] = useState(null)
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
@@ -1810,11 +1827,9 @@ export default function QuotesPage() {
   function handleUndoOrderFromList(quote, event) {
     event?.stopPropagation?.()
     const orders = loadOrders()
-    const order =
-      orders.find(
-        (item) =>
-          item.id === quote.id || item.quoteId === quote.id || item.id === quote.orderId,
-      ) || { id: quote.orderId || quote.id, quoteId: quote.id }
+    const order = orders.find(
+      (item) => item.id === quote.id || item.quoteId === quote.id || item.id === quote.orderId,
+    ) || { id: quote.orderId || quote.id, quoteId: quote.id }
     cancelOrderFromQuote(order)
     setQuotes(reloadQuotesStore())
     setPendingQuoteOrderAction(null)
@@ -2502,6 +2517,39 @@ export default function QuotesPage() {
     }
   }
 
+  function exitBulkSelectMode() {
+    setBulkSelectMode(false)
+    setSelectedQuoteIds([])
+    setPendingBulkDelete(false)
+  }
+
+  function toggleBulkQuoteSelect(id) {
+    const key = String(id)
+    setSelectedQuoteIds((current) =>
+      current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
+    )
+  }
+
+  function toggleBulkQuoteSelectAll(visibleIds = []) {
+    const keys = visibleIds.map(String)
+    setSelectedQuoteIds((current) => {
+      const allSelected = keys.length > 0 && keys.every((item) => current.includes(item))
+      if (allSelected) return current.filter((item) => !keys.includes(item))
+      const merged = new Set(current)
+      keys.forEach((item) => merged.add(item))
+      return [...merged]
+    })
+  }
+
+  function handleBulkDeleteQuotes() {
+    selectedQuoteIds.forEach((id) => {
+      const quote = quotes.find((item) => String(item.id) === id)
+      if (quote) softDeleteQuote(quote)
+    })
+    setQuotes(loadQuotes())
+    exitBulkSelectMode()
+  }
+
   function getQuoteSortDate(quote) {
     return getQuoteSortDateValue(quote)
   }
@@ -2567,6 +2615,7 @@ export default function QuotesPage() {
   )
 
   const quoteListColumnGrid = [
+    ...(bulkSelectMode ? ['2.75rem'] : []),
     '6.5rem',
     '4.75rem',
     'minmax(16rem, 2.4fr)',
@@ -2575,6 +2624,12 @@ export default function QuotesPage() {
     '6.5rem',
     '3rem',
   ].join(' ')
+
+  const listQuoteIds = listQuotes.map((quote) => String(quote.id))
+  const allVisibleQuotesSelected =
+    listQuoteIds.length > 0 && listQuoteIds.every((id) => selectedQuoteIds.includes(id))
+  const someVisibleQuotesSelected =
+    listQuoteIds.some((id) => selectedQuoteIds.includes(id)) && !allVisibleQuotesSelected
 
   const openQuotes = filteredQuotes.filter((quote) => {
     const activeStage = resolveListQuoteStage(quote)
@@ -2616,13 +2671,7 @@ export default function QuotesPage() {
       ) : (
         <AppPageHeader
           showBack={false}
-          title={
-            <AppPageBackLink
-              to={false}
-              onClick={returnToQuoteList}
-              label="Teklifler"
-            />
-          }
+          title={<AppPageBackLink to={false} onClick={returnToQuoteList} label="Teklifler" />}
           centerTitle={isDraftQuote ? 'YENİ TEKLİF OLUŞTUR' : 'TEKLİF DÜZENLE'}
           centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
           titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
@@ -2634,7 +2683,11 @@ export default function QuotesPage() {
                   className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.violet}`}
                 >
                   <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                    <Printer className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                    <Printer
+                      className={HEADER_ACTION_CTA_ICON_CLASS}
+                      strokeWidth={2.25}
+                      aria-hidden
+                    />
                   </span>
                   <span className={YF_TEXT_ON_COLOR_CLASS}>Şablonla Yazdır</span>
                 </Link>
@@ -2846,8 +2899,54 @@ export default function QuotesPage() {
             </AppPagePanel>
           ) : (
             <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
+              {bulkSelectMode ? (
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
+                  <p className={YF_TEXT_CLASS}>
+                    {selectedQuoteIds.length > 0
+                      ? `${selectedQuoteIds.length} teklif seçildi`
+                      : 'Silmek istediğiniz teklifleri seçin'}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={exitBulkSelectMode}
+                      className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 transition-colors hover:bg-black/5`}
+                    >
+                      İptal
+                    </button>
+                    <button
+                      ref={bulkDeleteButtonRef}
+                      type="button"
+                      disabled={selectedQuoteIds.length === 0}
+                      onClick={() => setPendingBulkDelete(true)}
+                      className="customer-bulk-delete-action inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-1.5 text-[14px] font-bold leading-tight tracking-normal transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+                      style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
+                    >
+                      <Trash2
+                        className="h-3.5 w-3.5 shrink-0"
+                        strokeWidth={2.25}
+                        aria-hidden
+                        style={{ color: '#ffffff', stroke: '#ffffff' }}
+                      />
+                      <span style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
+                        Seçilenleri Sil
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               <div className="quote-list-board">
                 <QuoteListRowPanel header gridTemplate={quoteListColumnGrid}>
+                  {bulkSelectMode ? (
+                    <QuoteListCell>
+                      <QuoteListSelectionCheckbox
+                        checked={allVisibleQuotesSelected}
+                        indeterminate={someVisibleQuotesSelected}
+                        aria-label="Tümünü seç"
+                        onChange={() => toggleBulkQuoteSelectAll(listQuoteIds)}
+                      />
+                    </QuoteListCell>
+                  ) : null}
                   <QuoteListCell>
                     <QuoteListColumnHeader
                       label="Tarih"
@@ -2905,12 +3004,77 @@ export default function QuotesPage() {
                     />
                   </QuoteListCell>
                   <QuoteListCell>
-                    <span
-                      className="pointer-events-none inline-flex h-control w-control min-h-control min-w-[var(--ds-control-h)] items-center justify-center rounded-ds-md text-ds-ink"
-                      aria-hidden
+                    <Dropdown
+                      align="end"
+                      menuClassName={PAGE_FILTER_MENU_CLASS}
+                      trigger={
+                        <button
+                          type="button"
+                          className={`quote-list-header-btn inline-flex h-control w-control min-h-control min-w-[var(--ds-control-h)] items-center justify-center rounded-ds-md transition-colors ${
+                            bulkSelectMode
+                              ? 'bg-blue-500/15 text-blue-700'
+                              : 'text-[var(--muted)] hover:bg-black/5'
+                          }`}
+                          title="Tümünü seç"
+                          aria-label="Tümünü seç"
+                        >
+                          <CheckSquare2 className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+                        </button>
+                      }
                     >
-                      <MoreHorizontal className="h-5 w-5" />
-                    </span>
+                      {({ close }) => (
+                        <>
+                          {!bulkSelectMode ? (
+                            <DropdownItem
+                              icon={CheckSquare2}
+                              label="Seçim modunu aç"
+                              tone="primary"
+                              close={close}
+                              onClick={() => {
+                                setBulkSelectMode(true)
+                                setSelectedQuoteIds([])
+                                setPendingBulkDelete(false)
+                              }}
+                            />
+                          ) : (
+                            <>
+                              <DropdownItem
+                                icon={CheckSquare2}
+                                label="Tümünü seç"
+                                tone="primary"
+                                close={close}
+                                onClick={() => toggleBulkQuoteSelectAll(listQuoteIds)}
+                              />
+                              <DropdownItem
+                                label="Seçimi kaldır"
+                                close={close}
+                                onClick={() => setSelectedQuoteIds([])}
+                              />
+                              <DropdownSeparator />
+                              <DropdownItem
+                                icon={Trash2}
+                                label={
+                                  selectedQuoteIds.length > 0
+                                    ? `Seçilenleri Sil (${selectedQuoteIds.length})`
+                                    : 'Seçilenleri Sil'
+                                }
+                                tone="danger"
+                                close={close}
+                                onClick={() => {
+                                  if (selectedQuoteIds.length > 0) setPendingBulkDelete(true)
+                                }}
+                              />
+                              <DropdownSeparator />
+                              <DropdownItem
+                                label="Seçim modunu kapat"
+                                close={close}
+                                onClick={exitBulkSelectMode}
+                              />
+                            </>
+                          )}
+                        </>
+                      )}
+                    </Dropdown>
                   </QuoteListCell>
                 </QuoteListRowPanel>
 
@@ -2918,24 +3082,43 @@ export default function QuotesPage() {
                   const stamp = formatListDateParts(getQuoteListDateSource(quote))
                   const display = getListCustomerDisplay(quote.customer)
                   const pending =
-                    pendingQuoteOrderAction?.id === quote.id
-                      ? pendingQuoteOrderAction.type
-                      : null
+                    pendingQuoteOrderAction?.id === quote.id ? pendingQuoteOrderAction.type : null
+                  const quoteKey = String(quote.id)
+                  const isBulkSelected = selectedQuoteIds.includes(quoteKey)
                   return (
                     <div
                       key={quote.id}
-                      role="button"
-                      tabIndex={0}
-                      className="cursor-pointer"
-                      onClick={() => editQuote(quote.id)}
+                      role={bulkSelectMode ? undefined : 'button'}
+                      tabIndex={bulkSelectMode ? undefined : 0}
+                      className={bulkSelectMode ? undefined : 'cursor-pointer'}
+                      onClick={() => {
+                        if (bulkSelectMode) toggleBulkQuoteSelect(quote.id)
+                        else editQuote(quote.id)
+                      }}
                       onKeyDown={(event) => {
+                        if (bulkSelectMode) return
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault()
                           editQuote(quote.id)
                         }
                       }}
                     >
-                      <QuoteListRowPanel gridTemplate={quoteListColumnGrid}>
+                      <QuoteListRowPanel
+                        gridTemplate={quoteListColumnGrid}
+                        className={isBulkSelected ? 'ring-1 ring-blue-400/35' : ''}
+                      >
+                        {bulkSelectMode ? (
+                          <QuoteListCell>
+                            <QuoteListSelectionCheckbox
+                              checked={isBulkSelected}
+                              aria-label={`${resolveQuoteCode(
+                                quote.id,
+                                quotes.map((item) => item.id),
+                              )} teklifini seç`}
+                              onChange={() => toggleBulkQuoteSelect(quote.id)}
+                            />
+                          </QuoteListCell>
+                        ) : null}
                         <QuoteListCell>
                           {stamp.date ? (
                             <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
@@ -2998,7 +3181,9 @@ export default function QuotesPage() {
                           </QuoteListCell>
                         ))}
                         <QuoteListCell>
-                          <span className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}>
+                          <span
+                            className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
+                          >
                             {formatTL(getQuoteListAmount(quote))}
                           </span>
                         </QuoteListCell>
@@ -3153,7 +3338,11 @@ export default function QuotesPage() {
                 </div>
               </AppPagePanel>
 
-              <AppPagePanel className="customer-list-panel w-full" title="Ürün Seçimi :" dotColor="blue">
+              <AppPagePanel
+                className="customer-list-panel w-full"
+                title="Ürün Seçimi :"
+                dotColor="blue"
+              >
                 <div className="space-y-2">
                   {(selectedQuote.items || []).map((item) => {
                     const totals = itemTotals(item, rates)
@@ -3215,7 +3404,9 @@ export default function QuotesPage() {
                               />
                               {itemCurrency !== 'TRY' && Number(item.unitPrice) > 0 ? (
                                 <p className="text-center text-[11px] font-normal tabular-nums text-[var(--muted)]">
-                                  {formatTL(totals.subtotal / Math.max(1, Number(item.quantity) || 1))}
+                                  {formatTL(
+                                    totals.subtotal / Math.max(1, Number(item.quantity) || 1),
+                                  )}
                                 </p>
                               ) : null}
                             </div>
@@ -3230,9 +3421,7 @@ export default function QuotesPage() {
                             <Field label="İndirim %" align="center">
                               <NumericInput
                                 value={item.discountRate || 0}
-                                onChange={(value) =>
-                                  updateItem(item.id, 'discountRate', value)
-                                }
+                                onChange={(value) => updateItem(item.id, 'discountRate', value)}
                                 className="!text-center"
                               />
                             </Field>
@@ -3241,9 +3430,7 @@ export default function QuotesPage() {
                             <Field label="ÖTV %" align="center">
                               <NumericInput
                                 value={item.exciseTaxRate || 0}
-                                onChange={(value) =>
-                                  updateItem(item.id, 'exciseTaxRate', value)
-                                }
+                                onChange={(value) => updateItem(item.id, 'exciseTaxRate', value)}
                                 className="!text-center"
                               />
                             </Field>
@@ -3277,140 +3464,140 @@ export default function QuotesPage() {
                               className={`flex h-10 items-center ${quoteItemFieldGapClass}`}
                               data-quote-dropdown
                             >
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setOpenItemMenuId(openItemMenuId === item.id ? null : item.id)
-                                    }
-                                    className={quoteLineActionBtnClass}
-                                    data-tone="primary"
-                                    title="Satıra alan ekle"
-                                  >
-                                    <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setPendingItemDeleteId(item.id)}
-                                    className={quoteLineDeleteBtnClass}
-                                    data-tone="danger"
-                                    title="Satırı sil"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
-                                  </button>
-                                  {openItemMenuId === item.id && (
-                                    <div
-                                      className={`absolute right-0 top-10 z-30 w-52 p-1.5 ${PAGE_FILTER_MENU_CLASS}`}
-                                    >
-                                      {[
-                                        ['showDescription', 'Açıklama ekle'],
-                                        ['showDiscount', 'İndirim ekle'],
-                                        ['showExciseTax', 'ÖTV ekle'],
-                                        ['showAccommodationTax', 'Konaklama vergisi ekle'],
-                                      ]
-                                        .filter(([field]) => !item[field])
-                                        .map(([field, label]) => (
-                                          <button
-                                            key={field}
-                                            type="button"
-                                            data-tone="primary"
-                                            onClick={() => enableItemOption(item.id, field)}
-                                            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-transform"
-                                          >
-                                            <Plus className="h-3.5 w-3.5 shrink-0" />
-                                            <span className="truncate">{label}</span>
-                                          </button>
-                                        ))}
-                                      {item.showDiscount ? (
-                                        <button
-                                          type="button"
-                                          data-tone="danger"
-                                          onClick={() => {
-                                            disableItemOption(item.id, 'showDiscount', {
-                                              discountRate: 0,
-                                            })
-                                            setOpenItemMenuId(null)
-                                          }}
-                                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-400 transition-colors hover:bg-red-500/10"
-                                        >
-                                          <X className="h-3.5 w-3.5 shrink-0" />
-                                          <span className="truncate">İndirimi kaldır</span>
-                                        </button>
-                                      ) : null}
-                                      {item.showExciseTax ? (
-                                        <button
-                                          type="button"
-                                          data-tone="danger"
-                                          onClick={() => {
-                                            disableItemOption(item.id, 'showExciseTax', {
-                                              exciseTaxRate: 0,
-                                            })
-                                            setOpenItemMenuId(null)
-                                          }}
-                                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-400 transition-colors hover:bg-red-500/10"
-                                        >
-                                          <X className="h-3.5 w-3.5 shrink-0" />
-                                          <span className="truncate">ÖTV kaldır</span>
-                                        </button>
-                                      ) : null}
-                                      {item.showAccommodationTax ? (
-                                        <button
-                                          type="button"
-                                          data-tone="danger"
-                                          onClick={() => {
-                                            disableItemOption(item.id, 'showAccommodationTax', {
-                                              accommodationTaxRate: 0,
-                                            })
-                                            setOpenItemMenuId(null)
-                                          }}
-                                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-400 transition-colors hover:bg-red-500/10"
-                                        >
-                                          <X className="h-3.5 w-3.5 shrink-0" />
-                                          <span className="truncate">Konaklama vergisini kaldır</span>
-                                        </button>
-                                      ) : null}
-                                    </div>
-                                  )}
-                                  {pendingItemDeleteId === item.id && (
-                                    <DeleteConfirmPopover
-                                      title="Satır silinsin mi?"
-                                      description="Bu satır kaldırılacak."
-                                      confirmLabel="Evet"
-                                      cancelLabel="Hayır"
-                                      compact
-                                      inline
-                                      onConfirm={() => removeItem(item.id)}
-                                      onCancel={() => setPendingItemDeleteId(null)}
-                                    />
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            {item.showDescription && (
-                              <div
-                                className={`mt-1.5 grid grid-cols-[minmax(0,1fr)_auto] items-center ${quoteItemFieldGapClass}`}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setOpenItemMenuId(openItemMenuId === item.id ? null : item.id)
+                                }
+                                className={quoteLineActionBtnClass}
+                                data-tone="primary"
+                                title="Satıra alan ekle"
                               >
-                                <input
-                                  value={item.extraDescription ?? ''}
-                                  onChange={(event) =>
-                                    updateItem(item.id, 'extraDescription', event.target.value)
-                                  }
-                                  placeholder="Satır açıklaması..."
-                                  className="form-input"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    disableItemOption(item.id, 'showDescription', {
-                                      extraDescription: '',
-                                    })
-                                  }
-                                  className="inline-flex h-10 items-center justify-center gap-1 rounded-lg px-2 text-[12px] font-medium text-red-400 transition-colors hover:bg-red-500/10"
-                                  title="Açıklamayı kaldır"
+                                <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPendingItemDeleteId(item.id)}
+                                className={quoteLineDeleteBtnClass}
+                                data-tone="danger"
+                                title="Satırı sil"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                              </button>
+                              {openItemMenuId === item.id && (
+                                <div
+                                  className={`absolute right-0 top-10 z-30 w-52 p-1.5 ${PAGE_FILTER_MENU_CLASS}`}
                                 >
-                                  <X className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            )}
+                                  {[
+                                    ['showDescription', 'Açıklama ekle'],
+                                    ['showDiscount', 'İndirim ekle'],
+                                    ['showExciseTax', 'ÖTV ekle'],
+                                    ['showAccommodationTax', 'Konaklama vergisi ekle'],
+                                  ]
+                                    .filter(([field]) => !item[field])
+                                    .map(([field, label]) => (
+                                      <button
+                                        key={field}
+                                        type="button"
+                                        data-tone="primary"
+                                        onClick={() => enableItemOption(item.id, field)}
+                                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-transform"
+                                      >
+                                        <Plus className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="truncate">{label}</span>
+                                      </button>
+                                    ))}
+                                  {item.showDiscount ? (
+                                    <button
+                                      type="button"
+                                      data-tone="danger"
+                                      onClick={() => {
+                                        disableItemOption(item.id, 'showDiscount', {
+                                          discountRate: 0,
+                                        })
+                                        setOpenItemMenuId(null)
+                                      }}
+                                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-400 transition-colors hover:bg-red-500/10"
+                                    >
+                                      <X className="h-3.5 w-3.5 shrink-0" />
+                                      <span className="truncate">İndirimi kaldır</span>
+                                    </button>
+                                  ) : null}
+                                  {item.showExciseTax ? (
+                                    <button
+                                      type="button"
+                                      data-tone="danger"
+                                      onClick={() => {
+                                        disableItemOption(item.id, 'showExciseTax', {
+                                          exciseTaxRate: 0,
+                                        })
+                                        setOpenItemMenuId(null)
+                                      }}
+                                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-400 transition-colors hover:bg-red-500/10"
+                                    >
+                                      <X className="h-3.5 w-3.5 shrink-0" />
+                                      <span className="truncate">ÖTV kaldır</span>
+                                    </button>
+                                  ) : null}
+                                  {item.showAccommodationTax ? (
+                                    <button
+                                      type="button"
+                                      data-tone="danger"
+                                      onClick={() => {
+                                        disableItemOption(item.id, 'showAccommodationTax', {
+                                          accommodationTaxRate: 0,
+                                        })
+                                        setOpenItemMenuId(null)
+                                      }}
+                                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-400 transition-colors hover:bg-red-500/10"
+                                    >
+                                      <X className="h-3.5 w-3.5 shrink-0" />
+                                      <span className="truncate">Konaklama vergisini kaldır</span>
+                                    </button>
+                                  ) : null}
+                                </div>
+                              )}
+                              {pendingItemDeleteId === item.id && (
+                                <DeleteConfirmPopover
+                                  title="Satır silinsin mi?"
+                                  description="Bu satır kaldırılacak."
+                                  confirmLabel="Evet"
+                                  cancelLabel="Hayır"
+                                  compact
+                                  inline
+                                  onConfirm={() => removeItem(item.id)}
+                                  onCancel={() => setPendingItemDeleteId(null)}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {item.showDescription && (
+                          <div
+                            className={`mt-1.5 grid grid-cols-[minmax(0,1fr)_auto] items-center ${quoteItemFieldGapClass}`}
+                          >
+                            <input
+                              value={item.extraDescription ?? ''}
+                              onChange={(event) =>
+                                updateItem(item.id, 'extraDescription', event.target.value)
+                              }
+                              placeholder="Satır açıklaması..."
+                              className="form-input"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                disableItemOption(item.id, 'showDescription', {
+                                  extraDescription: '',
+                                })
+                              }
+                              className="inline-flex h-10 items-center justify-center gap-1 rounded-lg px-2 text-[12px] font-medium text-red-400 transition-colors hover:bg-red-500/10"
+                              title="Açıklamayı kaldır"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
@@ -3420,11 +3607,7 @@ export default function QuotesPage() {
                     </div>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={addItem}
-                    className={`${quoteMsCtaClass} w-full`}
-                  >
+                  <button type="button" onClick={addItem} className={`${quoteMsCtaClass} w-full`}>
                     <Plus className="h-4 w-4 text-[#2563eb]" strokeWidth={2.25} />
                     Ürün Ekle
                   </button>
@@ -3516,6 +3699,17 @@ export default function QuotesPage() {
           setPendingHeaderQuoteDelete(false)
           setDeleteConfirmAnchor(null)
         }}
+      />
+
+      <DeleteConfirmOverlay
+        open={pendingBulkDelete && selectedQuoteIds.length > 0}
+        anchorRef={bulkDeleteButtonRef}
+        title={`${selectedQuoteIds.length} teklif silinsin mi?`}
+        description="Seçilen teklifler silinenlere taşınır; geri alınabilir."
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
+        onCancel={() => setPendingBulkDelete(false)}
+        onConfirm={handleBulkDeleteQuotes}
       />
     </AppPageShell>
   )
