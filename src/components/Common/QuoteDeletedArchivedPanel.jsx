@@ -96,8 +96,11 @@ export default function QuoteDeletedArchivedPanel({
   onRestored,
   emptyMessage = 'Silinen teklif yok.',
   className = '',
+  receivePulseKey = 0,
 }) {
+  const panelRef = useRef(null)
   const [open, setOpen] = useState(false)
+  const [receiveActive, setReceiveActive] = useState(false)
   const [version, setVersion] = useState(0)
   const [pendingPermanentDelete, setPendingPermanentDelete] = useState(null)
   const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
@@ -117,6 +120,15 @@ export default function QuoteDeletedArchivedPanel({
       window.removeEventListener('bach:quotes-updated', refresh)
     }
   }, [])
+
+  useEffect(() => {
+    if (!receivePulseKey) return undefined
+    setOpen(true)
+    setReceiveActive(true)
+    panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    const timer = window.setTimeout(() => setReceiveActive(false), 900)
+    return () => window.clearTimeout(timer)
+  }, [receivePulseKey])
 
   const entries = useMemo(() => {
     void version
@@ -185,9 +197,7 @@ export default function QuoteDeletedArchivedPanel({
         {
           id: 'bulk-delete-confirm',
           label:
-            selectedIds.length > 0
-              ? `Seçilenleri Sil (${selectedIds.length})`
-              : 'Seçilenleri Sil',
+            selectedIds.length > 0 ? `Seçilenleri Sil (${selectedIds.length})` : 'Seçilenleri Sil',
           icon: Trash2,
           tone: 'danger',
           onClick: (event) => {
@@ -219,7 +229,12 @@ export default function QuoteDeletedArchivedPanel({
       ]
 
   return (
-    <section className={`${SP_PANEL_SHELL_CLASS} ${className}`.trim()}>
+    <section
+      ref={panelRef}
+      className={`${SP_PANEL_SHELL_CLASS} ${className} ${
+        receiveActive ? 'quote-deleted-panel-receive' : ''
+      }`.trim()}
+    >
       <div className="relative flex min-h-[4.75rem] items-stretch">
         <button
           type="button"
@@ -324,9 +339,7 @@ export default function QuoteDeletedArchivedPanel({
                       )}
                       <div className="min-w-0 flex-1">
                         <p className={SP_ROW_TITLE_CLASS}>{item.label}</p>
-                        <p className={SP_ROW_META_CLASS}>
-                          Silindi · {formatWhen(item.at)}
-                        </p>
+                        <p className={SP_ROW_META_CLASS}>Silindi · {formatWhen(item.at)}</p>
                         {details.length ? (
                           <p className={SP_ROW_DETAILS_CLASS}>{details.join(' · ')}</p>
                         ) : null}

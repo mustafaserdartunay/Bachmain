@@ -900,8 +900,16 @@ html.night .app-responsive .page-type-shell .document-compact-controls .app-sear
 .app-responsive .page-type-shell .document-compact-controls input.search-pill:focus-visible,
 html:not(.night) .app-responsive .page-type-shell .document-compact-controls .form-input:hover,
 html:not(.night) .app-responsive .page-type-shell .document-compact-controls .form-input:focus,
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls input.search-pill:hover,
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls input.search-pill:focus {
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  input.search-pill:hover,
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  input.search-pill:focus {
   background-color: transparent !important;
   box-shadow: none !important;
   outline: none !important;
@@ -914,11 +922,31 @@ html:not(.night) .app-responsive .page-type-shell .document-compact-controls inp
 .app-responsive .page-type-shell .document-compact-controls .document-frame-only,
 html:not(.night) .app-responsive .page-type-shell .document-compact-controls .glass-inset,
 html:not(.night) .app-responsive .page-type-shell .document-compact-controls .document-frame-only,
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-dark-']:not(.app-panel-dot *),
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-black/']:not(.app-panel-dot *),
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-white']:not(.app-panel-dot *),
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-emerald-']:not(.app-panel-dot *),
-html:not(.night) .app-responsive .page-type-shell .document-compact-controls [class*='bg-blue-']:not(.app-panel-dot *),
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-dark-']:not(.app-panel-dot *),
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-black/']:not(.app-panel-dot *),
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-white']:not(.app-panel-dot *),
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-emerald-']:not(.app-panel-dot *),
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-blue-']:not(.app-panel-dot *),
 html.night .app-responsive .page-type-shell .document-compact-controls .glass-inset,
 html.night .app-responsive .page-type-shell .document-compact-controls .document-frame-only {
   background: transparent !important;
@@ -3487,6 +3515,62 @@ html body .app-responsive .quote-list-row-panel .customer-balance-positive {
   font-weight: 700 !important;
 }
 
+.quote-list-row-exit-wrap {
+  overflow: hidden;
+  pointer-events: none;
+  animation: quote-list-row-archive 0.72s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  transform-origin: center top;
+  will-change: transform, opacity, max-height;
+}
+
+@keyframes quote-list-row-archive {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 6rem;
+    filter: blur(0);
+  }
+  55% {
+    opacity: 0.72;
+    transform: translateY(2.75rem) scale(0.94);
+    max-height: 5rem;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(5.5rem) scale(0.78);
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    filter: blur(1px);
+  }
+}
+
+.customer-deleted-archived-panel.quote-deleted-panel-receive {
+  animation: quote-deleted-panel-receive 0.85s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes quote-deleted-panel-receive {
+  0% {
+    box-shadow:
+      0 10px 36px -14px rgba(30, 35, 60, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    box-shadow:
+      0 16px 40px -12px rgba(244, 63, 94, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    transform: translateY(-2px) scale(1.008);
+  }
+  100% {
+    box-shadow:
+      0 10px 36px -14px rgba(30, 35, 60, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(0) scale(1);
+  }
+}
+
 html.space [class*='rounded-2xl'][class*='border'][class*='bg-dark-800'] {
   background: var(--space-module-bg) !important;
   border-color: var(--space-module-border) !important;
@@ -4294,11 +4378,14 @@ html.night .glass-sidebar .sidebar-submenu {
   will-change: transform, opacity;
 }
 
-.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) > aside.app-sidebar:not(.glass-team-hub),
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting)
+  > aside.app-sidebar:not(.glass-team-hub),
 .studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) .app-shell-content > header,
 .studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) > .glass-team-hub,
 .studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) .app-shell-content > main,
-.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) .app-shell-content > div:not(header) {
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting)
+  .app-shell-content
+  > div:not(header) {
   opacity: 0;
 }
 
@@ -8265,7 +8352,11 @@ html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-orde
 html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
 html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
 html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
-html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
+html
+  .customers-page-type
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close
+  svg,
 html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg {
   color: var(--muted) !important;
   background: transparent !important;
@@ -8283,13 +8374,28 @@ html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-close:hover s
 html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
 html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
 html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
-html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html
+  .customers-page-type
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close:hover,
 html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
 html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
 html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
-html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
-html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
-html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg {
+html
+  .app-responsive
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close:hover
+  svg,
+html
+  .customers-page-type
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close:hover
+  svg,
+html
+  .page-type-shell
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close:hover
+  svg {
   color: #dc2626 !important;
   background: transparent !important;
   transform: none !important;

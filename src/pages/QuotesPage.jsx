@@ -1371,7 +1371,8 @@ export default function QuotesPage() {
   const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedQuoteIds, setSelectedQuoteIds] = useState([])
-  const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const [animatingDeleteIds, setAnimatingDeleteIds] = useState([])
+  const [archiveReceiveKey, setArchiveReceiveKey] = useState(0)
   const [openItemMenuId, setOpenItemMenuId] = useState(null)
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
@@ -2518,7 +2519,7 @@ export default function QuotesPage() {
   function exitBulkSelectMode() {
     setBulkSelectMode(false)
     setSelectedQuoteIds([])
-    setPendingBulkDelete(false)
+    setAnimatingDeleteIds([])
   }
 
   function toggleBulkQuoteSelect(id) {
@@ -2540,12 +2541,21 @@ export default function QuotesPage() {
   }
 
   function handleBulkDeleteQuotes() {
-    selectedQuoteIds.forEach((id) => {
-      const quote = quotes.find((item) => String(item.id) === id)
-      if (quote) softDeleteQuote(quote)
-    })
-    setQuotes(loadQuotes())
-    exitBulkSelectMode()
+    const ids = [...selectedQuoteIds]
+    if (!ids.length || animatingDeleteIds.length > 0) return
+
+    setAnimatingDeleteIds(ids)
+
+    window.setTimeout(() => {
+      ids.forEach((id) => {
+        const quote = quotes.find((item) => String(item.id) === id)
+        if (quote) softDeleteQuote(quote)
+      })
+      setQuotes(loadQuotes())
+      setAnimatingDeleteIds([])
+      exitBulkSelectMode()
+      setArchiveReceiveKey((current) => current + 1)
+    }, 720)
   }
 
   function getQuoteSortDate(quote) {
@@ -2620,7 +2630,7 @@ export default function QuotesPage() {
     ...quoteSegmentTabs.map(() => 'minmax(9.25rem, 0.7fr)'),
     '6.75rem',
     '6.5rem',
-    pendingBulkDelete && selectedQuoteIds.length > 0 ? '6.5rem' : '3rem',
+    bulkSelectMode && selectedQuoteIds.length > 0 ? '6.5rem' : '3rem',
   ].join(' ')
 
   const listQuoteIds = listQuotes.map((quote) => String(quote.id))
@@ -2897,22 +2907,6 @@ export default function QuotesPage() {
             </AppPagePanel>
           ) : (
             <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
-              {bulkSelectMode ? (
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
-                  <p className={YF_TEXT_CLASS}>
-                    {selectedQuoteIds.length > 0
-                      ? `${selectedQuoteIds.length} teklif seçildi`
-                      : 'Silmek istediğiniz teklifleri seçin'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={exitBulkSelectMode}
-                    className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 transition-colors hover:bg-black/5`}
-                  >
-                    İptal
-                  </button>
-                </div>
-              ) : null}
               <div className="quote-list-board">
                 <QuoteListRowPanel header gridTemplate={quoteListColumnGrid}>
                   {bulkSelectMode ? (
@@ -2982,33 +2976,25 @@ export default function QuotesPage() {
                     />
                   </QuoteListCell>
                   <QuoteListCell>
-                    {pendingBulkDelete && selectedQuoteIds.length > 0 ? (
+                    {bulkSelectMode && selectedQuoteIds.length > 0 ? (
                       <QuoteOrderInlineConfirm
                         label="Sil"
                         labelClass="quote-order-undo-sil"
                         ariaLabel={`${selectedQuoteIds.length} teklif silinsin mi?`}
-                        onConfirm={() => {
-                          handleBulkDeleteQuotes()
-                          setPendingBulkDelete(false)
-                        }}
-                        onCancel={() => setPendingBulkDelete(false)}
+                        onConfirm={handleBulkDeleteQuotes}
+                        onCancel={() => setSelectedQuoteIds([])}
                       />
                     ) : (
                       <button
                         type="button"
                         className={`${COP_KUTUSU_BUTTON_CLASS}${bulkSelectMode ? ' bg-red-500/15' : ''}`}
-                        title={bulkSelectMode ? 'Seçilenleri sil' : 'Toplu sil'}
-                        aria-label={bulkSelectMode ? 'Seçilenleri sil' : 'Toplu sil modu'}
+                        title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
+                        aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
                         onClick={(event) => {
                           event.stopPropagation()
                           if (!bulkSelectMode) {
                             setBulkSelectMode(true)
                             setSelectedQuoteIds([])
-                            setPendingBulkDelete(false)
-                            return
-                          }
-                          if (selectedQuoteIds.length > 0) {
-                            setPendingBulkDelete(true)
                             return
                           }
                           exitBulkSelectMode()
@@ -3020,25 +3006,38 @@ export default function QuotesPage() {
                   </QuoteListCell>
                 </QuoteListRowPanel>
 
-                {listQuotes.map((quote) => {
+                {listQuotes.map((quote, rowIndex) => {
                   const stamp = formatListDateParts(getQuoteListDateSource(quote))
                   const display = getListCustomerDisplay(quote.customer)
                   const pending =
                     pendingQuoteOrderAction?.id === quote.id ? pendingQuoteOrderAction.type : null
                   const quoteKey = String(quote.id)
                   const isBulkSelected = selectedQuoteIds.includes(quoteKey)
+                  const isAnimatingOut = animatingDeleteIds.includes(quoteKey)
                   return (
                     <div
                       key={quote.id}
-                      role={bulkSelectMode ? undefined : 'button'}
-                      tabIndex={bulkSelectMode ? undefined : 0}
-                      className={bulkSelectMode ? undefined : 'cursor-pointer'}
+                      className={
+                        isAnimatingOut
+                          ? 'quote-list-row-exit-wrap'
+                          : bulkSelectMode
+                            ? undefined
+                            : 'cursor-pointer'
+                      }
+                      style={
+                        isAnimatingOut
+                          ? { animationDelay: `${Math.min(rowIndex, 6) * 70}ms` }
+                          : undefined
+                      }
+                      role={bulkSelectMode && !isAnimatingOut ? undefined : 'button'}
+                      tabIndex={bulkSelectMode && !isAnimatingOut ? undefined : 0}
                       onClick={() => {
+                        if (isAnimatingOut) return
                         if (bulkSelectMode) toggleBulkQuoteSelect(quote.id)
                         else editQuote(quote.id)
                       }}
                       onKeyDown={(event) => {
-                        if (bulkSelectMode) return
+                        if (bulkSelectMode || isAnimatingOut) return
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault()
                           editQuote(quote.id)
@@ -3614,6 +3613,8 @@ export default function QuotesPage() {
         <QuoteDeletedArchivedPanel
           onRestored={() => setQuotes(loadQuotes())}
           emptyMessage="Silinen teklif yok."
+          receivePulseKey={archiveReceiveKey}
+          className="customer-deleted-archived-panel w-full"
         />
       ) : null}
 
