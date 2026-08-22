@@ -7,10 +7,14 @@ export const DROPDOWN_PORTAL_SHELL_CLASS =
   'app-dropdown-portal glass-inset az min-w-[210px] rounded-[16px] p-2'
 
 const TONE_CLASS = {
-  danger: 'text-[#ef4444] hover:bg-transparent hover:text-[#dc2626] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#dc2626]',
-  primary: 'text-[#2563eb] hover:bg-transparent hover:text-[#1d4ed8] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#1d4ed8]',
-  success: 'text-[#10b981] hover:bg-transparent hover:text-[#047857] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#047857]',
-  orange: 'text-[#ea580c] hover:bg-transparent hover:text-[#c2410c] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#c2410c]',
+  danger:
+    'text-[#ef4444] hover:bg-transparent hover:text-[#dc2626] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#dc2626]',
+  primary:
+    'text-[#2563eb] hover:bg-transparent hover:text-[#1d4ed8] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#1d4ed8]',
+  success:
+    'text-[#10b981] hover:bg-transparent hover:text-[#047857] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#047857]',
+  orange:
+    'text-[#ea580c] hover:bg-transparent hover:text-[#c2410c] [&_span]:text-[var(--muted)] hover:[&_span]:text-[#c2410c]',
   default: 'text-[var(--muted)] hover:bg-transparent',
 }
 
@@ -58,8 +62,7 @@ export function Dropdown({
       const menuHeight = menuEl.offsetHeight || 280
 
       let top = rect.bottom + gap
-      const opensUp =
-        top + menuHeight > bottomLimit && rect.top - menuHeight - gap > viewportPad
+      const opensUp = top + menuHeight > bottomLimit && rect.top - menuHeight - gap > viewportPad
       if (opensUp) {
         top = Math.max(viewportPad, rect.top - menuHeight - gap)
       }
@@ -115,7 +118,14 @@ export function Dropdown({
   )
 }
 
-export function DropdownItem({ icon: Icon, label, onClick, tone = 'default', close }) {
+export function DropdownItem({
+  icon: Icon,
+  label,
+  onClick,
+  tone = 'default',
+  close,
+  closeOnClick = true,
+}) {
   const toneClass = TONE_CLASS[tone] || TONE_CLASS.default
   return (
     <button
@@ -126,12 +136,10 @@ export function DropdownItem({ icon: Icon, label, onClick, tone = 'default', clo
       className={`flex w-full origin-left items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-normal leading-[14px] tracking-normal transition-[transform,background-color,color] hover:scale-110 ${toneClass}`}
       onClick={(event) => {
         onClick?.(event)
-        close?.()
+        if (closeOnClick) close?.()
       }}
     >
-      {Icon ? (
-        <Icon className="h-[14px] w-[14px] shrink-0" strokeWidth={2.25} aria-hidden />
-      ) : null}
+      {Icon ? <Icon className="h-[14px] w-[14px] shrink-0" strokeWidth={2.25} aria-hidden /> : null}
       <span className="min-w-0 truncate leading-[14px]">{label}</span>
     </button>
   )

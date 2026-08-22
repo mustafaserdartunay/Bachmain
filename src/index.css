@@ -1940,6 +1940,45 @@ html body .app-responsive .customer-list-panel .quote-order-undo-close:hover svg
   background: transparent !important;
   transform: none !important;
 }
+
+/* Teklif satır menüsü — Sil onayı menü içinde */
+.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-confirm {
+  display: inline-flex !important;
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-box {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 2.25rem !important;
+  box-sizing: border-box !important;
+}
+
+.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-sil {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  color: #dc2626 !important;
+  background: transparent !important;
+}
+
+.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-close,
+.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-close svg {
+  color: var(--muted) !important;
+  background: transparent !important;
+}
+
+.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-close:hover,
+.app-dropdown-portal .quote-menu-delete-confirm .quote-order-undo-close:hover svg {
+  color: #dc2626 !important;
+}
+
 html body .page-type-shell .customer-list-panel button.customer-bulk-delete-action,
 html body .customers-page-type .customer-list-panel button.customer-bulk-delete-action,
 html body .app-responsive .customer-list-panel button.customer-bulk-delete-action,

@@ -30,7 +30,9 @@ export function SummaryMetricCard({ title, value, icon: Icon, valueTone = 'white
           ) : null}
           <span className={`${APP_LABEL_CLASS} text-center`}>{title}</span>
         </div>
-        <p className={`${APP_VALUE_CLASS} max-w-full truncate text-center text-xl ${valueToneClass}`}>
+        <p
+          className={`${APP_VALUE_CLASS} max-w-full truncate text-center text-xl ${valueToneClass}`}
+        >
           {value}
         </p>
         {subtitle && <p className={`${APP_LABEL_CLASS} text-center`}>{subtitle}</p>}
@@ -44,7 +46,7 @@ export default function SummaryMetrics({ items, columns = 5, className = '' }) {
     columns === 8
       ? 'grid-cols-2 sm:grid-cols-4 xl:grid-cols-8'
       : columns === 5
-        ? 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-5'
+        ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
         : columns === 4
           ? 'grid-cols-2 lg:grid-cols-4'
           : 'grid-cols-3'

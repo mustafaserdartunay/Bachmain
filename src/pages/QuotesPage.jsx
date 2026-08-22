@@ -7,11 +7,13 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
+  Ban,
   CheckCircle2,
   ChevronDown,
   ClipboardList,
   FileText,
   Mail,
+  MoreHorizontal,
   Pencil,
   Plus,
   Printer,
@@ -21,7 +23,7 @@ import {
   Undo2,
   X,
 } from 'lucide-react'
-import { Dropdown, DropdownItem, DropdownSeparator, EmptyState, MoreMenu } from '@bachmain/ui'
+import { Button, Dropdown, DropdownItem, DropdownSeparator, EmptyState } from '@bachmain/ui'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
 import QuoteDeletedArchivedPanel from '../components/Common/QuoteDeletedArchivedPanel'
 import {
@@ -309,6 +311,104 @@ function QuoteOrderInlineConfirm({ label, labelClass, ariaLabel, onConfirm, onCa
         </button>
       </div>
     </div>
+  )
+}
+
+function QuoteListRowMoreMenu({
+  isGeneratingPdf,
+  onPrint,
+  onWhatsApp,
+  onMail,
+  onPdf,
+  onEdit,
+  onDelete,
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  return (
+    <Dropdown
+      align="end"
+      menuClassName="az customer-filter-dropdown-menu customers-page-menu"
+      trigger={
+        <Button
+          variant="ghost"
+          size="iconOnly"
+          className="hover:!bg-transparent"
+          aria-label="Diğer işlemler"
+          onClick={() => setConfirmDelete(false)}
+        >
+          <MoreHorizontal className="h-5 w-5" />
+        </Button>
+      }
+    >
+      {({ close }) =>
+        confirmDelete ? (
+          <div
+            className="quote-menu-delete-confirm flex w-full items-center justify-center px-1 py-1"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <QuoteOrderInlineConfirm
+              label="Sil"
+              labelClass="quote-order-undo-sil"
+              ariaLabel="Teklif sil"
+              onConfirm={() => {
+                onDelete()
+                setConfirmDelete(false)
+                close()
+              }}
+              onCancel={() => setConfirmDelete(false)}
+            />
+          </div>
+        ) : (
+          <>
+            <DropdownItem
+              icon={Printer}
+              label="Yazdır"
+              tone="primary"
+              close={close}
+              onClick={onPrint}
+            />
+            <DropdownItem
+              icon={Send}
+              label={isGeneratingPdf ? 'Hazırlanıyor...' : 'WhatsApp Gönder'}
+              tone="success"
+              close={close}
+              onClick={onWhatsApp}
+            />
+            <DropdownItem
+              icon={Mail}
+              label={isGeneratingPdf ? 'Hazırlanıyor...' : 'Mail Gönder'}
+              tone="primary"
+              close={close}
+              onClick={onMail}
+            />
+            <DropdownItem
+              icon={FileText}
+              label={isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir'}
+              tone="danger"
+              close={close}
+              onClick={onPdf}
+            />
+            <DropdownSeparator />
+            <DropdownItem
+              icon={Pencil}
+              label="Düzenle"
+              tone="primary"
+              close={close}
+              onClick={onEdit}
+            />
+            <DropdownItem
+              icon={Trash2}
+              label="Sil"
+              tone="danger"
+              close={close}
+              closeOnClick={false}
+              onClick={() => setConfirmDelete(true)}
+            />
+          </>
+        )
+      }
+    </Dropdown>
   )
 }
 
@@ -1371,7 +1471,6 @@ export default function QuotesPage() {
   listColumnSortRef.current = listColumnSort
   const listColumnSortLockRef = useRef(false)
   const [viewMode, setViewMode] = useState('list')
-  const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedQuoteIds, setSelectedQuoteIds] = useState([])
@@ -2538,7 +2637,6 @@ export default function QuotesPage() {
       }
     }
 
-    setPendingDeleteId(null)
     setPendingHeaderQuoteDelete(false)
     setOpenSaveMenu(false)
     if (navigateToList) {
@@ -2679,6 +2777,9 @@ export default function QuotesPage() {
   const summary = {
     total: filteredQuotes.length,
     sent: filteredQuotes.filter((quote) => quote.status === 'Müşteriye Gönderildi').length,
+    cancelled: filteredQuotes.filter(
+      (quote) => quote.status === 'İptal' || quote.status === 'Reddedildi',
+    ).length,
     approved: filteredQuotes.filter((quote) => quote.status === 'Onaylandı').length,
     totalAmount: openQuotes.reduce((sum, quote) => sum + getQuoteListAmount(quote), 0),
   }
@@ -2816,7 +2917,7 @@ export default function QuotesPage() {
 
       {viewMode === 'list' && (
         <SummaryMetrics
-          columns={4}
+          columns={5}
           className="customer-summary-metrics w-full"
           items={[
             {
@@ -2831,6 +2932,13 @@ export default function QuotesPage() {
               icon: Send,
               tone: 'orange',
               valueTone: 'text-blue-800',
+            },
+            {
+              title: 'İptal',
+              value: summary.cancelled,
+              icon: Ban,
+              tone: 'red',
+              valueTone: 'text-red-700',
             },
             {
               title: 'Onaylanan',
@@ -3184,66 +3292,15 @@ export default function QuotesPage() {
                             className="inline-flex w-full items-center justify-center"
                             onClick={(event) => event.stopPropagation()}
                           >
-                            {pendingDeleteId === quote.id ? (
-                              <QuoteOrderInlineConfirm
-                                label="Sil"
-                                labelClass="quote-order-undo-sil"
-                                ariaLabel="Teklif sil"
-                                onConfirm={() => {
-                                  deleteQuote(quote, { skipConfirm: true })
-                                  setPendingDeleteId(null)
-                                }}
-                                onCancel={() => setPendingDeleteId(null)}
-                              />
-                            ) : (
-                              <MoreMenu
-                                items={[
-                                  {
-                                    id: 'print',
-                                    label: 'Yazdır',
-                                    icon: Printer,
-                                    tone: 'primary',
-                                    onClick: () => printQuoteDocument(quote),
-                                  },
-                                  {
-                                    id: 'whatsapp',
-                                    label: isGeneratingPdf ? 'Hazırlanıyor...' : 'WhatsApp Gönder',
-                                    icon: Send,
-                                    tone: 'success',
-                                    onClick: () => sendQuoteByWhatsApp(quote),
-                                  },
-                                  {
-                                    id: 'mail',
-                                    label: isGeneratingPdf ? 'Hazırlanıyor...' : 'Mail Gönder',
-                                    icon: Mail,
-                                    tone: 'primary',
-                                    onClick: () => sendQuoteByMail(quote),
-                                  },
-                                  {
-                                    id: 'pdf',
-                                    label: isGeneratingPdf ? 'Hazırlanıyor...' : 'PDF İndir',
-                                    icon: FileText,
-                                    tone: 'danger',
-                                    onClick: () => downloadQuotePdf(quote),
-                                  },
-                                  { type: 'separator', id: 'quote-row-sep' },
-                                  {
-                                    id: 'edit',
-                                    label: 'Düzenle',
-                                    icon: Pencil,
-                                    tone: 'primary',
-                                    onClick: () => editQuote(quote.id),
-                                  },
-                                  {
-                                    id: 'delete',
-                                    label: 'Sil',
-                                    icon: Trash2,
-                                    tone: 'danger',
-                                    onClick: () => setPendingDeleteId(quote.id),
-                                  },
-                                ]}
-                              />
-                            )}
+                            <QuoteListRowMoreMenu
+                              isGeneratingPdf={isGeneratingPdf}
+                              onPrint={() => printQuoteDocument(quote)}
+                              onWhatsApp={() => sendQuoteByWhatsApp(quote)}
+                              onMail={() => sendQuoteByMail(quote)}
+                              onPdf={() => downloadQuotePdf(quote)}
+                              onEdit={() => editQuote(quote.id)}
+                              onDelete={() => deleteQuote(quote, { skipConfirm: true })}
+                            />
                           </span>
                         </QuoteListCell>
                       </QuoteListRowPanel>

@@ -41,6 +41,7 @@ export function MoreMenu({
               tone={item.tone}
               onClick={item.onClick}
               close={close}
+              closeOnClick={item.closeOnClick !== false}
             />
           ),
         )
