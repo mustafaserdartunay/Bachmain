@@ -230,26 +230,28 @@ function DeletedDateCell({ record, deletedAt }) {
   const createdLine = [createdStamp.date, createdStamp.time].filter(Boolean).join(' ')
   const deletedLine = [deletedStamp.date, deletedStamp.time].filter(Boolean).join(' ')
 
-  if (!createdLine && !deletedLine) {
-    return (
-      <span className="block text-center text-[11px] font-normal leading-tight text-[var(--muted)]">
-        —
-      </span>
-    )
-  }
-
   return (
-    <span className="flex max-w-full flex-col items-center justify-center gap-0.5 tabular-nums leading-tight">
-      {createdLine ? (
-        <span className="text-[11px] font-normal tracking-normal text-[var(--muted)]">
-          {createdLine}
+    <span className="quote-deleted-date-cell flex max-w-full flex-col items-center justify-center leading-none">
+      <span className="flex w-full max-w-[6.5rem] flex-col items-center gap-px">
+        <span className="text-[8px] font-normal leading-tight text-[var(--muted)]/55">
+          Oluşturulma tarihi
         </span>
-      ) : null}
-      {deletedLine ? (
-        <span className="text-[10px] font-normal tracking-normal text-[var(--muted)]/70">
-          {deletedLine}
+        <span className="text-[9px] font-normal tabular-nums leading-tight text-[var(--muted)]">
+          {createdLine || '—'}
         </span>
-      ) : null}
+      </span>
+      <span
+        className="my-0.5 h-px w-full max-w-[4.75rem] shrink-0 bg-[var(--glass-border)]/80"
+        aria-hidden
+      />
+      <span className="flex w-full max-w-[6.5rem] flex-col items-center gap-px">
+        <span className="text-[8px] font-normal leading-tight text-[var(--muted)]/55">
+          Silinme tarihi
+        </span>
+        <span className="text-[9px] font-normal tabular-nums leading-tight text-[var(--muted)]/70">
+          {deletedLine || '—'}
+        </span>
+      </span>
     </span>
   )
 }
@@ -440,6 +442,21 @@ export default function QuoteDeletedArchivedPanel({
         },
       ]
 
+  const togglePanelOpen = () => setOpen((current) => !current)
+
+  const handleHeaderPanelClick = (event) => {
+    if (event.target.closest('[data-deleted-header-interactive]')) return
+    togglePanelOpen()
+  }
+
+  const handleHeaderPanelKeyDown = (event) => {
+    if (event.target.closest('[data-deleted-header-interactive]')) return
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      togglePanelOpen()
+    }
+  }
+
   return (
     <div
       ref={panelRef}
@@ -447,8 +464,16 @@ export default function QuoteDeletedArchivedPanel({
         receiveActive ? 'quote-deleted-panel-receive' : ''
       }`.trim()}
     >
-      <AppPagePanel
-        className={`${DELETED_HEADER_PANEL_CLASS}${open ? ' quote-deleted-header-panel-open' : ''}`}
+      <section
+        type="button"
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={handleHeaderPanelClick}
+        onKeyDown={handleHeaderPanelKeyDown}
+        className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS}${
+          open ? ' quote-deleted-header-panel-open' : ''
+        } cursor-pointer`}
       >
         <div
           className="quote-list-row quote-deleted-header-row w-full min-w-0"
@@ -459,29 +484,21 @@ export default function QuoteDeletedArchivedPanel({
             className="is-start quote-deleted-header-title-cell"
             style={{ gridColumn: `span ${titleColumnSpan}` }}
           >
-            <button
-              type="button"
-              onClick={() => setOpen((current) => !current)}
-              className="flex min-w-0 items-center gap-2 rounded-lg bg-transparent px-0 py-0 text-left"
-            >
+            <span className="flex min-w-0 items-center gap-2 px-0 py-0 text-left">
               <RedPingDot />
               <span className={APP_LABEL_CLASS}>{title}</span>
-            </button>
+            </span>
           </DeletedListCell>
           <DeletedListCell>
-            <button
-              type="button"
-              onClick={() => setOpen((current) => !current)}
-              className="inline-flex w-full items-center justify-center gap-2 bg-transparent"
-              aria-expanded={open}
-            >
+            <span className="inline-flex w-full items-center justify-center gap-2">
               <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
               <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
-            </button>
+            </span>
           </DeletedListCell>
           <DeletedListCell>
             {entries.length > 0 ? (
               <span
+                data-deleted-header-interactive
                 className="inline-flex w-full items-center justify-center"
                 onClick={(event) => event.stopPropagation()}
               >
@@ -492,7 +509,7 @@ export default function QuoteDeletedArchivedPanel({
             )}
           </DeletedListCell>
         </div>
-      </AppPagePanel>
+      </section>
 
       {open ? (
         <div className="quote-deleted-body-plain w-full">
