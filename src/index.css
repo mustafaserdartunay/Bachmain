@@ -1919,6 +1919,75 @@ html body .app-responsive .customer-list-panel .quote-order-undo-evet {
   transform: none !important;
 }
 
+/* Sipariş geri al → Sipariş Oluştur soldan sağa süzülme */
+html body .page-type-shell .customer-list-panel .quote-order-create-reveal,
+html body .customers-page-type .customer-list-panel .quote-order-create-reveal,
+html body .app-responsive .customer-list-panel .quote-order-create-reveal {
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+  overflow: hidden !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-create-reveal.is-revealing .quote-order-chip,
+html body .customers-page-type .customer-list-panel .quote-order-create-reveal.is-revealing .quote-order-chip,
+html body .app-responsive .customer-list-panel .quote-order-create-reveal.is-revealing .quote-order-chip {
+  animation: quote-order-create-slide-in 0.48s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes quote-order-create-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-110%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Liste başlığı toplu sil — geri al butonu ile aynı 1.75rem yuvarlak */
+html body .page-type-shell .quote-list-header-panel button.quote-list-bulk-trash-btn,
+html body .customers-page-type .quote-list-header-panel button.quote-list-bulk-trash-btn,
+html body .app-responsive .quote-list-header-panel button.quote-list-bulk-trash-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  min-width: 1.75rem !important;
+  min-height: 1.75rem !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  background: transparent !important;
+  color: #ef4444 !important;
+  transform: none !important;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease !important;
+}
+
+html body .page-type-shell .quote-list-header-panel button.quote-list-bulk-trash-btn:hover,
+html body .customers-page-type .quote-list-header-panel button.quote-list-bulk-trash-btn:hover,
+html body .app-responsive .quote-list-header-panel button.quote-list-bulk-trash-btn:hover,
+html body .page-type-shell .quote-list-header-panel button.quote-list-bulk-trash-btn.is-active,
+html body .customers-page-type .quote-list-header-panel button.quote-list-bulk-trash-btn.is-active,
+html body .app-responsive .quote-list-header-panel button.quote-list-bulk-trash-btn.is-active {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
+  border-radius: 9999px !important;
+  transform: none !important;
+}
+
+html body .page-type-shell .quote-list-header-panel button.quote-list-bulk-trash-btn svg,
+html body .customers-page-type .quote-list-header-panel button.quote-list-bulk-trash-btn svg,
+html body .app-responsive .quote-list-header-panel button.quote-list-bulk-trash-btn svg {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+  color: currentColor !important;
+}
+
 html body .page-type-shell .customer-list-panel .quote-order-undo-close,
 html body .customers-page-type .customer-list-panel .quote-order-undo-close,
 html body .app-responsive .customer-list-panel .quote-order-undo-close,
@@ -3684,9 +3753,19 @@ html body .app-responsive .quote-list-row-panel .customer-balance-positive {
   }
 }
 
-/* Silinenler gövde — ekstra kart zemini yok; sadece sütun etiketleri */
+/* Silinenler gövde — ekstra kart zemini yok */
 .quote-deleted-body-plain {
   background: transparent !important;
+}
+
+/* Silinenler dış kabuk — cam kart zemini yok */
+.quote-deleted-panel-plain,
+html body .customer-deleted-archived-panel.quote-deleted-panel-plain {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .quote-deleted-list-board {
@@ -3697,23 +3776,18 @@ html body .app-responsive .quote-list-row-panel .customer-balance-positive {
   width: 100%;
 }
 
-.quote-deleted-columns-header {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.quote-deleted-columns-header .quote-list-row {
-  align-items: center;
-  min-height: 2.25rem;
-}
-
 .quote-deleted-ck-btn {
   transform: none !important;
 }
 
+/* Silinenler çk — geri yükle (glass-sidebar-collapse) ile aynı 1.75rem yuvarlak */
 html body .customer-deleted-archived-panel .quote-deleted-ck-btn,
 html body .customer-deleted-archived-panel .quote-deleted-ck-btn:hover {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  min-width: 1.75rem !important;
+  min-height: 1.75rem !important;
+  padding: 0 !important;
   transform: none !important;
   border-radius: 9999px !important;
 }

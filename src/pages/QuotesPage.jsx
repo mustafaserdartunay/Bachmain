@@ -108,7 +108,7 @@ import {
   safeNumber,
   sanitizeDocumentDiscountFields,
 } from '../utils/documentTotals'
-import { BTN_PRIMARY, COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../utils/buttonStyles'
+import { BTN_PRIMARY, COP_KUTUSU_ICON_CLASS } from '../utils/buttonStyles'
 import DocumentActivityPanel from '../components/DocumentEditor/DocumentActivityPanel'
 import DocumentTermsEditor from '../components/DocumentEditor/DocumentTermsEditor'
 import DocumentTotalsPanel from '../components/DocumentEditor/DocumentTotalsPanel'
@@ -573,6 +573,7 @@ function QuoteListOrderModuleButton({
   quote,
   orderCreated,
   pendingAction,
+  revealCreate = false,
   onRequestCreate,
   onRequestUndo,
   onConfirmCreate,
@@ -594,8 +595,8 @@ function QuoteListOrderModuleButton({
   if (pendingAction === 'undo') {
     return (
       <QuoteOrderInlineConfirm
-        label="Sil"
-        labelClass="quote-order-undo-sil"
+        label="Geri Al"
+        labelClass="quote-order-undo-evet"
         ariaLabel="Siparişi geri al"
         onConfirm={onConfirmUndo}
         onCancel={onCancelPending}
@@ -627,16 +628,22 @@ function QuoteListOrderModuleButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={onRequestCreate}
-      className="quote-order-chip quote-order-action inline-flex h-9 flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700"
-      title={`${quote.customer || quote.id} teklifinden sipariş oluştur`}
-      aria-label="Sipariş oluştur"
+    <span
+      className={`quote-order-create-reveal inline-flex w-full items-center justify-center overflow-hidden${
+        revealCreate ? ' is-revealing' : ''
+      }`}
     >
-      <span>Sipariş</span>
-      <span>Oluştur</span>
-    </button>
+      <button
+        type="button"
+        onClick={onRequestCreate}
+        className="quote-order-chip quote-order-action inline-flex h-9 flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700"
+        title={`${quote.customer || quote.id} teklifinden sipariş oluştur`}
+        aria-label="Sipariş oluştur"
+      >
+        <span>Sipariş</span>
+        <span>Oluştur</span>
+      </button>
+    </span>
   )
 }
 
@@ -1493,6 +1500,7 @@ export default function QuotesPage() {
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingQuoteOrderAction, setPendingQuoteOrderAction] = useState(null)
+  const [orderCreateRevealIds, setOrderCreateRevealIds] = useState([])
   const quotePreviewRef = useRef(null)
   const syncedCustomerKeyRef = useRef('')
   const { rates } = useExchangeRates()
@@ -1929,6 +1937,7 @@ export default function QuotesPage() {
 
   function handleUndoOrderFromList(quote, event) {
     event?.stopPropagation?.()
+    const quoteKey = String(quote.id)
     const orders = loadOrders()
     const order = orders.find(
       (item) => item.id === quote.id || item.quoteId === quote.id || item.id === quote.orderId,
@@ -1936,6 +1945,12 @@ export default function QuotesPage() {
     cancelOrderFromQuote(order)
     setQuotes(reloadQuotesStore())
     setPendingQuoteOrderAction(null)
+    setOrderCreateRevealIds((current) =>
+      current.includes(quoteKey) ? current : [...current, quoteKey],
+    )
+    window.setTimeout(() => {
+      setOrderCreateRevealIds((current) => current.filter((id) => id !== quoteKey))
+    }, 520)
   }
 
   function setQuoteStage(quote, stage) {
@@ -3139,7 +3154,7 @@ export default function QuotesPage() {
                     ) : (
                       <button
                         type="button"
-                        className={`${COP_KUTUSU_BUTTON_CLASS}${bulkSelectMode ? ' bg-red-500/15' : ''}`}
+                        className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
                         title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
                         aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
                         onClick={(event) => {
@@ -3289,6 +3304,7 @@ export default function QuotesPage() {
                               quote={quote}
                               orderCreated={isQuoteOrderCreated(quote)}
                               pendingAction={pending}
+                              revealCreate={orderCreateRevealIds.includes(quoteKey)}
                               onRequestCreate={() =>
                                 setPendingQuoteOrderAction({ id: quote.id, type: 'create' })
                               }

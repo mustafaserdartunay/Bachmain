@@ -12,9 +12,7 @@ import {
   SP_CHEVRON_CLASS,
   SP_EMPTY_CLASS,
   SP_HEADER_BUTTON_CLASS,
-  SP_PANEL_SHELL_CLASS,
   YF_TEXT_CLASS,
-  YFB_TEXT_CLASS,
 } from '../../utils/dashboardDesign'
 import { COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
 import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from './ListDeleteConfirmPanel'
@@ -122,20 +120,15 @@ const DELETED_LIST_GRID =
 const DATA_ROW_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-list-row flex w-full items-center min-h-[4.75rem] quote-list-data-panel'
 
-/** Geri yükle ile aynı ölçü — yuvarlak kırmızı hover */
+/** Geri yükle ile aynı ölçü (1.75rem) — yuvarlak kırmızı hover */
 const DELETED_CK_BUTTON_CLASS =
-  'quote-deleted-ck-btn customer-permanent-delete-action inline-flex h-9 w-9 items-center justify-center rounded-full bg-transparent text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600'
+  'quote-deleted-ck-btn customer-permanent-delete-action inline-flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full bg-transparent text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600'
+
+const QUOTE_DELETED_PANEL_SHELL_CLASS =
+  'customer-deleted-archived-panel quote-deleted-panel-plain overflow-visible p-0 w-full'
 
 function DeletedListCell({ className = '', children }) {
   return <div className={`quote-list-cell min-w-0 ${className}`.trim()}>{children}</div>
-}
-
-function DeletedColumnTitle({ label }) {
-  return (
-    <span className={`${YFB_TEXT_CLASS} quote-list-column-title uppercase text-[var(--muted)]`}>
-      {`${String(label).toLocaleUpperCase('tr-TR')} :`}
-    </span>
-  )
 }
 
 export default function QuoteDeletedArchivedPanel({
@@ -294,7 +287,7 @@ export default function QuoteDeletedArchivedPanel({
   return (
     <section
       ref={panelRef}
-      className={`${SP_PANEL_SHELL_CLASS} ${className} ${
+      className={`${QUOTE_DELETED_PANEL_SHELL_CLASS} ${className} ${
         receiveActive ? 'quote-deleted-panel-receive' : ''
       }`.trim()}
     >
@@ -331,11 +324,20 @@ export default function QuoteDeletedArchivedPanel({
             <>
               {bulkSelectMode ? (
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1 py-1">
-                  <p className={YF_TEXT_CLASS}>
-                    {selectedIds.length > 0
-                      ? `${selectedIds.length} kayıt seçildi`
-                      : 'Kalıcı silmek için kayıt seçin'}
-                  </p>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
+                      aria-label="Tümünü seç"
+                    />
+                    <p className={YF_TEXT_CLASS}>
+                      {selectedIds.length > 0
+                        ? `${selectedIds.length} kayıt seçildi`
+                        : 'Kalıcı silmek için kayıt seçin'}
+                    </p>
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -368,44 +370,6 @@ export default function QuoteDeletedArchivedPanel({
 
               <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
                 <div className="quote-list-board quote-deleted-list-board">
-                  {/* Sütun başlıkları — kart/arka zemin yok */}
-                  <div className="quote-deleted-columns-header min-h-[2.5rem] w-full px-4">
-                    <div
-                      className="quote-list-row w-full min-w-0"
-                      style={{ gridTemplateColumns: gridTemplate }}
-                    >
-                      {bulkSelectMode ? (
-                        <DeletedListCell>
-                          <input
-                            type="checkbox"
-                            checked={allSelected}
-                            onChange={toggleSelectAll}
-                            className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
-                            aria-label="Tümünü seç"
-                          />
-                        </DeletedListCell>
-                      ) : null}
-                      <DeletedListCell>
-                        <DeletedColumnTitle label="Tarih" />
-                      </DeletedListCell>
-                      <DeletedListCell>
-                        <DeletedColumnTitle label="Kod" />
-                      </DeletedListCell>
-                      <DeletedListCell>
-                        <DeletedColumnTitle label="Müşteri Adı" />
-                      </DeletedListCell>
-                      <DeletedListCell>
-                        <DeletedColumnTitle label="Durum" />
-                      </DeletedListCell>
-                      <DeletedListCell>
-                        <DeletedColumnTitle label="Tutar" />
-                      </DeletedListCell>
-                      <DeletedListCell>
-                        <DeletedColumnTitle label="İşlem" />
-                      </DeletedListCell>
-                    </div>
-                  </div>
-
                   {entries.map((item, rowIndex) => {
                     const display = getListCustomerDisplay(item.record?.customer)
                     const amount = quoteAmount(item.record)
