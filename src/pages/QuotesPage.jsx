@@ -126,6 +126,7 @@ import {
 import {
   isQuoteCustomStatusSegment,
   isQuoteStatusSegment,
+  isQuoteWorkflowSegment,
   quoteCustomListOptions,
   quoteSegmentFieldValue,
   quoteSegmentSource,
