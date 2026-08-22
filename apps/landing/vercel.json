@@ -1,6 +1,12 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://yonetim.bachmain.com/api/:path*"
+    }
+  ],
   "redirects": [
     {
       "source": "/Business",

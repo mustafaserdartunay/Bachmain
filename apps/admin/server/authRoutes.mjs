@@ -45,16 +45,35 @@ function allowedOrigins() {
     'https://crm.bachmain.com',
     'https://bachmain.com',
     'https://www.bachmain.com',
+    'https://yonetim.bachmain.com',
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    'http://localhost:5180',
+    'http://127.0.0.1:5180',
+    'http://localhost:4180',
+    'http://127.0.0.1:4180',
+    'http://localhost:5200',
+    'http://127.0.0.1:5200',
   ]
   return [...new Set([...fromEnv, ...defaults])]
 }
 
+function isAllowedOrigin(origin) {
+  if (!origin) return false
+  if (allowedOrigins().includes(origin)) return true
+  try {
+    const { protocol, hostname } = new URL(origin)
+    if (protocol !== 'https:' && protocol !== 'http:') return false
+    if (hostname.endsWith('.vercel.app') && hostname.includes('bachmain')) return true
+  } catch {
+    return false
+  }
+  return false
+}
+
 export function applyCors(req, res) {
   const origin = req.headers?.origin || ''
-  const allowed = allowedOrigins()
-  if (origin && allowed.includes(origin)) {
+  if (origin && isAllowedOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin)
   } else if (!origin) {
     // Same-origin / server-to-server — no browser CORS needed
@@ -63,7 +82,8 @@ export function applyCors(req, res) {
   res.setHeader('Vary', 'Origin')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept')
+  res.setHeader('Access-Control-Max-Age', '86400')
 }
 
 export function sendJson(req, res, status, data, { cookie } = {}) {
