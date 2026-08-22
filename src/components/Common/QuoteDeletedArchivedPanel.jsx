@@ -8,7 +8,6 @@ import { formatTL } from '../../utils/productPricing'
 import {
   APP_LABEL_CLASS,
   PAGE_BALANCE_AMOUNT_CLASS,
-  SP_BODY_CLASS,
   SP_CHEVRON_CLASS,
   SP_EMPTY_CLASS,
   SP_HEADER_BUTTON_CLASS,
@@ -124,8 +123,10 @@ const DATA_ROW_PANEL_CLASS =
 const DELETED_CK_BUTTON_CLASS =
   'quote-deleted-ck-btn customer-permanent-delete-action inline-flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full bg-transparent text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600'
 
-const QUOTE_DELETED_PANEL_SHELL_CLASS =
-  'customer-deleted-archived-panel quote-deleted-panel-plain overflow-visible p-0 w-full'
+const DELETED_HEADER_PANEL_CLASS =
+  'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-header-panel flex w-full items-center min-h-[4.75rem] p-0'
+
+const DELETED_PANEL_WRAP_CLASS = 'quote-deleted-panel-wrap customer-deleted-archived-panel w-full space-y-3'
 
 function DeletedListCell({ className = '', children }) {
   return <div className={`quote-list-cell min-w-0 ${className}`.trim()}>{children}</div>
@@ -285,39 +286,41 @@ export default function QuoteDeletedArchivedPanel({
       ]
 
   return (
-    <section
+    <div
       ref={panelRef}
-      className={`${QUOTE_DELETED_PANEL_SHELL_CLASS} ${className} ${
+      className={`${DELETED_PANEL_WRAP_CLASS} ${className} ${
         receiveActive ? 'quote-deleted-panel-receive' : ''
       }`.trim()}
     >
-      <div className="relative flex min-h-[4.75rem] items-stretch">
-        <button
-          type="button"
-          onClick={() => setOpen((current) => !current)}
-          className={`${SP_HEADER_BUTTON_CLASS} min-w-0 flex-1`}
-        >
-          <span className="flex min-w-0 items-center gap-2">
-            <RedPingDot />
-            <span className={APP_LABEL_CLASS}>{title}</span>
-          </span>
-          <span className="flex shrink-0 items-center gap-3 pr-12">
-            <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
-            <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
-          </span>
-        </button>
-        {entries.length > 0 ? (
-          <div
-            className="absolute right-3 top-1/2 z-10 -translate-y-1/2"
-            onClick={(event) => event.stopPropagation()}
+      <AppPagePanel className={DELETED_HEADER_PANEL_CLASS}>
+        <div className="relative flex min-h-[4.75rem] w-full items-stretch">
+          <button
+            type="button"
+            onClick={() => setOpen((current) => !current)}
+            className={`${SP_HEADER_BUTTON_CLASS} min-w-0 flex-1 rounded-[inherit]`}
           >
-            <MoreMenu items={headerActions} aria-label="Silinen teklif işlemleri" />
-          </div>
-        ) : null}
-      </div>
+            <span className="flex min-w-0 items-center gap-2">
+              <RedPingDot />
+              <span className={APP_LABEL_CLASS}>{title}</span>
+            </span>
+            <span className="flex shrink-0 items-center gap-3 pr-12">
+              <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
+              <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
+            </span>
+          </button>
+          {entries.length > 0 ? (
+            <div
+              className="absolute right-3 top-1/2 z-10 -translate-y-1/2"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <MoreMenu items={headerActions} aria-label="Silinen teklif işlemleri" />
+            </div>
+          ) : null}
+        </div>
+      </AppPagePanel>
 
       {open ? (
-        <div className={`${SP_BODY_CLASS} quote-deleted-body-plain`}>
+        <div className="quote-deleted-body-plain w-full">
           {entries.length === 0 ? (
             <div className={SP_EMPTY_CLASS}>{emptyMessage}</div>
           ) : (
@@ -515,6 +518,6 @@ export default function QuoteDeletedArchivedPanel({
         }}
         onConfirm={handleBulkPermanentDelete}
       />
-    </section>
+    </div>
   )
 }

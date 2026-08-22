@@ -1501,6 +1501,7 @@ export default function QuotesPage() {
   const [activeMenu, setActiveMenu] = useState(null)
   const [pendingQuoteOrderAction, setPendingQuoteOrderAction] = useState(null)
   const [orderCreateRevealIds, setOrderCreateRevealIds] = useState([])
+  const [ordersSyncTick, setOrdersSyncTick] = useState(0)
   const quotePreviewRef = useRef(null)
   const syncedCustomerKeyRef = useRef('')
   const { rates } = useExchangeRates()
@@ -1528,7 +1529,7 @@ export default function QuotesPage() {
       if (order.id) ids.add(order.id)
     })
     return ids
-  }, [quotes])
+  }, [quotes, ordersSyncTick])
   const quoteStageOptions = getQuoteStageOptions(workflowStages)
   const orderStageOptions = getOrderStageOptions(workflowStages)
 
@@ -1765,6 +1766,14 @@ export default function QuotesPage() {
   }, [])
 
   useEffect(() => {
+    function refreshOrdersLink() {
+      setOrdersSyncTick((current) => current + 1)
+    }
+    window.addEventListener('bach:orders-updated', refreshOrdersLink)
+    return () => window.removeEventListener('bach:orders-updated', refreshOrdersLink)
+  }, [])
+
+  useEffect(() => {
     if (viewMode === 'list' || !selectedQuote || (selectedQuote.items || []).length > 0) return
     patchSelected({ items: [createEmptyQuoteItem()] })
   }, [selectedQuote?.id, selectedQuote?.items?.length, viewMode])
@@ -1931,8 +1940,12 @@ export default function QuotesPage() {
   function handleCreateOrderFromList(quote, event) {
     event?.stopPropagation?.()
     if (isQuoteOrderCreated(quote)) return
-    transferQuoteToOrder(quote)
+    const order = transferQuoteToOrder(quote)
+    if (!order) return
     setPendingQuoteOrderAction(null)
+    setQuotes(reloadQuotesStore())
+    setOrdersSyncTick((current) => current + 1)
+    flushWorkspaceNow()
   }
 
   function handleUndoOrderFromList(quote, event) {
@@ -1944,6 +1957,8 @@ export default function QuotesPage() {
     ) || { id: quote.orderId || quote.id, quoteId: quote.id }
     cancelOrderFromQuote(order)
     setQuotes(reloadQuotesStore())
+    setOrdersSyncTick((current) => current + 1)
+    flushWorkspaceNow()
     setPendingQuoteOrderAction(null)
     setOrderCreateRevealIds((current) =>
       current.includes(quoteKey) ? current : [...current, quoteKey],

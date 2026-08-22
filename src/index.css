@@ -3758,14 +3758,12 @@ html body .app-responsive .quote-list-row-panel .customer-balance-positive {
   background: transparent !important;
 }
 
-/* Silinenler dış kabuk — cam kart zemini yok */
-.quote-deleted-panel-plain,
-html body .customer-deleted-archived-panel.quote-deleted-panel-plain {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+.quote-deleted-header-panel {
+  overflow: visible !important;
+}
+
+.quote-deleted-panel-wrap.quote-deleted-panel-receive .quote-deleted-header-panel {
+  animation: quote-deleted-panel-receive 0.85s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .quote-deleted-list-board {
@@ -3796,8 +3794,9 @@ html body .customer-deleted-archived-panel .quote-deleted-ck-btn:hover {
   background: rgba(239, 68, 68, 0.15) !important;
 }
 
-.customer-deleted-archived-panel.quote-deleted-panel-receive {
-  animation: quote-deleted-panel-receive 0.85s cubic-bezier(0.32, 0.72, 0, 1);
+.customer-deleted-archived-panel.quote-deleted-panel-receive,
+.quote-deleted-panel-wrap.quote-deleted-panel-receive {
+  animation: none;
 }
 
 @keyframes quote-deleted-panel-receive {
