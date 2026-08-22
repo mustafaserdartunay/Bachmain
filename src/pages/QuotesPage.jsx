@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 import SearchInput from '../components/Common/SearchInput'
+import QuoteRecordMetaPanel from '../components/Common/QuoteRecordMetaPanel'
 import { jsPDF } from 'jspdf'
 import {
   ArrowDown,
@@ -315,6 +316,7 @@ function QuoteOrderInlineConfirm({ label, labelClass, ariaLabel, onConfirm, onCa
 }
 
 function QuoteListRowMoreMenu({
+  quote,
   isGeneratingPdf,
   onPrint,
   onWhatsApp,
@@ -328,7 +330,7 @@ function QuoteListRowMoreMenu({
   return (
     <Dropdown
       align="end"
-      menuClassName="az customer-filter-dropdown-menu customers-page-menu"
+      menuClassName="az customer-filter-dropdown-menu customers-page-menu quote-record-meta-dropdown min-w-[15rem]"
       trigger={
         <Button
           variant="ghost"
@@ -343,6 +345,8 @@ function QuoteListRowMoreMenu({
     >
       {({ close }) => (
         <>
+          <QuoteRecordMetaPanel quote={quote} />
+          <DropdownSeparator />
           <DropdownItem
             icon={Printer}
             label="Yazdır"
@@ -3354,6 +3358,7 @@ export default function QuotesPage() {
                             onClick={(event) => event.stopPropagation()}
                           >
                             <QuoteListRowMoreMenu
+                              quote={quote}
                               isGeneratingPdf={isGeneratingPdf}
                               onPrint={() => printQuoteDocument(quote)}
                               onWhatsApp={() => sendQuoteByWhatsApp(quote)}

@@ -2,6 +2,7 @@ import { defaultQuoteStages, initialQuotes } from '../data/quotesData'
 import { nextQuoteCode } from './documentCodes'
 import { getQuoteStageOptions, loadWorkflowStages } from './workflowStages'
 import { softDeleteRecord, restoreDeletedRecord, permanentlyDeleteRecord } from './deletedRecordsStore'
+import { readUserProfile } from './userProfile'
 
 const STORAGE_KEY = 'erlenbox-quotes'
 const DELETED_COLLECTION = 'quotes'
@@ -52,8 +53,10 @@ export function softDeleteQuote(quote) {
   const existing = quotes.find((item) => item.id === quote.id) || quote
   const next = quotes.filter((item) => item.id !== quote.id)
   if (!saveQuotes(next)) return null
+  const profile = readUserProfile()
   softDeleteRecord(DELETED_COLLECTION, existing, {
     entityLabel: existing.customer || existing.title || existing.id || 'Teklif',
+    deletedBy: profile?.displayName || profile?.email || '',
   })
   return existing
 }

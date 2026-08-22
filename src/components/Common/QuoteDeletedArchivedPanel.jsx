@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, Trash2, Undo2, X } from 'lucide-react'
-import { MoreMenu } from '@bachmain/ui'
+import { ChevronDown, MoreHorizontal, Trash2, Undo2, X } from 'lucide-react'
+import { Button, Dropdown, DropdownItem, DropdownSeparator } from '@bachmain/ui'
 import { DELETED_RECORDS_EVENT, getDeletedRecords } from '../../utils/deletedRecordsStore'
 import { permanentlyDeleteQuote, restoreDeletedQuote } from '../../utils/quotesStore'
 import { resolveQuoteCode } from '../../utils/documentCodes'
@@ -16,7 +16,8 @@ import {
   YF_TEXT_CLASS,
 } from '../../utils/dashboardDesign'
 import { COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
-import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from './ListDeleteConfirmPanel'
+import { DeleteConfirmOverlay } from './ListDeleteConfirmPanel'
+import QuoteRecordMetaPanel from './QuoteRecordMetaPanel'
 import { AppPagePanel } from '../Layout/AppPageLayout'
 import EditableDropdownPill from '../EditableDropdownPill'
 
@@ -167,9 +168,88 @@ function buildDeletedListGrid(segmentCount = 1) {
 const DATA_ROW_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-list-row flex w-full items-center min-h-[4.75rem] quote-list-data-panel'
 
-/** Geri yükle ile aynı ölçü (1.75rem) — yuvarlak kırmızı hover */
-const DELETED_CK_BUTTON_CLASS =
-  'quote-deleted-ck-btn customer-permanent-delete-action inline-flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full bg-transparent text-red-500 transition-[background-color,color] hover:bg-red-500/15 hover:text-red-600'
+function DeletedListDateCell({ record }) {
+  const stamp = formatListDateParts(getDeletedRecordDateSource(record))
+
+  if (!stamp.date) {
+    return (
+      <span className="block text-center text-[14px] font-normal text-[var(--muted)]">—</span>
+    )
+  }
+
+  return (
+    <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
+      <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+        {stamp.date}
+      </span>
+      {stamp.time ? (
+        <span className="text-[12px] font-normal leading-tight text-[var(--muted)]/75">
+          {stamp.time}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+function QuoteDeletedRowMoreMenu({ item, disabled, onDelete }) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  return (
+    <Dropdown
+      align="end"
+      menuClassName="az customer-filter-dropdown-menu customers-page-menu quote-record-meta-dropdown min-w-[15rem]"
+      trigger={
+        <Button
+          variant="ghost"
+          size="iconOnly"
+          className="hover:!bg-transparent"
+          aria-label={`${item.label} diğer işlemler`}
+          disabled={disabled}
+          onClick={() => setConfirmDelete(false)}
+        >
+          <MoreHorizontal className="h-5 w-5" />
+        </Button>
+      }
+    >
+      {({ close }) => (
+        <>
+          <QuoteRecordMetaPanel
+            quote={item.record}
+            deletedAt={item.at}
+            entryMeta={item}
+          />
+          <DropdownSeparator />
+          {confirmDelete ? (
+            <div
+              className="quote-menu-delete-confirm flex w-full items-center justify-center px-1 py-1"
+              onClick={(event) => event.stopPropagation()}
+              role="menuitem"
+            >
+              <InlineSilConfirm
+                ariaLabel={`${item.label} kalıcı sil`}
+                onConfirm={() => {
+                  onDelete()
+                  setConfirmDelete(false)
+                  close()
+                }}
+                onCancel={() => setConfirmDelete(false)}
+              />
+            </div>
+          ) : (
+            <DropdownItem
+              icon={Trash2}
+              label="Sil"
+              tone="danger"
+              close={close}
+              closeOnClick={false}
+              onClick={() => setConfirmDelete(true)}
+            />
+          )}
+        </>
+      )}
+    </Dropdown>
+  )
+}
 
 /** Ana liste satırı ile aynı 76px kart */
 const DELETED_HEADER_PANEL_CLASS =
@@ -190,7 +270,7 @@ function DeletedOrderRestoreCell({
 }) {
   return (
     <span
-      className="quote-order-action inline-flex h-9 items-center justify-between"
+      className="quote-order-action inline-flex h-9 w-[5.75rem] min-w-[5.75rem] items-center justify-between"
       onClick={(event) => event.stopPropagation()}
     >
       {orderCreated ? (
@@ -203,7 +283,7 @@ function DeletedOrderRestoreCell({
         </span>
       ) : (
         <span
-          className="quote-order-chip quote-order-action inline-flex h-9 flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)]"
+          className="quote-order-chip inline-flex h-9 w-[3.75rem] flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)]"
           title="Sipariş oluşturulmamış"
         >
           <span>Sipariş</span>
@@ -220,32 +300,6 @@ function DeletedOrderRestoreCell({
       >
         <Undo2 className="h-3.5 w-3.5" strokeWidth={2.25} />
       </button>
-    </span>
-  )
-}
-
-function DeletedDateCell({ record, deletedAt }) {
-  const createdStamp = formatListDateParts(getDeletedRecordDateSource(record))
-  const deletedStamp = formatListDateParts(deletedAt)
-  const createdLine = [createdStamp.date, createdStamp.time].filter(Boolean).join(' ')
-  const deletedLine = [deletedStamp.date, deletedStamp.time].filter(Boolean).join(' ')
-
-  return (
-    <span className="quote-deleted-date-cell flex w-full max-w-[6.5rem] flex-col items-center justify-center leading-none">
-      <span className="quote-deleted-date-block w-full text-center">
-        <span className="quote-deleted-date-label block truncate">Oluşturulma tarihi</span>
-        <span className="quote-deleted-date-value block tabular-nums">{createdLine || '—'}</span>
-      </span>
-      <span
-        className="quote-deleted-date-separator my-0.5 block h-px w-full max-w-[4.25rem] bg-[var(--glass-border)]/75"
-        aria-hidden
-      />
-      <span className="quote-deleted-date-block w-full text-center">
-        <span className="quote-deleted-date-label block truncate">Silinme tarihi</span>
-        <span className="quote-deleted-date-value block tabular-nums opacity-80">
-          {deletedLine || '—'}
-        </span>
-      </span>
     </span>
   )
 }
@@ -276,7 +330,6 @@ export default function QuoteDeletedArchivedPanel({
   const [open, setOpen] = useState(false)
   const [receiveActive, setReceiveActive] = useState(false)
   const [version, setVersion] = useState(0)
-  const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
@@ -315,6 +368,8 @@ export default function QuoteDeletedArchivedPanel({
           record,
           label: quoteTitle(record, entry.entityLabel),
           at: entry.deletedAt,
+          deletedBy: entry.deletedBy,
+          restoredAt: entry.restoredAt || entry.restoredFromPurgeAt,
         }
       })
       .filter((item) => item.record?.id)
@@ -355,7 +410,6 @@ export default function QuoteDeletedArchivedPanel({
 
   function runPermanentDelete(item) {
     if (!item?.record?.id || trashingIds.includes(item.id)) return
-    setPendingDeleteId(null)
     setTrashingIds((current) => [...current, item.id])
     window.setTimeout(() => {
       permanentlyDeleteQuote(item.record.id)
@@ -400,42 +454,6 @@ export default function QuoteDeletedArchivedPanel({
     if (!record) return '—'
     return record.status || '—'
   }
-
-  const headerActions = bulkSelectMode
-    ? [
-        {
-          id: 'bulk-delete-confirm',
-          label:
-            selectedIds.length > 0 ? `Seçilenleri Sil (${selectedIds.length})` : 'Seçilenleri Sil',
-          icon: Trash2,
-          tone: 'danger',
-          onClick: (event) => {
-            if (selectedIds.length > 0) {
-              setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
-              setPendingBulkDelete(true)
-            }
-          },
-        },
-        {
-          id: 'bulk-delete-cancel',
-          label: 'İptal',
-          onClick: exitBulkSelectMode,
-        },
-      ]
-    : [
-        {
-          id: 'bulk-delete',
-          label: 'Toplu Sil',
-          icon: Trash2,
-          tone: 'danger',
-          onClick: () => {
-            setOpen(true)
-            setBulkSelectMode(true)
-            setSelectedIds([])
-            setPendingBulkDelete(false)
-          },
-        },
-      ]
 
   const togglePanelOpen = () => setOpen((current) => !current)
 
@@ -540,15 +558,37 @@ export default function QuoteDeletedArchivedPanel({
                   <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
                 </span>
               </DeletedListCell>
-              <DeletedListCell>
+              <DeletedListCell
+                data-deleted-header-interactive
+                onClick={(event) => event.stopPropagation()}
+              >
                 {entries.length > 0 ? (
-                  <span
-                    data-deleted-header-interactive
-                    className="inline-flex w-full items-center justify-center"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <MoreMenu items={headerActions} aria-label="Silinen teklif işlemleri" />
-                  </span>
+                  bulkSelectMode && selectedIds.length > 0 ? (
+                    <InlineSilConfirm
+                      ariaLabel={`${selectedIds.length} kayıt kalıcı sil`}
+                      onConfirm={() => setPendingBulkDelete(true)}
+                      onCancel={exitBulkSelectMode}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
+                      title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
+                      aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
+                      onClick={() => {
+                        if (!bulkSelectMode) {
+                          setOpen(true)
+                          setBulkSelectMode(true)
+                          setSelectedIds([])
+                          setPendingBulkDelete(false)
+                        } else {
+                          exitBulkSelectMode()
+                        }
+                      }}
+                    >
+                      <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                    </button>
+                  )
                 ) : (
                   <span className="inline-flex h-9 w-9" aria-hidden />
                 )}
@@ -570,7 +610,6 @@ export default function QuoteDeletedArchivedPanel({
                     const isSelected = selectedIds.includes(item.id)
                     const isRestoring = restoringIds.includes(item.id)
                     const isTrashing = trashingIds.includes(item.id)
-                    const pendingConfirm = pendingDeleteId === item.id
 
                     let wrapClass
                     if (isTrashing) wrapClass = 'quote-list-row-into-trash-wrap'
@@ -609,7 +648,7 @@ export default function QuoteDeletedArchivedPanel({
                               </DeletedListCell>
                             ) : null}
                             <DeletedListCell>
-                              <DeletedDateCell record={item.record} deletedAt={item.at} />
+                              <DeletedListDateCell record={item.record} />
                             </DeletedListCell>
                             <DeletedListCell>
                               <span className={`${YF_TEXT_CLASS} tabular-nums`}>
@@ -679,27 +718,11 @@ export default function QuoteDeletedArchivedPanel({
                                   className="inline-flex w-full items-center justify-center"
                                   onClick={(event) => event.stopPropagation()}
                                 >
-                                  {pendingConfirm ? (
-                                    <InlineSilConfirm
-                                      ariaLabel={`${item.label} kalıcı sil`}
-                                      onConfirm={() => runPermanentDelete(item)}
-                                      onCancel={() => setPendingDeleteId(null)}
-                                    />
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      onClick={() => setPendingDeleteId(item.id)}
-                                      disabled={isRestoring || isTrashing}
-                                      className={DELETED_CK_BUTTON_CLASS}
-                                      aria-label={`${item.label} kalıcı olarak sil`}
-                                      title="Sil"
-                                    >
-                                      <Trash2
-                                        className={COP_KUTUSU_ICON_CLASS}
-                                        strokeWidth={2.25}
-                                      />
-                                    </button>
-                                  )}
+                                  <QuoteDeletedRowMoreMenu
+                                    item={item}
+                                    disabled={isRestoring || isTrashing}
+                                    onDelete={() => runPermanentDelete(item)}
+                                  />
                                 </span>
                               ) : (
                                 <span className={YF_TEXT_CLASS}>{formatWhen(item.at)}</span>
