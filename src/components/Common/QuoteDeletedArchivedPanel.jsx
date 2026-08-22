@@ -18,6 +18,7 @@ import {
 import { COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
 import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from './ListDeleteConfirmPanel'
 import { AppPagePanel } from '../Layout/AppPageLayout'
+import EditableDropdownPill from '../EditableDropdownPill'
 
 const ROW_EXIT_MS = 720
 
@@ -175,18 +176,35 @@ const DELETED_HEADER_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-header-panel quote-list-data-panel flex h-[4.75rem] min-h-[4.75rem] max-h-[4.75rem] w-full items-center'
 
 const DELETED_PANEL_WRAP_CLASS =
-  'quote-deleted-panel-wrap customer-deleted-archived-panel w-full space-y-3'
+  'quote-deleted-panel-wrap customer-deleted-archived-panel w-full flex flex-col gap-5'
 
 function getDeletedRecordDateSource(record) {
   return record?.activities?.[0]?.date || record?.createdAt || ''
 }
 
-function DeletedProcessPill({ label }) {
-  const text = String(label || '').trim() || '—'
+function DeletedOrderStatusDisplay({ orderCreated }) {
+  if (orderCreated) {
+    return (
+      <span className="quote-order-action inline-flex h-9 items-center justify-center">
+        <span
+          className="quote-order-chip inline-flex h-9 w-[3.75rem] flex-col items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-1 text-center text-[10px] font-bold leading-tight text-emerald-700"
+          title="Sipariş oluşturuldu"
+        >
+          <span>Sipariş</span>
+          <span>Oluştu</span>
+        </span>
+      </span>
+    )
+  }
+
   return (
-    <span className="flex w-full items-center justify-center">
-      <span className={`${PAGE_LIST_PILL_WRAPPER_CLASS} quote-deleted-process-pill-wrap`}>
-        <span className={`${PAGE_LIST_PILL_CLASS} quote-deleted-process-pill`}>{text}</span>
+    <span className="quote-order-create-reveal inline-flex w-full items-center justify-center overflow-hidden">
+      <span
+        className="quote-order-chip quote-order-action inline-flex h-9 flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)]"
+        title="Sipariş oluşturulmamış"
+      >
+        <span>Sipariş</span>
+        <span>Oluştur</span>
       </span>
     </span>
   )
@@ -208,6 +226,9 @@ export default function QuoteDeletedArchivedPanel({
   receivePulseKey = 0,
   segmentTabs = [],
   getProcessValue,
+  getProcessOptions,
+  getListAmount,
+  isOrderCreated,
   columnGrid,
 }) {
   const panelRef = useRef(null)
@@ -480,10 +501,13 @@ export default function QuoteDeletedArchivedPanel({
               ) : null}
 
               <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
-                <div className="quote-list-board quote-deleted-list-board">
+                <div className="quote-list-board">
                   {entries.map((item, rowIndex) => {
                     const display = getListCustomerDisplay(item.record?.customer)
-                    const amount = quoteAmount(item.record)
+                    const amount = getListAmount
+                      ? getListAmount(item.record)
+                      : quoteAmount(item.record)
+                    const orderCreated = isOrderCreated?.(item.record) ?? false
                     const stamp = formatListDateParts(
                       getDeletedRecordDateSource(item.record) || item.at,
                     )
@@ -571,7 +595,24 @@ export default function QuoteDeletedArchivedPanel({
                               : [{ id: 'status', label: 'Durum' }]
                             ).map((tab) => (
                               <DeletedListCell key={tab.id || tab.label}>
-                                <DeletedProcessPill label={processLabelForRecord(item.record, tab)} />
+                                <span
+                                  className="flex w-full items-center justify-center"
+                                  onClick={(event) => event.stopPropagation()}
+                                >
+                                  <EditableDropdownPill
+                                    value={processLabelForRecord(item.record, tab)}
+                                    options={getProcessOptions?.(tab) || []}
+                                    includePlaceholderOption={false}
+                                    editable={false}
+                                    disabled
+                                    buttonClassName={PAGE_LIST_PILL_CLASS}
+                                    wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                                    openKey={`deleted-${item.id}-${tab.id}`}
+                                    activeMenu={null}
+                                    setActiveMenu={() => {}}
+                                    onChange={() => {}}
+                                  />
+                                </span>
                               </DeletedListCell>
                             ))}
                             <DeletedListCell>
@@ -582,7 +623,9 @@ export default function QuoteDeletedArchivedPanel({
                               </span>
                             </DeletedListCell>
                             <DeletedListCell>
-                              <span className={YF_TEXT_CLASS}>—</span>
+                              <span className="inline-flex w-full items-center justify-center">
+                                <DeletedOrderStatusDisplay orderCreated={orderCreated} />
+                              </span>
                             </DeletedListCell>
                             <DeletedListCell>
                               {!bulkSelectMode ? (

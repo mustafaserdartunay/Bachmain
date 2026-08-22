@@ -3779,15 +3779,6 @@ html body section.card.quote-list-row-panel.quote-deleted-header-panel {
   text-align: left !important;
 }
 
-.quote-deleted-process-pill {
-  pointer-events: none;
-  cursor: default;
-}
-
-.quote-deleted-process-pill-wrap {
-  max-width: 100%;
-}
-
 .quote-deleted-panel-wrap.quote-deleted-panel-receive .quote-deleted-header-panel {
   animation: quote-deleted-panel-receive 0.85s cubic-bezier(0.32, 0.72, 0, 1);
 }

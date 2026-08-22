@@ -1544,14 +1544,21 @@ export default function QuotesPage() {
   }
 
   function processValueForQuote(tab, quote) {
+    const tabLabel = String(tab?.label || '')
     if (isQuoteStatusSegment(tab)) {
       return resolveListColumnLabel(quote.status, optionLists.status)
     }
     if (isQuoteCustomStatusSegment(tab)) {
+      if (/öncelik/i.test(tabLabel)) {
+        return resolveListColumnLabel(quote.priority, optionLists.priority)
+      }
       return resolveListColumnLabel(
         quoteSegmentFieldValue(quote, tab),
         quoteCustomListOptions(quoteCustomLists, tab),
       )
+    }
+    if (isQuoteWorkflowSegment(tab) && /öncelik/i.test(tabLabel)) {
+      return resolveListColumnLabel(quote.priority, optionLists.priority)
     }
     return resolveListQuoteStage(quote)?.label || ''
   }
@@ -3762,6 +3769,9 @@ export default function QuotesPage() {
           className="customer-deleted-archived-panel w-full"
           segmentTabs={quoteSegmentTabs}
           getProcessValue={(quote, tab) => processValueForQuote(tab, quote)}
+          getProcessOptions={(tab) => processOptionsForTab(tab)}
+          getListAmount={getQuoteListAmount}
+          isOrderCreated={(quote) => isQuoteOrderCreated(quote)}
           columnGrid={[
             '6.5rem',
             '4.75rem',
