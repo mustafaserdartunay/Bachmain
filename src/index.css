@@ -742,7 +742,281 @@ textarea:not(.form-input)::placeholder {
   width: 100%;
 }
 
+/* Teklif / sipariş form kontrolleri — search-pill (h-10) ile aynı yükseklik */
+.page-type-shell .document-compact-controls .form-input,
+.page-type-shell .document-compact-controls .form-input-readonly,
+.page-type-shell .document-compact-controls select.form-input,
+.app-responsive .page-type-shell .document-compact-controls .form-input,
+.app-responsive .page-type-shell .document-compact-controls .form-input-readonly,
+.app-responsive .page-type-shell .document-compact-controls select.form-input {
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+  max-height: 2.5rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 2.5rem !important;
+}
+
+.page-type-shell .document-compact-controls textarea.form-input,
+.app-responsive .page-type-shell .document-compact-controls textarea.form-input {
+  height: auto !important;
+  min-height: 6rem !important;
+  max-height: none !important;
+  line-height: 1.4 !important;
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+}
+
+.page-type-shell .document-compact-controls .document-totals-panel .form-input,
+.app-responsive .page-type-shell .document-compact-controls .document-totals-panel .form-input {
+  height: 1.25rem !important;
+  min-height: 1.25rem !important;
+  max-height: 1.25rem !important;
+  line-height: 1.25rem !important;
+  font-size: 13px !important;
+}
+
+.page-type-shell .quote-ms-cta:hover,
+.page-type-shell .quote-ms-cta:hover span,
+.app-responsive .page-type-shell .quote-ms-cta:hover,
+.app-responsive .page-type-shell .quote-ms-cta:hover span {
+  color: #2563eb !important;
+  font-weight: 700 !important;
+}
+
+.page-type-shell .quote-ms-cta-plain:hover,
+.page-type-shell .quote-ms-cta-plain:focus,
+.page-type-shell .quote-ms-cta-plain:active,
+.page-type-shell .quote-ms-cta-plain:hover span,
+.page-type-shell .quote-ms-cta-plain:focus span,
+.page-type-shell .quote-ms-cta-plain:active span,
+.app-responsive .page-type-shell .quote-ms-cta-plain:hover,
+.app-responsive .page-type-shell .quote-ms-cta-plain:focus,
+.app-responsive .page-type-shell .quote-ms-cta-plain:active,
+.app-responsive .page-type-shell .quote-ms-cta-plain:hover span,
+.app-responsive .page-type-shell .quote-ms-cta-plain:focus span,
+.app-responsive .page-type-shell .quote-ms-cta-plain:active span {
+  color: #2563eb !important;
+  font-weight: 400 !important;
+  transform: none !important;
+}
+
+.page-type-shell .quote-customer-option:hover,
+.page-type-shell .quote-customer-option:hover .customer-name-primary,
+.page-type-shell .quote-customer-option:hover .customer-name-secondary,
+.page-type-shell .quote-customer-option:hover span,
+.app-responsive .page-type-shell .quote-customer-option:hover,
+.app-responsive .page-type-shell .quote-customer-option:hover .customer-name-primary,
+.app-responsive .page-type-shell .quote-customer-option:hover .customer-name-secondary,
+.app-responsive .page-type-shell .quote-customer-option:hover span {
+  color: #2563eb !important;
+  transform: none !important;
+}
+
+.page-type-shell .document-discount-mode-btn.document-discount-mode-selected,
+.app-responsive .page-type-shell .document-discount-mode-btn.document-discount-mode-selected {
+  color: #2563eb !important;
+  background: transparent !important;
+}
+
+.page-type-shell .document-term-chip:hover .document-term-check,
+.page-type-shell .document-term-chip:hover .document-term-label,
+.page-type-shell .document-term-chip.document-term-applied .document-term-check,
+.page-type-shell .document-term-chip.document-term-applied .document-term-label,
+.app-responsive .page-type-shell .document-term-chip:hover .document-term-check,
+.app-responsive .page-type-shell .document-term-chip:hover .document-term-label,
+.app-responsive .page-type-shell .document-term-chip.document-term-applied .document-term-check,
+.app-responsive .page-type-shell .document-term-chip.document-term-applied .document-term-label {
+  color: #10b981 !important;
+}
+
+.page-type-shell .document-bank-chip.document-bank-chip-selected,
+.page-type-shell .document-bank-chip.document-bank-chip-selected p,
+.page-type-shell .document-bank-chip.document-bank-chip-selected span,
+.page-type-shell .document-bank-chip.document-bank-chip-selected svg,
+.app-responsive .page-type-shell .document-bank-chip.document-bank-chip-selected,
+.app-responsive .page-type-shell .document-bank-chip.document-bank-chip-selected p,
+.app-responsive .page-type-shell .document-bank-chip.document-bank-chip-selected span,
+.app-responsive .page-type-shell .document-bank-chip.document-bank-chip-selected svg {
+  color: #10b981 !important;
+}
+
+.page-type-shell .document-totals-amount,
+.app-responsive .page-type-shell .document-totals-amount {
+  font-weight: 700 !important;
+}
+
+/* Teklif / sipariş: form alanları şeffaf — teklif listesi araması gibi ince çerçeve */
+.page-type-shell .document-compact-controls .form-input,
+.page-type-shell .document-compact-controls .form-input-readonly,
+.page-type-shell .document-compact-controls select.form-input,
+.page-type-shell .document-compact-controls textarea.form-input,
+.page-type-shell .document-compact-controls input.search-pill,
+.page-type-shell .document-compact-controls .app-search-field,
+.app-responsive .page-type-shell .document-compact-controls .form-input,
+.app-responsive .page-type-shell .document-compact-controls .form-input-readonly,
+.app-responsive .page-type-shell .document-compact-controls select.form-input,
+.app-responsive .page-type-shell .document-compact-controls textarea.form-input,
+.app-responsive .page-type-shell .document-compact-controls input.search-pill,
+.app-responsive .page-type-shell .document-compact-controls .app-search-field,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls .form-input,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls .form-input-readonly,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls select.form-input,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls textarea.form-input,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls input.search-pill,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls .app-search-field,
+html.night .app-responsive .page-type-shell .document-compact-controls .form-input,
+html.night .app-responsive .page-type-shell .document-compact-controls .form-input-readonly,
+html.night .app-responsive .page-type-shell .document-compact-controls select.form-input,
+html.night .app-responsive .page-type-shell .document-compact-controls textarea.form-input,
+html.night .app-responsive .page-type-shell .document-compact-controls input.search-pill,
+html.night .app-responsive .page-type-shell .document-compact-controls .app-search-field {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--search-border) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  color: var(--muted) !important;
+  transition: none !important;
+}
+
+.page-type-shell .document-compact-controls .form-input:hover,
+.page-type-shell .document-compact-controls .form-input:focus,
+.page-type-shell .document-compact-controls .form-input:focus-visible,
+.page-type-shell .document-compact-controls input.search-pill:hover,
+.page-type-shell .document-compact-controls input.search-pill:focus,
+.page-type-shell .document-compact-controls input.search-pill:focus-visible,
+.app-responsive .page-type-shell .document-compact-controls .form-input:hover,
+.app-responsive .page-type-shell .document-compact-controls .form-input:focus,
+.app-responsive .page-type-shell .document-compact-controls .form-input:focus-visible,
+.app-responsive .page-type-shell .document-compact-controls input.search-pill:hover,
+.app-responsive .page-type-shell .document-compact-controls input.search-pill:focus,
+.app-responsive .page-type-shell .document-compact-controls input.search-pill:focus-visible,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls .form-input:hover,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls .form-input:focus,
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  input.search-pill:hover,
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  input.search-pill:focus {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-color: var(--search-border) !important;
+}
+
+.page-type-shell .document-compact-controls .glass-inset,
+.page-type-shell .document-compact-controls .document-frame-only,
+.app-responsive .page-type-shell .document-compact-controls .glass-inset,
+.app-responsive .page-type-shell .document-compact-controls .document-frame-only,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls .glass-inset,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls .document-frame-only,
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-dark-']:not(.app-panel-dot *),
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-black/']:not(.app-panel-dot *),
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-white']:not(.app-panel-dot *),
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-emerald-']:not(.app-panel-dot *),
+html:not(.night)
+  .app-responsive
+  .page-type-shell
+  .document-compact-controls
+  [class*='bg-blue-']:not(.app-panel-dot *),
+html.night .app-responsive .page-type-shell .document-compact-controls .glass-inset,
+html.night .app-responsive .page-type-shell .document-compact-controls .document-frame-only {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-width: 1px !important;
+  border-color: var(--search-border) !important;
+}
+
+/* Panel başlık noktaları — şeffaf zemin kuralı renkleri silmesin; teklif formunda mavi kalsın */
+.page-type-shell .document-compact-controls .app-panel-dot,
+.app-responsive .page-type-shell .document-compact-controls .app-panel-dot {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.page-type-shell .document-compact-controls .app-panel-dot > span,
+.app-responsive .page-type-shell .document-compact-controls .app-panel-dot > span {
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.page-type-shell .document-compact-controls .app-panel-dot > span:first-child,
+.app-responsive .page-type-shell .document-compact-controls .app-panel-dot > span:first-child {
+  background-color: #60a5fa !important;
+}
+
+.page-type-shell .document-compact-controls .app-panel-dot > span:last-child,
+.app-responsive .page-type-shell .document-compact-controls .app-panel-dot > span:last-child {
+  background-color: #2563eb !important;
+}
+
+.page-type-shell .document-compact-controls .glass-inset,
+.app-responsive .page-type-shell .document-compact-controls .glass-inset {
+  border: 1px solid var(--search-border) !important;
+}
+
+.page-type-shell .document-compact-controls .document-no-frame,
+.app-responsive .page-type-shell .document-compact-controls .document-no-frame,
+html:not(.night) .app-responsive .page-type-shell .document-compact-controls .document-no-frame {
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  outline: none !important;
+}
+
 .card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 26px !important;
+  box-shadow:
+    0 10px 36px -14px rgba(30, 35, 60, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  color: var(--ink);
+}
+
+/* Eski shadow-card / dark panel kabukları — müşteri listesi .card tonuyla aynı */
+.page-type-shell section.shadow-card:not(.card),
+.page-type-shell section[class*='bg-dark-800'][class*='rounded-']:not(.card),
+.customers-page-type section.shadow-card:not(.card),
+.customers-page-type section[class*='bg-dark-800'][class*='rounded-']:not(.card) {
   background: var(--glass-bg) !important;
   backdrop-filter: blur(26px) saturate(180%);
   -webkit-backdrop-filter: blur(26px) saturate(180%);
@@ -1142,6 +1416,20 @@ textarea:not(.form-input)::placeholder {
   background: #3b82f6;
 }
 
+.document-date-picker-panel {
+  width: min(18.5rem, calc(100vw - 1rem)) !important;
+  border-radius: 20px !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(26px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(180%) !important;
+  border: 1px solid rgba(140, 145, 165, 0.16) !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.14) !important;
+}
+
+.document-date-picker-calendar {
+  min-width: 0;
+}
+
 .header-calendar-create-empty,
 .header-calendar-create-panel {
   display: flex;
@@ -1367,16 +1655,55 @@ textarea:not(.form-input)::placeholder {
   color: var(--ink);
 }
 
+/* Liste sayfaları — panel arkasındaki gri cam/zemin tabakasını kaldır */
+.page-type-shell {
+  background: transparent !important;
+}
+
+.page-type-shell > .app-page-header,
+.page-type-shell > .card,
+.page-type-shell .customer-summary-metrics .app-page-metric,
+.page-type-shell section.card.quote-list-row-panel {
+  background: var(--surface) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58) !important;
+}
+
+html.night .page-type-shell > .app-page-header,
+html.night .page-type-shell > .card,
+html.night .page-type-shell .customer-summary-metrics .app-page-metric,
+html.night .page-type-shell section.card.quote-list-row-panel {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
 .customer-summary-metrics .app-page-metric {
+  display: flex !important;
   height: var(--ds-header-h, 4.75rem);
   min-height: var(--ds-header-h, 4.75rem);
+  align-items: center !important;
+  justify-content: center !important;
   padding: 0.5rem 1rem;
+  text-align: center;
+}
+
+.customer-summary-metrics .app-page-metric .metric-label-icon,
+.customer-summary-metrics .app-page-metric .metric-label-icon span {
+  display: inline-flex !important;
+  height: 18px !important;
+  width: 16px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
 }
 
 .customer-summary-metrics .app-page-metric p:not(.text-xl),
 .customer-summary-metrics .app-page-metric .app-titlecase-words,
 .customer-summary-metrics .app-page-metric .yf,
-.customer-summary-metrics .app-page-metric span {
+.customer-summary-metrics .app-page-metric span:not(.metric-label-icon) {
   font-size: 14px !important;
   font-weight: 400 !important;
   line-height: 1.25 !important;
@@ -1455,7 +1782,133 @@ textarea:not(.form-input)::placeholder {
   color: var(--muted) !important;
 }
 
-/* Toplu sil CTA — panel yf rengi ezmesin; yazı + ikon beyaz kalsın */
+html body .page-type-shell .customer-list-panel .quote-order-action,
+html body .customers-page-type .customer-list-panel .quote-order-action,
+html body .app-responsive .customer-list-panel .quote-order-action {
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+  box-sizing: border-box !important;
+}
+
+html body .page-type-shell .customer-list-panel button.quote-order-chip.quote-order-action,
+html body .customers-page-type .customer-list-panel button.quote-order-chip.quote-order-action,
+html body .app-responsive .customer-list-panel button.quote-order-chip.quote-order-action {
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-chip,
+html body .customers-page-type .customer-list-panel .quote-order-chip,
+html body .app-responsive .customer-list-panel .quote-order-chip {
+  display: inline-flex !important;
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  width: 3.75rem !important;
+  max-width: 3.75rem !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 12px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+  letter-spacing: normal !important;
+  text-align: center !important;
+  white-space: normal !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-chip span,
+html body .customers-page-type .customer-list-panel .quote-order-chip span,
+html body .app-responsive .customer-list-panel .quote-order-chip span {
+  display: block !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+html body .page-type-shell .customer-list-panel span.quote-order-chip,
+html body .customers-page-type .customer-list-panel span.quote-order-chip,
+html body .app-responsive .customer-list-panel span.quote-order-chip,
+html body .page-type-shell .customer-list-panel span.quote-order-chip *,
+html body .customers-page-type .customer-list-panel span.quote-order-chip * {
+  color: #047857 !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-confirm,
+html body .customers-page-type .customer-list-panel .quote-order-undo-confirm,
+html body .app-responsive .customer-list-panel .quote-order-undo-confirm {
+  display: inline-flex !important;
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-box,
+html body .customers-page-type .customer-list-panel .quote-order-undo-box,
+html body .app-responsive .customer-list-panel .quote-order-undo-box {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 5.75rem !important;
+  height: 2.25rem !important;
+  box-sizing: border-box !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-sil,
+html body .customers-page-type .customer-list-panel .quote-order-undo-sil,
+html body .app-responsive .customer-list-panel .quote-order-undo-sil {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  color: #dc2626 !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-evet,
+html body .customers-page-type .customer-list-panel .quote-order-undo-evet,
+html body .app-responsive .customer-list-panel .quote-order-undo-evet {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  color: #047857 !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-close,
+html body .customers-page-type .customer-list-panel .quote-order-undo-close,
+html body .app-responsive .customer-list-panel .quote-order-undo-close,
+html body .page-type-shell .customer-list-panel .quote-order-undo-close svg,
+html body .customers-page-type .customer-list-panel .quote-order-undo-close svg,
+html body .app-responsive .customer-list-panel .quote-order-undo-close svg {
+  color: var(--muted) !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+html body .page-type-shell .customer-list-panel .quote-order-undo-close:hover,
+html body .customers-page-type .customer-list-panel .quote-order-undo-close:hover,
+html body .app-responsive .customer-list-panel .quote-order-undo-close:hover,
+html body .page-type-shell .customer-list-panel .quote-order-undo-close:hover svg,
+html body .customers-page-type .customer-list-panel .quote-order-undo-close:hover svg,
+html body .app-responsive .customer-list-panel .quote-order-undo-close:hover svg {
+  color: #dc2626 !important;
+  background: transparent !important;
+  transform: none !important;
+}
 html body .page-type-shell .customer-list-panel button.customer-bulk-delete-action,
 html body .customers-page-type .customer-list-panel button.customer-bulk-delete-action,
 html body .app-responsive .customer-list-panel button.customer-bulk-delete-action,
@@ -1477,9 +1930,27 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   color: var(--muted) !important;
 }
 
-/* Müşteriler / sistem merkez başlık — bold */
+/* Müşteriler / sistem merkez başlık — bold, yazı genişliği */
+.app-page-header-center {
+  width: max-content;
+  max-width: none;
+}
+
 .page-type-shell .app-page-header h1.customer-page-center-title,
 .customers-page-type .app-page-header h1.customer-page-center-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
+}
+
+html body .page-type-shell .app-page-header .customer-page-back-link,
+html body .page-type-shell .app-page-header .customer-page-back-link-label,
+html body .customers-page-type .app-page-header .customer-page-back-link,
+html body .customers-page-type .app-page-header .customer-page-back-link-label,
+html body .app-responsive .app-page-header .customer-page-back-link-label {
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1.25 !important;
@@ -1609,6 +2080,39 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
   transform-origin: left center;
 }
 
+html body .app-dropdown-portal button.dropdown-add-action,
+html body .customers-page-menu button.dropdown-add-action,
+html body .customer-filter-dropdown-menu button.dropdown-add-action,
+html body .customer-filter-dropdown-menu button.dropdown-add-action.flex.w-full,
+html body .customer-filter-dropdown-menu button.dropdown-add-action.flex.w-full:hover,
+html body .app-dropdown-portal button.dropdown-add-action:hover,
+html body .customers-page-menu button.dropdown-add-action:hover {
+  transform: none !important;
+  background: transparent !important;
+}
+
+html body .app-dropdown-portal button.dropdown-add-action svg,
+html body .customers-page-menu button.dropdown-add-action svg,
+html body .customer-filter-dropdown-menu button.dropdown-add-action svg,
+html body .app-dropdown-portal button.dropdown-add-action:hover svg,
+html body .customers-page-menu button.dropdown-add-action:hover svg,
+html body .customer-filter-dropdown-menu button.dropdown-add-action:hover svg {
+  color: #2563eb !important;
+  transform: none !important;
+}
+
+html body .app-dropdown-portal button.dropdown-add-action span,
+html body .customers-page-menu button.dropdown-add-action span,
+html body .customer-filter-dropdown-menu button.dropdown-add-action span {
+  color: var(--muted) !important;
+}
+
+html body .app-dropdown-portal button.dropdown-add-action:hover span,
+html body .customers-page-menu button.dropdown-add-action:hover span,
+html body .customer-filter-dropdown-menu button.dropdown-add-action:hover span {
+  color: #2563eb !important;
+}
+
 .customer-filter-dropdown-menu button.flex.w-full:hover span.truncate {
   font-weight: 400 !important;
 }
@@ -1628,9 +2132,9 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 .customers-page-menu button[title='Düzenle']:not([data-tone]):hover,
 .app-dropdown-portal button.customer-option-edit-btn:hover,
 .app-dropdown-portal button[title='Düzenle']:not([data-tone]):hover {
-  background: transparent !important;
+  background: rgba(37, 99, 235, 0.16) !important;
   color: #1d4ed8 !important;
-  transform: scale(1.1);
+  transform: none !important;
 }
 
 .customer-filter-dropdown-menu button[title='Sil']:not([data-tone]),
@@ -1647,9 +2151,9 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 .customers-page-menu button[title='Sil']:not([data-tone]):hover,
 .app-dropdown-portal button.customer-option-delete-btn:hover,
 .app-dropdown-portal button[title='Sil']:not([data-tone]):hover {
-  background: transparent !important;
+  background: rgba(239, 68, 68, 0.15) !important;
   color: #dc2626 !important;
-  transform: scale(1.1);
+  transform: none !important;
 }
 
 /* Row MoreMenu tones — beat customers-page-menu muted !important */
@@ -1864,6 +2368,41 @@ html body .customer-deleted-archived-panel button.customer-bulk-delete-action * 
 
 .customer-filter-color-swatches {
   max-width: 100%;
+}
+
+html body .app-dropdown-portal .dropdown-color-rail,
+html body .customers-page-menu .dropdown-color-rail,
+html body .customer-filter-dropdown-menu .dropdown-color-rail {
+  display: flex !important;
+  width: 2rem !important;
+  min-width: 2rem !important;
+  flex-shrink: 0 !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  align-self: stretch !important;
+  gap: 0.5rem !important;
+  border-left: 1px solid rgba(100, 116, 139, 0.35) !important;
+  padding-left: 0.625rem !important;
+}
+
+html body .app-dropdown-portal .dropdown-color-rail-label,
+html body .customers-page-menu .dropdown-color-rail-label,
+html body .customer-filter-dropdown-menu .dropdown-color-rail-label {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: #6b7280 !important;
+}
+
+html body .app-dropdown-portal .dropdown-color-rail button,
+html body .customers-page-menu .dropdown-color-rail button,
+html body .customer-filter-dropdown-menu .dropdown-color-rail button {
+  font-weight: 400 !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  transform: none !important;
 }
 
 .customer-filter-dropdown-menu button span.truncate {
@@ -2879,6 +3418,103 @@ html.special .app-page-metric {
   box-shadow: var(--special-card-glow) !important;
 }
 
+/* Teklif Listesi — satır aralığı filtre panelleri ile aynı (space-y-5 / shell-gap) */
+.quote-list-board {
+  display: flex;
+  width: 100%;
+  min-width: 56rem;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.quote-list-row {
+  display: grid;
+  width: 100%;
+  align-items: center;
+  column-gap: 0.5rem;
+}
+
+html body section.card.quote-list-row-panel {
+  min-width: 0;
+  min-height: 3rem;
+  padding-top: 0.375rem !important;
+  padding-bottom: 0.375rem !important;
+  overflow: visible !important;
+}
+
+html body section.card.quote-list-row-panel.quote-list-header-panel {
+  min-height: 4.75rem;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+  position: relative;
+  z-index: 4;
+}
+
+html body .quote-list-header-panel .quote-list-cell,
+html body .quote-list-header-panel .quote-list-header-btn,
+html body .quote-list-header-panel .quote-list-header-btn * {
+  pointer-events: auto !important;
+}
+
+html body .quote-list-header-panel .quote-list-header-btn {
+  position: relative;
+  z-index: 5;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  min-height: 2.75rem;
+  width: 100%;
+}
+
+.quote-list-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.quote-list-cell.is-start {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.quote-list-cell.is-end {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+html body .page-type-shell .quote-list-row-panel .customer-name-primary,
+html body .customers-page-type .quote-list-row-panel .customer-name-primary,
+html body .app-responsive .quote-list-row-panel .customer-name-primary {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+}
+
+html body .page-type-shell .quote-list-header-panel .quote-list-column-title,
+html body .customers-page-type .quote-list-header-panel .quote-list-column-title,
+html body .app-responsive .quote-list-header-panel .quote-list-column-title,
+html body .page-type-shell .quote-list-header-panel button .quote-list-column-title,
+html body .customers-page-type .quote-list-header-panel button .quote-list-column-title,
+html body .app-responsive .quote-list-header-panel button .quote-list-column-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
+}
+
+html body .page-type-shell .quote-list-row-panel .customer-balance-positive,
+html body .customers-page-type .quote-list-row-panel .customer-balance-positive,
+html body .app-responsive .quote-list-row-panel .customer-balance-positive {
+  color: #10b981 !important;
+  font-weight: 700 !important;
+}
+
 html.space [class*='rounded-2xl'][class*='border'][class*='bg-dark-800'] {
   background: var(--space-module-bg) !important;
   border-color: var(--space-module-border) !important;
@@ -3447,6 +4083,16 @@ html.night .glass-sidebar .sidebar-submenu {
   border-color: color-mix(in srgb, var(--muted) 70%, transparent);
 }
 
+.glass-sidebar-toggle[data-tone='primary']:hover {
+  color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+.glass-sidebar-toggle[data-tone='danger']:hover {
+  color: #e11d48 !important;
+  border-color: #e11d48 !important;
+}
+
 .prod-process-capsule-active {
   background: linear-gradient(
     120deg,
@@ -3584,6 +4230,341 @@ html.night .glass-sidebar .sidebar-submenu {
 
   .app-shell-content[data-teamhub-collapsed='false'] {
     margin-right: var(--shell-rail-inset-expanded);
+  }
+}
+
+.studio-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.studio-shell .app-shell-content {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.studio-shell .app-shell-content > main {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.studio-shell .studio-gateway-surface,
+.studio-shell > aside.glass-team-hub.studio-gateway-surface.app-sidebar {
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(155deg, #1d4ed8 0%, #2563eb 42%, #0ea5e9 100%) !important;
+  background-size: 180% 180% !important;
+  background-repeat: no-repeat !important;
+  animation: studio-gateway-flow 18s ease-in-out infinite;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 18px 44px -18px rgba(17, 24, 39, 0.55) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.studio-gateway-surface::before,
+.studio-gateway-surface::after {
+  display: none !important;
+  content: none !important;
+}
+
+.studio-gateway-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.studio-shell > .glass-team-hub.studio-gateway-surface h2,
+.studio-shell > .glass-team-hub.studio-gateway-surface button,
+.studio-shell > .glass-team-hub.studio-gateway-surface span {
+  color: #fff;
+}
+
+.studio-shell > .glass-team-hub.studio-gateway-surface .glass-sidebar-toggle {
+  color: rgba(255, 255, 255, 0.88);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.studio-shell > .glass-team-hub.studio-gateway-surface .glass-sidebar-toggle:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+@keyframes studio-gateway-flow {
+  0%,
+  100% {
+    background-position: 0% 42%;
+  }
+  50% {
+    background-position: 100% 58%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-gateway-surface,
+  .studio-shell > .glass-team-hub.studio-gateway-surface {
+    animation: none;
+  }
+}
+
+.studio-shell > aside.app-sidebar:not(.glass-team-hub),
+.studio-shell .app-shell-content > header,
+.studio-shell > .glass-team-hub,
+.studio-shell .app-shell-content > main,
+.studio-shell .app-shell-content > div:not(header) {
+  will-change: transform, opacity;
+}
+
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting)
+  > aside.app-sidebar:not(.glass-team-hub),
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) .app-shell-content > header,
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) > .glass-team-hub,
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting) .app-shell-content > main,
+.studio-shell:not(.studio-shell--entered):not(.studio-shell--exiting)
+  .app-shell-content
+  > div:not(header) {
+  opacity: 0;
+}
+
+.studio-shell--entered > aside.app-sidebar:not(.glass-team-hub) {
+  animation: studio-in-left 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.studio-shell--entered .app-shell-content > header {
+  animation: studio-in-down 0.58s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
+}
+
+.studio-shell--entered > .glass-team-hub {
+  animation: studio-in-right 0.58s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+
+.studio-shell--entered .app-shell-content > main,
+.studio-shell--entered .app-shell-content > div:not(header) {
+  animation: studio-in-fade 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+.studio-shell--exiting > aside.app-sidebar:not(.glass-team-hub) {
+  animation: studio-out-left 0.48s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.studio-shell--exiting .app-shell-content > header {
+  animation: studio-out-up 0.45s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.studio-shell--exiting > .glass-team-hub {
+  animation: studio-out-right 0.48s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.studio-shell--exiting .app-shell-content > main,
+.studio-shell--exiting .app-shell-content > div:not(header) {
+  animation: studio-out-fade 0.4s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.app-shell--to-studio,
+.app-shell--from-studio {
+  overflow: hidden;
+}
+
+.app-shell--to-studio > aside.glass-sidebar.app-sidebar {
+  animation: studio-out-left 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.app-shell--to-studio > aside.glass-team-hub {
+  animation: studio-out-right 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.app-shell--to-studio .app-shell-content {
+  animation: studio-out-fade 0.42s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.app-shell--from-studio > aside.glass-sidebar.app-sidebar {
+  animation: studio-in-left 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-shell--from-studio > aside.glass-team-hub {
+  animation: studio-in-right 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both;
+}
+
+.app-shell--from-studio .app-shell-content {
+  animation: studio-in-fade 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+.studio-enter-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background:
+    radial-gradient(720px 480px at 18% 20%, rgba(14, 165, 233, 0.35), transparent 62%),
+    linear-gradient(155deg, #1d4ed8 0%, #2563eb 46%, #0ea5e9 100%);
+  animation: studio-veil-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.studio-enter-veil-mark {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.studio-enter-veil-mark span {
+  color: #e2bc0f;
+}
+
+@keyframes studio-veil-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-enter-veil {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.app-shell--studio-active > aside.glass-sidebar,
+.app-shell--studio-active > aside.glass-team-hub,
+.app-shell--studio-active .app-header-banner,
+.app-shell--studio-active .app-shell-content > *:not(main) {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+.app-shell--studio-active .app-shell-content {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+@keyframes studio-in-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-36px, 0, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes studio-out-left {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-42px, 0, 0) scale(0.98);
+  }
+}
+
+@keyframes studio-in-right {
+  from {
+    opacity: 0;
+    transform: translate3d(36px, 0, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes studio-out-right {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(42px, 0, 0) scale(0.98);
+  }
+}
+
+@keyframes studio-in-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes studio-out-up {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0);
+  }
+}
+
+@keyframes studio-in-fade {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes studio-out-fade {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-shell--entered > aside.app-sidebar:not(.glass-team-hub),
+  .studio-shell--entered .app-shell-content > header,
+  .studio-shell--entered > .glass-team-hub,
+  .studio-shell--entered .app-shell-content > main,
+  .studio-shell--entered .app-shell-content > div:not(header),
+  .studio-shell--exiting > aside.app-sidebar:not(.glass-team-hub),
+  .studio-shell--exiting .app-shell-content > header,
+  .studio-shell--exiting > .glass-team-hub,
+  .studio-shell--exiting .app-shell-content > main,
+  .studio-shell--exiting .app-shell-content > div:not(header),
+  .app-shell--to-studio > aside.glass-sidebar.app-sidebar,
+  .app-shell--to-studio > aside.glass-team-hub,
+  .app-shell--to-studio .app-shell-content,
+  .app-shell--from-studio > aside.glass-sidebar.app-sidebar,
+  .app-shell--from-studio > aside.glass-team-hub,
+  .app-shell--from-studio .app-shell-content {
+    animation: none !important;
   }
 }
 
@@ -7229,8 +8210,7 @@ html .customer-filter-dropdown-menu button.kalem-btn svg {
   color: currentColor !important;
 }
 
-/* --- Standart silme onayı (DeleteConfirmPopover) --- */
-/* Kırmızı gradient zemin, minimal ölçüler ve tüm katmanların üstünde konum. */
+/* --- Standart silme onayı — teklif sipariş geri al kutusu ile aynı --- */
 .delete-confirm-portal {
   z-index: 12000 !important;
 }
@@ -7240,107 +8220,221 @@ html .customer-filter-dropdown-menu button.kalem-btn svg {
   backdrop-filter: blur(2px);
 }
 
-html .delete-confirm-panel,
-html.night .delete-confirm-panel,
-html .app-responsive .delete-confirm-panel,
-html .app-dropdown-portal .delete-confirm-panel {
-  background-image: linear-gradient(to bottom right, #fda4af, #f43f5e, #e11d48) !important;
-  background-color: #f43f5e !important;
-  border-color: rgba(255, 255, 255, 0.35) !important;
-}
-
-html .delete-confirm-panel :where(p, span, button, svg),
-html.night .delete-confirm-panel :where(p, span, button, svg),
-html .app-responsive .delete-confirm-panel :where(p, span, button, svg),
-html .app-dropdown-portal .delete-confirm-panel :where(p, span, button, svg) {
-  color: #ffffff !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
-}
-
-html .delete-confirm-panel .delete-confirm-title {
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  line-height: 1.2 !important;
-}
-
-html .delete-confirm-panel .delete-confirm-desc {
-  font-size: 11px !important;
-  font-weight: 400 !important;
-  line-height: 1.25 !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-}
-
-html .delete-confirm-panel .delete-confirm-yes,
-html .delete-confirm-panel .delete-confirm-no {
-  font-size: 12px !important;
-  line-height: 1 !important;
-}
-
-html .delete-confirm-panel .delete-confirm-yes,
-html.night .delete-confirm-panel .delete-confirm-yes,
-html .app-responsive .delete-confirm-panel .delete-confirm-yes,
-html .app-dropdown-portal .delete-confirm-panel .delete-confirm-yes {
-  background: #ffffff !important;
-  color: #e11d48 !important;
-  font-weight: 700 !important;
-}
-
-html .delete-confirm-panel .delete-confirm-no,
-html.night .delete-confirm-panel .delete-confirm-no,
-html .app-responsive .delete-confirm-panel .delete-confirm-no,
-html .app-dropdown-portal .delete-confirm-panel .delete-confirm-no {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.45) !important;
-  font-weight: 600 !important;
-}
-
-html .delete-confirm-panel-compact,
-html.night .delete-confirm-panel-compact,
-html .app-responsive .delete-confirm-panel-compact,
-html .customers-page-type .delete-confirm-panel-compact,
-html .page-type-shell .delete-confirm-panel-compact {
+html .delete-confirm-portal .delete-confirm-panel.quote-order-undo-confirm,
+html.night .delete-confirm-portal .delete-confirm-panel.quote-order-undo-confirm,
+html .app-responsive .delete-confirm-portal .delete-confirm-panel.quote-order-undo-confirm,
+html .app-dropdown-portal .delete-confirm-portal .delete-confirm-panel.quote-order-undo-confirm,
+html .delete-confirm-panel.quote-order-undo-confirm,
+html.night .delete-confirm-panel.quote-order-undo-confirm,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm {
   display: inline-flex !important;
-  flex-direction: column !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-  justify-content: center !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  width: max-content !important;
-  max-width: min(100vw, 18rem) !important;
-  gap: 0.25rem !important;
-  padding: 0.25rem 0.5rem !important;
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  width: 5.75rem !important;
+  min-width: 5.75rem !important;
+  max-width: 5.75rem !important;
+  margin: 0 !important;
   box-sizing: border-box !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  ring: none !important;
 }
 
-html .delete-confirm-panel-compact .delete-confirm-title,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-title,
-html .page-type-shell .delete-confirm-panel-compact .delete-confirm-title {
-  font-size: 10px !important;
+html .delete-confirm-portal .quote-order-undo-box,
+html.night .delete-confirm-portal .quote-order-undo-box,
+html .app-responsive .delete-confirm-portal .quote-order-undo-box,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-box,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-box {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 5.75rem !important;
+  height: 2.25rem !important;
+  box-sizing: border-box !important;
+  background: transparent !important;
+  border-color: var(--ds-border, rgba(140, 145, 165, 0.35)) !important;
+}
+
+html .delete-confirm-portal .quote-order-undo-sil,
+html.night .delete-confirm-portal .quote-order-undo-sil,
+html .app-responsive .delete-confirm-portal .quote-order-undo-sil,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-sil,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-sil {
+  font-size: 11px !important;
   font-weight: 700 !important;
-  line-height: 1.2 !important;
-  white-space: normal !important;
-  text-align: center !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  color: #dc2626 !important;
+  background: transparent !important;
+  transform: none !important;
 }
 
-html .delete-confirm-panel-compact .delete-confirm-yes,
-html .delete-confirm-panel-compact .delete-confirm-no,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-yes,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-no {
-  height: 1rem !important;
-  min-height: 1rem !important;
-  padding: 0 0.375rem !important;
-  font-size: 10px !important;
-  line-height: 1 !important;
-  white-space: nowrap !important;
+html .delete-confirm-portal .quote-order-undo-close,
+html.night .delete-confirm-portal .quote-order-undo-close,
+html .app-responsive .delete-confirm-portal .quote-order-undo-close,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-close,
+html .delete-confirm-portal .quote-order-undo-close svg,
+html.night .delete-confirm-portal .quote-order-undo-close svg,
+html .app-responsive .delete-confirm-portal .quote-order-undo-close svg,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-close svg,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html .customers-page-type .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg,
+html
+  .customers-page-type
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close
+  svg,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close svg {
+  color: var(--muted) !important;
+  background: transparent !important;
+  transform: none !important;
 }
 
-html .delete-confirm-panel-compact .delete-confirm-sep,
-html .customers-page-type .delete-confirm-panel-compact .delete-confirm-sep {
-  color: rgba(255, 255, 255, 0.8) !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  line-height: 1 !important;
+html .delete-confirm-portal .quote-order-undo-close:hover,
+html.night .delete-confirm-portal .quote-order-undo-close:hover,
+html .app-responsive .delete-confirm-portal .quote-order-undo-close:hover,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-close:hover,
+html .delete-confirm-portal .quote-order-undo-close:hover svg,
+html.night .delete-confirm-portal .quote-order-undo-close:hover svg,
+html .app-responsive .delete-confirm-portal .quote-order-undo-close:hover svg,
+html .app-dropdown-portal .delete-confirm-portal .quote-order-undo-close:hover svg,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html .app-responsive .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html
+  .customers-page-type
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close:hover,
+html .page-type-shell .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover,
+html .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
+html.night .delete-confirm-panel.quote-order-undo-confirm .quote-order-undo-close:hover svg,
+html
+  .app-responsive
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close:hover
+  svg,
+html
+  .customers-page-type
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close:hover
+  svg,
+html
+  .page-type-shell
+  .delete-confirm-panel.quote-order-undo-confirm
+  .quote-order-undo-close:hover
+  svg {
+  color: #dc2626 !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+/* BachMain Studio — Dropelya /yonetim gömülü tam ekran */
+.web-studio-fullscreen {
+  position: relative;
+  display: flex;
+  min-height: 100dvh;
+  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--app-bg-soft, #e5eaf2);
+  opacity: 0;
+  transform: translateY(8px) scale(0.995);
+  transition:
+    opacity 280ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.web-studio-fullscreen.is-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.web-studio-backbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  height: 3rem;
+  min-height: 3rem;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.75));
+  background: var(--glass-bg-strong, rgba(255, 255, 255, 0.72));
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  padding: 0 0.75rem;
+}
+
+.web-studio-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.75));
+  background: rgba(255, 255, 255, 0.55);
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.web-studio-back-link:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(121, 166, 210, 0.45);
+}
+
+.web-studio-backbar-title {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.web-studio-embed-frame {
+  min-height: 0;
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: #fff;
+}
+
+/* Eski gömülü kabuk — geriye dönük */
+.web-studio-embed-shell {
+  min-height: calc(100dvh - var(--ds-bottom-nav-h, 4rem) - (3 * var(--shell-gap)) - 3.5rem);
+}
+
+@media (min-width: 1024px) {
+  .web-studio-embed-shell {
+    min-height: calc(100dvh - (2 * var(--shell-gap)) - 3.5rem);
+  }
 }

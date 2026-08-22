@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { isStudioFullscreenRoute } from '../../data/webMenu'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
 import TeamHubPanel from './TeamHubPanel'
 import BottomNav from './BottomNav'
+import AppGuidedTour from '../Onboarding/AppGuidedTour'
+import ModuleAccessGate from '../../auth/ModuleAccessGate'
+import { GUIDED_TOUR_SIDEBAR_EVENT } from '../Onboarding/guidedTourStorage'
 
+const STUDIO_ENTER_MS = 580
 const SIDEBAR_KEY = 'bach-sidebar'
 const LEGACY_SIDEBAR_KEY = 'erlenbox-sidebar'
 
@@ -21,12 +26,17 @@ function readSidebarCollapsed() {
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
+  const isStudioManagement = isStudioFullscreenRoute(pathname)
+
+  // Web Studio artık normal sayfa — özel tam ekran modundan çıkarıldı
   const hideChrome = pathname === '/paketler' || pathname.startsWith('/paketler/')
+
   const fullscreenWorkspace =
     pathname === '/otomasyon/designer' ||
     pathname.startsWith('/otomasyon/designer/') ||
     pathname === '/mes/operator' ||
-    pathname.startsWith('/mes/operator/')
+    pathname.startsWith('/mes/operator/') ||
+    isStudioManagement
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed)
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(
@@ -39,6 +49,9 @@ export default function Layout({ children }) {
   const [isTablet, setIsTablet] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth >= 768 && window.innerWidth < 1024 : false,
   )
+  const [studioChromeVisible, setStudioChromeVisible] = useState(!isStudioManagement)
+  const [studioEntering, setStudioEntering] = useState(false)
+  const [tourUnlockSidebar, setTourUnlockSidebar] = useState(false)
 
   useEffect(() => {
     function syncViewport() {
@@ -48,7 +61,6 @@ export default function Layout({ children }) {
       setIsMobile(mobile)
       setIsTablet(tablet)
       if (!mobile) setMobileSidebarOpen(false)
-      // Tablet: auto-collapse sidebar
       if (tablet) {
         setSidebarCollapsed(true)
       }
@@ -57,6 +69,51 @@ export default function Layout({ children }) {
     syncViewport()
     window.addEventListener('resize', syncViewport)
     return () => window.removeEventListener('resize', syncViewport)
+  }, [])
+
+  useEffect(() => {
+    if (!isStudioManagement) {
+      setStudioChromeVisible(true)
+      setStudioExiting(false)
+      return undefined
+    }
+    if (studioExiting) return undefined
+    const timer = window.setTimeout(() => setStudioChromeVisible(false), STUDIO_ENTER_MS)
+    return () => window.clearTimeout(timer)
+  }, [isStudioManagement, studioExiting])
+
+  useEffect(() => {
+    function onStudioExit() {
+      setStudioExiting(true)
+      setStudioChromeVisible(true)
+    }
+    function onStudioEnter() {
+      setStudioEntering(true)
+    }
+    window.addEventListener('bach:studio-exit-start', onStudioExit)
+    window.addEventListener('bach:studio-enter-start', onStudioEnter)
+    return () => {
+      window.removeEventListener('bach:studio-exit-start', onStudioExit)
+      window.removeEventListener('bach:studio-enter-start', onStudioEnter)
+    }
+  }, [])
+
+  useEffect(() => {
+    function onTourSidebar(event) {
+      const expand = event.detail?.expand
+      if (expand) {
+        setTourUnlockSidebar(true)
+        setSidebarCollapsed(false)
+        setMobileSidebarOpen(true)
+        return
+      }
+      if (expand === false) {
+        setTourUnlockSidebar(false)
+        setMobileSidebarOpen(false)
+      }
+    }
+    window.addEventListener(GUIDED_TOUR_SIDEBAR_EVENT, onTourSidebar)
+    return () => window.removeEventListener(GUIDED_TOUR_SIDEBAR_EVENT, onTourSidebar)
   }, [])
 
   function toggleSidebar() {
@@ -85,9 +142,25 @@ export default function Layout({ children }) {
     })
   }
 
-  const effectiveCollapsed = isTablet ? true : isMobile ? false : sidebarCollapsed
+  const effectiveCollapsed = tourUnlockSidebar
+    ? false
+    : isTablet
+      ? true
+      : isMobile
+        ? false
+        : sidebarCollapsed
+  const studioActive = isStudioManagement && !studioChromeVisible && !studioExiting
+  const studioShellClass = [
+    (isStudioManagement && studioChromeVisible && !studioExiting) || studioEntering
+      ? 'app-shell--to-studio'
+      : '',
+    studioExiting ? 'app-shell--from-studio' : '',
+    studioActive ? 'app-shell--studio-active' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
-  if (fullscreenWorkspace) {
+  if (fullscreenWorkspace && !isStudioManagement) {
     return (
       <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))]">
         <main className="min-h-screen w-full overflow-hidden p-0">{children}</main>
@@ -96,7 +169,9 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))] transition-colors">
+    <div
+      className={`app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))] transition-colors ${studioShellClass}`.trim()}
+    >
       {mobileSidebarOpen && (
         <button
           type="button"
@@ -119,11 +194,19 @@ export default function Layout({ children }) {
         {!hideChrome ? <Header onMenuClick={() => setMobileSidebarOpen(true)} /> : null}
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
         <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">
-          {children}
+          <ModuleAccessGate>{children}</ModuleAccessGate>
         </main>
       </div>
       <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
       {!hideChrome ? <BottomNav /> : null}
+      {!hideChrome && !isStudioManagement ? <AppGuidedTour /> : null}
+      {studioEntering ? (
+        <div className="studio-enter-veil" aria-hidden="true">
+          <p className="studio-enter-veil-mark">
+            STUDIO<span>.</span>
+          </p>
+        </div>
+      ) : null}
     </div>
   )
 }

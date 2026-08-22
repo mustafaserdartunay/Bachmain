@@ -12,6 +12,7 @@ import {
   Percent,
   MessageCircle,
   Receipt,
+  FileText,
   BarChart3,
   Settings,
   FolderPlus,
@@ -48,12 +49,14 @@ import {
   Container,
   LayoutDashboard,
   PackageCheck,
+  Globe2,
   Sparkles,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
 import { visibleCustomerSubMenus, isSalesRoute } from '../../data/customerMenu'
 import { expensesSubMenus, isExpensesRoute } from '../../data/expensesMenu'
+import { eDocumentsSubMenus, isEDocumentsRoute } from '../../data/eDocumentsMenu'
 import { treasurySubMenus, isTreasuryRoute, CASH_BASE_PATH } from '../../data/treasuryMenu'
 import { stockSubMenus, isStockRoute, STOCK_PRODUCTS_PATH } from '../../data/stockMenu'
 import {
@@ -64,6 +67,7 @@ import {
 import { hrSubMenus, isHrRoute, HR_HOME_PATH } from '../../data/hrMenu'
 import { crmSubMenus, isCrmMenuRoute } from '../../data/crmMenu'
 import { visibleProcessSubMenus, isProcessRoute } from '../../data/processMenu'
+import { GUIDED_TOUR_SIDEBAR_EVENT } from '../Onboarding/guidedTourStorage'
 import { logisticsSubMenus, isLogisticsRoute, LOGISTICS_HOME_PATH } from '../../data/logisticsMenu'
 import { projectsSubMenus, isProjectsRoute, PROJECTS_HOME_PATH } from '../../data/projectsMenu'
 import { settingsSubMenus } from '../../data/settingsMenu'
@@ -73,11 +77,14 @@ import {
   DOCUMENT_CENTER_BASE,
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
+import { isWebRoute } from '../../data/webMenu'
+import { getDropelyaYonetimUrl, startStudioJump } from '../../utils/dropelyaStudio'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
 import { useAuth } from '../../auth/AuthContext'
 import { filterMenuByEntitlements } from '../../utils/entitlements'
+import { canViewModule, canViewPath, filterByModuleAccess } from '../../utils/moduleAccess'
 import { canUseMultiCompany } from '../../utils/orgScope'
 
 const projectsMenuGate = {
@@ -215,14 +222,17 @@ function SidebarSection({ label, collapsed }) {
 export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, onToggle }) {
   const location = useLocation()
   const { user } = useAuth()
+  const allow = (code) => canViewModule(user, code)
   const [company, setCompany] = useState(() => readCompanySettings())
   const isSalesRouteActive = isSalesRoute(location.pathname)
   const isProcessRouteActive = isProcessRoute(location.pathname)
   const isExpensesRouteActive = isExpensesRoute(location.pathname)
+  const isEDocumentsRouteActive = isEDocumentsRoute(location.pathname)
   const isTreasuryRouteActive = isTreasuryRoute(location.pathname)
   const isStockRouteActive = isStockRoute(location.pathname)
   const isFieldSalesRouteActive = isFieldSalesRoute(location.pathname)
   const isLogisticsRouteActive = isLogisticsRoute(location.pathname)
+  const isWebRouteActive = isWebRoute(location.pathname)
   const isHrRouteActive = isHrRoute(location.pathname)
   const isDocumentCenterRouteActive = isDocumentCenterRoute(location.pathname)
   const isCrmRouteActive = isCrmMenuRoute(location.pathname)
@@ -232,6 +242,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     if (isSalesRouteActive) return 'customer'
     if (isProcessRouteActive) return 'process'
     if (isExpensesRouteActive) return 'expenses'
+    if (isEDocumentsRouteActive) return 'edocuments'
     if (isTreasuryRouteActive) return 'treasury'
     if (isStockRouteActive) return 'stock'
     if (isProjectsRouteActive) return 'projects'
@@ -239,6 +250,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     if (isCrmRouteActive) return 'crm'
     if (isHrRouteActive) return 'hr'
     if (isLogisticsRouteActive) return 'logistics'
+    if (isWebRouteActive) return 'web'
     if (isSettingsRoute) return 'settings'
     return null
   }
@@ -250,6 +262,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
   const customerOpen = openMenuId === 'customer'
   const processOpen = openMenuId === 'process'
   const expensesOpen = openMenuId === 'expenses'
+  const eDocumentsOpen = openMenuId === 'edocuments'
   const treasuryOpen = openMenuId === 'treasury'
   const stockOpen = openMenuId === 'stock'
   const projectsOpen = openMenuId === 'projects'
@@ -270,6 +283,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     isSalesRouteActive,
     isProcessRouteActive,
     isExpensesRouteActive,
+    isEDocumentsRouteActive,
     isTreasuryRouteActive,
     isStockRouteActive,
     isProjectsRouteActive,
@@ -277,6 +291,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     isCrmRouteActive,
     isHrRouteActive,
     isLogisticsRouteActive,
+    isWebRouteActive,
     isSettingsRoute,
   ])
 
@@ -301,6 +316,15 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     return () => {
       window.removeEventListener('erlenbox:company-settings-updated', syncCompany)
     }
+  }, [])
+
+  useEffect(() => {
+    function onTourSidebar(event) {
+      const menu = event.detail?.menu
+      if (menu) setOpenMenuId(menu)
+    }
+    window.addEventListener(GUIDED_TOUR_SIDEBAR_EVENT, onTourSidebar)
+    return () => window.removeEventListener(GUIDED_TOUR_SIDEBAR_EVENT, onTourSidebar)
   }, [])
 
   const menuItems = filterMenuByEntitlements([courierMenuItem], user?.entitlements)
@@ -369,283 +393,346 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         className={`flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 ${collapsed ? 'px-0' : 'px-1'}`}
       >
         {/* Ana: Güncel Durum */}
-        <NavLink
-          to="/"
-          end
-          onClick={handleNavigate}
-          className={({ isActive }) =>
-            `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              isActive ? 'sidebar-menu-active font-medium' : ''
-            }`
-          }
-        >
-          <MenuIcon collapsed={collapsed}>
-            <Gauge className="w-4 h-4 shrink-0" />
-          </MenuIcon>
-          {!collapsed ? <span className={menuLabelClass}>Güncel Durum</span> : null}
-        </NavLink>
+        {allow('dashboard_basic') ? (
+          <NavLink
+            to="/"
+            end
+            onClick={handleNavigate}
+            className={({ isActive }) =>
+              `${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                isActive ? 'sidebar-menu-active font-medium' : ''
+              }`
+            }
+          >
+            <MenuIcon collapsed={collapsed}>
+              <Gauge className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed ? <span className={menuLabelClass}>Güncel Durum</span> : null}
+          </NavLink>
+        ) : null}
 
         <SidebarSection label="ERP" collapsed={collapsed} />
 
         {/* 2. Satışlar */}
-        <div className={`sidebar-menu-group ${customerOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('customer')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <TrendingUp className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Satışlar</span>
-                {customerOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
-            )}
-          </button>
+        {allow('crm') ? (
+          <div className={`sidebar-menu-group ${customerOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('customer')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <TrendingUp className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>Satışlar</span>
+                  {customerOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
 
-          {customerOpen && !collapsed && (
-            <SidebarSubMenu>
-              {visibleCustomerSubMenus.map((sub) => {
-                const SubIcon = sub.icon ? customerSubMenuIcons[sub.icon] : null
-                return (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    end={sub.path === '/musteriler'}
-                    onClick={handleNavigate}
-                    className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
-                    }
-                  >
-                    {SubIcon ? (
-                      <SubMenuIcon>
-                        <SubIcon className="h-3.5 w-3.5" />
-                      </SubMenuIcon>
-                    ) : null}
-                    {sub.label}
-                  </NavLink>
-                )
-              })}
-            </SidebarSubMenu>
-          )}
-        </div>
+            {customerOpen && !collapsed && (
+              <SidebarSubMenu>
+                {visibleCustomerSubMenus.map((sub) => {
+                  const SubIcon = sub.icon ? customerSubMenuIcons[sub.icon] : null
+                  return (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      end={sub.path === '/musteriler'}
+                      data-tour={sub.path === '/musteriler' ? 'nav-customers' : undefined}
+                      onClick={handleNavigate}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} flex items-center gap-2 ${
+                          isActive ? 'sidebar-menu-active font-medium' : ''
+                        }`
+                      }
+                    >
+                      {SubIcon ? (
+                        <SubMenuIcon>
+                          <SubIcon className="h-3.5 w-3.5" />
+                        </SubMenuIcon>
+                      ) : null}
+                      {sub.label}
+                    </NavLink>
+                  )
+                })}
+              </SidebarSubMenu>
+            )}
+          </div>
+        ) : null}
 
         {/* 2b. Süreç Yönetimi (Satışlar altında, bağımsız grup) */}
-        <div className={`sidebar-menu-group ${processOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('process')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isProcessRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <ClipboardList className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Süreç Yönetimi</span>
-                {processOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
-            )}
-          </button>
+        {visibleProcessSubMenus.some((sub) => canViewPath(user, sub.path)) ? (
+          <div className={`sidebar-menu-group ${processOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('process')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isProcessRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <ClipboardList className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>Süreç Yönetimi</span>
+                  {processOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
 
-          {processOpen && !collapsed && (
-            <SidebarSubMenu>
-              {visibleProcessSubMenus.map((sub) => (
-                <NavLink
-                  key={sub.path}
-                  to={sub.path}
-                  onClick={handleNavigate}
-                  className={({ isActive }) =>
-                    `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
-                  }
-                >
-                  {sub.label}
-                </NavLink>
-              ))}
-            </SidebarSubMenu>
-          )}
-        </div>
+            {processOpen && !collapsed && (
+              <SidebarSubMenu>
+                {visibleProcessSubMenus
+                  .filter((sub) => canViewPath(user, sub.path))
+                  .map((sub) => (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      data-tour={sub.path === '/teklifler' ? 'nav-quotes' : undefined}
+                      onClick={handleNavigate}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
+                      }
+                    >
+                      {sub.label}
+                    </NavLink>
+                  ))}
+              </SidebarSubMenu>
+            )}
+          </div>
+        ) : null}
 
         {/* 3. Giderler */}
-        <div className={`sidebar-menu-group ${expensesOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('expenses')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isExpensesRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <Banknote className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Giderler</span>
-                {expensesOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
-            )}
-          </button>
+        {allow('expenses') ? (
+          <div className={`sidebar-menu-group ${expensesOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('expenses')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isExpensesRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <Banknote className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>Giderler</span>
+                  {expensesOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
 
-          {expensesOpen && !collapsed && (
-            <SidebarSubMenu>
-              {expensesSubMenus.map((sub) => {
-                const SubIcon = sub.icon ? expensesSubMenuIcons[sub.icon] : null
-                return (
+            {expensesOpen && !collapsed && (
+              <SidebarSubMenu>
+                {expensesSubMenus.map((sub) => {
+                  const SubIcon = sub.icon ? expensesSubMenuIcons[sub.icon] : null
+                  return (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      onClick={handleNavigate}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} flex items-center gap-2 ${
+                          isActive ? 'sidebar-menu-active font-medium' : ''
+                        }`
+                      }
+                    >
+                      {SubIcon ? (
+                        <SubMenuIcon>
+                          <SubIcon className="h-3.5 w-3.5" />
+                        </SubMenuIcon>
+                      ) : null}
+                      {sub.label}
+                    </NavLink>
+                  )
+                })}
+              </SidebarSubMenu>
+            )}
+          </div>
+        ) : null}
+
+        {/* 3b. E-Belgeler */}
+        {allow('einvoice') ? (
+          <div className={`sidebar-menu-group ${eDocumentsOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('edocuments')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isEDocumentsRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <FileText className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>E-Belgeler</span>
+                  {eDocumentsOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
+            {eDocumentsOpen && !collapsed && (
+              <SidebarSubMenu>
+                {filterMenuByEntitlements(
+                  eDocumentsSubMenus.map((item) => ({ ...item, moduleCode: 'einvoice' })),
+                  user?.entitlements,
+                ).map((sub) => (
                   <NavLink
                     key={sub.path}
                     to={sub.path}
                     onClick={handleNavigate}
                     className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
+                      `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
                     }
                   >
-                    {SubIcon ? (
-                      <SubMenuIcon>
-                        <SubIcon className="h-3.5 w-3.5" />
-                      </SubMenuIcon>
-                    ) : null}
                     {sub.label}
                   </NavLink>
-                )
-              })}
-            </SidebarSubMenu>
-          )}
-        </div>
+                ))}
+              </SidebarSubMenu>
+            )}
+          </div>
+        ) : null}
 
         {/* 4. Nakit */}
-        <div className={`sidebar-menu-group ${treasuryOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('treasury')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isTreasuryRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <Coins className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Nakit</span>
-                {treasuryOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
-            )}
-          </button>
+        {allow('finance') ? (
+          <div className={`sidebar-menu-group ${treasuryOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('treasury')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isTreasuryRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <Coins className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>Nakit</span>
+                  {treasuryOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
 
-          {treasuryOpen && !collapsed && (
-            <SidebarSubMenu>
-              {treasurySubMenus.map((sub) => {
-                const SubIcon = sub.icon ? treasurySubMenuIcons[sub.icon] : null
-                return (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    end
-                    onClick={handleNavigate}
-                    className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
-                    }
-                  >
-                    {SubIcon ? (
-                      <SubMenuIcon>
-                        <SubIcon className="h-3.5 w-3.5" />
-                      </SubMenuIcon>
-                    ) : null}
-                    {sub.label}
-                  </NavLink>
-                )
-              })}
-            </SidebarSubMenu>
-          )}
-        </div>
+            {treasuryOpen && !collapsed && (
+              <SidebarSubMenu>
+                {treasurySubMenus.map((sub) => {
+                  const SubIcon = sub.icon ? treasurySubMenuIcons[sub.icon] : null
+                  return (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      end
+                      onClick={handleNavigate}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} flex items-center gap-2 ${
+                          isActive ? 'sidebar-menu-active font-medium' : ''
+                        }`
+                      }
+                    >
+                      {SubIcon ? (
+                        <SubMenuIcon>
+                          <SubIcon className="h-3.5 w-3.5" />
+                        </SubMenuIcon>
+                      ) : null}
+                      {sub.label}
+                    </NavLink>
+                  )
+                })}
+              </SidebarSubMenu>
+            )}
+          </div>
+        ) : null}
 
         {/* 5. Stok */}
-        <div className={`sidebar-menu-group ${stockOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('stock')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isStockRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <Boxes className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Stok</span>
-                {stockOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
-            )}
-          </button>
+        {allow('stock') || allow('warehouse') ? (
+          <div className={`sidebar-menu-group ${stockOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('stock')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isStockRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <Boxes className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>Stok</span>
+                  {stockOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
 
-          {stockOpen && !collapsed && (
-            <SidebarSubMenu>
-              {stockSubMenus.map((sub) => {
-                const SubIcon = sub.icon ? stockSubMenuIcons[sub.icon] : null
-                return (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    end={sub.path === STOCK_PRODUCTS_PATH}
-                    onClick={() => {
-                      handleNavigate()
-                      if (sub.openProductsList) {
-                        window.dispatchEvent(new CustomEvent('erlenbox:open-products-list'))
+            {stockOpen && !collapsed && (
+              <SidebarSubMenu>
+                {stockSubMenus.map((sub) => {
+                  const SubIcon = sub.icon ? stockSubMenuIcons[sub.icon] : null
+                  return (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      end={sub.path === STOCK_PRODUCTS_PATH}
+                      data-tour={sub.path === STOCK_PRODUCTS_PATH ? 'nav-products' : undefined}
+                      onClick={() => {
+                        handleNavigate()
+                        if (sub.openProductsList) {
+                          window.dispatchEvent(new CustomEvent('erlenbox:open-products-list'))
+                        }
+                      }}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} flex items-center gap-2 ${
+                          isActive ? 'sidebar-menu-active font-medium' : ''
+                        }`
                       }
-                    }}
-                    className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
-                    }
-                  >
-                    {SubIcon ? (
-                      <SubMenuIcon>
-                        <SubIcon className="h-3.5 w-3.5" />
-                      </SubMenuIcon>
-                    ) : null}
-                    {sub.label}
-                  </NavLink>
-                )
-              })}
-            </SidebarSubMenu>
-          )}
-        </div>
+                    >
+                      {SubIcon ? (
+                        <SubMenuIcon>
+                          <SubIcon className="h-3.5 w-3.5" />
+                        </SubMenuIcon>
+                      ) : null}
+                      {sub.label}
+                    </NavLink>
+                  )
+                })}
+              </SidebarSubMenu>
+            )}
+          </div>
+        ) : null}
 
-        {showProjects && (
+        {showProjects && allow('projects') && (
           <div className={`sidebar-menu-group ${projectsOpen ? 'is-open' : ''}`}>
             <button
               type="button"
@@ -699,7 +786,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
           </div>
         )}
 
-        {showPos ? (
+        {showPos && allow('pos') ? (
           <NavLink
             to={posMenuItem.path}
             onClick={handleNavigate}
@@ -717,237 +804,281 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <SidebarSection label="CRM" collapsed={collapsed} />
 
         {/* Ajanda (görev / not / randevu) */}
-        <div className={`sidebar-menu-group ${crmOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('crm')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isCrmRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <CalendarDays className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Ajanda</span>
-                {crmOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
-            )}
-          </button>
+        {allow('tasks') || allow('notes') || allow('appointments') ? (
+          <div className={`sidebar-menu-group ${crmOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('crm')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isCrmRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <CalendarDays className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>Ajanda</span>
+                  {crmOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
 
-          {crmOpen && !collapsed && (
-            <SidebarSubMenu>
-              {crmSubMenus.map((sub) => (
-                <NavLink
-                  key={sub.path}
-                  to={sub.path}
-                  end={Boolean(sub.end)}
-                  onClick={handleNavigate}
-                  className={({ isActive }) =>
-                    `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
-                  }
-                >
-                  {sub.label}
-                </NavLink>
-              ))}
-            </SidebarSubMenu>
-          )}
-        </div>
-
-        {/* Mesaj Merkezi — always visible */}
-        <NavLink
-          to="/mesajlar"
-          onClick={handleNavigate}
-          className={`${menuButtonBase} relative ${collapsed ? 'justify-center' : ''} ${
-            isMessageCenterActive ? 'sidebar-menu-active font-medium' : ''
-          }`}
-        >
-          <MenuIcon collapsed={collapsed}>
-            <MessageCircle className="w-4 h-4 shrink-0" />
-          </MenuIcon>
-          {!collapsed && <span className={menuLabelClass}>Mesaj Merkezi</span>}
-          {messageBadge.count > 0 &&
-            (collapsed ? (
-              <span
-                className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.75)] animate-pulse"
-                aria-label={`${messageBadge.count} okunmamış mesaj`}
-              />
-            ) : (
-              <span
-                className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-500 px-1.5 text-[12px] font-black text-white shadow-[0_0_10px_rgba(244,63,94,0.55)]"
-                title={`${messageBadge.unreadTotal > 0 ? `${messageBadge.unreadTotal} yeni mesaj` : `${messageBadge.unansweredCount} cevaplanmayan konuşma`}`}
-              >
-                {messageBadge.count > 99 ? '99+' : messageBadge.count}
-              </span>
-            ))}
-        </NavLink>
-
-        {/* Saha Satış */}
-        <div className={`sidebar-menu-group ${fieldSalesOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('fieldSales')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isFieldSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <MapPinned className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Saha Satış</span>
-                {fieldSalesOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
-            )}
-          </button>
-
-          {fieldSalesOpen && !collapsed && (
-            <SidebarSubMenu>
-              {fieldSalesSubMenus.map((sub) => {
-                const SubIcon = sub.icon ? fieldSalesSubMenuIcons[sub.icon] : null
-                return (
+            {crmOpen && !collapsed && (
+              <SidebarSubMenu>
+                {crmSubMenus.map((sub) => (
                   <NavLink
                     key={sub.path}
                     to={sub.path}
-                    end={sub.path === FIELD_SALES_HOME_PATH}
+                    end={Boolean(sub.end)}
                     onClick={handleNavigate}
                     className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
+                      `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
                     }
                   >
-                    {SubIcon ? (
-                      <SubMenuIcon>
-                        <SubIcon className="h-3.5 w-3.5" />
-                      </SubMenuIcon>
-                    ) : null}
                     {sub.label}
                   </NavLink>
-                )
-              })}
-            </SidebarSubMenu>
-          )}
-        </div>
+                ))}
+              </SidebarSubMenu>
+            )}
+          </div>
+        ) : null}
+
+        {allow('whatsapp') ? (
+          <NavLink
+            to="/mesajlar"
+            onClick={handleNavigate}
+            className={`${menuButtonBase} relative ${collapsed ? 'justify-center' : ''} ${
+              isMessageCenterActive ? 'sidebar-menu-active font-medium' : ''
+            }`}
+          >
+            <MenuIcon collapsed={collapsed}>
+              <MessageCircle className="w-4 h-4 shrink-0" />
+            </MenuIcon>
+            {!collapsed && <span className={menuLabelClass}>Mesaj Merkezi</span>}
+            {messageBadge.count > 0 &&
+              (collapsed ? (
+                <span
+                  className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.75)] animate-pulse"
+                  aria-label={`${messageBadge.count} okunmamış mesaj`}
+                />
+              ) : (
+                <span
+                  className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-500 px-1.5 text-[12px] font-black text-white shadow-[0_0_10px_rgba(244,63,94,0.55)]"
+                  title={`${messageBadge.unreadTotal > 0 ? `${messageBadge.unreadTotal} yeni mesaj` : `${messageBadge.unansweredCount} cevaplanmayan konuşma`}`}
+                >
+                  {messageBadge.count > 99 ? '99+' : messageBadge.count}
+                </span>
+              ))}
+          </NavLink>
+        ) : null}
+
+        {/* Saha Satış */}
+        {allow('field_sales') ? (
+          <div className={`sidebar-menu-group ${fieldSalesOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('fieldSales')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isFieldSalesRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <MapPinned className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>Saha Satış</span>
+                  {fieldSalesOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
+
+            {fieldSalesOpen && !collapsed && (
+              <SidebarSubMenu>
+                {fieldSalesSubMenus.map((sub) => {
+                  const SubIcon = sub.icon ? fieldSalesSubMenuIcons[sub.icon] : null
+                  return (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      end={sub.path === FIELD_SALES_HOME_PATH}
+                      onClick={handleNavigate}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} flex items-center gap-2 ${
+                          isActive ? 'sidebar-menu-active font-medium' : ''
+                        }`
+                      }
+                    >
+                      {SubIcon ? (
+                        <SubMenuIcon>
+                          <SubIcon className="h-3.5 w-3.5" />
+                        </SubMenuIcon>
+                      ) : null}
+                      {sub.label}
+                    </NavLink>
+                  )
+                })}
+              </SidebarSubMenu>
+            )}
+          </div>
+        ) : null}
+
+        {allow('web') ? (
+          <>
+            <SidebarSection label="WEB" collapsed={collapsed} />
+
+            <a
+              href={getDropelyaYonetimUrl()}
+              onClick={(event) => {
+                if (
+                  event.metaKey ||
+                  event.ctrlKey ||
+                  event.shiftKey ||
+                  event.altKey ||
+                  event.button !== 0
+                ) {
+                  handleNavigate()
+                  return
+                }
+                event.preventDefault()
+                handleNavigate()
+                startStudioJump()
+              }}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <Globe2 className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed ? <span className={menuLabelClass}>Studio</span> : null}
+            </a>
+          </>
+        ) : null}
 
         <SidebarSection label="İK" collapsed={collapsed} />
 
         {/* İnsan Kaynakları / PDKS */}
-        <div className={`sidebar-menu-group ${hrOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('hr')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isHrRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <UserCog className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>İnsan Kaynakları</span>
-                {hrOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
-              </>
+        {allow('hr') ? (
+          <div className={`sidebar-menu-group ${hrOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              onClick={() => toggleMenu('hr')}
+              className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                collapsed && isHrRouteActive ? 'sidebar-menu-active font-medium' : ''
+              }`}
+            >
+              <MenuIcon collapsed={collapsed}>
+                <UserCog className="w-4 h-4 shrink-0" />
+              </MenuIcon>
+              {!collapsed && (
+                <>
+                  <span className={menuLabelClass}>İnsan Kaynakları</span>
+                  {hrOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  )}
+                </>
+              )}
+            </button>
+
+            {hrOpen && !collapsed && (
+              <SidebarSubMenu>
+                {hrSubMenus.map((sub) => {
+                  const SubIcon = sub.icon ? hrSubMenuIcons[sub.icon] : null
+                  return (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
+                      end={sub.path === HR_HOME_PATH}
+                      onClick={handleNavigate}
+                      className={({ isActive }) =>
+                        `${subMenuButtonBase} flex items-center gap-2 ${
+                          isActive ? 'sidebar-menu-active font-medium' : ''
+                        }`
+                      }
+                    >
+                      {SubIcon ? (
+                        <SubMenuIcon>
+                          <SubIcon className="h-3.5 w-3.5" />
+                        </SubMenuIcon>
+                      ) : null}
+                      {sub.label}
+                    </NavLink>
+                  )
+                })}
+              </SidebarSubMenu>
             )}
-          </button>
+          </div>
+        ) : null}
 
-          {hrOpen && !collapsed && (
-            <SidebarSubMenu>
-              {hrSubMenus.map((sub) => {
-                const SubIcon = sub.icon ? hrSubMenuIcons[sub.icon] : null
-                return (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    end={sub.path === HR_HOME_PATH}
-                    onClick={handleNavigate}
-                    className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
-                    }
-                  >
-                    {SubIcon ? (
-                      <SubMenuIcon>
-                        <SubIcon className="h-3.5 w-3.5" />
-                      </SubMenuIcon>
-                    ) : null}
-                    {sub.label}
-                  </NavLink>
-                )
-              })}
-            </SidebarSubMenu>
-          )}
-        </div>
+        {allow('logistics') ? (
+          <>
+            <SidebarSection label="LOJİSTİK" collapsed={collapsed} />
 
-        <SidebarSection label="LOJİSTİK" collapsed={collapsed} />
-
-        {/* Lojistik */}
-        <div className={`sidebar-menu-group ${logisticsOpen ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            onClick={() => toggleMenu('logistics')}
-            className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
-              collapsed && isLogisticsRouteActive ? 'sidebar-menu-active font-medium' : ''
-            }`}
-          >
-            <MenuIcon collapsed={collapsed}>
-              <Container className="w-4 h-4 shrink-0" />
-            </MenuIcon>
-            {!collapsed && (
-              <>
-                <span className={menuLabelClass}>Sevkiyat</span>
-                {logisticsOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+            {/* Lojistik */}
+            <div className={`sidebar-menu-group ${logisticsOpen ? 'is-open' : ''}`}>
+              <button
+                type="button"
+                onClick={() => toggleMenu('logistics')}
+                className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
+                  collapsed && isLogisticsRouteActive ? 'sidebar-menu-active font-medium' : ''
+                }`}
+              >
+                <MenuIcon collapsed={collapsed}>
+                  <Container className="w-4 h-4 shrink-0" />
+                </MenuIcon>
+                {!collapsed && (
+                  <>
+                    <span className={menuLabelClass}>Sevkiyat</span>
+                    {logisticsOpen ? (
+                      <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </button>
-          {logisticsOpen && !collapsed && (
-            <SidebarSubMenu>
-              {logisticsSubMenus.map((sub) => {
-                const SubIcon = logisticsSubMenuIcons[sub.icon] || ClipboardList
-                return (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    end={sub.path === LOGISTICS_HOME_PATH}
-                    onClick={handleNavigate}
-                    className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
-                    }
-                  >
-                    <SubMenuIcon>
-                      <SubIcon className="h-3.5 w-3.5" />
-                    </SubMenuIcon>
-                    {sub.label}
-                  </NavLink>
-                )
-              })}
-            </SidebarSubMenu>
-          )}
-        </div>
+              </button>
+              {logisticsOpen && !collapsed && (
+                <SidebarSubMenu>
+                  {logisticsSubMenus.map((sub) => {
+                    const SubIcon = logisticsSubMenuIcons[sub.icon] || ClipboardList
+                    return (
+                      <NavLink
+                        key={sub.path}
+                        to={sub.path}
+                        end={sub.path === LOGISTICS_HOME_PATH}
+                        onClick={handleNavigate}
+                        className={({ isActive }) =>
+                          `${subMenuButtonBase} flex items-center gap-2 ${
+                            isActive ? 'sidebar-menu-active font-medium' : ''
+                          }`
+                        }
+                      >
+                        <SubMenuIcon>
+                          <SubIcon className="h-3.5 w-3.5" />
+                        </SubMenuIcon>
+                        {sub.label}
+                      </NavLink>
+                    )
+                  })}
+                </SidebarSubMenu>
+              )}
+            </div>
+          </>
+        ) : null}
 
-        {showCourier ? (
+        {showCourier && allow('courier') ? (
           <NavLink
             to={courierMenuItem.path}
             onClick={handleNavigate}
@@ -990,7 +1121,10 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
 
           {settingsOpen && !collapsed && (
             <SidebarSubMenu>
-              {filterMenuByEntitlements(settingsSubMenus, user?.entitlements)
+              {filterByModuleAccess(
+                filterMenuByEntitlements(settingsSubMenus, user?.entitlements),
+                user,
+              )
                 .filter((sub) => {
                   if (sub.moduleCode === 'multi_company') {
                     return canUseMultiCompany(user?.entitlements, user?.planCode)
@@ -1002,6 +1136,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
                     key={sub.path}
                     to={sub.path}
                     end={sub.path === '/ayarlar'}
+                    data-tour={sub.path === '/ayarlar' ? 'nav-settings' : undefined}
                     onClick={handleNavigate}
                     className={({ isActive }) =>
                       `${subMenuButtonBase} ${isActive ? 'sidebar-menu-active font-medium' : ''}`
