@@ -1,0 +1,14 @@
+{
+  "label": "YÖNETİM - BACHMAIN",
+  "version": "local-canonical-2026-08-22",
+  "webUrl": "http://127.0.0.1:5200",
+  "apiUrl": "http://127.0.0.1:5201",
+  "adminDir": "apps/admin",
+  "envFile": "apps/admin/.env",
+  "requiresDatabaseUrl": true,
+  "devCommand": "npm run dev:all",
+  "openScript": "workspace/scripts/open-yonetim.sh",
+  "apiRoutes": ["/api/member", "/api/support-ticket"],
+  "defaultPages": ["/uyeler", "/destek", "/musteriler"],
+  "notes": "Postgres (.env) + singleSegmentApi.mjs — Vercel ile aynı üye detay ve ticket mesajlaşması."
+}

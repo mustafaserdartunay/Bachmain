@@ -81,10 +81,7 @@ import {
   DOCUMENT_CENTER_BASE,
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
-import {
-  isWebRoute,
-  WEB_STUDIO_PATH,
-} from '../../data/webMenu'
+import { isWebRoute, WEB_STUDIO_PATH } from '../../data/webMenu'
 import { STUDIO_ADMIN_PAGES } from '../../utils/dropelyaStudio'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
@@ -336,7 +333,6 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
     return () => window.removeEventListener(GUIDED_TOUR_SIDEBAR_EVENT, onTourSidebar)
   }, [])
 
-  const menuItems = filterMenuByEntitlements([courierMenuItem], user?.entitlements)
   const showProjects = filterMenuByEntitlements([projectsMenuGate], user?.entitlements).length > 0
   const showPos = filterMenuByEntitlements([posMenuItem], user?.entitlements).length > 0
   const isPosActive =

@@ -2,22 +2,27 @@
 
 ## Domain map
 
-| Domain | App | Vercel project | Root directory |
-|--------|-----|----------------|----------------|
-| bachmain.com / www | Kurumsal web | `bachmain-web` | `apps/web` |
-| uygulama.bachmain.com | CRM | `bachmain` | `.` (repo root) |
-| yonetim.bachmain.com | Admin | `bachmain-admin` | `apps/admin` |
+| Domain                  | App                          | Vercel project   | Root directory                      |
+| ----------------------- | ---------------------------- | ---------------- | ----------------------------------- |
+| bachmain.com / www      | Kurumsal web                 | `bachmain-web`   | `apps/landing`                      |
+| uygulama.bachmain.com   | CRM                          | `bachmain`       | `.` (repo root)                     |
+| yonetim.bachmain.com    | Admin                        | `bachmain-admin` | `apps/admin`                        |
+| iosapp.bachmain.com     | iOS (App Store / TestFlight) | —                | `~/Documents/Bachmain/bachmain.ios` |
+| androidapp.bachmain.com | Android (Play Store)         | —                | `apps/android`                      |
+
+Cursor çok köklü workspace: `workspace/WORKSPACE BACHMAIN.code-workspace`  
+SSD kopyası: `/Volumes/DevDisk/WORKSPACE BACHMAIN/`
 
 ## DNS (Squarespace)
 
 Keep nameservers on Squarespace. Add/edit:
 
-| Type | Host | Value |
-|------|------|-------|
-| A | `@` | `76.76.21.21` |
-| CNAME | `www` | `cname.vercel-dns.com` **or** `bachmain.com` |
-| CNAME | `uygulama` | `cname.vercel-dns.com` |
-| CNAME | `yonetim` | `cname.vercel-dns.com` |
+| Type  | Host       | Value                                        |
+| ----- | ---------- | -------------------------------------------- |
+| A     | `@`        | `76.76.21.21`                                |
+| CNAME | `www`      | `cname.vercel-dns.com` **or** `bachmain.com` |
+| CNAME | `uygulama` | `cname.vercel-dns.com`                       |
+| CNAME | `yonetim`  | `cname.vercel-dns.com`                       |
 
 Do **not** change MX / SPF / DKIM (Google Workspace mail).
 

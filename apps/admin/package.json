@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:api": "SERVE_STATIC=false API_PORT=5201 node server/index.mjs",
+    "dev:api": "SERVE_STATIC=false API_PORT=5201 node --env-file=.env server/index.mjs",
     "dev:all": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev\"",
-    "start": "node server/index.mjs",
+    "start": "node --env-file=.env server/index.mjs",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview"

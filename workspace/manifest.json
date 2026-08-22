@@ -1,0 +1,76 @@
+{
+  "name": "WORKSPACE BACHMAIN",
+  "version": "1.0.0",
+  "updatedAt": "2026-08-22",
+  "canonicalMonorepo": "/Users/serdartunay/Documents/Bachmain/BachMain Tüm Proje",
+  "activeMonorepo": "/Users/serdartunay/Bachmain-Recovery-2026-08-22",
+  "systems": [
+    {
+      "id": "crm",
+      "label": "uygulama.bachmain.com",
+      "title": "UYGULAMA - BACHMAIN",
+      "kind": "web",
+      "domain": "https://uygulama.bachmain.com",
+      "localDev": "http://localhost:5173",
+      "repoPath": ".",
+      "vercelProject": "bachmain",
+      "devCommand": "npm run dev",
+      "buildCommand": "npm run build"
+    },
+    {
+      "id": "admin",
+      "label": "yonetim.bachmain.com",
+      "title": "YÖNETİM - BACHMAIN",
+      "kind": "web",
+      "domain": "https://yonetim.bachmain.com",
+      "localDev": "http://127.0.0.1:5200",
+      "localApi": "http://127.0.0.1:5201",
+      "repoPath": "apps/admin",
+      "vercelProject": "bachmain-admin",
+      "devCommand": "npm run yonetim:dev",
+      "openCommand": "npm run yonetim:open",
+      "buildCommand": "npm run build"
+    },
+    {
+      "id": "web",
+      "label": "bachmain.com",
+      "title": "WEB - BACHMAIN",
+      "kind": "web",
+      "domain": "https://bachmain.com",
+      "localDev": "http://127.0.0.1:5180",
+      "repoPath": "apps/landing",
+      "vercelProject": "bachmain-web",
+      "devCommand": "npm run dev",
+      "buildCommand": "npm run build"
+    },
+    {
+      "id": "ios",
+      "label": "iosapp.bachmain",
+      "title": "IOS - BACHMAIN",
+      "kind": "mobile-ios",
+      "domain": "https://iosapp.bachmain.com",
+      "localDev": "Xcode → Bachmain.xcodeproj",
+      "repoPath": "../bachmain.ios",
+      "repoPathAbsolute": "/Users/serdartunay/Documents/Bachmain/bachmain.ios",
+      "devCommand": "open Bachmain.xcodeproj",
+      "buildCommand": "xcodebuild -scheme Bachmain -configuration Release"
+    },
+    {
+      "id": "android",
+      "label": "androidapp.bachmain",
+      "title": "ANDROID - BACHMAIN",
+      "kind": "mobile-android",
+      "domain": "https://androidapp.bachmain.com",
+      "localDev": "Android Studio",
+      "repoPath": "apps/android",
+      "devCommand": "TBD — Gradle sync",
+      "buildCommand": "TBD — assembleRelease"
+    }
+  ],
+  "shared": {
+    "api": "apps/api",
+    "packages": "packages/ui",
+    "docs": "docs",
+    "deployScript": "scripts/deploy-all.sh"
+  }
+}

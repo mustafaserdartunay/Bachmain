@@ -1,0 +1,27 @@
+---
+description: yonetim.bachmain.com yerel geliştirme — her zaman bu akışı kullan
+alwaysApply: false
+globs:
+  - apps/admin/**
+---
+
+# yonetim.bachmain.com — yerel kanon
+
+Kullanıcı yönetim paneli isterse veya `yonetim` / `admin` aç denirse:
+
+1. **`npm run yonetim:open`** — sunucuyu başlat + Cursor Simple Browser `http://127.0.0.1:5200`
+2. Alternatif: `npm run yonetim:dev` (sadece sunucu)
+
+## Zorunlu
+
+- `apps/admin/.env` içinde **`DATABASE_URL`** (Neon/Postgres) — Vercel ile aynı veri
+- `dev:api` → `node --env-file=.env server/index.mjs`
+- API rotaları: `/api/member?id=`, `/api/support-ticket?id=` (`server/singleSegmentApi.mjs`)
+
+## Yasak
+
+- Boş `db.json` ile üye/ticket detayı beklemek
+- Eski `/api/memberships/:id` veya `/api/support/tickets/:id` frontend yolu icat etmek
+- Port 5174 varsaymak — kanon **5200/5201**
+
+Kayıt: `workspace/yonetim.local.json`

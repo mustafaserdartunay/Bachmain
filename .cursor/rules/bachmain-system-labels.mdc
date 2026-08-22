@@ -1,0 +1,34 @@
+---
+description: BachMain 5 sistem kanonik isimleri — Cursor, Simple Browser, canlı algılama
+alwaysApply: true
+---
+
+# BachMain sistem isimleri (ZORUNLU)
+
+| Sistem | Kanonik isim | Domain | Yerel URL |
+|--------|--------------|--------|-----------|
+| CRM | **UYGULAMA - BACHMAIN** | uygulama.bachmain.com | http://127.0.0.1:5173 |
+| Admin | **YÖNETİM - BACHMAIN** | yonetim.bachmain.com | http://127.0.0.1:5200 |
+| Web | **WEB - BACHMAIN** | bachmain.com | http://127.0.0.1:5180 |
+| iOS | **IOS - BACHMAIN** | iosapp.bachmain.com | Xcode / preview |
+| Android | **ANDROID - BACHMAIN** | androidapp.bachmain.com | apps/android |
+
+Kaynak: `workspace/system-labels.json`
+
+## Açma komutları
+
+```bash
+npm run yonetim:open      # YÖNETİM - BACHMAIN
+npm run uygulama:open     # UYGULAMA - BACHMAIN
+npm run web:open          # WEB - BACHMAIN
+npm run ios:open          # IOS - BACHMAIN
+npm run android:open      # ANDROID - BACHMAIN
+npm run bachmain:open-all # hepsi
+```
+
+## Yasak
+
+- Yönetim için **Studio**, **BACHMAIN Studio**, **Control Center** (sekme/başlık)
+- Eski domain-only workspace klasör adları (`uygulama.bachmain.com — CRM` vb.)
+
+HTML `<title>` ve Cursor Simple Browser bu isimleri kullanır.

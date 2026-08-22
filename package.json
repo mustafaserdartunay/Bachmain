@@ -5,6 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
+    "yonetim:dev": "npm --prefix apps/admin run dev:all",
+    "yonetim:open": "bash workspace/scripts/open-system.sh yonetim",
+    "uygulama:open": "bash workspace/scripts/open-system.sh uygulama",
+    "web:open": "bash workspace/scripts/open-system.sh web",
+    "ios:open": "bash workspace/scripts/open-system.sh ios",
+    "android:open": "bash workspace/scripts/open-system.sh android",
+    "bachmain:open-all": "bash workspace/scripts/open-system.sh",
     "build:website-os": "npm --prefix apps/website-os install && npm --prefix apps/website-os run build && rm -rf public/website-os && cp -R apps/website-os/dist public/website-os",
     "build": "vite build",
     "preview": "vite preview --host",

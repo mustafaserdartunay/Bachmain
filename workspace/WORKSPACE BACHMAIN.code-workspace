@@ -1,0 +1,101 @@
+{
+  "folders": [
+    { "name": "UYGULAMA - BACHMAIN", "path": ".." },
+    { "name": "YÖNETİM - BACHMAIN", "path": "../apps/admin" },
+    { "name": "WEB - BACHMAIN", "path": "../apps/landing" },
+    { "name": "IOS - BACHMAIN", "path": "../../../Documents/Bachmain/bachmain.ios" },
+    { "name": "ANDROID - BACHMAIN", "path": "../apps/android" }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/dist": true,
+      "**/.git": false
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/dist": true,
+      "**/package-lock.json": true
+    },
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "typescript.tsdk": "node_modules/typescript/lib"
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "swiftlang.swift-vscode"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "YÖNETİM - BACHMAIN",
+        "type": "chrome",
+        "request": "launch",
+        "url": "http://127.0.0.1:5200",
+        "webRoot": "${workspaceFolder:YÖNETİM - BACHMAIN}/src"
+      },
+      {
+        "name": "UYGULAMA - BACHMAIN",
+        "type": "chrome",
+        "request": "launch",
+        "url": "http://127.0.0.1:5173",
+        "webRoot": "${workspaceFolder:UYGULAMA - BACHMAIN}/src"
+      },
+      {
+        "name": "WEB - BACHMAIN",
+        "type": "chrome",
+        "request": "launch",
+        "url": "http://127.0.0.1:5180",
+        "webRoot": "${workspaceFolder:WEB - BACHMAIN}/src"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "YÖNETİM - BACHMAIN aç",
+        "type": "shell",
+        "command": "npm run yonetim:open",
+        "options": { "cwd": "${workspaceFolder:UYGULAMA - BACHMAIN}" },
+        "group": { "kind": "build", "isDefault": true },
+        "presentation": { "reveal": "always", "panel": "dedicated" }
+      },
+      {
+        "label": "Tüm sistemleri aç",
+        "type": "shell",
+        "command": "npm run bachmain:open-all",
+        "options": { "cwd": "${workspaceFolder:UYGULAMA - BACHMAIN}" },
+        "group": "build"
+      },
+      {
+        "label": "UYGULAMA - BACHMAIN dev",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": { "cwd": "${workspaceFolder:UYGULAMA - BACHMAIN}" },
+        "group": "build"
+      },
+      {
+        "label": "YÖNETİM - BACHMAIN dev",
+        "type": "shell",
+        "command": "npm run yonetim:dev",
+        "options": { "cwd": "${workspaceFolder:UYGULAMA - BACHMAIN}" },
+        "group": "build"
+      },
+      {
+        "label": "WEB - BACHMAIN dev",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": { "cwd": "${workspaceFolder:WEB - BACHMAIN}" },
+        "group": "build"
+      }
+    ]
+  }
+}

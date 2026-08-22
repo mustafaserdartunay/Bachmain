@@ -105,12 +105,12 @@ export function StaffLoginPage() {
           className="h-14 w-auto object-contain sm:h-16"
           draggable={false}
         />
-        <p className="mt-4 text-[16px] font-semibold tracking-[0.22em] text-[#0f172a] uppercase">
-          Business
+        <p className="mt-4 text-[16px] font-semibold tracking-[0.12em] text-[#0f172a] uppercase">
+          UYGULAMA - BACHMAIN
         </p>
       </section>
 
-      {/* Sağ — Bachmain Studio */}
+      {/* Sağ — YÖNETİM - BACHMAIN */}
       <section className="flex min-h-[42vh] flex-1 flex-col items-center justify-center bg-gradient-to-br from-[#1d4ed8] via-[#2563eb] to-[#1e40af] px-6 py-16 lg:min-h-screen lg:px-10">
         <img
           src="/assets/bachmain-logo-on-dark.png"
@@ -118,8 +118,8 @@ export function StaffLoginPage() {
           className="h-14 w-auto object-contain sm:h-16"
           draggable={false}
         />
-        <p className="mt-4 text-[16px] font-semibold tracking-[0.22em] text-white uppercase">
-          Bachmain Studio
+        <p className="mt-4 text-[16px] font-semibold tracking-[0.12em] text-white uppercase">
+          YÖNETİM - BACHMAIN
         </p>
       </section>
 
@@ -134,7 +134,7 @@ export function StaffLoginPage() {
           <div className="text-center">
             <h1 className="text-xl font-bold tracking-tight text-[#0f172a]">Giriş Yap</h1>
             <p className="mt-1 text-sm text-[#64748b]">
-              Aynı hesapla Business veya Studio’ya geçebilirsiniz.
+              Aynı hesapla Uygulama veya Yönetim paneline geçebilirsiniz.
             </p>
           </div>
 
@@ -170,7 +170,7 @@ export function StaffLoginPage() {
               onClick={() => loginTo('business')}
               className="rounded-xl border border-[#0f172a] bg-[#0f172a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1e293b] disabled:opacity-60"
             >
-              {loading === 'business' ? 'Giriş…' : 'Business'}
+              {loading === 'business' ? 'Giriş…' : 'UYGULAMA - BACHMAIN'}
             </button>
             <button
               type="button"
@@ -178,7 +178,7 @@ export function StaffLoginPage() {
               onClick={() => loginTo('studio')}
               className="rounded-xl bg-[#2563eb] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8] disabled:opacity-60"
             >
-              {loading === 'studio' ? 'Giriş…' : 'Bachmain Studio'}
+              {loading === 'studio' ? 'Giriş…' : 'YÖNETİM - BACHMAIN'}
             </button>
           </div>
         </form>

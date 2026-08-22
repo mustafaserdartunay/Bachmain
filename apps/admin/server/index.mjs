@@ -40,6 +40,7 @@ import {
   notifySupportReply,
   notifySupportTicketCreated,
 } from './supportRoutes.mjs'
+import { handleMemberApi, handleSupportTicketApi } from './singleSegmentApi.mjs'
 import {
   buildDashboardPayload,
   buildServerMonitorRows,
@@ -320,6 +321,16 @@ async function handle(req, res, url) {
     if (method === 'GET' && pathname === '/api/support/tickets') {
       const store = await loadStore()
       return sendJson(req, res, 200, store.supportTickets)
+    }
+
+    const queryParams = Object.fromEntries(url.searchParams.entries())
+
+    if (pathname === '/api/member') {
+      return handleMemberApi(req, res, method, queryParams, body)
+    }
+
+    if (pathname === '/api/support-ticket') {
+      return handleSupportTicketApi(req, res, method, queryParams, body)
     }
 
     const ticketMatch = pathname.match(/^\/api\/support\/tickets\/([^/]+)$/)

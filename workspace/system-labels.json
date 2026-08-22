@@ -1,0 +1,35 @@
+{
+  "uygulama": {
+    "label": "UYGULAMA - BACHMAIN",
+    "domain": "uygulama.bachmain.com",
+    "localUrl": "http://127.0.0.1:5173",
+    "devCommand": "npm run dev",
+    "cwd": "."
+  },
+  "yonetim": {
+    "label": "YÖNETİM - BACHMAIN",
+    "domain": "yonetim.bachmain.com",
+    "localUrl": "http://127.0.0.1:5200",
+    "devCommand": "npm run dev:all",
+    "cwd": "apps/admin"
+  },
+  "web": {
+    "label": "WEB - BACHMAIN",
+    "domain": "bachmain.com",
+    "localUrl": "http://127.0.0.1:5180",
+    "devCommand": "npm run dev",
+    "cwd": "apps/landing"
+  },
+  "ios": {
+    "label": "IOS - BACHMAIN",
+    "domain": "iosapp.bachmain.com",
+    "localUrl": "http://127.0.0.1:5173/preview-ios-bachmain.html",
+    "note": "Native: ~/Documents/Bachmain/bachmain.ios"
+  },
+  "android": {
+    "label": "ANDROID - BACHMAIN",
+    "domain": "androidapp.bachmain.com",
+    "localUrl": "http://127.0.0.1:5173/preview-android-bachmain.html",
+    "note": "Native: apps/android"
+  }
+}
