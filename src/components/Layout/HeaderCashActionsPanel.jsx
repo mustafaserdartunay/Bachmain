@@ -72,7 +72,7 @@ export const HEADER_QUICK_ACTIONS = [
   {
     id: 'quote',
     to: () => '/teklifler?yeni=1',
-    title: 'Yeni Teklif Oluştur',
+    title: 'Yeni Teklif',
     icon: FileText,
     gradient: HEADER_ACTION_GRADIENTS.quote,
   },
