@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { buildMetadata } from '../seo/buildMetadata'
 import { SEO_CONTENT } from '../seo/contentCatalog'
 import RouteSchemas from '../components/seo/schema/RouteSchemas'
-import GatewayPage from '../views/GatewayPage'
+import HomePage from '../views/HomePage'
 
 const seo = SEO_CONTENT['/']
 
@@ -12,7 +12,7 @@ export default function Page() {
   return (
     <>
       <RouteSchemas path="/" seo={seo} />
-      <GatewayPage />
+      <HomePage />
     </>
   )
 }

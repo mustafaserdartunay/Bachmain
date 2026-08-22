@@ -3,6 +3,16 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/Business",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/business",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/girisyap",
       "destination": "/giris",
       "permanent": false

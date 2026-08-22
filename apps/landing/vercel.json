@@ -3,8 +3,13 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/Business",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/business",
-      "destination": "/Business",
+      "destination": "/",
       "permanent": true
     },
     {

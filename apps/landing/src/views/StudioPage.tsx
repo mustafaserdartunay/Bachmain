@@ -69,7 +69,7 @@ export default function StudioPage() {
       <header className="studio-topbar">
         <Link to="/" className="studio-back">
           <ArrowLeft className="h-4 w-4" aria-hidden />
-          Ana giriş
+          Ana sayfa
         </Link>
         <div className="studio-topbar-brand">
           <img
@@ -82,8 +82,8 @@ export default function StudioPage() {
           />
           <span className="studio-topbar-badge">Studio</span>
         </div>
-        <Link to="/Business" className="studio-switch">
-          Business
+        <Link to="/" className="studio-switch">
+          BACHMAIN
           <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </Link>
       </header>
@@ -113,7 +113,7 @@ export default function StudioPage() {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </a>
             <Link to="/" className="studio-btn studio-btn-ghost">
-              Ürün seçimine dön
+              Ana sayfaya dön
             </Link>
           </div>
         </motion.div>
@@ -156,11 +156,7 @@ export default function StudioPage() {
             ))}
             <motion.div
               className="studio-cursor"
-              animate={
-                reduceMotion
-                  ? undefined
-                  : { x: [12, 120, 70, 12], y: [20, 90, 150, 20] }
-              }
+              animate={reduceMotion ? undefined : { x: [12, 120, 70, 12], y: [20, 90, 150, 20] }}
               transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
             >
               <MousePointer2 className="h-5 w-5" />
@@ -210,15 +206,15 @@ export default function StudioPage() {
         >
           <h2>Web sitenizi Studio ile şekillendirin</h2>
           <p>
-            Yönetim paneli yakında hesabınızla açılacak. Şimdilik ürün seçimine dönüp Bachmain
-            Business’ı da keşfedebilirsiniz.
+            Yönetim paneli yakında hesabınızla açılacak. Şimdilik ana sayfadan BACHMAIN CRM & ERP
+            platformunu da keşfedebilirsiniz.
           </p>
           <div className="studio-hero-actions">
             <Link to="/" className="studio-btn studio-btn-primary">
-              Ana girişe dön
+              Ana sayfaya dön
             </Link>
-            <Link to="/Business" className="studio-btn studio-btn-ghost">
-              Bachmain Business
+            <Link to="/demo" className="studio-btn studio-btn-ghost">
+              Demo talep et
             </Link>
           </div>
         </motion.div>

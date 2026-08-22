@@ -22,6 +22,8 @@ Disallow: /pricing
 Disallow: /login
 Disallow: /register
 Disallow: /contact
+Disallow: /Business
+Disallow: /business
 
 User-Agent: GPTBot
 Allow: /

@@ -1,18 +1,12 @@
 import type { Metadata } from 'next'
-import { buildMetadata } from '../../seo/buildMetadata'
-import { SEO_CONTENT } from '../../seo/contentCatalog'
-import RouteSchemas from '../../components/seo/schema/RouteSchemas'
-import HomePage from '../../views/HomePage'
+import BusinessHomeRedirect from '../../components/seo/BusinessHomeRedirect'
 
-const seo = SEO_CONTENT['/Business']
-
-export const metadata: Metadata = buildMetadata(seo)
+export const metadata: Metadata = {
+  title: 'BACHMAIN',
+  robots: { index: false, follow: true },
+  alternates: { canonical: 'https://bachmain.com/' },
+}
 
 export default function Page() {
-  return (
-    <>
-      <RouteSchemas path="/Business" seo={seo} />
-      <HomePage />
-    </>
-  )
+  return <BusinessHomeRedirect />
 }

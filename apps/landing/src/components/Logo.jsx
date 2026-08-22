@@ -11,10 +11,10 @@ const LOGO_ON_DARK_SRC = '/assets/bachmain-logo-on-dark.png'
 
 export default function Logo({ className = '', collapsed = false, onDark = false }) {
   return (
-    <Link to="/Business" className={`brand-logo ${className}`} aria-label="BACHMAIN Business">
+    <Link to="/" className={`brand-logo ${className}`} aria-label="BACHMAIN ana sayfa">
       <OptimizedImage
         src={onDark ? LOGO_ON_DARK_SRC : LOGO_SRC}
-        alt="BACHMAIN Business — Tüm Süreçler Tek Platform"
+        alt="BACHMAIN — Tüm Süreçler Tek Platform"
         width={180}
         height={40}
         className={collapsed ? 'brand-logo-img brand-logo-img-collapsed' : 'brand-logo-img'}

@@ -72,6 +72,8 @@ export const MODULE_GRAPH = {
 
 /** Old path → new short URL (backwards compatibility / redirects). */
 export const SEO_PATH_REDIRECTS: Record<string, string> = {
+  '/Business': '/',
+  '/business': '/',
   '/features/crm': '/crm',
   '/features/erp': '/erp',
   '/features/stock': '/stok',
@@ -423,7 +425,7 @@ export function getSitemapEntries(): Array<{
     const priority =
       page.path === '/'
         ? 1
-        : page.path === '/Business' || page.path === '/studio'
+        : page.path === '/studio'
           ? 0.98
           : page.path === '/fiyatlar' || page.path === '/crm' || page.path === '/erp'
             ? 0.95

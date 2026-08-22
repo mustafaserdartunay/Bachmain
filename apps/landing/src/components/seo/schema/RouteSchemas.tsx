@@ -29,19 +29,6 @@ type RouteSchemasProps = {
  */
 export default function RouteSchemas({ path, seo, article, faqItems }: RouteSchemasProps) {
   if (path === '/') {
-    return (
-      <>
-        <OrganizationSchema />
-        <WebPageSchema
-          name={seo.h1 || seo.title}
-          description={seo.aiSearchDescription || seo.description}
-          url={absoluteUrl(path)}
-        />
-      </>
-    )
-  }
-
-  if (path === '/Business') {
     return <HomeGraphSchema />
   }
 

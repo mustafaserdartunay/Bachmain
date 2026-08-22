@@ -36,6 +36,8 @@ export default function robots(): MetadataRoute.Robots {
           '/login',
           '/register',
           '/contact',
+          '/Business',
+          '/business',
         ],
       },
       { userAgent: 'GPTBot', allow: '/' },

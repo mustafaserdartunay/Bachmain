@@ -2,15 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  Boxes,
-  ChevronDown,
-  LayoutGrid,
-  Menu,
-  Receipt,
-  Sparkles,
-  X,
-} from 'lucide-react'
+import { Boxes, ChevronDown, LayoutGrid, Menu, Receipt, Sparkles, X } from 'lucide-react'
 import Logo from './Logo'
 
 const nav = [
@@ -65,6 +57,7 @@ const nav = [
   { label: 'Referanslar', href: '/referanslar' },
   { label: 'Başarı Hikayeleri', href: '/basari-hikayeleri' },
   { label: 'Blog', href: '/blog' },
+  { label: 'Studio', href: '/studio' },
   { label: 'İletişim', href: '/iletisim' },
 ]
 
@@ -144,7 +137,9 @@ function Dropdown({ label, items, href, rich }) {
                     <RichNavIcon type={item.icon} />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-[13.5px] font-bold text-slate-800">{item.label}</span>
+                    <span className="block text-[13.5px] font-bold text-slate-800">
+                      {item.label}
+                    </span>
                     {item.description ? (
                       <span className="mt-0.5 block text-[12px] leading-snug text-slate-500">
                         {item.description}

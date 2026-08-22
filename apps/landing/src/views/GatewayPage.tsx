@@ -8,7 +8,11 @@ import { ArrowUpRight, Boxes, LayoutTemplate, Sparkles } from 'lucide-react'
 type Side = 'business' | 'studio' | null
 
 const businessPoints = ['CRM & ERP tek panel', 'Üretim · Depo · Finans', 'E-Fatura & WhatsApp']
-const studioPoints = ['Sürükle-bırak sayfa tasarımı', 'Domain & yayın yönetimi', 'SEO ve içerik paneli']
+const studioPoints = [
+  'Sürükle-bırak sayfa tasarımı',
+  'Domain & yayın yönetimi',
+  'SEO ve içerik paneli',
+]
 
 export default function GatewayPage() {
   const reduceMotion = useReducedMotion()
@@ -63,8 +67,8 @@ export default function GatewayPage() {
               İşinizi tek panelden yönetin
             </h1>
             <p className="gateway-lead gateway-lead-dark">
-              Bachmain Business; CRM, ERP, üretim, depo, finans ve e-faturayı aynı bulutta birleştirir.
-              Tekliften tahsilata tüm süreçler burada.
+              Bachmain Business; CRM, ERP, üretim, depo, finans ve e-faturayı aynı bulutta
+              birleştirir. Tekliften tahsilata tüm süreçler burada.
             </p>
 
             <ul className="gateway-points">
@@ -76,19 +80,15 @@ export default function GatewayPage() {
               ))}
             </ul>
 
-            <Link to="/Business" className="gateway-cta gateway-cta-business">
-              Business&apos;a gir
+            <Link to="/" className="gateway-cta gateway-cta-business">
+              BACHMAIN&apos;e gir
               <ArrowUpRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>
 
           <motion.div
             className="gateway-float-card gateway-float-card-light"
-            animate={
-              reduceMotion
-                ? undefined
-                : { y: [0, -10, 0], rotate: [0, 1.2, 0] }
-            }
+            animate={reduceMotion ? undefined : { y: [0, -10, 0], rotate: [0, 1.2, 0] }}
             transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
             aria-hidden
           >
@@ -123,8 +123,8 @@ export default function GatewayPage() {
               Web sitenizi özgürce tasarlayın
             </h2>
             <p className="gateway-lead gateway-lead-light">
-              Bachmain Studio; sürükle-bırak editör, şablonlar ve yayın paneliyle markanıza özel
-              web siteleri kurmanızı sağlar.
+              Bachmain Studio; sürükle-bırak editör, şablonlar ve yayın paneliyle markanıza özel web
+              siteleri kurmanızı sağlar.
             </p>
 
             <ul className="gateway-points gateway-points-light">
@@ -144,11 +144,7 @@ export default function GatewayPage() {
 
           <motion.div
             className="gateway-float-card gateway-float-card-dark"
-            animate={
-              reduceMotion
-                ? undefined
-                : { y: [0, 12, 0], rotate: [0, -1.4, 0] }
-            }
+            animate={reduceMotion ? undefined : { y: [0, 12, 0], rotate: [0, -1.4, 0] }}
             transition={{ duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
             aria-hidden
           >

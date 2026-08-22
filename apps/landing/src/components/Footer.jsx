@@ -64,6 +64,7 @@ const PRODUCT_LINKS = [
   { label: 'E-Ticaret', href: '/siparis' },
   { label: 'Raporlama', href: '/raporlar' },
   { label: 'Fiyatlandırma', href: '/fiyatlar' },
+  { label: 'Studio', href: '/studio' },
 ]
 
 const SECURITY_LINKS = [

@@ -17,62 +17,24 @@ function link(label: string, path: string) {
 export const SEO_CONTENT: Record<string, PageSeo> = {
   '/': {
     path: '/',
-    title: 'BACHMAIN | Business & Studio',
+    title: 'BACHMAIN | Tüm Süreçler Tek Platformda',
     description:
-      'Bachmain Business ile CRM & ERP, Bachmain Studio ile web sitesi tasarımı. İki ürün, tek ekosistem — bachmain.com ana giriş.',
-    ogTitle: 'BACHMAIN | Business & Studio',
-    ogDescription:
-      'İş yönetimi için Bachmain Business; web sitesi yapımı için Bachmain Studio. Ürününüzü seçin.',
-    twitterTitle: 'BACHMAIN — Business & Studio',
-    twitterDescription: 'CRM/ERP veya web sitesi builder — Bachmain ürün seçimi.',
-    h1: 'Bachmain Business & Studio',
-    h2: ['Bachmain Business', 'Bachmain Studio'],
-    h3: ['CRM & ERP', 'Web sitesi builder', 'Tek ekosistem'],
-    schemaType: 'Organization',
-    focusKeyword: 'Bachmain',
-    secondaryKeywords: ['Bachmain Business', 'Bachmain Studio', 'CRM ERP', 'web sitesi yapma'],
-    aiSearchDescription:
-      'bachmain.com ana giriş sayfası Bachmain Business (CRM/ERP) ve Bachmain Studio (web sitesi yapma paneli) ürünlerini sunar.',
-    intro:
-      'Bachmain ekosisteminde işletme yönetimi Business ile, web sitesi tasarımı Studio ile ilerler.',
-    sections: [
-      {
-        h2: 'Bachmain Business',
-        body: 'CRM, ERP, üretim, depo, finans ve e-fatura tek panelde.',
-      },
-      {
-        h2: 'Bachmain Studio',
-        body: 'Sürükle-bırak editör ve yönetim paneliyle istediğiniz web sayfasını oluşturun.',
-      },
-    ],
-    relatedPaths: [
-      link('Business', '/Business'),
-      link('Studio', '/studio'),
-      link('Demo', '/demo'),
-    ],
-    breadcrumbs: [{ name: 'Ana Sayfa', path: '/' }],
-  },
-
-  '/Business': {
-    path: '/Business',
-    title: 'BACHMAIN Business | Tüm Süreçler Tek Platformda',
-    description:
-      'CRM, ERP, muhasebe, üretim, depo ve e-fatura tek panelde. Bachmain Business ile tekliften tahsilata tüm süreçleri yönetin.',
-    ogTitle: 'BACHMAIN Business | Tüm Süreçler Tek Platformda',
+      'CRM, ERP, muhasebe, üretim, depo ve e-fatura tek panelde. BACHMAIN ile tekliften tahsilata tüm süreçleri yönetin — Tüm Süreçler Tek Platformda.',
+    ogTitle: 'BACHMAIN | Tüm Süreçler Tek Platformda',
     ogDescription:
       'KOBİ’ler için premium CRM & ERP: müşteri, sipariş, üretim, stok, finans ve WhatsApp aynı bulutta.',
-    twitterTitle: 'BACHMAIN Business — Tüm Süreçler Tek Platformda',
+    twitterTitle: 'BACHMAIN — Tüm Süreçler Tek Platformda',
     twitterDescription: 'Tekliften tahsilata; CRM, ERP, e-fatura ve üretim tek SaaS platformunda.',
-    h1: 'Tüm Süreçler Tek Platformda',
+    h1: 'Tüm Süreçler Tek Panel',
     h2: ['Neden BACHMAIN?', 'Modüller bir arada', 'Hemen başlayın'],
     h3: ['CRM & Pipeline', 'ERP & Üretim', 'Finans & E-Fatura'],
     schemaType: 'SoftwareApplication',
     focusKeyword: 'CRM ERP yazılımı',
-    secondaryKeywords: ['KOBİ yazılımı', 'bulut ERP', 'iş yönetimi platformu', 'Bachmain Business'],
+    secondaryKeywords: ['KOBİ yazılımı', 'bulut ERP', 'iş yönetimi platformu', 'BACHMAIN'],
     aiSearchDescription:
-      'Bachmain Business, Türkiye’deki işletmeler için CRM, ERP, stok, üretim, muhasebe, e-fatura, lojistik ve WhatsApp’ı tek SaaS panelinde birleştiren iş yönetimi platformudur.',
+      'BACHMAIN (bachmain.com), Türkiye’deki işletmeler için CRM, ERP, stok, üretim, muhasebe, e-fatura, lojistik ve WhatsApp’ı tek SaaS panelinde birleştiren iş yönetimi platformudur.',
     intro:
-      'Bachmain Business; satış, operasyon ve finansı aynı dilde konuşturur. Dağınık Excel’ler ve kopuk yazılımlar yerine tek premium panelde ilerleyin.',
+      'BACHMAIN; satış, operasyon ve finansı aynı dilde konuşturur. Dağınık Excel’ler ve kopuk yazılımlar yerine tek premium panelde ilerleyin.',
     sections: [
       {
         h2: 'Neden BACHMAIN?',
@@ -105,10 +67,7 @@ export const SEO_CONTENT: Record<string, PageSeo> = {
       link('Demo', '/demo'),
       link('Studio', '/studio'),
     ],
-    breadcrumbs: [
-      { name: 'Ana Sayfa', path: '/' },
-      { name: 'Business', path: '/Business' },
-    ],
+    breadcrumbs: [{ name: 'Ana Sayfa', path: '/' }],
   },
 
   '/studio': {
@@ -145,11 +104,7 @@ export const SEO_CONTENT: Record<string, PageSeo> = {
         body: 'Başlık, meta ve yapılandırılmış veri kontrolleri Studio içinde.',
       },
     ],
-    relatedPaths: [
-      link('Business', '/Business'),
-      link('Ana giriş', '/'),
-      link('İletişim', '/iletisim'),
-    ],
+    relatedPaths: [link('Ana Sayfa', '/'), link('Demo', '/demo'), link('İletişim', '/iletisim')],
     breadcrumbs: [
       { name: 'Ana Sayfa', path: '/' },
       { name: 'Studio', path: '/studio' },
