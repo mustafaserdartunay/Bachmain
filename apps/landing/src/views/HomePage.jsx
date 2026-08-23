@@ -2,8 +2,8 @@
 
 import { Link } from 'react-router-dom'
 import dynamic from 'next/dynamic'
-import { motion } from 'framer-motion'
 import { ArrowRight, MapPin, Star } from 'lucide-react'
+import KadikoyFieldMap from '../components/landing/KadikoyFieldMap'
 import ScrollReveal, { Counter } from '../components/ScrollReveal'
 import OptimizedImage from '../components/seo/OptimizedImage'
 import { BLUR_LOGO, BLUR_PHOTO } from '../seo/imageBlur'
@@ -150,50 +150,7 @@ export default function HomePage() {
         <section className="section-pad field-sales-section">
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-2 lg:px-8">
             <ScrollReveal direction="left">
-              <div className="field-map-shell relative h-[460px] overflow-hidden rounded-[1.5rem] border border-white/15 shadow-2xl">
-                {/* CSP iframe engeli yok — gerçek Kadıköy OSM static harita */}
-                <img
-                  src="https://staticmap.openstreetmap.de/staticmap.php?center=40.9901,29.0584&zoom=13&size=1000x600&maptype=mapnik"
-                  alt="İstanbul Kadıköy saha haritası"
-                  className="field-map-iframe absolute inset-0 h-full w-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="field-map-overlay pointer-events-none absolute inset-0" />
-                {[
-                  { t: '28%', l: '48%', c: 'bg-blue-500', label: 'Moda' },
-                  { t: '42%', l: '36%', c: 'bg-emerald-500', label: 'Caferağa' },
-                  { t: '55%', l: '58%', c: 'bg-orange-400', label: 'Fenerbahçe' },
-                  { t: '38%', l: '62%', c: 'bg-violet-500', label: 'Caddebostan' },
-                ].map((p, i) => (
-                  <motion.div
-                    key={p.label}
-                    className="absolute z-10"
-                    style={{ top: p.t, left: p.l }}
-                    animate={{ y: [0, -10, 0], scale: [1, 1.08, 1] }}
-                    transition={{ duration: 2.6, repeat: Infinity, delay: i * 0.35 }}
-                  >
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-full ${p.c} text-white shadow-xl ring-4 ring-white/25`}
-                      title={p.label}
-                    >
-                      <MapPin className="h-4 w-4" />
-                    </div>
-                  </motion.div>
-                ))}
-                <div className="absolute bottom-4 left-4 right-4 z-10 flex justify-around rounded-2xl border border-white/15 bg-[#0b1b3a]/75 px-4 py-3 backdrop-blur-md">
-                  {[
-                    ['12', 'Temsilci'],
-                    ['84', 'Ziyaret'],
-                    ['₺1.2M', 'Satış'],
-                  ].map(([v, l]) => (
-                    <div key={l} className="text-center">
-                      <div className="text-lg font-extrabold text-white">{v}</div>
-                      <div className="text-[10px] uppercase tracking-wide text-white/55">{l}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <KadikoyFieldMap />
             </ScrollReveal>
             <ScrollReveal direction="right">
               <span className="pill">Saha Satış</span>
@@ -295,11 +252,11 @@ export default function HomePage() {
                 },
                 {
                   name: 'e-Fatura',
-                  src: 'https://cdn.simpleicons.org/invoice/2563EB',
+                  src: '/assets/integrations/efatura.svg',
                 },
                 {
                   name: 'SMS',
-                  src: 'https://cdn.simpleicons.org/twilio/F22F46',
+                  src: '/assets/integrations/sms.svg',
                 },
                 {
                   name: 'Mail',

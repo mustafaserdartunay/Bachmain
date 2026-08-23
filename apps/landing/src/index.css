@@ -99,7 +99,6 @@ h1,
 
 .home-page .stats-band-mesh,
 .home-page .process-section,
-.home-page .mod-section:not(.mod-section-night),
 .home-page .home-seo,
 .home-page .section-pad {
   background: transparent;
@@ -1449,6 +1448,8 @@ h1,
   transition:
     background 0.45s ease,
     color 0.45s ease;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 48%, #f8fafc 100%);
+  color: #0f172a;
 }
 .mod-section-night {
   background: linear-gradient(180deg, #0b1220 0%, #111827 55%, #0f172a 100%);
@@ -1464,6 +1465,74 @@ h1,
   color: #93c5fd;
   background: rgba(59, 130, 246, 0.12);
   border-color: rgba(59, 130, 246, 0.22);
+}
+
+/* cine-home gündüz: beyaz metin zorlamasını kır — okunur açık panel */
+html.cine-home .mod-section:not(.mod-section-night) {
+  background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 48%, #f8fafc 100%) !important;
+  color: #0f172a !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .section-title,
+html.cine-home .mod-section:not(.mod-section-night) .mod-theme-copy h3,
+html.cine-home .mod-section:not(.mod-section-night) .mod-spot h3,
+html.cine-home .mod-section:not(.mod-section-night) .mod-card h3,
+html.cine-home .mod-section:not(.mod-section-night) .mod-foot h3,
+html.cine-home .mod-section:not(.mod-section-night) .font-bold,
+html.cine-home .mod-section:not(.mod-section-night) .font-extrabold {
+  color: #0f172a !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .section-desc,
+html.cine-home .mod-section:not(.mod-section-night) .mod-theme-copy p,
+html.cine-home .mod-section:not(.mod-section-night) .text-slate-500,
+html.cine-home .mod-section:not(.mod-section-night) .text-slate-600 {
+  color: #64748b !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .pill {
+  color: #1d4ed8 !important;
+  background: rgba(37, 99, 235, 0.1) !important;
+  border-color: rgba(37, 99, 235, 0.2) !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .mod-title {
+  color: #f4a41c !important;
+  text-shadow: none;
+}
+html.cine-home .mod-section:not(.mod-section-night) .mod-toolbar,
+html.cine-home .mod-section:not(.mod-section-night) .mod-theme-card,
+html.cine-home .mod-section:not(.mod-section-night) .mod-spot,
+html.cine-home .mod-section:not(.mod-section-night) .mod-card,
+html.cine-home .mod-section:not(.mod-section-night) .mod-foot {
+  background: #fff !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 28px rgba(15, 40, 90, 0.08) !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .mod-theme-card {
+  background: linear-gradient(135deg, #fff7ed, #fff 40%, #eff6ff) !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .mod-foot {
+  background: linear-gradient(135deg, #eff6ff, #fff 40%, #f5f3ff) !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .mod-channel {
+  background: #fff !important;
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.06) !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .mod-marquee-chip {
+  background: #fff !important;
+  color: #334155 !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .mod-live-pill {
+  color: #2563eb !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .text-blue-600 {
+  color: #2563eb !important;
+}
+html.cine-home .mod-section:not(.mod-section-night) .mod-badge {
+  color: #1d4ed8 !important;
+  background: rgba(37, 99, 235, 0.1) !important;
+}
+html.cine-home .mod-section:not(.mod-section-night)::before {
+  background: radial-gradient(ellipse, rgba(96, 165, 250, 0.12), transparent 70%);
 }
 
 .mod-pill {
@@ -4466,6 +4535,144 @@ html.cine-home .home-page .text-slate-800 {
   filter: drop-shadow(0 18px 36px rgba(30, 64, 140, 0.35));
 }
 
+.cine-ai-panel-stage {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 36rem;
+  margin-left: auto;
+  border-radius: 1.35rem;
+  overflow: visible;
+  transform: scale(1.02);
+  transform-origin: center top;
+}
+
+.cine-ai-panel-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 16rem;
+  object-fit: cover;
+  object-position: center 28%;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 30px 70px rgba(10, 30, 80, 0.45);
+  background: #e8eef8;
+}
+
+.cine-ai-panel-shade {
+  position: absolute;
+  inset: 0;
+  border-radius: 1.35rem;
+  background: linear-gradient(
+    120deg,
+    rgba(8, 20, 48, 0.15) 0%,
+    transparent 45%,
+    rgba(8, 20, 48, 0.35) 100%
+  );
+  pointer-events: none;
+}
+
+.cine-ai-assistant-card {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  z-index: 5;
+  width: min(92%, 22rem);
+  transform: translate(-50%, -50%);
+  border-radius: 1.1rem;
+  padding: 1rem 1.05rem 0.9rem;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 24px 48px rgba(15, 40, 90, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  color: #0f172a;
+}
+
+.cine-ai-assistant-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cine-ai-assistant-head strong {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.cine-ai-assistant-head span {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.cine-ai-assistant-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.cine-ai-assistant-bubbles {
+  margin-top: 0.7rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.85rem;
+  background: #f1f5f9;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.cine-ai-assistant-bubbles p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.cine-ai-assistant-input {
+  margin-top: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.85rem;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.cine-ai-assistant-input span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cine-ai-assistant-send {
+  color: #7c3aed;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .cine-ai-panel-stage {
+    max-width: 100%;
+    transform: none;
+  }
+  .cine-ai-assistant-card {
+    width: min(94%, 20rem);
+    top: 58%;
+  }
+}
+
 .cine-ai-float {
   position: absolute;
   z-index: 2;
@@ -4898,24 +5105,32 @@ html.cine-home .home-seo-close h3 {
 }
 
 /* ─── Field map Kadıköy ─── */
-.field-map-shell,
 .field-map-shell {
   background: #0b1b3a;
 }
 .field-map-iframe {
-  filter: saturate(1.15) contrast(1.05);
+  z-index: 1;
+  filter: saturate(1.12) contrast(1.04);
+}
+.field-map-fallback {
+  z-index: 0;
+  transition: opacity 0.45s ease;
+}
+.field-map-shell.is-ready .field-map-fallback {
+  opacity: 0;
+  pointer-events: none;
 }
 .field-map-overlay {
+  z-index: 2;
   background:
     linear-gradient(
       180deg,
-      rgba(11, 27, 58, 0.15) 0%,
-      transparent 30%,
-      rgba(11, 27, 58, 0.45) 100%
+      rgba(11, 27, 58, 0.12) 0%,
+      transparent 28%,
+      rgba(11, 27, 58, 0.35) 100%
     ),
-    radial-gradient(circle at 70% 40%, rgba(56, 189, 248, 0.12), transparent 50%);
+    radial-gradient(circle at 70% 40%, rgba(56, 189, 248, 0.1), transparent 50%);
 }
-.field-feature-icon,
 .field-feature-icon {
   animation: field-icon-pulse 2.8s ease-in-out infinite;
 }
