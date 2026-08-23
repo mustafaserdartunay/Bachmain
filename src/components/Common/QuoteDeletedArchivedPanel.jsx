@@ -14,7 +14,6 @@ import {
   SP_CHEVRON_CLASS,
   SP_EMPTY_CLASS,
   YF_TEXT_CLASS,
-  YFB_TEXT_CLASS,
 } from '../../utils/dashboardDesign'
 import { COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
 import QuoteOrderInlineConfirm from './QuoteOrderInlineConfirm'
@@ -131,22 +130,6 @@ function buildDeletedListGrid(segmentCount = 1, actionCol = '3rem') {
 const DATA_ROW_PANEL_CLASS =
   'customer-filter-panel customer-list-panel quote-list-row-panel quote-deleted-list-row flex w-full items-center min-h-[4.75rem] quote-list-data-panel'
 
-const QUOTE_LIST_ROW_PANEL_CLASS =
-  'customer-filter-panel customer-list-panel quote-list-row-panel flex w-full items-center'
-
-function formatQuoteListColumnLabel(label) {
-  const text = String(label || '').trim()
-  if (!text) return ''
-  const upper = text.replace(/\s*:\s*$/, '').toLocaleUpperCase('tr-TR')
-  return `${upper} :`
-}
-
-function DeletedBulkColumnLabel({ label }) {
-  const title = formatQuoteListColumnLabel(label)
-  if (!title) return <span className="inline-flex h-5 w-5" aria-hidden />
-  return <span className={`${YFB_TEXT_CLASS} quote-list-column-title`}>{title}</span>
-}
-
 function DeletedBulkSelectCheckbox({
   checked,
   indeterminate = false,
@@ -165,90 +148,6 @@ function DeletedBulkSelectCheckbox({
       aria-label={ariaLabel}
       className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
     />
-  )
-}
-
-function DeletedBulkHeaderPanel({
-  gridTemplate,
-  segmentTabs,
-  allSelected,
-  someSelected,
-  onToggleSelectAll,
-  selectedCount,
-  onConfirmDelete,
-  onCancelBulk,
-  onEnterBulk,
-  onExitBulk,
-  bulkSelectMode,
-  hasEntries,
-}) {
-  return (
-    <AppPagePanel
-      className={`${QUOTE_LIST_ROW_PANEL_CLASS} min-h-[4.75rem] quote-list-header-panel`}
-    >
-      <div className="quote-list-row w-full min-w-0" style={{ gridTemplateColumns: gridTemplate }}>
-        <DeletedListCell>
-          <DeletedBulkSelectCheckbox
-            checked={allSelected}
-            indeterminate={someSelected}
-            aria-label="Tümünü seç"
-            onChange={onToggleSelectAll}
-          />
-        </DeletedListCell>
-        <DeletedListCell>
-          <DeletedBulkColumnLabel label="Tarih" />
-        </DeletedListCell>
-        <DeletedListCell>
-          <DeletedBulkColumnLabel label="Kod" />
-        </DeletedListCell>
-        <DeletedListCell>
-          <DeletedBulkColumnLabel label="Müşteri Adı" />
-        </DeletedListCell>
-        {segmentTabs.map((tab) => (
-          <DeletedListCell key={tab.id || tab.label}>
-            <DeletedBulkColumnLabel label={tab.label} />
-          </DeletedListCell>
-        ))}
-        <DeletedListCell>
-          <DeletedBulkColumnLabel label="Tutar" />
-        </DeletedListCell>
-        <DeletedListCell>
-          <DeletedBulkColumnLabel label="Sipariş" />
-        </DeletedListCell>
-        <DeletedListCell>
-          {hasEntries ? (
-            bulkSelectMode && selectedCount > 0 ? (
-              <QuoteOrderInlineConfirm
-                label="Sil"
-                labelClass="quote-order-undo-sil"
-                ariaLabel={`${selectedCount} kayıt kalıcı silinsin mi?`}
-                onConfirm={onConfirmDelete}
-                onCancel={onCancelBulk}
-              />
-            ) : (
-              <button
-                type="button"
-                className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
-                title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
-                aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  if (!bulkSelectMode) {
-                    onEnterBulk()
-                    return
-                  }
-                  onExitBulk()
-                }}
-              >
-                <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-              </button>
-            )
-          ) : (
-            <span className="inline-flex h-9 w-9" aria-hidden />
-          )}
-        </DeletedListCell>
-      </div>
-    </AppPagePanel>
   )
 }
 
@@ -458,7 +357,7 @@ export default function QuoteDeletedArchivedPanel({
     baseCols[baseCols.length - 1] = bulkActionCol
   }
   const gridTemplate = bulkSelectMode ? `2.75rem ${baseCols.join(' ')}` : baseCols.join(' ')
-  const titleColumnSpan = bulkSelectMode ? 0 : 3 + resolvedSegmentTabs.length + 1
+  const titleColumnSpan = 3 + resolvedSegmentTabs.length + 1
 
   const deletedQuoteIds = useMemo(
     () => entries.map((entry) => entry.record?.id).filter(Boolean),
@@ -502,85 +401,87 @@ export default function QuoteDeletedArchivedPanel({
     >
       <div className={scrollShellClass}>
         <div className="quote-list-board quote-deleted-list-board w-full">
-          {bulkSelectMode && open ? (
-            <DeletedBulkHeaderPanel
-              gridTemplate={gridTemplate}
-              segmentTabs={
-                resolvedSegmentTabs.length
-                  ? resolvedSegmentTabs
-                  : [{ id: 'status', label: 'Durum' }]
-              }
-              allSelected={allSelected}
-              someSelected={someSelected}
-              onToggleSelectAll={toggleSelectAll}
-              selectedCount={selectedIds.length}
-              onConfirmDelete={handleBulkPermanentDelete}
-              onCancelBulk={exitBulkSelectMode}
-              onEnterBulk={() => {
-                setOpen(true)
-                setBulkSelectMode(true)
-                setSelectedIds([])
-              }}
-              onExitBulk={exitBulkSelectMode}
-              bulkSelectMode={bulkSelectMode}
-              hasEntries={entries.length > 0}
-            />
-          ) : (
-            <section
-              role="button"
-              tabIndex={0}
-              aria-expanded={open}
-              onClick={handleHeaderPanelClick}
-              onKeyDown={handleHeaderPanelKeyDown}
-              className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS}${
-                open ? ' quote-deleted-header-panel-open' : ''
-              } cursor-pointer`}
+          <section
+            role="button"
+            tabIndex={0}
+            aria-expanded={open}
+            onClick={handleHeaderPanelClick}
+            onKeyDown={handleHeaderPanelKeyDown}
+            className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS}${
+              open || bulkSelectMode ? ' quote-deleted-header-panel-open' : ''
+            } cursor-pointer`}
+          >
+            <div
+              className="quote-list-row quote-deleted-header-row w-full min-w-0"
+              style={{ gridTemplateColumns: gridTemplate }}
             >
-              <div
-                className="quote-list-row quote-deleted-header-row w-full min-w-0"
-                style={{ gridTemplateColumns: gridTemplate }}
-              >
-                <DeletedListCell
-                  className="is-start quote-deleted-header-title-cell"
-                  style={{ gridColumn: `span ${titleColumnSpan}` }}
-                >
-                  <span className="flex min-w-0 items-center gap-2 px-0 py-0 text-left">
-                    <RedPingDot />
-                    <span className={APP_LABEL_CLASS}>{title}</span>
-                  </span>
-                </DeletedListCell>
-                <DeletedListCell>
-                  <span className="inline-flex w-full items-center justify-center gap-2">
-                    <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
-                    <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
-                  </span>
-                </DeletedListCell>
+              {bulkSelectMode ? (
                 <DeletedListCell
                   data-deleted-header-interactive
                   onClick={(event) => event.stopPropagation()}
                 >
-                  {entries.length > 0 ? (
+                  <DeletedBulkSelectCheckbox
+                    checked={allSelected}
+                    indeterminate={someSelected}
+                    aria-label="Tümünü seç"
+                    onChange={toggleSelectAll}
+                  />
+                </DeletedListCell>
+              ) : null}
+              <DeletedListCell
+                className="is-start quote-deleted-header-title-cell"
+                style={{ gridColumn: `span ${titleColumnSpan}` }}
+              >
+                <span className="flex min-w-0 items-center gap-2 px-0 py-0 text-left">
+                  <RedPingDot />
+                  <span className={APP_LABEL_CLASS}>{title}</span>
+                </span>
+              </DeletedListCell>
+              <DeletedListCell>
+                <span className="inline-flex w-full items-center justify-center gap-2">
+                  <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
+                  <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
+                </span>
+              </DeletedListCell>
+              <DeletedListCell
+                data-deleted-header-interactive
+                onClick={(event) => event.stopPropagation()}
+              >
+                {entries.length > 0 ? (
+                  bulkSelectMode && selectedIds.length > 0 ? (
+                    <QuoteOrderInlineConfirm
+                      label="Sil"
+                      labelClass="quote-order-undo-sil"
+                      ariaLabel={`${selectedIds.length} kayıt kalıcı silinsin mi?`}
+                      onConfirm={handleBulkPermanentDelete}
+                      onCancel={exitBulkSelectMode}
+                    />
+                  ) : (
                     <button
                       type="button"
-                      className="quote-list-bulk-trash-btn"
-                      title="Toplu sil"
-                      aria-label="Toplu sil modu"
+                      className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
+                      title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
+                      aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
                       onClick={(event) => {
                         event.stopPropagation()
-                        setOpen(true)
-                        setBulkSelectMode(true)
-                        setSelectedIds([])
+                        if (!bulkSelectMode) {
+                          setOpen(true)
+                          setBulkSelectMode(true)
+                          setSelectedIds([])
+                          return
+                        }
+                        exitBulkSelectMode()
                       }}
                     >
                       <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} aria-hidden />
                     </button>
-                  ) : (
-                    <span className="inline-flex h-9 w-9" aria-hidden />
-                  )}
-                </DeletedListCell>
-              </div>
-            </section>
-          )}
+                  )
+                ) : (
+                  <span className="inline-flex h-9 w-9" aria-hidden />
+                )}
+              </DeletedListCell>
+            </div>
+          </section>
 
           {open && entries.length === 0 ? (
             <div className={`${SP_EMPTY_CLASS} px-4`}>{emptyMessage}</div>
@@ -611,7 +512,7 @@ export default function QuoteDeletedArchivedPanel({
                   >
                     <AppPagePanel
                       className={`${DATA_ROW_PANEL_CLASS} ${
-                        isSelected ? 'ring-1 ring-blue-400/35' : ''
+                        isSelected ? 'ring-1 ring-rose-400/40' : ''
                       }`}
                     >
                       <div
@@ -621,13 +522,10 @@ export default function QuoteDeletedArchivedPanel({
                       >
                         {bulkSelectMode ? (
                           <DeletedListCell>
-                            <input
-                              type="checkbox"
+                            <DeletedBulkSelectCheckbox
                               checked={isSelected}
-                              onChange={() => toggleSelect(item.id)}
-                              onClick={(event) => event.stopPropagation()}
                               aria-label={`${item.label} seç`}
-                              className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
+                              onChange={() => toggleSelect(item.id)}
                             />
                           </DeletedListCell>
                         ) : null}
