@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
   compress: true,
   outputFileTracingRoot: path.join(__dirname),
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'gsap', 'lenis'],
   },
   async rewrites() {
     if (process.env.NODE_ENV === 'production') return []

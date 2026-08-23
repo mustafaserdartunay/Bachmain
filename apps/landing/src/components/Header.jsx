@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { Link } from 'react-router-dom'
 import { Boxes, ChevronDown, LayoutGrid, Menu, Receipt, Sparkles, X } from 'lucide-react'
 import Logo from './Logo'
@@ -68,7 +69,7 @@ function RichNavIcon({ type }) {
   return <Boxes className="h-4 w-4 text-blue-600" aria-hidden />
 }
 
-function Dropdown({ label, items, href, rich }) {
+function Dropdown({ label, items, href, rich, cine }) {
   const [open, setOpen] = useState(false)
   const closeTimer = useRef(null)
 
@@ -92,13 +93,14 @@ function Dropdown({ label, items, href, rich }) {
     closeTimer.current = setTimeout(() => setOpen(false), 220)
   }
 
+  const triggerCls = cine
+    ? 'flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-white/85 transition hover:text-white'
+    : 'flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600'
+
   return (
     <div className="relative" onMouseEnter={openMenu} onMouseLeave={closeMenu}>
       {href ? (
-        <Link
-          to={href}
-          className="flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600"
-        >
+        <Link to={href} className={triggerCls}>
           {label}
           <ChevronDown
             className={`h-3.5 w-3.5 opacity-50 transition ${open ? 'rotate-180' : ''}`}
@@ -107,7 +109,7 @@ function Dropdown({ label, items, href, rich }) {
       ) : (
         <button
           type="button"
-          className="flex items-center gap-1 px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600"
+          className={triggerCls}
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
         >
@@ -168,6 +170,8 @@ function Dropdown({ label, items, href, rich }) {
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const pathname = usePathname() || '/'
+  const cine = pathname === '/'
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 12)
@@ -176,10 +180,10 @@ export default function Header() {
   }, [])
 
   return (
-    <header className={`site-nav ${scrolled ? 'scrolled' : ''}`}>
+    <header className={`site-nav ${scrolled ? 'scrolled' : ''} ${cine ? 'site-nav-cine' : ''}`}>
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
         <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-          <Logo />
+          <Logo onDark={cine} />
         </div>
 
         <nav className="hidden items-center xl:flex">
@@ -191,12 +195,15 @@ export default function Header() {
                 items={item.items}
                 href={item.href}
                 rich={item.rich}
+                cine={cine}
               />
             ) : (
               <Link
                 key={item.label}
                 to={item.href}
-                className="px-2.5 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-blue-600"
+                className={`px-2.5 py-2 text-[13px] font-semibold transition ${
+                  cine ? 'text-white/85 hover:text-white' : 'text-slate-600 hover:text-blue-600'
+                }`}
               >
                 {item.label}
               </Link>
@@ -218,7 +225,7 @@ export default function Header() {
 
         <button
           type="button"
-          className="rounded-lg p-2 text-slate-700 xl:hidden"
+          className={`rounded-lg p-2 xl:hidden ${cine ? 'text-white' : 'text-slate-700'}`}
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Menü"
         >
@@ -227,7 +234,7 @@ export default function Header() {
       </div>
 
       {mobileOpen && (
-        <div className="absolute left-0 right-0 top-[68px] border-b border-slate-100 bg-white px-4 py-4 shadow-lg xl:hidden">
+        <div className="cine-mobile-panel absolute left-0 right-0 top-[68px] border-b border-slate-100 bg-white px-4 py-4 shadow-lg xl:hidden">
           <div className="flex flex-col gap-1">
             {nav.map((item) => (
               <div key={item.label}>

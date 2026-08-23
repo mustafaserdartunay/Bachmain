@@ -25,7 +25,7 @@ export const SEO_CONTENT: Record<string, PageSeo> = {
       'KOBİ’ler için premium CRM & ERP: müşteri, sipariş, üretim, stok, finans ve WhatsApp aynı bulutta.',
     twitterTitle: 'BACHMAIN — Tüm Süreçler Tek Platformda',
     twitterDescription: 'Tekliften tahsilata; CRM, ERP, e-fatura ve üretim tek SaaS platformunda.',
-    h1: 'Tüm Süreçler Tek Panel',
+    h1: 'Tüm süreçler tek platform.',
     h2: ['Neden BACHMAIN?', 'Modüller bir arada', 'Hemen başlayın'],
     h3: ['CRM & Pipeline', 'ERP & Üretim', 'Finans & E-Fatura'],
     schemaType: 'SoftwareApplication',
