@@ -3398,7 +3398,7 @@ html.cine-home .home-page-orbs {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: url('/bachy/bachy-hero-scene.jpg');
+  background-image: url('/bachy/bachy-hero-scene.jpg?v=247');
   background-size: cover;
   background-position: center 82%;
   opacity: 0.18;
@@ -3500,7 +3500,7 @@ html.cine-home .home-page-orbs {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: url('/bachy/bachy-hero-scene.jpg');
+  background-image: url('/bachy/bachy-hero-scene.jpg?v=247');
   background-size: cover;
   background-position: center 70%;
   opacity: 0.14;

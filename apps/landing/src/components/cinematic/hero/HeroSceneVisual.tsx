@@ -6,7 +6,7 @@ import OptimizedImage from '../../seo/OptimizedImage'
 import { useIsCoarsePointer, usePrefersReducedMotion } from '../useCinematicMotion'
 
 /** Kullanıcı referans görseli — grid zemin + neon halka + Bachy (tek sahne). */
-const HERO_SCENE = '/bachy/bachy-hero-scene.jpg'
+const HERO_SCENE = '/bachy/bachy-hero-scene.jpg?v=247'
 
 export default function HeroSceneVisual() {
   const reduce = usePrefersReducedMotion()
