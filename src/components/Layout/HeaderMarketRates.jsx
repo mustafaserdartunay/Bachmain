@@ -75,11 +75,20 @@ function seriesFromMove(id, price, changePct) {
   return out
 }
 
+function seriesHasShape(rows) {
+  if (!Array.isArray(rows) || rows.length < 4) return false
+  const values = rows.map((row) => Number(row.value)).filter((n) => Number.isFinite(n) && n > 0)
+  if (values.length < 4) return false
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  return max - min > max * 0.0008
+}
+
 function toChartSeries(id, price, changePct, history) {
   const live = Array.isArray(history)
     ? history.filter((row) => Number.isFinite(Number(row.value)) && Number(row.value) > 0)
     : []
-  const source = live.length >= 3 ? live : seriesFromMove(id, price, changePct)
+  const source = seriesHasShape(live) ? live : seriesFromMove(id, price, changePct)
   return source.map((row, index) => ({
     i: index,
     value: Number(row.value),
@@ -93,6 +102,7 @@ function MiniSpark({ id, series, up }) {
   const min = values.length ? Math.min(...values) : 0
   const max = values.length ? Math.max(...values) : 1
   const pad = Math.max((max - min) * 0.18, Math.abs(max) * 0.0004, 0.0001)
+  const floor = min - pad
 
   return (
     <div className="h-9 w-[4.5rem] shrink-0">
@@ -104,13 +114,14 @@ function MiniSpark({ id, series, up }) {
               <stop offset="100%" stopColor={stroke} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <YAxis domain={[min - pad, max + pad]} hide />
+          <YAxis domain={[floor, max + pad]} hide />
           <Area
             type="monotone"
             dataKey="value"
             stroke={stroke}
             strokeWidth={1.5}
             fill={`url(#${fillId})`}
+            baseValue={floor}
             isAnimationActive={false}
             dot={false}
           />
@@ -228,7 +239,7 @@ export default function HeaderMarketRates() {
   const { open, setOpen, toggle } = useHeaderPopover('market-rates')
   const { rates, loading } = useExchangeRates()
   const [seriesTick, setSeriesTick] = useState(0)
-  const [dailyHistory, setDailyHistory] = useState({ USD: [], EUR: [] })
+  const [dailyHistory, setDailyHistory] = useState({ USD: [], EUR: [], GOLD: [] })
   const {
     anchorRef,
     menuRef,
@@ -251,10 +262,11 @@ export default function HeaderMarketRates() {
     let cancelled = false
     loadFxDailyHistory()
       .then((data) => {
-        if (!cancelled) setDailyHistory({ USD: data.USD || [], EUR: data.EUR || [] })
+        if (!cancelled)
+          setDailyHistory({ USD: data.USD || [], EUR: data.EUR || [], GOLD: data.GOLD || [] })
       })
       .catch(() => {
-        if (!cancelled) setDailyHistory({ USD: [], EUR: [] })
+        if (!cancelled) setDailyHistory({ USD: [], EUR: [], GOLD: [] })
       })
     return () => {
       cancelled = true
