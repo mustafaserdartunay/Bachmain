@@ -12,7 +12,8 @@ import SmoothScrollProvider from '../components/cinematic/SmoothScrollProvider'
 import CustomCursor from '../components/cinematic/CustomCursor'
 import HeroScene from '../components/cinematic/hero/HeroScene'
 import CinematicPageFloor from '../components/cinematic/story/CinematicPageFloor'
-import LiveAppPanel from '../components/landing/LiveAppPanel'
+import GuncelDurumPanel from '../components/landing/GuncelDurumPanel'
+import MusterilerPanel from '../components/landing/MusterilerPanel'
 import {
   b2bFeatures,
   fieldFeatures,
@@ -100,11 +101,7 @@ export default function HomePage() {
             </ScrollReveal>
           </div>
           <div className="erp-full-bleed px-2 sm:px-4 lg:px-6 xl:px-8">
-            <LiveAppPanel
-              src="/assets/guncel-durum-panel.jpg"
-              alt="BACHMAIN Güncel Durum ana sayfası — nakit dengesi, finans özeti ve hızlı aksiyonlar"
-              caption="Güncel Durum · ana sayfa paneli"
-            />
+            <GuncelDurumPanel />
           </div>
           <div className="mx-auto mt-8 grid max-w-5xl gap-3 px-4 sm:grid-cols-3 lg:px-8">
             {[
@@ -149,12 +146,7 @@ export default function HomePage() {
               </Link>
             </ScrollReveal>
             <ScrollReveal direction="right">
-              <LiveAppPanel
-                compact
-                src="/assets/musteriler-panel.jpg"
-                alt="BACHMAIN Müşteriler sayfası — cari listesi, filtreler ve özet metrikler"
-                caption="Müşteriler · canlı liste"
-              />
+              <MusterilerPanel compact />
             </ScrollReveal>
           </div>
         </section>
