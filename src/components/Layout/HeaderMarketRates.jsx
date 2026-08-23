@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { CandlestickChart, Loader2, X } from 'lucide-react'
-import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { useHeaderPopover } from '../../hooks/useHeaderPopover'
@@ -34,31 +41,131 @@ function requestRatesRefresh() {
   }
 }
 
-function MiniSpark({ id, series, up }) {
-  const stroke = up ? '#10b981' : '#e11d48'
-  const fillId = `mkt-sp-${id}`
+/** Günlük % ile uyumlu, okunaklı trend serisi (önce → şimdi). */
+function buildTrendSeries(price, changePct, history) {
+  const end = Number(price)
+  if (!Number.isFinite(end) || end <= 0) return []
+
+  const live = Array.isArray(history) && history.length >= 4 ? history : null
+  if (live) {
+    return live.map((row, index) => ({
+      i: index,
+      label: index === 0 ? 'Önce' : index === live.length - 1 ? 'Şimdi' : '',
+      value: Number(row.value),
+    }))
+  }
+
+  const pct = Number(changePct) || 0
+  const start = end / (1 + pct / 100)
+  const steps = 10
+  const out = []
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps
+    const wobble = Math.sin(t * Math.PI * 2) * (end - start) * 0.06
+    const value = start + (end - start) * t + wobble
+    out.push({
+      i,
+      label: i === 0 ? 'Önce' : i === steps ? 'Şimdi' : '',
+      value: Number(value.toFixed(4)),
+    })
+  }
+  out[out.length - 1].value = Number(end.toFixed(4))
+  return out
+}
+
+function TrendChart({ id, series, up, digits }) {
+  const stroke = up ? '#059669' : '#e11d48'
+  const fillId = `mkt-trend-${id}`
+  const values = series.map((row) => row.value).filter((n) => Number.isFinite(n))
+  const min = values.length ? Math.min(...values) : 0
+  const max = values.length ? Math.max(...values) : 1
+  const pad = Math.max((max - min) * 0.12, max * 0.0008)
+
   return (
-    <div className="h-9 w-[4.5rem] shrink-0">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={series} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={stroke} stopOpacity={0.32} />
-              <stop offset="100%" stopColor={stroke} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <YAxis domain={['dataMin', 'dataMax']} hide />
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke={stroke}
-            strokeWidth={1.5}
-            fill={`url(#${fillId})`}
-            isAnimationActive={false}
-            dot={false}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+    <div className="mt-2">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className={`${YF_TEXT_CLASS} text-[11px] tabular-nums`}>
+          Düşük {formatPrice(min, digits)}
+        </span>
+        <span className={`${YF_TEXT_CLASS} text-[11px] tabular-nums`}>
+          Yüksek {formatPrice(max, digits)}
+        </span>
+      </div>
+      <div className="h-[88px] w-full rounded-xl bg-[rgba(255,255,255,0.35)] px-1 pt-1 ring-1 ring-[rgba(255,255,255,0.5)]">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={series} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={stroke} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={stroke} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              vertical={false}
+              stroke="rgba(140,145,165,0.22)"
+              strokeDasharray="3 4"
+            />
+            <XAxis
+              dataKey="i"
+              tickLine={false}
+              axisLine={false}
+              interval="preserveStartEnd"
+              tick={({ x, y, payload }) => {
+                const row = series[payload.value]
+                if (!row?.label) return null
+                return (
+                  <text
+                    x={x}
+                    y={y + 10}
+                    textAnchor="middle"
+                    fill="var(--muted)"
+                    fontSize={10}
+                  >
+                    {row.label}
+                  </text>
+                )
+              }}
+              height={18}
+            />
+            <YAxis
+              domain={[min - pad, max + pad]}
+              width={44}
+              tickLine={false}
+              axisLine={false}
+              tickCount={3}
+              tick={{ fill: 'var(--muted)', fontSize: 10 }}
+              tickFormatter={(v) => formatPrice(v, digits <= 2 ? 0 : 2)}
+            />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke={stroke}
+              strokeWidth={2}
+              fill={`url(#${fillId})`}
+              isAnimationActive={false}
+              dot={(props) => {
+                const { cx, cy, index } = props
+                if (index !== series.length - 1 || cx == null || cy == null) return null
+                return (
+                  <circle
+                    key={`dot-${id}`}
+                    cx={cx}
+                    cy={cy}
+                    r={3.5}
+                    fill={stroke}
+                    stroke="#fff"
+                    strokeWidth={1.5}
+                  />
+                )
+              }}
+              activeDot={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+      <p className={`${YF_TEXT_CLASS} mt-1 text-center text-[11px]`}>
+        Günlük seyir · önce → şimdi
+      </p>
     </div>
   )
 }
@@ -133,28 +240,32 @@ function TryConverter({ rate, foreignUnit }) {
 
 function RateCard({ instrument }) {
   const up = instrument.changePct >= 0
+  const digits = instrument.id === 'GOLD' ? 2 : 4
   return (
     <div className="rounded-2xl bg-[rgba(255,255,255,0.28)] p-3 ring-1 ring-[rgba(255,255,255,0.5)]">
-      <div className="flex items-center gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className={`${YF_TEXT_CLASS}`}>{instrument.label}</p>
-            <span
-              className={`text-[11px] font-semibold tabular-nums ${
-                up ? 'text-emerald-600' : 'text-rose-600'
-              }`}
-            >
-              {up ? '+' : ''}
-              {Number(instrument.changePct || 0).toFixed(2)}%
-            </span>
-          </div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className={`${YF_TEXT_CLASS}`}>{instrument.label}</p>
           <p className={`${YFB_TEXT_CLASS} mt-0.5 text-[15px] tabular-nums text-[var(--ink)]`}>
-            {formatPrice(instrument.price, instrument.id === 'GOLD' ? 2 : 4)}
+            {formatPrice(instrument.price, digits)}
             <span className={`${YF_TEXT_CLASS} ml-1`}>₺</span>
           </p>
         </div>
-        <MiniSpark id={instrument.id} series={instrument.series} up={up} />
+        <span
+          className={`shrink-0 rounded-lg px-2 py-1 text-[12px] font-semibold tabular-nums ${
+            up ? 'bg-emerald-500/12 text-emerald-700' : 'bg-rose-500/12 text-rose-700'
+          }`}
+        >
+          {up ? '▲' : '▼'} {up ? '+' : ''}
+          {Number(instrument.changePct || 0).toFixed(2)}%
+        </span>
       </div>
+      <TrendChart
+        id={instrument.id}
+        series={instrument.series}
+        up={up}
+        digits={digits}
+      />
       <TryConverter rate={instrument.price} foreignUnit={instrument.foreignUnit} />
     </div>
   )
@@ -171,7 +282,7 @@ export default function HeaderMarketRates() {
   } = useAnchoredPortal(open, {
     align: 'end',
     matchWidth: false,
-    width: 300,
+    width: 320,
     offset: 8,
   })
 
@@ -202,7 +313,11 @@ export default function HeaderMarketRates() {
         foreignUnit: '$',
         price: rates.USD,
         changePct: rates.change?.USD ?? 0,
-        series: getMarketSeries('USD', rates.USD),
+        series: buildTrendSeries(
+          rates.USD,
+          rates.change?.USD ?? 0,
+          getMarketSeries('USD', rates.USD),
+        ),
       },
       {
         id: 'EUR',
@@ -210,7 +325,11 @@ export default function HeaderMarketRates() {
         foreignUnit: '€',
         price: rates.EUR,
         changePct: rates.change?.EUR ?? 0,
-        series: getMarketSeries('EUR', rates.EUR),
+        series: buildTrendSeries(
+          rates.EUR,
+          rates.change?.EUR ?? 0,
+          getMarketSeries('EUR', rates.EUR),
+        ),
       },
       {
         id: 'GOLD',
@@ -218,7 +337,11 @@ export default function HeaderMarketRates() {
         foreignUnit: 'gr',
         price: rates.GOLD,
         changePct: rates.change?.GOLD ?? 0,
-        series: getMarketSeries('GOLD', rates.GOLD),
+        series: buildTrendSeries(
+          rates.GOLD,
+          rates.change?.GOLD ?? 0,
+          getMarketSeries('GOLD', rates.GOLD),
+        ),
       },
     ]
   }, [rates, seriesTick])
@@ -255,7 +378,7 @@ export default function HeaderMarketRates() {
                   zIndex: 10000,
                 }
               }
-              className="app-header-dropdown header-popover-panel w-[min(18.75rem,calc(100vw-1rem))] overflow-hidden"
+              className="app-header-dropdown header-popover-panel w-[min(20rem,calc(100vw-1rem))] overflow-hidden"
               data-header-popover="market-rates"
               onClick={(event) => event.stopPropagation()}
             >
@@ -279,7 +402,7 @@ export default function HeaderMarketRates() {
                 </button>
               </div>
 
-              <div className="space-y-2 p-2.5">
+              <div className="max-h-[min(72vh,34rem)] space-y-2 overflow-y-auto p-2.5">
                 {instruments.map((instrument) => (
                   <RateCard key={instrument.id} instrument={instrument} />
                 ))}
