@@ -3709,6 +3709,13 @@ html body .app-responsive .quote-list-row-panel .customer-balance-positive {
   will-change: transform, opacity, max-height, filter;
 }
 
+.quote-deleted-row-land-wrap {
+  overflow: hidden;
+  animation: quote-deleted-row-land 0.72s cubic-bezier(0.32, 0.72, 0, 1) both;
+  transform-origin: center top;
+  will-change: transform, opacity;
+}
+
 @keyframes quote-list-row-archive {
   0% {
     opacity: 1;
@@ -3781,6 +3788,17 @@ html body .app-responsive .quote-list-row-panel .customer-balance-positive {
     margin-top: 0;
     margin-bottom: 0;
     filter: blur(1px);
+  }
+}
+
+@keyframes quote-deleted-row-land {
+  0% {
+    opacity: 0;
+    transform: translateY(-1.25rem) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

@@ -2647,6 +2647,8 @@ export default function QuotesPage() {
       softDeleteQuote(quote)
       const nextQuotes = loadQuotes()
       setQuotes(nextQuotes)
+      setArchiveReceiveKey((current) => current + 1)
+      flushWorkspaceNow()
       if (selectedId === quote.id) {
         setSelectedId(nextQuotes[0]?.id || null)
       }
@@ -2698,6 +2700,7 @@ export default function QuotesPage() {
       setAnimatingDeleteIds([])
       exitBulkSelectMode()
       setArchiveReceiveKey((current) => current + 1)
+      flushWorkspaceNow()
     }, 720)
   }
 
@@ -2707,11 +2710,13 @@ export default function QuotesPage() {
     setAnimatingDeleteIds((current) => [...current, id])
     window.setTimeout(() => {
       softDeleteQuote(quote)
-      setQuotes(loadQuotes())
+      const nextQuotes = loadQuotes()
+      setQuotes(nextQuotes)
       setAnimatingDeleteIds((current) => current.filter((item) => item !== id))
       setArchiveReceiveKey((current) => current + 1)
+      flushWorkspaceNow()
       if (selectedId === quote.id) {
-        setSelectedId(loadQuotes()[0]?.id || null)
+        setSelectedId(nextQuotes[0]?.id || null)
       }
     }, 720)
   }
@@ -3354,7 +3359,11 @@ export default function QuotesPage() {
 
               <QuoteDeletedArchivedPanel
                 layoutMode="inline"
-                onRestored={() => setQuotes(loadQuotes())}
+                onRestored={(restored) => {
+                  setQuotes(loadQuotes())
+                  if (restored?.id) setSelectedId(restored.id)
+                  flushWorkspaceNow()
+                }}
                 emptyMessage="Silinen teklif yok."
                 receivePulseKey={archiveReceiveKey}
                 className="customer-deleted-archived-panel w-full"

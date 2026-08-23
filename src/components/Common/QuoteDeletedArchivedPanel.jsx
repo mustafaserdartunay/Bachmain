@@ -3,6 +3,7 @@ import { ChevronDown, MoreHorizontal, Trash2, Undo2 } from 'lucide-react'
 import { Button, Dropdown, DropdownItem, DropdownSeparator } from '@bachmain/ui'
 import { DELETED_RECORDS_EVENT, getDeletedRecords } from '../../utils/deletedRecordsStore'
 import { permanentlyDeleteQuote, restoreDeletedQuote } from '../../utils/quotesStore'
+import { flushWorkspaceNow } from '../../utils/workspaceStorage'
 import { resolveQuoteCode } from '../../utils/documentCodes'
 import { getListCustomerDisplay } from '../../data/customerProfiles'
 import { formatTL } from '../../utils/productPricing'
@@ -203,15 +204,18 @@ function DeletedOrderRestoreCell({
           title="Sipariş oluşturulmamış"
         >
           <span>Sipariş</span>
-          <span>Oluştur</span>
+          <span>—</span>
         </span>
       )}
       <button
         type="button"
-        onClick={onRestore}
+        onClick={(event) => {
+          event.stopPropagation()
+          onRestore?.()
+        }}
         disabled={disabled}
         className="glass-sidebar-toggle glass-sidebar-collapse flex h-9 w-9 items-center justify-center rounded-xl"
-        title="Geri yükle"
+        title="Teklifi geri yükle"
         aria-label={restoreLabel}
       >
         <Undo2 className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -250,6 +254,9 @@ export default function QuoteDeletedArchivedPanel({
   const [selectedIds, setSelectedIds] = useState([])
   const [restoringIds, setRestoringIds] = useState([])
   const [trashingIds, setTrashingIds] = useState([])
+  const [landingIds, setLandingIds] = useState([])
+  const knownEntryIdsRef = useRef(new Set())
+  const deletedHydratedRef = useRef(false)
 
   useEffect(() => {
     function refresh() {
@@ -265,6 +272,8 @@ export default function QuoteDeletedArchivedPanel({
 
   useEffect(() => {
     if (!receivePulseKey) return undefined
+    // Silinen kaydı panelde tut — kapalı panelde layout yukarı kaymasın
+    setOpen(true)
     setReceiveActive(true)
     const timer = window.setTimeout(() => setReceiveActive(false), 900)
     return () => window.clearTimeout(timer)
@@ -289,6 +298,24 @@ export default function QuoteDeletedArchivedPanel({
       .filter((item) => item.record?.id)
       .sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))
   }, [version])
+
+  useEffect(() => {
+    const nextIds = entries.map((item) => item.id)
+    if (!deletedHydratedRef.current) {
+      deletedHydratedRef.current = true
+      knownEntryIdsRef.current = new Set(nextIds)
+      return undefined
+    }
+    const known = knownEntryIdsRef.current
+    const arrived = nextIds.filter((id) => !known.has(id))
+    knownEntryIdsRef.current = new Set(nextIds)
+    if (!arrived.length) return undefined
+    setLandingIds((current) => [...new Set([...current, ...arrived])])
+    const timer = window.setTimeout(() => {
+      setLandingIds((current) => current.filter((id) => !arrived.includes(id)))
+    }, 720)
+    return () => window.clearTimeout(timer)
+  }, [entries])
 
   function exitBulkSelectMode() {
     setBulkSelectMode(false)
@@ -318,6 +345,7 @@ export default function QuoteDeletedArchivedPanel({
       if (restored) onRestored?.(restored, item)
       setRestoringIds((current) => current.filter((id) => id !== item.id))
       setVersion((current) => current + 1)
+      flushWorkspaceNow()
     }, ROW_EXIT_MS)
   }
 
@@ -328,6 +356,7 @@ export default function QuoteDeletedArchivedPanel({
       permanentlyDeleteQuote(item.record.id)
       setTrashingIds((current) => current.filter((id) => id !== item.id))
       setVersion((current) => current + 1)
+      flushWorkspaceNow()
     }, ROW_EXIT_MS)
   }
 
@@ -341,6 +370,7 @@ export default function QuoteDeletedArchivedPanel({
       setTrashingIds([])
       exitBulkSelectMode()
       setVersion((current) => current + 1)
+      flushWorkspaceNow()
     }, ROW_EXIT_MS)
   }
 
@@ -518,10 +548,12 @@ export default function QuoteDeletedArchivedPanel({
                 const isSelected = selectedIds.includes(item.id)
                 const isRestoring = restoringIds.includes(item.id)
                 const isTrashing = trashingIds.includes(item.id)
+                const isLanding = landingIds.includes(item.id)
 
                 let wrapClass
                 if (isTrashing) wrapClass = 'quote-deleted-row-collapse-wrap'
                 else if (isRestoring) wrapClass = 'quote-list-row-restore-wrap'
+                else if (isLanding) wrapClass = 'quote-deleted-row-land-wrap'
 
                 return (
                   <div
