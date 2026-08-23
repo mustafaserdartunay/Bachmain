@@ -37,19 +37,9 @@ export function pushMarketSeriesPoint(id, price) {
 }
 
 export function getMarketSeries(id, fallbackPrice) {
+  void fallbackPrice
   const all = readAll()
-  const series = Array.isArray(all[id]) ? all[id] : []
-  if (series.length >= 2) return series
-  const base = Number(fallbackPrice)
-  if (!Number.isFinite(base) || base <= 0) return series
-  const seed = []
-  let value = base * 0.992
-  for (let i = 0; i < 12; i += 1) {
-    value *= 1 + (Math.sin(i / 2) * 0.0012 + (i / 12) * 0.0008)
-    seed.push({ t: i, value: Number(value.toFixed(4)) })
-  }
-  seed.push({ t: 12, value: Number(base.toFixed(4)) })
-  return seed
+  return Array.isArray(all[id]) ? all[id] : []
 }
 
 export { DISCLAIMER as MARKET_RATES_DISCLAIMER }
