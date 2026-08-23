@@ -6,7 +6,6 @@ import {
   ChevronRight,
   ClipboardList,
   FileText,
-  Inbox,
   Maximize2,
   MessageCircle,
   Minimize2,
@@ -21,6 +20,7 @@ import {
   X,
   Check,
 } from 'lucide-react'
+import { WhatsAppIcon } from './SocialBrandIcons'
 import UccChatPane from '../Communication/UccChatPane'
 import { openCommunicationCenter, UCC_OPEN_EVENT } from '../../ucc/uccClient'
 import { fetchAccountNotifications } from '../../utils/platformApi'
@@ -53,11 +53,12 @@ import { TEAM_HUB_FIELD_CLASS, TEAM_HUB_TEXTAREA_CLASS } from '../../utils/theme
 
 const TABS = [
   {
-    id: 'inbox',
-    label: 'Tümü',
-    icon: Inbox,
-    iconWrap: 'bg-gradient-to-br from-slate-400 to-slate-600',
-    activeRing: 'ring-slate-400/40',
+    id: 'whatsapp',
+    label: 'WhatsApp',
+    icon: WhatsAppIcon,
+    iconWrap: 'bg-[#25D366]',
+    activeRing: 'ring-[#25D366]/45',
+    brand: true,
   },
   {
     id: 'chat',
@@ -79,13 +80,6 @@ const TABS = [
     icon: Phone,
     iconWrap: 'bg-gradient-to-br from-emerald-400 to-teal-600',
     activeRing: 'ring-emerald-400/40',
-  },
-  {
-    id: 'whatsapp',
-    label: 'WhatsApp',
-    icon: MessageCircle,
-    iconWrap: 'bg-gradient-to-br from-green-400 to-emerald-600',
-    activeRing: 'ring-green-400/40',
   },
   {
     id: 'notify',
@@ -337,7 +331,7 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
 
   useEffect(() => {
     function onOpen(event) {
-      const tab = event.detail?.tab || 'chat'
+      const tab = event.detail?.tab === 'inbox' ? 'chat' : event.detail?.tab || 'chat'
       setActiveTab(tab)
       setFullscreen(Boolean(event.detail?.fullscreen))
       if (collapsed) onToggle?.()
@@ -429,7 +423,7 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
             <button
               type="button"
               onClick={() => setFullscreen((value) => !value)}
-              className="glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl"
+              className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
               aria-label={fullscreen ? 'Paneli küçült' : 'Tam ekran'}
             >
               {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -472,7 +466,10 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
               <span
                 className={`relative flex h-8 w-8 items-center justify-center rounded-xl shadow-sm ${tab.iconWrap}`}
               >
-                <Icon className="h-4 w-4 text-[#ffffff]" strokeWidth={2.25} />
+                <Icon
+                  className="h-4 w-4 text-[#ffffff]"
+                  {...(tab.brand ? {} : { strokeWidth: 2.25 })}
+                />
                 <TeamHubNoticeBadge count={tabBadges[tab.id]} />
               </span>
             </button>
@@ -482,38 +479,6 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
 
       {!collapsed ? (
         <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[18px] bg-white/35 ring-1 ring-[rgba(140,145,165,0.14)]">
-          {activeTab === 'inbox' ? (
-            <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2.5">
-              {waThreads.slice(0, 8).map((thread) => (
-                <Link
-                  key={thread.id}
-                  to="/mesajlar"
-                  className="rounded-[14px] bg-white/65 px-2.5 py-2 text-left"
-                >
-                  <p className="truncate text-[12px] font-extrabold">
-                    {thread.contactName || 'WhatsApp'}
-                  </p>
-                  <p className="truncate text-[11px] font-semibold text-[var(--muted)]">
-                    {thread.lastMessagePreview || 'Konuşma'}
-                  </p>
-                </Link>
-              ))}
-              {notifications.slice(0, 6).map((item) => (
-                <div key={item.id || item.title} className="rounded-[14px] bg-white/65 px-2.5 py-2">
-                  <p className="truncate text-[12px] font-extrabold">{item.title || 'Bildirim'}</p>
-                  <p className="truncate text-[11px] font-semibold text-[var(--muted)]">
-                    {item.body || ''}
-                  </p>
-                </div>
-              ))}
-              {waThreads.length === 0 && notifications.length === 0 ? (
-                <p className="px-2 py-6 text-center text-[12px] font-semibold text-[var(--muted)]">
-                  Birleşik gelen kutusu boş. Sohbet sekmesinden ekip yazışmasına geçin.
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-
           {activeTab === 'chat' ? <UccChatPane /> : null}
 
           {activeTab === 'video' ? (
