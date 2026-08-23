@@ -1,0 +1,43 @@
+---
+description: Bachmain üretim SaaS — mevcut kodu koru, onay olmadan Neon/Vercel/git/auth yok
+alwaysApply: true
+---
+
+# Güvenli geliştirme (REQUIRED)
+
+Çalışan sistemi koruyarak iyileştir. Yeniden yazma. Klasörü “ideal ağaç” diye taşıma.
+
+## Önce oku
+
+1. İlgili mevcut dosyayı ve `docs/` şartnamesini oku.
+2. Aynı işi yapan bileşen/servis/API varsa yenisini oluşturma.
+3. Bir görevde yalnızca o görevin dosyalarını değiştir.
+
+## Yasak (onay olmadan)
+
+- Neon / `DATABASE_URL` yazma, migration, DROP, TRUNCATE, DELETE, ALTER
+- `apps/admin/server/auth.mjs`, `staffAuth.mjs`, `authRoutes.mjs`, `db.mjs`, `store.mjs`
+- `src/auth/*`, `src/utils/platformAuth.js`, `workspaceStorage.js`, `tenantSync.js`
+- `vercel.json`, `apps/*/vercel.json`, `scripts/deploy-all.sh`, domain, env **değerleri**
+- `git commit` / `git push` / force push / rebase / history rewrite
+- Secret yazdırma (`.env`, Vercel env değerleri)
+
+## Kullan
+
+- CRM UI: `src/components/Common`, `dashboardDesign.js`, `packages/ui`
+- Yönetim: `apps/admin` — CRM ile karıştırma
+- Web: `apps/landing` (canlı `bachmain.com`)
+- Canlı üye API: `yonetim.bachmain.com/api` (`VITE_PLATFORM_API_URL`)
+- Hedef Fastify `apps/api` production kesimi değil; sessizce taşıma
+
+## Domainler
+
+| Sistem | Domain |
+|--------|--------|
+| Web | bachmain.com |
+| Uygulama | uygulama.bachmain.com |
+| Yönetim | yonetim.bachmain.com |
+
+## Büyük değişiklik öncesi
+
+Ne / hangi dosyalar / risk / DB / API / Vercel / geri alma — kullanıcıya sor, onay bekle.

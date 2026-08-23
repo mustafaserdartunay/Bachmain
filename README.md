@@ -1,6 +1,16 @@
-# BACHMAIN ERP - CRM & Muhasebe Programı
+# BACHMAIN
 
-Görseldeki tasarıma uygun, web tabanlı ERP/CRM dashboard uygulaması.
+Kurumsal SaaS: CRM, ERP, muhasebe, stok, üretim, lojistik ve yönetim paneli. Çalışan üretim kodu korunur; temizlik ve yeni özellik mevcut yapının üzerine eklenir.
+
+## Domainler
+
+| Sistem                  | Domain                | Kod                      |
+| ----------------------- | --------------------- | ------------------------ |
+| **WEB - BACHMAIN**      | bachmain.com          | `apps/landing` (Next.js) |
+| **UYGULAMA - BACHMAIN** | uygulama.bachmain.com | repo kökü (`src/`, Vite) |
+| **YÖNETİM - BACHMAIN**  | yonetim.bachmain.com  | `apps/admin`             |
+
+Ayrıntı: [`docs/PRODUCTION.md`](docs/PRODUCTION.md) · mimari: [`docs/ENTERPRISE-SAAS-ARCHITECTURE.md`](docs/ENTERPRISE-SAAS-ARCHITECTURE.md)
 
 ## Özellikler
 
@@ -15,25 +25,88 @@ Görseldeki tasarıma uygun, web tabanlı ERP/CRM dashboard uygulaması.
 - **Bayi Yönetimi** - Bayi performansı ve harita
 - **Sesli AI Asistan** - Mikrofon ile konuşma, OpenAI ile otomatik işlem (müşteri, ürün, teklif)
 
-## Kurulum
+## Proje yapısı
+
+```text
+Bachmain/
+├── src/                 # UYGULAMA (CRM)
+├── server/              # CRM yerel AI proxy (voice / omni)
+├── apps/
+│   ├── admin/           # YÖNETİM UI + canlı /api (Neon)
+│   ├── landing/         # WEB (bachmain.com)
+│   └── api/             # Hedef Fastify API (production kesimi ayrı iş)
+├── packages/
+│   ├── ui/              # Ortak UI primitives
+│   └── platform-config/ # Domain URL sabitleri
+├── docs/                # Şartnameler
+├── scripts/             # deploy-all.sh (yalnızca onaylı push+deploy)
+└── public/
+```
+
+CRM kök `src/` içinde kalır (`apps/application` göçü yok). `apps/web` eski static çıktıdır; canlı site `apps/landing`.
+
+## Paket yöneticisi
+
+**npm** (`package-lock.json`). pnpm/yarn’a geçilmez.
+
+## Local geliştirme
 
 ```bash
 npm install
 cp .env.example .env
-npm run dev
+npm run dev                 # UYGULAMA  http://127.0.0.1:5173
+npm run yonetim:open        # YÖNETİM   http://127.0.0.1:5200
+npm run web:open            # WEB       http://127.0.0.1:5180
 ```
 
-`.env` dosyasına gerçek anahtarınızı ekleyin:
+Yönetim için `apps/admin/.env` içinde `DATABASE_URL` gerekir (Vercel ile aynı Neon’u local’de kullanıyorsan yazma işlemine dikkat). Hedef API: `npm run api:dev` (port 8080) — canlı üye girişi varsayılan olarak yönetim `/api` üzerindedir.
 
+## Environment
+
+Örnek isimler (değer yok): `.env.example`, `.env.production.example`, `apps/admin/.env.example`, `apps/api/.env.example`.
+
+Gerçek `.env` Git’e girmez. Secret’ı README’ye veya sohbete yazma. Production değişkenleri Vercel’de kalır.
+
+## Database
+
+Canlı üyelik/platform durumu: **Neon**, `apps/admin/server/db.mjs` (`DATABASE_URL`). CRM iş verisinin çoğu tarayıcı `localStorage` + tenant senkronu.
+
+DROP / TRUNCATE / production migration yok. Ayrıntı: [`docs/56_DATABASE_CURRENT_STATE.md`](docs/56_DATABASE_CURRENT_STATE.md)
+
+## GitHub
+
+Kaynak: `github.com/mustafaserdartunay/Bachmain` · üretim branch: **`main`**. Force push / history rewrite yok. Commit ve `git push` yalnızca açık onayla.
+
+## Vercel
+
+Üç production proje (CRM kök, admin `apps/admin`, web `apps/landing`). Ayar, domain ve env **değerleri** bu repodan değiştirilmez. Production deploy ayrı onay ister. Script: `scripts/deploy-all.sh`.
+
+DNS (Squarespace) özeti [`docs/PRODUCTION.md`](docs/PRODUCTION.md) içindedir.
+
+### CRM (uygulama.bachmain.com)
+
+SPA rotaları kök `vercel.json` rewrite ile çalışır. AI uçları `/api/voice/*` ve `/api/omni/*`.
+
+### Node sunucusu (VPS / Railway / Render)
+
+```bash
+npm run build
+npm start
 ```
-OPENAI_API_KEY=sk-proj-...
-```
 
-Alternatif: **Yönetici Ayarları → Sesli AI Asistan** bölümünden anahtarı girebilirsiniz (sunucuda .env yoksa).
+Varsayılan port: `4173`. Ortam değişkenleri (değerler Vercel/sunucuda):
 
-Tarayıcıda `http://localhost:5173` adresini açın. Geliştirme modunda sesli asistan API'si Vite üzerinden çalışır.
+| Değişken                  | Açıklama                                   |
+| ------------------------- | ------------------------------------------ |
+| `OPENAI_API_KEY`          | OpenAI (sesli asistan)                     |
+| `OPENAI_MODEL`            | Model (varsayılan gpt-5.5-pro)             |
+| `OPENAI_REASONING_EFFORT` | GPT-5 reasoning                            |
+| `OPENAI_WHISPER_MODEL`    | Ses yazıya                                 |
+| `PORT`                    | Sunucu portu (4173)                        |
+| `VITE_PLATFORM_API_URL`   | Canlıda `https://yonetim.bachmain.com/api` |
+| `DATABASE_URL`            | Yönetim Neon (admin uygulaması)            |
 
-## Sesli Asistan
+## Sesli asistan
 
 Header'daki mikrofon simgesine tıklayın. Konuşun veya yazın; asistan müşteri oluşturma, ürün ekleme, teklif hazırlama ve sayfa gezintisi gibi işlemleri otomatik yapar.
 
@@ -43,78 +116,19 @@ Header'daki mikrofon simgesine tıklayın. Konuşun veya yazın; asistan müşte
 - "5000 adet kraft kutu teklifi hazırla"
 - "Teklifler sayfasına git"
 
-**Gereksinimler:**
+**Gereksinimler:** Chrome, Edge veya Firefox (mikrofon). Sunucuda `OPENAI_API_KEY` tanımlı olmalı. Alternatif: **Yönetici Ayarları → Sesli AI Asistan**.
 
-- Chrome, Edge veya Firefox (mikrofon kaydı)
-- Sunucuda `OPENAI_API_KEY` tanımlı olmalı (Whisper + GPT aynı anahtar)
+## Cursor çalışma kuralları
 
-## Online Yayın (Production)
-
-Platform domain yapısı (Paraşüt modeli):
-
-| Domain                  | Uygulama                  |
-| ----------------------- | ------------------------- |
-| `bachmain.com` / `www`  | Kurumsal web (`apps/web`) |
-| `uygulama.bachmain.com` | CRM (repo root)           |
-| `yonetim.bachmain.com`  | Admin (`apps/admin`)      |
-
-Detay: [`docs/PRODUCTION.md`](docs/PRODUCTION.md)
-
-### Vercel
-
-1. GitHub’a push edin.
-2. Üç Vercel project oluşturun (rootDirectory: `.` / `apps/web` / `apps/admin`).
-3. Environment Variables: `.env.production.example` dosyasına bakın.
-4. DNS (Squarespace):
-   - `A @` → `76.76.21.21`
-   - `CNAME www` → `cname.vercel-dns.com`
-   - `CNAME uygulama` → `cname.vercel-dns.com`
-   - `CNAME yonetim` → `cname.vercel-dns.com`
-
-### Vercel + bachmain.com (önerilen)
-
-1. Projeyi GitHub’a push edin.
-2. [Vercel](https://vercel.com) → Import Project → GitHub repo.
-3. Environment Variables ekleyin:
-   - `OPENAI_API_KEY` = `sk-...`
-   - `OPENAI_MODEL` = `gpt-5.5-pro` (opsiyonel; varsayılan en yüksek kalite)
-   - `OPENAI_REASONING_EFFORT` = `high` (opsiyonel)
-   - `OPENAI_WHISPER_MODEL` = `gpt-4o-transcribe` (opsiyonel)
-4. Deploy sonrası Domains → ilgili subdomain’leri ekleyin.
-5. Google Workspace / domain DNS’te Vercel’in verdiği kayıtları ekleyin:
-   - `A` → `76.76.21.21` (apex)
-   - veya Vercel’in gösterdiği `CNAME` → `cname.vercel-dns.com`
-
-CLI ile:
-
-```bash
-npx vercel login
-npx vercel --prod
-npx vercel domains add bachmain.com
-```
-
-SPA rotaları (`/musteriler` vb.) `vercel.json` rewrite ile çalışır. AI API uçları `/api/voice/*` ve `/api/omni/*` serverless fonksiyonlardır.
-
-### Node sunucusu (VPS / Railway / Render)
-
-```bash
-npm run build
-npm start
-```
-
-Varsayılan port: `4173`. Ortam değişkenleri:
-
-| Değişken                  | Açıklama                                   |
-| ------------------------- | ------------------------------------------ |
-| `OPENAI_API_KEY`          | OpenAI API anahtarı (zorunlu)              |
-| `OPENAI_MODEL`            | Model adı (varsayılan: gpt-5.5-pro)        |
-| `OPENAI_REASONING_EFFORT` | GPT-5 reasoning (varsayılan: high)         |
-| `OPENAI_WHISPER_MODEL`    | Ses yazıya (varsayılan: gpt-4o-transcribe) |
-| `PORT`                    | Sunucu portu (varsayılan: 4173)            |
+- Mevcut bileşen / API / tablo varsa yenisini uydurma.
+- Neon, auth, Vercel, env değeri, commit/push: önce onay.
+- Bir modülde çalışırken diğer uygulamaları (web / yönetim / CRM) gereksiz yere değiştirme.
+- Kural dosyası: `.cursor/rules/safe-saas-development.mdc`
 
 ## Teknolojiler
 
-- React 19 + Vite
+- React 19 + Vite (CRM), Next.js (web), Vite+TS (yönetim)
 - Tailwind CSS
-- Recharts (grafikler)
-- Lucide React (ikonlar)
+- Recharts, Lucide React
+- Yönetim API: Node + Neon
+- Hedef platform API: Fastify + Drizzle (`apps/api`)
