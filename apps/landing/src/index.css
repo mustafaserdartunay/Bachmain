@@ -1253,16 +1253,19 @@ h1,
 }
 .cta-inline-logo {
   display: inline-block;
-  height: 0.92em;
+  height: 1em;
   width: auto;
-  max-height: 0.92em;
-  max-width: 9.5rem;
+  max-height: 1.05em;
+  max-width: none;
   object-fit: contain;
-  vertical-align: -0.12em;
+  object-position: left center;
+  vertical-align: -0.18em;
   background: transparent;
-  padding: 0;
+  padding: 0 0.15em 0 0; /* turuncu nokta kesilmesin */
+  margin-right: 0.15em;
   border-radius: 0;
   box-shadow: none;
+  overflow: visible;
 }
 
 .site-footer {
@@ -3249,20 +3252,23 @@ html.cine-home .home-page-orbs {
   min-height: 100dvh;
 }
 
-/* ─── Tam ekran canlı arka zemin (video veya Ken Burns görsel) ─── */
+/* ─── Tam ekran canlı arka zemin (4K video veya Ken Burns görsel) ─── */
 .cine-live-backdrop {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
+  /* Siyah bar olmasın — luminous navy zemin */
+  background: #1f4e9a;
   will-change: transform;
 }
 
 .cine-live-backdrop__scroll {
   position: absolute;
-  inset: -10%;
-  width: 120%;
-  height: 120%;
+  inset: -2%;
+  width: 104%;
+  height: 104%;
+  transform-origin: 50% 0%;
   will-change: transform;
 }
 
@@ -3281,10 +3287,28 @@ html.cine-home .home-page-orbs {
 .cine-live-backdrop__video,
 .cine-live-backdrop__poster {
   display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 40%;
+  object-position: center center;
+  background: #1f4e9a;
+}
+
+.cine-live-backdrop__video {
+  z-index: 2;
+}
+
+.cine-live-backdrop__poster {
+  z-index: 1;
+}
+
+.cine-live-backdrop__poster.is-pending {
+  /* Video yüklenirken kısa süre; oynayınca DOM'dan çıkar */
+  opacity: 1;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
 }
 
 .cine-live-backdrop__grid-flow {
@@ -3294,7 +3318,7 @@ html.cine-home .home-page-orbs {
   background-image: url('/bachy/bachy-hero-scene.jpg');
   background-size: cover;
   background-position: center 82%;
-  opacity: 0.22;
+  opacity: 0.18;
   mix-blend-mode: screen;
   mask-image: linear-gradient(to top, transparent 45%, #000 78%, transparent 100%);
   -webkit-mask-image: linear-gradient(to top, transparent 45%, #000 78%, transparent 100%);
@@ -3304,11 +3328,12 @@ html.cine-home .home-page-orbs {
 .cine-live-backdrop__scan {
   position: absolute;
   inset: 0;
+  z-index: 3;
   pointer-events: none;
   background: linear-gradient(
     105deg,
     transparent 42%,
-    rgba(186, 230, 253, 0.07) 50%,
+    rgba(186, 230, 253, 0.06) 50%,
     transparent 58%
   );
   background-size: 220% 100%;
@@ -3318,10 +3343,18 @@ html.cine-home .home-page-orbs {
 .cine-live-backdrop__vignette {
   position: absolute;
   inset: 0;
+  z-index: 3;
   pointer-events: none;
+  /* Üstte siyah yok — yalnızca hafif navy okunabilirlik */
   background:
-    radial-gradient(ellipse at 70% 45%, transparent 35%, rgba(15, 35, 80, 0.35) 100%),
-    linear-gradient(to top, rgba(31, 78, 154, 0.55) 0%, transparent 42%);
+    radial-gradient(ellipse at 72% 42%, transparent 42%, rgba(31, 78, 154, 0.28) 100%),
+    linear-gradient(
+      90deg,
+      rgba(22, 52, 110, 0.55) 0%,
+      rgba(31, 78, 154, 0.18) 38%,
+      transparent 62%
+    ),
+    linear-gradient(to top, rgba(31, 78, 154, 0.42) 0%, transparent 38%);
 }
 
 .cine-hero-layout--live {
@@ -3351,9 +3384,9 @@ html.cine-home .home-page-orbs {
   z-index: 2;
   background: linear-gradient(
     90deg,
-    rgba(22, 52, 110, 0.82) 0%,
-    rgba(31, 78, 154, 0.52) 34%,
-    rgba(31, 78, 154, 0.18) 52%,
+    rgba(22, 52, 110, 0.72) 0%,
+    rgba(31, 78, 154, 0.4) 34%,
+    rgba(31, 78, 154, 0.12) 52%,
     transparent 68%
   );
 }
@@ -4054,9 +4087,11 @@ html.cine-home .home-seo-card {
 }
 
 html.cine-home .home-seo-title,
-html.cine-home .home-seo-block h3,
-html.cine-home .home-seo-close h3 {
+html.cine-home .home-seo-block h3 {
   color: #fff;
+}
+html.cine-home .home-seo-close h3 {
+  color: #60a5fa;
 }
 
 html.cine-home .home-seo-lead,
@@ -4178,7 +4213,7 @@ html.cine-home .home-page .text-slate-800 {
 
   .cine-live-backdrop__poster,
   .cine-live-backdrop__video {
-    object-position: center 32%;
+    object-position: center center;
   }
 
   .cine-hero--live .cine-hero-veil {
@@ -4566,4 +4601,524 @@ html.cine-home .home-page .text-slate-800 {
   .cine-story-pin {
     min-height: auto;
   }
+}
+
+/* ─── Ana sayfa SEO renkleri (istek) ─── */
+html.cine-home .home-seo-kicker {
+  color: #ffffff !important;
+}
+html.cine-home .home-seo-faq > h3 {
+  color: #ffffff !important;
+}
+html.cine-home .home-seo-close h3 {
+  color: #60a5fa !important;
+}
+
+/* ─── Problem — görkemli ─── */
+.cine-problem--grand {
+  position: relative;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem 4.5rem;
+  text-align: center;
+  overflow: hidden;
+}
+.cine-problem-glow {
+  position: absolute;
+  inset: 10% 15% auto;
+  height: 55%;
+  background: radial-gradient(ellipse, rgba(96, 165, 250, 0.28), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+.cine-problem--grand .cine-problem-title {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  line-height: 1.15;
+  max-width: 18ch;
+  margin-left: auto;
+  margin-right: auto;
+  text-shadow: 0 10px 40px rgba(15, 35, 80, 0.35);
+}
+.cine-problem--grand .cine-problem-lead {
+  max-width: 42rem;
+  font-size: 1.08rem;
+  color: rgba(238, 244, 255, 0.84);
+}
+.cine-problem-grid {
+  list-style: none;
+  margin: 2.25rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  text-align: left;
+}
+@media (min-width: 768px) {
+  .cine-problem-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .cine-problem-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.cine-problem-card {
+  border-radius: 1.25rem;
+  padding: 1.15rem 1.2rem 1.25rem;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 18px 40px rgba(15, 40, 90, 0.18);
+  backdrop-filter: blur(14px);
+  transition:
+    transform 0.35s ease,
+    border-color 0.35s ease;
+}
+.cine-problem-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: rgba(147, 197, 253, 0.55);
+}
+.cine-problem-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  color: #fff;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+}
+.cine-problem-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+}
+.cine-problem-card p {
+  margin: 0.45rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(238, 244, 255, 0.72);
+}
+.cine-problem-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* ─── Story — net geçişler ─── */
+.cine-story--dynamic .cine-story-shell {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 5.5rem 1.25rem 3rem;
+}
+.cine-story-head {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.cine-story-sub {
+  margin: 0.65rem auto 0;
+  max-width: 34rem;
+  color: rgba(238, 244, 255, 0.72);
+  font-size: 0.98rem;
+}
+.cine-story--dynamic .cine-act {
+  border-radius: 1.5rem;
+  padding: 1.75rem 1.5rem;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)),
+    radial-gradient(
+      circle at 90% 10%,
+      var(--cine-act-glow, rgba(96, 165, 250, 0.35)),
+      transparent 55%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 24px 60px rgba(10, 30, 80, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(18px) saturate(140%);
+  filter: none !important;
+}
+.cine-story--dynamic .cine-act.is-active {
+  outline: 2px solid rgba(186, 230, 253, 0.55);
+  outline-offset: 4px;
+}
+.cine-story--dynamic .cine-act-title {
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+}
+.cine-story-progress {
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 1.5rem;
+}
+.cine-story-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  transition:
+    width 0.3s ease,
+    background 0.3s ease;
+}
+.cine-story-dot.is-active {
+  width: 1.6rem;
+  background: linear-gradient(90deg, #93c5fd, #60a5fa);
+}
+
+/* ─── AI — uygulama paneli ─── */
+.cine-ai-section--app {
+  padding: 4rem 1.25rem 5rem;
+}
+.cine-ai-section--app .cine-ai-headline {
+  margin: 0.85rem 0 0;
+  font-size: clamp(1.85rem, 4vw, 2.85rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: #fff;
+}
+.cine-ai-section--app .cine-ai-lead {
+  margin-top: 1rem;
+  font-size: 1.08rem;
+  line-height: 1.7;
+  color: rgba(238, 244, 255, 0.84);
+  max-width: 34rem;
+}
+.cine-ai-visual--app {
+  position: relative;
+  min-height: 22rem;
+}
+.cine-ai-app-frame {
+  position: relative;
+  z-index: 2;
+  border-radius: 1.35rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 30px 70px rgba(10, 30, 80, 0.45);
+  transform: scale(1.04);
+  transform-origin: center top;
+  background: rgba(8, 20, 48, 0.55);
+}
+.cine-ai-dash-skeleton {
+  min-height: 22rem;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0.06)
+  );
+  background-size: 200% 100%;
+  animation: cine-shimmer 1.6s linear infinite;
+}
+@keyframes cine-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ─── Mobile alive ─── */
+.cine-mobile-section--alive {
+  padding: 3.5rem 1.25rem 4rem;
+  text-align: center;
+}
+.cine-platform-list--cards {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.85rem;
+  margin: 1.75rem 0 0;
+  padding: 0;
+}
+.cine-platform-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 7.5rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 1.15rem;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 16px 36px rgba(15, 40, 90, 0.2);
+  color: #fff;
+}
+.cine-platform-card strong {
+  font-size: 1rem;
+}
+.cine-platform-card span {
+  font-size: 0.75rem;
+  color: rgba(238, 244, 255, 0.7);
+}
+.cine-platform-card.is-soon {
+  opacity: 0.85;
+}
+.cine-platform-icon {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+}
+
+/* ─── Stats band alive ─── */
+.stats-band--alive,
+.stats-band.stats-band--alive {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(96, 165, 250, 0.35), transparent 55%),
+    radial-gradient(ellipse at 80% 100%, rgba(167, 139, 250, 0.28), transparent 50%),
+    linear-gradient(120deg, #1e3a8a 0%, #1d4ed8 45%, #4f46e5 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.stats-band-value {
+  text-shadow: 0 8px 24px rgba(15, 30, 80, 0.35);
+}
+.stats-band--alive::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 60%
+  );
+  background-size: 220% 100%;
+  animation: cine-light-scan 10s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ─── Field map Kadıköy ─── */
+.field-map-shell,
+.field-map-shell {
+  background: #0b1b3a;
+}
+.field-map-iframe {
+  filter: saturate(1.15) contrast(1.05);
+}
+.field-map-overlay {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(11, 27, 58, 0.15) 0%,
+      transparent 30%,
+      rgba(11, 27, 58, 0.45) 100%
+    ),
+    radial-gradient(circle at 70% 40%, rgba(56, 189, 248, 0.12), transparent 50%);
+}
+.field-feature-icon,
+.field-feature-icon {
+  animation: field-icon-pulse 2.8s ease-in-out infinite;
+}
+@keyframes field-icon-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 12px 26px rgba(37, 99, 235, 0.5);
+  }
+}
+
+/* ─── Feature trio ─── */
+.feature-trio-card {
+  border-radius: 1.35rem;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 18px 40px rgba(15, 40, 90, 0.16);
+  backdrop-filter: blur(12px);
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.feature-trio-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 28px 55px rgba(15, 40, 90, 0.28);
+}
+.feature-trio-emoji {
+  font-size: 2rem;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+}
+html.cine-home .feature-trio-card h3 {
+  color: #fff;
+}
+html.cine-home .feature-trio-card p {
+  color: rgba(238, 244, 255, 0.72);
+}
+
+/* ─── Integration logos ─── */
+.integration-logo-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #eef4ff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(15, 40, 90, 0.12);
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease;
+}
+.integration-logo-card:hover {
+  transform: translateY(-3px) scale(1.04);
+  background: rgba(255, 255, 255, 0.18);
+}
+.integration-logo-card img {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+/* ─── Testimonials v2 ─── */
+.testimonial-card--v2 {
+  border-radius: 1.35rem;
+  padding: 1.5rem;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 20px 44px rgba(15, 40, 90, 0.18);
+  transition: transform 0.35s ease;
+}
+.testimonial-card--v2:hover {
+  transform: translateY(-5px);
+}
+
+/* ─── Process / Modules canlı vurgu ─── */
+html.cine-home .process-section,
+html.cine-home .mod-section {
+  position: relative;
+}
+html.cine-home .process-section::before,
+html.cine-home .mod-section::before {
+  content: '';
+  position: absolute;
+  inset: 8% 10% auto;
+  height: 40%;
+  background: radial-gradient(ellipse, rgba(96, 165, 250, 0.2), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+html.cine-home .process-stage,
+html.cine-home .mod-toolbar,
+html.cine-home .mod-theme-card {
+  position: relative;
+  z-index: 1;
+}
+html.cine-home .process-node.on,
+html.cine-home .process-node.done {
+  box-shadow:
+    0 0 0 4px rgba(96, 165, 250, 0.25),
+    0 12px 30px rgba(37, 99, 235, 0.35);
+  transform: translateY(-4px) scale(1.04);
+}
+html.cine-home .process-spotlight {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05));
+  box-shadow: 0 22px 50px rgba(15, 40, 90, 0.22);
+}
+html.cine-home .mod-theme-card,
+html.cine-home .mod-channel {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+html.cine-home .mod-theme-card:hover,
+html.cine-home .mod-channel:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 44px rgba(15, 40, 90, 0.25);
+}
+html.cine-home .mod-section-night .mod-theme-card,
+html.cine-home .mod-section-night .mod-channel {
+  backdrop-filter: blur(12px);
+}
+
+/* CTA logo — header on-dark ile aynı, turuncu uç görünür */
+.cta-title .cta-inline-logo,
+.cta-band .cta-inline-logo,
+h2 .cta-inline-logo {
+  display: inline-block;
+  height: 1em;
+  width: auto;
+  max-height: 1.05em;
+  max-width: none;
+  object-fit: contain;
+  object-position: left center;
+  vertical-align: -0.18em;
+  padding-right: 0.2em;
+  margin-right: 0.1em;
+  overflow: visible;
+}
+.cta-title,
+.cta-band .cta-title {
+  overflow: visible;
+}
+
+/* Process + Modules canlı vurgu (doğru class adları) */
+html.cine-home .process-section,
+html.cine-home .mod-section {
+  position: relative;
+}
+html.cine-home .process-section::before,
+html.cine-home .mod-section::before {
+  content: '';
+  position: absolute;
+  inset: 8% 10% auto;
+  height: 40%;
+  background: radial-gradient(ellipse, rgba(96, 165, 250, 0.22), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+html.cine-home .process-stage,
+html.cine-home .mod-toolbar,
+html.cine-home .mod-theme-card {
+  position: relative;
+  z-index: 1;
+}
+html.cine-home .process-node.on,
+html.cine-home .process-node.done {
+  box-shadow:
+    0 0 0 4px rgba(96, 165, 250, 0.25),
+    0 12px 30px rgba(37, 99, 235, 0.35);
+  transform: translateY(-4px) scale(1.04);
+}
+html.cine-home .process-spotlight {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05));
+  box-shadow: 0 22px 50px rgba(15, 40, 90, 0.22);
+}
+html.cine-home .mod-theme-card,
+html.cine-home .mod-channel {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+html.cine-home .mod-theme-card:hover,
+html.cine-home .mod-channel:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 44px rgba(15, 40, 90, 0.25);
+}
+
+/* SEO kart renkleri — kesin */
+html.cine-home .home-seo-kicker {
+  color: #ffffff !important;
+}
+html.cine-home .home-seo-faq > h3 {
+  color: #ffffff !important;
+}
+html.cine-home .home-seo-close h3 {
+  color: #60a5fa !important;
 }

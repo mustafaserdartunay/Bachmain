@@ -28,15 +28,24 @@ export default function HeroScene() {
           scrollTrigger: {
             trigger: root,
             start: 'top top',
-            end: '+=130%',
+            end: '+=110%',
             pin: true,
             pinSpacing: true,
-            scrub: 0.7,
+            scrub: 0.65,
+            anticipatePin: 1,
           },
         })
-        .to(copy, { y: -64, opacity: 0, filter: 'blur(8px)', ease: 'none' }, 0)
-        .to(scrollLayer, { scale: 1.12, y: 40, ease: 'none' }, 0)
-        .to(hint, { opacity: 0, ease: 'none' }, 0.12)
+        .to(copy, { y: -48, opacity: 0, ease: 'none' }, 0)
+        .to(
+          scrollLayer,
+          {
+            scale: 1.08,
+            transformOrigin: '50% 0%',
+            ease: 'none',
+          },
+          0,
+        )
+        .to(hint, { opacity: 0, ease: 'none' }, 0.1)
     }, root)
 
     return () => ctx.revert()

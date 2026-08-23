@@ -62,11 +62,11 @@ export default function HomePage() {
         <AISection />
         <MobileSection />
 
-        <section className="stats-band stats-band-mesh py-14">
+        <section className="stats-band stats-band-mesh stats-band--alive py-16 lg:py-20">
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 sm:grid-cols-3 lg:grid-cols-6 lg:px-8">
             {bandStats.map((s, i) => (
               <ScrollReveal key={s.label} delay={i * 0.05} className="text-center">
-                <div className="text-2xl font-extrabold tracking-tight text-white lg:text-3xl">
+                <div className="stats-band-value text-3xl font-extrabold tracking-tight text-white lg:text-4xl">
                   {s.value.includes('+') || s.value.includes('%') || s.value.includes('/') ? (
                     s.value
                   ) : (
@@ -76,7 +76,9 @@ export default function HomePage() {
                     />
                   )}
                 </div>
-                <div className="mt-1 text-xs font-medium text-white/70">{s.label}</div>
+                <div className="stats-band-label mt-2 text-sm font-semibold text-white/80">
+                  {s.label}
+                </div>
               </ScrollReveal>
             ))}
           </div>
@@ -145,39 +147,41 @@ export default function HomePage() {
         </section>
 
         {/* FIELD SALES */}
-        <section className="section-pad">
+        <section className="section-pad field-sales-section">
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-2 lg:px-8">
             <ScrollReveal direction="left">
-              <div className="relative h-[420px] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-[#1a2744] shadow-xl">
-                <div
-                  className="absolute inset-0 opacity-40"
-                  style={{
-                    backgroundImage:
-                      'linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px)',
-                    backgroundSize: '40px 40px',
-                  }}
+              <div className="field-map-shell relative h-[460px] overflow-hidden rounded-[1.5rem] border border-white/15 shadow-2xl">
+                {/* CSP iframe engeli yok — gerçek Kadıköy OSM static harita */}
+                <img
+                  src="https://staticmap.openstreetmap.de/staticmap.php?center=40.9901,29.0584&zoom=13&size=1000x600&maptype=mapnik"
+                  alt="İstanbul Kadıköy saha haritası"
+                  className="field-map-iframe absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
+                <div className="field-map-overlay pointer-events-none absolute inset-0" />
                 {[
-                  { t: '18%', l: '42%', c: 'bg-blue-500' },
-                  { t: '36%', l: '24%', c: 'bg-emerald-500' },
-                  { t: '50%', l: '58%', c: 'bg-orange-400' },
-                  { t: '62%', l: '34%', c: 'bg-violet-500' },
+                  { t: '28%', l: '48%', c: 'bg-blue-500', label: 'Moda' },
+                  { t: '42%', l: '36%', c: 'bg-emerald-500', label: 'Caferağa' },
+                  { t: '55%', l: '58%', c: 'bg-orange-400', label: 'Fenerbahçe' },
+                  { t: '38%', l: '62%', c: 'bg-violet-500', label: 'Caddebostan' },
                 ].map((p, i) => (
                   <motion.div
-                    key={i}
-                    className="absolute"
+                    key={p.label}
+                    className="absolute z-10"
                     style={{ top: p.t, left: p.l }}
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{ duration: 2.8, repeat: Infinity, delay: i * 0.35 }}
+                    animate={{ y: [0, -10, 0], scale: [1, 1.08, 1] }}
+                    transition={{ duration: 2.6, repeat: Infinity, delay: i * 0.35 }}
                   >
                     <div
-                      className={`flex h-9 w-9 items-center justify-center rounded-full ${p.c} text-white shadow-lg`}
+                      className={`flex h-10 w-10 items-center justify-center rounded-full ${p.c} text-white shadow-xl ring-4 ring-white/25`}
+                      title={p.label}
                     >
                       <MapPin className="h-4 w-4" />
                     </div>
                   </motion.div>
                 ))}
-                <div className="absolute bottom-4 left-4 right-4 flex justify-around rounded-2xl border border-white/10 bg-black/40 px-4 py-3 backdrop-blur">
+                <div className="absolute bottom-4 left-4 right-4 z-10 flex justify-around rounded-2xl border border-white/15 bg-[#0b1b3a]/75 px-4 py-3 backdrop-blur-md">
                   {[
                     ['12', 'Temsilci'],
                     ['84', 'Ziyaret'],
@@ -185,7 +189,7 @@ export default function HomePage() {
                   ].map(([v, l]) => (
                     <div key={l} className="text-center">
                       <div className="text-lg font-extrabold text-white">{v}</div>
-                      <div className="text-[10px] text-white/50">{l}</div>
+                      <div className="text-[10px] uppercase tracking-wide text-white/55">{l}</div>
                     </div>
                   ))}
                 </div>
@@ -195,13 +199,14 @@ export default function HomePage() {
               <span className="pill">Saha Satış</span>
               <h2 className="section-title mt-4">Sahayı Haritadan Yönetin</h2>
               <p className="section-desc">
-                Canlı konum, rota, ziyaret, sipariş ve tahsilat — mobil CRM.
+                İstanbul Kadıköy ve tüm Türkiye — canlı konum, rota, ziyaret, sipariş ve tahsilat
+                tek mobilde.
               </p>
               <div className="mt-6 space-y-3">
                 {fieldFeatures.map((f) => (
-                  <div key={f.title} className="saas-card flex gap-3 p-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                      📍
+                  <div key={f.title} className="saas-card field-feature-card flex gap-3 p-4">
+                    <div className="field-feature-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg">
+                      <MapPin className="h-5 w-5" />
                     </div>
                     <div>
                       <div className="font-bold text-slate-900">{f.title}</div>
@@ -218,7 +223,7 @@ export default function HomePage() {
         </section>
 
         {/* LOGISTICS + CRM + REPORTS strip */}
-        <section className="section-pad">
+        <section className="section-pad feature-trio-section">
           <div className="mx-auto max-w-7xl px-4 lg:px-8">
             <div className="grid gap-5 lg:grid-cols-3">
               {[
@@ -226,27 +231,35 @@ export default function HomePage() {
                   title: 'Nakliye & Lojistik',
                   desc: 'Tır, koli, palet, konteyner ve canlı sevkiyat durumları.',
                   to: '/features/stock',
+                  tone: 'sky',
                   emoji: '🚛',
                 },
                 {
                   title: 'CRM Pipeline',
                   desc: 'Fırsatlar, kanban, görevler, toplantılar ve müşteri kartları.',
                   to: '/features/crm',
+                  tone: 'violet',
                   emoji: '🎯',
                 },
                 {
                   title: 'Raporlama',
                   desc: 'Canlı KPI, satış, tahsilat, kasa ve banka grafikleri.',
                   to: '/features/reports',
+                  tone: 'emerald',
                   emoji: '📊',
                 },
               ].map((c, i) => (
                 <ScrollReveal key={c.title} delay={i * 0.08}>
-                  <Link to={c.to} className="saas-card block p-7">
-                    <div className="text-3xl">{c.emoji}</div>
+                  <Link
+                    to={c.to}
+                    className={`feature-trio-card feature-trio-card--${c.tone} block p-7`}
+                  >
+                    <div className="feature-trio-emoji" aria-hidden>
+                      {c.emoji}
+                    </div>
                     <h3 className="mt-4 text-xl font-extrabold text-slate-900">{c.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-slate-500">{c.desc}</p>
-                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blue-600">
+                    <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-blue-600">
                       İncele <ArrowRight className="h-4 w-4" />
                     </span>
                   </Link>
@@ -257,26 +270,57 @@ export default function HomePage() {
         </section>
 
         {/* INTEGRATIONS */}
-        <section className="border-y border-slate-200/40 py-12">
+        <section className="integrations-band border-y border-slate-200/40 py-14">
           <div className="mx-auto max-w-7xl px-4 text-center lg:px-8">
             <p className="text-sm font-bold uppercase tracking-widest text-slate-400">
               Entegrasyonlar
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              {integrations.map((name) => (
-                <span
-                  key={name}
-                  className="rounded-full border border-slate-200/80 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur-sm"
-                >
-                  {name}
-                </span>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              {[
+                {
+                  name: 'WhatsApp',
+                  src: 'https://cdn.simpleicons.org/whatsapp/25D366',
+                },
+                {
+                  name: 'Instagram',
+                  src: 'https://cdn.simpleicons.org/instagram/E4405F',
+                },
+                {
+                  name: 'Facebook',
+                  src: 'https://cdn.simpleicons.org/facebook/1877F2',
+                },
+                {
+                  name: 'Meta',
+                  src: 'https://cdn.simpleicons.org/meta/0082FB',
+                },
+                {
+                  name: 'e-Fatura',
+                  src: 'https://cdn.simpleicons.org/invoice/2563EB',
+                },
+                {
+                  name: 'SMS',
+                  src: 'https://cdn.simpleicons.org/twilio/F22F46',
+                },
+                {
+                  name: 'Mail',
+                  src: 'https://cdn.simpleicons.org/gmail/EA4335',
+                },
+                {
+                  name: 'API',
+                  src: 'https://cdn.simpleicons.org/fastapi/009688',
+                },
+              ].map((item) => (
+                <div key={item.name} className="integration-logo-card">
+                  <img src={item.src} alt="" width={28} height={28} loading="lazy" />
+                  <span>{item.name}</span>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
         {/* TESTIMONIALS */}
-        <section id="referanslar" className="section-pad">
+        <section id="referanslar" className="section-pad testimonials-section">
           <div className="mx-auto max-w-7xl px-4 lg:px-8">
             <ScrollReveal className="mb-12 text-center">
               <span className="pill">Referanslar</span>
@@ -288,7 +332,7 @@ export default function HomePage() {
             <div className="grid gap-6 md:grid-cols-3">
               {testimonials.map((t, i) => (
                 <ScrollReveal key={t.name} delay={i * 0.08}>
-                  <article className="testimonial-card group flex h-full flex-col">
+                  <article className="testimonial-card testimonial-card--v2 group flex h-full flex-col">
                     <div className="flex items-start justify-between gap-3">
                       <div
                         className="flex gap-0.5 text-amber-400"
@@ -364,10 +408,10 @@ export default function HomePage() {
               <div className="cta-band px-8 py-14 text-center text-white lg:px-16">
                 <h2 className="cta-title text-3xl font-extrabold tracking-tight lg:text-4xl">
                   <OptimizedImage
-                    src="/assets/bachmain-logo.png"
+                    src="/assets/bachmain-logo-on-dark.png"
                     alt="BACHMAIN"
-                    width={140}
-                    height={32}
+                    width={220}
+                    height={48}
                     className="cta-inline-logo"
                     placeholder="blur"
                     blurDataURL={BLUR_LOGO}
