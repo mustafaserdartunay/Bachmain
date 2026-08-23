@@ -347,16 +347,12 @@ export default function QuoteDeletedArchivedPanel({
   const allSelected = entries.length > 0 && selectedIds.length === entries.length
   const someSelected = selectedIds.length > 0 && !allSelected
   const resolvedSegmentTabs = Array.isArray(segmentTabs) ? segmentTabs : []
-  const bulkActionCol = bulkSelectMode ? '6.5rem' : '3rem'
-  const baseCols = (
-    columnGrid || buildDeletedListGrid(resolvedSegmentTabs.length || 1, bulkActionCol)
-  )
+  const baseCols = (columnGrid || buildDeletedListGrid(resolvedSegmentTabs.length || 1, '3rem'))
     .trim()
     .split(/\s+/)
-  if (bulkSelectMode) {
-    baseCols[baseCols.length - 1] = bulkActionCol
-  }
-  const rowGridTemplate = bulkSelectMode ? `2.75rem ${baseCols.join(' ')}` : baseCols.join(' ')
+  baseCols[baseCols.length - 1] = '3rem'
+  // Checkbox sütunu her zaman ayrılır — toplu seçimde sağ sütunlar kaymaz
+  const rowGridTemplate = `2.75rem ${baseCols.join(' ')}`
 
   const deletedQuoteIds = useMemo(
     () => entries.map((entry) => entry.record?.id).filter(Boolean),
@@ -409,33 +405,36 @@ export default function QuoteDeletedArchivedPanel({
             aria-expanded={open}
             onClick={handleHeaderPanelClick}
             onKeyDown={handleHeaderPanelKeyDown}
-            className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS}${
-              open || bulkSelectMode ? ' quote-deleted-header-panel-open' : ''
-            } cursor-pointer`}
+            className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS} quote-deleted-header-panel-open cursor-pointer`}
           >
             <div
               className={`quote-deleted-header-bar flex w-full min-w-0 items-center gap-2${
                 bulkSelectMode && selectedIds.length > 0 ? ' is-bulk-confirm' : ''
               }${bulkSelectMode ? ' is-bulk-select' : ''}`}
             >
-              {bulkSelectMode ? (
-                <span
-                  className="quote-deleted-header-check shrink-0"
-                  data-deleted-header-interactive
-                  onClick={(event) => event.stopPropagation()}
-                >
+              <span
+                className="quote-deleted-header-check flex h-9 w-[2.75rem] shrink-0 items-center justify-center"
+                data-deleted-header-interactive
+                onClick={(event) => event.stopPropagation()}
+              >
+                {bulkSelectMode ? (
                   <DeletedBulkSelectCheckbox
                     checked={allSelected}
                     indeterminate={someSelected}
                     aria-label="Tümünü seç"
                     onChange={toggleSelectAll}
                   />
-                </span>
-              ) : null}
+                ) : null}
+              </span>
 
               <span className="quote-deleted-header-title flex min-w-0 shrink-0 items-center gap-2">
                 <RedPingDot />
                 <span className={APP_LABEL_CLASS}>{title}</span>
+                {bulkSelectMode ? (
+                  <span className={`${APP_LABEL_CLASS} shrink-0 opacity-50`} aria-hidden>
+                    /
+                  </span>
+                ) : null}
               </span>
 
               {bulkSelectMode ? (
@@ -452,19 +451,21 @@ export default function QuoteDeletedArchivedPanel({
               </span>
 
               <span
-                className="quote-deleted-header-action flex h-9 w-[6.5rem] shrink-0 items-center justify-end"
+                className="quote-deleted-header-action relative flex h-9 w-[3rem] shrink-0 items-center justify-center"
                 data-deleted-header-interactive
                 onClick={(event) => event.stopPropagation()}
               >
                 {entries.length > 0 ? (
                   bulkSelectMode && selectedIds.length > 0 ? (
-                    <QuoteOrderInlineConfirm
-                      label="Sil"
-                      labelClass="quote-order-undo-sil"
-                      ariaLabel={`${selectedIds.length} kayıt kalıcı silinsin mi?`}
-                      onConfirm={handleBulkPermanentDelete}
-                      onCancel={exitBulkSelectMode}
-                    />
+                    <span className="quote-deleted-header-sil-wrap absolute right-0 top-1/2 -translate-y-1/2">
+                      <QuoteOrderInlineConfirm
+                        label="Sil"
+                        labelClass="quote-order-undo-sil"
+                        ariaLabel={`${selectedIds.length} kayıt kalıcı silinsin mi?`}
+                        onConfirm={handleBulkPermanentDelete}
+                        onCancel={exitBulkSelectMode}
+                      />
+                    </span>
                   ) : (
                     <button
                       type="button"
@@ -529,15 +530,15 @@ export default function QuoteDeletedArchivedPanel({
                         style={{ gridTemplateColumns: rowGridTemplate }}
                         onClick={bulkSelectMode ? () => toggleSelect(item.id) : undefined}
                       >
-                        {bulkSelectMode ? (
-                          <DeletedListCell>
+                        <DeletedListCell>
+                          {bulkSelectMode ? (
                             <DeletedBulkSelectCheckbox
                               checked={isSelected}
                               aria-label={`${item.label} seç`}
                               onChange={() => toggleSelect(item.id)}
                             />
-                          </DeletedListCell>
-                        ) : null}
+                          ) : null}
+                        </DeletedListCell>
                         <DeletedListCell>
                           <DeletedListDateCell record={item.record} />
                         </DeletedListCell>

@@ -4018,15 +4018,28 @@ html body section.card.quote-list-row-panel.quote-deleted-list-row {
 }
 
 .quote-deleted-header-action {
-  margin-left: auto;
+  position: relative;
+  z-index: 2;
 }
 
-.quote-deleted-header-action .quote-list-bulk-trash-btn {
-  margin-left: auto;
+.quote-deleted-header-sil-wrap {
+  z-index: 3;
 }
 
-.quote-deleted-header-bar.is-bulk-select .quote-deleted-header-count {
-  transition: transform 0.2s ease;
+.quote-deleted-header-bar.is-bulk-confirm .quote-order-undo-confirm {
+  animation: quote-deleted-bulk-confirm-in 0.22s cubic-bezier(0.32, 0.72, 0, 1) both;
+  transform-origin: right center;
+}
+
+@keyframes quote-deleted-bulk-confirm-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .quote-deleted-bulk-warning {
@@ -4044,25 +4057,15 @@ html body section.card.quote-list-row-panel.quote-deleted-list-row {
   }
 }
 
-.quote-deleted-header-row .quote-deleted-header-title-cell {
-  justify-content: flex-start !important;
-  text-align: left !important;
+/* Silinenler başlığı — kırmızı zemin her zaman */
+html body section.card.quote-list-row-panel.quote-deleted-header-panel,
+html body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel {
+  background: color-mix(in srgb, #f43f5e 10%, var(--surface)) !important;
 }
 
-.quote-deleted-header-bar.is-bulk-confirm .quote-order-undo-confirm {
-  animation: quote-deleted-bulk-confirm-in 0.22s cubic-bezier(0.32, 0.72, 0, 1) both;
-  transform-origin: center center;
-}
-
-@keyframes quote-deleted-bulk-confirm-in {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+html.night body section.card.quote-list-row-panel.quote-deleted-header-panel,
+html.night body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel {
+  background: color-mix(in srgb, #f43f5e 14%, var(--surface)) !important;
 }
 
 .quote-deleted-panel-wrap.quote-deleted-panel-receive .quote-deleted-header-panel {
