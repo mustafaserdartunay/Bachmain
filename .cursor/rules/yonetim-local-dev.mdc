@@ -9,7 +9,7 @@ globs:
 
 Kullanıcı yönetim paneli isterse veya `yonetim` / `admin` aç denirse:
 
-1. **`npm run yonetim:open`** — sunucuyu başlat + Cursor Simple Browser `http://127.0.0.1:5200`
+1. **`npm run yonetim:open`** — sunucuyu başlat + Cursor Simple Browser `http://127.0.0.1:5200?ide=1`
 2. Alternatif: `npm run yonetim:dev` (sadece sunucu)
 
 ## Zorunlu

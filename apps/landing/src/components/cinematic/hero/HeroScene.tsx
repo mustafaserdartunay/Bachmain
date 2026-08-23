@@ -1,15 +1,15 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useReducedMotion } from 'framer-motion'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import HeroCopy from './HeroCopy'
 import HeroLiveBackdrop from './HeroLiveBackdrop'
 import ParticleField from './ParticleField'
+import { usePrefersReducedMotion } from '../useCinematicMotion'
 
 export default function HeroScene() {
-  const reduce = useReducedMotion()
+  const reduce = usePrefersReducedMotion()
   const rootRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function HeroScene() {
       aria-labelledby="home-hero-heading"
     >
       <HeroLiveBackdrop />
-      <ParticleField />
+      {reduce ? null : <ParticleField />}
       <div className="cine-hero-veil" aria-hidden />
       <div className="cine-hero-layout cine-hero-layout--live">
         <HeroCopy />

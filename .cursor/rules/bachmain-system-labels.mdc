@@ -1,5 +1,5 @@
 ---
-description: BachMain 5 sistem kanonik isimleri — Cursor, Simple Browser, canlı algılama
+description: BachMain 5 sistem kanonik isimleri — Cursor Simple Browser (yerel)
 alwaysApply: true
 ---
 
@@ -31,4 +31,4 @@ npm run bachmain:open-all # hepsi
 - Yönetim için **Studio**, **BACHMAIN Studio**, **Control Center** (sekme/başlık)
 - Eski domain-only workspace klasör adları (`uygulama.bachmain.com — CRM` vb.)
 
-HTML `<title>` ve Cursor Simple Browser bu isimleri kullanır.
+HTML `<title>` bu isimleri kullanır. Yerel düzenleme: `npm run uygulama:open` (Cursor Simple Browser, `?ide=1`). Canlı domainleri Simple Browser’da açma. `bachmain:open-all` tek sekme (UYGULAMA).

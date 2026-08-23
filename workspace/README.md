@@ -12,7 +12,7 @@ Beş ana sistem + paylaşılan platform katmanı. Cursor / VS Code çok köklü 
 | 4   | **iosapp.bachmain**       | `~/Documents/Bachmain/bachmain.ios` | Xcode                               |
 | 5   | **androidapp.bachmain**   | `apps/android`                      | Android Studio (kurulum aşamasında) |
 
-## Sistem isimleri (Cursor / Simple Browser)
+## Sistem isimleri (Cursor Simple Browser — yerel `?ide=1`)
 
 | Kanonik isim            | Komut                       |
 | ----------------------- | --------------------------- |
@@ -22,6 +22,8 @@ Beş ana sistem + paylaşılan platform katmanı. Cursor / VS Code çok köklü 
 | **IOS - BACHMAIN**      | `npm run ios:open`          |
 | **ANDROID - BACHMAIN**  | `npm run android:open`      |
 | Hepsi                   | `npm run bachmain:open-all` |
+
+`open-all` sunucuları başlatır; Simple Browser yalnızca UYGULAMA sekmesini açar (8GB RAM). Yönetim/web için ayrı komut çalıştır.
 
 Kaynak: `workspace/system-labels.json`
 

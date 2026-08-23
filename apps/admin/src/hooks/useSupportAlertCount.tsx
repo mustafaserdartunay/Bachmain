@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supportApi } from '@/services/api'
 import { SUPPORT_ALERT_EVENT } from '@/lib/supportAlertEvents'
+import { isIdeWebview } from '@/lib/ideWebview'
 
 const ACTIONABLE = new Set(['open', 'in_progress', 'waiting'])
 const POLL_MS = 15_000
@@ -35,14 +36,17 @@ export function useSupportAlertCount() {
 
   useEffect(() => {
     void refresh()
-    const timer = window.setInterval(() => void refresh(), POLL_MS)
+    const pollMs = isIdeWebview() ? 60_000 : POLL_MS
+    const timer = window.setInterval(() => void refresh(), pollMs)
     const onFocus = () => void refresh()
     const onVisible = () => {
       if (document.visibilityState === 'visible') void refresh()
     }
     window.addEventListener(SUPPORT_ALERT_EVENT, onFocus)
-    window.addEventListener('focus', onFocus)
-    document.addEventListener('visibilitychange', onVisible)
+    if (!isIdeWebview()) {
+      window.addEventListener('focus', onFocus)
+      document.addEventListener('visibilitychange', onVisible)
+    }
     return () => {
       window.clearInterval(timer)
       window.removeEventListener(SUPPORT_ALERT_EVENT, onFocus)

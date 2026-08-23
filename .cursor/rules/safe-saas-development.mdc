@@ -38,6 +38,8 @@ alwaysApply: true
 | Uygulama | uygulama.bachmain.com |
 | Yönetim | yonetim.bachmain.com |
 
+Canlı uygulama/web/yönetim domainlerini Cursor Simple Browser’da açma. Yerel düzenleme: `npm run uygulama:open` (`127.0.0.1` + `?ide=1`, tek sekme).
+
 ## Büyük değişiklik öncesi
 
 Ne / hangi dosyalar / risk / DB / API / Vercel / geri alma — kullanıcıya sor, onay bekle.

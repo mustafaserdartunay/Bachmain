@@ -11,6 +11,7 @@ import {
   pushTenantCollection,
   isTenantPushBusy,
 } from './tenantSync'
+import { isIdeWebview } from './ideWebview'
 
 export const WORKSPACE_OWNER_KEY = 'bach-workspace-owner'
 export const WORKSPACE_HYDRATED_EVENT = 'bach:workspace-hydrated'
@@ -19,6 +20,7 @@ export const WORKSPACE_REMOTE_SYNC_EVENT = 'bach:workspace-remote-synced'
 
 const LIVE_PULL_VISIBLE_MS = 3000
 const LIVE_PULL_HIDDEN_MS = 15000
+const LIVE_PULL_IDE_MS = 60_000
 const SAFETY_FLUSH_MS = 60_000
 
 /** Auth / control keys — never part of tenant workspace blob. */
@@ -413,8 +415,9 @@ function installWorkspaceLiveSync() {
   const scheduleNextPull = () => {
     clearPullTimer()
     if (!canSyncWithServer()) return
-    const delay =
-      typeof document !== 'undefined' && document.visibilityState === 'hidden'
+    const delay = isIdeWebview()
+      ? LIVE_PULL_IDE_MS
+      : typeof document !== 'undefined' && document.visibilityState === 'hidden'
         ? LIVE_PULL_HIDDEN_MS
         : LIVE_PULL_VISIBLE_MS
     timerId = window.setTimeout(async () => {
@@ -441,11 +444,14 @@ function installWorkspaceLiveSync() {
     }
   })
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') pullNow()
-    else scheduleNextPull()
-  })
-  window.addEventListener('focus', pullNow)
+  // Simple Browser flickers focus/visibility; pulling on every event floods the API.
+  if (!isIdeWebview()) {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') pullNow()
+      else scheduleNextPull()
+    })
+    window.addEventListener('focus', pullNow)
+  }
   window.addEventListener('online', pullNow)
 
   scheduleNextPull()

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# BachMain sistem açıcı — Cursor Simple Browser sekmeleri kanonik isimlerle
+# BachMain sistem açıcı — Cursor Simple Browser (yerel URL + ?ide=1).
+# Canlı domainleri (uygulama/yonetim/bachmain.com) Simple Browser’da açma.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -13,6 +14,14 @@ port_listen() { lsof -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1; }
 
 url_for() {
   python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[sys.argv[2]]['localUrl'])" "$LABELS" "$1"
+}
+
+with_ide_query() {
+  local url="$1"
+  case "$url" in
+    *\?*) echo "${url}&ide=1" ;;
+    *) echo "${url}?ide=1" ;;
+  esac
 }
 
 ensure_admin_env() {
@@ -76,33 +85,32 @@ start_if_needed() {
   exit 1
 }
 
-open_cursor_url() {
+open_simple_browser() {
   local url="$1"
   local encoded
   encoded=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$url")
-  if command -v cursor >/dev/null 2>&1; then
-    cursor --open-url "vscode://vscode.simple-browser/show?url=${encoded}" 2>/dev/null || open "$url"
-  else
-    open "$url"
-  fi
-  sleep 0.35
+  open "vscode://vscode.simple-browser/show?url=${encoded}"
 }
 
 open_one() {
   local key="$1"
   start_if_needed "$key"
   local url
-  url=$(url_for "$key")
+  url=$(with_ide_query "$(url_for "$key")")
   local label
   label=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[sys.argv[2]]['label'])" "$LABELS" "$key")
-  echo "→ Açılıyor: $label — $url"
-  open_cursor_url "$url"
+  echo "→ Açılıyor (Cursor Simple Browser): $label — $url"
+  open_simple_browser "$url"
 }
 
 if [[ $# -eq 0 ]]; then
   for key in uygulama yonetim web ios android; do
-    open_one "$key"
+    start_if_needed "$key"
   done
+  echo "→ Sunucular hazır. Simple Browser yalnızca UYGULAMA (8GB RAM — tek sekme)."
+  echo "   Yönetim: npm run yonetim:open"
+  echo "   Web:     npm run web:open"
+  open_one uygulama
   exit 0
 fi
 
