@@ -4085,16 +4085,15 @@ html body section.card.quote-list-row-panel.quote-deleted-list-row {
   flex-shrink: 0;
 }
 
-/* Silinenler başlığı — kırmızı zemin her zaman */
-html body section.card.quote-list-row-panel.quote-deleted-header-panel,
-html body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel {
-  background: color-mix(in srgb, #f43f5e 10%, var(--surface)) !important;
+.quote-deleted-header-row.is-bulk-select .quote-deleted-header-count {
+  transition: margin-right 0.22s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-html.night body section.card.quote-list-row-panel.quote-deleted-header-panel,
-html.night body .page-type-shell section.card.quote-list-row-panel.quote-deleted-header-panel {
-  background: color-mix(in srgb, #f43f5e 14%, var(--surface)) !important;
+.quote-deleted-header-row.is-bulk-confirm .quote-deleted-header-count {
+  margin-right: 5.75rem;
 }
+
+/* Silinenler başlığı — kırmızı zemin yalnızca toplu silme modunda (quote-deleted-header-panel-open) */
 
 .quote-deleted-panel-wrap.quote-deleted-panel-receive .quote-deleted-header-panel {
   animation: quote-deleted-panel-receive 0.85s cubic-bezier(0.32, 0.72, 0, 1);

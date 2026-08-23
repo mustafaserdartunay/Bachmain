@@ -351,11 +351,11 @@ export default function QuoteDeletedArchivedPanel({
     .trim()
     .split(/\s+/)
   baseCols[baseCols.length - 1] = '3rem'
-  // Checkbox sütunu her zaman ayrılır — toplu seçimde sağ sütunlar kaymaz
-  const rowGridTemplate = `2.75rem ${baseCols.join(' ')}`
+  const rowGridTemplate = bulkSelectMode ? `2.75rem ${baseCols.join(' ')}` : baseCols.join(' ')
   const baseColCount = baseCols.length
-  const headerMidEndCol = baseColCount + 1
-  const headerActionCol = baseColCount + 1
+  const headerMidStart = bulkSelectMode ? 2 : 1
+  const headerMidEnd = bulkSelectMode ? baseColCount + 1 : baseColCount
+  const headerActionCol = bulkSelectMode ? baseColCount + 1 : baseColCount
 
   const deletedQuoteIds = useMemo(
     () => entries.map((entry) => entry.record?.id).filter(Boolean),
@@ -408,7 +408,9 @@ export default function QuoteDeletedArchivedPanel({
             aria-expanded={open}
             onClick={handleHeaderPanelClick}
             onKeyDown={handleHeaderPanelKeyDown}
-            className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS} quote-deleted-header-panel-open cursor-pointer`}
+            className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS}${
+              bulkSelectMode ? ' quote-deleted-header-panel-open' : ''
+            } cursor-pointer`}
           >
             <div
               className={`quote-list-row quote-deleted-header-row w-full min-w-0${
@@ -416,23 +418,23 @@ export default function QuoteDeletedArchivedPanel({
               }${bulkSelectMode ? ' is-bulk-select' : ''}`}
               style={{ gridTemplateColumns: rowGridTemplate }}
             >
-              <DeletedListCell
-                data-deleted-header-interactive
-                onClick={(event) => event.stopPropagation()}
-              >
-                {bulkSelectMode ? (
+              {bulkSelectMode ? (
+                <DeletedListCell
+                  data-deleted-header-interactive
+                  onClick={(event) => event.stopPropagation()}
+                >
                   <DeletedBulkSelectCheckbox
                     checked={allSelected}
                     indeterminate={someSelected}
                     aria-label="Tümünü seç"
                     onChange={toggleSelectAll}
                   />
-                ) : null}
-              </DeletedListCell>
+                </DeletedListCell>
+              ) : null}
 
               <DeletedListCell
                 className="quote-deleted-header-mid is-start"
-                style={{ gridColumn: `2 / ${headerMidEndCol}` }}
+                style={{ gridColumn: `${headerMidStart} / ${headerMidEnd}` }}
               >
                 <div className="flex w-full min-w-0 items-center gap-2">
                   <span className="quote-deleted-header-title flex shrink-0 items-center gap-2">
@@ -541,15 +543,15 @@ export default function QuoteDeletedArchivedPanel({
                         style={{ gridTemplateColumns: rowGridTemplate }}
                         onClick={bulkSelectMode ? () => toggleSelect(item.id) : undefined}
                       >
-                        <DeletedListCell>
-                          {bulkSelectMode ? (
+                        {bulkSelectMode ? (
+                          <DeletedListCell>
                             <DeletedBulkSelectCheckbox
                               checked={isSelected}
                               aria-label={`${item.label} seç`}
                               onChange={() => toggleSelect(item.id)}
                             />
-                          ) : null}
-                        </DeletedListCell>
+                          </DeletedListCell>
+                        ) : null}
                         <DeletedListCell>
                           <DeletedListDateCell record={item.record} />
                         </DeletedListCell>
