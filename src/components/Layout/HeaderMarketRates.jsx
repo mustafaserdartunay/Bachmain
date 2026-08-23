@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { CandlestickChart, Loader2, X } from 'lucide-react'
+import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { useHeaderPopover } from '../../hooks/useHeaderPopover'
 import { useExchangeRates } from '../../hooks/useExchangeRates'
 import { YF_TEXT_CLASS, YFB_TEXT_CLASS } from '../../utils/dashboardDesign'
-import { pushMarketSeriesPoint } from '../../markets/localStore'
+import { getMarketSeries, pushMarketSeriesPoint } from '../../markets/localStore'
 
 function formatPrice(value, digits = 2) {
   return new Intl.NumberFormat('tr-TR', {
@@ -31,6 +32,35 @@ function requestRatesRefresh() {
   } catch {
     /* ignore */
   }
+}
+
+function MiniSpark({ id, series, up }) {
+  const stroke = up ? '#10b981' : '#e11d48'
+  const fillId = `mkt-sp-${id}`
+  return (
+    <div className="h-9 w-[4.5rem] shrink-0">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={series} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={stroke} stopOpacity={0.32} />
+              <stop offset="100%" stopColor={stroke} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <YAxis domain={['dataMin', 'dataMax']} hide />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={stroke}
+            strokeWidth={1.5}
+            fill={`url(#${fillId})`}
+            isAnimationActive={false}
+            dot={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  )
 }
 
 function TryConverter({ rate, foreignUnit }) {
@@ -74,10 +104,10 @@ function TryConverter({ rate, foreignUnit }) {
   }
 
   const inputClass =
-    'min-w-0 flex-1 bg-transparent py-0.5 text-[13px] font-normal tabular-nums text-[var(--ink)] outline-none placeholder:text-[var(--muted)]'
+    'min-w-0 flex-1 bg-transparent text-[13px] font-semibold tabular-nums text-[var(--ink)] outline-none'
 
   return (
-    <div className="mt-1.5 flex items-center gap-1.5 border-t border-[rgba(140,145,165,0.1)] pt-1.5">
+    <div className="mt-2 flex items-center gap-1.5 rounded-xl bg-[rgba(255,255,255,0.42)] px-2.5 py-1.5 ring-1 ring-[rgba(255,255,255,0.55)]">
       <input
         type="text"
         inputMode="decimal"
@@ -87,7 +117,7 @@ function TryConverter({ rate, foreignUnit }) {
         aria-label="Döviz veya gram tutarı"
       />
       <span className={`${YF_TEXT_CLASS} shrink-0 text-[12px]`}>{foreignUnit}</span>
-      <span className={`${YF_TEXT_CLASS} shrink-0 text-[12px]`}>=</span>
+      <span className={`${YF_TEXT_CLASS} shrink-0 opacity-50`}>→</span>
       <input
         type="text"
         inputMode="decimal"
@@ -101,26 +131,29 @@ function TryConverter({ rate, foreignUnit }) {
   )
 }
 
-function RateRow({ instrument }) {
+function RateCard({ instrument }) {
   const up = instrument.changePct >= 0
   return (
-    <div className="py-2.5 first:pt-0 last:pb-0">
-      <div className="flex items-baseline justify-between gap-2">
-        <p className={`${YF_TEXT_CLASS}`}>{instrument.label}</p>
-        <div className="flex items-baseline gap-2">
-          <p className={`${YFB_TEXT_CLASS} tabular-nums text-[var(--ink)]`}>
+    <div className="rounded-2xl bg-[rgba(255,255,255,0.28)] p-3 ring-1 ring-[rgba(255,255,255,0.5)]">
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className={`${YF_TEXT_CLASS}`}>{instrument.label}</p>
+            <span
+              className={`text-[11px] font-semibold tabular-nums ${
+                up ? 'text-emerald-600' : 'text-rose-600'
+              }`}
+            >
+              {up ? '+' : ''}
+              {Number(instrument.changePct || 0).toFixed(2)}%
+            </span>
+          </div>
+          <p className={`${YFB_TEXT_CLASS} mt-0.5 text-[15px] tabular-nums text-[var(--ink)]`}>
             {formatPrice(instrument.price, instrument.id === 'GOLD' ? 2 : 4)}
             <span className={`${YF_TEXT_CLASS} ml-1`}>₺</span>
           </p>
-          <span
-            className={`text-[12px] font-normal tabular-nums ${
-              up ? 'text-emerald-600' : 'text-rose-600'
-            }`}
-          >
-            {up ? '+' : ''}
-            {Number(instrument.changePct || 0).toFixed(2)}%
-          </span>
         </div>
+        <MiniSpark id={instrument.id} series={instrument.series} up={up} />
       </div>
       <TryConverter rate={instrument.price} foreignUnit={instrument.foreignUnit} />
     </div>
@@ -130,6 +163,7 @@ function RateRow({ instrument }) {
 export default function HeaderMarketRates() {
   const { open, setOpen, toggle } = useHeaderPopover('market-rates')
   const { rates, loading } = useExchangeRates()
+  const [seriesTick, setSeriesTick] = useState(0)
   const {
     anchorRef,
     menuRef,
@@ -137,7 +171,7 @@ export default function HeaderMarketRates() {
   } = useAnchoredPortal(open, {
     align: 'end',
     matchWidth: false,
-    width: 280,
+    width: 300,
     offset: 8,
   })
 
@@ -156,16 +190,19 @@ export default function HeaderMarketRates() {
     ].forEach(([id, price]) => {
       if (Number.isFinite(price) && price > 0) pushMarketSeriesPoint(id, price)
     })
+    setSeriesTick((n) => n + 1)
   }, [rates.USD, rates.EUR, rates.GOLD, rates.updatedAt])
 
-  const instruments = useMemo(
-    () => [
+  const instruments = useMemo(() => {
+    void seriesTick
+    return [
       {
         id: 'USD',
         label: 'Dolar',
         foreignUnit: '$',
         price: rates.USD,
         changePct: rates.change?.USD ?? 0,
+        series: getMarketSeries('USD', rates.USD),
       },
       {
         id: 'EUR',
@@ -173,6 +210,7 @@ export default function HeaderMarketRates() {
         foreignUnit: '€',
         price: rates.EUR,
         changePct: rates.change?.EUR ?? 0,
+        series: getMarketSeries('EUR', rates.EUR),
       },
       {
         id: 'GOLD',
@@ -180,10 +218,10 @@ export default function HeaderMarketRates() {
         foreignUnit: 'gr',
         price: rates.GOLD,
         changePct: rates.change?.GOLD ?? 0,
+        series: getMarketSeries('GOLD', rates.GOLD),
       },
-    ],
-    [rates],
-  )
+    ]
+  }, [rates, seriesTick])
 
   return (
     <div
@@ -217,28 +255,33 @@ export default function HeaderMarketRates() {
                   zIndex: 10000,
                 }
               }
-              className="app-header-dropdown header-popover-panel w-[min(17.5rem,calc(100vw-1rem))] overflow-hidden"
+              className="app-header-dropdown header-popover-panel w-[min(18.75rem,calc(100vw-1rem))] overflow-hidden"
               data-header-popover="market-rates"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="flex items-center justify-between gap-2 px-3 py-2">
-                <p className={`${YF_TEXT_CLASS} flex min-w-0 items-center gap-1.5`}>
-                  {loading ? <Loader2 className="h-3 w-3 shrink-0 animate-spin" /> : null}
-                  <span className="truncate">{rates.updatedAt || 'Kurlar'}</span>
-                </p>
+              <div className="header-popover-head !px-3 !py-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    Kurlar
+                  </p>
+                  <p className={`${YF_TEXT_CLASS} mt-0.5 flex items-center gap-1.5`}>
+                    {loading ? <Loader2 className="h-3 w-3 shrink-0 animate-spin" /> : null}
+                    <span className="truncate">{rates.updatedAt || '—'}</span>
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-white/45"
+                  className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
                   aria-label="Kapat"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="divide-y divide-[rgba(140,145,165,0.12)] px-3 pb-2">
+              <div className="space-y-2 p-2.5">
                 {instruments.map((instrument) => (
-                  <RateRow key={instrument.id} instrument={instrument} />
+                  <RateCard key={instrument.id} instrument={instrument} />
                 ))}
               </div>
             </div>,
