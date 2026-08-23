@@ -20,7 +20,6 @@ export const ROUTE_MODULE_MAP = {
   '/stok/depolar': 'warehouse',
   '/kasa': 'finance',
   '/finans': 'finance',
-  '/piyasa': 'markets',
   '/gorevler': 'tasks',
   '/takvim': 'calendar',
   '/randevu': 'appointments',

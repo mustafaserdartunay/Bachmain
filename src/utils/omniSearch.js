@@ -18,7 +18,6 @@ const MODULE_HINTS = [
   { label: 'Depolar', to: '/stok/depolar', keys: ['depo', 'warehouse'] },
   { label: 'Kasa / Bankalar', to: CASH_BASE_PATH, keys: ['kasa', 'banka', 'nakit', 'cash'] },
   { label: 'Finans', to: '/finans', keys: ['finans', 'finance'] },
-  { label: 'Piyasa', to: '/piyasa', keys: ['piyasa', 'borsa', 'hisse', 'döviz', 'doviz', 'markets'] },
   { label: 'E-Fatura', to: '/finans?tab=einvoice', keys: ['e-fatura', 'efatura', 'fatura'] },
   { label: 'Personel / İK', to: '/ik', keys: ['personel', 'ik', 'hr', 'çalışan', 'calisan'] },
   { label: 'Sevkiyat', to: '/sevkiyat', keys: ['sevkiyat', 'lojistik', 'kargo'] },

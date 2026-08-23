@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
-  CandlestickChart,
   FileText,
   Handshake,
   Inbox,
@@ -46,8 +45,6 @@ export const HEADER_ACTION_GRADIENTS = {
   violet: 'from-[#c7b6ff] via-[#a78bfa] to-[#8b5cf6]',
   /** Gelen E-Faturalar — rose → red (vazgeç / sil) */
   danger: 'from-[#fda4af] via-[#f43f5e] to-[#e11d48]',
-  /** Piyasa — indigo → blue */
-  markets: 'from-[#a5b4fc] via-[#6366f1] to-[#2563eb]',
 }
 
 export const HEADER_QUICK_ACTIONS = [
@@ -107,13 +104,6 @@ export const HEADER_QUICK_ACTIONS = [
     icon: Inbox,
     gradient: HEADER_ACTION_GRADIENTS.danger,
   },
-  {
-    id: 'markets',
-    to: () => '/piyasa',
-    title: 'Piyasa',
-    icon: CandlestickChart,
-    gradient: HEADER_ACTION_GRADIENTS.markets,
-  },
 ]
 
 /** Banner + page-header chip shell (52px). Banner adds flex-1; page headers use fixed. */
@@ -166,7 +156,7 @@ export function HeaderQuickActionCard({ action, fixed = false, className = '' })
 export default function HeaderCashActionsPanel() {
   return (
     <section className="app-header-banner flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center px-4 py-2 sm:px-6">
-      <div className="flex w-full gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-9 lg:gap-2 lg:overflow-visible">
+      <div className="flex w-full gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-8 lg:gap-2 lg:overflow-visible">
         {HEADER_QUICK_ACTIONS.map((action) => (
           <HeaderQuickActionCard key={action.id} action={action} />
         ))}

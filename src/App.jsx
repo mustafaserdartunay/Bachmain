@@ -41,7 +41,6 @@ import DigitalTwinCenterPage from './pages/DigitalTwinCenterPage'
 import ManufacturingCenterPage from './pages/mes/ManufacturingCenterPage'
 import MesOperatorTabletPage from './pages/mes/MesOperatorTabletPage'
 import FinanceCenterPage from './pages/FinanceCenterPage'
-import MarketsCenterPage from './pages/MarketsCenterPage'
 import AnalyticsCenterPage from './pages/AnalyticsCenterPage'
 import CustomerExperienceCloudPage from './pages/CustomerExperienceCloudPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
@@ -304,7 +303,6 @@ export default function App() {
                       <Route path="/mes" element={<ManufacturingCenterPage />} />
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/finans" element={<FinanceCenterPage />} />
-                      <Route path="/piyasa" element={<MarketsCenterPage />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
                       <Route
                         path="/web"

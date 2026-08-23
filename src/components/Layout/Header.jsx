@@ -29,6 +29,7 @@ import HeaderAgendaSwitch from './HeaderAgendaSwitch'
 import HeaderAiAssistant from './HeaderAiAssistant'
 import HeaderOmniSearch from './HeaderOmniSearch'
 import HeaderSupport from './HeaderSupport'
+import HeaderMarketRates from './HeaderMarketRates'
 import OrgSwitcher from './OrgSwitcher'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { HeaderPopoverProvider, useHeaderPopover } from '../../hooks/useHeaderPopover'
@@ -268,12 +269,14 @@ function HeaderBar({ onMenuClick }) {
       <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-1.5">
         {compactHeader ? (
           <>
+            <HeaderMarketRates />
             <MobileHeaderTools onNavigate={navigate} />
             <HeaderNotebook hideTrigger />
             <HeaderCalendar hideTrigger />
           </>
         ) : (
           <>
+            <HeaderMarketRates />
             <HeaderSupport />
             <button
               type="button"
