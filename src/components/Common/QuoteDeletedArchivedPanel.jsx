@@ -347,7 +347,7 @@ export default function QuoteDeletedArchivedPanel({
   const allSelected = entries.length > 0 && selectedIds.length === entries.length
   const someSelected = selectedIds.length > 0 && !allSelected
   const resolvedSegmentTabs = Array.isArray(segmentTabs) ? segmentTabs : []
-  const bulkActionCol = bulkSelectMode && selectedIds.length > 0 ? '6.5rem' : '3rem'
+  const bulkActionCol = bulkSelectMode ? '6.5rem' : '3rem'
   const baseCols = (
     columnGrid || buildDeletedListGrid(resolvedSegmentTabs.length || 1, bulkActionCol)
   )
@@ -358,6 +358,7 @@ export default function QuoteDeletedArchivedPanel({
   }
   const gridTemplate = bulkSelectMode ? `2.75rem ${baseCols.join(' ')}` : baseCols.join(' ')
   const titleColumnSpan = 3 + resolvedSegmentTabs.length + 1
+  const rowGridTemplate = gridTemplate
 
   const deletedQuoteIds = useMemo(
     () => entries.map((entry) => entry.record?.id).filter(Boolean),
@@ -412,7 +413,9 @@ export default function QuoteDeletedArchivedPanel({
             } cursor-pointer`}
           >
             <div
-              className="quote-list-row quote-deleted-header-row w-full min-w-0"
+              className={`quote-list-row quote-deleted-header-row w-full min-w-0${
+                bulkSelectMode && selectedIds.length > 0 ? ' is-bulk-confirm' : ''
+              }`}
               style={{ gridTemplateColumns: gridTemplate }}
             >
               {bulkSelectMode ? (
@@ -517,7 +520,7 @@ export default function QuoteDeletedArchivedPanel({
                     >
                       <div
                         className="quote-list-row w-full min-w-0"
-                        style={{ gridTemplateColumns: gridTemplate }}
+                        style={{ gridTemplateColumns: rowGridTemplate }}
                         onClick={bulkSelectMode ? () => toggleSelect(item.id) : undefined}
                       >
                         {bulkSelectMode ? (
@@ -599,15 +602,11 @@ export default function QuoteDeletedArchivedPanel({
                             className="inline-flex w-full items-center justify-center"
                             onClick={(event) => event.stopPropagation()}
                           >
-                            {!bulkSelectMode ? (
-                              <QuoteDeletedRowMoreMenu
-                                item={item}
-                                disabled={isRestoring || isTrashing}
-                                onDelete={() => runPermanentDelete(item)}
-                              />
-                            ) : (
-                              <span className="inline-flex h-9 w-9" aria-hidden />
-                            )}
+                            <QuoteDeletedRowMoreMenu
+                              item={item}
+                              disabled={isRestoring || isTrashing}
+                              onDelete={() => runPermanentDelete(item)}
+                            />
                           </span>
                         </DeletedListCell>
                       </div>
