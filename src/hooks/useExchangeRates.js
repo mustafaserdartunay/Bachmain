@@ -11,6 +11,7 @@ const FALLBACK = {
     EUR: { buy: 42.75, sell: 42.95 },
     GOLD: { buy: 4280, sell: 4320 },
   },
+  change: { USD: 0, EUR: 0, GOLD: 0 },
 }
 const CACHE_KEY = 'erlenbox-live-exchange-rates'
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000
@@ -57,6 +58,7 @@ function readCachedRates() {
         EUR: parsed.EUR,
         GOLD: parsed.GOLD || FALLBACK.GOLD,
       }),
+      change: parsed.change || { USD: 0, EUR: 0, GOLD: 0 },
     }
   } catch {
     return null
@@ -93,6 +95,7 @@ async function fetchOpenExchangeRates() {
     updatedAt: getUpdatedAt(usdData.time_last_update_utc),
     source: 'Open Exchange Rates',
     market: buildMarketFromMid({ USD, EUR, GOLD: FALLBACK.GOLD }),
+    change: { USD: 0, EUR: 0, GOLD: 0 },
   }
 }
 
@@ -118,6 +121,7 @@ async function fetchFrankfurterRates() {
     updatedAt: getUpdatedAt(usdData.date),
     source: 'Frankfurter',
     market: buildMarketFromMid({ USD, EUR, GOLD: FALLBACK.GOLD }),
+    change: { USD: 0, EUR: 0, GOLD: 0 },
   }
 }
 
@@ -137,6 +141,11 @@ async function fetchTruncgilRates() {
     throw new Error('Piyasa verisi geçersiz')
   }
 
+  const changeOf = (row) => {
+    const n = Number(row?.Change)
+    return Number.isFinite(n) ? n : 0
+  }
+
   return {
     USD: (usdBuy + usdSell) / 2,
     EUR: (eurBuy + eurSell) / 2,
@@ -147,6 +156,11 @@ async function fetchTruncgilRates() {
       USD: { buy: usdBuy, sell: usdSell },
       EUR: { buy: eurBuy, sell: eurSell },
       GOLD: { buy: goldBuy, sell: goldSell },
+    },
+    change: {
+      USD: changeOf(data?.USD),
+      EUR: changeOf(data?.EUR),
+      GOLD: changeOf(goldData),
     },
   }
 }
@@ -194,7 +208,7 @@ export function useExchangeRates() {
     }
 
     fetchRates({ showLoading: true })
-    const interval = setInterval(fetchRates, REFRESH_INTERVAL_MS)
+    const interval = setInterval(() => fetchRates(), REFRESH_INTERVAL_MS)
 
     function refreshWhenVisible() {
       if (document.visibilityState === 'visible') fetchRates()
@@ -202,14 +216,26 @@ export function useExchangeRates() {
 
     window.addEventListener('focus', fetchRates)
     document.addEventListener('visibilitychange', refreshWhenVisible)
+    window.addEventListener('bach:exchange-rates-refresh', fetchRates)
 
     return () => {
       cancelled = true
       clearInterval(interval)
       window.removeEventListener('focus', fetchRates)
       document.removeEventListener('visibilitychange', refreshWhenVisible)
+      window.removeEventListener('bach:exchange-rates-refresh', fetchRates)
     }
   }, [])
 
-  return { rates, loading }
+  return {
+    rates,
+    loading,
+    refresh: () => {
+      try {
+        window.dispatchEvent(new Event('bach:exchange-rates-refresh'))
+      } catch {
+        /* ignore */
+      }
+    },
+  }
 }

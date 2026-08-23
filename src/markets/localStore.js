@@ -1,50 +1,55 @@
-/** Dev/mock FX + gold series — production must use backend MarketDataProvider. */
+/** Local sparkline history fed by live mid prices (no secrets). */
 
+const SERIES_KEY = 'bach:market-rate-series-v1'
+const MAX_POINTS = 28
 const DISCLAIMER = 'Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.'
 
-const SEED = {
-  USDTRY: { label: 'Dolar', unit: '₺', base: 34.12, changePct: -0.18 },
-  EURTRY: { label: 'Euro', unit: '₺', base: 37.05, changePct: 0.11 },
-  XAUTRY: { label: 'Gram Altın', unit: '₺', base: 2845.6, changePct: 0.42 },
-}
-
-function jitter(n, amp = 0.002) {
-  return n * (1 + (Math.random() - 0.5) * amp)
-}
-
-function buildSeries(base, points = 24) {
-  const series = []
-  let value = base * (1 - 0.012)
-  for (let i = 0; i < points; i += 1) {
-    value = jitter(value, 0.006)
-    series.push({
-      t: i,
-      value: Number(value.toFixed(2)),
-    })
-  }
-  series[series.length - 1].value = Number(jitter(base, 0.0015).toFixed(2))
-  return series
-}
-
-export function marketRatesLocal() {
-  const instruments = Object.entries(SEED).map(([id, meta]) => {
-    const series = buildSeries(meta.base)
-    const price = series[series.length - 1].value
-    const prev = series[0].value
-    const changePct = Number((((price - prev) / prev) * 100).toFixed(2))
-    return {
-      id,
-      label: meta.label,
-      unit: meta.unit,
-      price,
-      changePct: Number((meta.changePct + (Math.random() - 0.5) * 0.06).toFixed(2)) || changePct,
-      series,
-    }
-  })
-
-  return {
-    updatedAt: new Date().toISOString(),
-    disclaimer: DISCLAIMER,
-    instruments,
+function readAll() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SERIES_KEY) || '{}')
+    return raw && typeof raw === 'object' ? raw : {}
+  } catch {
+    return {}
   }
 }
+
+function writeAll(map) {
+  try {
+    localStorage.setItem(SERIES_KEY, JSON.stringify(map))
+  } catch {
+    /* ignore quota */
+  }
+}
+
+export function pushMarketSeriesPoint(id, price) {
+  const value = Number(price)
+  if (!id || !Number.isFinite(value) || value <= 0) return []
+  const all = readAll()
+  const prev = Array.isArray(all[id]) ? all[id] : []
+  const last = prev[prev.length - 1]
+  if (last && Math.abs(last.value - value) < value * 0.00005) {
+    return prev
+  }
+  const next = [...prev, { t: Date.now(), value: Number(value.toFixed(4)) }].slice(-MAX_POINTS)
+  all[id] = next
+  writeAll(all)
+  return next
+}
+
+export function getMarketSeries(id, fallbackPrice) {
+  const all = readAll()
+  const series = Array.isArray(all[id]) ? all[id] : []
+  if (series.length >= 2) return series
+  const base = Number(fallbackPrice)
+  if (!Number.isFinite(base) || base <= 0) return series
+  const seed = []
+  let value = base * 0.992
+  for (let i = 0; i < 12; i += 1) {
+    value *= 1 + (Math.sin(i / 2) * 0.0012 + (i / 12) * 0.0008)
+    seed.push({ t: i, value: Number(value.toFixed(4)) })
+  }
+  seed.push({ t: 12, value: Number(base.toFixed(4)) })
+  return seed
+}
+
+export { DISCLAIMER as MARKET_RATES_DISCLAIMER }

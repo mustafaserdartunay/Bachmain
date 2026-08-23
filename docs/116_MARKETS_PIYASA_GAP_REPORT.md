@@ -2,13 +2,10 @@
 
 ## Status
 
-Full `/piyasa` hub deferred. Current surface: **header banner** popover
-(`HeaderMarketRates`) with USD, EUR, gram gold + sparkline charts (mock series).
+Header banner popover (`HeaderMarketRates`): live USD / EUR / gram gold via
+existing `useExchangeRates` (Truncgil → Open ER → Frankfurter), sparkline history,
+and **per-panel TL converter** (foreign ↔ ₺).
 
 ## Boundary
 
-Do **not** reuse `/finans`, entitlement `finance`, or Financial Suite treasury/GL.
-
-## Next
-
-Backend `MarketDataProvider`, cache, live quotes — frontend stays mock until then.
+Do **not** reuse `/finans` treasury/GL. Shared FX hook is OK for mid rates only.
