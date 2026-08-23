@@ -11,6 +11,7 @@ import { handleLeadsApi } from '../server/leads.mjs'
 import { handleLegalApi } from '../server/legal.mjs'
 import { handleAnnouncementsApi } from '../server/announcements.mjs'
 import { handleWhatsAppApi } from '../server/whatsappApi.mjs'
+import { handleUccApi } from '../server/uccApi.mjs'
 import { handleMailApi } from '../server/mailRoutes.mjs'
 import { hasDatabase } from '../server/db.mjs'
 import {
@@ -279,6 +280,7 @@ export default async function handler(req, res) {
     if (await handleBillingApi(req, res, path, body)) return
     if (await handlePaymentsApi(req, res, path, body)) return
     if (await handleWhatsAppApi(req, res, path, body)) return
+    if (await handleUccApi(req, res, path, body)) return
     if (await handleTenantApi(req, res, path, body)) return
     if (await handleEdocumentsApi(req, res, path, body, getQuery(req))) return
     if (await handleMailApi(req, res, path, body)) return

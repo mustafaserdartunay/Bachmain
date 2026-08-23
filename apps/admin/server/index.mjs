@@ -8,6 +8,7 @@ import { handleLeadsApi } from './leads.mjs'
 import { handleLegalApi } from './legal.mjs'
 import { handleAnnouncementsApi } from './announcements.mjs'
 import { handleWhatsAppApi } from './whatsappApi.mjs'
+import { handleUccApi } from './uccApi.mjs'
 import { handleBillingApi } from './billingRoutes.mjs'
 import { handlePaymentsApi } from './payments.mjs'
 import {
@@ -32,6 +33,7 @@ import { handleAiosApi } from './aiosRoutes.mjs'
 import { handleQualityControl } from './qualityControl.mjs'
 import { handleSocialConnections } from './socialConnections.mjs'
 import { handlePlatformAdminApi } from './platformAdminRoutes.mjs'
+import { handleRemoteOpsApi } from './remoteOpsRoutes.mjs'
 import { handleEdocumentsApi } from './edocumentsRoutes.mjs'
 import {
   addSupportReply,
@@ -174,6 +176,7 @@ async function handle(req, res, url) {
       if (await handleBillingApi(req, res, apiPath, body)) return
       if (await handlePaymentsApi(req, res, apiPath, body)) return
       if (await handleWhatsAppApi(req, res, apiPath, body)) return
+      if (await handleUccApi(req, res, apiPath, body)) return
       if (await handleMailApi(req, res, apiPath, body)) return
       if (await handleSecurityApi(req, res, apiPath)) return
       if (await handleAiosApi(req, res, apiPath)) return
@@ -189,6 +192,7 @@ async function handle(req, res, url) {
         return
       if (await handleSocialConnections(req, res, apiPath)) return
       if (await handlePlatformAdminApi(req, res, apiPath, body)) return
+      if (await handleRemoteOpsApi(req, res, apiPath, body)) return
     }
 
     // DELETE (ve diğer) platform admin yolları

@@ -31,6 +31,7 @@ export const MODULE_CATALOG = [
   { code: 'b2b', label: 'B2B Portal', group: 'ops' },
   { code: 'whatsapp', label: 'WhatsApp', group: 'comms' },
   { code: 'sms', label: 'SMS', group: 'comms' },
+  { code: 'bach_chat', label: 'Bachmain Sohbet', group: 'comms' },
   { code: 'courier', label: 'Kurye', group: 'ops' },
   { code: 'api', label: 'API', group: 'platform' },
   { code: 'api_advanced', label: 'Gelişmiş API', group: 'platform' },
@@ -38,6 +39,7 @@ export const MODULE_CATALOG = [
   { code: 'dashboard_advanced', label: 'Gelişmiş Dashboard', group: 'platform' },
   { code: 'bi', label: 'BI Dashboard', group: 'platform' },
   { code: 'ai', label: 'Yapay Zeka / AI Asistan', group: 'platform' },
+  { code: 'remote', label: 'Bachmain Remote', group: 'platform' },
   { code: 'hr', label: 'İnsan Kaynakları', group: 'enterprise' },
   { code: 'mrp', label: 'MRP', group: 'enterprise' },
   { code: 'quality', label: 'Kalite Yönetimi', group: 'enterprise' },
@@ -72,6 +74,8 @@ export const STARTER_MODULES = [
   'reports_basic',
   'einvoice',
   'earchive',
+  'remote',
+  'bach_chat',
 ]
 
 export const PROFESSIONAL_EXTRA = [

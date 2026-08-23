@@ -24,6 +24,8 @@ import {
   Package,
   Pencil,
   Phone,
+  Mail,
+  Video,
   Trash2,
   Truck,
   Upload,
@@ -44,10 +46,7 @@ import {
   getTreasuryMovements,
 } from '../utils/treasuryStore'
 import { getCustomerDisplay } from '../utils/customerDisplay'
-import {
-  readOptionLists,
-  saveOptionList,
-} from '../utils/customerMeta'
+import { readOptionLists, saveOptionList } from '../utils/customerMeta'
 import { DeleteConfirmOverlay } from '../components/Common/ListDeleteConfirmPanel'
 import CustomerMovementForm from '../components/CustomerMovementForm'
 import {
@@ -98,7 +97,8 @@ import {
   patchMovementForm,
 } from '../utils/customerMovementForm'
 import CustomerStockPanel from '../components/Customers/CustomerStockPanel'
-import { Dropdown, DropdownItem } from '@bachmain/ui'
+import { resolveCustomerContactInfo } from '../utils/customerContacts'
+import { openCommunicationCenter } from '../ucc/uccClient'
 
 const TAHSILAT_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.success}`
 const ODEME_BTN = `${HEADER_ACTION_CTA_CLASS} w-full justify-center ${HEADER_ACTION_GRADIENTS.expense}`
@@ -155,6 +155,7 @@ export default function CustomerDetailPage() {
   const location = useLocation()
   const [customer, setCustomer] = useState(() => findCustomerProfile(customerId))
   const customerDisplay = getCustomerDisplay(customer)
+  const contactInfo = useMemo(() => resolveCustomerContactInfo(customer), [customer])
   const [accounts] = useState(() => getTreasuryAccounts())
   const [movements, setMovements] = useState(() => getTreasuryMovements())
   const [collectionForm, setCollectionForm] = useState(() =>
@@ -553,6 +554,66 @@ export default function CustomerDetailPage() {
         }
       />
 
+      <div className="flex flex-wrap gap-2">
+        {[
+          {
+            id: 'whatsapp',
+            label: 'WhatsApp',
+            icon: MessageCircle,
+            onClick: () => {
+              const digits = String(contactInfo.phone || '').replace(/\D/g, '')
+              if (digits) window.open(`https://wa.me/${digits}`, '_blank', 'noopener,noreferrer')
+              openCommunicationCenter({ tab: 'whatsapp', customerId: customer.id })
+            },
+          },
+          {
+            id: 'phone',
+            label: 'Ara',
+            icon: Phone,
+            href: contactInfo.phone
+              ? `tel:${String(contactInfo.phone).replace(/\s/g, '')}`
+              : undefined,
+            onClick: () => openCommunicationCenter({ tab: 'phone', customerId: customer.id }),
+          },
+          {
+            id: 'chat',
+            label: 'Sohbet',
+            icon: MessageCircle,
+            onClick: () => openCommunicationCenter({ tab: 'chat', customerId: customer.id }),
+          },
+          {
+            id: 'video',
+            label: 'Görüşme',
+            icon: Video,
+            onClick: () => openCommunicationCenter({ tab: 'video', customerId: customer.id }),
+          },
+          {
+            id: 'email',
+            label: 'E-posta',
+            icon: Mail,
+            href: contactInfo.email ? `mailto:${contactInfo.email}` : undefined,
+            onClick: () => openCommunicationCenter({ tab: 'notify', customerId: customer.id }),
+          },
+        ].map((action) => {
+          const Icon = action.icon
+          const className = `${YF_TEXT_CLASS} inline-flex items-center gap-1.5 rounded-xl bg-white/55 px-3 py-2 ring-1 ring-white/60`
+          if (action.href) {
+            return (
+              <a key={action.id} href={action.href} className={className} onClick={action.onClick}>
+                <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+                {action.label}
+              </a>
+            )
+          }
+          return (
+            <button key={action.id} type="button" className={className} onClick={action.onClick}>
+              <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+              {action.label}
+            </button>
+          )
+        })}
+      </div>
+
       {voiceNotice ? (
         <div className="flex items-center justify-between gap-3 rounded-[16px] border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
           <p className={`${YF_TEXT_CLASS} !text-emerald-700`}>{voiceNotice}</p>
@@ -575,8 +636,12 @@ export default function CustomerDetailPage() {
             <span className="min-w-0 truncate">{'İşlem Yeri'.toLocaleUpperCase('tr-TR')}</span>
             <span className="min-w-0 truncate">{'İşlem Türü'.toLocaleUpperCase('tr-TR')}</span>
             <span className="min-w-0 truncate">{'Açıklama'.toLocaleUpperCase('tr-TR')}</span>
-            <span className="min-w-0 truncate text-right">{'Meblağ'.toLocaleUpperCase('tr-TR')}</span>
-            <span className="min-w-0 truncate text-right">{'Bakiye'.toLocaleUpperCase('tr-TR')}</span>
+            <span className="min-w-0 truncate text-right">
+              {'Meblağ'.toLocaleUpperCase('tr-TR')}
+            </span>
+            <span className="min-w-0 truncate text-right">
+              {'Bakiye'.toLocaleUpperCase('tr-TR')}
+            </span>
           </div>
 
           <div className="customer-ledger-body min-h-0 flex-1 divide-y divide-[var(--glass-border)]">
@@ -641,9 +706,7 @@ export default function CustomerDetailPage() {
                 type="button"
                 className={LEDGER_PAGE_BTN_CLASS}
                 disabled={statementRows.length === 0 || safeLedgerPage >= ledgerPageCount - 1}
-                onClick={() =>
-                  setLedgerPage((page) => Math.min(ledgerPageCount - 1, page + 1))
-                }
+                onClick={() => setLedgerPage((page) => Math.min(ledgerPageCount - 1, page + 1))}
                 aria-label="Sonraki sayfa"
               >
                 <ChevronRight className="h-4 w-4" aria-hidden />
@@ -777,7 +840,9 @@ export default function CustomerDetailPage() {
 
             <div className="flex min-w-0 gap-3 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
-              <p className={`${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+              <p
+                className={`${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}
+              >
                 Müşteri ekranı ayarlarınızı buradan yapabilirsiniz. Değişiklikler anında kaydedilir.
               </p>
             </div>
@@ -791,8 +856,12 @@ export default function CustomerDetailPage() {
                   className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>Ödeme Hatırlat</span>
-                  <span className={`mt-1 block ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+                  <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>
+                    Ödeme Hatırlat
+                  </span>
+                  <span
+                    className={`mt-1 block ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}
+                  >
                     Müşterinize ait faturalarınızın ödemeleri, ödeme tarihinde e-posta ile
                     hatırlatılacaktır.
                   </span>
@@ -807,8 +876,12 @@ export default function CustomerDetailPage() {
                   className="mt-1 h-4 w-4 shrink-0 rounded border-ds-border accent-blue-500"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>Online Tahsilat</span>
-                  <span className={`mt-1 block ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+                  <span className={`block ${DETAIL_CELL_CLASS} !font-bold uppercase`}>
+                    Online Tahsilat
+                  </span>
+                  <span
+                    className={`mt-1 block ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}
+                  >
                     Kredi kartı ile tahsilat özelliği hazırla.
                   </span>
                 </span>
@@ -819,7 +892,9 @@ export default function CustomerDetailPage() {
                   <List className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
                   <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>IBAN Numaralarınız</p>
                 </div>
-                <p className={`pl-7 ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+                <p
+                  className={`pl-7 ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}
+                >
                   Paylaşabileceğiniz IBAN numarası olan hesaplarınız
                 </p>
                 <div className="space-y-2 pl-7">
@@ -856,21 +931,27 @@ export default function CustomerDetailPage() {
               <div className="min-w-0 space-y-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <Users className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
-                  <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>Erişimi Olan Kişiler</p>
+                  <p className={`${DETAIL_CELL_CLASS} !font-bold uppercase`}>
+                    Erişimi Olan Kişiler
+                  </p>
                 </div>
                 {(portalSettings.accessEmails || []).map((email) => (
                   <div
                     key={email}
                     className="flex min-w-0 items-center justify-between gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2"
                   >
-                    <span className={`${DETAIL_CELL_CLASS} min-w-0 flex-1 !font-bold !overflow-visible !whitespace-normal break-all`}>
+                    <span
+                      className={`${DETAIL_CELL_CLASS} min-w-0 flex-1 !font-bold !overflow-visible !whitespace-normal break-all`}
+                    >
                       {email}
                     </span>
                     <button
                       type="button"
                       onClick={() =>
                         updatePortalSettings({
-                          accessEmails: portalSettings.accessEmails.filter((item) => item !== email),
+                          accessEmails: portalSettings.accessEmails.filter(
+                            (item) => item !== email,
+                          ),
                         })
                       }
                       className="shrink-0 text-[var(--muted)] hover:text-red-500"
@@ -905,7 +986,9 @@ export default function CustomerDetailPage() {
                     B2B Müşteri Paneli
                   </p>
                 </div>
-                <p className={`${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}>
+                <p
+                  className={`${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal !text-[12px] leading-5`}
+                >
                   Müşterinize özel panel linki ile cari hareketler, ürünler, sipariş ve üretim
                   takibini paylaşın.
                 </p>
@@ -923,7 +1006,9 @@ export default function CustomerDetailPage() {
                 {b2bAccess?.enabled && b2bAccess.accessToken ? (
                   <div className="min-w-0 space-y-2">
                     <div className="flex min-w-0 items-start gap-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
-                      <p className={`min-w-0 flex-1 break-all ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal`}>
+                      <p
+                        className={`min-w-0 flex-1 break-all ${DETAIL_CELL_CLASS} !overflow-visible !whitespace-normal`}
+                      >
                         {getPortalUrl(b2bAccess.accessToken)}
                       </p>
                       <button
@@ -945,7 +1030,9 @@ export default function CustomerDetailPage() {
                       </a>
                     </div>
                     {linkCopied ? (
-                      <p className={`${DETAIL_CELL_CLASS} !font-bold !text-emerald-600`}>Link kopyalandı</p>
+                      <p className={`${DETAIL_CELL_CLASS} !font-bold !text-emerald-600`}>
+                        Link kopyalandı
+                      </p>
                     ) : null}
                   </div>
                 ) : null}

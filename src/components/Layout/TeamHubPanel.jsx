@@ -1,20 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  Bell,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
   FileText,
+  Inbox,
+  Maximize2,
   MessageCircle,
+  Minimize2,
   Pencil,
+  Phone,
   Send,
   ShoppingCart,
   Trash2,
   Trophy,
   UserPlus,
+  Video,
   X,
   Check,
 } from 'lucide-react'
+import UccChatPane from '../Communication/UccChatPane'
+import { openCommunicationCenter, UCC_OPEN_EVENT } from '../../ucc/uccClient'
+import { fetchAccountNotifications } from '../../utils/platformApi'
+import { readConversations } from '../../omnichannel/store'
 import { TASK_CATEGORIES, TASK_PRIORITIES } from '../../utils/crmStore'
 import { fullName } from '../../utils/personnelHelpers'
 import {
@@ -43,6 +53,13 @@ import { TEAM_HUB_FIELD_CLASS, TEAM_HUB_TEXTAREA_CLASS } from '../../utils/theme
 
 const TABS = [
   {
+    id: 'inbox',
+    label: 'Tümü',
+    icon: Inbox,
+    iconWrap: 'bg-gradient-to-br from-slate-400 to-slate-600',
+    activeRing: 'ring-slate-400/40',
+  },
+  {
     id: 'chat',
     label: 'Sohbet',
     icon: MessageCircle,
@@ -50,27 +67,57 @@ const TABS = [
     activeRing: 'ring-sky-400/40',
   },
   {
-    id: 'deals',
-    label: 'Teklif & Sipariş',
-    icon: FileText,
+    id: 'video',
+    label: 'Görüntülü',
+    icon: Video,
+    iconWrap: 'bg-gradient-to-br from-indigo-400 to-blue-700',
+    activeRing: 'ring-indigo-400/40',
+  },
+  {
+    id: 'phone',
+    label: 'Telefon',
+    icon: Phone,
     iconWrap: 'bg-gradient-to-br from-emerald-400 to-teal-600',
     activeRing: 'ring-emerald-400/40',
   },
   {
-    id: 'race',
-    label: 'Yarış',
-    icon: Trophy,
+    id: 'whatsapp',
+    label: 'WhatsApp',
+    icon: MessageCircle,
+    iconWrap: 'bg-gradient-to-br from-green-400 to-emerald-600',
+    activeRing: 'ring-green-400/40',
+  },
+  {
+    id: 'notify',
+    label: 'Bildirimler',
+    icon: Bell,
     iconWrap: 'bg-gradient-to-br from-amber-400 to-orange-500',
     activeRing: 'ring-amber-400/40',
   },
   {
-    id: 'assign',
-    label: 'Görev Ata',
-    icon: UserPlus,
+    id: 'team',
+    label: 'Ekip',
+    icon: Trophy,
     iconWrap: 'bg-gradient-to-br from-violet-400 to-fuchsia-600',
     activeRing: 'ring-violet-400/40',
   },
 ]
+
+const TEAM_SUBTABS = [
+  { id: 'deals', label: 'Teklif & Sipariş' },
+  { id: 'race', label: 'Yarış' },
+  { id: 'assign', label: 'Görev Ata' },
+]
+
+function HonestEmpty({ title, body, action }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-3 py-6 text-center">
+      <p className="text-[13px] font-bold text-[var(--ink)]">{title}</p>
+      <p className="text-[12px] font-semibold text-[var(--muted)]">{body}</p>
+      {action}
+    </div>
+  )
+}
 
 function TeamAvatar({ employee, size = 'md', selected = false }) {
   const sizeClass = size === 'sm' ? 'h-8 w-8' : size === 'lg' ? 'h-12 w-12' : 'h-10 w-10'
@@ -234,6 +281,9 @@ function TeamChatMessage({ message, member, onChanged }) {
 
 export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
   const [activeTab, setActiveTab] = useState('chat')
+  const [teamSubTab, setTeamSubTab] = useState('deals')
+  const [fullscreen, setFullscreen] = useState(false)
+  const [notifications, setNotifications] = useState([])
   const [tick, setTick] = useState(0)
   const [messageDraft, setMessageDraft] = useState('')
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('')
@@ -285,14 +335,47 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
     setTick((value) => value + 1)
   }, [activeTab])
 
+  useEffect(() => {
+    function onOpen(event) {
+      const tab = event.detail?.tab || 'chat'
+      setActiveTab(tab)
+      setFullscreen(Boolean(event.detail?.fullscreen))
+      if (collapsed) onToggle?.()
+    }
+    window.addEventListener(UCC_OPEN_EVENT, onOpen)
+    return () => window.removeEventListener(UCC_OPEN_EVENT, onOpen)
+  }, [collapsed, onToggle])
+
+  useEffect(() => {
+    if (activeTab !== 'notify') return undefined
+    let cancelled = false
+    fetchAccountNotifications()
+      .then((rows) => {
+        if (!cancelled) setNotifications(Array.isArray(rows) ? rows : [])
+      })
+      .catch(() => {
+        if (!cancelled) setNotifications([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [activeTab, tick])
+
   const tabBadges = useMemo(
     () => Object.fromEntries(TABS.map((tab) => [tab.id, getTeamHubTabBadgeCount(tab.id)])),
     [tick, hubState.messages, hubState.lastReadChatAt],
   )
 
+  const waThreads = useMemo(
+    () => readConversations().filter((item) => item.channel === 'whatsapp'),
+    [tick, activeTab],
+  )
+
   const panelWidthClass = collapsed
     ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]'
-    : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
+    : fullscreen
+      ? 'left-[var(--shell-gap)] w-auto'
+      : 'w-[var(--ds-sidebar-expanded,17.5rem)]'
   const panelPaddingClass = collapsed ? 'p-4 lg:px-2 lg:py-4' : 'px-3 py-4'
 
   function handleSendMessage(event) {
@@ -321,7 +404,8 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
       category: 'Genel',
       priority: 'Normal',
     })
-    setActiveTab('race')
+    setActiveTab('team')
+    setTeamSubTab('race')
   }
 
   return (
@@ -336,22 +420,34 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
           <div className="flex min-w-0 items-center gap-2">
             <TeamHeaderDots />
             <h2 className="truncate text-xs font-extrabold leading-none text-[var(--ink)]">
-              Ekip Merkezi
+              İletişim
             </h2>
           </div>
         ) : null}
-        <button
-          type="button"
-          onClick={onToggle}
-          className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
-          aria-label={collapsed ? 'Ekip panelini aç' : 'Ekip panelini daralt'}
-        >
-          {collapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          {!collapsed ? (
+            <button
+              type="button"
+              onClick={() => setFullscreen((value) => !value)}
+              className="glass-sidebar-toggle flex h-8 w-8 items-center justify-center rounded-xl"
+              aria-label={fullscreen ? 'Paneli küçült' : 'Tam ekran'}
+            >
+              {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onToggle}
+            className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
+            aria-label={collapsed ? 'İletişim panelini aç' : 'İletişim panelini daralt'}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
 
       <nav
-        className={`mt-2 ${collapsed ? 'flex flex-col items-center gap-1.5' : 'grid grid-cols-4 gap-1'}`}
+        className={`mt-2 ${collapsed ? 'flex flex-col items-center gap-1.5' : 'flex gap-1 overflow-x-auto'}`}
       >
         {TABS.map((tab) => {
           const Icon = tab.icon
@@ -386,52 +482,134 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
 
       {!collapsed ? (
         <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[18px] bg-white/35 ring-1 ring-[rgba(140,145,165,0.14)]">
-          {activeTab === 'chat' ? (
-            <>
-              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2.5">
-                {chatMessages.length === 0 ? (
-                  <p className="px-2 py-6 text-center text-[12px] font-semibold text-[var(--muted)]">
-                    Henüz mesaj yok. Ekiple sohbeti buradan başlatın.
-                  </p>
-                ) : (
-                  chatMessages.map((message) => {
-                    const member = members.find((item) => item.id === message.authorId)
-                    return (
-                      <TeamChatMessage
-                        key={message.id}
-                        message={message}
-                        member={member}
-                        onChanged={() => setTick((value) => value + 1)}
-                      />
-                    )
-                  })
-                )}
-              </div>
-              <form
-                onSubmit={handleSendMessage}
-                className="flex items-center gap-2 border-t border-white/50 p-2.5"
-              >
-                <input
-                  value={messageDraft}
-                  onChange={(event) => setMessageDraft(event.target.value)}
-                  onKeyDown={handleMessageKeyDown}
-                  placeholder="Mesaj yaz..."
-                  enterKeyHint="send"
-                  className={`${TEAM_HUB_FIELD_CLASS} min-w-0 flex-1 !rounded-full`}
-                />
-                <button
-                  type="submit"
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:brightness-105 disabled:opacity-50"
-                  aria-label="Gönder"
-                  disabled={!messageDraft.trim()}
+          {activeTab === 'inbox' ? (
+            <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2.5">
+              {waThreads.slice(0, 8).map((thread) => (
+                <Link
+                  key={thread.id}
+                  to="/mesajlar"
+                  className="rounded-[14px] bg-white/65 px-2.5 py-2 text-left"
                 >
-                  <Send className="h-3.5 w-3.5" strokeWidth={2.25} />
-                </button>
-              </form>
-            </>
+                  <p className="truncate text-[12px] font-extrabold">
+                    {thread.contactName || 'WhatsApp'}
+                  </p>
+                  <p className="truncate text-[11px] font-semibold text-[var(--muted)]">
+                    {thread.lastMessagePreview || 'Konuşma'}
+                  </p>
+                </Link>
+              ))}
+              {notifications.slice(0, 6).map((item) => (
+                <div key={item.id || item.title} className="rounded-[14px] bg-white/65 px-2.5 py-2">
+                  <p className="truncate text-[12px] font-extrabold">{item.title || 'Bildirim'}</p>
+                  <p className="truncate text-[11px] font-semibold text-[var(--muted)]">
+                    {item.body || ''}
+                  </p>
+                </div>
+              ))}
+              {waThreads.length === 0 && notifications.length === 0 ? (
+                <p className="px-2 py-6 text-center text-[12px] font-semibold text-[var(--muted)]">
+                  Birleşik gelen kutusu boş. Sohbet sekmesinden ekip yazışmasına geçin.
+                </p>
+              ) : null}
+            </div>
           ) : null}
 
-          {activeTab === 'deals' ? (
+          {activeTab === 'chat' ? <UccChatPane /> : null}
+
+          {activeTab === 'video' ? (
+            <HonestEmpty
+              title="Görüntülü görüşme henüz kurulmadı"
+              body="Canlı görüntü LiveKit SFU ile gelecek. Medya Vercel üzerinden geçmez. Sahte arama ekranı yok."
+            />
+          ) : null}
+
+          {activeTab === 'phone' ? (
+            <HonestEmpty
+              title="Santral henüz bağlanmadı"
+              body="PSTN için Telnyx WebRTC + BTK lisanslı TR SIP gerekir. Şimdilik yalnızca cihaz araması."
+              action={
+                <a href="tel:" className="text-[12px] font-bold text-sky-700">
+                  Cihaz araması (tel:)
+                </a>
+              }
+            />
+          ) : null}
+
+          {activeTab === 'whatsapp' ? (
+            <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2.5">
+              {waThreads.length === 0 ? (
+                <HonestEmpty
+                  title="WhatsApp konuşması yok"
+                  body="Resmi Meta Cloud API aynı kalır. Tüm gelen kutusu /mesajlar sayfasında."
+                  action={
+                    <Link to="/mesajlar" className="text-[12px] font-bold text-sky-700">
+                      Mesaj merkezini aç
+                    </Link>
+                  }
+                />
+              ) : (
+                waThreads.map((thread) => (
+                  <Link
+                    key={thread.id}
+                    to="/mesajlar"
+                    className="rounded-[14px] bg-white/65 px-2.5 py-2"
+                  >
+                    <p className="truncate text-[12px] font-extrabold">
+                      {thread.contactName || 'WhatsApp'}
+                    </p>
+                    <p className="truncate text-[11px] font-semibold text-[var(--muted)]">
+                      {thread.lastMessagePreview || 'Konuşma'}
+                    </p>
+                  </Link>
+                ))
+              )}
+            </div>
+          ) : null}
+
+          {activeTab === 'notify' ? (
+            <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2.5">
+              {notifications.length === 0 ? (
+                <p className="px-2 py-6 text-center text-[12px] font-semibold text-[var(--muted)]">
+                  Bildirim yok.
+                </p>
+              ) : (
+                notifications.map((item) => (
+                  <div
+                    key={item.id || item.title}
+                    className="rounded-[14px] bg-white/65 px-2.5 py-2"
+                  >
+                    <p className="truncate text-[12px] font-extrabold">
+                      {item.title || 'Bildirim'}
+                    </p>
+                    <p className="mt-0.5 text-[11px] font-semibold text-[var(--muted)]">
+                      {item.body || ''}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : null}
+
+          {activeTab === 'team' ? (
+            <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-white/40 px-2 py-1.5">
+              {TEAM_SUBTABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setTeamSubTab(tab.id)}
+                  className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${
+                    teamSubTab === tab.id
+                      ? 'bg-white/90 text-[var(--ink)]'
+                      : 'bg-white/40 text-[var(--muted)]'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {activeTab === 'team' && teamSubTab === 'deals' ? (
             <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2.5">
               <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[var(--muted)]">
                 Bugünkü hareketler
@@ -468,7 +646,7 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
             </div>
           ) : null}
 
-          {activeTab === 'race' ? (
+          {activeTab === 'team' && teamSubTab === 'race' ? (
             <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2.5">
               <div className="rounded-[14px] bg-gradient-to-br from-amber-500/15 to-orange-500/10 px-3 py-2.5">
                 <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">
@@ -503,7 +681,8 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
                   type="button"
                   onClick={() => {
                     setSelectedEmployeeId(row.employeeId)
-                    setActiveTab('assign')
+                    setActiveTab('team')
+                    setTeamSubTab('assign')
                   }}
                   className={`flex w-full items-center gap-2 rounded-[14px] bg-white/65 px-2.5 py-2 text-left transition-colors hover:bg-white/85 ${
                     selectedEmployeeId === row.employeeId ? 'ring-2 ring-orange-300' : ''
@@ -551,7 +730,7 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
             </div>
           ) : null}
 
-          {activeTab === 'assign' ? (
+          {activeTab === 'team' && teamSubTab === 'assign' ? (
             <form
               onSubmit={handleAssignTask}
               className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2.5"
@@ -669,7 +848,8 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
                 type="button"
                 onClick={() => {
                   setSelectedEmployeeId(employee.id)
-                  setActiveTab('assign')
+                  setActiveTab('team')
+                  setTeamSubTab('assign')
                   onToggle?.()
                 }}
                 className="relative rounded-full"
