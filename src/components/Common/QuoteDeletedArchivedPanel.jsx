@@ -353,6 +353,9 @@ export default function QuoteDeletedArchivedPanel({
   baseCols[baseCols.length - 1] = '3rem'
   // Checkbox sütunu her zaman ayrılır — toplu seçimde sağ sütunlar kaymaz
   const rowGridTemplate = `2.75rem ${baseCols.join(' ')}`
+  const baseColCount = baseCols.length
+  const headerMidEndCol = baseColCount + 1
+  const headerActionCol = baseColCount + 1
 
   const deletedQuoteIds = useMemo(
     () => entries.map((entry) => entry.record?.id).filter(Boolean),
@@ -408,12 +411,12 @@ export default function QuoteDeletedArchivedPanel({
             className={`card px-4 py-3 ${DELETED_HEADER_PANEL_CLASS} quote-deleted-header-panel-open cursor-pointer`}
           >
             <div
-              className={`quote-deleted-header-bar flex w-full min-w-0 items-center gap-2${
+              className={`quote-list-row quote-deleted-header-row w-full min-w-0${
                 bulkSelectMode && selectedIds.length > 0 ? ' is-bulk-confirm' : ''
               }${bulkSelectMode ? ' is-bulk-select' : ''}`}
+              style={{ gridTemplateColumns: rowGridTemplate }}
             >
-              <span
-                className="quote-deleted-header-check flex h-9 w-[2.75rem] shrink-0 items-center justify-center"
+              <DeletedListCell
                 data-deleted-header-interactive
                 onClick={(event) => event.stopPropagation()}
               >
@@ -425,39 +428,47 @@ export default function QuoteDeletedArchivedPanel({
                     onChange={toggleSelectAll}
                   />
                 ) : null}
-              </span>
+              </DeletedListCell>
 
-              <span className="quote-deleted-header-title flex min-w-0 shrink-0 items-center gap-2">
-                <RedPingDot />
-                <span className={APP_LABEL_CLASS}>{title}</span>
-                {bulkSelectMode ? (
-                  <span className={`${APP_LABEL_CLASS} shrink-0 opacity-50`} aria-hidden>
-                    /
+              <DeletedListCell
+                className="quote-deleted-header-mid is-start"
+                style={{ gridColumn: `2 / ${headerMidEndCol}` }}
+              >
+                <div className="flex w-full min-w-0 items-center gap-2">
+                  <span className="quote-deleted-header-title flex shrink-0 items-center gap-2">
+                    <RedPingDot />
+                    <span className={APP_LABEL_CLASS}>{title}</span>
+                    {bulkSelectMode ? (
+                      <span className={`${APP_LABEL_CLASS} shrink-0 opacity-50`} aria-hidden>
+                        /
+                      </span>
+                    ) : null}
                   </span>
-                ) : null}
-              </span>
 
-              {bulkSelectMode ? (
-                <p className="quote-deleted-bulk-warning min-w-0 flex-1 truncate px-1 text-[11px] font-medium leading-snug text-rose-600/90">
-                  {bulkWarningText}
-                </p>
-              ) : (
-                <span className="min-w-0 flex-1" aria-hidden />
-              )}
+                  {bulkSelectMode ? (
+                    <p className="quote-deleted-bulk-warning min-w-0 truncate px-1 text-[11px] font-medium leading-snug text-rose-600/90">
+                      {bulkWarningText}
+                    </p>
+                  ) : null}
 
-              <span className="quote-deleted-header-count inline-flex shrink-0 items-center justify-center gap-2">
-                <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
-                <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
-              </span>
+                  <span className="min-w-0 flex-1" aria-hidden />
 
-              <span
-                className="quote-deleted-header-action relative flex h-9 w-[3rem] shrink-0 items-center justify-center"
+                  <span className="quote-deleted-header-count inline-flex shrink-0 items-center justify-center gap-2">
+                    <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
+                    <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
+                  </span>
+                </div>
+              </DeletedListCell>
+
+              <DeletedListCell
+                className="quote-deleted-header-action-cell"
+                style={{ gridColumn: headerActionCol }}
                 data-deleted-header-interactive
                 onClick={(event) => event.stopPropagation()}
               >
                 {entries.length > 0 ? (
                   bulkSelectMode && selectedIds.length > 0 ? (
-                    <span className="quote-deleted-header-sil-wrap absolute right-0 top-1/2 -translate-y-1/2">
+                    <span className="quote-deleted-header-sil-wrap">
                       <QuoteOrderInlineConfirm
                         label="Sil"
                         labelClass="quote-order-undo-sil"
@@ -489,7 +500,7 @@ export default function QuoteDeletedArchivedPanel({
                 ) : (
                   <span className="inline-flex h-9 w-9" aria-hidden />
                 )}
-              </span>
+              </DeletedListCell>
             </div>
           </section>
 
