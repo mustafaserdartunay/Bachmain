@@ -4013,16 +4013,43 @@ html body section.card.quote-list-row-panel.quote-deleted-list-row {
   width: 100%;
 }
 
+.quote-deleted-header-bar {
+  min-height: 2.25rem;
+}
+
+.quote-deleted-header-action {
+  margin-left: auto;
+}
+
+.quote-deleted-header-action .quote-list-bulk-trash-btn {
+  margin-left: auto;
+}
+
+.quote-deleted-header-bar.is-bulk-select .quote-deleted-header-count {
+  transition: transform 0.2s ease;
+}
+
+.quote-deleted-bulk-warning {
+  animation: quote-deleted-bulk-warning-in 0.28s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes quote-deleted-bulk-warning-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .quote-deleted-header-row .quote-deleted-header-title-cell {
   justify-content: flex-start !important;
   text-align: left !important;
 }
 
-.quote-deleted-header-row .quote-list-cell:last-child {
-  justify-content: center;
-}
-
-.quote-deleted-header-row.is-bulk-confirm .quote-order-undo-confirm {
+.quote-deleted-header-bar.is-bulk-confirm .quote-order-undo-confirm {
   animation: quote-deleted-bulk-confirm-in 0.22s cubic-bezier(0.32, 0.72, 0, 1) both;
   transform-origin: center center;
 }

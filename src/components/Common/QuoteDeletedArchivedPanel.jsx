@@ -356,9 +356,7 @@ export default function QuoteDeletedArchivedPanel({
   if (bulkSelectMode) {
     baseCols[baseCols.length - 1] = bulkActionCol
   }
-  const gridTemplate = bulkSelectMode ? `2.75rem ${baseCols.join(' ')}` : baseCols.join(' ')
-  const titleColumnSpan = 3 + resolvedSegmentTabs.length + 1
-  const rowGridTemplate = gridTemplate
+  const rowGridTemplate = bulkSelectMode ? `2.75rem ${baseCols.join(' ')}` : baseCols.join(' ')
 
   const deletedQuoteIds = useMemo(
     () => entries.map((entry) => entry.record?.id).filter(Boolean),
@@ -393,6 +391,9 @@ export default function QuoteDeletedArchivedPanel({
       ? 'quote-deleted-inline-shell w-full'
       : 'w-full min-w-0 overflow-x-auto overflow-y-visible'
 
+  const bulkWarningText =
+    'Silme işlemini onaylamanız dahilinde artık bilgiler geri gelmeyecek. Silmek istediğinize emin misiniz?'
+
   return (
     <div
       ref={panelRef}
@@ -413,13 +414,13 @@ export default function QuoteDeletedArchivedPanel({
             } cursor-pointer`}
           >
             <div
-              className={`quote-list-row quote-deleted-header-row w-full min-w-0${
+              className={`quote-deleted-header-bar flex w-full min-w-0 items-center gap-2${
                 bulkSelectMode && selectedIds.length > 0 ? ' is-bulk-confirm' : ''
-              }`}
-              style={{ gridTemplateColumns: gridTemplate }}
+              }${bulkSelectMode ? ' is-bulk-select' : ''}`}
             >
               {bulkSelectMode ? (
-                <DeletedListCell
+                <span
+                  className="quote-deleted-header-check shrink-0"
                   data-deleted-header-interactive
                   onClick={(event) => event.stopPropagation()}
                 >
@@ -429,24 +430,29 @@ export default function QuoteDeletedArchivedPanel({
                     aria-label="Tümünü seç"
                     onChange={toggleSelectAll}
                   />
-                </DeletedListCell>
+                </span>
               ) : null}
-              <DeletedListCell
-                className="is-start quote-deleted-header-title-cell"
-                style={{ gridColumn: `span ${titleColumnSpan}` }}
-              >
-                <span className="flex min-w-0 items-center gap-2 px-0 py-0 text-left">
-                  <RedPingDot />
-                  <span className={APP_LABEL_CLASS}>{title}</span>
-                </span>
-              </DeletedListCell>
-              <DeletedListCell>
-                <span className="inline-flex w-full items-center justify-center gap-2">
-                  <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
-                  <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
-                </span>
-              </DeletedListCell>
-              <DeletedListCell
+
+              <span className="quote-deleted-header-title flex min-w-0 shrink-0 items-center gap-2">
+                <RedPingDot />
+                <span className={APP_LABEL_CLASS}>{title}</span>
+              </span>
+
+              {bulkSelectMode ? (
+                <p className="quote-deleted-bulk-warning min-w-0 flex-1 truncate px-1 text-[11px] font-medium leading-snug text-rose-600/90">
+                  {bulkWarningText}
+                </p>
+              ) : (
+                <span className="min-w-0 flex-1" aria-hidden />
+              )}
+
+              <span className="quote-deleted-header-count inline-flex shrink-0 items-center justify-center gap-2">
+                <span className={`${APP_LABEL_CLASS} shrink-0`}>{entries.length} Kayıt</span>
+                <ChevronDown className={`${SP_CHEVRON_CLASS} ${open ? 'rotate-180' : ''}`} />
+              </span>
+
+              <span
+                className="quote-deleted-header-action flex h-9 w-[6.5rem] shrink-0 items-center justify-end"
                 data-deleted-header-interactive
                 onClick={(event) => event.stopPropagation()}
               >
@@ -482,7 +488,7 @@ export default function QuoteDeletedArchivedPanel({
                 ) : (
                   <span className="inline-flex h-9 w-9" aria-hidden />
                 )}
-              </DeletedListCell>
+              </span>
             </div>
           </section>
 
