@@ -58,7 +58,12 @@ export default function ScrollReveal({
   )
 }
 
-export function Counter({ end, suffix = '', duration = 1800 }) {
+/**
+ * Yükselen sayı — prefix/suffix ve ondalık destekler.
+ * örn: end=10000, suffix="+", decimals=0 → 10.000+
+ *      end=99.9, suffix="%", decimals=1 → 99,9%
+ */
+export function Counter({ end, prefix = '', suffix = '', decimals = 0, duration = 1800 }) {
   const [val, setVal] = useState(0)
   const ref = useRef(null)
   const started = useRef(false)
@@ -74,22 +79,32 @@ export function Counter({ end, suffix = '', duration = 1800 }) {
           const tick = (now) => {
             const p = Math.min((now - start) / duration, 1)
             const eased = 1 - Math.pow(1 - p, 3)
-            setVal(Math.floor(end * eased))
+            const next = end * eased
+            setVal(decimals > 0 ? Number(next.toFixed(decimals)) : Math.floor(next))
             if (p < 1) requestAnimationFrame(tick)
             else setVal(end)
           }
           requestAnimationFrame(tick)
         }
       },
-      { threshold: 0.5 },
+      { threshold: 0.35 },
     )
     obs.observe(el)
     return () => obs.disconnect()
-  }, [end, duration])
+  }, [end, duration, decimals])
+
+  const formatted =
+    decimals > 0
+      ? val.toLocaleString('tr-TR', {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+        })
+      : val.toLocaleString('tr-TR')
 
   return (
-    <span ref={ref}>
-      {val.toLocaleString('tr-TR')}
+    <span ref={ref} className="stats-counter">
+      {prefix}
+      {formatted}
       {suffix}
     </span>
   )

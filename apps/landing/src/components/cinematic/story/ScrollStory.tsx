@@ -1,113 +1,91 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useReducedMotion } from 'framer-motion'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { STORY_MODULES } from '../../../data/cinematicStory'
-import { useIsCoarsePointer } from '../useCinematicMotion'
-import CinematicModules from './CinematicModules'
 import ModuleStoryAct from './ModuleStoryAct'
 
+/** Otomatik kayan, büyük modül slider — scroll pin yok. */
 export default function ScrollStory() {
   const reduce = useReducedMotion()
-  const coarse = useIsCoarsePointer()
-  const pinRef = useRef<HTMLDivElement>(null)
-  const stageRef = useRef<HTMLDivElement>(null)
-  const simple = reduce || coarse
+  const [index, setIndex] = useState(0)
+  const total = STORY_MODULES.length
 
   useEffect(() => {
-    if (simple) return
-    const pin = pinRef.current
-    const stage = stageRef.current
-    if (!pin || !stage) return
+    if (reduce || total < 2) return
+    const id = window.setInterval(() => {
+      setIndex((i) => (i + 1) % total)
+    }, 4200)
+    return () => window.clearInterval(id)
+  }, [reduce, total])
 
-    gsap.registerPlugin(ScrollTrigger)
-    const cards = gsap.utils.toArray<HTMLElement>('.cine-act', stage)
-    if (!cards.length) return
-
-    gsap.set(cards, { autoAlpha: 0, y: 56, scale: 0.94, filter: 'blur(8px)' })
-    gsap.set(cards[0], { autoAlpha: 1, y: 0, scale: 1, filter: 'blur(0px)' })
-    cards[0]?.classList.add('is-active')
-
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: pin,
-          start: 'top top',
-          end: () => `+=${cards.length * 620}`,
-          pin: true,
-          scrub: 0.85,
-          anticipatePin: 1,
-        },
-      })
-
-      cards.forEach((card, i) => {
-        if (i === 0) return
-        const prev = cards[i - 1]
-        tl.to(
-          prev,
-          {
-            autoAlpha: 0,
-            y: -72,
-            x: -80,
-            scale: 0.88,
-            filter: 'blur(10px)',
-            duration: 1,
-            ease: 'none',
-            onComplete: () => prev.classList.remove('is-active'),
-          },
-          i,
-        ).fromTo(
-          card,
-          { autoAlpha: 0, y: 72, x: 80, scale: 0.9, filter: 'blur(10px)' },
-          {
-            autoAlpha: 1,
-            y: 0,
-            x: 0,
-            scale: 1,
-            filter: 'blur(0px)',
-            duration: 1,
-            ease: 'none',
-            onStart: () => card.classList.add('is-active'),
-          },
-          i,
-        )
-      })
-    }, pin)
-
-    ScrollTrigger.refresh()
-    return () => ctx.revert()
-  }, [simple])
-
-  if (simple) {
-    return (
-      <section className="cine-modules-fallback" aria-label="Bachmain modülleri">
-        <div className="cine-modules-fallback-head">
-          <p className="cine-kicker">Modüller</p>
-          <h2 className="cine-problem-title">Tüm süreçler tek ekosistemde.</h2>
-        </div>
-        <CinematicModules />
-      </section>
-    )
-  }
+  const go = (dir: number) => setIndex((i) => (i + dir + total) % total)
 
   return (
-    <section className="cine-story" aria-label="Modül hikâyesi">
-      <div ref={pinRef} className="cine-story-pin">
-        <div className="cine-story-shell">
+    <section
+      className="cine-story cine-story--dynamic cine-story--slider"
+      aria-label="Modül hikâyesi"
+    >
+      <div className="cine-story-shell cine-story-shell--wide">
+        <div className="cine-story-head">
           <p className="cine-kicker">Modül geçişleri</p>
           <h2 className="cine-story-heading">Tüm modüller tek hikâyede</h2>
-          <div ref={stageRef} className="cine-story-stage">
+          <p className="cine-story-sub">
+            CRM’den finansa, üretimden Studio’ya — her modül aynı ekosistemde, otomatik akışla.
+          </p>
+        </div>
+
+        <div className="cine-story-slider-frame">
+          <button
+            type="button"
+            className="cine-story-nav cine-story-nav--prev"
+            onClick={() => go(-1)}
+            aria-label="Önceki modül"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <div className="cine-story-stage cine-story-stage--slider" aria-live="polite">
             {STORY_MODULES.map((mod, i) => (
-              <ModuleStoryAct key={mod.id} mod={mod} active={i === 0} />
+              <div
+                key={mod.id}
+                className={`cine-story-slide${i === index ? ' is-active' : ''}`}
+                aria-hidden={i !== index}
+              >
+                <ModuleStoryAct mod={mod} active={i === index} />
+              </div>
             ))}
           </div>
-          <div className="cine-story-progress" aria-hidden>
-            {STORY_MODULES.map((m) => (
-              <span key={m.id} className="cine-story-dot" data-module={m.id} />
-            ))}
-          </div>
+
+          <button
+            type="button"
+            className="cine-story-nav cine-story-nav--next"
+            onClick={() => go(1)}
+            aria-label="Sonraki modül"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="cine-story-progress" role="tablist" aria-label="Modül seçimi">
+          {STORY_MODULES.map((m, i) => (
+            <button
+              key={m.id}
+              type="button"
+              role="tab"
+              aria-selected={i === index}
+              className={`cine-story-dot${i === index ? ' is-active' : ''}`}
+              onClick={() => setIndex(i)}
+            />
+          ))}
+        </div>
+
+        <div className="cine-story-cta-row">
+          <Link to={STORY_MODULES[index]?.href || '/crm'} className="cine-btn cine-btn-primary">
+            {STORY_MODULES[index]?.title} modülünü incele <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </section>

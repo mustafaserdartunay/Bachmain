@@ -380,12 +380,12 @@ export const floatMetrics = [
 ]
 
 export const bandStats = [
-  { value: '10.000+', label: 'Mutlu Kullanıcı' },
-  { value: '500+', label: 'Aktif Firma' },
-  { value: '99.9%', label: 'Uptime' },
-  { value: '7/24', label: 'Teknik Destek' },
-  { value: '%90', label: 'Zaman Tasarrufu' },
-  { value: '%45', label: 'Maliyet Azaltma' },
+  { end: 10000, suffix: '+', label: 'Mutlu Kullanıcı' },
+  { end: 500, suffix: '+', label: 'Aktif Firma' },
+  { end: 99.9, suffix: '%', decimals: 1, label: 'Uptime' },
+  { end: 24, prefix: '7/', label: 'Teknik Destek' },
+  { end: 90, prefix: '%', label: 'Zaman Tasarrufu' },
+  { end: 45, prefix: '%', label: 'Maliyet Azaltma' },
 ]
 
 export const testimonials = [
@@ -411,6 +411,47 @@ export const testimonials = [
     role: 'Satış Direktörü',
     company: 'Dağıtım',
     image: '/assets/testimonials/can.webp',
+    rating: 5,
+  },
+  {
+    quote: 'E-fatura ve stok aynı panelde olunca ay sonu kapanışlarımız 2 günden yarım güne indi.',
+    name: 'Elif Yılmaz',
+    role: 'Muhasebe Müdürü',
+    company: 'Gıda Dağıtım',
+    image: '/assets/testimonials/mehmet.webp',
+    rating: 5,
+  },
+  {
+    quote: 'Üretim planı ile depo senkronu sayesinde fire oranımız belirgin şekilde düştü.',
+    name: 'Burak Şahin',
+    role: 'Üretim Müdürü',
+    company: 'Metal İşleme',
+    image: '/assets/testimonials/can.webp',
+    rating: 5,
+  },
+  {
+    quote:
+      'AI asistan teklif taslaklarını hızlandırdı; satış ekibi müşteriye daha çok zaman ayırıyor.',
+    name: 'Zeynep Arslan',
+    role: 'Satış Operasyon',
+    company: 'Ambalaj',
+    image: '/assets/testimonials/ayse.webp',
+    rating: 5,
+  },
+  {
+    quote: 'Saha rotaları ve ziyaret raporları tek ekranda — bölgesel performans net görünüyor.',
+    name: 'Hakan Demir',
+    role: 'Saha Satış Lideri',
+    company: 'FMCG',
+    image: '/assets/testimonials/can.webp',
+    rating: 5,
+  },
+  {
+    quote: 'Kurulumdan sonra ekip eğitimi kısa sürdü. Arayüz sade, süreçler anlaşılır.',
+    name: 'Selin Kara',
+    role: 'Genel Müdür',
+    company: 'Perakende Zincir',
+    image: '/assets/testimonials/ayse.webp',
     rating: 5,
   },
 ]

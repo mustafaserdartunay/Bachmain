@@ -2,8 +2,9 @@
 
 import { Link } from 'react-router-dom'
 import dynamic from 'next/dynamic'
-import { ArrowRight, MapPin, Star } from 'lucide-react'
+import { ArrowRight, MapPin } from 'lucide-react'
 import KadikoyFieldMap from '../components/landing/KadikoyFieldMap'
+import TestimonialsCarousel from '../components/landing/TestimonialsCarousel'
 import ScrollReveal, { Counter } from '../components/ScrollReveal'
 import OptimizedImage from '../components/seo/OptimizedImage'
 import { BLUR_LOGO, BLUR_PHOTO } from '../seo/imageBlur'
@@ -57,24 +58,18 @@ export default function HomePage() {
         <CustomCursor />
         <CinematicPageFloor />
         <HeroScene />
-        <ProblemSection />
-        <ScrollStory />
-        <AISection />
-        <MobileSection />
 
         <section className="stats-band stats-band-mesh stats-band--alive py-16 lg:py-20">
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 sm:grid-cols-3 lg:grid-cols-6 lg:px-8">
             {bandStats.map((s, i) => (
               <ScrollReveal key={s.label} delay={i * 0.05} className="text-center">
                 <div className="stats-band-value text-3xl font-extrabold tracking-tight text-white lg:text-4xl">
-                  {s.value.includes('+') || s.value.includes('%') || s.value.includes('/') ? (
-                    s.value
-                  ) : (
-                    <Counter
-                      end={parseInt(s.value, 10) || 0}
-                      suffix={s.value.replace(/[0-9.]/g, '')}
-                    />
-                  )}
+                  <Counter
+                    end={s.end}
+                    prefix={s.prefix || ''}
+                    suffix={s.suffix || ''}
+                    decimals={s.decimals || 0}
+                  />
                 </div>
                 <div className="stats-band-label mt-2 text-sm font-semibold text-white/80">
                   {s.label}
@@ -83,6 +78,11 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        <ProblemSection />
+        <ScrollStory />
+        <AISection />
+        <MobileSection />
 
         <div id="nasil-calisir">
           <ProcessFlowShowcase />
@@ -286,47 +286,7 @@ export default function HomePage() {
                 Gerçek ekipler, ölçülebilir sonuçlar — BACHMAIN ile büyüyen firmalar.
               </p>
             </ScrollReveal>
-            <div className="grid gap-6 md:grid-cols-3">
-              {testimonials.map((t, i) => (
-                <ScrollReveal key={t.name} delay={i * 0.08}>
-                  <article className="testimonial-card testimonial-card--v2 group flex h-full flex-col">
-                    <div className="flex items-start justify-between gap-3">
-                      <div
-                        className="flex gap-0.5 text-amber-400"
-                        aria-label={`${t.rating} yıldız`}
-                      >
-                        {Array.from({ length: t.rating }).map((_, si) => (
-                          <Star key={si} className="h-4 w-4 fill-current" />
-                        ))}
-                      </div>
-                      <span className="testimonial-quote-mark" aria-hidden>
-                        “
-                      </span>
-                    </div>
-                    <p className="mt-4 flex-1 text-[15px] leading-relaxed text-slate-600">
-                      {t.quote}
-                    </p>
-                    <div className="mt-6 flex items-center gap-3 border-t border-slate-100/80 pt-5">
-                      <OptimizedImage
-                        src={t.image}
-                        alt={t.name}
-                        className="testimonial-avatar h-12 w-12 rounded-full object-cover"
-                        width={48}
-                        height={48}
-                        placeholder="blur"
-                        blurDataURL={BLUR_PHOTO}
-                      />
-                      <div className="min-w-0">
-                        <div className="truncate font-bold text-slate-900">{t.name}</div>
-                        <div className="truncate text-xs text-slate-500">
-                          {t.role} · {t.company}
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                </ScrollReveal>
-              ))}
-            </div>
+            <TestimonialsCarousel items={testimonials} />
           </div>
         </section>
 

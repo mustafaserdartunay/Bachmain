@@ -90,7 +90,7 @@ function Dropdown({ label, items, href, rich, cine }) {
 
   const closeMenu = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current)
-    closeTimer.current = setTimeout(() => setOpen(false), 220)
+    closeTimer.current = setTimeout(() => setOpen(false), 160)
   }
 
   const triggerCls = cine
@@ -100,10 +100,10 @@ function Dropdown({ label, items, href, rich, cine }) {
   return (
     <div className="relative" onMouseEnter={openMenu} onMouseLeave={closeMenu}>
       {href ? (
-        <Link to={href} className={triggerCls}>
+        <Link to={href} className={triggerCls} aria-expanded={open}>
           {label}
           <ChevronDown
-            className={`h-3.5 w-3.5 opacity-50 transition ${open ? 'rotate-180' : ''}`}
+            className={`h-3.5 w-3.5 opacity-60 transition duration-300 ${open ? 'rotate-180' : ''}`}
           />
         </Link>
       ) : (
@@ -115,27 +115,28 @@ function Dropdown({ label, items, href, rich, cine }) {
         >
           {label}
           <ChevronDown
-            className={`h-3.5 w-3.5 opacity-50 transition ${open ? 'rotate-180' : ''}`}
+            className={`h-3.5 w-3.5 opacity-60 transition duration-300 ${open ? 'rotate-180' : ''}`}
           />
         </button>
       )}
-      {open && items && (
+      {open && items ? (
         <div className="absolute left-0 top-full z-50 pt-2">
           <div
             className={[
-              'rounded-2xl border border-slate-100 bg-white/95 p-2 shadow-xl backdrop-blur',
-              rich ? 'min-w-[320px]' : 'min-w-[200px]',
+              'nav-dropdown-panel rounded-2xl p-2',
+              rich ? 'min-w-[340px]' : 'min-w-[220px]',
             ].join(' ')}
           >
-            {items.map((item) =>
+            {items.map((item, idx) =>
               rich ? (
                 <Link
                   key={item.href}
                   to={item.href}
-                  className="flex items-start gap-3 rounded-xl px-3 py-3 transition hover:bg-blue-50"
+                  className="flex items-start gap-3 rounded-xl px-3 py-3 transition"
+                  style={{ animationDelay: `${idx * 40}ms` }}
                   onClick={() => setOpen(false)}
                 >
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 ring-1 ring-blue-100">
                     <RichNavIcon type={item.icon} />
                   </span>
                   <span className="min-w-0">
@@ -153,7 +154,8 @@ function Dropdown({ label, items, href, rich, cine }) {
                 <Link
                   key={item.href}
                   to={item.href}
-                  className="block rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-blue-50 hover:text-blue-700"
+                  className="block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:text-blue-700"
+                  style={{ animationDelay: `${idx * 35}ms` }}
                   onClick={() => setOpen(false)}
                 >
                   {item.label}
@@ -162,7 +164,7 @@ function Dropdown({ label, items, href, rich, cine }) {
             )}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }
@@ -171,7 +173,8 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname() || '/'
-  const cine = pathname === '/'
+  /* Header yalnızca pazarlama sayfalarında görünür; zemin mavi → cine nav */
+  const cine = true
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 12)

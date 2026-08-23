@@ -47,12 +47,17 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   const isChromeless = CHROMELESS_PATHS.has(pathname)
   const hideChrome = isAuth || isChromeless
   const isCineHome = pathname === '/'
+  const isCineSite = !isAuth && !isChromeless
 
   useEffect(() => {
     const root = document.documentElement
     root.classList.toggle('cine-home', isCineHome)
-    return () => root.classList.remove('cine-home')
-  }, [isCineHome])
+    root.classList.toggle('cine-site', isCineSite && !isCineHome)
+    return () => {
+      root.classList.remove('cine-home')
+      root.classList.remove('cine-site')
+    }
+  }, [isCineHome, isCineSite])
 
   return (
     <>
