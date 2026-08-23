@@ -29,14 +29,6 @@ export default function ScrollStory() {
       aria-label="Modül hikâyesi"
     >
       <div className="cine-story-shell cine-story-shell--wide">
-        <div className="cine-story-head">
-          <p className="cine-kicker">Modül geçişleri</p>
-          <h2 className="cine-story-heading">Tüm modüller tek hikâyede</h2>
-          <p className="cine-story-sub">
-            CRM’den finansa, üretimden Studio’ya — her modül aynı ekosistemde, otomatik akışla.
-          </p>
-        </div>
-
         <div className="cine-story-slider-frame">
           <button
             type="button"

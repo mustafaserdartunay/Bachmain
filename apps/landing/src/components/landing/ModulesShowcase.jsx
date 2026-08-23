@@ -392,16 +392,6 @@ export default function ModulesShowcase() {
                   </div>
                   <h3 className="mt-3 text-[15px] font-extrabold tracking-tight">{m.title}</h3>
                   <p className="mt-1.5 text-[13px] leading-snug opacity-65">{m.desc}</p>
-                  <motion.div
-                    className="mod-card-shine"
-                    animate={{ x: ['-120%', '160%'] }}
-                    transition={{
-                      duration: 2.8,
-                      delay: (i % 7) * 0.35,
-                      repeat: Infinity,
-                      repeatDelay: 4,
-                    }}
-                  />
                 </Link>
               </motion.div>
             </ScrollReveal>

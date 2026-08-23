@@ -394,7 +394,7 @@ export const testimonials = [
     name: 'Mehmet Kaya',
     role: 'CFO',
     company: 'Tekstil A.Ş.',
-    image: '/assets/testimonials/mehmet.webp',
+    image: '/assets/testimonials/mehmet.jpg',
     rating: 5,
   },
   {
@@ -402,7 +402,7 @@ export const testimonials = [
     name: 'Ayşe Demir',
     role: 'Operasyon Müdürü',
     company: 'Mobilya',
-    image: '/assets/testimonials/ayse.webp',
+    image: '/assets/testimonials/ayse.jpg',
     rating: 5,
   },
   {
@@ -410,7 +410,7 @@ export const testimonials = [
     name: 'Can Öztürk',
     role: 'Satış Direktörü',
     company: 'Dağıtım',
-    image: '/assets/testimonials/can.webp',
+    image: '/assets/testimonials/can.jpg',
     rating: 5,
   },
   {
@@ -418,7 +418,7 @@ export const testimonials = [
     name: 'Elif Yılmaz',
     role: 'Muhasebe Müdürü',
     company: 'Gıda Dağıtım',
-    image: '/assets/testimonials/mehmet.webp',
+    image: '/assets/testimonials/elif.jpg',
     rating: 5,
   },
   {
@@ -426,7 +426,7 @@ export const testimonials = [
     name: 'Burak Şahin',
     role: 'Üretim Müdürü',
     company: 'Metal İşleme',
-    image: '/assets/testimonials/can.webp',
+    image: '/assets/testimonials/burak.jpg',
     rating: 5,
   },
   {
@@ -435,7 +435,7 @@ export const testimonials = [
     name: 'Zeynep Arslan',
     role: 'Satış Operasyon',
     company: 'Ambalaj',
-    image: '/assets/testimonials/ayse.webp',
+    image: '/assets/testimonials/zeynep.jpg',
     rating: 5,
   },
   {
@@ -443,7 +443,7 @@ export const testimonials = [
     name: 'Hakan Demir',
     role: 'Saha Satış Lideri',
     company: 'FMCG',
-    image: '/assets/testimonials/can.webp',
+    image: '/assets/testimonials/hakan.jpg',
     rating: 5,
   },
   {
@@ -451,7 +451,7 @@ export const testimonials = [
     name: 'Selin Kara',
     role: 'Genel Müdür',
     company: 'Perakende Zincir',
-    image: '/assets/testimonials/ayse.webp',
+    image: '/assets/testimonials/selin.jpg',
     rating: 5,
   },
 ]

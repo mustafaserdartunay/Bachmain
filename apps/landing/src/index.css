@@ -5768,3 +5768,88 @@ html.cine-home .home-seo-tagline {
   display: inline-block;
   font-variant-numeric: tabular-nums;
 }
+
+/* Mod theme preview — cine-home okunur kontrast */
+html.cine-home .mod-theme-preview {
+  background: linear-gradient(135deg, rgba(30, 64, 140, 0.92), rgba(37, 99, 235, 0.88)) !important;
+  border: 1px solid rgba(147, 197, 253, 0.45) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(15, 40, 90, 0.28);
+}
+html.cine-home .mod-foot.night .mod-theme-preview {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.88)) !important;
+  border-color: rgba(253, 230, 138, 0.35) !important;
+  color: #fde68a !important;
+}
+
+/* Live app panel — gerçek ekran görüntüsü */
+.live-app-panel {
+  position: relative;
+  width: 100%;
+}
+.live-app-panel-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 30px 70px rgba(10, 30, 80, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: #0b1b3a;
+}
+.live-app-panel--compact .live-app-panel-frame {
+  border-radius: 1.2rem;
+  box-shadow: 0 22px 50px rgba(10, 30, 80, 0.35);
+}
+.live-app-panel-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  object-position: top center;
+}
+.live-app-panel-shine {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 60%
+  );
+  background-size: 220% 100%;
+  animation: cine-light-scan 9s ease-in-out infinite;
+}
+.live-app-panel-live {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.85rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+}
+.live-app-panel-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+  animation: mod-pulse 1.6s infinite;
+}
+.live-app-panel-caption {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(238, 244, 255, 0.7);
+}

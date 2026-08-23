@@ -11,8 +11,8 @@ import { BLUR_LOGO, BLUR_PHOTO } from '../seo/imageBlur'
 import SmoothScrollProvider from '../components/cinematic/SmoothScrollProvider'
 import CustomCursor from '../components/cinematic/CustomCursor'
 import HeroScene from '../components/cinematic/hero/HeroScene'
-import ProblemSection from '../components/cinematic/story/ProblemSection'
 import CinematicPageFloor from '../components/cinematic/story/CinematicPageFloor'
+import LiveAppPanel from '../components/landing/LiveAppPanel'
 import {
   b2bFeatures,
   fieldFeatures,
@@ -35,9 +35,6 @@ const TrustSection = dynamic(() => import('../components/cinematic/story/TrustSe
   loading: () => <div className="section-pad min-h-[200px]" aria-hidden />,
 })
 
-const LiveCrmDashboard = dynamic(() => import('../components/landing/LiveCrmDashboard'), {
-  loading: () => <div className="erp-shell erp-shell-full min-h-[280px]" aria-hidden />,
-})
 const ModulesShowcase = dynamic(() => import('../components/landing/ModulesShowcase'), {
   loading: () => <div className="section-pad min-h-[200px]" aria-hidden />,
 })
@@ -79,7 +76,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <ProblemSection />
         <ScrollStory />
         <AISection />
         <MobileSection />
@@ -90,58 +86,75 @@ export default function HomePage() {
 
         <ModulesShowcase />
 
-        {/* DATA SHOWCASE — same full panel, no crop */}
+        {/* GÜNCEL DURUM — ana panel ekranı */}
         <section id="panel" className="section-pad overflow-hidden">
           <div className="mx-auto max-w-7xl px-4 text-center lg:px-8">
             <ScrollReveal className="mb-10">
-              <h2 className="section-title mx-auto">Tüm Verileriniz Tek Ekranda</h2>
+              <span className="pill">Ana sayfa · Güncel Durum</span>
+              <h2 className="section-title mx-auto mt-4">Güncel Durum Sayfası</h2>
               <p className="section-desc mx-auto">
-                Gerçek BACHMAIN paneli — finans, aktivite, KDV ve hızlı aksiyonlar.
+                BACHMAIN’e girişte sizi karşılayan ana ekran. Kasa, gelir-gider, teklif, müşteri ve
+                fatura kısayolları; ay sonu nakit dengesi; finans özeti ve aktivasyon zaman tablosu
+                tek bakışta — operasyonu anlık yönetin.
               </p>
             </ScrollReveal>
           </div>
           <div className="erp-full-bleed px-2 sm:px-4 lg:px-6 xl:px-8">
-            <LiveCrmDashboard full />
+            <LiveAppPanel
+              src="/assets/guncel-durum-panel.jpg"
+              alt="BACHMAIN Güncel Durum ana sayfası — nakit dengesi, finans özeti ve hızlı aksiyonlar"
+              caption="Güncel Durum · ana sayfa paneli"
+            />
+          </div>
+          <div className="mx-auto mt-8 grid max-w-5xl gap-3 px-4 sm:grid-cols-3 lg:px-8">
+            {[
+              ['Hızlı aksiyonlar', 'Kasa, gelir, gider, teklif, müşteri ve fatura tek tıkla'],
+              ['Nakit dengesi', 'Mevcut denge ve operasyonel senaryo göstergeleri'],
+              ['Finans özeti', 'Tahsilat, ödeme, stok, kasa ve banka bakiyeleri'],
+            ].map(([t, d]) => (
+              <div
+                key={t}
+                className="guncel-durum-point rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-left backdrop-blur"
+              >
+                <div className="text-sm font-bold text-white">{t}</div>
+                <div className="mt-1 text-xs leading-relaxed text-white/75">{d}</div>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* B2B */}
+        {/* MÜŞTERİLER / B2B */}
         <section className="section-pad">
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-2 lg:px-8">
             <ScrollReveal direction="left">
-              <span className="pill">B2B Portal</span>
-              <h2 className="section-title mt-4">Müşteriniz de Aynı Panelden Yönetsin</h2>
+              <span className="pill">Müşteriler</span>
+              <h2 className="section-title mt-4">Müşteri & Cari Yönetimi</h2>
               <p className="section-desc">
-                Laptop, tablet ve telefonda çalışan müşteri portalı — ERP ile aynı dil.
+                Gerçek Müşteriler ekranı — özet kartlar, filtreler, tip/temsilci/puantaj ve güncel
+                bakiye. Bayi ve müşteri kayıtlarını tek listeden yönetin; B2B portal ile aynı veri
+                dilini paylaşın.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {b2bFeatures.map((f) => (
                   <span
                     key={f}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm"
+                    className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/85 shadow-sm"
                   >
                     {f}
                   </span>
                 ))}
               </div>
-              <Link to="/features/erp" className="btn-primary mt-8">
-                B2B Özelliklerini İncele
+              <Link to="/features/crm" className="btn-primary mt-8">
+                Müşteri Modülünü İncele
               </Link>
             </ScrollReveal>
             <ScrollReveal direction="right">
-              <div className="relative">
-                <LiveCrmDashboard />
-                <div className="absolute -bottom-4 -left-2 w-28 overflow-hidden rounded-[1.4rem] border-4 border-slate-800 bg-slate-900 shadow-2xl sm:w-32">
-                  <div className="bg-white p-2">
-                    <div className="mb-1 text-[8px] font-bold text-slate-800">B2B Mobil</div>
-                    <div className="space-y-1">
-                      <div className="h-1.5 rounded-full bg-blue-300" />
-                      <div className="h-1.5 w-4/5 rounded-full bg-emerald-300" />
-                      <div className="h-1.5 w-3/5 rounded-full bg-orange-300" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <LiveAppPanel
+                compact
+                src="/assets/musteriler-panel.jpg"
+                alt="BACHMAIN Müşteriler sayfası — cari listesi, filtreler ve özet metrikler"
+                caption="Müşteriler · canlı liste"
+              />
             </ScrollReveal>
           </div>
         </section>
