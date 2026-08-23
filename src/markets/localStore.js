@@ -42,4 +42,30 @@ export function getMarketSeries(id, fallbackPrice) {
   return Array.isArray(all[id]) ? all[id] : []
 }
 
+export function mergeMarketSeries(daily, live, currentPrice) {
+  const byTime = new Map()
+  for (const row of daily || []) {
+    const value = Number(row?.value)
+    const t = Number(row?.t)
+    if (Number.isFinite(t) && Number.isFinite(value) && value > 0) byTime.set(t, value)
+  }
+  for (const row of live || []) {
+    const value = Number(row?.value)
+    const t = Number(row?.t)
+    if (Number.isFinite(t) && Number.isFinite(value) && value > 0) byTime.set(t, value)
+  }
+  const rows = [...byTime.entries()].sort((a, b) => a[0] - b[0]).map(([t, value]) => ({ t, value }))
+  const price = Number(currentPrice)
+  if (Number.isFinite(price) && price > 0) {
+    if (!rows.length) return [{ t: Date.now(), value: Number(price.toFixed(4)) }]
+    const last = rows[rows.length - 1]
+    if (Math.abs(last.value - price) < price * 0.00005) {
+      rows[rows.length - 1] = { ...last, value: Number(price.toFixed(4)) }
+    } else {
+      rows.push({ t: Date.now(), value: Number(price.toFixed(4)) })
+    }
+  }
+  return rows.slice(-MAX_POINTS)
+}
+
 export { DISCLAIMER as MARKET_RATES_DISCLAIMER }

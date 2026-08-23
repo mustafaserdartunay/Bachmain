@@ -29,7 +29,12 @@ function isValidRate(value) {
 function toNumber(value) {
   if (typeof value === 'number') return value
   if (!value) return NaN
-  return Number(String(value).replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''))
+  return Number(
+    String(value)
+      .replace(/\./g, '')
+      .replace(',', '.')
+      .replace(/[^\d.-]/g, ''),
+  )
 }
 
 function buildMarketFromMid({ USD, EUR, GOLD }) {
@@ -53,11 +58,13 @@ function readCachedRates() {
     return {
       ...parsed,
       GOLD: isValidRate(parsed.GOLD) ? parsed.GOLD : FALLBACK.GOLD,
-      market: parsed.market || buildMarketFromMid({
-        USD: parsed.USD,
-        EUR: parsed.EUR,
-        GOLD: parsed.GOLD || FALLBACK.GOLD,
-      }),
+      market:
+        parsed.market ||
+        buildMarketFromMid({
+          USD: parsed.USD,
+          EUR: parsed.EUR,
+          GOLD: parsed.GOLD || FALLBACK.GOLD,
+        }),
       change: parsed.change || { USD: 0, EUR: 0, GOLD: 0 },
     }
   } catch {
@@ -101,8 +108,8 @@ async function fetchOpenExchangeRates() {
 
 async function fetchFrankfurterRates() {
   const [usdRes, eurRes] = await Promise.all([
-    fetch('https://api.frankfurter.app/latest?from=USD&to=TRY', { cache: 'no-store' }),
-    fetch('https://api.frankfurter.app/latest?from=EUR&to=TRY', { cache: 'no-store' }),
+    fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=TRY', { cache: 'no-store' }),
+    fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=TRY', { cache: 'no-store' }),
   ])
 
   if (!usdRes.ok || !eurRes.ok) throw new Error('Kur alınamadı')
