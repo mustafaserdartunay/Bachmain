@@ -229,7 +229,7 @@ function DeletedListCell({ className = '', style, children }) {
 }
 
 export default function QuoteDeletedArchivedPanel({
-  title = 'Silinenler ve Arşivlenenler',
+  title = 'Silinenler',
   onRestored,
   emptyMessage = 'Silinen teklif yok.',
   className = '',
