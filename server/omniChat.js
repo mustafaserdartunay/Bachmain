@@ -39,14 +39,19 @@ Kurallar:
 - actions dizisini yalnızca gerçekten uygunsa doldur; yoksa boş bırak.
 - Önceki başarılı yanıt örneklerini referans al ve marka tonunu koru.`
 
-function buildSystemPrompt({ brandVoice, companyName, learningExamples = [] }) {
+function buildSystemPrompt({
+  brandVoice,
+  companyName,
+  learningExamples = [],
+  maxLearningExamples = 6,
+}) {
   let prompt = BASE_SYSTEM_PROMPT
   if (companyName) prompt += `\n\nFirma adı: ${companyName}`
   if (brandVoice) prompt += `\nMarka sesi: ${brandVoice}`
 
   if (learningExamples.length > 0) {
     prompt += '\n\nÖğrenilmiş başarılı yanıt örnekleri (bunlardan ilham al):'
-    learningExamples.slice(0, 12).forEach((ex, i) => {
+    learningExamples.slice(0, maxLearningExamples).forEach((ex, i) => {
       prompt += `\n${i + 1}. Müşteri: "${ex.customerMessage?.slice(0, 120) || '—'}" → Yanıt: "${ex.reply?.slice(0, 200) || ex.finalText?.slice(0, 200) || '—'}"`
     })
   }
@@ -54,14 +59,30 @@ function buildSystemPrompt({ brandVoice, companyName, learningExamples = [] }) {
   return prompt
 }
 
-function formatThreadForModel(messages = []) {
+function formatThreadForModel(messages = [], maxThreadMessages = 12) {
   return messages
     .filter((m) => m?.body && m.type === 'text')
-    .slice(-20)
+    .slice(-maxThreadMessages)
     .map((m) => ({
       role: m.direction === 'in' ? 'user' : 'assistant',
       content: `[${m.channel || 'kanal'}] ${m.senderName || (m.direction === 'in' ? 'Müşteri' : 'Temsilci')}: ${m.body}`,
     }))
+}
+
+function resolveOmniModel(model) {
+  const fromRequest = String(model || '').trim()
+  if (fromRequest) return resolveChatModel(fromRequest)
+  return resolveChatModel(process.env.OPENAI_OMNI_MODEL || 'gpt-4o-mini')
+}
+
+function resolveOmniReasoningEffort(override) {
+  const raw = String(override || process.env.OPENAI_OMNI_REASONING_EFFORT || 'low').trim()
+  return raw || 'low'
+}
+
+function resolveOmniMaxTokens(override) {
+  const parsed = Number(override || process.env.OPENAI_OMNI_MAX_TOKENS || 512)
+  return Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 2048) : 512
 }
 
 export async function runOmniAnalyze({
@@ -72,10 +93,16 @@ export async function runOmniAnalyze({
   model,
   brandVoice = '',
   companyName = 'Erlenbox',
+  reasoningEffort,
+  maxOutputTokens,
+  maxThreadMessages = 12,
+  maxLearningExamples = 6,
 }) {
   const resolvedKey = requireOpenAiApiKey(apiKey)
-  const selectedModel = resolveChatModel(model)
-  const thread = formatThreadForModel(messages)
+  const selectedModel = resolveOmniModel(model)
+  const thread = formatThreadForModel(messages, maxThreadMessages)
+  const effort = resolveOmniReasoningEffort(reasoningEffort)
+  const maxTokens = resolveOmniMaxTokens(maxOutputTokens)
 
   if (thread.length === 0) {
     return {
@@ -86,18 +113,24 @@ export async function runOmniAnalyze({
       actions: [],
       confidence: 0.5,
       source: 'openai',
+      model: selectedModel,
     }
   }
 
-  const systemPrompt = buildSystemPrompt({ brandVoice, companyName, learningExamples })
+  const systemPrompt = buildSystemPrompt({
+    brandVoice,
+    companyName,
+    learningExamples,
+    maxLearningExamples,
+  })
 
   const result = await createOpenAiCompletion({
     apiKey: resolvedKey,
     model: selectedModel,
-    temperature: 0.4,
+    temperature: 0.35,
     json: true,
-    reasoningEffort: 'high',
-    maxCompletionTokens: 4096,
+    reasoningEffort: effort,
+    maxCompletionTokens: maxTokens,
     messages: [
       {
         role: 'system',
@@ -132,6 +165,7 @@ export async function runOmniAnalyze({
       actions: Array.isArray(parsed.actions) ? parsed.actions : [],
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.75,
       source: 'openai',
+      model: result.model || selectedModel,
     }
   } catch {
     return {
@@ -142,6 +176,7 @@ export async function runOmniAnalyze({
       actions: [],
       confidence: 0.5,
       source: 'openai',
+      model: result.model || selectedModel,
     }
   }
 }
@@ -155,6 +190,10 @@ export async function handleOmniAnalyzeRequest(reqBody, reqHeaders = {}) {
     brandVoice = '',
     companyName = 'Erlenbox',
     model,
+    reasoningEffort,
+    maxOutputTokens,
+    maxThreadMessages,
+    maxLearningExamples,
   } = reqBody || {}
 
   return runOmniAnalyze({
@@ -164,6 +203,10 @@ export async function handleOmniAnalyzeRequest(reqBody, reqHeaders = {}) {
     brandVoice,
     companyName,
     apiKey: resolveRequestApiKey(reqBody, reqHeaders),
-    model: resolveChatModel(model),
+    model,
+    reasoningEffort,
+    maxOutputTokens,
+    maxThreadMessages,
+    maxLearningExamples,
   })
 }

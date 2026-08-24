@@ -90,7 +90,8 @@ app.get('/api/omni/health', (_req, res) => {
   res.json({
     ok: true,
     hasApiKey: Boolean(getOpenAiApiKey()),
-    model: resolveChatModel(),
+    model: process.env.OPENAI_OMNI_MODEL || 'gpt-4o-mini',
+    defaultChatModel: resolveChatModel(),
     clientKeysAllowed: !isProductionRuntime(),
   })
 })

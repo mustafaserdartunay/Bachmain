@@ -18,7 +18,7 @@ import {
   recordAcceptedReply,
   recordFeedback,
 } from '../omnichannel/ai/learningStore'
-import { readAiSettings, saveAiSettings } from '../omnichannel/ai/settings'
+import { readAiSettings, saveAiSettings, OMNI_MODEL_PRESETS } from '../omnichannel/ai/settings'
 import {
   assignConversation,
   createWhatsAppExampleThread,
@@ -414,6 +414,17 @@ export default function OmnichannelPage() {
                   />
                   Otomatik müşteri yanıtı
                 </label>
+                <select
+                  value={aiSettings.model}
+                  onChange={(e) => setAiSettings((prev) => ({ ...prev, model: e.target.value }))}
+                  className="form-input text-xs md:col-span-2"
+                >
+                  {OMNI_MODEL_PRESETS.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.label}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="password"
                   placeholder="OpenAI API Key (sk-...)"
@@ -456,7 +467,8 @@ export default function OmnichannelPage() {
                 </label>
                 <p className="text-[12px] font-semibold text-[var(--muted)] md:col-span-2">
                   {learningStats.exampleCount} öğrenilmiş yanıt · {learningStats.positiveFeedback}{' '}
-                  olumlu geri bildirim
+                  olumlu geri bildirim · model: {aiSettings.model} · hız:{' '}
+                  {aiSettings.speedProfile || 'fast'}
                 </p>
               </div>
               <div className="mt-3 flex justify-end">

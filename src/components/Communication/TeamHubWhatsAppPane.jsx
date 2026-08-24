@@ -66,6 +66,7 @@ export default function TeamHubWhatsAppPane() {
   const [aiLoading, setAiLoading] = useState(false)
   const bottomRef = useRef(null)
   const autoRepliedRef = useRef(new Set())
+  const analyzeRequestRef = useRef(0)
 
   const refresh = useCallback(() => {
     const list = readConversations()
@@ -138,25 +139,30 @@ export default function TeamHubWhatsAppPane() {
   }, [lastInbound?.body])
 
   const runAiAnalysis = useCallback(async () => {
-    if (!conversation || messages.length === 0) {
+    if (!conversation || messages.length === 0 || !aiSettings.enabled) {
       setInsights(null)
       return
     }
+    const requestId = ++analyzeRequestRef.current
     setAiLoading(true)
     try {
       const result = await analyzeConversationWithAi({
         messages,
         context: buildConversationContext({ conversation, customer, lead }),
       })
-      setInsights(result)
+      if (requestId === analyzeRequestRef.current) {
+        setInsights(result)
+      }
     } finally {
-      setAiLoading(false)
+      if (requestId === analyzeRequestRef.current) {
+        setAiLoading(false)
+      }
     }
-  }, [conversation, messages, customer, lead])
+  }, [conversation, messages, customer, lead, aiSettings.enabled])
 
   useEffect(() => {
-    if (quickOpen || aiSettings.enabled) runAiAnalysis()
-  }, [quickOpen, aiSettings.enabled, runAiAnalysis])
+    runAiAnalysis()
+  }, [runAiAnalysis])
 
   useEffect(() => {
     if (selectedId) markConversationRead(selectedId)
@@ -395,7 +401,8 @@ export default function TeamHubWhatsAppPane() {
                 {insights?.primaryReply ? (
                   <div className="rounded-[12px] bg-violet-500/8 px-2.5 py-2 ring-1 ring-violet-400/20">
                     <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-violet-700">
-                      OpenAI · {insights.source === 'openai' ? 'AI' : 'Yerel'}
+                      OpenAI ·{' '}
+                      {insights.source === 'openai' ? aiSettings.model || 'gpt-4o-mini' : 'Yerel'}
                     </p>
                     <p className="text-[12px] font-semibold leading-snug text-[var(--ink)]">
                       {insights.primaryReply}

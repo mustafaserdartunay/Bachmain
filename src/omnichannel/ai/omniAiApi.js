@@ -65,7 +65,12 @@ export async function analyzeConversationWithAi({ messages, context }) {
   const local = analyzeConversationLocal(messages)
 
   if (!settings.enabled) {
-    return { ...local, replySuggestions: local.replies, source: 'local', primaryReply: local.replies[0] || '' }
+    return {
+      ...local,
+      replySuggestions: local.replies,
+      source: 'local',
+      primaryReply: local.replies[0] || '',
+    }
   }
 
   const base = getApiBase()
@@ -75,14 +80,21 @@ export async function analyzeConversationWithAi({ messages, context }) {
     const response = await fetch(`${base}/api/omni/analyze`, {
       method: 'POST',
       headers: buildHeaders(),
-      body: JSON.stringify(buildPayload({
-        messages,
-        context,
-        learningExamples,
-        brandVoice: settings.brandVoice,
-        companyName: settings.companyName,
-        model: settings.model,
-      })),
+      body: JSON.stringify(
+        buildPayload({
+          messages,
+          context,
+          learningExamples,
+          brandVoice: settings.brandVoice,
+          companyName: settings.companyName,
+          model: settings.model,
+          reasoningEffort: settings.reasoningEffort,
+          maxOutputTokens: settings.maxOutputTokens,
+          maxThreadMessages: settings.maxThreadMessages,
+          maxLearningExamples: settings.maxLearningExamples,
+          speedProfile: settings.speedProfile,
+        }),
+      ),
     })
 
     const data = await response.json().catch(() => ({}))
