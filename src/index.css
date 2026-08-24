@@ -4674,7 +4674,8 @@ html.night .glass-sidebar .sidebar-submenu {
 }
 
 .glass-team-hub .glass-sidebar-collapse:hover {
-  transform: translateX(2px);
+  transform-origin: center;
+  transform: scale(1.06);
 }
 
 .glass-team-hub .search-pill,
@@ -4722,7 +4723,8 @@ html.night .glass-sidebar .sidebar-submenu {
 }
 
 .glass-team-hub[data-collapsed='true'] .glass-sidebar-collapse:hover {
-  transform: translateX(-2px);
+  transform-origin: center;
+  transform: scale(1.06);
 }
 
 .glass-sidebar-toggle {
