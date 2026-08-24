@@ -1,0 +1,32 @@
+{
+  "folders": [{ "name": "BACHMAIN", "path": ".." }],
+  "settings": {
+    "git.openRepositoryInParentFolders": "never",
+    "git.autofetch": false,
+    "git.autorefresh": false,
+    "git.autoRepositoryScan": false,
+    "search.followSymlinks": false,
+    "npm.autoDetect": "off",
+    "typescript.tsserver.maxTsServerMemory": 512,
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/dist": true,
+      "**/.vite": true
+    },
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/.next/**": true,
+      "**/dist/**": true,
+      "**/.vite/**": true,
+      "**/*.pack.gz": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/dist": true,
+      "**/.vite": true,
+      "**/package-lock.json": true
+    }
+  }
+}

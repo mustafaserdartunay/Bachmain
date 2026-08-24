@@ -34,6 +34,7 @@ credentials*.json
 apps/admin/server/data/db.json
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea/
 
 # Backups / restore points (kept out of the project to avoid index bloat)

@@ -7,17 +7,33 @@
     { "name": "ANDROID - BACHMAIN", "path": "../apps/android" }
   ],
   "settings": {
+    "git.openRepositoryInParentFolders": "never",
+    "git.autofetch": false,
+    "git.autorefresh": false,
+    "git.autoRepositoryScan": false,
+    "search.followSymlinks": false,
+    "npm.autoDetect": "off",
+    "typescript.tsserver.maxTsServerMemory": 512,
     "files.exclude": {
       "**/node_modules": true,
       "**/.next": true,
       "**/dist": true,
+      "**/.vite": true,
       "**/.git": false
+    },
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/.next/**": true,
+      "**/dist/**": true,
+      "**/.vite/**": true,
+      "**/*.pack.gz": true
     },
     "search.exclude": {
       "**/node_modules": true,
       "**/.next": true,
       "**/dist": true,
-      "**/package-lock.json": true
+      "**/package-lock.json": true,
+      "**/.vite": true
     },
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
