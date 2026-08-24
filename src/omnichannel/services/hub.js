@@ -13,7 +13,19 @@ import {
   isWhatsAppChannelConfigured,
   resolveWhatsAppRecipient,
   shouldWhatsAppLocalFallback,
+  canSendWhatsAppCloud,
+  buildWhatsAppLocalDispatch,
 } from './whatsappRecipients'
+
+function recordLocalWhatsAppSend(to, note) {
+  appendWebhookLog({
+    channel: 'whatsapp',
+    event: 'message.local',
+    to,
+    note: note || 'Yerel taslak — Meta API gönderilmedi',
+  })
+  return buildWhatsAppLocalDispatch(to, note)
+}
 
 const channelSenders = {
   whatsapp: async (payload) => {
@@ -23,6 +35,11 @@ const channelSenders = {
 
     if (!to) {
       throw new Error('Alıcı telefon numarası bulunamadı. Konuşmada contactPhone tanımlayın.')
+    }
+
+    if (!canSendWhatsAppCloud(conversation)) {
+      recordLocalWhatsAppSend(to, null)
+      return buildWhatsAppLocalDispatch(to)
     }
 
     try {
@@ -36,19 +53,8 @@ const channelSenders = {
       return { success: true, messageId: result.messageId || createId('WA'), localOnly: false }
     } catch (error) {
       if (shouldWhatsAppLocalFallback(error, conversation)) {
-        appendWebhookLog({
-          channel: 'whatsapp',
-          event: 'message.local',
-          to,
-          note: error.message || 'Meta API — yerel taslak olarak kaydedildi',
-        })
-        return {
-          success: true,
-          messageId: createId('WA-LOCAL'),
-          localOnly: true,
-          warning:
-            'WhatsApp API bağlı değil veya oturum yok. Mesaj yalnızca CRM içinde görünür; gerçek gönderim için Mesaj Merkezi ayarlarını tamamlayın.',
-        }
+        recordLocalWhatsAppSend(to, error.message)
+        return buildWhatsAppLocalDispatch(to)
       }
       throw error
     }

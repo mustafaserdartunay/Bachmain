@@ -7,16 +7,29 @@ const API_BASE = import.meta.env.VITE_PLATFORM_API_URL || 'https://yonetim.bachm
 
 async function waFetch(path, { method = 'GET', body } = {}) {
   const { token } = getStoredSession()
-  if (!token) throw new Error('Oturum yok — önce giriş yapın')
-  const res = await fetch(`${API_BASE}/${path}`, {
-    method,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: body != null ? JSON.stringify(body) : undefined,
-  })
+  if (!token) {
+    const err = new Error('Oturum yok — önce giriş yapın')
+    err.code = 'UNAUTHORIZED'
+    throw err
+  }
+
+  let res
+  try {
+    res = await fetch(`${API_BASE}/${path}`, {
+      method,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: body != null ? JSON.stringify(body) : undefined,
+    })
+  } catch (networkError) {
+    const err = new Error(networkError?.message || 'WhatsApp API bağlantı hatası')
+    err.code = 'NETWORK_ERROR'
+    throw err
+  }
+
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     const err = new Error(data.message || data.error || 'WhatsApp API hatası')
