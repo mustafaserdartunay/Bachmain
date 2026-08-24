@@ -139,13 +139,13 @@ export const rootMetadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon-512.png?v=5', type: 'image/png', sizes: '512x512' },
-      { url: '/favicon-192.png?v=5', type: 'image/png', sizes: '192x192' },
-      { url: '/favicon-48.png?v=5', type: 'image/png', sizes: '48x48' },
-      { url: '/favicon-32.png?v=5', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-512.png?v=6', type: 'image/png', sizes: '512x512' },
+      { url: '/favicon-192.png?v=6', type: 'image/png', sizes: '192x192' },
+      { url: '/favicon-48.png?v=6', type: 'image/png', sizes: '48x48' },
+      { url: '/favicon-32.png?v=6', type: 'image/png', sizes: '32x32' },
     ],
-    apple: [{ url: '/apple-touch-icon.png?v=5', sizes: '180x180' }],
-    shortcut: '/favicon-512.png?v=5',
+    apple: [{ url: '/apple-touch-icon.png?v=6', sizes: '180x180' }],
+    shortcut: '/favicon-512.png?v=6',
   },
   manifest: '/manifest.webmanifest',
   openGraph: {

@@ -17,19 +17,19 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['business', 'productivity'],
     icons: [
       {
-        src: '/favicon-512.png?v=5',
+        src: '/favicon-512.png?v=6',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/favicon-192.png?v=5',
+        src: '/favicon-192.png?v=6',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/apple-touch-icon.png?v=5',
+        src: '/apple-touch-icon.png?v=6',
         sizes: '180x180',
         type: 'image/png',
         purpose: 'any',
