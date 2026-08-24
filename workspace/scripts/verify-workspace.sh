@@ -31,8 +31,13 @@ echo "-- Sistem klasörleri"
 check_dir "uygulama.bachmain.com (CRM)" "$MONOREPO"
 check_dir "yonetim.bachmain.com (Admin)" "$MONOREPO/apps/admin"
 check_dir "bachmain.com (Landing)" "$MONOREPO/apps/landing"
-check_dir "iosapp.bachmain (iOS)" "$IOS"
-check_dir "androidapp.bachmain (Android)" "$MONOREPO/apps/android"
+
+echo ""
+echo "-- Ertelenmiş mobil (workspace dışı)"
+if [[ -d "$IOS" ]]; then pass "iosapp.bachmain (opsiyonel) → $IOS"
+else echo "  ○ iosapp.bachmain henüz yok (workspace dışı)"; fi
+if [[ -d "$MONOREPO/apps/android" ]]; then pass "androidapp.bachmain (opsiyonel) → $MONOREPO/apps/android"
+else echo "  ○ androidapp.bachmain henüz yok (workspace dışı)"; fi
 
 echo ""
 echo "-- Workspace dosyaları (repo)"
@@ -43,7 +48,7 @@ echo ""
 echo "-- SSD workspace"
 if [[ -d "$SSD" ]]; then
   pass "SSD klasörü: $SSD"
-  for name in uygulama.bachmain.com yonetim.bachmain.com bachmain.com iosapp.bachmain androidapp.bachmain; do
+  for name in uygulama.bachmain.com yonetim.bachmain.com bachmain.com; do
     target="$SSD/systems/$name"
     if [[ -L "$target" ]] && [[ -e "$target" ]]; then
       pass "SSD symlink $name"

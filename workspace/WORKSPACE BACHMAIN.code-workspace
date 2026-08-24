@@ -2,9 +2,7 @@
   "folders": [
     { "name": "UYGULAMA - BACHMAIN", "path": ".." },
     { "name": "YÖNETİM - BACHMAIN", "path": "../apps/admin" },
-    { "name": "WEB - BACHMAIN", "path": "../apps/landing" },
-    { "name": "IOS - BACHMAIN", "path": "../../../Documents/Bachmain/bachmain.ios" },
-    { "name": "ANDROID - BACHMAIN", "path": "../apps/android" }
+    { "name": "WEB - BACHMAIN", "path": "../apps/landing" }
   ],
   "settings": {
     "git.openRepositoryInParentFolders": "never",
@@ -22,11 +20,15 @@
       "**/.git": false
     },
     "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
       "**/node_modules/**": true,
-      "**/.next/**": true,
+      "**/apps/**/node_modules/**": true,
       "**/dist/**": true,
+      "**/.next/**": true,
       "**/.vite/**": true,
-      "**/*.pack.gz": true
+      "**/*.pack.gz": true,
+      "**/.vercel/**": true
     },
     "search.exclude": {
       "**/node_modules": true,
@@ -43,8 +45,7 @@
     "recommendations": [
       "dbaeumer.vscode-eslint",
       "esbenp.prettier-vscode",
-      "bradlc.vscode-tailwindcss",
-      "swiftlang.swift-vscode"
+      "bradlc.vscode-tailwindcss"
     ]
   },
   "launch": {

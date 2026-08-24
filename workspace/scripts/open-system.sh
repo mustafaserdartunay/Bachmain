@@ -133,7 +133,7 @@ open_one() {
 }
 
 if [[ $# -eq 0 ]]; then
-  for key in uygulama yonetim web ios android; do
+  for key in uygulama yonetim web; do
     start_if_needed "$key"
   done
   echo "→ Sunucular hazır. Simple Browser yalnızca UYGULAMA (8GB RAM — tek sekme)."

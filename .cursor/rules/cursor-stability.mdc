@@ -10,10 +10,12 @@ alwaysApply: true
 
 ## Workspace açma (KRİTİK — OOM önleme)
 
-**Agent oturumunda yalnızca tek klasör aç:** `File → Open Folder → Bachmain`
+**Tercih sırası:**
+1. Agent / düşük RAM → `File → Open Folder → Bachmain` veya `workspace/BACHMAIN-SINGLE.code-workspace`
+2. Üç sistem birlikte → `workspace/WORKSPACE BACHMAIN.code-workspace` (**3 kök:** UYGULAMA, YÖNETİM, WEB)
 
-- `workspace/WORKSPACE BACHMAIN.code-workspace` **multi-root** (5 uygulama) Cursor'da **açma** — RAM'i 3–5× şişirir, çökme/kapanma yapar.
-- Multi-root gerekiyorsa yalnızca manuel geliştirmede; agent işleri tek kökte.
+- iOS / Android workspace köklerinden **çıkarıldı** (henüz başlanmadı — RAM yükünü azaltır).
+- Eski 5 köklü workspace Cursor’da RAM’i şişirir; kullanma.
 
 ## Agent — turu yarım bırakma (ZORUNLU)
 
