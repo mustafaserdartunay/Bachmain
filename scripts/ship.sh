@@ -58,7 +58,7 @@ echo "==> Push origin ${BRANCH}"
 git push -u origin "$BRANCH"
 
 # Redeploy via Vercel CLI (OAuth refresh; stale auth.json token causes API 403).
-echo "==> Vercel production redeploy (CLI)"
+echo "==> Vercel production deploy (CLI — fresh build)"
 CLI_PROJECTS=()
 [ "$NEED_CRM" = "1" ] && CLI_PROJECTS+=("crm")
 [ "$NEED_ADMIN" = "1" ] && CLI_PROJECTS+=("admin")

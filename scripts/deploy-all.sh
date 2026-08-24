@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 echo "==> Git push origin main"
 git push origin main
 
-echo "==> Vercel production redeploy (CLI)"
+echo "==> Vercel production deploy (CLI — fresh build)"
 bash scripts/vercel-redeploy-cli.sh crm admin web || true
 
 echo "Tamam. Kontrol: https://bachmain.com | https://uygulama.bachmain.com | https://yonetim.bachmain.com"
