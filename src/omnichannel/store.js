@@ -23,7 +23,16 @@ export function createId(prefix = 'OMNI') {
 }
 
 export function readConversations() {
-  return readJson(STORAGE_KEYS.conversations, [])
+  const items = readJson(STORAGE_KEYS.conversations, [])
+  return items.map((item) => {
+    if (item.channel !== 'whatsapp') return item
+    const externalId = String(item.externalId || '')
+    const phoneDigits = String(item.contactPhone || '').replace(/\D/g, '')
+    if ((externalId.startsWith('demo-') || externalId.length < 10) && phoneDigits.length >= 10) {
+      return { ...item, externalId: phoneDigits }
+    }
+    return item
+  })
 }
 
 export function writeConversations(items) {
@@ -51,7 +60,10 @@ export function readWebhookLog() {
 }
 
 export function appendWebhookLog(entry) {
-  const log = [{ id: createId('WH'), at: new Date().toISOString(), ...entry }, ...readWebhookLog()].slice(0, 200)
+  const log = [
+    { id: createId('WH'), at: new Date().toISOString(), ...entry },
+    ...readWebhookLog(),
+  ].slice(0, 200)
   writeJson(STORAGE_KEYS.webhookLog, log)
 }
 
@@ -97,9 +109,10 @@ export function appendMessage(message, { bumpUnread = true } = {}) {
       ...conversations[index],
       lastMessageAt: message.at,
       lastMessagePreview: message.type === 'text' ? message.body : `[${message.type}]`,
-      unreadCount: bumpUnread && message.direction === 'in'
-        ? (conversations[index].unreadCount || 0) + 1
-        : conversations[index].unreadCount || 0,
+      unreadCount:
+        bumpUnread && message.direction === 'in'
+          ? (conversations[index].unreadCount || 0) + 1
+          : conversations[index].unreadCount || 0,
     }
     writeConversations(conversations)
   }
@@ -110,7 +123,8 @@ export function appendMessage(message, { bumpUnread = true } = {}) {
 export function mergeWhatsAppInbox(inbox = {}) {
   const remoteConversations = Array.isArray(inbox.conversations) ? inbox.conversations : []
   const remoteMessages = Array.isArray(inbox.messages) ? inbox.messages : []
-  if (!remoteConversations.length && !remoteMessages.length) return { conversations: 0, messages: 0 }
+  if (!remoteConversations.length && !remoteMessages.length)
+    return { conversations: 0, messages: 0 }
 
   let conversationCount = 0
   let messageCount = 0
@@ -122,13 +136,11 @@ export function mergeWhatsAppInbox(inbox = {}) {
   )
 
   remoteConversations.forEach((conversation) => {
-    const existingId = conversation.id
-      && localConversations.some((item) => item.id === conversation.id)
-      ? conversation.id
-      : idByExternal.get(String(conversation.externalId))
-    const existing = existingId
-      ? localConversations.find((item) => item.id === existingId)
-      : null
+    const existingId =
+      conversation.id && localConversations.some((item) => item.id === conversation.id)
+        ? conversation.id
+        : idByExternal.get(String(conversation.externalId))
+    const existing = existingId ? localConversations.find((item) => item.id === existingId) : null
     const id = existing?.id || conversation.id
     upsertConversation({
       ...(existing || {}),
@@ -141,9 +153,12 @@ export function mergeWhatsAppInbox(inbox = {}) {
   })
 
   remoteMessages.forEach((message) => {
-    const mappedId = idByExternal.get(
-      String(remoteConversations.find((item) => item.id === message.conversationId)?.externalId || ''),
-    ) || message.conversationId
+    const mappedId =
+      idByExternal.get(
+        String(
+          remoteConversations.find((item) => item.id === message.conversationId)?.externalId || '',
+        ),
+      ) || message.conversationId
     const before = readMessages().length
     appendMessage({ ...message, conversationId: mappedId }, { bumpUnread: false })
     if (readMessages().length > before) messageCount += 1
@@ -153,9 +168,9 @@ export function mergeWhatsAppInbox(inbox = {}) {
 }
 
 export function markConversationRead(conversationId) {
-  const conversations = readConversations().map((item) => (
-    item.id === conversationId ? { ...item, unreadCount: 0 } : item
-  ))
+  const conversations = readConversations().map((item) =>
+    item.id === conversationId ? { ...item, unreadCount: 0 } : item,
+  )
   writeConversations(conversations)
 }
 
@@ -186,10 +201,21 @@ export function getMessageCenterBadge() {
   return { count, unreadTotal, unansweredCount }
 }
 
-const SOCIAL_CHANNEL_IDS = ['whatsapp', 'instagram', 'facebook', 'tiktok', 'linkedin', 'pinterest', 'x', 'email']
+const SOCIAL_CHANNEL_IDS = [
+  'whatsapp',
+  'instagram',
+  'facebook',
+  'tiktok',
+  'linkedin',
+  'pinterest',
+  'x',
+  'email',
+]
 
 function normalizeSocialChannel(channel) {
-  const value = String(channel || '').trim().toLowerCase()
+  const value = String(channel || '')
+    .trim()
+    .toLowerCase()
   if (value === 'twitter' || value === 'x') return 'x'
   return value
 }
@@ -208,11 +234,11 @@ export function getChannelUnreadCounts() {
 }
 
 export function assignConversation(conversationId, { userId, departmentId }) {
-  const conversations = readConversations().map((item) => (
+  const conversations = readConversations().map((item) =>
     item.id === conversationId
       ? { ...item, assignedUserId: userId, departmentId, status: 'pending' }
-      : item
-  ))
+      : item,
+  )
   writeConversations(conversations)
 }
 
@@ -226,34 +252,38 @@ function seedIfEmpty() {
   const conversationId = createId('CONV')
   const at = new Date().toISOString()
 
-  writeConversations([{
-    id: conversationId,
-    channel: 'whatsapp',
-    externalId: 'demo-whatsapp',
-    contactName: 'Ayşe Yılmaz',
-    contactPhone: '+905551112233',
-    contactEmail: '',
-    contactHandle: '',
-    customerId: null,
-    leadId: null,
-    assignedUserId: null,
-    departmentId: 'dep-sales',
-    lastMessageAt: at,
-    lastMessagePreview: 'Merhaba, teklif hakkında bilgi alabilir miyim?',
-    unreadCount: 2,
-    sentiment: 'neutral',
-    status: 'open',
-  }])
+  writeConversations([
+    {
+      id: conversationId,
+      channel: 'whatsapp',
+      externalId: '905551112233',
+      contactName: 'Ayşe Yılmaz',
+      contactPhone: '+905551112233',
+      contactEmail: '',
+      contactHandle: '',
+      customerId: null,
+      leadId: null,
+      assignedUserId: null,
+      departmentId: 'dep-sales',
+      lastMessageAt: at,
+      lastMessagePreview: 'Merhaba, teklif hakkında bilgi alabilir miyim?',
+      unreadCount: 2,
+      sentiment: 'neutral',
+      status: 'open',
+    },
+  ])
 
-  writeMessages([{
-    id: createId('MSG'),
-    conversationId,
-    direction: 'in',
-    type: 'text',
-    body: 'Merhaba, teklif hakkında bilgi alabilir miyim?',
-    at,
-    senderName: 'Ayşe Yılmaz',
-  }])
+  writeMessages([
+    {
+      id: createId('MSG'),
+      conversationId,
+      direction: 'in',
+      type: 'text',
+      body: 'Merhaba, teklif hakkında bilgi alabilir miyim?',
+      at,
+      senderName: 'Ayşe Yılmaz',
+    },
+  ])
 }
 
 seedIfEmpty()
@@ -286,20 +316,23 @@ export function createWhatsAppExampleThread({
     status: 'open',
   })
 
-  appendMessage({
-    id: createId('MSG'),
-    conversationId,
-    channel: 'whatsapp',
-    direction: 'in',
-    type: 'text',
-    body: 'Merhaba, BachMain WhatsApp örneği — fiyat alabilir miyim?',
-    mediaUrl: null,
-    mediaName: null,
-    duration: null,
-    senderName: contactName,
-    at,
-    status: 'delivered',
-  }, { bumpUnread: false })
+  appendMessage(
+    {
+      id: createId('MSG'),
+      conversationId,
+      channel: 'whatsapp',
+      direction: 'in',
+      type: 'text',
+      body: 'Merhaba, BachMain WhatsApp örneği — fiyat alabilir miyim?',
+      mediaUrl: null,
+      mediaName: null,
+      duration: null,
+      senderName: contactName,
+      at,
+      status: 'delivered',
+    },
+    { bumpUnread: false },
+  )
 
   appendWebhookLog({
     channel: 'whatsapp',

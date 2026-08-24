@@ -1,5 +1,4 @@
 import { getOpenAiApiKey } from '../../server/env.js'
-import { resolveChatModel } from '../../server/openaiModels.js'
 
 export default function handler(req, res) {
   if (req.method !== 'GET') {
@@ -10,6 +9,6 @@ export default function handler(req, res) {
   return res.status(200).json({
     ok: true,
     hasApiKey: Boolean(getOpenAiApiKey()),
-    model: resolveChatModel(),
+    model: process.env.OPENAI_OMNI_MODEL || 'gpt-4o-mini',
   })
 }

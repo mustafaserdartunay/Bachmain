@@ -250,7 +250,7 @@ export default function OmnichannelPage() {
     setSending(true)
     try {
       const body = payload.body?.trim() || ''
-      await sendChannelMessage({
+      const result = await sendChannelMessage({
         channel: selectedConversation.channel,
         conversationId: selectedConversation.id,
         body,
@@ -259,6 +259,10 @@ export default function OmnichannelPage() {
         mediaName: payload.mediaName,
         duration: payload.duration,
       })
+
+      if (result.warning) {
+        window.alert(result.warning)
+      }
 
       if (body && (appliedSuggestionRef.current || insights?.primaryReply)) {
         recordAcceptedReply({

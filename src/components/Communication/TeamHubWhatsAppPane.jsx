@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Loader2, Send, Sparkles, X, Zap } from 'lucide-react'
-import { analyzeConversationWithAi, buildConversationContext } from '../../omnichannel/ai/omniAiApi'
+import {
+  analyzeConversationWithAi,
+  buildConversationContext,
+  checkOmniAiHealth,
+} from '../../omnichannel/ai/omniAiApi'
 import { readAiSettings, saveAiSettings } from '../../omnichannel/ai/settings'
 import { suggestReplies } from '../../omnichannel/ai/assistant'
 import {
@@ -10,7 +14,7 @@ import {
   mergeWhatsAppInbox,
   readConversations,
 } from '../../omnichannel/store'
-import { sendChannelMessage } from '../../omnichannel/services/hub'
+import { getWhatsAppSetupStatus, sendChannelMessage } from '../../omnichannel/services/hub'
 import { pullWhatsAppInbox } from '../../utils/whatsappChannelApi'
 import { getCustomerProfiles } from '../../data/customerProfiles'
 import { readLeads } from '../../omnichannel/store'
@@ -30,12 +34,15 @@ function formatTime(value) {
 
 function MessageBubble({ message }) {
   const out = message.direction === 'out'
+  const localOnly = message.deliveryMode === 'local' || message.status === 'local'
   return (
     <div className={`flex ${out ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`max-w-[88%] rounded-2xl px-2.5 py-2 ${
           out
-            ? 'rounded-br-md bg-[#25D366]/90 text-white shadow-sm'
+            ? localOnly
+              ? 'rounded-br-md bg-emerald-600/75 text-white ring-1 ring-amber-300/50'
+              : 'rounded-br-md bg-[#25D366]/90 text-white shadow-sm'
             : 'rounded-bl-md bg-white/72 text-[var(--ink)]'
         }`}
       >
@@ -44,6 +51,7 @@ function MessageBubble({ message }) {
           className={`mt-1 text-right text-[10px] ${out ? 'text-emerald-50/90' : 'text-[var(--muted)]'}`}
         >
           {formatTime(message.at)}
+          {localOnly ? ' · yerel' : ''}
         </p>
       </div>
     </div>
@@ -64,6 +72,9 @@ export default function TeamHubWhatsAppPane() {
   const [aiSettings, setAiSettings] = useState(() => readAiSettings())
   const [insights, setInsights] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
+  const [statusNote, setStatusNote] = useState('')
+  const [waSetup, setWaSetup] = useState(() => getWhatsAppSetupStatus())
+  const [aiHealth, setAiHealth] = useState(null)
   const bottomRef = useRef(null)
   const autoRepliedRef = useRef(new Set())
   const analyzeRequestRef = useRef(0)
@@ -89,6 +100,14 @@ export default function TeamHubWhatsAppPane() {
       )
     }
   }, [refresh])
+
+  useEffect(() => {
+    setWaSetup(getWhatsAppSetupStatus())
+    checkOmniAiHealth().then(setAiHealth)
+    const onOmni = () => setWaSetup(getWhatsAppSetupStatus())
+    window.addEventListener('bach:omni-updated', onOmni)
+    return () => window.removeEventListener('bach:omni-updated', onOmni)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -193,13 +212,14 @@ export default function TeamHubWhatsAppPane() {
       autoRepliedRef.current.add(lastInbound.id)
       setSending(true)
       try {
-        await sendChannelMessage({
+        const result = await sendChannelMessage({
           channel: 'whatsapp',
           conversationId: conversation.id,
           body: text,
           type: 'text',
           senderName: 'AI Asistan',
         })
+        if (result.warning) setStatusNote(result.warning)
         refresh()
       } catch {
         autoRepliedRef.current.delete(lastInbound.id)
@@ -226,7 +246,7 @@ export default function TeamHubWhatsAppPane() {
     if (!conversation || !text || sending) return
     setSending(true)
     try {
-      await sendChannelMessage({
+      const result = await sendChannelMessage({
         channel: 'whatsapp',
         conversationId: conversation.id,
         body: text,
@@ -234,6 +254,8 @@ export default function TeamHubWhatsAppPane() {
       })
       setDraft('')
       setQuickOpen(false)
+      if (result.warning) setStatusNote(result.warning)
+      else setStatusNote('')
       refresh()
     } catch (error) {
       window.alert(error?.message || 'WhatsApp mesajı gönderilemedi.')
@@ -267,6 +289,31 @@ export default function TeamHubWhatsAppPane() {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
+      {!waSetup.configured || !aiHealth?.hasApiKey ? (
+        <div className="shrink-0 space-y-1 border-b border-amber-300/40 bg-amber-500/10 px-2.5 py-2">
+          {!waSetup.configured ? (
+            <p className="text-[10px] font-semibold leading-snug text-amber-900">
+              WhatsApp API bağlı değil — mesajlar yerel kaydedilir.{' '}
+              <Link to="/mesajlar?ayarlar=1" className="font-bold underline">
+                Ayarları aç
+              </Link>
+            </p>
+          ) : null}
+          {!aiHealth?.hasApiKey ? (
+            <p className="text-[10px] font-semibold leading-snug text-violet-900">
+              OpenAI anahtarı yok — yerel şablonlar kullanılır.{' '}
+              <Link to="/mesajlar?ayarlar=1" className="font-bold underline">
+                API key ekle
+              </Link>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {statusNote ? (
+        <p className="shrink-0 border-b border-white/40 bg-white/55 px-2.5 py-1.5 text-[10px] font-semibold text-[var(--muted)]">
+          {statusNote}
+        </p>
+      ) : null}
       <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-white/40 px-2 py-1.5">
         {threads.map((thread) => (
           <button
@@ -395,6 +442,12 @@ export default function TeamHubWhatsAppPane() {
                   <p className="flex items-center gap-2 text-[11px] font-semibold text-violet-600">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     OpenAI önerileri hazırlanıyor...
+                  </p>
+                ) : null}
+
+                {insights?.error ? (
+                  <p className="rounded-[12px] bg-amber-500/12 px-2.5 py-2 text-[11px] font-semibold text-amber-900">
+                    OpenAI: {insights.error} — yerel öneriler kullanılıyor.
                   </p>
                 ) : null}
 
