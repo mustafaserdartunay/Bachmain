@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom'
 import OptimizedImage from './seo/OptimizedImage'
 import { BLUR_LOGO } from '../seo/imageBlur'
 
-/** BACHMAIN resmi logo — 5173 referansıyla aynı boyut (1.65rem yükseklik, oran korunur) */
+/** Açık zeminler — mavi wordmark + turuncu nokta */
 const LOGO_SRC = '/assets/bachmain-logo.png'
-/** Footer / koyu zemin: beyaz yazı + turuncu nokta */
+/** Koyu zeminler — beyaz wordmark + turuncu nokta */
 const LOGO_ON_DARK_SRC = '/assets/bachmain-logo-on-dark.png'
 
 export default function Logo({ className = '', collapsed = false, onDark = false }) {
