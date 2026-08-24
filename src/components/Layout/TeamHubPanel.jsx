@@ -22,9 +22,9 @@ import {
 } from 'lucide-react'
 import { WhatsAppIcon } from './SocialBrandIcons'
 import UccChatPane from '../Communication/UccChatPane'
+import TeamHubWhatsAppPane from '../Communication/TeamHubWhatsAppPane'
 import { openCommunicationCenter, UCC_OPEN_EVENT } from '../../ucc/uccClient'
 import { fetchAccountNotifications } from '../../utils/platformApi'
-import { readConversations } from '../../omnichannel/store'
 import { TASK_CATEGORIES, TASK_PRIORITIES } from '../../utils/crmStore'
 import { fullName } from '../../utils/personnelHelpers'
 import {
@@ -360,11 +360,6 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
     [tick, hubState.messages, hubState.lastReadChatAt],
   )
 
-  const waThreads = useMemo(
-    () => readConversations().filter((item) => item.channel === 'whatsapp'),
-    [tick, activeTab],
-  )
-
   const panelWidthClass = collapsed
     ? 'lg:w-[var(--ds-sidebar-collapsed,5.5rem)] w-[var(--ds-sidebar-expanded,17.5rem)]'
     : fullscreen
@@ -502,36 +497,7 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
             />
           ) : null}
 
-          {activeTab === 'whatsapp' ? (
-            <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2.5">
-              {waThreads.length === 0 ? (
-                <HonestEmpty
-                  title="WhatsApp konuşması yok"
-                  body="Resmi Meta Cloud API aynı kalır. Tüm gelen kutusu /mesajlar sayfasında."
-                  action={
-                    <Link to="/mesajlar" className="text-[12px] font-bold text-sky-700">
-                      Mesaj merkezini aç
-                    </Link>
-                  }
-                />
-              ) : (
-                waThreads.map((thread) => (
-                  <Link
-                    key={thread.id}
-                    to="/mesajlar"
-                    className="rounded-[14px] bg-white/65 px-2.5 py-2"
-                  >
-                    <p className="truncate text-[12px] font-extrabold">
-                      {thread.contactName || 'WhatsApp'}
-                    </p>
-                    <p className="truncate text-[11px] font-semibold text-[var(--muted)]">
-                      {thread.lastMessagePreview || 'Konuşma'}
-                    </p>
-                  </Link>
-                ))
-              )}
-            </div>
-          ) : null}
+          {activeTab === 'whatsapp' ? <TeamHubWhatsAppPane /> : null}
 
           {activeTab === 'notify' ? (
             <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2.5">
