@@ -19,6 +19,7 @@
     "preview": "vite preview --host",
     "start": "node server/index.js",
     "deploy": "npx vercel --prod",
+    "dp": "bash scripts/deploy-all.sh",
     "lint": "eslint src server api scripts apps/admin/src apps/admin/server apps/api/src --max-warnings 9999",
     "lint:fix": "eslint src server api scripts apps/admin/src apps/admin/server apps/api/src --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"server/**/*.js\" \"api/**/*.js\" \"apps/admin/src/**/*.{ts,tsx}\" \"apps/api/src/**/*.ts\" \"docs/**/*.md\" \"*.md\" \".github/**/*.{yml,yaml,md}\"",
@@ -69,6 +70,7 @@
     "prettier": "^3.6.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
+    "vercel": "^59.5.0",
     "vite": "^6.3.5"
   }
 }

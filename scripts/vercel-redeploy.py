@@ -34,11 +34,17 @@ def load_token(repo_root: Path) -> str:
     if auth.exists():
         data = json.loads(auth.read_text())
         t = data.get("token")
+        expires_at = data.get("expiresAt")
+        if isinstance(expires_at, (int, float)) and expires_at < time.time() * 1000:
+            raise SystemExit(
+                "Vercel CLI token expired in auth.json. Use scripts/vercel-redeploy-cli.sh "
+                "or run: npx vercel login"
+            )
         if isinstance(t, str) and t.strip():
             return t.strip()
     raise SystemExit(
-        "No Vercel token. Create one at https://vercel.com/account/tokens "
-        "and save as .env.vercel (VERCEL_TOKEN=...) or run vercel login."
+        "No Vercel token. Use scripts/vercel-redeploy-cli.sh (recommended), "
+        "save VERCEL_TOKEN in .env.vercel, or run vercel login."
     )
 
 
@@ -76,7 +82,10 @@ def main() -> int:
         name, pid = item.split(":", 1)
         st, p = api(token, "GET", f"https://api.vercel.com/v9/projects/{pid}?teamId={team}")
         if st != 200 or not isinstance(p, dict):
-            print(f"!! {name} project fetch failed: {st}")
+            detail = p if isinstance(p, str) else json.dumps(p)[:120]
+            print(f"!! {name} project fetch failed: {st} {detail}")
+            if st == 403 and "invalidToken" in str(p):
+                print("!! Use scripts/vercel-redeploy-cli.sh — CLI refreshes OAuth automatically.")
             continue
         # Ensure broken ignore-build commands are cleared
         if p.get("commandForIgnoringBuildStep"):

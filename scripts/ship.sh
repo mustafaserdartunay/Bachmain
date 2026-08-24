@@ -57,13 +57,12 @@ fi
 echo "==> Push origin ${BRANCH}"
 git push -u origin "$BRANCH"
 
-# Redeploy via Vercel API (GitHub-linked projects). Token from auth.json / .env.vercel — never argv.
-echo "==> Vercel production redeploy (API)"
-PROJECTS=()
-[ "$NEED_CRM" = "1" ] && PROJECTS+=("crm:$CRM_ID")
-[ "$NEED_ADMIN" = "1" ] && PROJECTS+=("admin:$ADMIN_ID")
-[ "$NEED_WEB" = "1" ] && PROJECTS+=("web:$WEB_ID")
-
-python3 scripts/vercel-redeploy.py --team "$ORG" --ref "$BRANCH" "${PROJECTS[@]}"
+# Redeploy via Vercel CLI (OAuth refresh; stale auth.json token causes API 403).
+echo "==> Vercel production redeploy (CLI)"
+CLI_PROJECTS=()
+[ "$NEED_CRM" = "1" ] && CLI_PROJECTS+=("crm")
+[ "$NEED_ADMIN" = "1" ] && CLI_PROJECTS+=("admin")
+[ "$NEED_WEB" = "1" ] && CLI_PROJECTS+=("web")
+bash scripts/vercel-redeploy-cli.sh "${CLI_PROJECTS[@]}" || true
 
 echo "Tamam → https://bachmain.com | https://uygulama.bachmain.com | https://yonetim.bachmain.com"
