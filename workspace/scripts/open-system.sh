@@ -12,6 +12,33 @@ mkdir -p "$LOG_DIR"
 
 port_listen() { lsof -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1; }
 
+# npm run *:open process group'u kapanınca sunucu ölmesin diye yeni session.
+spawn_detached() {
+  local dir="$1"
+  local npm_script="$2"
+  local log="$3"
+  python3 - "$dir" "$npm_script" "$log" <<'PY'
+import os, sys
+workdir, script, logfile = sys.argv[1], sys.argv[2], sys.argv[3]
+if os.fork() > 0:
+    sys.exit(0)
+os.setsid()
+if os.fork() > 0:
+    sys.exit(0)
+os.chdir(workdir)
+devnull = os.open(os.devnull, os.O_RDONLY)
+logfd = os.open(logfile, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
+os.dup2(devnull, 0)
+os.dup2(logfd, 1)
+os.dup2(logfd, 2)
+try:
+    os.closerange(3, 256)
+except Exception:
+    pass
+os.execvp("npm", ["npm", "run", script])
+PY
+}
+
 url_for() {
   python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[sys.argv[2]]['localUrl'])" "$LABELS" "$1"
 }
@@ -51,7 +78,7 @@ start_if_needed() {
         return 0
       fi
       echo "→ UYGULAMA - BACHMAIN başlatılıyor ($ROOT)…"
-      (cd "$ROOT" && nohup npm run dev >>"$LOG_DIR/uygulama.log" 2>&1 &)
+      spawn_detached "$ROOT" "dev" "$LOG_DIR/uygulama.log"
       ;;
     yonetim)
       ensure_admin_env
@@ -59,12 +86,12 @@ start_if_needed() {
       echo "→ YÖNETİM - BACHMAIN başlatılıyor…"
       for p in 5200 5201; do pid=$(lsof -tiTCP:"$p" -sTCP:LISTEN 2>/dev/null || true); [[ -n "$pid" ]] && kill "$pid" 2>/dev/null || true; done
       sleep 1
-      (cd "$ADMIN" && nohup npm run dev:all >>"$LOG_DIR/yonetim.log" 2>&1 &)
+      spawn_detached "$ADMIN" "dev:all" "$LOG_DIR/yonetim.log"
       ;;
     web)
       port_listen 5180 && return 0
       echo "→ WEB - BACHMAIN başlatılıyor…"
-      (cd "$ROOT/apps/landing" && nohup npm run dev >>"$LOG_DIR/web.log" 2>&1 &)
+      spawn_detached "$ROOT/apps/landing" "dev" "$LOG_DIR/web.log"
       ;;
     ios|android)
       port_listen 5173 || start_if_needed uygulama
@@ -72,7 +99,7 @@ start_if_needed() {
     *)
       echo "Bilinmeyen sistem: $key"; exit 1 ;;
   esac
-  for _ in $(seq 1 40); do
+  for _ in $(seq 1 60); do
     case "$key" in
       uygulama) port_listen 5173 && return 0 ;;
       yonetim) port_listen 5200 && port_listen 5201 && return 0 ;;
@@ -89,7 +116,9 @@ open_simple_browser() {
   local url="$1"
   local encoded
   encoded=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$url")
-  open "vscode://vscode.simple-browser/show?url=${encoded}"
+  local vscode_url="vscode://vscode.simple-browser/show?url=${encoded}"
+  # macOS'ta vscode:// kayıtlı olmayabiliyor; Cursor uygulamasına bağla.
+  open -a Cursor "$vscode_url" 2>/dev/null || open "cursor://vscode.simple-browser/show?url=${encoded}"
 }
 
 open_one() {

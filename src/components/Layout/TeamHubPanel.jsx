@@ -441,40 +441,42 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
       </div>
 
       <nav
-        className={`mt-2 ${collapsed ? 'flex flex-col items-center gap-1.5' : 'flex gap-1 overflow-x-auto'}`}
+        className={`mt-2 shrink-0 ${collapsed ? 'flex flex-col items-center gap-1.5' : 'team-hub-icon-tabs'}`}
       >
-        {TABS.map((tab) => {
-          const Icon = tab.icon
-          const active = activeTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => {
-                setActiveTab(tab.id)
-                if (collapsed) onToggle?.()
-              }}
-              className={`flex items-center justify-center rounded-[14px] p-1 transition-all ${
-                active
-                  ? `bg-white/78 ring-2 ${tab.activeRing} shadow-sm`
-                  : 'bg-white/30 hover:bg-white/58'
-              } ${collapsed ? 'h-10 w-10' : 'h-10'}`}
-              title={tab.label}
-              aria-label={tab.label}
-              aria-current={active ? 'page' : undefined}
-            >
-              <span
-                className={`relative flex h-8 w-8 items-center justify-center rounded-xl shadow-sm ${tab.iconWrap}`}
+        <div className={collapsed ? 'contents' : 'team-hub-icon-tabs-row'}>
+          {TABS.map((tab) => {
+            const Icon = tab.icon
+            const active = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setActiveTab(tab.id)
+                  if (collapsed) onToggle?.()
+                }}
+                className={`flex h-10 shrink-0 items-center justify-center rounded-[14px] p-1 transition-all ${
+                  active
+                    ? `bg-white/78 ring-2 ${tab.activeRing} shadow-sm`
+                    : 'bg-white/30 hover:bg-white/58'
+                } ${collapsed ? 'w-10' : ''}`}
+                title={tab.label}
+                aria-label={tab.label}
+                aria-current={active ? 'page' : undefined}
               >
-                <Icon
-                  className="h-4 w-4 text-[#ffffff]"
-                  {...(tab.brand ? {} : { strokeWidth: 2.25 })}
-                />
-                <TeamHubNoticeBadge count={tabBadges[tab.id]} />
-              </span>
-            </button>
-          )
-        })}
+                <span
+                  className={`relative flex h-8 w-8 items-center justify-center rounded-xl shadow-sm ${tab.iconWrap}`}
+                >
+                  <Icon
+                    className="h-4 w-4 text-[#ffffff]"
+                    {...(tab.brand ? {} : { strokeWidth: 2.25 })}
+                  />
+                  <TeamHubNoticeBadge count={tabBadges[tab.id]} />
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </nav>
 
       {!collapsed ? (

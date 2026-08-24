@@ -4673,14 +4673,42 @@ html.night .glass-sidebar .sidebar-submenu {
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
+.glass-sidebar.app-sidebar .glass-sidebar-collapse:hover,
+.glass-sidebar.app-sidebar[data-collapsed='true'] .glass-sidebar-collapse:hover,
 .glass-team-hub.app-sidebar .glass-sidebar-collapse:hover,
 .glass-team-hub.app-sidebar[data-collapsed='true'] .glass-sidebar-collapse:hover {
   transform-origin: center;
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 
+.glass-sidebar.app-sidebar .glass-sidebar-collapse svg,
 .glass-team-hub.app-sidebar .glass-sidebar-collapse svg {
   transform: none;
+}
+
+/* Icon row grows from the top so the 8px scrollbar never clips tab icons. */
+.glass-team-hub > nav.team-hub-icon-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 2px 0.85rem;
+  min-height: 4.4rem;
+  scrollbar-width: thin;
+}
+
+.glass-team-hub > nav.team-hub-icon-tabs .team-hub-icon-tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: max-content;
+  min-width: 100%;
+  min-height: 2.5rem;
+}
+
+.glass-team-hub > nav.team-hub-icon-tabs::-webkit-scrollbar {
+  height: 8px;
 }
 
 .glass-team-hub .search-pill,
