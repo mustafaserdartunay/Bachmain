@@ -1,6 +1,7 @@
 #!/bin/bash
 # Deploy BachMain Vercel projects from local git tree (fresh build + production).
 # `vercel redeploy <url>` only re-publishes an OLD deployment — use `deploy --prod` instead.
+# Project root dirs (apps/admin, apps/landing) are configured in Vercel — CLI cwd = repo root.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,9 +11,9 @@ SCOPE="${VERCEL_SCOPE:-bachmain}"
 WAIT="${VERCEL_WAIT:-0}"
 
 declare -a PROJECT_SPECS=(
-  "crm:bachmain:."
-  "admin:bachmain-admin:apps/admin"
-  "web:bachmain-web:apps/landing"
+  "crm:bachmain"
+  "admin:bachmain-admin"
+  "web:bachmain-web"
 )
 
 vercel_cmd() {
@@ -59,19 +60,10 @@ FAILED=0
 while IFS= read -r spec; do
   [ -z "$spec" ] && continue
   name="${spec%%:*}"
-  rest="${spec#*:}"
-  project="${rest%%:*}"
-  rel_dir="${rest#*:}"
-  dir="$ROOT/$rel_dir"
+  project="${spec#*:}"
 
-  if [ ! -d "$dir" ]; then
-    echo "!! $name dizin yok: $dir"
-    FAILED=1
-    continue
-  fi
-
-  echo "==> $name deploy --prod → $project ($rel_dir)"
-  if run_vercel deploy --project "$project" --cwd "$dir" "${EXTRA[@]}"; then
+  echo "==> $name deploy --prod → $project"
+  if run_vercel deploy --project "$project" --cwd "$ROOT" "${EXTRA[@]}"; then
     echo "==> $name OK"
   else
     echo "!! $name deploy başarısız"
