@@ -1,10 +1,16 @@
-# Keep Cursor's indexer fast: exclude heavy / generated / duplicate content
+# Cursor indexer — ağır / üretilmiş içerik (8GB Mac OOM önleme)
 node_modules/
 **/.next/
 apps/landing/out/
 dist/
 dist-static/
+**/.vite/
+**/.turbo/
+**/.vercel/
 restore-backups/
+coverage/
+build/
 *.log
 .DS_Store
 **/*.pack.gz
+**/package-lock.json
