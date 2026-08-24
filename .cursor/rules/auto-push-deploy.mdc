@@ -14,8 +14,9 @@ Kullanıcı **push**, **deploy**, **pd** veya **push ve deploy** derse hemen:
 1. Sürümü bump et (`src/version/appVersion.js` + `public/app-version.json`)
 2. İlgili dosyaları commit et
 3. `./scripts/deploy-all.sh` çalıştır (push `origin main` + CRM/admin/web production)
+4. Script bitene kadar bekle; push + deploy sonucunu aynı turda raporla
 
-Onay bekleme. iCloud gerekçesiyle durma.
+Onay bekleme. iCloud gerekçesiyle durma. **Commit sonrası turu kapatma — deploy adımı zorunlu.**
 
 ## Git
 

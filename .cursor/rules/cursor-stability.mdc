@@ -1,5 +1,5 @@
 ---
-description: 8GB Mac — Cursor kararlılığı; Simple Browser yalnızca yerel lite mode
+description: 8GB Mac — Cursor kararlılığı; agent kesintisiz tamamlama
 alwaysApply: true
 ---
 
@@ -8,16 +8,28 @@ alwaysApply: true
 - Çalışma kökü: `/Users/serdartunay/Bachmain`
 - NTFS `BachmainData` ve iCloud Documents kopyasını workspace yapma.
 
+## Agent — turu yarım bırakma (ZORUNLU)
+
+1. **`dp` / push / deploy** istendiğinde aynı turda bitir: sürüm bump → commit → `./scripts/deploy-all.sh` → sonuç raporu. Commit sonrası durma.
+2. **Görsel dosyaları `Read` ile açma** (PNG/JPG/WebP). Boyut/kontrol için yalnızca `Shell` + `file`/`sips`/`python3` kullan — büyük görseller agent'ı dondurur.
+3. **Paralel ağır agent** (`Task` explore + shell) aynı anda çalıştırma.
+4. İş bitmeden özet yazıp turu kapatma; deploy script çıktısını bekle (`block_until_ms` ≥ 120000).
+
+## Üretilmiş klasörler
+
+- `**/.next/`, `apps/landing/out/`, `node_modules/`, `dist/` — `.gitignore` + `.cursorignore` dışında; tarama/git status'a sokma.
+- Yerel Next dev sonrası `apps/landing/.next` birikirse silmek güvenli (yeniden üretilir).
+
 ## Simple Browser (yerel düzenleme)
 
-Yerel sayfaları Cursor Simple Browser’da aç: `npm run uygulama:open` / `yonetim:open` / `web:open`.
+Yerel sayfaları Cursor Simple Browser'da aç: `npm run uygulama:open` / `yonetim:open` / `web:open`.
 
 Bu komutlar `127.0.0.1` + `?ide=1` kullanır (ağır 3D/canlı çekim yavaşlar). **Tek sekme** aç; `bachmain:open-all` yalnızca UYGULAMA sekmesini açar.
 
-Canlı `uygulama.bachmain.com` / `yonetim.bachmain.com` / `bachmain.com` Simple Browser’da **açma** (Vercel 403 + OOM).
+Canlı `uygulama.bachmain.com` / `yonetim.bachmain.com` / `bachmain.com` Simple Browser'da **açma** (Vercel 403 + OOM).
 
-Agent: canlı URL’ye `browser_navigate` / Simple Browser ile gitme.
+Agent: canlı URL'ye `browser_navigate` / Simple Browser ile gitme.
 
 ## Tarama
 
-Tüm repoyu tek turda tarama. `node_modules`, `.next`, `dist` içine girme. Aynı anda birden fazla ağır agent çalıştırma.
+Tüm repoyu tek turda tarama. `node_modules`, `.next`, `dist` içine girme.

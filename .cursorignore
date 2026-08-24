@@ -1,7 +1,10 @@
 # Keep Cursor's indexer fast: exclude heavy / generated / duplicate content
 node_modules/
+**/.next/
+apps/landing/out/
 dist/
 dist-static/
 restore-backups/
 *.log
 .DS_Store
+**/*.pack.gz

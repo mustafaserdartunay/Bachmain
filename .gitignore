@@ -7,6 +7,8 @@ apps/admin/tsconfig.tsbuildinfo
 # Build output
 dist/
 dist-static/
+**/.next/
+apps/landing/out/
 *.local
 
 # Vite cache
