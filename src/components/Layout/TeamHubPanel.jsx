@@ -435,7 +435,7 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
             className="glass-sidebar-toggle glass-sidebar-collapse flex h-8 w-8 items-center justify-center rounded-xl"
             aria-label={collapsed ? 'İletişim panelini aç' : 'İletişim panelini daralt'}
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {collapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </button>
         </div>
       </div>

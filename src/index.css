@@ -4673,9 +4673,14 @@ html.night .glass-sidebar .sidebar-submenu {
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-.glass-team-hub .glass-sidebar-collapse:hover {
+.glass-team-hub.app-sidebar .glass-sidebar-collapse:hover,
+.glass-team-hub.app-sidebar[data-collapsed='true'] .glass-sidebar-collapse:hover {
   transform-origin: center;
   transform: scale(1.06);
+}
+
+.glass-team-hub.app-sidebar .glass-sidebar-collapse svg {
+  transform: none;
 }
 
 .glass-team-hub .search-pill,
@@ -4720,11 +4725,6 @@ html.night .glass-sidebar .sidebar-submenu {
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   padding-right: 2rem;
-}
-
-.glass-team-hub[data-collapsed='true'] .glass-sidebar-collapse:hover {
-  transform-origin: center;
-  transform: scale(1.06);
 }
 
 .glass-sidebar-toggle {
