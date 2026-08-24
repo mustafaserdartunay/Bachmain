@@ -2,18 +2,18 @@
  * Bach Main sürüm şeması: BM-V{major}.{ay}{yy}[.patch]
  */
 
-export const APP_VERSION = 'BM-V1.826.263'
+export const APP_VERSION = 'BM-V1.826.264'
 
 /** Deploy içeriği damgası — sürüm kodu aynı kalsa bile yenilemeyi tetikler */
-export const APP_BUILD = '2026-08-24T23:22:00+03:00'
+export const APP_BUILD = '2026-08-24T23:29:00+03:00'
 
 export const APP_VERSION_META = {
   code: APP_VERSION,
   major: 1,
   month: 8,
   year: 2026,
-  patch: 263,
-  releasedAt: '2026-08-24T23:22:00+03:00',
+  patch: 264,
+  releasedAt: '2026-08-24T23:29:00+03:00',
   build: APP_BUILD,
   label: 'Ağustos 2026',
 }

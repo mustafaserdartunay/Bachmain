@@ -40,10 +40,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-TileColor" content={THEME_COLOR} />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="icon" href="/favicon.png?v=4" type="image/png" sizes="32x32" />
-        <link rel="icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32" />
-        <link rel="icon" href="/favicon-192.png?v=4" type="image/png" sizes="192x192" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" sizes="180x180" />
+        <link rel="icon" href="/favicon-512.png?v=5" type="image/png" sizes="512x512" />
+        <link rel="icon" href="/favicon-192.png?v=5" type="image/png" sizes="192x192" />
+        <link rel="icon" href="/favicon-48.png?v=5" type="image/png" sizes="48x48" />
+        <link rel="icon" href="/favicon-32.png?v=5" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=5" sizes="180x180" />
       </head>
       <body
         className={poppins.className}
