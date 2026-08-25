@@ -5,12 +5,13 @@
   "git.detectSubmodules": false,
   "git.openRepositoryInParentFolders": "never",
   "search.followSymlinks": false,
-  "search.maxResults": 5000,
+  "search.maxResults": 2000,
   "npm.autoDetect": "off",
   "workbench.editor.limit.enabled": true,
-  "workbench.editor.limit.value": 6,
+  "workbench.editor.limit.value": 4,
   "workbench.localHistory.enabled": false,
-  "typescript.tsserver.maxTsServerMemory": 512,
+  "typescript.tsserver.maxTsServerMemory": 384,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
   "typescript.disableAutomaticTypeAcquisition": true,
   "javascript.updateImportsOnFileMove.enabled": "never",
   "editor.largeFileOptimizations": true,
@@ -30,6 +31,8 @@
     "**/.git/subtree-cache/**": true,
     "**/node_modules/**": true,
     "**/apps/**/node_modules/**": true,
+    "apps/landing/node_modules/**": true,
+    "apps/admin/node_modules/**": true,
     "**/dist/**": true,
     "**/dist-static/**": true,
     "**/.next/**": true,
@@ -39,10 +42,19 @@
     "**/.vite/**": true,
     "**/node_modules/.vite/**": true,
     "**/build/**": true,
+    "**/.cache/**": true,
     "**/.gradle/**": true,
     "**/restore-backups/**": true,
+    "**/docs/**": true,
+    "**/BACHMAIN_DOCUMENT_CENTER/**": true,
+    "apps/landing/public/bachy/**": true,
     "**/*.pack.gz": true,
-    "**/.vercel/**": true
+    "**/.vercel/**": true,
+    "**/*.mp4": true,
+    "**/*.mov": true,
+    "**/*.webm": true,
+    "**/*.glb": true,
+    "**/*.gltf": true
   },
   "search.exclude": {
     "**/node_modules": true,
@@ -52,6 +64,9 @@
     "apps/landing/out": true,
     "**/restore-backups": true,
     "**/.vite": true,
-    "**/package-lock.json": true
+    "**/.cache": true,
+    "**/coverage": true,
+    "**/package-lock.json": true,
+    "**/docs": true
   }
 }

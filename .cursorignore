@@ -1,16 +1,58 @@
-# Cursor indexer — ağır / üretilmiş içerik (8GB Mac OOM önleme)
+# Cursor indexer — 8GB Mac OOM önleme (kaynak kod IGNORE edilmez)
+
+# Dependencies & üretilmiş
 node_modules/
+**/node_modules/
 **/.next/
 apps/landing/out/
 dist/
 dist-static/
+build/
+coverage/
+.cache/
+**/.cache/
 **/.vite/
 **/.turbo/
 **/.vercel/
+.git/
 restore-backups/
-coverage/
-build/
+
+# Logs / temp / archives
 *.log
-.DS_Store
+*.tmp
+*.temp
+*.zip
+*.tar
+*.gz
 **/*.pack.gz
+.DS_Store
+
+# Lockfile (çok büyük; kaynak değil)
 **/package-lock.json
+
+# Video — indeksleme gereksiz, runtime public'te kalır
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+
+# 3D / BACHY modelleri — binary; web runtime erişimi devam eder
+*.glb
+*.gltf
+*.fbx
+*.obj
+*.blend
+
+# Büyük design export
+*.psd
+*.ai
+*.eps
+*.sketch
+
+# Büyük texture / binary görseller (metin indeksine gerek yok)
+*.hdr
+*.exr
+*.tiff
+*.tif
+*.bmp

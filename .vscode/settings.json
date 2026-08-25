@@ -5,9 +5,15 @@
   "git.autoRepositoryScan": false,
   "git.detectSubmodules": false,
   "search.followSymlinks": false,
-  "search.maxResults": 5000,
+  "search.maxResults": 2000,
   "npm.autoDetect": "off",
-  "typescript.tsserver.maxTsServerMemory": 512,
+  "typescript.tsserver.maxTsServerMemory": 384,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "off"
+  },
   "typescript.disableAutomaticTypeAcquisition": true,
   "javascript.updateImportsOnFileMove.enabled": "never",
   "editor.largeFileOptimizations": true,
@@ -40,10 +46,25 @@
     "**/.vite/**": true,
     "**/node_modules/.vite/**": true,
     "**/build/**": true,
+    "**/.cache/**": true,
     "**/.gradle/**": true,
     "**/restore-backups/**": true,
     "**/*.pack.gz": true,
-    "**/.vercel/**": true
+    "**/.vercel/**": true,
+    "**/docs/**": true,
+    "**/BACHMAIN_DOCUMENT_CENTER/**": true,
+    "apps/landing/public/bachy/**": true,
+    "apps/landing/node_modules/**": true,
+    "apps/admin/node_modules/**": true,
+    "**/*.mp4": true,
+    "**/*.mov": true,
+    "**/*.webm": true,
+    "**/*.glb": true,
+    "**/*.gltf": true,
+    "**/*.fbx": true,
+    "**/*.blend": true,
+    "**/*.psd": true,
+    "**/*.ai": true
   },
   "search.exclude": {
     "**/node_modules": true,
@@ -53,6 +74,11 @@
     "apps/landing/out": true,
     "**/restore-backups": true,
     "**/.vite": true,
-    "**/package-lock.json": true
+    "**/.cache": true,
+    "**/coverage": true,
+    "**/package-lock.json": true,
+    "**/*.mp4": true,
+    "**/*.glb": true,
+    "**/*.gltf": true
   }
 }

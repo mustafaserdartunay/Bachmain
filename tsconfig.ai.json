@@ -18,5 +18,6 @@
     "resolveJsonModule": true,
     "types": []
   },
-  "include": ["src/ai/**/*.ts"]
+  "include": ["src/ai/**/*.ts"],
+  "exclude": ["node_modules", "dist", "coverage", ".cache", ".next", "build"]
 }

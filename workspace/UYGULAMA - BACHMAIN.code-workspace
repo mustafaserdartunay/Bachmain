@@ -1,0 +1,78 @@
+{
+  "folders": [{ "name": "UYGULAMA - BACHMAIN", "path": ".." }],
+  "settings": {
+    "git.openRepositoryInParentFolders": "never",
+    "git.autofetch": false,
+    "git.autorefresh": false,
+    "git.autoRepositoryScan": false,
+    "git.detectSubmodules": false,
+    "search.followSymlinks": false,
+    "search.maxResults": 2000,
+    "npm.autoDetect": "off",
+    "workbench.editor.limit.enabled": true,
+    "workbench.editor.limit.value": 4,
+    "workbench.localHistory.enabled": false,
+    "typescript.tsserver.maxTsServerMemory": 384,
+    "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+    "typescript.disableAutomaticTypeAcquisition": true,
+    "javascript.updateImportsOnFileMove.enabled": "never",
+    "editor.largeFileOptimizations": true,
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/dist": true,
+      "**/.vite": true,
+      "apps/landing/out": true,
+      "apps/admin/node_modules": true,
+      "apps/landing/node_modules": true
+    },
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "apps/admin/**": true,
+      "apps/landing/**": true,
+      "apps/api/**": true,
+      "apps/android/**": true,
+      "apps/website-os/**": true,
+      "**/.git/objects/**": true,
+      "**/dist/**": true,
+      "**/.next/**": true,
+      "**/.vite/**": true,
+      "**/docs/**": true,
+      "**/BACHMAIN_DOCUMENT_CENTER/**": true,
+      "**/*.mp4": true,
+      "**/*.pack.gz": true,
+      "**/.vercel/**": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "apps/admin": true,
+      "apps/landing": true,
+      "**/.next": true,
+      "**/dist": true,
+      "**/package-lock.json": true,
+      "**/docs": true
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "UYGULAMA - BACHMAIN aç",
+        "type": "shell",
+        "command": "npm run uygulama:open",
+        "options": { "cwd": "${workspaceFolder}" },
+        "group": { "kind": "build", "isDefault": true }
+      },
+      {
+        "label": "UYGULAMA dev",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": { "cwd": "${workspaceFolder}" },
+        "group": "build"
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "bradlc.vscode-tailwindcss"]
+  }
+}

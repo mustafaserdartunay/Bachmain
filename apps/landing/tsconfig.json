@@ -20,5 +20,5 @@
     "baseUrl": "."
   },
   "include": ["src", "next.config.ts", "next-env.d.ts", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "out", ".next"]
+  "exclude": ["node_modules", "out", ".next", "coverage", ".cache", "dist", "build"]
 }

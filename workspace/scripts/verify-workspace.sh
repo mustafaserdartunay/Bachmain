@@ -41,7 +41,9 @@ else echo "  ○ androidapp.bachmain henüz yok (workspace dışı)"; fi
 
 echo ""
 echo "-- Workspace dosyaları (repo)"
-check_file "Cursor workspace" "$ROOT/workspace/WORKSPACE BACHMAIN.code-workspace"
+check_file "UYGULAMA workspace" "$ROOT/workspace/UYGULAMA - BACHMAIN.code-workspace"
+check_file "YÖNETİM workspace" "$ROOT/workspace/YÖNETİM - BACHMAIN.code-workspace"
+check_file "WEB workspace" "$ROOT/workspace/WEB - BACHMAIN.code-workspace"
 check_file "Manifest" "$ROOT/workspace/manifest.json"
 
 echo ""

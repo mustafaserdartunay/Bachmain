@@ -10,12 +10,16 @@ alwaysApply: true
 
 ## Workspace açma (KRİTİK — OOM önleme)
 
-**Tercih sırası:**
-1. Agent / düşük RAM → `File → Open Folder → Bachmain` veya `workspace/BACHMAIN-SINGLE.code-workspace`
-2. Üç sistem birlikte → `workspace/WORKSPACE BACHMAIN.code-workspace` (**3 kök:** UYGULAMA, YÖNETİM, WEB)
+**Tercih sırası (8GB Mac):**
+1. **Belgeler** → `~/Documents/Bachmain/` içinden **tek** workspace seç:
+   - `UYGULAMA - BACHMAIN.code-workspace` (CRM)
+   - `YÖNETİM - BACHMAIN.code-workspace` (admin)
+   - `WEB - BACHMAIN.code-workspace` (landing)
+2. Kurulum: `npm run cursor:workspaces`
+3. Repo içi alternatif: `workspace/UYGULAMA - BACHMAIN.code-workspace` (veya YÖNETİM / WEB)
 
+- **3 köklü workspace kullanma** — `WORKSPACE BACHMAIN.3-KOK-KULLANMA` RAM’i 3 kat tüketir.
 - iOS / Android workspace köklerinden **çıkarıldı** (henüz başlanmadı — RAM yükünü azaltır).
-- Eski 5 köklü workspace Cursor’da RAM’i şişirir; kullanma.
 
 ## Agent — turu yarım bırakma (ZORUNLU)
 

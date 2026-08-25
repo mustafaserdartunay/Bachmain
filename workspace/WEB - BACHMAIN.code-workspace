@@ -1,0 +1,68 @@
+{
+  "folders": [{ "name": "WEB - BACHMAIN", "path": "../apps/landing" }],
+  "settings": {
+    "git.openRepositoryInParentFolders": "never",
+    "git.autofetch": false,
+    "git.autorefresh": false,
+    "git.autoRepositoryScan": false,
+    "git.detectSubmodules": false,
+    "search.followSymlinks": false,
+    "search.maxResults": 2000,
+    "npm.autoDetect": "off",
+    "workbench.editor.limit.enabled": true,
+    "workbench.editor.limit.value": 4,
+    "workbench.localHistory.enabled": false,
+    "typescript.tsserver.maxTsServerMemory": 384,
+    "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+    "typescript.disableAutomaticTypeAcquisition": true,
+    "javascript.updateImportsOnFileMove.enabled": "never",
+    "editor.largeFileOptimizations": true,
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "out": true,
+      "**/.vite": true
+    },
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/.next/**": true,
+      "out/**": true,
+      "public/bachy/**": true,
+      "**/.git/objects/**": true,
+      "**/dist/**": true,
+      "**/.vite/**": true,
+      "**/.vercel/**": true,
+      "**/*.mp4": true,
+      "**/*.pack.gz": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "out": true,
+      "**/package-lock.json": true,
+      "public/bachy": true
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "WEB - BACHMAIN aç",
+        "type": "shell",
+        "command": "npm run web:open",
+        "options": { "cwd": "${workspaceFolder}/../.." },
+        "group": { "kind": "build", "isDefault": true }
+      },
+      {
+        "label": "WEB dev",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": { "cwd": "${workspaceFolder}" },
+        "group": "build"
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "bradlc.vscode-tailwindcss"]
+  }
+}

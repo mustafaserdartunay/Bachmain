@@ -1,47 +1,51 @@
-# WORKSPACE BACHMAIN
+# WORKSPACE BACHMAIN — 8GB RAM (tek sistem seç)
 
-Üç aktif web sistemi + paylaşılan platform katmanı. Cursor / VS Code çok köklü workspace (**iOS/Android workspace dışı** — henüz başlanmadı).
+Cursor’da **aynı anda yalnızca bir** workspace açın. Üç köklü dosya (`WORKSPACE BACHMAIN.3-KOK-KULLANMA`) RAM’i 3 kat tüketir.
 
-## Workspace kökleri (3)
+## Belgeler’de (önerilen)
 
-| #   | Alan                      | Klasör         | Yerel geliştirme        |
-| --- | ------------------------- | -------------- | ----------------------- |
-| 1   | **uygulama.bachmain.com** | Monorepo kökü  | `npm run dev` → `:5173` |
-| 2   | **yonetim.bachmain.com**  | `apps/admin`   | `npm run dev:all`       |
-| 3   | **bachmain.com**          | `apps/landing` | `npm run dev` → `:5180` |
+`~/Documents/Bachmain/` içinde üç ayrı dosya:
 
-## Ertelenmiş (workspace’te yok)
+| Dosya                                  | Ne açar                | Yerel   |
+| -------------------------------------- | ---------------------- | ------- |
+| **UYGULAMA - BACHMAIN.code-workspace** | CRM (`src/`)           | `:5173` |
+| **YÖNETİM - BACHMAIN.code-workspace**  | Admin panel            | `:5200` |
+| **WEB - BACHMAIN.code-workspace**      | Landing / bachmain.com | `:5180` |
 
-| Alan                | Not                                     |
-| ------------------- | --------------------------------------- |
-| iosapp.bachmain     | Xcode — `npm run ios:open` (preview)    |
-| androidapp.bachmain | Android Studio — `npm run android:open` |
-
-## Sistem isimleri (Cursor Simple Browser — yerel `?ide=1`)
-
-| Kanonik isim            | Komut                       |
-| ----------------------- | --------------------------- |
-| **UYGULAMA - BACHMAIN** | `npm run uygulama:open`     |
-| **YÖNETİM - BACHMAIN**  | `npm run yonetim:open`      |
-| **WEB - BACHMAIN**      | `npm run web:open`          |
-| Hepsi (3 sunucu)        | `npm run bachmain:open-all` |
-
-`open-all` yalnızca UYGULAMA + YÖNETİM + WEB sunucularını başlatır; Simple Browser tek sekme UYGULAMA açar (8GB RAM).
-
-Kaynak: `workspace/system-labels.json`, `workspace/manifest.json`
-
-## Açma
+Kurulum / güncelleme:
 
 ```bash
-cursor "workspace/WORKSPACE BACHMAIN.code-workspace"
+npm run cursor:workspaces
 ```
 
-Agent / düşük RAM: `workspace/BACHMAIN-SINGLE.code-workspace` veya `File → Open Folder → Bachmain`
+Cursor: **File → Open Workspace from File…** → istediğiniz dosya.
 
-## Doğrulama
+## Repo içi (geliştirici)
 
-```bash
-./workspace/scripts/verify-workspace.sh
-```
+| Dosya                                          | Kök            |
+| ---------------------------------------------- | -------------- |
+| `workspace/UYGULAMA - BACHMAIN.code-workspace` | monorepo kökü  |
+| `workspace/YÖNETİM - BACHMAIN.code-workspace`  | `apps/admin`   |
+| `workspace/WEB - BACHMAIN.code-workspace`      | `apps/landing` |
 
-Push / deploy: `scripts/deploy-all.sh`
+## Açma komutları (workspace içinden Task)
+
+| Sistem   | Komut                   |
+| -------- | ----------------------- |
+| UYGULAMA | `npm run uygulama:open` |
+| YÖNETİM  | `npm run yonetim:open`  |
+| WEB      | `npm run web:open`      |
+
+`npm run bachmain:open-all` üç sunucuyu birden başlatır — **8GB Mac’te kullanmayın.**
+
+## RAM ayarları
+
+- `.vscode/settings.json` — proje geneli
+- `workspace/cursor-recommended-user-settings.json` — global Cursor (`npm run cursor:apply-settings`)
+- `npm run cursor:clean` — `.next` / `out` temizliği
+
+## Kullanmayın
+
+- `workspace/WORKSPACE BACHMAIN.3-KOK-KULLANMA.code-workspace` — eski 3 kök (OOM)
+
+Kaynak: `workspace/system-labels.json`
