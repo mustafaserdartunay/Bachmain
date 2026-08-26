@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { useLocation } from 'react-router-dom'
 import { APP_SURFACE_PANEL_CLASS, YF_TEXT_CLASS, YFB_TEXT_CLASS } from '../../utils/dashboardDesign'
 import { BTN_PRIMARY } from '../../utils/buttonStyles'
 
@@ -45,6 +46,12 @@ export default class AppErrorBoundary extends Component {
     return { error }
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.state.error && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ error: null })
+    }
+  }
+
   componentDidCatch(error, info) {
     console.error('[bachmain] render error', error, info?.componentStack)
     if (isStaleChunkError(error)) {
@@ -62,23 +69,48 @@ export default class AppErrorBoundary extends Component {
   render() {
     if (!this.state.error) return this.props.children
 
+    const isPage = this.props.variant === 'page'
+    const title = isPage ? 'Bu bölümde beklenmeyen bir hata oluştu.' : 'Sayfa yüklenemedi'
+    const body = isPage
+      ? 'Diğer menüler çalışmaya devam eder. Bu bölümü yeniden deneyin.'
+      : 'Uygulama beklenmeyen bir hata verdi. Yenilemeyi deneyin; sorun sürerse çıkış yapıp tekrar girin.'
+
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center p-6">
+      <div
+        className={
+          isPage
+            ? 'flex min-h-[40vh] items-center justify-center p-6'
+            : 'flex min-h-[100dvh] items-center justify-center p-6'
+        }
+      >
         <section className={`${APP_SURFACE_PANEL_CLASS} max-w-md p-6 text-center`}>
-          <p className={`${YFB_TEXT_CLASS} text-[var(--ink)]`}>Sayfa yüklenemedi</p>
-          <p className={`${YF_TEXT_CLASS} mt-2 whitespace-normal`}>
-            Uygulama beklenmeyen bir hata verdi. Yenilemeyi deneyin; sorun sürerse çıkış yapıp
-            tekrar girin.
-          </p>
+          <p className={`${YFB_TEXT_CLASS} text-[var(--ink)]`}>{title}</p>
+          <p className={`${YF_TEXT_CLASS} mt-2 whitespace-normal`}>{body}</p>
           <button
             type="button"
             className={`${BTN_PRIMARY} mt-5 w-full px-4 text-white`}
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              if (isPage) {
+                this.setState({ error: null })
+                return
+              }
+              window.location.reload()
+            }}
           >
-            Yenile
+            {isPage ? 'Tekrar dene' : 'Yenile'}
           </button>
         </section>
       </div>
     )
   }
+}
+
+/** Route-level boundary — bir sayfa çökünce Layout/CRM ayakta kalır. */
+export function PageErrorBoundary({ children }) {
+  const location = useLocation()
+  return (
+    <AppErrorBoundary variant="page" resetKey={location.pathname + location.search}>
+      {children}
+    </AppErrorBoundary>
+  )
 }

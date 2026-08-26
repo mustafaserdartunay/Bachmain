@@ -237,7 +237,7 @@ function RateCard({ instrument }) {
 
 export default function HeaderMarketRates() {
   const { open, setOpen, toggle } = useHeaderPopover('market-rates')
-  const { rates, loading } = useExchangeRates()
+  const { rates, loading } = useExchangeRates({ enabled: open })
   const [seriesTick, setSeriesTick] = useState(0)
   const [dailyHistory, setDailyHistory] = useState({ USD: [], EUR: [], GOLD: [] })
   const {
@@ -259,6 +259,7 @@ export default function HeaderMarketRates() {
   }, [open])
 
   useEffect(() => {
+    if (!open) return undefined
     let cancelled = false
     loadFxDailyHistory()
       .then((data) => {
@@ -271,9 +272,10 @@ export default function HeaderMarketRates() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [open])
 
   useEffect(() => {
+    if (!open) return
     ;[
       ['USD', rates.USD],
       ['EUR', rates.EUR],
@@ -282,7 +284,7 @@ export default function HeaderMarketRates() {
       if (Number.isFinite(price) && price > 0) pushMarketSeriesPoint(id, price)
     })
     setSeriesTick((n) => n + 1)
-  }, [rates.USD, rates.EUR, rates.GOLD, rates.updatedAt])
+  }, [open, rates.USD, rates.EUR, rates.GOLD, rates.updatedAt])
 
   const instruments = useMemo(() => {
     void seriesTick

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
   clearSession,
   fetchCurrentUser,
@@ -118,6 +118,16 @@ function captureHandoffToken() {
 
 const HAND_OFF_ON_LOAD = typeof window !== 'undefined' ? captureHandoffToken() : false
 
+function sameUser(a, b) {
+  if (a === b) return true
+  if (!a || !b) return false
+  try {
+    return JSON.stringify(a) === JSON.stringify(b)
+  } catch {
+    return false
+  }
+}
+
 export function AuthProvider({ children }) {
   const stored = getStoredSession()
   const localBoot = typeof window !== 'undefined' && isLocalDevHost()
@@ -126,6 +136,10 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(initialUser)
   const [loading, setLoading] = useState(localBoot ? false : pendingSession)
   const [bootstrapped, setBootstrapped] = useState(localBoot ? true : !pendingSession)
+
+  const applyUser = useCallback((next) => {
+    setUser((current) => (sameUser(current, next) ? current : next))
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -140,7 +154,7 @@ export function AuthProvider({ children }) {
       if (isLocalDevHost()) {
         persistSession({ token: LOCAL_DEV_TOKEN, user: LOCAL_DEV_USER })
         if (!cancelled) {
-          setUser(LOCAL_DEV_USER)
+          applyUser(LOCAL_DEV_USER)
           await activateWorkspace(LOCAL_DEV_USER)
           setLoading(false)
           setBootstrapped(true)
@@ -160,13 +174,13 @@ export function AuthProvider({ children }) {
       try {
         if (token === LOCAL_DEV_TOKEN) {
           if (!cancelled) {
-            setUser(cached || LOCAL_DEV_USER)
+            applyUser(cached || LOCAL_DEV_USER)
             await activateWorkspace(cached || LOCAL_DEV_USER)
           }
         } else {
           const next = await fetchCurrentUser()
           if (!cancelled) {
-            setUser(next)
+            applyUser(next)
             try {
               await activateWorkspace(next)
             } catch (workspaceError) {
@@ -177,7 +191,7 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         if (cached && !cancelled) {
-          setUser(cached)
+          applyUser(cached)
           try {
             await activateWorkspace(cached)
           } catch {
@@ -189,7 +203,7 @@ export function AuthProvider({ children }) {
             await new Promise((resolve) => window.setTimeout(resolve, 400))
             const retry = await fetchCurrentUser()
             if (!cancelled && retry) {
-              setUser(retry)
+              applyUser(retry)
               try {
                 await activateWorkspace(retry)
               } catch {
@@ -222,13 +236,13 @@ export function AuthProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [applyUser])
 
   useEffect(() => {
-    const onChange = (event) => setUser(event.detail?.user || null)
+    const onChange = (event) => applyUser(event.detail?.user || null)
     window.addEventListener('bachmain:auth-changed', onChange)
     return () => window.removeEventListener('bachmain:auth-changed', onChange)
-  }, [])
+  }, [applyUser])
 
   useEffect(() => {
     if (!user) return undefined
@@ -237,7 +251,7 @@ export function AuthProvider({ children }) {
     const tick = async () => {
       try {
         const next = await fetchCurrentUser()
-        setUser(next)
+        applyUser(next)
       } catch {
         /* ignore poll errors */
       }
@@ -251,59 +265,94 @@ export function AuthProvider({ children }) {
       window.clearInterval(id)
       window.removeEventListener('bachmain:license-updated', onLicense)
     }
-  }, [user?.id])
+  }, [user?.id, applyUser])
 
-  const value = {
-    user,
-    loading,
-    bootstrapped,
-    isAuthenticated: Boolean(user),
-    async refreshUser() {
-      const next = await fetchCurrentUser()
-      setUser(next)
-      await activateWorkspace(next)
-      return next
-    },
-    async listAccessibleCompanies() {
-      return fetchAccessibleCompanies()
-    },
-    async switchCompany(tenantCode) {
+  const refreshUser = useCallback(async () => {
+    const next = await fetchCurrentUser()
+    applyUser(next)
+    await activateWorkspace(next)
+    return next
+  }, [applyUser])
+
+  const listAccessibleCompanies = useCallback(() => fetchAccessibleCompanies(), [])
+
+  const switchCompany = useCallback(
+    async (tenantCode) => {
       await flushWorkspaceNow()
       const data = await switchActiveCompany(tenantCode)
-      setUser(data.user)
+      applyUser(data.user)
       await activateWorkspace(data.user)
       return data.user
     },
-    async login(form) {
+    [applyUser],
+  )
+
+  const login = useCallback(
+    async (form) => {
       const data = await loginAccount(form)
-      setUser(data.user)
+      applyUser(data.user)
       await activateWorkspace(data.user)
       return data.user
     },
-    async register(form) {
+    [applyUser],
+  )
+
+  const register = useCallback(
+    async (form) => {
       const data = await registerAccount(form)
-      setUser(data.user)
+      applyUser(data.user)
       await activateWorkspace(data.user)
       return data.user
     },
-    async logout() {
-      try {
-        await flushWorkspaceNow()
-      } catch {
-        // still logout locally
-      }
-      await logoutAccount()
-      clearWorkspaceStorage()
-      localStorage.removeItem(WORKSPACE_OWNER_KEY)
-      setUser(null)
-    },
-    async completeOnboarding() {
-      const next = await completeOnboardingRequest()
-      setUser(next)
-      await activateWorkspace(next)
-      return next
-    },
-  }
+    [applyUser],
+  )
+
+  const logout = useCallback(async () => {
+    try {
+      await flushWorkspaceNow()
+    } catch {
+      // still logout locally
+    }
+    await logoutAccount()
+    clearWorkspaceStorage()
+    localStorage.removeItem(WORKSPACE_OWNER_KEY)
+    setUser(null)
+  }, [])
+
+  const completeOnboarding = useCallback(async () => {
+    const next = await completeOnboardingRequest()
+    applyUser(next)
+    await activateWorkspace(next)
+    return next
+  }, [applyUser])
+
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      bootstrapped,
+      isAuthenticated: Boolean(user),
+      refreshUser,
+      listAccessibleCompanies,
+      switchCompany,
+      login,
+      register,
+      logout,
+      completeOnboarding,
+    }),
+    [
+      user,
+      loading,
+      bootstrapped,
+      refreshUser,
+      listAccessibleCompanies,
+      switchCompany,
+      login,
+      register,
+      logout,
+      completeOnboarding,
+    ],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

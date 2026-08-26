@@ -5,6 +5,7 @@ import { setAuthCookie, getAuthCookie, clearAuthCookie } from './authCookies'
 
 const TOKEN_KEY = 'bachmain_auth_token'
 const USER_KEY = 'bachmain_auth_user'
+const AUTH_TIMEOUT_MS = 12_000
 
 export function getPlatformApiBase() {
   if (import.meta.env.VITE_PLATFORM_API_URL)
@@ -36,14 +37,27 @@ export function getStoredSession() {
   return { token, user }
 }
 
+function usersLookEqual(a, b) {
+  if (a === b) return true
+  if (!a || !b) return false
+  try {
+    return JSON.stringify(a) === JSON.stringify(b)
+  } catch {
+    return false
+  }
+}
+
 export function persistSession({ token, user }) {
   if (token) {
     localStorage.setItem(TOKEN_KEY, token)
     setAuthCookie('bachmain_token', token)
   }
   if (user) {
+    const previous = readStoredUser()
     localStorage.setItem(USER_KEY, JSON.stringify(user))
-    window.dispatchEvent(new CustomEvent('bachmain:auth-changed', { detail: { user } }))
+    if (!usersLookEqual(previous, user)) {
+      window.dispatchEvent(new CustomEvent('bachmain:auth-changed', { detail: { user } }))
+    }
   }
 }
 
@@ -54,10 +68,27 @@ export function clearSession() {
   window.dispatchEvent(new CustomEvent('bachmain:auth-changed', { detail: { user: null } }))
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = AUTH_TIMEOUT_MS) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      const err = new Error('İstek zaman aşımına uğradı')
+      err.code = 'TIMEOUT'
+      throw err
+    }
+    throw error
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 async function authRequest(path, { method = 'GET', body } = {}) {
   const base = getPlatformApiBase()
   const { token } = getStoredSession()
-  const res = await fetch(`${base}/${path.replace(/^\//, '')}`, {
+  const res = await fetchWithTimeout(`${base}/${path.replace(/^\//, '')}`, {
     method,
     credentials: 'include',
     headers: {
