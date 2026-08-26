@@ -2,7 +2,16 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import SearchInput from '../Common/SearchInput'
-import { Instagram, Landmark, Mail, MapPin, Phone, UserPlus, UserRound, Warehouse } from 'lucide-react'
+import {
+  Instagram,
+  Landmark,
+  Mail,
+  MapPin,
+  Phone,
+  UserPlus,
+  UserRound,
+  Warehouse,
+} from 'lucide-react'
 import { customers as customerData } from '../../data/mockData'
 import { findCustomerProfileByReference, getCustomerProfiles } from '../../data/customerProfiles'
 import { getCustomerDisplay } from '../../utils/customerDisplay'
@@ -31,6 +40,8 @@ import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 
 const MS_SEARCH_CLASS =
   'customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]'
+const MS_CTA_PLAIN_CLASS =
+  'quote-ms-cta-plain group inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#2563eb] focus:text-[#2563eb] active:text-[#2563eb] disabled:pointer-events-none disabled:opacity-40 [&_svg]:text-[#2563eb]'
 const MENU_SHELL = `${DROPDOWN_MENU_PORTAL_CLASS} ${PAGE_FILTER_MENU_CLASS}`
 const LIST_SCROLL_HIDE =
   '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
@@ -355,7 +366,12 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
       )
     : customerOptions
   const matchedCustomer = findDocumentCustomer(query)
-  const { anchorRef, menuRef, style: menuStyle } = useAnchoredPortal(isOpen, {
+  const customerDetailId = String(matchedCustomer?.id || doc.customerId || '').trim()
+  const {
+    anchorRef,
+    menuRef,
+    style: menuStyle,
+  } = useAnchoredPortal(isOpen, {
     placement: 'below',
     matchWidth: true,
     offset: 6,
@@ -416,11 +432,29 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
             className={MS_SEARCH_CLASS}
           />
         </div>
+        <button
+          type="button"
+          disabled={!customerDetailId}
+          onClick={() => {
+            if (!customerDetailId) return
+            navigate(`/musteriler/${customerDetailId}`)
+          }}
+          className={MS_CTA_PLAIN_CLASS}
+          title={customerDetailId ? 'Müşteri Detayı' : 'Önce müşteri seçin'}
+          aria-label={
+            customerDetailId
+              ? 'Seçili müşterinin detay sayfasına git'
+              : 'Müşteri detayı için önce müşteri seçin'
+          }
+        >
+          <UserRound className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+          Müşteri Detay
+        </button>
         {allowCreate ? (
           <button
             type="button"
             onClick={() => navigate('/musteriler/yeni')}
-            className="quote-ms-cta-plain group inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#2563eb] focus:text-[#2563eb] active:text-[#2563eb] [&_svg]:text-[#2563eb]"
+            className={MS_CTA_PLAIN_CLASS}
           >
             <UserPlus className="h-4 w-4" strokeWidth={2.25} aria-hidden />
             Yeni Müşteri Oluştur
