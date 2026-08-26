@@ -1681,7 +1681,7 @@ export default function QuotesPage() {
 
   useEffect(() => {
     if (viewMode !== 'prepare' || !selectedQuote?.customer?.trim()) return
-    const customer = findQuoteCustomer(selectedQuote.customer)
+    const customer = findQuoteCustomer(selectedQuote.customerId || selectedQuote.customer)
     if (!customer) return
     const representative = getQuoteCustomerRepresentative(customer)
     const contactInfo = resolveCustomerContactInfo(customer)
@@ -1690,6 +1690,7 @@ export default function QuotesPage() {
     syncedCustomerKeyRef.current = syncKey
 
     const patch = {}
+    if (customer.id && selectedQuote.customerId !== customer.id) patch.customerId = customer.id
     if (representative && selectedQuote.owner !== representative) patch.owner = representative
     if (contactInfo.contactName && selectedQuote.contact !== contactInfo.contactName)
       patch.contact = contactInfo.contactName

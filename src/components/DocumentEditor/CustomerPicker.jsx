@@ -41,7 +41,7 @@ import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 const MS_SEARCH_CLASS =
   'customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]'
 const MS_CTA_PLAIN_CLASS =
-  'quote-ms-cta-plain group inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#2563eb] focus:text-[#2563eb] active:text-[#2563eb] disabled:pointer-events-none disabled:opacity-40 [&_svg]:text-[#2563eb]'
+  'quote-ms-cta-plain group inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent px-3 text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#2563eb] focus:text-[#2563eb] active:text-[#2563eb] [&_svg]:text-[#2563eb]'
 const MENU_SHELL = `${DROPDOWN_MENU_PORTAL_CLASS} ${PAGE_FILTER_MENU_CLASS}`
 const LIST_SCROLL_HIDE =
   '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
@@ -56,15 +56,17 @@ function resolveCustomerWarehouse(customer) {
 }
 
 function findDocumentCustomer(customerName) {
+  const raw = String(customerName || '').trim()
+  if (!raw) return null
+  const byId = getCustomerProfiles().find((customer) => String(customer.id || '') === raw)
+  if (byId) return byId
   return (
-    findCustomerProfileByReference(customerName) ||
+    findCustomerProfileByReference(raw) ||
     (customerData.list || []).find((customer) => {
-      const normalized = String(customerName || '')
-        .trim()
-        .toLowerCase()
-      if (!normalized) return false
+      const normalized = raw.toLowerCase()
       const display = getCustomerDisplay(customer)
       return (
+        customer.id === raw ||
         customer.company?.toLowerCase() === normalized ||
         display.brandShortName.toLowerCase() === normalized ||
         display.companyTitle.toLowerCase() === normalized
@@ -72,6 +74,16 @@ function findDocumentCustomer(customerName) {
     }) ||
     null
   )
+}
+
+function resolveCustomerDetailId(doc, matchedCustomer) {
+  return String(
+    matchedCustomer?.id ||
+      doc?.customerId ||
+      findDocumentCustomer(doc?.customerId)?.id ||
+      findDocumentCustomer(doc?.customer)?.id ||
+      '',
+  ).trim()
 }
 
 function customerSearchTexts(customer) {
@@ -365,8 +377,7 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
           .some((value) => String(value).toLowerCase().includes(normalizedQuery)),
       )
     : customerOptions
-  const matchedCustomer = findDocumentCustomer(query)
-  const customerDetailId = String(matchedCustomer?.id || doc.customerId || '').trim()
+  const matchedCustomer = findDocumentCustomer(query) || findDocumentCustomer(doc.customerId)
   const {
     anchorRef,
     menuRef,
@@ -434,18 +445,17 @@ export default function CustomerPicker({ record, quote, onPatch, allowCreate = t
         </div>
         <button
           type="button"
-          disabled={!customerDetailId}
           onClick={() => {
-            if (!customerDetailId) return
-            navigate(`/musteriler/${customerDetailId}`)
+            const id = resolveCustomerDetailId(doc, matchedCustomer)
+            if (id) {
+              navigate(`/musteriler/${id}`)
+              return
+            }
+            navigate('/musteriler')
           }}
           className={MS_CTA_PLAIN_CLASS}
-          title={customerDetailId ? 'Müşteri Detayı' : 'Önce müşteri seçin'}
-          aria-label={
-            customerDetailId
-              ? 'Seçili müşterinin detay sayfasına git'
-              : 'Müşteri detayı için önce müşteri seçin'
-          }
+          title="Müşteri Detayı"
+          aria-label="Müşteri detay sayfasına git"
         >
           <UserRound className="h-4 w-4" strokeWidth={2.25} aria-hidden />
           Müşteri Detay
