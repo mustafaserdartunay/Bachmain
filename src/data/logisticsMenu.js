@@ -3,6 +3,7 @@ export const LOGISTICS_HOME_PATH = '/lojistik'
 export const logisticsSubMenus = [
   { label: 'Dashboard', path: '/lojistik', icon: 'report' },
   { label: 'Digital Twin', path: '/dijital-ikiz', icon: 'dashboard' },
+  { label: 'Tır Sevkiyat', path: '/lojistik/tir-sevkiyat', icon: 'shipments' },
   { label: 'Yük Hesaplama', path: '/lojistik/yukleme-plani', icon: 'plan' },
   { label: 'Planlanan Lojistik', path: '/lojistik/planlanan', icon: 'shipments' },
   { label: 'Teslimatta', path: '/lojistik/teslimatta', icon: 'delivery' },

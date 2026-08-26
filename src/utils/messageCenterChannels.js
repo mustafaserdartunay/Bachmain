@@ -4,10 +4,27 @@ export const MESSAGE_CENTER_CHANNEL_DEFINITIONS = [
     label: 'WhatsApp',
     api: 'WhatsApp Business Cloud API',
     fields: [
-      { key: 'displayPhone', label: 'WhatsApp Numarası', placeholder: '+90…' },
-      { key: 'phoneNumberId', label: 'Phone Number ID', placeholder: 'Meta Phone Number ID' },
-      { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'EAA...' },
-      { key: 'webhookVerifyToken', label: 'Webhook Verify Token', placeholder: 'Doğrulama anahtarı' },
+      {
+        key: 'displayPhone',
+        label: 'WhatsApp Numarası',
+        placeholder: '+905301285610',
+      },
+      {
+        key: 'phoneNumberId',
+        label: 'Phone Number ID',
+        placeholder: 'örn. 123456789012345',
+      },
+      {
+        key: 'accessToken',
+        label: 'Access Token',
+        type: 'text',
+        placeholder: 'EAA… (Meta Temporary / System User token)',
+      },
+      {
+        key: 'webhookVerifyToken',
+        label: 'Webhook Verify Token',
+        placeholder: 'bach-wa-5301285610',
+      },
     ],
   },
   {
@@ -34,7 +51,12 @@ export const MESSAGE_CENTER_CHANNEL_DEFINITIONS = [
     api: 'TikTok Business Leads API',
     fields: [
       { key: 'advertiserId', label: 'Advertiser ID', placeholder: 'TikTok reklam hesabı ID' },
-      { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'TikTok API anahtarı' },
+      {
+        key: 'accessToken',
+        label: 'Access Token',
+        type: 'password',
+        placeholder: 'TikTok API anahtarı',
+      },
     ],
   },
   {
@@ -42,10 +64,24 @@ export const MESSAGE_CENTER_CHANNEL_DEFINITIONS = [
     label: 'LinkedIn',
     api: 'LinkedIn Messaging API',
     fields: [
-      { key: 'organizationId', label: 'Organization ID', placeholder: 'LinkedIn şirket sayfası ID' },
+      {
+        key: 'organizationId',
+        label: 'Organization ID',
+        placeholder: 'LinkedIn şirket sayfası ID',
+      },
       { key: 'clientId', label: 'Client ID', placeholder: 'LinkedIn uygulama Client ID' },
-      { key: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: 'LinkedIn Client Secret' },
-      { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'OAuth access token' },
+      {
+        key: 'clientSecret',
+        label: 'Client Secret',
+        type: 'password',
+        placeholder: 'LinkedIn Client Secret',
+      },
+      {
+        key: 'accessToken',
+        label: 'Access Token',
+        type: 'password',
+        placeholder: 'OAuth access token',
+      },
     ],
   },
   {
@@ -55,8 +91,18 @@ export const MESSAGE_CENTER_CHANNEL_DEFINITIONS = [
     fields: [
       { key: 'adAccountId', label: 'Ad Account ID', placeholder: 'Pinterest reklam hesabı ID' },
       { key: 'appId', label: 'App ID', placeholder: 'Pinterest App ID' },
-      { key: 'appSecret', label: 'App Secret', type: 'password', placeholder: 'Pinterest App Secret' },
-      { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'OAuth access token' },
+      {
+        key: 'appSecret',
+        label: 'App Secret',
+        type: 'password',
+        placeholder: 'Pinterest App Secret',
+      },
+      {
+        key: 'accessToken',
+        label: 'Access Token',
+        type: 'password',
+        placeholder: 'OAuth access token',
+      },
     ],
   },
   {
@@ -65,9 +111,24 @@ export const MESSAGE_CENTER_CHANNEL_DEFINITIONS = [
     api: 'X (Twitter) API v2',
     fields: [
       { key: 'apiKey', label: 'API Key', placeholder: 'Consumer API Key' },
-      { key: 'apiSecret', label: 'API Secret', type: 'password', placeholder: 'Consumer API Secret' },
-      { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'OAuth access token' },
-      { key: 'accessTokenSecret', label: 'Access Token Secret', type: 'password', placeholder: 'OAuth token secret' },
+      {
+        key: 'apiSecret',
+        label: 'API Secret',
+        type: 'password',
+        placeholder: 'Consumer API Secret',
+      },
+      {
+        key: 'accessToken',
+        label: 'Access Token',
+        type: 'password',
+        placeholder: 'OAuth access token',
+      },
+      {
+        key: 'accessTokenSecret',
+        label: 'Access Token Secret',
+        type: 'password',
+        placeholder: 'OAuth token secret',
+      },
     ],
   },
   {
@@ -80,7 +141,12 @@ export const MESSAGE_CENTER_CHANNEL_DEFINITIONS = [
       { key: 'smtpHost', label: 'SMTP Sunucu', placeholder: 'smtp.ornek.com' },
       { key: 'smtpPort', label: 'SMTP Port', placeholder: '587' },
       { key: 'username', label: 'E-posta Adresi', placeholder: 'info@firma.com' },
-      { key: 'password', label: 'Şifre / Uygulama Şifresi', type: 'password', placeholder: '••••••••' },
+      {
+        key: 'password',
+        label: 'Şifre / Uygulama Şifresi',
+        type: 'password',
+        placeholder: '••••••••',
+      },
     ],
   },
 ]
@@ -95,6 +161,8 @@ export function buildDefaultMessageCenterChannelConfig() {
         ...(channel.id === 'whatsapp'
           ? {
               displayPhone: '+905301285610',
+              phoneNumberId: '',
+              accessToken: '',
               webhookVerifyToken: 'bach-wa-5301285610',
             }
           : {}),
@@ -117,5 +185,16 @@ export function mergeMessageCenterChannelConfig(saved = {}) {
 }
 
 export function getConnectedMessageCenterChannels(config = {}) {
-  return MESSAGE_CENTER_CHANNEL_DEFINITIONS.filter((channel) => Boolean(config[channel.id]?.connected))
+  return MESSAGE_CENTER_CHANNEL_DEFINITIONS.filter((channel) =>
+    Boolean(config[channel.id]?.connected),
+  )
+}
+
+/** Formda “nasıl doldurulur” göstermek için örnek değerler — gerçek Meta token değildir. */
+export const WHATSAPP_EXAMPLE_FORM_VALUES = {
+  connected: false,
+  displayPhone: '+905301285610',
+  phoneNumberId: '123456789012345',
+  accessToken: 'EAA_ORNEK_TOKEN_Meta_API_Setup_sayfasindan_kopyalanir',
+  webhookVerifyToken: 'bach-wa-5301285610',
 }

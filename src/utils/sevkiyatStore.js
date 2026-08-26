@@ -228,9 +228,7 @@ function haversineKm(a, b) {
   const dLng = toRad(b.lng - a.lng)
   const lat1 = toRad(a.lat)
   const lat2 = toRad(b.lat)
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h))
 }
 
@@ -248,10 +246,7 @@ export function enrichStopCoordinates(stop) {
       lat: coords.lat,
       lng: coords.lng,
       customerLabel:
-        stop.customerLabel ||
-        getCustomerDisplay(customer).brandShortName ||
-        customer.company ||
-        '',
+        stop.customerLabel || getCustomerDisplay(customer).brandShortName || customer.company || '',
     }
   }
   const coords = resolveAddressCoordinates(
@@ -349,10 +344,7 @@ export function tickSevkiyatLivePositions() {
     const to = stops[segmentIndex]
     const livePosition = interpolatePosition(from, to, segmentT)
 
-    const routeGeometry = [
-      [hq.lat, hq.lng],
-      ...stops.map((s) => [s.lat, s.lng]),
-    ]
+    const routeGeometry = [[hq.lat, hq.lng], ...stops.map((s) => [s.lat, s.lng])]
 
     if (nextProgress !== progress) changed = true
     return {
@@ -375,4 +367,111 @@ export function getSevkiyatSummary(trips = loadTrips()) {
     inTransit: trips.filter((t) => t.status === 'in_transit').length,
     delivered: trips.filter((t) => t.status === 'delivered').length,
   }
+}
+
+export function saveTripRouteSnapshot(tripId, snapshot, extras = {}) {
+  const trip = getTrip(tripId)
+  if (!trip) return null
+  return upsertTrip({
+    ...trip,
+    routeSnapshot: snapshot || null,
+    routeAlternatives: extras.alternatives || trip.routeAlternatives || [],
+    routePreferences: extras.preferences || trip.routePreferences || trip.routePreferences,
+    route: {
+      ...(trip.route || {}),
+      distanceKm:
+        snapshot?.distanceMeters != null
+          ? Math.round((snapshot.distanceMeters / 1000) * 10) / 10
+          : (trip.route?.distanceKm ?? null),
+      durationMin:
+        snapshot?.durationSec != null
+          ? Math.round(snapshot.durationSec / 60)
+          : (trip.route?.durationMin ?? null),
+      calculatedAt: snapshot?.computedAt || new Date().toISOString(),
+      source: snapshot?.source || trip.route?.source || null,
+    },
+  })
+}
+
+export function saveTripRoutePreferences(tripId, preferences) {
+  const trip = getTrip(tripId)
+  if (!trip) return null
+  return upsertTrip({
+    ...trip,
+    routePreferences: {
+      avoidTolls: Boolean(preferences?.avoidTolls),
+      avoidHighways: Boolean(preferences?.avoidHighways),
+      avoidFerries: Boolean(preferences?.avoidFerries),
+    },
+  })
+}
+
+export function reorderTripStops(tripId, orderedIds) {
+  const trip = getTrip(tripId)
+  if (!trip) return null
+  const byId = new Map((trip.stops || []).map((stop) => [stop.id, stop]))
+  const next = orderedIds
+    .map((id, index) => {
+      const stop = byId.get(id)
+      return stop ? { ...stop, seq: index + 1 } : null
+    })
+    .filter(Boolean)
+  const leftover = (trip.stops || []).filter((stop) => !orderedIds.includes(stop.id))
+  leftover.forEach((stop) => next.push({ ...stop, seq: next.length + 1 }))
+  return upsertTrip({
+    ...trip,
+    stops: next,
+    routeDirty: true,
+  })
+}
+
+export function updateTripStop(tripId, stopId, patch) {
+  const trip = getTrip(tripId)
+  if (!trip) return null
+  return upsertTrip({
+    ...trip,
+    stops: (trip.stops || []).map((stop) => (stop.id === stopId ? { ...stop, ...patch } : stop)),
+  })
+}
+
+export function appendTripEvent(tripId, event) {
+  const trip = getTrip(tripId)
+  if (!trip) return null
+  const entry = {
+    id: createId('evt'),
+    at: event?.at || new Date().toISOString(),
+    type: event?.type || 'note',
+    label: event?.label || '',
+    detail: event?.detail || '',
+  }
+  return upsertTrip({
+    ...trip,
+    events: [entry, ...(trip.events || [])].slice(0, 200),
+    statusHistory: [
+      {
+        id: entry.id,
+        at: entry.at,
+        status: event?.status || trip.status,
+        label: entry.label,
+      },
+      ...(trip.statusHistory || []),
+    ].slice(0, 200),
+  })
+}
+
+export function appendTripNote(tripId, note) {
+  const trip = getTrip(tripId)
+  if (!trip) return null
+  const entry = {
+    id: createId('note'),
+    at: note?.at || new Date().toISOString(),
+    authorType: note?.authorType || 'ops',
+    authorLabel: note?.authorLabel || 'Lojistik sorumlusu',
+    text: String(note?.text || '').trim(),
+  }
+  if (!entry.text) return trip
+  return upsertTrip({
+    ...trip,
+    opsNotes: [entry, ...(trip.opsNotes || [])].slice(0, 200),
+  })
 }

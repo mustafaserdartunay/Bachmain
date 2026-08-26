@@ -19,6 +19,7 @@ const MODULE_LABELS = {
   omnichannel: 'Mesaj Merkezi',
   einvoice: 'E-Fatura',
   reports: 'Raporlar',
+  logistics: 'Lojistik',
 }
 
 const ACTION_LABELS = {
@@ -44,7 +45,8 @@ function cloneForStorage(value) {
     return Object.fromEntries(
       Object.entries(value).map(([key, item]) => {
         if (['image', 'file', 'imageFile', 'url'].includes(key)) return [key, null]
-        if (['instagramImages', 'webImages', 'videos', 'gallery', 'files'].includes(key)) return [key, []]
+        if (['instagramImages', 'webImages', 'videos', 'gallery', 'files'].includes(key))
+          return [key, []]
         return [key, cloneForStorage(item)]
       }),
     )
@@ -115,11 +117,9 @@ export function markActivityEntryRestored(entryId) {
   const restoreEntryId = createId('restore')
   const entries = readActivityEntries()
   const target = entries.find((entry) => entry.id === entryId)
-  const nextEntries = entries.map((entry) => (
-    entry.id === entryId
-      ? { ...entry, restoredAt, restoredByEntryId: restoreEntryId }
-      : entry
-  ))
+  const nextEntries = entries.map((entry) =>
+    entry.id === entryId ? { ...entry, restoredAt, restoredByEntryId: restoreEntryId } : entry,
+  )
   const restoreEntry = {
     id: restoreEntryId,
     at: restoredAt,
@@ -138,8 +138,9 @@ export function markActivityEntryRestored(entryId) {
 export function filterActivityEntries({ modules = [], actions = [] } = {}) {
   const moduleSet = new Set(modules.filter(Boolean))
   const actionSet = new Set(actions.filter(Boolean))
-  return readActivityEntries().filter((entry) => (
-    (!moduleSet.size || moduleSet.has(entry.module))
-    && (!actionSet.size || actionSet.has(entry.action))
-  ))
+  return readActivityEntries().filter(
+    (entry) =>
+      (!moduleSet.size || moduleSet.has(entry.module)) &&
+      (!actionSet.size || actionSet.has(entry.action)),
+  )
 }

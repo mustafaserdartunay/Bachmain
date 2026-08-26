@@ -4,6 +4,7 @@ import { readChannelConfig, saveChannelConfig } from '../../omnichannel/store'
 import {
   getConnectedMessageCenterChannels,
   MESSAGE_CENTER_CHANNEL_DEFINITIONS,
+  WHATSAPP_EXAMPLE_FORM_VALUES,
 } from '../../utils/messageCenterChannels'
 import {
   loadWhatsAppServerConfig,
@@ -14,7 +15,11 @@ import {
 import { flushWorkspaceNow } from '../../utils/workspaceStorage'
 import { SOCIAL_BRAND_BACKGROUNDS, SOCIAL_BRAND_ICONS } from '../Layout/SocialBrandIcons'
 import FormSectionPanel, { FORM_FIELD_ROW_CLASS } from '../Common/FormSectionPanel'
-import { APP_FILTER_LABEL_CLASS, APP_METRIC_ROW_CLASS, APP_SUBLABEL_CLASS } from '../../utils/dashboardDesign'
+import {
+  APP_FILTER_LABEL_CLASS,
+  APP_METRIC_ROW_CLASS,
+  APP_SUBLABEL_CLASS,
+} from '../../utils/dashboardDesign'
 import { BTN_SUCCESS } from '../../utils/buttonStyles'
 
 function ChannelConfigCard({ channel, config, onChange, footer = null }) {
@@ -29,7 +34,9 @@ function ChannelConfigCard({ channel, config, onChange, footer = null }) {
     <section className={`${FORM_FIELD_ROW_CLASS} !grid !grid-cols-1 !gap-3 !p-4`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm ${SOCIAL_BRAND_BACKGROUNDS[channel.id] || 'bg-[rgba(140,145,165,0.2)]'}`}>
+          <span
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm ${SOCIAL_BRAND_BACKGROUNDS[channel.id] || 'bg-[rgba(140,145,165,0.2)]'}`}
+          >
             {Icon ? <Icon className="h-4 w-4" /> : null}
           </span>
           <div className="min-w-0">
@@ -38,7 +45,11 @@ function ChannelConfigCard({ channel, config, onChange, footer = null }) {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {connected ? <Wifi className="h-4 w-4 text-emerald-600" /> : <WifiOff className="h-4 w-4 text-[var(--muted)]" />}
+          {connected ? (
+            <Wifi className="h-4 w-4 text-emerald-600" />
+          ) : (
+            <WifiOff className="h-4 w-4 text-[var(--muted)]" />
+          )}
           <label className="flex items-center gap-2 text-xs font-bold text-[var(--ink)]">
             <input
               type="checkbox"
@@ -100,7 +111,8 @@ export default function MessageCenterSettingsPanel() {
               ...local,
               connected: data.config.connected ?? local.connected,
               phoneNumberId: data.config.phoneNumberId || local.phoneNumberId || '',
-              webhookVerifyToken: data.config.webhookVerifyToken || local.webhookVerifyToken || 'bach-wa-5301285610',
+              webhookVerifyToken:
+                data.config.webhookVerifyToken || local.webhookVerifyToken || 'bach-wa-5301285610',
               displayPhone: data.config.displayPhone || local.displayPhone || '+905301285610',
               // Keep local token input; if empty and server has token, leave blank (masked on server)
               accessToken: local.accessToken || '',
@@ -112,7 +124,9 @@ export default function MessageCenterSettingsPanel() {
       .catch(() => {
         // offline / no session — local-only still works for drafts
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const connectedChannels = useMemo(
@@ -126,6 +140,27 @@ export default function MessageCenterSettingsPanel() {
       [channelId]: nextConfig,
     }))
   }
+
+  function fillWhatsAppExample() {
+    setChannelConfig((current) => ({
+      ...current,
+      whatsapp: {
+        ...(current.whatsapp || {}),
+        ...WHATSAPP_EXAMPLE_FORM_VALUES,
+      },
+    }))
+    setStatus(
+      'Örnek değerler forma yazıldı. Bunlar gerçek Meta bilgisi değil — kendi Phone Number ID ve EAA token’ınla değiştir, sonra Kaydet → Test Et.',
+    )
+  }
+
+  useEffect(() => {
+    const wa = readChannelConfig()?.whatsapp || {}
+    if (!String(wa.phoneNumberId || '').trim() && !String(wa.accessToken || '').trim()) {
+      fillWhatsAppExample()
+    }
+    // Yalnızca boş formda bir kez örnek göster
+  }, [])
 
   async function handleSave() {
     setBusy(true)
@@ -199,11 +234,14 @@ export default function MessageCenterSettingsPanel() {
   }
 
   function copyWebhook() {
-    navigator.clipboard?.writeText(webhookUrl).then(() => {
-      setStatus('Webhook URL kopyalandı')
-    }).catch(() => {
-      window.prompt('Webhook URL', webhookUrl)
-    })
+    navigator.clipboard
+      ?.writeText(webhookUrl)
+      .then(() => {
+        setStatus('Webhook URL kopyalandı')
+      })
+      .catch(() => {
+        window.prompt('Webhook URL', webhookUrl)
+      })
   }
 
   const whatsappDef = MESSAGE_CENTER_CHANNEL_DEFINITIONS.find((item) => item.id === 'whatsapp')
@@ -214,7 +252,8 @@ export default function MessageCenterSettingsPanel() {
       <FormSectionPanel icon={MessageCircle} title="Bağlı Kanallar" dotColor="emerald">
         {connectedChannels.length === 0 ? (
           <p className="text-sm font-semibold text-[var(--muted)]">
-            Henüz bağlı kanal yok. Aşağıdan kanal seçip API bilgilerini girip &quot;Bağlı&quot; işaretleyin.
+            Henüz bağlı kanal yok. Aşağıdan kanal seçip API bilgilerini girip &quot;Bağlı&quot;
+            işaretleyin.
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -225,7 +264,9 @@ export default function MessageCenterSettingsPanel() {
                   key={channel.id}
                   className={`${APP_METRIC_ROW_CLASS} !inline-flex !w-auto !min-h-0 items-center gap-2 !px-3 !py-2`}
                 >
-                  <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${SOCIAL_BRAND_BACKGROUNDS[channel.id]}`}>
+                  <span
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg ${SOCIAL_BRAND_BACKGROUNDS[channel.id]}`}
+                  >
                     {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
                   </span>
                   <span className="text-xs font-extrabold text-[var(--ink)]">{channel.label}</span>
@@ -236,7 +277,8 @@ export default function MessageCenterSettingsPanel() {
           </div>
         )}
         <p className={APP_SUBLABEL_CLASS}>
-          {connectedChannels.length}/{MESSAGE_CENTER_CHANNEL_DEFINITIONS.length} kanal bağlı · API ayarları şirket üyeliğinize özeldir
+          {connectedChannels.length}/{MESSAGE_CENTER_CHANNEL_DEFINITIONS.length} kanal bağlı · API
+          ayarları şirket üyeliğinize özeldir
         </p>
       </FormSectionPanel>
 
@@ -245,23 +287,46 @@ export default function MessageCenterSettingsPanel() {
           channel={whatsappDef}
           config={channelConfig.whatsapp}
           onChange={patchChannel}
-          footer={(
+          footer={
             <div className="space-y-3 border-t border-[rgba(140,145,165,0.18)] pt-3">
               <div className="rounded-xl bg-[rgba(140,145,165,0.08)] px-3 py-2 text-[12px] font-semibold text-[var(--muted)]">
                 <p className="mb-1 font-extrabold text-[var(--ink)]">Kurulum</p>
                 <ol className="list-decimal space-y-1 pl-4">
-                  <li>Meta → WhatsApp → API Setup sayfasından <strong>Phone number ID</strong> değerini kopyalayıp forma yapıştırın.</li>
-                  <li><strong>Temporary access token</strong> (EAA…) değerini Access Token alanına yapıştırın.</li>
-                  <li>Webhook URL’yi Meta’da Callback URL yapın; Verify Token: <code className="font-mono">bach-wa-5301285610</code></li>
-                  <li>Webhook alanı: <code className="font-mono">messages</code> abone edin.</li>
+                  <li>
+                    Meta → WhatsApp → API Setup sayfasından <strong>Phone number ID</strong>{' '}
+                    değerini kopyalayıp forma yapıştırın.
+                  </li>
+                  <li>
+                    <strong>Temporary access token</strong> (EAA…) değerini Access Token alanına
+                    yapıştırın.
+                  </li>
+                  <li>
+                    Webhook URL’yi Meta’da Callback URL yapın; Verify Token:{' '}
+                    <code className="font-mono">bach-wa-5301285610</code>
+                  </li>
+                  <li>
+                    Webhook alanı: <code className="font-mono">messages</code> abone edin.
+                  </li>
                   <li>Kaydet → Bağlantıyı Test Et.</li>
                 </ol>
+                <p className="mt-2 rounded-lg bg-amber-500/12 px-2 py-1.5 text-[11px] font-bold text-amber-900">
+                  Aşağıdaki alanlar örnek format içindir. Gerçek bağlantı için Meta’daki kendi
+                  değerlerinle değiştir.
+                </p>
               </div>
               <label className="block space-y-1">
                 <span className={APP_FILTER_LABEL_CLASS}>Webhook Callback URL</span>
                 <div className="flex gap-2">
-                  <input readOnly className="form-input w-full font-mono text-[11px]" value={webhookUrl} />
-                  <button type="button" onClick={copyWebhook} className="btn-ghost inline-flex items-center gap-1 !px-3 !py-2 text-[11px] font-bold">
+                  <input
+                    readOnly
+                    className="form-input w-full font-mono text-[11px]"
+                    value={webhookUrl}
+                  />
+                  <button
+                    type="button"
+                    onClick={copyWebhook}
+                    className="btn-ghost inline-flex items-center gap-1 !px-3 !py-2 text-[11px] font-bold"
+                  >
                     <Copy className="h-3.5 w-3.5" /> Kopyala
                   </button>
                 </div>
@@ -277,6 +342,14 @@ export default function MessageCenterSettingsPanel() {
                 <button
                   type="button"
                   disabled={busy}
+                  onClick={fillWhatsAppExample}
+                  className="btn-ghost inline-flex items-center gap-2 !px-4 !py-2 text-xs font-bold disabled:opacity-40"
+                >
+                  Örnek doldur
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
                   onClick={handleTestWhatsApp}
                   className="btn-ghost inline-flex items-center gap-2 !px-4 !py-2 text-xs font-bold disabled:opacity-40"
                 >
@@ -284,7 +357,7 @@ export default function MessageCenterSettingsPanel() {
                 </button>
               </div>
             </div>
-          )}
+          }
         />
       ) : null}
 
@@ -299,9 +372,7 @@ export default function MessageCenterSettingsPanel() {
         ))}
       </div>
 
-      {status ? (
-        <p className="text-sm font-semibold text-[var(--ink)]">{status}</p>
-      ) : null}
+      {status ? <p className="text-sm font-semibold text-[var(--ink)]">{status}</p> : null}
 
       <div className="flex justify-end">
         <button

@@ -101,6 +101,8 @@ const DeliveredLogisticsPage = lazyPage(() =>
     default: m.DeliveredLogisticsPage,
   })),
 )
+const TirSevkiyatPage = lazyPage(() => import('./pages/logistics/TirSevkiyatPage'))
+const TirSevkiyatDetailPage = lazyPage(() => import('./pages/logistics/TirSevkiyatDetailPage'))
 import ProductsPage from './pages/stock/ProductsPage'
 import WarehousesPage from './pages/stock/WarehousesPage'
 import WarehouseTransferPage from './pages/stock/WarehouseTransferPage'
@@ -668,6 +670,22 @@ export default function App() {
                         element={
                           <PageSuspense>
                             <DeliveredLogisticsPage />
+                          </PageSuspense>
+                        }
+                      />
+                      <Route
+                        path="/lojistik/tir-sevkiyat"
+                        element={
+                          <PageSuspense>
+                            <TirSevkiyatPage />
+                          </PageSuspense>
+                        }
+                      />
+                      <Route
+                        path="/lojistik/tir-sevkiyat/:shipmentId"
+                        element={
+                          <PageSuspense>
+                            <TirSevkiyatDetailPage />
                           </PageSuspense>
                         }
                       />

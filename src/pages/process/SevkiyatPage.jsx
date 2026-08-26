@@ -970,6 +970,13 @@ export default function SevkiyatPage() {
           ]}
           getRowActions={(trip) => [
             {
+              id: 'control',
+              label: 'Detayları Gör',
+              icon: ExternalLink,
+              tone: 'primary',
+              onClick: () => navigate(`/lojistik/tir-sevkiyat/${trip.id}`),
+            },
+            {
               id: 'edit',
               label: 'Düzenle',
               icon: Save,

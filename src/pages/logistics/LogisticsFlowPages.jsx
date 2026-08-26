@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  FileText,
-  Mail,
-  MessageCircle,
-  Printer,
-  Receipt,
-  Sparkles,
-  Truck,
-} from 'lucide-react'
+import { FileText, Mail, MessageCircle, Printer, Receipt, Sparkles, Truck } from 'lucide-react'
 import { AppPageHeader, AppPageShell } from '../../components/Layout/AppPageLayout'
 import {
   getLogisticsSummary,
@@ -41,7 +33,9 @@ function PlanTable({ rows, onStatus }) {
         </thead>
         <tbody>
           {rows.map((plan) => {
-            const customers = [...new Set((plan.pallets || []).map((p) => p.customer || p.code).filter(Boolean))]
+            const customers = [
+              ...new Set((plan.pallets || []).map((p) => p.customer || p.code).filter(Boolean)),
+            ]
             return (
               <tr key={plan.id}>
                 <td>{plan.code}</td>
@@ -58,7 +52,12 @@ function PlanTable({ rows, onStatus }) {
                         İlerlet
                       </button>
                     ) : null}
-                    <Link to="/belge-merkezi" className="slp-btn">Belge</Link>
+                    <Link to={`/lojistik/tir-sevkiyat/${plan.id}`} className="slp-btn">
+                      Detayları Gör
+                    </Link>
+                    <Link to="/belge-merkezi" className="slp-btn">
+                      Belge
+                    </Link>
                   </div>
                 </td>
               </tr>
@@ -83,7 +82,9 @@ function usePlans() {
 export function LogisticsDashboardPage() {
   const summary = useMemo(() => getLogisticsSummary(), [])
   const [plans] = usePlans()
-  const planned = plans.filter((p) => ['draft', 'planned', 'active'].includes(p.status || 'draft')).length
+  const planned = plans.filter((p) =>
+    ['draft', 'planned', 'active'].includes(p.status || 'draft'),
+  ).length
   const transit = plans.filter((p) => p.status === 'in_transit').length
   const done = plans.filter((p) => p.status === 'delivered').length
 
@@ -91,23 +92,57 @@ export function LogisticsDashboardPage() {
     <AppPageShell className="slp-shell">
       <AppPageHeader
         title="Lojistik Dashboard"
-        actions={<Link to="/lojistik/yukleme-plani" className="slp-btn slp-btn--primary"><Sparkles className="inline h-3.5 w-3.5 mr-1" />Yük Hesaplama</Link>}
+        actions={
+          <Link to="/lojistik/yukleme-plani" className="slp-btn slp-btn--primary">
+            <Sparkles className="inline h-3.5 w-3.5 mr-1" />
+            Yük Hesaplama
+          </Link>
+        }
       />
       <div className="slp-metrics">
-        <div className="slp-metric"><strong>{planned}</strong><span>Planlanan</span></div>
-        <div className="slp-metric"><strong>{transit}</strong><span>Teslimatta</span></div>
-        <div className="slp-metric"><strong>{done}</strong><span>Teslim</span></div>
-        <div className="slp-metric"><strong>%{summary.fillVolumePct}</strong><span>Doluluk</span></div>
-        <div className="slp-metric"><strong>{summary.vehicles}</strong><span>Araç</span></div>
-        <div className="slp-metric"><strong>{summary.deliveriesPending}</strong><span>Bekleyen</span></div>
+        <div className="slp-metric">
+          <strong>{planned}</strong>
+          <span>Planlanan</span>
+        </div>
+        <div className="slp-metric">
+          <strong>{transit}</strong>
+          <span>Teslimatta</span>
+        </div>
+        <div className="slp-metric">
+          <strong>{done}</strong>
+          <span>Teslim</span>
+        </div>
+        <div className="slp-metric">
+          <strong>%{summary.fillVolumePct}</strong>
+          <span>Doluluk</span>
+        </div>
+        <div className="slp-metric">
+          <strong>{summary.vehicles}</strong>
+          <span>Araç</span>
+        </div>
+        <div className="slp-metric">
+          <strong>{summary.deliveriesPending}</strong>
+          <span>Bekleyen</span>
+        </div>
       </div>
       <div className="slp-glass slp-panel">
         <h3>Hızlı işlem</h3>
         <div className="slp-toolbar">
-          <Link to="/lojistik/planlanan" className="slp-btn">Planlanan Lojistik</Link>
-          <Link to="/lojistik/teslimatta" className="slp-btn">Teslimatta</Link>
-          <Link to="/lojistik/teslim-edildi" className="slp-btn">Teslim Edildi</Link>
-          <Link to="/depo" className="slp-btn">Depo Stokları</Link>
+          <Link to="/lojistik/planlanan" className="slp-btn">
+            Planlanan Lojistik
+          </Link>
+          <Link to="/lojistik/tir-sevkiyat" className="slp-btn">
+            Tır Sevkiyat
+          </Link>
+          <Link to="/lojistik/teslimatta" className="slp-btn">
+            Teslimatta
+          </Link>
+          <Link to="/lojistik/teslim-edildi" className="slp-btn">
+            Teslim Edildi
+          </Link>
+          <Link to="/depo" className="slp-btn">
+            Depo Stokları
+          </Link>
         </div>
       </div>
     </AppPageShell>
@@ -138,12 +173,17 @@ export function PlannedLogisticsPage() {
     <AppPageShell className="slp-shell">
       <AppPageHeader
         title="Planlanan Lojistik"
-        actions={(
+        actions={
           <div className="slp-toolbar">
-            <Link to="/lojistik/yukleme-plani" className="slp-btn slp-btn--primary">Yeni plan</Link>
-            <Link to="/belge-merkezi" className="slp-btn"><FileText className="inline h-3.5 w-3.5 mr-1" />Belge Merkezi</Link>
+            <Link to="/lojistik/yukleme-plani" className="slp-btn slp-btn--primary">
+              Yeni plan
+            </Link>
+            <Link to="/belge-merkezi" className="slp-btn">
+              <FileText className="inline h-3.5 w-3.5 mr-1" />
+              Belge Merkezi
+            </Link>
           </div>
-        )}
+        }
       />
       <PlanTable rows={rows} onStatus={advance} />
       <div className="slp-glass slp-panel" style={{ marginTop: 12 }}>
@@ -154,16 +194,56 @@ export function PlannedLogisticsPage() {
         <div className="slp-toolbar" style={{ marginTop: 10 }}>
           {rows[0] ? (
             <>
-              <button type="button" className="slp-btn" onClick={() => makeDoc(rows[0], 'invoice', 'en')}><Receipt className="inline h-3.5 w-3.5 mr-1" />Invoice EN</button>
-              <button type="button" className="slp-btn" onClick={() => makeDoc(rows[0], 'cmr', 'de')}>CMR DE</button>
-              <button type="button" className="slp-btn" onClick={() => makeDoc(rows[0], 'packing_list', 'tr')}>Packing List</button>
-              <a className="slp-btn" href={`mailto:?subject=${encodeURIComponent(rows[0].code || 'Sevkiyat')}`}><Mail className="inline h-3.5 w-3.5 mr-1" />Mail</a>
-              <button type="button" className="slp-btn" onClick={() => window.print()}><Printer className="inline h-3.5 w-3.5 mr-1" />Yazdır</button>
-              <a className="slp-btn" href={`https://wa.me/?text=${encodeURIComponent(`Sevkiyat planı: ${rows[0].code}`)}`} target="_blank" rel="noreferrer"><MessageCircle className="inline h-3.5 w-3.5 mr-1" />WhatsApp</a>
+              <button
+                type="button"
+                className="slp-btn"
+                onClick={() => makeDoc(rows[0], 'invoice', 'en')}
+              >
+                <Receipt className="inline h-3.5 w-3.5 mr-1" />
+                Invoice EN
+              </button>
+              <button
+                type="button"
+                className="slp-btn"
+                onClick={() => makeDoc(rows[0], 'cmr', 'de')}
+              >
+                CMR DE
+              </button>
+              <button
+                type="button"
+                className="slp-btn"
+                onClick={() => makeDoc(rows[0], 'packing_list', 'tr')}
+              >
+                Packing List
+              </button>
+              <a
+                className="slp-btn"
+                href={`mailto:?subject=${encodeURIComponent(rows[0].code || 'Sevkiyat')}`}
+              >
+                <Mail className="inline h-3.5 w-3.5 mr-1" />
+                Mail
+              </a>
+              <button type="button" className="slp-btn" onClick={() => window.print()}>
+                <Printer className="inline h-3.5 w-3.5 mr-1" />
+                Yazdır
+              </button>
+              <a
+                className="slp-btn"
+                href={`https://wa.me/?text=${encodeURIComponent(`Sevkiyat planı: ${rows[0].code}`)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <MessageCircle className="inline h-3.5 w-3.5 mr-1" />
+                WhatsApp
+              </a>
             </>
           ) : null}
           <select className="slp-btn" defaultValue="tr" aria-label="Belge dili">
-            {DOC_LANGUAGES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
+            {DOC_LANGUAGES.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -182,7 +262,10 @@ export function InTransitLogisticsPage() {
 
   return (
     <AppPageShell className="slp-shell">
-      <AppPageHeader title="Teslimatta" subtitle="Canlı sevkiyat · kalan durak · harita (Google Maps anahtarı ile)" />
+      <AppPageHeader
+        title="Teslimatta"
+        subtitle="Canlı sevkiyat · kalan durak · harita (Google Maps anahtarı ile)"
+      />
       <div className="slp-glass slp-panel" style={{ marginBottom: 12 }}>
         <div className="slp-toolbar">
           <Truck className="h-4 w-4 text-[color:var(--accent)]" />
@@ -192,10 +275,7 @@ export function InTransitLogisticsPage() {
           Google Maps Directions bağlandığında canlı konum, kalan durak ve ETA burada görünür.
         </p>
       </div>
-      <PlanTable
-        rows={rows}
-        onStatus={deliver}
-      />
+      <PlanTable rows={rows} onStatus={deliver} />
     </AppPageShell>
   )
 }
