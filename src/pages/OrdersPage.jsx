@@ -1,36 +1,58 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  ArrowLeft,
+  Ban,
   CheckCircle2,
   ChevronDown,
   ClipboardList,
   Factory,
-  Plus,
+  MoreHorizontal,
+  Pencil,
   Printer,
-  Receipt,
   Save,
   Send,
   Trash2,
   Undo2,
-  Users,
 } from 'lucide-react'
-import { BTN_SUCCESS } from '../utils/buttonStyles'
-import { MoreMenu } from '@bachmain/ui'
+import { Button, Dropdown, DropdownItem, DropdownSeparator, EmptyState } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
-import ListHeaderRow from '../components/Common/ListHeaderRow'
 import SummaryMetrics from '../components/Common/SummaryMetrics'
-import SplitCreateButton from '../components/Common/SplitCreateButton'
-import CreateCustomerPickModal from '../components/Common/CreateCustomerPickModal'
-import { AppPageHeader, AppPageShell, AppPagePanel } from '../components/Layout/AppPageLayout'
+import QuoteDeletedArchivedPanel from '../components/Common/QuoteDeletedArchivedPanel'
+import QuoteOrderInlineConfirm from '../components/Common/QuoteOrderInlineConfirm'
+import QuoteRecordMetaPanel from '../components/Common/QuoteRecordMetaPanel'
+import {
+  QuoteListCell,
+  QuoteListColumnHeader,
+  QuoteListRowPanel,
+  QuoteListSelectionCheckbox,
+  TurkishLiraIcon,
+} from '../components/Common/QuoteStyleListChrome'
+import {
+  AppPageBackLink,
+  AppPageHeader,
+  AppPagePanel,
+  AppPageShell,
+  AppPanelDot,
+} from '../components/Layout/AppPageLayout'
+import {
+  HEADER_ACTION_CTA_CLASS,
+  HEADER_ACTION_CTA_DIVIDER_CLASS,
+  HEADER_ACTION_CTA_ICON_CLASS,
+  HEADER_ACTION_CTA_ICON_WRAP_CLASS,
+  HEADER_ACTION_CTA_SHELL_CLASS,
+  HEADER_ACTION_GRADIENTS,
+} from '../components/Layout/HeaderCashActionsPanel'
 import { customerToDocumentPatch } from '../utils/documentCustomerPatch'
-import ListDeleteConfirmPanel, {
-  DeleteTrashButton,
-  LIST_PILL_CLASS,
+import {
+  captureDeleteConfirmAnchor,
+  DeleteConfirmOverlay,
 } from '../components/Common/ListDeleteConfirmPanel'
 import EditableDropdownPill from '../components/EditableDropdownPill'
-import CustomerPicker, { findDocumentCustomer } from '../components/DocumentEditor/CustomerPicker'
-import { DocumentField, DocumentMiniButton } from '../components/DocumentEditor/DocumentField'
+import CustomerPicker, {
+  DOCUMENT_SIDE_ACTION_WIDTH,
+  findDocumentCustomer,
+} from '../components/DocumentEditor/CustomerPicker'
+import { DocumentMiniButton } from '../components/DocumentEditor/DocumentField'
 import DocumentLineItemRow, {
   createEmptyDocumentItem,
 } from '../components/DocumentEditor/DocumentLineItemRow'
@@ -48,7 +70,7 @@ import {
   resolveListColumnLabel,
 } from '../components/DocumentEditor/processPanelUtils'
 import ProcessPanelModule from '../components/DocumentEditor/ProcessPanelModule'
-import { stageColors, getStageColumnSurfaceClasses } from '../components/DocumentEditor/stageColors'
+import { stageColors } from '../components/DocumentEditor/stageColors'
 import RepresentativeEditor from '../components/DocumentEditor/RepresentativeEditor'
 import { formatTL } from '../utils/productPricing'
 import { getListCustomerDisplay, findCustomerProfile } from '../data/customerProfiles'
@@ -59,13 +81,15 @@ import {
   loadOrders,
   orderHasLinkedQuote,
   orderTotals,
+  permanentlyDeleteOrder,
   readOpenOrderId,
   clearOpenOrderId,
+  restoreDeletedOrder,
   saveOrders,
 } from '../utils/ordersStore'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
 import { publishWorkflowStages } from '../utils/workflowStagePublish'
-import { createProductionFromOrder, loadProductionJobs } from '../utils/productionStore'
+import { createProductionFromOrder } from '../utils/productionStore'
 import { syncQuoteFromOrder } from '../utils/quoteWorkflowSync'
 import {
   appendOrderStage,
@@ -77,14 +101,28 @@ import {
   resolveOrderPanelCurrentStageId,
   toStageDropdownOptions,
 } from '../utils/workflowStages'
-import { nextDocumentCode } from '../utils/documentCodes'
+import { nextDocumentCode, resolveQuoteCode } from '../utils/documentCodes'
 import { documentTotals } from '../utils/documentTotals'
 import { readOptionLists, saveOptionList } from '../utils/customerMeta'
 import { resolveCustomerContactInfo } from '../utils/customerContacts'
+import { formatListDateParts, getQuoteCreatedSource } from '../utils/quoteListDateFormat'
+import { COP_KUTUSU_ICON_CLASS } from '../utils/buttonStyles'
+import ModernDatePicker from '../components/Common/ModernDatePicker'
+import {
+  APP_PANEL_TITLE_CLASS,
+  PAGE_BALANCE_AMOUNT_CLASS,
+  PAGE_FILTER_FIELD_CLASS,
+  PAGE_FILTER_LABEL_CLASS,
+  PAGE_FILTER_MENU_CLASS,
+  PAGE_FILTER_PILL_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
+  PAGE_LIST_MENU_CLASS,
+  PAGE_LIST_PILL_CLASS,
+  PAGE_LIST_PILL_WRAPPER_CLASS,
+  YF_TEXT_CLASS,
+  YF_TEXT_ON_COLOR_CLASS,
+} from '../utils/dashboardDesign'
 
-const orderListGrid = '118px 72px minmax(180px,1.2fr) 148px 148px 118px 118px minmax(220px,auto)'
-const orderListProcessPillClass =
-  'flex h-8 w-full min-w-0 items-center justify-between gap-1 rounded-lg border border-dark-500/50 bg-dark-700/70 px-2 py-1 text-[12px] font-bold transition-colors hover:bg-dark-700/80'
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500', locked: true }
 const sortFilterOptions = [
   { label: 'Son işleme göre', color: 'bg-blue-500' },
@@ -104,6 +142,171 @@ const sortLabelByMode = {
   name: 'İsme göre',
   price: 'Fiyata göre',
 }
+const productionStatusFilterOptions = [
+  { label: 'Tümü', color: 'bg-gray-500', locked: true },
+  { label: 'Üretimde', color: 'bg-emerald-500' },
+  { label: 'Üretimde değil', color: 'bg-orange-500' },
+]
+
+function isOrderInProduction(order, workflowStages) {
+  const activeStage = resolveOrderActiveStage(order, workflowStages)
+  return activeStage?.label === 'Üretime Alındı' || order.status === 'Üretimde'
+}
+
+function DateInlineField({ label, value, onChange, dotColor = 'blue' }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2">
+        <AppPanelDot color={dotColor} />
+        <h2 className={APP_PANEL_TITLE_CLASS}>{label}</h2>
+      </div>
+      <div className="min-w-0 flex-1">
+        <ModernDatePicker value={value} onChange={onChange} />
+      </div>
+    </div>
+  )
+}
+
+function OrderListRowMoreMenu({
+  order,
+  onEdit,
+  onDelete,
+  onProduce,
+  onCancelQuoteLink,
+  canProduce,
+  hasLinkedQuote,
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  return (
+    <Dropdown
+      align="end"
+      menuClassName="az customer-filter-dropdown-menu customers-page-menu quote-record-meta-dropdown min-w-[15rem]"
+      trigger={
+        <Button
+          variant="ghost"
+          size="iconOnly"
+          className="hover:!bg-transparent"
+          aria-label="Diğer işlemler"
+          onClick={() => setConfirmDelete(false)}
+        >
+          <MoreHorizontal className="h-5 w-5" />
+        </Button>
+      }
+    >
+      {({ close }) => (
+        <>
+          <QuoteRecordMetaPanel quote={order} />
+          <DropdownSeparator />
+          {hasLinkedQuote ? (
+            <DropdownItem
+              icon={Undo2}
+              label="Teklife Geri Al"
+              tone="primary"
+              close={close}
+              onClick={onCancelQuoteLink}
+            />
+          ) : null}
+          {canProduce ? (
+            <DropdownItem
+              icon={Factory}
+              label="Üretime Al"
+              tone="success"
+              close={close}
+              onClick={onProduce}
+            />
+          ) : null}
+          <DropdownItem
+            icon={Pencil}
+            label="Düzenle"
+            tone="primary"
+            close={close}
+            onClick={onEdit}
+          />
+          {confirmDelete ? (
+            <div
+              className="quote-menu-delete-confirm flex w-full items-center justify-center px-1 py-1"
+              onClick={(event) => event.stopPropagation()}
+              role="menuitem"
+              aria-label="Silmeyi onayla"
+            >
+              <QuoteOrderInlineConfirm
+                label="Sil"
+                labelClass="quote-order-undo-sil"
+                ariaLabel="Sipariş sil"
+                onConfirm={() => {
+                  onDelete()
+                  setConfirmDelete(false)
+                  close()
+                }}
+                onCancel={() => setConfirmDelete(false)}
+              />
+            </div>
+          ) : (
+            <DropdownItem
+              icon={Trash2}
+              label="Sil"
+              tone="danger"
+              close={close}
+              closeOnClick={false}
+              onClick={() => setConfirmDelete(true)}
+            />
+          )}
+        </>
+      )}
+    </Dropdown>
+  )
+}
+
+function OrderListProductionModuleButton({
+  order,
+  inProduction,
+  pendingAction,
+  onRequestCreate,
+  onConfirmCreate,
+  onCancelPending,
+}) {
+  if (pendingAction === 'create') {
+    return (
+      <QuoteOrderInlineConfirm
+        label="Evet"
+        labelClass="quote-order-undo-evet"
+        ariaLabel="Üretime al"
+        onConfirm={onConfirmCreate}
+        onCancel={onCancelPending}
+      />
+    )
+  }
+
+  if (inProduction) {
+    return (
+      <span className="quote-order-action inline-flex h-9 items-center justify-between">
+        <span
+          className="quote-order-chip inline-flex h-9 w-[3.75rem] flex-col items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-1 text-center text-[10px] font-bold leading-tight text-emerald-700"
+          title="Üretime alındı"
+        >
+          <span>Üretim</span>
+          <span>Alındı</span>
+        </span>
+      </span>
+    )
+  }
+
+  return (
+    <span className="quote-order-create-reveal inline-flex w-full items-center justify-center overflow-hidden">
+      <button
+        type="button"
+        onClick={onRequestCreate}
+        className="quote-order-chip quote-order-action inline-flex h-9 flex-col items-center justify-center rounded-xl border border-ds-border bg-transparent px-1 text-center text-[10px] font-semibold leading-tight text-[var(--muted)] transition-colors hover:border-emerald-500/40 hover:text-emerald-700"
+        title={`${order.customer || order.id} siparişini üretime al`}
+        aria-label="Üretime al"
+      >
+        <span>Üretim</span>
+        <span>Al</span>
+      </button>
+    </span>
+  )
+}
 
 function readImageFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -122,54 +325,8 @@ function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 }
 
-function formatListDate(value) {
-  if (!value) return ''
-  if (/^\d{2}\.\d{2}\.\d{4}$/.test(value)) return value
-  const [datePart] = String(value).split(' ')
-  const [year, month, day] = datePart.split('-')
-  if (!year || !month || !day) return value
-  return `${day}.${month}.${year}`
-}
-
 function getOrderListDateSource(order) {
-  return order.activities?.[0]?.date || order.createdAt || ''
-}
-
-function formatListDateTime(value) {
-  if (!value) return ''
-  const raw = String(value).trim()
-  const trMatch = raw.match(/^(\d{2}\.\d{2}\.\d{4})(?:[, ]+\s*(\d{1,2}:\d{2}(?::\d{2})?))/)
-  if (trMatch) return trMatch[2] ? `${trMatch[1]} ${trMatch[2].slice(0, 5)}` : trMatch[1]
-
-  const formattedDate = formatListDate(raw.split(/[T ]/)[0] || raw)
-  const timePart = raw.includes('T') ? raw.split('T')[1] : raw.split(' ')[1]
-  if (!timePart || !timePart.includes(':')) return formattedDate
-  const [hours, minutes] = timePart.split(':')
-  if (!hours || !minutes) return formattedDate
-  return `${formattedDate} ${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`
-}
-
-function TurkishLiraIcon({ className = '' }) {
-  return (
-    <span
-      className={`${className} flex items-center justify-center text-base font-black leading-none`}
-    >
-      ₺
-    </span>
-  )
-}
-
-function Panel({ title, description, children, action }) {
-  return (
-    <AppPagePanel
-      className="customer-list-panel w-full"
-      title={title ? `${title} :` : undefined}
-      description={description}
-      action={action}
-    >
-      {children}
-    </AppPagePanel>
-  )
+  return getQuoteCreatedSource(order)
 }
 
 function OrderPriorityEditor({ order, onPatch, optionLists, updateOptionList, compact = false }) {
@@ -374,17 +531,29 @@ export default function OrdersPage() {
   const [draftOrder, setDraftOrder] = useState(null)
   const [selectedId, setSelectedId] = useState(orders[0]?.id || null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filters, setFilters] = useState({ priority: 'Tümü', stage: 'Tümü' })
+  const [filters, setFilters] = useState({
+    priority: 'Tümü',
+    stage: 'Tümü',
+    productionStatus: 'Tümü',
+  })
   const [sortMode, setSortMode] = useState('latest')
+  const [listColumnSort, setListColumnSort] = useState({ key: null, dir: 'asc' })
+  const listColumnSortRef = useRef(listColumnSort)
+  listColumnSortRef.current = listColumnSort
+  const listColumnSortLockRef = useRef(false)
   const [viewMode, setViewMode] = useState('list')
-  const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [bulkSelectMode, setBulkSelectMode] = useState(false)
+  const [selectedOrderIds, setSelectedOrderIds] = useState([])
+  const [animatingDeleteIds, setAnimatingDeleteIds] = useState([])
+  const [archiveReceiveKey, setArchiveReceiveKey] = useState(0)
+  const [pendingProductionAction, setPendingProductionAction] = useState(null)
+  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [activeMenu, setActiveMenu] = useState(null)
   const [openItemMenuId, setOpenItemMenuId] = useState(null)
   const [pendingItemDeleteId, setPendingItemDeleteId] = useState(null)
   const [openSaveMenu, setOpenSaveMenu] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [pendingHeaderOrderDelete, setPendingHeaderOrderDelete] = useState(false)
-  const [customerModalOpen, setCustomerModalOpen] = useState(false)
   const [isStagePanelOpen, setIsStagePanelOpen] = useState(false)
   const [stageInput, setStageInput] = useState('')
   const [pendingStageDeleteId, setPendingStageDeleteId] = useState(null)
@@ -604,7 +773,7 @@ export default function OrdersPage() {
         !q ||
         order.id.toLowerCase().includes(q) ||
         (order.title || '').toLowerCase().includes(q) ||
-        order.customer.toLowerCase().includes(q) ||
+        (order.customer || '').toLowerCase().includes(q) ||
         (order.contact || '').toLowerCase().includes(q) ||
         (order.quoteId || '').toLowerCase().includes(q)
       const normalizedPriority = orderPriorityLabels.includes(order.priority)
@@ -612,20 +781,57 @@ export default function OrdersPage() {
         : 'Normal'
       const matchesPriority = filters.priority === 'Tümü' || normalizedPriority === filters.priority
       const matchesStage = filters.stage === 'Tümü' || activeStage?.label === filters.stage
-      return matchesSearch && matchesPriority && matchesStage
+      const inProduction = isOrderInProduction(order, workflowStages)
+      const productionFilter = filters.productionStatus || 'Tümü'
+      const matchesProduction =
+        productionFilter === 'Tümü' ||
+        (productionFilter === 'Üretimde' && inProduction) ||
+        (productionFilter === 'Üretimde değil' && !inProduction)
+      return matchesSearch && matchesPriority && matchesStage && matchesProduction
     })
     .sort((a, b) => {
+      if (listColumnSort.key) return 0
       if (sortMode === 'date') return getOrderSortDate(b) - getOrderSortDate(a)
       if (sortMode === 'name') return (a.customer || '').localeCompare(b.customer || '', 'tr')
       if (sortMode === 'price') return orderTotals(b).grandTotal - orderTotals(a).grandTotal
       return getOrderSortDate(b) - getOrderSortDate(a)
     })
 
+  const listOrders = (() => {
+    if (!listColumnSort.key) return filteredOrders
+    const dir = listColumnSort.dir === 'desc' ? -1 : 1
+    const orderIds = orders.map((item) => item.id)
+    return [...filteredOrders].sort((a, b) => {
+      const valueOf = (order) => {
+        if (listColumnSort.key === 'date') return getOrderSortDate(order)
+        if (listColumnSort.key === 'code') return resolveQuoteCode(order.id, orderIds)
+        if (listColumnSort.key === 'customer') {
+          const display = getListCustomerDisplay(order.customer)
+          return display.brandShortName || display.companyTitle || order.customer || ''
+        }
+        if (listColumnSort.key === 'amount') return orderTotals(order).grandTotal
+        if (listColumnSort.key === 'production')
+          return isOrderInProduction(order, workflowStages) ? 1 : 0
+        if (listColumnSort.key === 'priority') return order.priority || ''
+        if (listColumnSort.key === 'stage')
+          return resolveOrderActiveStage(order, workflowStages)?.label || ''
+        return ''
+      }
+      const av = valueOf(a)
+      const bv = valueOf(b)
+      if (av == null && bv == null) return 0
+      if (av == null) return 1
+      if (bv == null) return -1
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir
+      return String(av).localeCompare(String(bv), 'tr', { sensitivity: 'base' }) * dir
+    })
+  })()
+
   const summary = {
     total: filteredOrders.length,
     newOrders: filteredOrders.filter((order) => order.status === 'Yeni').length,
-    production: loadProductionJobs().length,
-    totalNet: filteredOrders.reduce((sum, order) => sum + orderTotals(order).net, 0),
+    cancelled: filteredOrders.filter((order) => order.status === 'İptal').length,
+    production: filteredOrders.filter((order) => isOrderInProduction(order, workflowStages)).length,
     totalAmount: filteredOrders.reduce((sum, order) => sum + orderTotals(order).grandTotal, 0),
   }
 
@@ -697,11 +903,6 @@ export default function OrdersPage() {
     setDraftOrder(next)
     setSelectedId(next.id)
     setViewMode('prepare')
-  }
-
-  function handleCreateWithCustomer(customer) {
-    setCustomerModalOpen(false)
-    addOrder(customerToDocumentPatch(customer))
   }
 
   function returnToOrderList() {
@@ -828,14 +1029,62 @@ export default function OrdersPage() {
     setViewMode('prepare')
   }
 
-  function removeOrder(order) {
-    deleteOrder(order.id)
-    setOrders(loadOrders())
-    setPendingDeleteId(null)
-    if (selectedId === order.id) {
-      const remaining = loadOrders()
-      setSelectedId(remaining[0]?.id || null)
-    }
+  function exitBulkSelectMode() {
+    setBulkSelectMode(false)
+    setSelectedOrderIds([])
+  }
+
+  function toggleBulkOrderSelect(orderId) {
+    const key = String(orderId)
+    setSelectedOrderIds((current) =>
+      current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
+    )
+  }
+
+  function toggleBulkOrderSelectAll(ids) {
+    const keys = ids.map(String)
+    setSelectedOrderIds((current) => {
+      const allOn = keys.length > 0 && keys.every((id) => current.includes(id))
+      return allOn ? [] : keys
+    })
+  }
+
+  function toggleListColumnSort(key) {
+    if (listColumnSortLockRef.current) return
+    listColumnSortLockRef.current = true
+    window.setTimeout(() => {
+      listColumnSortLockRef.current = false
+    }, 0)
+    const current = listColumnSortRef.current
+    const next =
+      current.key !== key
+        ? { key, dir: 'asc' }
+        : { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+    listColumnSortRef.current = next
+    setListColumnSort(next)
+  }
+
+  function softDeleteOrderWithAnimation(order) {
+    if (!order?.id) return
+    const key = String(order.id)
+    setAnimatingDeleteIds((current) => [...current, key])
+    window.setTimeout(() => {
+      deleteOrder(order.id)
+      setOrders(loadOrders())
+      setAnimatingDeleteIds((current) => current.filter((item) => item !== key))
+      setArchiveReceiveKey((current) => current + 1)
+      flushWorkspaceNow()
+      if (selectedId === order.id) {
+        const remaining = loadOrders()
+        setSelectedId(remaining[0]?.id || null)
+      }
+    }, 880)
+  }
+
+  function handleBulkDeleteOrders() {
+    const selected = listOrders.filter((order) => selectedOrderIds.includes(String(order.id)))
+    selected.forEach((order) => softDeleteOrderWithAnimation(order))
+    exitBulkSelectMode()
   }
 
   function handleCancelOrderFromList(order, event) {
@@ -1029,125 +1278,132 @@ export default function OrdersPage() {
     currentStageId: resolveOrderPanelCurrentStageId(selectedOrder, workflowStages),
   }
 
+  const listOrderIds = listOrders.map((order) => String(order.id))
+  const allVisibleOrdersSelected =
+    listOrderIds.length > 0 && listOrderIds.every((id) => selectedOrderIds.includes(id))
+  const someVisibleOrdersSelected =
+    listOrderIds.some((id) => selectedOrderIds.includes(id)) && !allVisibleOrdersSelected
+
+  const orderListBaseColumnGrid = [
+    '6.5rem',
+    '4.75rem',
+    'minmax(16rem, 2.4fr)',
+    'minmax(9.25rem, 0.7fr)',
+    'minmax(9.25rem, 0.7fr)',
+    '6.75rem',
+    '6.5rem',
+    '3rem',
+  ]
+  const orderListColumnGrid = [
+    ...(bulkSelectMode ? ['2.75rem'] : []),
+    ...orderListBaseColumnGrid.slice(0, -1),
+    bulkSelectMode && selectedOrderIds.length > 0 ? '6.5rem' : '3rem',
+  ].join(' ')
+
   return (
     <AppPageShell className="customers-page-type w-full">
       {viewMode === 'list' ? (
         <AppPageHeader
-          title="Sipariş Yönetimi"
+          showBack={false}
+          title={<AppPageBackLink />}
+          centerTitle="SİPARİŞLER"
+          titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
-            <SplitCreateButton
-              label="Yeni Sipariş Oluştur"
-              onPrimaryClick={() => addOrder()}
-              menuAriaLabel="Sipariş seçenekleri"
-              menuItems={[
-                {
-                  id: 'customer',
-                  label: 'Müşteri Seçerek Oluştur',
-                  icon: Users,
-                  iconClassName: 'text-blue-300',
-                  onClick: () => setCustomerModalOpen(true),
-                },
-                {
-                  id: 'draft',
-                  label: 'Hızlı Taslak Sipariş',
-                  icon: Receipt,
-                  iconClassName: 'text-emerald-300',
-                  onClick: () => addOrder(),
-                },
-              ]}
-            />
+            <button
+              type="button"
+              onClick={() => addOrder()}
+              className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}
+            >
+              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                <ClipboardList
+                  className={HEADER_ACTION_CTA_ICON_CLASS}
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
+              </span>
+              <span className={YF_TEXT_ON_COLOR_CLASS}>Yeni Sipariş Oluştur</span>
+            </button>
           }
         />
       ) : (
         <AppPageHeader
-          title={isDraftOrder ? 'Yeni Sipariş Oluştur' : 'Sipariş Düzenle'}
-          onBack={returnToOrderList}
-          backLabel="Sipariş listesine dön"
+          showBack={false}
+          title={<AppPageBackLink to={false} onClick={returnToOrderList} label="Siparişler" />}
+          centerTitle={isDraftOrder ? 'YENİ SİPARİŞ OLUŞTUR' : 'SİPARİŞ DÜZENLE'}
+          titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
           actions={
             <div className="relative flex shrink-0 items-center gap-2" data-order-dropdown>
               {selectedOrder && !isDraftOrder ? (
                 <Link
                   to={`/belge-merkezi/yazdir?type=order&id=${encodeURIComponent(selectedOrder.id)}`}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 text-xs font-black uppercase text-gray-300 hover:bg-dark-700 hover:text-white"
+                  className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.violet}`}
                 >
-                  <Printer className="h-4 w-4" /> Şablonla Yazdır
+                  <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                    <Printer
+                      className={HEADER_ACTION_CTA_ICON_CLASS}
+                      strokeWidth={2.25}
+                      aria-hidden
+                    />
+                  </span>
+                  <span className={YF_TEXT_ON_COLOR_CLASS}>Şablonla Yazdır</span>
                 </Link>
               ) : null}
-              <div className="relative">
-                <div className="btn-split">
-                  <button
-                    type="button"
-                    onClick={() => saveCurrentOrder({ returnToList: false })}
-                    disabled={!selectedOrder || isSaving}
-                    className={`${BTN_SUCCESS} min-w-[10.5rem] gap-2.5 px-3 disabled:cursor-not-allowed disabled:opacity-50`}
-                  >
-                    <Save className="h-4 w-4" />
+              <div
+                className={`relative inline-flex overflow-hidden ${HEADER_ACTION_CTA_SHELL_CLASS} ${HEADER_ACTION_GRADIENTS.success}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => saveCurrentOrder({ returnToList: true })}
+                  disabled={!selectedOrder || isSaving}
+                  className="inline-flex h-full items-center gap-2.5 bg-transparent px-3 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                    <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                  </span>
+                  <span className={YF_TEXT_ON_COLOR_CLASS}>
                     {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
-                  </button>
-                  <span className="btn-split-divider" aria-hidden />
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      setOpenSaveMenu((open) => {
-                        if (open) setPendingHeaderOrderDelete(false)
-                        return !open
-                      })
-                    }}
-                    disabled={!selectedOrder || isSaving}
-                    className={`${BTN_SUCCESS} w-14 px-0 disabled:cursor-not-allowed disabled:opacity-50`}
-                    title="Kaydet seçenekleri"
-                    aria-expanded={openSaveMenu}
-                    aria-haspopup="menu"
-                  >
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform ${openSaveMenu ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                </div>
-                {openSaveMenu && (
-                  <div
-                    className="absolute right-0 top-full z-40 mt-2 w-56 rounded-2xl border border-dark-500 bg-dark-900 p-2 text-left shadow-card"
-                    role="menu"
-                  >
+                  </span>
+                </button>
+                <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
+                <Dropdown
+                  align="end"
+                  className="h-full"
+                  menuClassName={PAGE_FILTER_MENU_CLASS}
+                  trigger={
                     <button
                       type="button"
-                      role="menuitem"
-                      onClick={() => saveCurrentOrder({ startNew: true })}
-                      className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
+                      disabled={!selectedOrder || isSaving}
+                      className="inline-flex h-full w-12 items-center justify-center bg-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                      title="Kaydet seçenekleri"
+                      aria-label="Kaydet seçenekleri"
                     >
-                      Kaydet ve Yeni Ekle
+                      <ChevronDown className={HEADER_ACTION_CTA_ICON_CLASS} aria-hidden="true" />
                     </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => saveCurrentOrder({ returnToList: true })}
-                      className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-gray-200 transition-colors hover:bg-blue-500/15 hover:text-white"
-                    >
-                      Kaydet ve Listeye Dön
-                    </button>
-                    <div className="my-1 border-t border-dark-500/40" />
-                    {pendingHeaderOrderDelete ? (
-                      <ListDeleteConfirmPanel
-                        title="Sipariş silinsin mi?"
-                        description="Bu işlem geri alınamaz. Sipariş kalıcı olarak silinir."
-                        onConfirm={() =>
-                          deleteCurrentOrder({ navigateToList: true, skipConfirm: true })
-                        }
-                        onCancel={() => setPendingHeaderOrderDelete(false)}
+                  }
+                >
+                  {({ close }) => (
+                    <>
+                      <DropdownItem
+                        icon={Save}
+                        label="Kaydet ve Düzenlemeye Devam Et"
+                        tone="primary"
+                        close={close}
+                        onClick={() => saveCurrentOrder({ returnToList: false })}
                       />
-                    ) : (
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => setPendingHeaderOrderDelete(true)}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-300 transition-colors hover:bg-red-500/15 hover:text-red-200"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Siparişi Sil
-                      </button>
-                    )}
-                  </div>
-                )}
+                      <DropdownSeparator />
+                      <DropdownItem
+                        icon={Trash2}
+                        label="Siparişi Sil"
+                        tone="danger"
+                        close={close}
+                        onClick={(event) => {
+                          setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
+                          setPendingHeaderOrderDelete(true)
+                        }}
+                      />
+                    </>
+                  )}
+                </Dropdown>
               </div>
             </div>
           }
@@ -1156,317 +1412,562 @@ export default function OrdersPage() {
 
       {viewMode === 'list' && (
         <SummaryMetrics
+          columns={5}
+          className="customer-summary-metrics w-full"
           items={[
-            { title: 'Toplam Sipariş', value: summary.total, icon: ClipboardList },
             {
-              title: 'Yeni Sipariş',
+              title: 'Toplam Sipariş',
+              value: summary.total,
+              icon: ClipboardList,
+              valueTone: 'text-violet-800',
+            },
+            {
+              title: 'Yeni',
               value: summary.newOrders,
               icon: Send,
               tone: 'orange',
-              valueTone: 'orange',
+              valueTone: 'text-blue-800',
+            },
+            {
+              title: 'İptal',
+              value: summary.cancelled,
+              icon: Ban,
+              tone: 'red',
+              valueTone: 'text-red-700',
             },
             {
               title: 'Üretimde',
               value: summary.production,
               icon: CheckCircle2,
               tone: 'emerald',
-              valueTone: 'emerald',
+              valueTone: 'text-emerald-800',
             },
             {
-              title: 'Toplam KDV Hariç',
-              value: `${formatTL(summary.totalNet)}`,
-              icon: TurkishLiraIcon,
-              tone: 'purple',
-              valueTone: 'red',
-            },
-            {
-              title: 'Toplam KDV Dahil',
+              title: 'Toplam Tutar',
               value: `${formatTL(summary.totalAmount)}`,
               icon: TurkishLiraIcon,
               tone: 'orange',
-              valueTone: 'emerald',
+              valueTone: 'text-emerald-800',
             },
           ]}
         />
       )}
 
       {viewMode === 'list' ? (
-        <Panel
-          title="Sipariş Listesi"
-          action={
-            <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">
-              {filteredOrders.length} kayıt
-            </span>
-          }
-        >
-          <div className="mb-4 space-y-3">
-            <SearchInput
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Sipariş kodu, teklif no, müşteri veya yetkili ara..."
-            />
-            <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
-              <div>
-                <p className="mb-2 text-[14px] font-normal text-[var(--muted)]">Öncelik :</p>
-                <EditableDropdownPill
-                  value={filters.priority}
-                  options={orderPriorityFilterOptions}
-                  includePlaceholderOption={false}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey="filter-priority"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateFilter('priority', value)}
-                  onOptionsChange={(next) => updateOptionList('priority', next)}
-                />
+        <>
+          <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
+            <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
+              <div className="flex shrink-0 items-center gap-2 px-1">
+                <AppPanelDot color="blue" />
+                <span className={YF_TEXT_CLASS}>Filtre :</span>
               </div>
-              <div>
-                <p className="mb-2 text-[14px] font-normal text-[var(--muted)]">Süreç :</p>
-                <EditableDropdownPill
-                  value={filters.stage}
-                  options={orderStageFilterOptions}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey="filter-stage"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateFilter('stage', value)}
-                />
-              </div>
-              <div>
-                <p className="mb-2 text-[14px] font-normal text-[var(--muted)]">Sıralama :</p>
-                <EditableDropdownPill
-                  value={sortLabelByMode[sortMode] || 'Son işleme göre'}
-                  options={sortFilterOptions}
-                  includePlaceholderOption={false}
-                  editable={false}
-                  buttonClassName={LIST_PILL_CLASS}
-                  openKey="filter-sort"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => setSortMode(sortModeByLabel[value] || 'latest')}
-                />
-              </div>
-            </div>
-          </div>
-
-          <ListHeaderRow
-            gridTemplate={orderListGrid}
-            columns={[
-              'Tarih',
-              'Kod',
-              'Müşteri Adı',
-              'Öncelik',
-              'Süreç',
-              { label: 'KDV Hariç', align: 'right', className: 'pr-2 tracking-normal' },
-              { label: 'KDV Dahil', align: 'right', className: 'pr-2 tracking-normal' },
-            ]}
-          />
-
-          <div className="mt-3 space-y-2 overflow-visible">
-            {filteredOrders.map((order) => {
-              const totals = orderTotals(order)
-              const activeStage = resolveOrderActiveStage(order, workflowStages)
-              const isInProduction =
-                activeStage?.label === 'Üretime Alındı' || order.status === 'Üretimde'
-              const productionEntryStage = orderStageOptions.find(
-                (item) => item.label === 'Üretime Alındı',
-              )
-              const stageSurfaceStage = isInProduction ? activeStage || productionEntryStage : null
-              const stageColumnSurface = stageSurfaceStage
-                ? getStageColumnSurfaceClasses(stageSurfaceStage)
-                : ''
-              const priorityValue = resolveListColumnLabel(
-                order.priority,
-                orderPriorityDropdownOptions,
-              )
-              const customerDisplay = getListCustomerDisplay(order.customer)
-              const hasLinkedQuote = orderHasLinkedQuote(order)
-              return (
-                <div
-                  key={order.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => editOrder(order.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') editOrder(order.id)
-                  }}
-                  className="relative grid cursor-pointer items-center gap-2 rounded-2xl border border-dark-500/45 bg-dark-800/55 px-3 py-3 transition-all hover:border-blue-500/35 hover:bg-dark-700/60"
-                  style={{ gridTemplateColumns: orderListGrid }}
-                >
-                  <div className="min-w-0 text-left">
-                    <p className="text-left text-xs font-semibold text-gray-500">
-                      {formatListDateTime(getOrderListDateSource(order))}
-                    </p>
-                  </div>
-                  <div className="min-w-0 text-left">
-                    <p className="text-left text-xs font-black tabular-nums text-blue-300">
-                      {order.id}
-                    </p>
-                  </div>
-                  <div className="min-w-0 w-full text-left">
-                    <div className="flex w-full min-w-0 items-center justify-start gap-2 text-left text-sm font-black text-white">
-                      <span className="truncate">
-                        {customerDisplay.brandShortName || 'Müşteri girilmedi'}
-                      </span>
-                      {customerDisplay.companyTitle && (
-                        <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[12px] font-black text-gray-400">
-                          <span className="truncate">{customerDisplay.companyTitle}</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div
-                    className="min-w-0 w-full justify-self-start text-left"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <EditableDropdownPill
-                      value={priorityValue}
-                      options={orderPriorityDropdownOptions}
-                      buttonClassName={orderListProcessPillClass}
-                      openKey={`${order.id}-priority`}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      onChange={(value) => setOrderPriority(order, value)}
-                      onOptionsChange={(next) => updateOptionList('priority', next)}
-                    />
-                  </div>
-                  <div
-                    className={`min-w-0 w-full justify-self-start text-left rounded-xl transition-colors ${stageColumnSurface ? `${stageColumnSurface} py-0.5` : ''}`}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <EditableDropdownPill
-                      value={activeStage?.label || orderStageDropdownOptions[0]?.label || ''}
-                      options={orderStageDropdownOptions}
-                      editable={false}
-                      buttonClassName={
-                        stageColumnSurface
-                          ? `${orderListProcessPillClass} border-transparent bg-transparent hover:bg-black/10`
-                          : orderListProcessPillClass
-                      }
-                      openKey={`${order.id}-stage`}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      onChange={(value) => handleOrderStageLabelChange(order, value)}
-                    />
-                  </div>
-                  <span className="block min-w-0 w-full pr-2 text-right text-sm font-bold tabular-nums text-gray-200">
-                    {formatTL(totals.net)}
-                  </span>
-                  <span className="block min-w-0 w-full pr-2 text-right text-sm font-black tabular-nums text-white">
-                    {formatTL(totals.grandTotal)}
-                  </span>
-                  <div
-                    className="relative z-10 flex h-9 w-full items-center justify-end gap-2"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    {isInProduction ? (
-                      <span className="whitespace-nowrap rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-[12px] font-bold text-emerald-400/90">
-                        Üretimde
-                      </span>
-                    ) : null}
-                    <MoreMenu
-                      items={[
-                        ...(hasLinkedQuote
-                          ? [
-                              {
-                                id: 'cancel',
-                                label: 'Vazgeç',
-                                icon: Undo2,
-                                onClick: () =>
-                                  handleCancelOrderFromList(order, { stopPropagation: () => {} }),
-                              },
-                            ]
-                          : []),
-                        ...(!isInProduction && productionEntryStage
-                          ? [
-                              {
-                                id: 'produce',
-                                label: 'Üretime al',
-                                icon: Factory,
-                                onClick: () => {
-                                  transferOrderToProduction(order, productionEntryStage)
-                                  navigate('/uretim')
-                                },
-                              },
-                            ]
-                          : []),
-                        {
-                          id: 'delete',
-                          label: 'Sil',
-                          icon: Trash2,
-                          tone: 'danger',
-                          onClick: () => setPendingDeleteId(order.id),
-                        },
-                      ]}
-                    />
-                    {pendingDeleteId === order.id ? (
-                      <DeleteTrashButton
-                        pending
-                        onClick={() => setPendingDeleteId(order.id)}
-                        onConfirm={() => {
-                          removeOrder(order)
-                          setPendingDeleteId(null)
-                        }}
-                        onCancel={() => setPendingDeleteId(null)}
-                        title="Sipariş silinsin mi?"
-                        description="Bu işlem geri alınamaz."
-                        popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
-                      />
-                    ) : null}
-                  </div>
+              <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className={PAGE_FILTER_FIELD_CLASS}>
+                  <p className={PAGE_FILTER_LABEL_CLASS}>Öncelik Durumu :</p>
+                  <EditableDropdownPill
+                    value={filters.priority}
+                    options={orderPriorityFilterOptions}
+                    includePlaceholderOption={false}
+                    buttonClassName={PAGE_FILTER_PILL_CLASS}
+                    menuClassName={PAGE_FILTER_MENU_CLASS}
+                    openKey="filter-priority"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    onChange={(value) => updateFilter('priority', value)}
+                    onOptionsChange={(next) => updateOptionList('priority', next)}
+                  />
                 </div>
-              )
-            })}
-          </div>
-
-          {filteredOrders.length === 0 && (
-            <div className="mt-4 rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-8 text-center">
-              <ClipboardList className="mx-auto mb-3 h-8 w-8 text-gray-600" />
-              <p className="text-sm font-bold text-white">Sipariş bulunamadı.</p>
-              <p className="mt-1 text-xs text-gray-500">Arama veya filtreleri değiştirin.</p>
+                <div className={PAGE_FILTER_FIELD_CLASS}>
+                  <p className={PAGE_FILTER_LABEL_CLASS}>Sipariş Durumu :</p>
+                  <EditableDropdownPill
+                    value={filters.stage}
+                    options={orderStageFilterOptions}
+                    includePlaceholderOption={false}
+                    editable={false}
+                    buttonClassName={PAGE_FILTER_PILL_CLASS}
+                    menuClassName={PAGE_FILTER_MENU_CLASS}
+                    openKey="filter-stage"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    onChange={(value) => updateFilter('stage', value)}
+                  />
+                </div>
+                <div className={PAGE_FILTER_FIELD_CLASS}>
+                  <p className={PAGE_FILTER_LABEL_CLASS}>Sıralama :</p>
+                  <EditableDropdownPill
+                    value={sortLabelByMode[sortMode] || 'Son işleme göre'}
+                    options={sortFilterOptions}
+                    includePlaceholderOption={false}
+                    editable={false}
+                    buttonClassName={PAGE_FILTER_PILL_CLASS}
+                    menuClassName={PAGE_FILTER_MENU_CLASS}
+                    openKey="filter-sort"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    onChange={(value) => setSortMode(sortModeByLabel[value] || 'latest')}
+                  />
+                </div>
+                <div className={PAGE_FILTER_FIELD_CLASS}>
+                  <p className={PAGE_FILTER_LABEL_CLASS}>Üretim Durumu :</p>
+                  <EditableDropdownPill
+                    value={filters.productionStatus || 'Tümü'}
+                    options={productionStatusFilterOptions}
+                    includePlaceholderOption={false}
+                    editable={false}
+                    buttonClassName={PAGE_FILTER_PILL_CLASS}
+                    menuClassName={PAGE_FILTER_MENU_CLASS}
+                    openKey="filter-production-status"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    onChange={(value) => updateFilter('productionStatus', value)}
+                  />
+                </div>
+              </div>
             </div>
-          )}
-        </Panel>
+          </AppPagePanel>
+
+          <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
+            <div className="flex w-full min-w-0 items-center gap-3 px-1">
+              <div className="flex shrink-0 items-center gap-2">
+                <AppPanelDot color="blue" />
+                <span className={YF_TEXT_CLASS}>Sipariş Listesi :</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Sipariş kodu, müşteri, yetkili veya teklif no ara..."
+                  className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+                />
+              </div>
+              <span className={`shrink-0 ${YF_TEXT_CLASS}`}>{filteredOrders.length} Kayıt</span>
+            </div>
+          </AppPagePanel>
+
+          {listOrders.length === 0 ? (
+            <AppPagePanel className="customer-filter-panel w-full">
+              <EmptyState
+                title="Sipariş bulunamadı."
+                description="Arama veya filtreleri değiştirin."
+              />
+            </AppPagePanel>
+          ) : null}
+
+          <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
+            <div className="quote-teklifler-list-stack flex min-w-[56rem] w-full flex-col gap-5">
+              {listOrders.length > 0 ? (
+                <div className="quote-list-board">
+                  <QuoteListRowPanel header gridTemplate={orderListColumnGrid}>
+                    {bulkSelectMode ? (
+                      <QuoteListCell>
+                        <QuoteListSelectionCheckbox
+                          checked={allVisibleOrdersSelected}
+                          indeterminate={someVisibleOrdersSelected}
+                          aria-label="Tümünü seç"
+                          onChange={() => toggleBulkOrderSelectAll(listOrderIds)}
+                        />
+                      </QuoteListCell>
+                    ) : null}
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Tarih"
+                        sortable
+                        sortKey="date"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Kod"
+                        sortable
+                        sortKey="code"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Müşteri Adı"
+                        sortable
+                        sortKey="customer"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Öncelik"
+                        sortable
+                        sortKey="priority"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Sipariş Durumu"
+                        sortable
+                        sortKey="stage"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Tutar"
+                        sortable
+                        sortKey="amount"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Üretim"
+                        sortable
+                        sortKey="production"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      {bulkSelectMode && selectedOrderIds.length > 0 ? (
+                        <QuoteOrderInlineConfirm
+                          label="Sil"
+                          labelClass="quote-order-undo-sil"
+                          ariaLabel={`${selectedOrderIds.length} sipariş silinsin mi?`}
+                          onConfirm={handleBulkDeleteOrders}
+                          onCancel={exitBulkSelectMode}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
+                          title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
+                          aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            if (!bulkSelectMode) {
+                              setBulkSelectMode(true)
+                              setSelectedOrderIds([])
+                              return
+                            }
+                            exitBulkSelectMode()
+                          }}
+                        >
+                          <Trash2
+                            className={COP_KUTUSU_ICON_CLASS}
+                            strokeWidth={2.25}
+                            aria-hidden
+                          />
+                        </button>
+                      )}
+                    </QuoteListCell>
+                  </QuoteListRowPanel>
+
+                  {listOrders.map((order, rowIndex) => {
+                    const stamp = formatListDateParts(getOrderListDateSource(order))
+                    const display = getListCustomerDisplay(order.customer)
+                    const orderKey = String(order.id)
+                    const isBulkSelected = selectedOrderIds.includes(orderKey)
+                    const isAnimatingOut = animatingDeleteIds.includes(orderKey)
+                    const inProduction = isOrderInProduction(order, workflowStages)
+                    const productionEntryStage = orderStageOptions.find(
+                      (item) => item.label === 'Üretime Alındı',
+                    )
+                    const priorityValue = resolveListColumnLabel(
+                      order.priority,
+                      orderPriorityDropdownOptions,
+                    )
+                    const activeStage = resolveOrderActiveStage(order, workflowStages)
+                    const pending =
+                      pendingProductionAction?.id === order.id ? pendingProductionAction.type : null
+                    return (
+                      <div
+                        key={order.id}
+                        className={
+                          isAnimatingOut
+                            ? 'quote-list-row-into-trash-wrap'
+                            : bulkSelectMode
+                              ? undefined
+                              : 'cursor-pointer'
+                        }
+                        style={
+                          isAnimatingOut
+                            ? { animationDelay: `${Math.min(rowIndex, 6) * 70}ms` }
+                            : undefined
+                        }
+                        role={bulkSelectMode && !isAnimatingOut ? undefined : 'button'}
+                        tabIndex={bulkSelectMode && !isAnimatingOut ? undefined : 0}
+                        onClick={() => {
+                          if (isAnimatingOut) return
+                          if (bulkSelectMode) toggleBulkOrderSelect(order.id)
+                          else editOrder(order.id)
+                        }}
+                        onKeyDown={(event) => {
+                          if (bulkSelectMode || isAnimatingOut) return
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            editOrder(order.id)
+                          }
+                        }}
+                      >
+                        <QuoteListRowPanel
+                          gridTemplate={orderListColumnGrid}
+                          className={isBulkSelected ? 'ring-1 ring-blue-400/35' : ''}
+                        >
+                          {bulkSelectMode ? (
+                            <QuoteListCell>
+                              <QuoteListSelectionCheckbox
+                                checked={isBulkSelected}
+                                aria-label={`${resolveQuoteCode(
+                                  order.id,
+                                  orders.map((item) => item.id),
+                                )} siparişini seç`}
+                                onChange={() => toggleBulkOrderSelect(order.id)}
+                              />
+                            </QuoteListCell>
+                          ) : null}
+                          <QuoteListCell>
+                            {stamp.date ? (
+                              <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
+                                <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+                                  {stamp.date}
+                                </span>
+                                {stamp.time ? (
+                                  <span className="text-[12px] font-normal leading-tight text-[var(--muted)]/75">
+                                    {stamp.time}
+                                  </span>
+                                ) : null}
+                              </span>
+                            ) : (
+                              <span className="block text-center text-[14px] font-normal text-[var(--muted)]">
+                                —
+                              </span>
+                            )}
+                          </QuoteListCell>
+                          <QuoteListCell>
+                            <span className={`${YF_TEXT_CLASS} tabular-nums`}>
+                              {resolveQuoteCode(
+                                order.id,
+                                orders.map((item) => item.id),
+                              )}
+                            </span>
+                          </QuoteListCell>
+                          <QuoteListCell>
+                            <span className="flex min-w-0 w-full flex-col items-center gap-0.5 py-0.5 text-center">
+                              <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                                {display.brandShortName || 'Müşteri girilmedi'}
+                              </span>
+                              {display.companyTitle ? (
+                                <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
+                                  {display.companyTitle}
+                                </span>
+                              ) : null}
+                            </span>
+                          </QuoteListCell>
+                          <QuoteListCell>
+                            <span
+                              className="flex w-full items-center justify-center"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <EditableDropdownPill
+                                value={priorityValue}
+                                options={orderPriorityDropdownOptions}
+                                includePlaceholderOption={false}
+                                buttonClassName={PAGE_LIST_PILL_CLASS}
+                                wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                                menuClassName={PAGE_LIST_MENU_CLASS}
+                                menuMatchWidth={false}
+                                openKey={`${order.id}-priority`}
+                                activeMenu={activeMenu}
+                                setActiveMenu={setActiveMenu}
+                                onChange={(value) => setOrderPriority(order, value)}
+                                onOptionsChange={(next) => updateOptionList('priority', next)}
+                              />
+                            </span>
+                          </QuoteListCell>
+                          <QuoteListCell>
+                            <span
+                              className="flex w-full items-center justify-center"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <EditableDropdownPill
+                                value={
+                                  activeStage?.label || orderStageDropdownOptions[0]?.label || ''
+                                }
+                                options={orderStageDropdownOptions}
+                                includePlaceholderOption={false}
+                                editable={false}
+                                buttonClassName={PAGE_LIST_PILL_CLASS}
+                                wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                                menuClassName={PAGE_LIST_MENU_CLASS}
+                                menuMatchWidth={false}
+                                openKey={`${order.id}-stage`}
+                                activeMenu={activeMenu}
+                                setActiveMenu={setActiveMenu}
+                                onChange={(value) => handleOrderStageLabelChange(order, value)}
+                              />
+                            </span>
+                          </QuoteListCell>
+                          <QuoteListCell>
+                            <span
+                              className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
+                            >
+                              {formatTL(orderTotals(order).grandTotal)}
+                            </span>
+                          </QuoteListCell>
+                          <QuoteListCell>
+                            <span
+                              className="inline-flex w-full items-center justify-center"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <OrderListProductionModuleButton
+                                order={order}
+                                inProduction={inProduction}
+                                pendingAction={pending}
+                                onRequestCreate={() =>
+                                  setPendingProductionAction({ id: order.id, type: 'create' })
+                                }
+                                onConfirmCreate={() => {
+                                  if (productionEntryStage) {
+                                    transferOrderToProduction(order, productionEntryStage)
+                                  }
+                                  setPendingProductionAction(null)
+                                }}
+                                onCancelPending={() => setPendingProductionAction(null)}
+                              />
+                            </span>
+                          </QuoteListCell>
+                          <QuoteListCell>
+                            <span
+                              className="inline-flex w-full items-center justify-center"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <OrderListRowMoreMenu
+                                order={order}
+                                onEdit={() => editOrder(order.id)}
+                                onDelete={() => softDeleteOrderWithAnimation(order)}
+                                canProduce={!inProduction && Boolean(productionEntryStage)}
+                                hasLinkedQuote={orderHasLinkedQuote(order)}
+                                onProduce={() => {
+                                  if (productionEntryStage) {
+                                    transferOrderToProduction(order, productionEntryStage)
+                                    navigate('/uretim')
+                                  }
+                                }}
+                                onCancelQuoteLink={() =>
+                                  handleCancelOrderFromList(order, { stopPropagation: () => {} })
+                                }
+                              />
+                            </span>
+                          </QuoteListCell>
+                        </QuoteListRowPanel>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : null}
+
+              <QuoteDeletedArchivedPanel
+                layoutMode="inline"
+                title="Silinenler"
+                collection="orders"
+                storeEvent="bach:orders-updated"
+                restoreRecord={restoreDeletedOrder}
+                permanentlyDelete={permanentlyDeleteOrder}
+                resolveCode={resolveQuoteCode}
+                onRestored={(restored) => {
+                  setOrders(loadOrders())
+                  if (restored?.id) setSelectedId(restored.id)
+                  flushWorkspaceNow()
+                }}
+                emptyMessage="Silinen sipariş yok."
+                receivePulseKey={archiveReceiveKey}
+                className="customer-deleted-archived-panel w-full"
+                segmentTabs={[
+                  { id: 'priority', label: 'Öncelik' },
+                  { id: 'stage', label: 'Sipariş Durumu' },
+                ]}
+                getProcessValue={(order, tab) =>
+                  tab.id === 'priority'
+                    ? resolveListColumnLabel(order.priority, orderPriorityDropdownOptions)
+                    : resolveOrderActiveStage(order, workflowStages)?.label || '—'
+                }
+                getProcessOptions={(tab) =>
+                  tab.id === 'priority' ? orderPriorityDropdownOptions : orderStageDropdownOptions
+                }
+                getListAmount={(order) => orderTotals(order).grandTotal}
+                isOrderCreated={(order) => isOrderInProduction(order, workflowStages)}
+                columnGrid={orderListBaseColumnGrid.join(' ')}
+              />
+            </div>
+          </div>
+        </>
       ) : (
         selectedOrder && (
           <div className="space-y-5 document-compact-controls">
-            <AppPagePanel className="w-full" title="Sipariş Bilgileri :">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_200px]">
-                  <DocumentField label="Sipariş Başlığı">
+            <AppPagePanel className="customer-list-panel w-full">
+              <div className="mb-4 flex min-w-0 items-center gap-3">
+                <div className="flex shrink-0 items-center gap-2">
+                  <AppPanelDot color="blue" />
+                  <h2 className={APP_PANEL_TITLE_CLASS}>Sipariş Başlığı :</h2>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <input
+                    value={selectedOrder.title}
+                    onChange={(e) => patchSelected({ title: e.target.value })}
+                    className="form-input !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+                  />
+                </div>
+                <div className="flex min-w-0 shrink-0 items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-2">
+                    <AppPanelDot color="blue" />
+                    <h2 className={APP_PANEL_TITLE_CLASS}>Sipariş Kodu :</h2>
+                  </div>
+                  <div className={DOCUMENT_SIDE_ACTION_WIDTH}>
                     <input
-                      value={selectedOrder.title}
-                      onChange={(e) => patchSelected({ title: e.target.value })}
-                      className="form-input"
+                      value={resolveQuoteCode(
+                        selectedOrder.id,
+                        orders.map((item) => item.id),
+                      )}
+                      readOnly
+                      className="form-input !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+                      title="Sipariş kodu"
                     />
-                  </DocumentField>
-                  {selectedOrder.quoteId && (
-                    <DocumentField label="Kaynak Teklif">
-                      <div className="form-input flex items-center bg-dark-900/40 font-bold text-emerald-300">
-                        {selectedOrder.quoteId}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <CustomerPicker record={selectedOrder} onPatch={patchSelected} allowCreate />
+                <div className="col-span-2 grid grid-cols-3 gap-3">
+                  <DateInlineField
+                    label="Oluşturma Tarihi :"
+                    value={selectedOrder.createdAt}
+                    onChange={(value) => patchSelected({ createdAt: value })}
+                  />
+                  <DateInlineField
+                    label="Teslim Tarihi :"
+                    value={selectedOrder.deliveryDate || ''}
+                    onChange={(value) => patchSelected({ deliveryDate: value })}
+                  />
+                  {selectedOrder.quoteId ? (
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex shrink-0 items-center gap-2">
+                        <AppPanelDot color="blue" />
+                        <h2 className={APP_PANEL_TITLE_CLASS}>Kaynak Teklif :</h2>
                       </div>
-                    </DocumentField>
+                      <div className="min-w-0 flex-1">
+                        <div className="form-input flex items-center !text-[14px] !font-normal !text-[var(--muted)]">
+                          {selectedOrder.quoteId}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div />
                   )}
                 </div>
-                <CustomerPicker record={selectedOrder} onPatch={patchSelected} />
-                <DocumentField label="Oluşturma Tarihi">
-                  <input
-                    type="date"
-                    value={selectedOrder.createdAt}
-                    onChange={(e) => patchSelected({ createdAt: e.target.value })}
-                    className="form-input"
-                  />
-                </DocumentField>
-                <DocumentField label="Teslim Tarihi">
-                  <input
-                    type="date"
-                    value={selectedOrder.deliveryDate || ''}
-                    onChange={(e) => patchSelected({ deliveryDate: e.target.value })}
-                    className="form-input"
-                  />
-                </DocumentField>
                 <div className="col-span-2">
                   <RepresentativeEditor
                     record={selectedOrder}
@@ -1562,12 +2063,26 @@ export default function OrdersPage() {
         )
       )}
 
-      <CreateCustomerPickModal
-        open={customerModalOpen}
-        onClose={() => setCustomerModalOpen(false)}
-        onSelect={handleCreateWithCustomer}
-        description="Sipariş oluşturmak için müşteri seçin."
-      />
+      {pendingHeaderOrderDelete ? (
+        <DeleteConfirmOverlay
+          open
+          title="Sipariş silinsin mi?"
+          description="Sipariş silinenlere taşınır ve geri yüklenebilir."
+          confirmLabel="Sil"
+          anchor={deleteConfirmAnchor}
+          onConfirm={() => {
+            if (selectedOrder) {
+              deleteCurrentOrder({ navigateToList: true, skipConfirm: true })
+            }
+            setPendingHeaderOrderDelete(false)
+            setDeleteConfirmAnchor(null)
+          }}
+          onCancel={() => {
+            setPendingHeaderOrderDelete(false)
+            setDeleteConfirmAnchor(null)
+          }}
+        />
+      ) : null}
     </AppPageShell>
   )
 }

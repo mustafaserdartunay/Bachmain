@@ -2,7 +2,11 @@ import { detailedOrders } from '../data/ordersData'
 import { documentTotals, sanitizeDocumentDiscountFields } from './documentTotals'
 import { syncQuoteFromOrder } from './quoteWorkflowSync'
 import { loadQuotes, saveQuotes } from './quotesStore'
-import { softDeleteRecord, restoreDeletedRecord } from './deletedRecordsStore'
+import {
+  permanentlyDeleteRecord,
+  restoreDeletedRecord,
+  softDeleteRecord,
+} from './deletedRecordsStore'
 import {
   DEFAULT_ORDER_STAGE_ID,
   findWorkflowStage,
@@ -169,7 +173,9 @@ export function createOrderFromQuote(quote, stageId = DEFAULT_ORDER_STAGE_ID) {
 }
 
 export function updateOrder(orderId, patch) {
-  const orders = loadOrders().map((order) => (order.id === orderId ? { ...order, ...patch } : order))
+  const orders = loadOrders().map((order) =>
+    order.id === orderId ? { ...order, ...patch } : order,
+  )
   saveOrders(orders)
   const updated = orders.find((order) => order.id === orderId)
   if (updated && patch.currentStageId) {
@@ -193,6 +199,10 @@ export function restoreDeletedOrder(orderId) {
   if (orders.some((item) => item.id === record.id)) return record
   saveOrders([normalizeOrder(record), ...orders])
   return record
+}
+
+export function permanentlyDeleteOrder(orderId) {
+  return permanentlyDeleteRecord(DELETED_COLLECTION, orderId)
 }
 
 function findQuoteForOrder(order) {

@@ -245,6 +245,11 @@ export default function QuoteDeletedArchivedPanel({
   isOrderCreated,
   columnGrid,
   layoutMode = 'standalone',
+  collection = 'quotes',
+  storeEvent = 'bach:quotes-updated',
+  restoreRecord = restoreDeletedQuote,
+  permanentlyDelete = permanentlyDeleteQuote,
+  resolveCode = resolveQuoteCode,
 }) {
   const panelRef = useRef(null)
   const [open, setOpen] = useState(false)
@@ -263,12 +268,12 @@ export default function QuoteDeletedArchivedPanel({
       setVersion((current) => current + 1)
     }
     window.addEventListener(DELETED_RECORDS_EVENT, refresh)
-    window.addEventListener('bach:quotes-updated', refresh)
+    window.addEventListener(storeEvent, refresh)
     return () => {
       window.removeEventListener(DELETED_RECORDS_EVENT, refresh)
-      window.removeEventListener('bach:quotes-updated', refresh)
+      window.removeEventListener(storeEvent, refresh)
     }
-  }, [])
+  }, [storeEvent])
 
   useEffect(() => {
     if (!receivePulseKey) return undefined
@@ -279,7 +284,7 @@ export default function QuoteDeletedArchivedPanel({
 
   const entries = useMemo(() => {
     void version
-    return getDeletedRecords('quotes')
+    return getDeletedRecords(collection)
       .map((entry) => {
         const record = entry.record
         return {
@@ -295,7 +300,7 @@ export default function QuoteDeletedArchivedPanel({
       })
       .filter((item) => item.record?.id)
       .sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))
-  }, [version])
+  }, [version, collection])
 
   useEffect(() => {
     const nextIds = entries.map((item) => item.id)
@@ -339,7 +344,7 @@ export default function QuoteDeletedArchivedPanel({
     if (!item?.record?.id || restoringIds.includes(item.id) || trashingIds.includes(item.id)) return
     setRestoringIds((current) => [...current, item.id])
     window.setTimeout(() => {
-      const restored = restoreDeletedQuote(item.record.id)
+      const restored = restoreRecord(item.record.id)
       if (restored) onRestored?.(restored, item)
       setRestoringIds((current) => current.filter((id) => id !== item.id))
       setVersion((current) => current + 1)
@@ -351,7 +356,7 @@ export default function QuoteDeletedArchivedPanel({
     if (!item?.record?.id || trashingIds.includes(item.id)) return
     setTrashingIds((current) => [...current, item.id])
     window.setTimeout(() => {
-      permanentlyDeleteQuote(item.record.id)
+      permanentlyDelete(item.record.id)
       setTrashingIds((current) => current.filter((id) => id !== item.id))
       setVersion((current) => current + 1)
       flushWorkspaceNow()
@@ -364,7 +369,7 @@ export default function QuoteDeletedArchivedPanel({
     const ids = selected.map((item) => item.id)
     setTrashingIds((current) => [...current, ...ids])
     window.setTimeout(() => {
-      selected.forEach((item) => permanentlyDeleteQuote(item.record.id))
+      selected.forEach((item) => permanentlyDelete(item.record.id))
       setTrashingIds([])
       exitBulkSelectMode()
       setVersion((current) => current + 1)
@@ -587,9 +592,7 @@ export default function QuoteDeletedArchivedPanel({
                         </DeletedListCell>
                         <DeletedListCell>
                           <span className={`${YF_TEXT_CLASS} tabular-nums`}>
-                            {item.record?.id
-                              ? resolveQuoteCode(item.record.id, deletedQuoteIds)
-                              : '—'}
+                            {item.record?.id ? resolveCode(item.record.id, deletedQuoteIds) : '—'}
                           </span>
                         </DeletedListCell>
                         <DeletedListCell>
