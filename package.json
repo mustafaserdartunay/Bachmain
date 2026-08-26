@@ -22,7 +22,7 @@
     "deploy": "npx vercel --prod",
     "dp": "bash scripts/deploy-all.sh",
     "lint": "eslint src server api scripts apps/admin/server apps/api/src --max-warnings 9999",
-    "lint:fix": "eslint src server api scripts apps/admin/src apps/admin/server apps/api/src --fix",
+    "lint:fix": "eslint src server api scripts apps/admin/server apps/api/src --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"server/**/*.js\" \"api/**/*.js\" \"apps/admin/src/**/*.{ts,tsx}\" \"apps/api/src/**/*.ts\" \"docs/**/*.md\" \"*.md\" \".github/**/*.{yml,yaml,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"server/**/*.js\" \"api/**/*.js\" \"apps/admin/src/**/*.{ts,tsx}\" \"apps/api/src/**/*.ts\" \"docs/5*.md\" \"docs/6*.md\" \".github/**/*.{yml,yaml,md}\"",
     "typecheck:api": "npm --prefix apps/api run typecheck",
