@@ -12,6 +12,13 @@ import {
 import { readCompanySettings } from './companySettings'
 import { getCustomerDisplay } from './customerDisplay'
 import { getCustomerProfiles } from '../data/customerProfiles'
+import {
+  permanentlyDeleteRecord,
+  restoreDeletedRecord,
+  softDeleteRecord,
+} from './deletedRecordsStore'
+
+const DELETED_COLLECTION = 'sevkiyat'
 
 const TRIPS_KEY = 'bach-sevkiyat-trips'
 const VEHICLE_TYPES_KEY = 'bach-sevkiyat-vehicle-types'
@@ -188,9 +195,25 @@ export function upsertTrip(trip) {
 }
 
 export function deleteTrip(tripId) {
-  const trips = loadTrips().filter((trip) => trip.id !== tripId)
-  saveTrips(trips)
+  const trip = getTrip(tripId)
+  if (trip) {
+    softDeleteRecord(DELETED_COLLECTION, trip, { entityLabel: trip.code || tripId || 'Sevkiyat' })
+  }
+  saveTrips(loadTrips().filter((item) => item.id !== tripId))
   return true
+}
+
+export function restoreDeletedTrip(tripId) {
+  const record = restoreDeletedRecord(DELETED_COLLECTION, tripId)
+  if (!record) return null
+  const trips = loadTrips()
+  if (trips.some((item) => item.id === record.id)) return record
+  saveTrips([record, ...trips])
+  return record
+}
+
+export function permanentlyDeleteTrip(tripId) {
+  return permanentlyDeleteRecord(DELETED_COLLECTION, tripId)
 }
 
 export function shareTrackingLink(tripId, shared = true) {
@@ -366,6 +389,7 @@ export function getSevkiyatSummary(trips = loadTrips()) {
     planned: trips.filter((t) => t.status === 'planned' || t.status === 'draft').length,
     inTransit: trips.filter((t) => t.status === 'in_transit').length,
     delivered: trips.filter((t) => t.status === 'delivered').length,
+    cancelled: trips.filter((t) => t.status === 'cancelled').length,
   }
 }
 

@@ -13,6 +13,13 @@ import {
   resolveDepoStageIdFromLegacyStatus,
 } from './depoWorkflowStages'
 import { normalizeStagePhotos } from './productionStagePhotos'
+import {
+  permanentlyDeleteRecord,
+  restoreDeletedRecord,
+  softDeleteRecord,
+} from './deletedRecordsStore'
+
+const DELETED_COLLECTION = 'depo'
 
 const STORAGE_KEY = 'erlenbox-depo'
 
@@ -67,10 +74,11 @@ export function loadDepoItems() {
 
 function normalizeDepoItem(item, stages = loadDepoWorkflowStages()) {
   const firstStage = stages[0]
-  let currentStageId = item.currentStageId
-    || resolveDepoStageIdFromLegacyStatus(item.status, stages)
-    || firstStage?.id
-    || ''
+  let currentStageId =
+    item.currentStageId ||
+    resolveDepoStageIdFromLegacyStatus(item.status, stages) ||
+    firstStage?.id ||
+    ''
   const stage = findDepoStageById(currentStageId, stages) || firstStage
   let stagePhotos = normalizeStagePhotos(item.stagePhotos)
   let productionCode = item.productionCode || ''
@@ -82,15 +90,23 @@ function normalizeDepoItem(item, stages = loadDepoWorkflowStages()) {
       ? line.quantityRows.findIndex((row) => row.id === item.quantityRowId)
       : -1
     const row = rowIndex >= 0 ? line.quantityRows[rowIndex] : null
-    productionCode = row?.productionCode || (rowIndex >= 0 && line.quantityRows.length > 1 ? `${item.productionJobId}-${rowIndex + 1}` : '')
+    productionCode =
+      row?.productionCode ||
+      (rowIndex >= 0 && line.quantityRows.length > 1
+        ? `${item.productionJobId}-${rowIndex + 1}`
+        : '')
   }
 
-  const aracStage = stages.find((entry) => (
-    entry.label === 'Araç Teslim' || entry.label === 'Araçta'
-  ))
+  const aracStage = stages.find(
+    (entry) => entry.label === 'Araç Teslim' || entry.label === 'Araçta',
+  )
   const teslimStage = stages.find((entry) => entry.label === 'Teslim Edildi')
 
-  if (item.loadingPhoto && aracStage && !stagePhotos.some((photo) => photo.stageId === aracStage.id)) {
+  if (
+    item.loadingPhoto &&
+    aracStage &&
+    !stagePhotos.some((photo) => photo.stageId === aracStage.id)
+  ) {
     stagePhotos = [
       ...stagePhotos,
       {
@@ -103,7 +119,11 @@ function normalizeDepoItem(item, stages = loadDepoWorkflowStages()) {
     ]
   }
 
-  if (item.deliveryPhoto && teslimStage && !stagePhotos.some((photo) => photo.stageId === teslimStage.id)) {
+  if (
+    item.deliveryPhoto &&
+    teslimStage &&
+    !stagePhotos.some((photo) => photo.stageId === teslimStage.id)
+  ) {
     stagePhotos = [
       ...stagePhotos,
       {
@@ -116,9 +136,10 @@ function normalizeDepoItem(item, stages = loadDepoWorkflowStages()) {
     ]
   }
 
-  const customerText = typeof item.customer === 'object'
-    ? (item.customer?.companyTitle || item.customer?.name || '')
-    : (item.customer || '')
+  const customerText =
+    typeof item.customer === 'object'
+      ? item.customer?.companyTitle || item.customer?.name || ''
+      : item.customer || ''
 
   return {
     ...item,
@@ -154,9 +175,9 @@ export function addWarehouse(payload) {
 }
 
 export function updateDepoItem(itemId, patch) {
-  const items = loadDepoItems().map((item) => (
-    item.id === itemId ? { ...item, ...patch, updatedAt: nowStamp() } : item
-  ))
+  const items = loadDepoItems().map((item) =>
+    item.id === itemId ? { ...item, ...patch, updatedAt: nowStamp() } : item,
+  )
   patchState({ items })
   return items.find((item) => item.id === itemId) || null
 }
@@ -185,9 +206,9 @@ function estimateUnitPrice(line) {
 
 export function resolveLinePricingFromOrder(job, line) {
   const order = loadOrders().find((entry) => entry.id === job.orderId)
-  const orderLine = order?.items?.find((entry) => (
-    entry.id === line.id || entry.product === line.product
-  ))
+  const orderLine = order?.items?.find(
+    (entry) => entry.id === line.id || entry.product === line.product,
+  )
   return {
     unitPrice: Number(orderLine?.unitPrice) || estimateUnitPrice(line),
     vatRate: Number(orderLine?.vatRate) || DEFAULT_DEPO_VAT_RATE,
@@ -207,20 +228,24 @@ export function addDepoItem(item) {
 }
 
 export function getDepoItemByProductionRow(productionJobId, lineItemId, quantityRowId) {
-  return loadDepoItems().find((item) => (
-    item.productionJobId === productionJobId
-    && item.lineItemId === lineItemId
-    && item.quantityRowId === quantityRowId
-  )) || null
+  return (
+    loadDepoItems().find(
+      (item) =>
+        item.productionJobId === productionJobId &&
+        item.lineItemId === lineItemId &&
+        item.quantityRowId === quantityRowId,
+    ) || null
+  )
 }
 
 export function removeDepoItemByProductionRow(productionJobId, lineItemId, quantityRowId) {
   const items = loadDepoItems().filter(
-    (item) => !(
-      item.productionJobId === productionJobId
-      && item.lineItemId === lineItemId
-      && item.quantityRowId === quantityRowId
-    ),
+    (item) =>
+      !(
+        item.productionJobId === productionJobId &&
+        item.lineItemId === lineItemId &&
+        item.quantityRowId === quantityRowId
+      ),
   )
   if (items.length !== loadDepoItems().length) {
     patchState({ items })
@@ -233,6 +258,30 @@ export function removeDepoItemById(depoItemId) {
   if (items.length !== loadDepoItems().length) {
     patchState({ items })
   }
+}
+
+export function deleteDepoItem(depoItemId) {
+  if (!depoItemId) return
+  const item = loadDepoItems().find((entry) => entry.id === depoItemId)
+  if (item) {
+    softDeleteRecord(DELETED_COLLECTION, item, {
+      entityLabel: item.product || item.productionCode || item.id || 'Depo',
+    })
+  }
+  removeDepoItemById(depoItemId)
+}
+
+export function restoreDeletedDepoItem(depoItemId) {
+  const record = restoreDeletedRecord(DELETED_COLLECTION, depoItemId)
+  if (!record) return null
+  const items = loadDepoItems()
+  if (items.some((item) => item.id === record.id)) return record
+  patchState({ items: [normalizeDepoItem(record), ...items] })
+  return record
+}
+
+export function permanentlyDeleteDepoItem(depoItemId) {
+  return permanentlyDeleteRecord(DELETED_COLLECTION, depoItemId)
 }
 
 export function createDepoItemFromLine(job, line, warehouseId) {
@@ -403,7 +452,13 @@ export function advanceDepoItemStatus(itemId, nextStatus, patch = {}) {
   return updateDepoItem(itemId, { status: nextStatus, ...timestamps, ...patch })
 }
 
-export function createTransfer({ fromWarehouseId, toWarehouseId, depoItemId, quantity, notes = '' }) {
+export function createTransfer({
+  fromWarehouseId,
+  toWarehouseId,
+  depoItemId,
+  quantity,
+  notes = '',
+}) {
   const item = loadDepoItems().find((entry) => entry.id === depoItemId)
   const transfers = loadDepoTransfers()
   const transfer = {
@@ -433,7 +488,10 @@ export function issueDepoInvoice(depoItemId) {
   if (item.invoiceNo) return item
 
   const invoiceNo = `SF-${Date.now().toString().slice(-8)}`
-  const invoicedQuantity = Math.max(0, Number(item.deliveredQuantity) || Number(item.quantity) || Number(item.producedQuantity) || 0)
+  const invoicedQuantity = Math.max(
+    0,
+    Number(item.deliveredQuantity) || Number(item.quantity) || Number(item.producedQuantity) || 0,
+  )
   return updateDepoItem(depoItemId, {
     invoiceNo,
     invoiceAt: nowStamp(),

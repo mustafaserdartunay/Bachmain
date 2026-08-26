@@ -1,25 +1,39 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeftRight,
-  ChevronDown,
   FileText,
   Package,
   Plus,
   Receipt,
+  Trash2,
   Truck,
   Undo2,
   Warehouse,
 } from 'lucide-react'
-import { resolveStockScope, STOCK_SCOPES } from '../../utils/stockScope'
+import { EmptyState } from '@bachmain/ui'
+import { resolveStockScope } from '../../utils/stockScope'
 import { loadLoadPlans } from '../../utils/logisticsStore'
-import { MoreMenu } from '@bachmain/ui'
 import SearchInput from '../Common/SearchInput'
-import ListHeaderRow from '../Common/ListHeaderRow'
 import SummaryMetrics from '../Common/SummaryMetrics'
 import SplitCreateButton from '../Common/SplitCreateButton'
-import { LIST_PILL_CLASS } from '../Common/ListDeleteConfirmPanel'
-import { AppPageHeader, AppPageShell, AppPagePanel } from '../Layout/AppPageLayout'
+import QuoteDeletedArchivedPanel from '../Common/QuoteDeletedArchivedPanel'
+import QuoteOrderInlineConfirm from '../Common/QuoteOrderInlineConfirm'
+import ProcessListRowMoreMenu from '../Common/ProcessListRowMoreMenu'
+import {
+  QuoteListCell,
+  QuoteListColumnHeader,
+  QuoteListRowPanel,
+  QuoteListSelectionCheckbox,
+  TurkishLiraIcon,
+} from '../Common/QuoteStyleListChrome'
+import {
+  AppPageBackLink,
+  AppPageHeader,
+  AppPagePanel,
+  AppPageShell,
+  AppPanelDot,
+} from '../Layout/AppPageLayout'
 import EditableDropdownPill from '../EditableDropdownPill'
 import DepoItemStagePanel from './DepoItemStagePanel'
 import { findCustomerProfileByReference, getListCustomerDisplay } from '../../data/customerProfiles'
@@ -28,7 +42,6 @@ import {
   computeDepoSummary,
   computeDepoLineTotals,
   customerLabel,
-  formatDepoDateTime,
   formatQty,
 } from '../../utils/depoHelpers'
 import { formatTL } from '../../utils/productPricing'
@@ -37,10 +50,13 @@ import {
   advanceDepoItemStatus,
   createDepoWaybill,
   createTransfer,
+  deleteDepoItem,
   issueDepoInvoice,
   loadDepoItems,
   loadDepoTransfers,
   loadDepoWarehouses,
+  permanentlyDeleteDepoItem,
+  restoreDeletedDepoItem,
   removeDepoItemById,
   syncDepoFromProduction,
 } from '../../utils/depoStore'
@@ -48,17 +64,35 @@ import { getProductionJobById, updateProductionJob } from '../../utils/productio
 import { getLineQuantityRows, syncLineQuantitiesFromRows } from '../../utils/productionLineItems'
 import { getDepoItemStatusLabel, isDepoItemDelivered } from '../../utils/depoStageHelpers'
 import { getDepoStageFilterOptions, loadDepoWorkflowStages } from '../../utils/depoWorkflowStages'
+import { resolveQuoteCode } from '../../utils/documentCodes'
+import { formatListDateParts } from '../../utils/quoteListDateFormat'
+import { flushWorkspaceNow } from '../../utils/workspaceStorage'
+import { COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
+import {
+  PAGE_BALANCE_AMOUNT_CLASS,
+  PAGE_CENTER_TITLE_CLASS,
+  PAGE_FILTER_FIELD_CLASS,
+  PAGE_FILTER_LABEL_CLASS,
+  PAGE_FILTER_MENU_CLASS,
+  PAGE_FILTER_PILL_CLASS,
+  PAGE_HEADER_TITLE_SLOT_CLASS,
+  PAGE_LIST_PILL_CLASS,
+  PAGE_LIST_PILL_WRAPPER_CLASS,
+  YF_TEXT_CLASS,
+} from '../../utils/dashboardDesign'
 
-const depoListGrid =
-  '96px 76px minmax(140px,1fr) minmax(200px,1.5fr) 96px 210px'
+const DEPO_STOCK_TABS = [
+  { id: 'general', label: 'Genel Stok' },
+  { id: 'customer', label: 'Müşteri Stokları' },
+  { id: 'pending_ship', label: 'Bekleyen Sevkiyatlar' },
+  { id: 'planned', label: 'Planlanan Lojistik' },
+  { id: 'in_transit', label: 'Teslimatta' },
+  { id: 'delivered', label: 'Teslim Edildi' },
+]
 
 const DEPO_PAGE_CONFIG = {
   order: {
     title: 'Depo',
-    titleClass: 'text-blue-300',
-    subtitle: 'Üretimden gelen ürünler · paketleme ve sevk',
-    listTitle: 'Depo Listesi',
-    listDescription: 'Depoya gönderilen kalemler burada listelenir',
     emptyHint: 'Üretim takibinde Teslim alanından "Depoya Gönder" ile kalemler buraya gelir.',
     metricInWarehouse: 'Depoda',
   },
@@ -83,40 +117,32 @@ function buildDepoDocumentDraft(item) {
       productCode,
       `${quantity} adet`,
       invoiceAt,
-    ].filter(Boolean).join(' · '),
+    ]
+      .filter(Boolean)
+      .join(' · '),
     customerName: item.customer || '',
     productName: item.product || '',
     productCode,
     productionCode,
     deliveredQuantity: quantity,
     invoiceAt,
-    lines: [{
-      description: `${codePrefix ? `${codePrefix} · ` : ''}${item.product}`,
-      quantity,
-      unitPrice: totals.unitPriceExcl,
-      vat: totals.vatRate,
-    }],
+    lines: [
+      {
+        description: `${codePrefix ? `${codePrefix} · ` : ''}${item.product}`,
+        quantity,
+        unitPrice: totals.unitPriceExcl,
+        vat: totals.vatRate,
+      },
+    ],
     depoItemId: item.id,
     orderId: item.orderId,
   }
 }
 
-function Panel({ title, description, children, action }) {
-  return (
-    <AppPagePanel
-      className="customer-list-panel w-full"
-      title={title ? `${title} :` : undefined}
-      description={description}
-      action={action}
-    >
-      {children}
-    </AppPagePanel>
-  )
-}
-
-function formatListDateTime(value) {
-  if (!value) return '—'
-  return formatDepoDateTime(value)
+function compareSortValue(a, b, dir) {
+  const sign = dir === 'desc' ? -1 : 1
+  if (typeof a === 'number' && typeof b === 'number') return (a - b) * sign
+  return String(a || '').localeCompare(String(b || ''), 'tr', { numeric: true }) * sign
 }
 
 export default function DepoWorkspace({ warehouseKind = 'order' }) {
@@ -147,15 +173,23 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
   const [depoStages, setDepoStages] = useState(() => loadDepoWorkflowStages())
   const [stockTab, setStockTab] = useState('customer')
   const [loadPlans, setLoadPlans] = useState(() => loadLoadPlans())
+  const [listColumnSort, setListColumnSort] = useState({ key: null, dir: 'asc' })
+  const listColumnSortRef = useRef(listColumnSort)
+  listColumnSortRef.current = listColumnSort
+  const listColumnSortLockRef = useRef(false)
+  const [bulkSelectMode, setBulkSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [animatingDeleteIds, setAnimatingDeleteIds] = useState([])
+  const [archiveReceiveKey, setArchiveReceiveKey] = useState(0)
 
-  const DEPO_STOCK_TABS = [
-    { id: 'general', label: 'Genel Stok' },
-    { id: 'customer', label: 'Müşteri Stokları' },
-    { id: 'pending_ship', label: 'Bekleyen Sevkiyatlar' },
-    { id: 'planned', label: 'Planlanan Lojistik' },
-    { id: 'in_transit', label: 'Teslimatta' },
-    { id: 'delivered', label: 'Teslim Edildi' },
-  ]
+  const stockFilterOptions = DEPO_STOCK_TABS.map((tab) => ({
+    label: tab.label,
+    color: 'bg-gray-500',
+    id: tab.id,
+  }))
+  const stockTabLabel =
+    DEPO_STOCK_TABS.find((tab) => tab.id === stockTab)?.label || 'Müşteri Stokları'
+  const isLogisticsTab = stockTab === 'planned' || stockTab === 'in_transit'
 
   function refresh() {
     syncDepoFromProduction()
@@ -180,18 +214,32 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
     }
   }, [])
 
+  useEffect(() => {
+    if (!activeMenu) return undefined
+    function closeActiveMenu() {
+      setActiveMenu(null)
+    }
+    document.addEventListener('click', closeActiveMenu)
+    return () => document.removeEventListener('click', closeActiveMenu)
+  }, [activeMenu])
+
   const scopedItems = useMemo(() => {
     const warehouseIds = new Set(
-      warehouses.filter((warehouse) => warehouse.kind === warehouseKind).map((warehouse) => warehouse.id),
+      warehouses
+        .filter((warehouse) => warehouse.kind === warehouseKind)
+        .map((warehouse) => warehouse.id),
     )
     return items.filter((item) => warehouseIds.has(item.warehouseId))
   }, [items, warehouses, warehouseKind])
 
-  const summary = useMemo(() => computeDepoSummary(scopedItems, warehouses), [scopedItems, warehouses])
-
-  const statusFilterOptions = useMemo(
-    () => getDepoStageFilterOptions(depoStages),
-    [depoStages],
+  const summary = useMemo(
+    () => computeDepoSummary(scopedItems, warehouses),
+    [scopedItems, warehouses],
+  )
+  const statusFilterOptions = useMemo(() => getDepoStageFilterOptions(depoStages), [depoStages])
+  const stageDropdownOptions = useMemo(
+    () => statusFilterOptions.filter((option) => option.label !== 'Tümü'),
+    [statusFilterOptions],
   )
 
   const filteredItems = useMemo(() => {
@@ -208,12 +256,42 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
       if (stockTab === 'delivered' && !isDepoItemDelivered(item, depoStages)) return false
       if (stockTab === 'planned' || stockTab === 'in_transit') return false
 
-      const haystack = `${item.product} ${item.orderId} ${item.productionJobId} ${customerLabel(item.customer)}`.toLowerCase()
+      const haystack =
+        `${item.product} ${item.orderId} ${item.productionJobId} ${item.productionCode} ${customerLabel(item.customer)}`.toLowerCase()
       if (q && !haystack.includes(q)) return false
-      if (filters.status !== 'Tümü' && getDepoItemStatusLabel(item, depoStages) !== filters.status) return false
+      if (filters.status !== 'Tümü' && getDepoItemStatusLabel(item, depoStages) !== filters.status)
+        return false
       return true
     })
   }, [scopedItems, searchQuery, filters, depoStages, stockTab])
+
+  const listItems = useMemo(() => {
+    if (!listColumnSort.key) return filteredItems
+    const dir = listColumnSort.dir
+    const ids = items.map((item) => item.id)
+    return [...filteredItems].sort((a, b) => {
+      const valueOf = (item) => {
+        if (listColumnSort.key === 'date') return item.createdAt || ''
+        if (listColumnSort.key === 'code')
+          return item.productionCode || resolveQuoteCode(item.id, ids)
+        if (listColumnSort.key === 'customer') {
+          const display =
+            typeof item.customer === 'object'
+              ? getListCustomerDisplay(item.customer)
+              : getListCustomerDisplay(item.customer)
+          return (
+            display.brandShortName || display.companyTitle || customerLabel(item.customer) || ''
+          )
+        }
+        if (listColumnSort.key === 'process') return getDepoItemStatusLabel(item, depoStages)
+        if (listColumnSort.key === 'qty')
+          return Number(item.deliveredQuantity) || Number(item.quantity) || 0
+        if (listColumnSort.key === 'amount') return computeDepoLineTotals(item).gross
+        return ''
+      }
+      return compareSortValue(valueOf(a), valueOf(b), dir)
+    })
+  }, [filteredItems, listColumnSort, items, depoStages])
 
   const logisticsTabPlans = useMemo(() => {
     if (stockTab === 'planned') {
@@ -248,9 +326,16 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
 
   function handleTransfer(event) {
     event.preventDefault()
-    if (!transferForm.depoItemId || !transferForm.fromWarehouseId || !transferForm.toWarehouseId) return
+    if (!transferForm.depoItemId || !transferForm.fromWarehouseId || !transferForm.toWarehouseId)
+      return
     createTransfer(transferForm)
-    setTransferForm({ depoItemId: '', fromWarehouseId: '', toWarehouseId: '', quantity: '', notes: '' })
+    setTransferForm({
+      depoItemId: '',
+      fromWarehouseId: '',
+      toWarehouseId: '',
+      quantity: '',
+      notes: '',
+    })
     setShowTransferPanel(false)
     refresh()
   }
@@ -260,7 +345,10 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
     if (!updated) return
     const profile = findCustomerProfileByReference(item.customer)
     if (profile?.id && warehouseKind === 'order') {
-      sessionStorage.setItem('erlenbox-depo-document-draft', JSON.stringify(buildDepoDocumentDraft(updated)))
+      sessionStorage.setItem(
+        'erlenbox-depo-document-draft',
+        JSON.stringify(buildDepoDocumentDraft(updated)),
+      )
       navigate(`/musteriler/${profile.id}/belge/satis-faturasi`)
       return
     }
@@ -284,11 +372,11 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
       if (job) {
         const lineItems = (job.lineItems || []).map((line) => {
           if (line.id !== item.lineItemId) return line
-          const rows = getLineQuantityRows(line).map((row) => (
+          const rows = getLineQuantityRows(line).map((row) =>
             row.id === item.quantityRowId
               ? { ...row, depoItemId: '', depoSentAt: '', invoiceNo: '', invoiceAt: '' }
-              : row
-          ))
+              : row,
+          )
           const synced = syncLineQuantitiesFromRows(rows)
           return { ...line, ...synced, quantityRows: synced.quantityRows }
         })
@@ -299,15 +387,100 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
     refresh()
   }
 
+  function toggleListColumnSort(key) {
+    if (listColumnSortLockRef.current) return
+    listColumnSortLockRef.current = true
+    window.setTimeout(() => {
+      listColumnSortLockRef.current = false
+    }, 0)
+    const current = listColumnSortRef.current
+    const next =
+      current.key !== key
+        ? { key, dir: 'asc' }
+        : { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+    listColumnSortRef.current = next
+    setListColumnSort(next)
+  }
+
+  function exitBulkSelectMode() {
+    setBulkSelectMode(false)
+    setSelectedIds([])
+  }
+
+  function toggleBulkSelect(id) {
+    const key = String(id)
+    setSelectedIds((current) =>
+      current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
+    )
+  }
+
+  function toggleBulkSelectAll(ids) {
+    const allSelected = ids.length > 0 && ids.every((id) => selectedIds.includes(id))
+    setSelectedIds(allSelected ? [] : ids)
+  }
+
+  function softDeleteItemWithAnimation(item) {
+    if (!item?.id) return
+    const key = String(item.id)
+    setAnimatingDeleteIds((current) => [...current, key])
+    window.setTimeout(() => {
+      deleteDepoItem(item.id)
+      refresh()
+      setAnimatingDeleteIds((current) => current.filter((entry) => entry !== key))
+      setArchiveReceiveKey((current) => current + 1)
+      flushWorkspaceNow()
+    }, 880)
+  }
+
+  function handleBulkDelete() {
+    listItems
+      .filter((item) => selectedIds.includes(String(item.id)))
+      .forEach((item) => softDeleteItemWithAnimation(item))
+    exitBulkSelectMode()
+  }
+
+  const listItemIds = listItems.map((item) => String(item.id))
+  const allVisibleSelected =
+    listItemIds.length > 0 && listItemIds.every((id) => selectedIds.includes(id))
+  const someVisibleSelected =
+    listItemIds.some((id) => selectedIds.includes(id)) && !allVisibleSelected
+
+  const depoListBaseColumnGrid = [
+    '6.5rem',
+    '4.75rem',
+    'minmax(16rem, 2.4fr)',
+    'minmax(9.25rem, 0.7fr)',
+    '6.5rem',
+    '6.75rem',
+    '3rem',
+  ]
+  const depoListColumnGrid = [
+    ...(bulkSelectMode ? ['2.75rem'] : []),
+    ...depoListBaseColumnGrid.slice(0, -1),
+    bulkSelectMode && selectedIds.length > 0 ? '6.5rem' : '3rem',
+  ].join(' ')
+
+  const relatedTransfers = transfers.filter((transfer) => {
+    const from = warehouses.find((w) => w.id === transfer.fromWarehouseId)
+    const to = warehouses.find((w) => w.id === transfer.toWarehouseId)
+    return from?.kind === warehouseKind || to?.kind === warehouseKind
+  })
+
   return (
     <AppPageShell className="customers-page-type w-full">
       <AppPageHeader
-        title={pageConfig.title}
-        titleClassName={pageConfig.titleClass}
-        actions={(
+        showBack={false}
+        title={<AppPageBackLink />}
+        centerTitle="DEPO"
+        centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
+        titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+        actions={
           <SplitCreateButton
             label="Yeni Depo İşlemi"
-            onPrimaryClick={() => { setShowWarehousePanel(true); setShowTransferPanel(false) }}
+            onPrimaryClick={() => {
+              setShowWarehousePanel(true)
+              setShowTransferPanel(false)
+            }}
             menuAriaLabel="Depo seçenekleri"
             menuItems={[
               {
@@ -315,14 +488,20 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
                 label: 'Yeni Depo Ekle',
                 icon: Warehouse,
                 iconClassName: 'text-blue-300',
-                onClick: () => { setShowWarehousePanel(true); setShowTransferPanel(false) },
+                onClick: () => {
+                  setShowWarehousePanel(true)
+                  setShowTransferPanel(false)
+                },
               },
               {
                 id: 'transfer',
                 label: 'Transfer Oluştur',
                 icon: ArrowLeftRight,
                 iconClassName: 'text-emerald-300',
-                onClick: () => { setShowTransferPanel(true); setShowWarehousePanel(false) },
+                onClick: () => {
+                  setShowTransferPanel(true)
+                  setShowWarehousePanel(false)
+                },
               },
               {
                 id: 'load',
@@ -333,370 +512,665 @@ export default function DepoWorkspace({ warehouseKind = 'order' }) {
               },
             ]}
           />
-        )}
+        }
       />
 
       <SummaryMetrics
+        columns={5}
+        className="customer-summary-metrics w-full"
         items={[
-          { title: pageConfig.metricInWarehouse, value: summary.inWarehouse, icon: Package, tone: 'blue', valueTone: 'blue' },
-          { title: 'KDV Hariç Toplam', value: formatTL(summary.totalNet), icon: Receipt, tone: 'purple', valueTone: 'red' },
-          { title: 'KDV Dahil Toplam', value: formatTL(summary.totalSales), icon: Package, tone: 'emerald', valueTone: 'emerald' },
-          { title: 'Faturalanan', value: summary.invoiced, icon: FileText, tone: 'cyan', valueTone: 'cyan' },
-          { title: 'Teslim Edildi', value: summary.delivered, icon: Truck, tone: 'orange', valueTone: 'orange' },
+          {
+            title: pageConfig.metricInWarehouse,
+            value: summary.inWarehouse,
+            icon: Package,
+            valueTone: 'text-violet-800',
+          },
+          {
+            title: 'KDV Hariç',
+            value: formatTL(summary.totalNet),
+            icon: TurkishLiraIcon,
+            tone: 'purple',
+            valueTone: 'text-blue-800',
+          },
+          {
+            title: 'KDV Dahil',
+            value: formatTL(summary.totalSales),
+            icon: Package,
+            tone: 'emerald',
+            valueTone: 'text-emerald-800',
+          },
+          {
+            title: 'Faturalanan',
+            value: summary.invoiced,
+            icon: FileText,
+            tone: 'orange',
+            valueTone: 'text-[#ea580c]',
+          },
+          {
+            title: 'Teslim Edildi',
+            value: summary.delivered,
+            icon: Truck,
+            tone: 'orange',
+            valueTone: 'text-emerald-800',
+          },
         ]}
       />
 
-      <Panel
-        title={pageConfig.listTitle}
-        description={pageConfig.listDescription}
-        action={(
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => { setShowWarehousePanel((v) => !v); setShowTransferPanel(false) }}
-              className="inline-flex items-center gap-1 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-1.5 text-xs font-bold text-gray-300 hover:text-white"
-            >
-              <Warehouse className="h-3.5 w-3.5" />
-              Depolar
-            </button>
-            <button
-              type="button"
-              onClick={() => { setShowTransferPanel((v) => !v); setShowWarehousePanel(false) }}
-              className="inline-flex items-center gap-1 rounded-xl border border-dark-500/50 bg-dark-700/70 px-3 py-1.5 text-xs font-bold text-gray-300 hover:text-white"
-            >
-              <ArrowLeftRight className="h-3.5 w-3.5" />
-              Transfer
-            </button>
-            <span className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-xs font-black text-blue-300">
-              {filteredItems.length} kayıt
-            </span>
+      <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
+        <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
+          <div className="flex shrink-0 items-center gap-2 px-1">
+            <AppPanelDot color="blue" />
+            <span className={YF_TEXT_CLASS}>Filtre :</span>
           </div>
-        )}
-      >
-        {showWarehousePanel && (
-          <div className="mb-4 rounded-2xl border border-dark-500/40 bg-dark-900/30 p-3">
-            <form onSubmit={handleAddWarehouse} className="mb-3 grid gap-2 lg:grid-cols-[1fr_100px_120px_auto]">
-              <input value={warehouseForm.name} onChange={(e) => setWarehouseForm({ ...warehouseForm, name: e.target.value })} placeholder="Depo adı" className="form-input h-9 text-xs" required />
-              <input value={warehouseForm.code} onChange={(e) => setWarehouseForm({ ...warehouseForm, code: e.target.value })} placeholder="Kod" className="form-input h-9 text-xs" />
-              <input value={warehouseForm.city} onChange={(e) => setWarehouseForm({ ...warehouseForm, city: e.target.value })} placeholder="Şehir" className="form-input h-9 text-xs" />
-              <button type="submit" className="inline-flex items-center justify-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white">
-                <Plus className="h-3.5 w-3.5" />
-                Ekle
-              </button>
-            </form>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {warehouses.filter((warehouse) => warehouse.kind === warehouseKind).map((warehouse) => (
-                <div key={warehouse.id} className="rounded-xl border border-dark-500/45 bg-dark-800/55 px-3 py-2">
-                  <p className="text-sm font-bold text-white">{warehouse.name}</p>
-                  <p className="text-[12px] text-gray-500">{warehouse.code} · {WAREHOUSE_KINDS[warehouse.kind]}</p>
-                  <p className="mt-1 text-[12px] font-bold text-cyan-300">
-                    {scopedItems.filter((i) => i.warehouseId === warehouse.id && !isDepoItemDelivered(i, depoStages)).length} aktif
+          <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Stok :</p>
+              <EditableDropdownPill
+                value={stockTabLabel}
+                options={stockFilterOptions}
+                includePlaceholderOption={false}
+                editable={false}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
+                openKey="filter-depo-stock"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => {
+                  const next = DEPO_STOCK_TABS.find((tab) => tab.label === value)
+                  if (next) setStockTab(next.id)
+                }}
+              />
+            </div>
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Durum :</p>
+              <EditableDropdownPill
+                value={filters.status}
+                options={statusFilterOptions}
+                includePlaceholderOption={false}
+                editable={false}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
+                openKey="filter-depo-status"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => updateFilter('status', value)}
+              />
+            </div>
+          </div>
+        </div>
+      </AppPagePanel>
+
+      <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
+        <div className="flex w-full min-w-0 items-center gap-3 px-1">
+          <div className="flex shrink-0 items-center gap-2">
+            <AppPanelDot color="blue" />
+            <span className={YF_TEXT_CLASS}>Depo Listesi :</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <SearchInput
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Sipariş, ürün veya müşteri ara..."
+              className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+            />
+          </div>
+          <span className={`shrink-0 ${YF_TEXT_CLASS}`}>
+            {isLogisticsTab ? logisticsTabPlans.length : filteredItems.length} Kayıt
+          </span>
+        </div>
+      </AppPagePanel>
+
+      {showWarehousePanel ? (
+        <AppPagePanel className="customer-filter-panel w-full">
+          <form
+            onSubmit={handleAddWarehouse}
+            className="mb-3 grid gap-2 lg:grid-cols-[1fr_100px_120px_auto]"
+          >
+            <input
+              value={warehouseForm.name}
+              onChange={(e) => setWarehouseForm({ ...warehouseForm, name: e.target.value })}
+              placeholder="Depo adı"
+              className="form-input h-9 text-[14px]"
+              required
+            />
+            <input
+              value={warehouseForm.code}
+              onChange={(e) => setWarehouseForm({ ...warehouseForm, code: e.target.value })}
+              placeholder="Kod"
+              className="form-input h-9 text-[14px]"
+            />
+            <input
+              value={warehouseForm.city}
+              onChange={(e) => setWarehouseForm({ ...warehouseForm, city: e.target.value })}
+              placeholder="Şehir"
+              className="form-input h-9 text-[14px]"
+            />
+            <button
+              type="submit"
+              className="btn-primary inline-flex items-center justify-center gap-1"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Ekle
+            </button>
+          </form>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {warehouses
+              .filter((warehouse) => warehouse.kind === warehouseKind)
+              .map((warehouse) => (
+                <div key={warehouse.id} className="rounded-xl px-3 py-2">
+                  <p className={`${YF_TEXT_CLASS} !font-bold`}>{warehouse.name}</p>
+                  <p className={YF_TEXT_CLASS}>
+                    {warehouse.code} · {WAREHOUSE_KINDS[warehouse.kind]}
+                  </p>
+                  <p className={YF_TEXT_CLASS}>
+                    {
+                      scopedItems.filter(
+                        (item) =>
+                          item.warehouseId === warehouse.id &&
+                          !isDepoItemDelivered(item, depoStages),
+                      ).length
+                    }{' '}
+                    aktif
                   </p>
                 </div>
               ))}
-            </div>
           </div>
-        )}
+        </AppPagePanel>
+      ) : null}
 
-        {showTransferPanel && (
-          <form onSubmit={handleTransfer} className="mb-4 grid gap-2 rounded-2xl border border-dark-500/40 bg-dark-900/30 p-3 lg:grid-cols-6">
-            <select value={transferForm.depoItemId} onChange={(e) => setTransferForm({ ...transferForm, depoItemId: e.target.value })} className="form-input h-9 text-xs" required>
-              <option value="">Ürün</option>
-              {scopedItems.filter((i) => !isDepoItemDelivered(i, depoStages)).map((item) => (
-                <option key={item.id} value={item.id}>{item.product}</option>
-              ))}
-            </select>
-            <select value={transferForm.fromWarehouseId} onChange={(e) => setTransferForm({ ...transferForm, fromWarehouseId: e.target.value })} className="form-input h-9 text-xs" required>
-              <option value="">Kaynak</option>
-              {warehouses.filter((w) => w.kind === warehouseKind).map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-            </select>
-            <select value={transferForm.toWarehouseId} onChange={(e) => setTransferForm({ ...transferForm, toWarehouseId: e.target.value })} className="form-input h-9 text-xs" required>
-              <option value="">Hedef</option>
-              {warehouses.filter((w) => w.kind === warehouseKind).map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-            </select>
-            <input value={transferForm.quantity} onChange={(e) => setTransferForm({ ...transferForm, quantity: e.target.value })} placeholder="Adet" className="form-input h-9 text-xs" />
-            <input value={transferForm.notes} onChange={(e) => setTransferForm({ ...transferForm, notes: e.target.value })} placeholder="Not" className="form-input h-9 text-xs" />
-            <button type="submit" className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white">Transfer</button>
-          </form>
-        )}
-
-        <div className="mb-4 space-y-3">
-          <div className="flex flex-wrap gap-1.5 rounded-2xl border border-dark-500/40 bg-dark-800/60 p-1.5">
-            {DEPO_STOCK_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setStockTab(tab.id)}
-                className={`rounded-xl px-3 py-2 text-[12px] font-bold transition-colors ${
-                  stockTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-400 hover:bg-dark-700/80 hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-            <Link
-              to="/lojistik/yukleme-plani"
-              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-blue-500/15 px-3 py-2 text-[12px] font-bold text-blue-300 hover:bg-blue-500/25"
+      {showTransferPanel ? (
+        <AppPagePanel className="customer-filter-panel w-full">
+          <form onSubmit={handleTransfer} className="grid gap-2 lg:grid-cols-6">
+            <select
+              value={transferForm.depoItemId}
+              onChange={(e) => setTransferForm({ ...transferForm, depoItemId: e.target.value })}
+              className="form-input h-9 text-[14px]"
+              required
             >
-              <Truck className="h-3.5 w-3.5" />
-              Yük Hesaplama
-            </Link>
-          </div>
-
-          {(stockTab === 'planned' || stockTab === 'in_transit') ? (
-            <div className="space-y-2 rounded-2xl border border-dark-500/40 bg-dark-800/55 p-4">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-sm font-bold text-white">
-                  {stockTab === 'planned' ? 'Planlanan lojistik planları' : 'Yoldaki sevkiyatlar'}
-                </p>
-                <Link to={stockTab === 'planned' ? '/lojistik/planlanan' : '/lojistik/teslimatta'} className="text-xs font-bold text-blue-300">
-                  Tümünü aç →
-                </Link>
-              </div>
-              {!logisticsTabPlans.length ? (
-                <p className="text-sm text-gray-500">Kayıt yok. Yük Hesaplama’dan plan kaydedin.</p>
-              ) : logisticsTabPlans.map((plan) => (
-                <div key={plan.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dark-500/40 bg-dark-900/40 px-3 py-2.5 text-sm">
-                  <div>
-                    <p className="font-bold text-white">{plan.code || plan.id}</p>
-                    <p className="text-xs text-gray-500">
-                      {(plan.pallets || []).length} palet · {plan.status || 'draft'}
-                      {plan.meta?.fillPct != null ? ` · %${plan.meta.fillPct} doluluk` : ''}
-                    </p>
-                  </div>
-                  <Link to="/lojistik/planlanan" className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white">Detay</Link>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <>
-          <SearchInput
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Sipariş, ürün veya müşteri ara..."
-          />
-          <div className="glass-inset rounded-2xl p-3">
-            <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Durum</p>
-            <EditableDropdownPill
-              value={filters.status}
-              options={statusFilterOptions}
-              includePlaceholderOption={false}
-              editable={false}
-              buttonClassName={LIST_PILL_CLASS}
-              openKey={`filter-depo-status-${warehouseKind}`}
-              activeMenu={activeMenu}
-              setActiveMenu={setActiveMenu}
-              onChange={(value) => updateFilter('status', value)}
+              <option value="">Ürün</option>
+              {scopedItems
+                .filter((item) => !isDepoItemDelivered(item, depoStages))
+                .map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.product}
+                  </option>
+                ))}
+            </select>
+            <select
+              value={transferForm.fromWarehouseId}
+              onChange={(e) =>
+                setTransferForm({ ...transferForm, fromWarehouseId: e.target.value })
+              }
+              className="form-input h-9 text-[14px]"
+              required
+            >
+              <option value="">Kaynak</option>
+              {warehouses
+                .filter((w) => w.kind === warehouseKind)
+                .map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+            </select>
+            <select
+              value={transferForm.toWarehouseId}
+              onChange={(e) => setTransferForm({ ...transferForm, toWarehouseId: e.target.value })}
+              className="form-input h-9 text-[14px]"
+              required
+            >
+              <option value="">Hedef</option>
+              {warehouses
+                .filter((w) => w.kind === warehouseKind)
+                .map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+            </select>
+            <input
+              value={transferForm.quantity}
+              onChange={(e) => setTransferForm({ ...transferForm, quantity: e.target.value })}
+              placeholder="Adet"
+              className="form-input h-9 text-[14px]"
             />
-          </div>
-            </>
-          )}
-        </div>
+            <input
+              value={transferForm.notes}
+              onChange={(e) => setTransferForm({ ...transferForm, notes: e.target.value })}
+              placeholder="Not"
+              className="form-input h-9 text-[14px]"
+            />
+            <button type="submit" className="btn-primary">
+              Transfer
+            </button>
+          </form>
+        </AppPagePanel>
+      ) : null}
 
-        {stockTab !== 'planned' && stockTab !== 'in_transit' ? (
-          <>
-        <ListHeaderRow
-          gridTemplate={depoListGrid}
-          columns={[
-            'Tarih',
-            'Sipariş',
-            'Müşteri Adı',
-            'Süreç',
-            { label: 'Adet', align: 'right', className: 'pr-1' },
-            { label: 'İşlem', align: 'right' },
-          ]}
-        />
-
-        <div className="mt-3 space-y-2 overflow-visible">
-          {filteredItems.map((item) => {
-            const customerDisplay = typeof item.customer === 'object'
-              ? getListCustomerDisplay(item.customer)
-              : { brandShortName: item.customer, companyTitle: '' }
-            const scope = resolveStockScope(item)
-            const scopeMeta = STOCK_SCOPES[scope] || STOCK_SCOPES.general
-            const isExpanded = expandedId === item.id
-            const docsReady = canIssueDocuments(item)
-            const incomingQuantity = Math.max(
-              0,
-              Number(item.deliveredQuantity) || Number(item.quantity) || Number(item.producedQuantity) || 0,
-            )
-            const invoicedQuantity = item.invoiceNo
-              ? Math.max(0, Number(item.invoicedQuantity) || incomingQuantity)
-              : 0
-            const remainingInDepo = item.invoiceNo
-              ? Math.max(0, incomingQuantity - invoicedQuantity)
-              : 0
-
-            return (
-              <div
-                key={item.id}
-                className={`rounded-2xl border transition-all ${
-                  isExpanded
-                    ? 'relative z-40 overflow-visible border-blue-500/40 bg-dark-800/70 shadow-[0_8px_24px_rgba(0,0,0,0.18)]'
-                    : 'overflow-hidden border-dark-500/45 bg-dark-800/55 hover:border-blue-500/35 hover:bg-dark-700/60'
-                }`}
-              >
-                <div
-                  className="relative grid items-center gap-2 px-3 py-3"
-                  style={{ gridTemplateColumns: depoListGrid }}
-                >
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500">{formatListDateTime(item.createdAt)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-black tabular-nums text-blue-300">
-                      {item.productionCode || item.productionJobId || item.orderId}
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="flex min-w-0 items-center gap-1.5 text-sm font-black text-white">
-                      <span className="truncate">{customerDisplay.brandShortName || 'Müşteri yok'}</span>
-                      {customerDisplay.companyTitle && (
-                        <span className="inline-flex min-w-0 items-center rounded-lg border border-dark-500/45 bg-dark-700/60 px-2 py-0.5 text-[12px] font-black text-gray-400">
-                          <span className="truncate">{customerDisplay.companyTitle}</span>
-                        </span>
-                      )}
-                    </p>
-                    <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
-                      scope === 'customer'
-                        ? 'bg-violet-500/15 text-violet-300'
-                        : 'bg-sky-500/15 text-sky-300'
-                    }`}
-                    >
-                      {scopeMeta.short}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <DepoItemStagePanel
-                      item={item}
-                      warehouses={warehouses}
-                      onRefresh={refresh}
-                      compact
-                    />
-                  </div>
-                  <div className="min-w-0 pr-1 text-right">
-                    <p className="text-sm font-black tabular-nums text-white">{formatQty(incomingQuantity)}</p>
-                    <p className="mt-0.5 text-[11px] font-black uppercase tracking-wide text-gray-500">Gelen</p>
-                    {remainingInDepo > 0 && (
-                      <p className="mt-0.5 text-[12px] font-black text-amber-300">
-                        Kalan {formatQty(remainingInDepo)}
-                      </p>
-                    )}
-                  </div>
-                  <div className="relative z-10 flex items-center justify-end gap-1">
-                    {!isDepoItemDelivered(item, depoStages) ? (
-                      <MoreMenu
-                        items={[
-                          {
-                            id: 'cancel',
-                            label: 'Vazgeç',
-                            icon: Undo2,
-                            onClick: () => handleCancelDepoItem(item),
-                          },
-                          {
-                            id: 'deliver',
-                            label: 'Teslim et',
-                            icon: Truck,
-                            onClick: () => handleDeliverItem(item),
-                          },
-                          ...(!item.invoiceNo && docsReady
-                            ? [{
-                                id: 'invoice',
-                                label: 'Fatura kes',
-                                icon: Receipt,
-                                onClick: () => handleIssueInvoice(item),
-                              }]
-                            : []),
-                        ]}
-                      />
-                    ) : null}
-                    {item.invoiceNo ? (
-                      <span
-                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[12px] font-black text-emerald-300"
-                        title={`Fatura: ${item.invoiceNo}`}
-                      >
-                        <Receipt className="h-3.5 w-3.5" />
-                        {remainingInDepo > 0 ? 'Kısmi' : 'Fatura'}
+      {isLogisticsTab ? (
+        logisticsTabPlans.length === 0 ? (
+          <AppPagePanel className="customer-filter-panel w-full">
+            <EmptyState title="Kayıt yok." description="Yük Hesaplama’dan plan kaydedin." />
+          </AppPagePanel>
+        ) : (
+          <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
+            <div className="quote-teklifler-list-stack flex min-w-[56rem] w-full flex-col gap-5">
+              <div className="quote-list-board">
+                {logisticsTabPlans.map((plan) => (
+                  <QuoteListRowPanel
+                    key={plan.id}
+                    gridTemplate="6.5rem minmax(16rem,1fr) 8rem 6.5rem"
+                  >
+                    <QuoteListCell>
+                      <span className={`${YF_TEXT_CLASS} tabular-nums`}>
+                        {plan.code || plan.id}
                       </span>
-                    ) : null}
-                    {docsReady && !item.waybillNo && (
-                      <button
-                        type="button"
-                        onClick={() => handleCreateWaybill(item)}
-                        className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-1.5 text-blue-300 transition-colors hover:bg-blue-500/20"
-                        title="İrsaliye oluştur"
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                      className={`rounded-lg border p-1.5 transition-colors ${
-                        isExpanded
-                          ? 'border-blue-500/40 bg-blue-500/15 text-blue-300'
-                          : 'border-dark-500/50 bg-dark-700/70 text-gray-400 hover:border-blue-500/40 hover:text-blue-300'
-                      }`}
-                      title={isExpanded ? 'Kapat' : 'Detay ve sevkiyat'}
-                    >
-                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                    </button>
-                  </div>
-                </div>
-
-                {isExpanded && (
-                  <div className="border-t border-dark-500/40 bg-gradient-to-b from-dark-900/50 to-dark-900/20 px-4 py-4">
-                    <DepoItemStagePanel
-                      item={item}
-                      warehouses={warehouses}
-                      onRefresh={refresh}
-                      onIssueInvoice={handleIssueInvoice}
-                      onCreateWaybill={handleCreateWaybill}
-                      expanded
-                    />
-                  </div>
-                )}
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <span className={YF_TEXT_CLASS}>
+                        {(plan.pallets || []).length} palet
+                        {plan.meta?.fillPct != null ? ` · %${plan.meta.fillPct} doluluk` : ''}
+                      </span>
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <span className={YF_TEXT_CLASS}>{plan.status || 'draft'}</span>
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <Link to="/lojistik/planlanan" className={YF_TEXT_CLASS}>
+                        Detay
+                      </Link>
+                    </QuoteListCell>
+                  </QuoteListRowPanel>
+                ))}
               </div>
-            )
-          })}
-
-          {filteredItems.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-dark-500/60 bg-dark-800/40 p-8 text-center">
-              <Package className="mx-auto mb-3 h-8 w-8 text-gray-600" />
-              <p className="text-sm font-bold text-white">{pageConfig.title} kaydı bulunamadı</p>
-              <p className="mt-1 text-xs text-gray-500">{pageConfig.emptyHint}</p>
-            </div>
-          )}
-        </div>
-          </>
-        ) : null}
-
-        {transfers.filter((transfer) => {
-          const from = warehouses.find((w) => w.id === transfer.fromWarehouseId)
-          const to = warehouses.find((w) => w.id === transfer.toWarehouseId)
-          return from?.kind === warehouseKind || to?.kind === warehouseKind
-        }).length > 0 && (
-          <div className="mt-4 rounded-xl border border-dark-500/40 bg-dark-900/20 p-3">
-            <p className="mb-2 text-[12px] font-black uppercase tracking-wider text-gray-500">Son transferler</p>
-            <div className="space-y-1">
-              {transfers
-                .filter((transfer) => {
-                  const from = warehouses.find((w) => w.id === transfer.fromWarehouseId)
-                  const to = warehouses.find((w) => w.id === transfer.toWarehouseId)
-                  return from?.kind === warehouseKind || to?.kind === warehouseKind
-                })
-                .slice(0, 5)
-                .map((transfer) => (
-                <p key={transfer.id} className="text-[13px] text-gray-400">
-                  {formatListDateTime(transfer.createdAt)} · {transfer.product} · {warehouseName(transfer.fromWarehouseId)} → {warehouseName(transfer.toWarehouseId)}
-                </p>
-              ))}
             </div>
           </div>
-        )}
-      </Panel>
+        )
+      ) : (
+        <>
+          {listItems.length === 0 ? (
+            <AppPagePanel className="customer-filter-panel w-full">
+              <EmptyState title="Depo kaydı bulunamadı." description={pageConfig.emptyHint} />
+            </AppPagePanel>
+          ) : null}
+
+          <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
+            <div className="quote-teklifler-list-stack flex min-w-[56rem] w-full flex-col gap-5">
+              {listItems.length > 0 ? (
+                <div className="quote-list-board">
+                  <QuoteListRowPanel header gridTemplate={depoListColumnGrid}>
+                    {bulkSelectMode ? (
+                      <QuoteListCell>
+                        <QuoteListSelectionCheckbox
+                          checked={allVisibleSelected}
+                          indeterminate={someVisibleSelected}
+                          aria-label="Tümünü seç"
+                          onChange={() => toggleBulkSelectAll(listItemIds)}
+                        />
+                      </QuoteListCell>
+                    ) : null}
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Tarih"
+                        sortable
+                        sortKey="date"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Kod"
+                        sortable
+                        sortKey="code"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Müşteri Adı"
+                        sortable
+                        sortKey="customer"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Süreç"
+                        sortable
+                        sortKey="process"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Adet"
+                        sortable
+                        sortKey="qty"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      <QuoteListColumnHeader
+                        label="Tutar"
+                        sortable
+                        sortKey="amount"
+                        sort={listColumnSort}
+                        onToggleSort={toggleListColumnSort}
+                      />
+                    </QuoteListCell>
+                    <QuoteListCell>
+                      {bulkSelectMode && selectedIds.length > 0 ? (
+                        <QuoteOrderInlineConfirm
+                          label="Sil"
+                          labelClass="quote-order-undo-sil"
+                          ariaLabel={`${selectedIds.length} depo kaydı silinsin mi?`}
+                          onConfirm={handleBulkDelete}
+                          onCancel={exitBulkSelectMode}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
+                          title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
+                          aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            if (!bulkSelectMode) {
+                              setBulkSelectMode(true)
+                              setSelectedIds([])
+                              return
+                            }
+                            exitBulkSelectMode()
+                          }}
+                        >
+                          <Trash2
+                            className={COP_KUTUSU_ICON_CLASS}
+                            strokeWidth={2.25}
+                            aria-hidden
+                          />
+                        </button>
+                      )}
+                    </QuoteListCell>
+                  </QuoteListRowPanel>
+
+                  {listItems.map((item, rowIndex) => {
+                    const stamp = formatListDateParts(item.createdAt)
+                    const display =
+                      typeof item.customer === 'object'
+                        ? getListCustomerDisplay(item.customer)
+                        : getListCustomerDisplay(item.customer)
+                    const itemKey = String(item.id)
+                    const isBulkSelected = selectedIds.includes(itemKey)
+                    const isAnimatingOut = animatingDeleteIds.includes(itemKey)
+                    const isExpanded = expandedId === item.id
+                    const incomingQuantity = Math.max(
+                      0,
+                      Number(item.deliveredQuantity) ||
+                        Number(item.quantity) ||
+                        Number(item.producedQuantity) ||
+                        0,
+                    )
+                    const statusLabel = getDepoItemStatusLabel(item, depoStages)
+                    const totals = computeDepoLineTotals(item)
+                    const docsReady = canIssueDocuments(item)
+                    const extraItems = []
+                    if (!isDepoItemDelivered(item, depoStages)) {
+                      extraItems.push({
+                        id: 'cancel',
+                        icon: Undo2,
+                        label: 'Vazgeç',
+                        tone: 'primary',
+                        onClick: () => handleCancelDepoItem(item),
+                      })
+                      extraItems.push({
+                        id: 'deliver',
+                        icon: Truck,
+                        label: 'Teslim et',
+                        tone: 'success',
+                        onClick: () => handleDeliverItem(item),
+                      })
+                      if (!item.invoiceNo && docsReady) {
+                        extraItems.push({
+                          id: 'invoice',
+                          icon: Receipt,
+                          label: 'Fatura kes',
+                          tone: 'primary',
+                          onClick: () => handleIssueInvoice(item),
+                        })
+                      }
+                      if (docsReady && !item.waybillNo) {
+                        extraItems.push({
+                          id: 'waybill',
+                          icon: FileText,
+                          label: 'İrsaliye oluştur',
+                          tone: 'primary',
+                          onClick: () => handleCreateWaybill(item),
+                        })
+                      }
+                    }
+                    extraItems.push({
+                      id: 'detail',
+                      icon: Package,
+                      label: isExpanded ? 'Detayı Kapat' : 'Detay',
+                      tone: 'primary',
+                      onClick: () => setExpandedId(isExpanded ? null : item.id),
+                    })
+
+                    return (
+                      <div key={item.id}>
+                        <div
+                          className={
+                            isAnimatingOut
+                              ? 'quote-list-row-into-trash-wrap'
+                              : bulkSelectMode
+                                ? undefined
+                                : 'cursor-pointer'
+                          }
+                          style={
+                            isAnimatingOut
+                              ? { animationDelay: `${Math.min(rowIndex, 6) * 70}ms` }
+                              : undefined
+                          }
+                          role={bulkSelectMode && !isAnimatingOut ? undefined : 'button'}
+                          tabIndex={bulkSelectMode && !isAnimatingOut ? undefined : 0}
+                          onClick={() => {
+                            if (isAnimatingOut) return
+                            if (bulkSelectMode) toggleBulkSelect(item.id)
+                            else setExpandedId(isExpanded ? null : item.id)
+                          }}
+                          onKeyDown={(event) => {
+                            if (bulkSelectMode || isAnimatingOut) return
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              setExpandedId(isExpanded ? null : item.id)
+                            }
+                          }}
+                        >
+                          <QuoteListRowPanel
+                            gridTemplate={depoListColumnGrid}
+                            className={isBulkSelected ? 'ring-1 ring-blue-400/35' : ''}
+                          >
+                            {bulkSelectMode ? (
+                              <QuoteListCell>
+                                <QuoteListSelectionCheckbox
+                                  checked={isBulkSelected}
+                                  aria-label={`${item.product || item.id} seç`}
+                                  onChange={() => toggleBulkSelect(item.id)}
+                                />
+                              </QuoteListCell>
+                            ) : null}
+                            <QuoteListCell>
+                              {stamp.date ? (
+                                <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
+                                  <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+                                    {stamp.date}
+                                  </span>
+                                  {stamp.time ? (
+                                    <span className="text-[12px] font-normal leading-tight text-[var(--muted)]/75">
+                                      {stamp.time}
+                                    </span>
+                                  ) : null}
+                                </span>
+                              ) : (
+                                <span className="block text-center text-[14px] font-normal text-[var(--muted)]">
+                                  —
+                                </span>
+                              )}
+                            </QuoteListCell>
+                            <QuoteListCell>
+                              <span className={`${YF_TEXT_CLASS} tabular-nums`}>
+                                {item.productionCode ||
+                                  resolveQuoteCode(
+                                    item.id,
+                                    items.map((entry) => entry.id),
+                                  )}
+                              </span>
+                            </QuoteListCell>
+                            <QuoteListCell>
+                              <span className="flex min-w-0 w-full flex-col items-center gap-0.5 py-0.5 text-center">
+                                <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                                  {display.brandShortName ||
+                                    customerLabel(item.customer) ||
+                                    'Müşteri girilmedi'}
+                                </span>
+                                {display.companyTitle ? (
+                                  <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
+                                    {display.companyTitle}
+                                  </span>
+                                ) : item.product ? (
+                                  <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
+                                    {item.product}
+                                  </span>
+                                ) : null}
+                              </span>
+                            </QuoteListCell>
+                            <QuoteListCell>
+                              <span
+                                className="flex w-full items-center justify-center"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <EditableDropdownPill
+                                  value={statusLabel || stageDropdownOptions[0]?.label || '—'}
+                                  options={stageDropdownOptions}
+                                  includePlaceholderOption={false}
+                                  editable={false}
+                                  buttonClassName={PAGE_LIST_PILL_CLASS}
+                                  wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                                  menuClassName={PAGE_FILTER_MENU_CLASS}
+                                  menuMatchWidth={false}
+                                  openKey={`${item.id}-process`}
+                                  activeMenu={activeMenu}
+                                  setActiveMenu={setActiveMenu}
+                                  onChange={(value) => {
+                                    advanceDepoItemStatus(item.id, value)
+                                    refresh()
+                                  }}
+                                />
+                              </span>
+                            </QuoteListCell>
+                            <QuoteListCell>
+                              <span
+                                className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
+                              >
+                                {formatQty(incomingQuantity)}
+                              </span>
+                            </QuoteListCell>
+                            <QuoteListCell>
+                              <span
+                                className={`${PAGE_BALANCE_AMOUNT_CLASS} customer-balance-positive`}
+                              >
+                                {formatTL(totals.gross)}
+                              </span>
+                            </QuoteListCell>
+                            <QuoteListCell>
+                              <span
+                                className="inline-flex w-full items-center justify-center"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <ProcessListRowMoreMenu
+                                  record={item}
+                                  deleteAriaLabel="Depo kaydı sil"
+                                  onEdit={() => setExpandedId(isExpanded ? null : item.id)}
+                                  onDelete={() => softDeleteItemWithAnimation(item)}
+                                  extraItems={extraItems}
+                                />
+                              </span>
+                            </QuoteListCell>
+                          </QuoteListRowPanel>
+                        </div>
+                        {isExpanded ? (
+                          <AppPagePanel className="customer-list-panel w-full">
+                            <DepoItemStagePanel
+                              item={item}
+                              warehouses={warehouses}
+                              onRefresh={refresh}
+                              onIssueInvoice={handleIssueInvoice}
+                              onCreateWaybill={handleCreateWaybill}
+                              expanded
+                            />
+                          </AppPagePanel>
+                        ) : null}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : null}
+
+              <QuoteDeletedArchivedPanel
+                layoutMode="inline"
+                title="Silinenler"
+                collection="depo"
+                storeEvent="bach:depo-updated"
+                restoreRecord={restoreDeletedDepoItem}
+                permanentlyDelete={permanentlyDeleteDepoItem}
+                resolveCode={(id, extraIds) => {
+                  const item = items.find((entry) => entry.id === id)
+                  return item?.productionCode || resolveQuoteCode(id, extraIds)
+                }}
+                onRestored={() => {
+                  refresh()
+                  flushWorkspaceNow()
+                }}
+                emptyMessage="Silinen depo kaydı yok."
+                receivePulseKey={archiveReceiveKey}
+                className="customer-deleted-archived-panel w-full"
+                segmentTabs={[{ id: 'process', label: 'Süreç' }]}
+                getProcessValue={(item) => getDepoItemStatusLabel(item, depoStages) || '—'}
+                getProcessOptions={() => stageDropdownOptions}
+                getListAmount={(item) => computeDepoLineTotals(item).gross}
+                columnGrid={depoListBaseColumnGrid.join(' ')}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {relatedTransfers.length > 0 ? (
+        <AppPagePanel className="customer-filter-panel w-full">
+          <div className="flex items-center gap-2 px-1">
+            <AppPanelDot color="blue" />
+            <span className={YF_TEXT_CLASS}>Son transferler :</span>
+          </div>
+          <div className="mt-2 space-y-1">
+            {relatedTransfers.slice(0, 5).map((transfer) => {
+              const stamp = formatListDateParts(transfer.createdAt)
+              return (
+                <p key={transfer.id} className={YF_TEXT_CLASS}>
+                  {stamp.date || '—'}
+                  {stamp.time ? ` ${stamp.time}` : ''} · {transfer.product} ·{' '}
+                  {warehouseName(transfer.fromWarehouseId)} →{' '}
+                  {warehouseName(transfer.toWarehouseId)}
+                </p>
+              )
+            })}
+          </div>
+        </AppPagePanel>
+      ) : null}
     </AppPageShell>
   )
 }

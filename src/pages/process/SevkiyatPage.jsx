@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  Ban,
   CheckCircle2,
   Copy,
   ExternalLink,
@@ -11,13 +12,19 @@ import {
   Truck,
   X,
 } from 'lucide-react'
-import { DataTable } from '@bachmain/ui'
+import { EmptyState } from '@bachmain/ui'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import SummaryMetrics from '../../components/Common/SummaryMetrics'
+import SearchInput from '../../components/Common/SearchInput'
+import QuoteDeletedArchivedPanel from '../../components/Common/QuoteDeletedArchivedPanel'
+import QuoteOrderInlineConfirm from '../../components/Common/QuoteOrderInlineConfirm'
+import ProcessListRowMoreMenu from '../../components/Common/ProcessListRowMoreMenu'
 import {
-  DeleteConfirmOverlay,
-  captureDeleteConfirmAnchor,
-} from '../../components/Common/ListDeleteConfirmPanel'
+  QuoteListCell,
+  QuoteListColumnHeader,
+  QuoteListRowPanel,
+  QuoteListSelectionCheckbox,
+} from '../../components/Common/QuoteStyleListChrome'
 import EditableDropdownPill from '../../components/EditableDropdownPill'
 import SevkiyatMap from '../../components/Sevkiyat/SevkiyatMap'
 import {
@@ -41,7 +48,8 @@ import {
   PAGE_FILTER_MENU_CLASS,
   PAGE_FILTER_PILL_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
-  PAGE_TABLE_HEADER_CLASS,
+  PAGE_LIST_PILL_CLASS,
+  PAGE_LIST_PILL_WRAPPER_CLASS,
   YF_TEXT_CLASS,
   YF_TEXT_ON_COLOR_CLASS,
 } from '../../utils/dashboardDesign'
@@ -61,6 +69,8 @@ import {
   loadTrips,
   loadVehicleTypes,
   markTripStatus,
+  permanentlyDeleteTrip,
+  restoreDeletedTrip,
   saveVehicleTypes,
   SEVKIYAT_EVENT,
   SEVKIYAT_STATUS,
@@ -70,6 +80,9 @@ import {
 import { COP_KUTUSU_BUTTON_CLASS, COP_KUTUSU_ICON_CLASS } from '../../utils/buttonStyles'
 import { loadLoadPlans } from '../../utils/logisticsStore'
 import { fmtKg } from '../../utils/truckLoadCalc'
+import { resolveQuoteCode } from '../../utils/documentCodes'
+import { formatListDateParts } from '../../utils/quoteListDateFormat'
+import { flushWorkspaceNow } from '../../utils/workspaceStorage'
 
 const filterAllOption = { label: 'Tümü', color: 'bg-gray-500' }
 const STATUS_FILTER_OPTIONS = [
@@ -82,21 +95,6 @@ const STATUS_FILTER_OPTIONS = [
 
 function statusLabel(status) {
   return SEVKIYAT_STATUS[status]?.label || status || '—'
-}
-
-function formatWhen(value) {
-  if (!value) return '—'
-  try {
-    return new Date(value).toLocaleString('tr-TR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return value
-  }
 }
 
 function HeaderCta({ icon: Icon, label, gradient, onClick, to, type = 'button' }) {
@@ -145,9 +143,16 @@ export default function SevkiyatPage() {
   const [trips, setTrips] = useState(() => loadTrips())
   const [vehicleTypes, setVehicleTypes] = useState(() => loadVehicleTypes())
   const [filters, setFilters] = useState({ status: 'Tümü', vehicleType: 'Tümü' })
+  const [searchQuery, setSearchQuery] = useState('')
   const [activeMenu, setActiveMenu] = useState(null)
-  const [pendingDeleteId, setPendingDeleteId] = useState(null)
-  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
+  const [listColumnSort, setListColumnSort] = useState({ key: null, dir: 'asc' })
+  const listColumnSortRef = useRef(listColumnSort)
+  listColumnSortRef.current = listColumnSort
+  const listColumnSortLockRef = useRef(false)
+  const [bulkSelectMode, setBulkSelectMode] = useState(false)
+  const [selectedTripIds, setSelectedTripIds] = useState([])
+  const [animatingDeleteIds, setAnimatingDeleteIds] = useState([])
+  const [archiveReceiveKey, setArchiveReceiveKey] = useState(0)
   const [mapsUrl, setMapsUrl] = useState(null)
   const [copied, setCopied] = useState(false)
   const [notice, setNotice] = useState(() => location.state?.notice || '')
@@ -210,15 +215,20 @@ export default function SevkiyatPage() {
   }, [activeMenu])
 
   const filteredTrips = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
     return trips.filter((trip) => {
       const matchStatus = filters.status === 'Tümü' || statusLabel(trip.status) === filters.status
       const matchType =
         filters.vehicleType === 'Tümü' ||
         trip.vehicleTypeLabel === filters.vehicleType ||
         trip.vehicleTypeId === filters.vehicleType
-      return matchStatus && matchType
+      const firstStop = (trip.stops || [])[0]
+      const haystack =
+        `${trip.code || ''} ${trip.plate || ''} ${trip.driverName || ''} ${firstStop?.customerLabel || ''}`.toLowerCase()
+      const matchSearch = !q || haystack.includes(q)
+      return matchStatus && matchType && matchSearch
     })
-  }, [trips, filters])
+  }, [trips, filters, searchQuery])
 
   const summary = useMemo(() => getSevkiyatSummary(trips), [trips])
 
@@ -348,12 +358,80 @@ export default function SevkiyatPage() {
     setDraft(getTrip(draft.id) || draft)
   }
 
-  function handleDeleteConfirm() {
-    if (!pendingDeleteId) return
-    deleteTrip(pendingDeleteId)
-    setPendingDeleteId(null)
-    setTrips(loadTrips())
-    if (routeId === pendingDeleteId) navigate('/sevkiyat')
+  function compareSortValue(a, b, dir) {
+    const sign = dir === 'desc' ? -1 : 1
+    if (typeof a === 'number' && typeof b === 'number') return (a - b) * sign
+    return String(a || '').localeCompare(String(b || ''), 'tr', { numeric: true }) * sign
+  }
+
+  const listTrips = useMemo(() => {
+    if (!listColumnSort.key) return filteredTrips
+    const dir = listColumnSort.dir
+    const ids = trips.map((item) => item.id)
+    return [...filteredTrips].sort((a, b) => {
+      const valueOf = (trip) => {
+        if (listColumnSort.key === 'date') return trip.createdAt || ''
+        if (listColumnSort.key === 'code') return trip.code || resolveQuoteCode(trip.id, ids)
+        if (listColumnSort.key === 'customer')
+          return (trip.stops || [])[0]?.customerLabel || trip.plate || ''
+        if (listColumnSort.key === 'status') return statusLabel(trip.status)
+        if (listColumnSort.key === 'stops') return (trip.stops || []).length
+        return ''
+      }
+      return compareSortValue(valueOf(a), valueOf(b), dir)
+    })
+  }, [filteredTrips, listColumnSort, trips])
+
+  function toggleListColumnSort(key) {
+    if (listColumnSortLockRef.current) return
+    listColumnSortLockRef.current = true
+    window.setTimeout(() => {
+      listColumnSortLockRef.current = false
+    }, 0)
+    const current = listColumnSortRef.current
+    const next =
+      current.key !== key
+        ? { key, dir: 'asc' }
+        : { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+    listColumnSortRef.current = next
+    setListColumnSort(next)
+  }
+
+  function exitBulkSelectMode() {
+    setBulkSelectMode(false)
+    setSelectedTripIds([])
+  }
+
+  function toggleBulkSelect(id) {
+    const key = String(id)
+    setSelectedTripIds((current) =>
+      current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
+    )
+  }
+
+  function toggleBulkSelectAll(ids) {
+    const allSelected = ids.length > 0 && ids.every((id) => selectedTripIds.includes(id))
+    setSelectedTripIds(allSelected ? [] : ids)
+  }
+
+  function softDeleteTripWithAnimation(trip) {
+    if (!trip?.id) return
+    const key = String(trip.id)
+    setAnimatingDeleteIds((current) => [...current, key])
+    window.setTimeout(() => {
+      deleteTrip(trip.id)
+      setTrips(loadTrips())
+      setAnimatingDeleteIds((current) => current.filter((item) => item !== key))
+      setArchiveReceiveKey((current) => current + 1)
+      flushWorkspaceNow()
+    }, 880)
+  }
+
+  function handleBulkDeleteTrips() {
+    listTrips
+      .filter((trip) => selectedTripIds.includes(String(trip.id)))
+      .forEach((trip) => softDeleteTripWithAnimation(trip))
+    exitBulkSelectMode()
   }
 
   const vehicleTypeOptions = vehicleTypes.map((item) => ({
@@ -806,6 +884,25 @@ export default function SevkiyatPage() {
     )
   }
 
+  const listTripIds = listTrips.map((trip) => String(trip.id))
+  const allVisibleTripsSelected =
+    listTripIds.length > 0 && listTripIds.every((id) => selectedTripIds.includes(id))
+  const someVisibleTripsSelected =
+    listTripIds.some((id) => selectedTripIds.includes(id)) && !allVisibleTripsSelected
+  const sevkiyatListBaseColumnGrid = [
+    '6.5rem',
+    '4.75rem',
+    'minmax(16rem, 2.4fr)',
+    'minmax(9.25rem, 0.7fr)',
+    '6.5rem',
+    '3rem',
+  ]
+  const sevkiyatListColumnGrid = [
+    ...(bulkSelectMode ? ['2.75rem'] : []),
+    ...sevkiyatListBaseColumnGrid.slice(0, -1),
+    bulkSelectMode && selectedTripIds.length > 0 ? '6.5rem' : '3rem',
+  ].join(' ')
+
   return (
     <AppPageShell className="customers-page-type w-full">
       <AppPageHeader
@@ -825,7 +922,7 @@ export default function SevkiyatPage() {
       />
 
       <SummaryMetrics
-        columns={4}
+        columns={5}
         className="customer-summary-metrics w-full"
         items={[
           {
@@ -855,16 +952,20 @@ export default function SevkiyatPage() {
             tone: 'purple',
             valueTone: 'text-emerald-800',
           },
+          {
+            title: 'İptal',
+            value: summary.cancelled,
+            icon: Ban,
+            tone: 'red',
+            valueTone: 'text-red-700',
+          },
         ]}
       />
 
       <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
         <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
           <div className="flex shrink-0 items-center gap-2 px-1">
-            <span className="relative flex h-1.5 w-1.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
-            </span>
+            <AppPanelDot color="blue" />
             <span className={YF_TEXT_CLASS}>Filtre :</span>
           </div>
           <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
@@ -902,142 +1003,334 @@ export default function SevkiyatPage() {
         </div>
       </AppPagePanel>
 
-      <AppPagePanel className="customer-list-panel w-full">
-        <div className="mb-4 flex min-w-0 items-center gap-3">
+      <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
+        <div className="flex w-full min-w-0 items-center gap-3 px-1">
           <div className="flex shrink-0 items-center gap-2">
             <AppPanelDot color="blue" />
-            <h2 className={APP_PANEL_TITLE_CLASS}>Sevkiyat Listesi :</h2>
+            <span className={YF_TEXT_CLASS}>Sevkiyat Listesi :</span>
           </div>
-          <span className={`ml-auto shrink-0 ${YF_TEXT_CLASS}`}>{filteredTrips.length} Kayıt</span>
+          <div className="min-w-0 flex-1">
+            <SearchInput
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Kod, plaka, şoför veya müşteri ara..."
+              className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
+            />
+          </div>
+          <span className={`shrink-0 ${YF_TEXT_CLASS}`}>{filteredTrips.length} Kayıt</span>
         </div>
-
-        <DataTable
-          emptyTitle="Sevkiyat bulunamadı."
-          emptyDescription="Yeni sevkiyat oluşturun veya filtreleri değiştirin."
-          headerClassName={PAGE_TABLE_HEADER_CLASS}
-          mobileHeaderClassName={PAGE_TABLE_HEADER_CLASS}
-          data={filteredTrips}
-          getRowId={(trip) => trip.id}
-          onRowClick={(trip) => navigate(`/sevkiyat/${trip.id}`)}
-          columns={[
-            {
-              id: 'code',
-              header: 'KOD',
-              accessorKey: 'code',
-              sortable: true,
-              className: 'w-[7rem]',
-              cell: (trip) => (
-                <span className="text-[14px] font-bold text-[var(--muted)]">{trip.code}</span>
-              ),
-            },
-            {
-              id: 'plate',
-              header: 'PLAKA',
-              accessorKey: 'plate',
-              cell: (trip) => trip.plate || '—',
-            },
-            {
-              id: 'loadPlan',
-              header: 'YÜK',
-              hideOnMobile: true,
-              cell: (trip) => trip.loadPlanCode || '—',
-            },
-            {
-              id: 'driver',
-              header: 'ŞOFÖR',
-              accessorKey: 'driverName',
-              hideOnMobile: true,
-              cell: (trip) => trip.driverName || '—',
-            },
-            {
-              id: 'stops',
-              header: 'DURAK',
-              cell: (trip) => (trip.stops || []).length,
-            },
-            {
-              id: 'status',
-              header: 'DURUM',
-              cell: (trip) => statusLabel(trip.status),
-            },
-            {
-              id: 'createdAt',
-              header: 'TARİH',
-              accessorKey: 'createdAt',
-              sortable: true,
-              hideOnMobile: true,
-              cell: (trip) => formatWhen(trip.createdAt),
-            },
-          ]}
-          getRowActions={(trip) => [
-            {
-              id: 'control',
-              label: 'Detayları Gör',
-              icon: ExternalLink,
-              tone: 'primary',
-              onClick: () => navigate(`/lojistik/tir-sevkiyat/${trip.id}`),
-            },
-            {
-              id: 'edit',
-              label: 'Düzenle',
-              icon: Save,
-              tone: 'primary',
-              onClick: () => navigate(`/sevkiyat/${trip.id}`),
-            },
-            {
-              id: 'track',
-              label: 'Takip linki',
-              icon: Copy,
-              tone: 'primary',
-              onClick: async () => {
-                shareTrackingLink(trip.id, true)
-                const url = getSevkiyatTrackingUrl(trip.trackingToken)
-                try {
-                  await navigator.clipboard.writeText(url)
-                } catch {
-                  window.prompt('Takip linki:', url)
-                }
-              },
-            },
-            {
-              id: 'deliver',
-              label: 'Teslim et',
-              icon: CheckCircle2,
-              tone: 'success',
-              onClick: () => {
-                markTripStatus(trip.id, 'delivered')
-                setTrips(loadTrips())
-              },
-            },
-            {
-              id: 'delete',
-              label: 'Sil',
-              icon: Trash2,
-              tone: 'danger',
-              onClick: (event) => {
-                setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
-                setPendingDeleteId(trip.id)
-              },
-            },
-          ]}
-        />
       </AppPagePanel>
 
-      <DeleteConfirmOverlay
-        open={Boolean(pendingDeleteId)}
-        anchorRect={deleteConfirmAnchor}
-        title="Sevkiyat silinsin mi?"
-        description="Sevkiyat kaydı listeden kaldırılacak."
-        confirmLabel="Evet, Sil"
-        cancelLabel="Vazgeç"
-        onCancel={() => {
-          setPendingDeleteId(null)
-          setDeleteConfirmAnchor(null)
-        }}
-        onConfirm={() => {
-          handleDeleteConfirm()
-          setDeleteConfirmAnchor(null)
-        }}
-      />
+      {listTrips.length === 0 ? (
+        <AppPagePanel className="customer-filter-panel w-full">
+          <EmptyState
+            title="Sevkiyat bulunamadı."
+            description="Yeni sevkiyat oluşturun veya filtreleri değiştirin."
+          />
+        </AppPagePanel>
+      ) : null}
+
+      <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
+        <div className="quote-teklifler-list-stack flex min-w-[56rem] w-full flex-col gap-5">
+          {listTrips.length > 0 ? (
+            <div className="quote-list-board">
+              <QuoteListRowPanel header gridTemplate={sevkiyatListColumnGrid}>
+                {bulkSelectMode ? (
+                  <QuoteListCell>
+                    <QuoteListSelectionCheckbox
+                      checked={allVisibleTripsSelected}
+                      indeterminate={someVisibleTripsSelected}
+                      aria-label="Tümünü seç"
+                      onChange={() => toggleBulkSelectAll(listTripIds)}
+                    />
+                  </QuoteListCell>
+                ) : null}
+                <QuoteListCell>
+                  <QuoteListColumnHeader
+                    label="Tarih"
+                    sortable
+                    sortKey="date"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteListCell>
+                <QuoteListCell>
+                  <QuoteListColumnHeader
+                    label="Kod"
+                    sortable
+                    sortKey="code"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteListCell>
+                <QuoteListCell>
+                  <QuoteListColumnHeader
+                    label="Müşteri Adı"
+                    sortable
+                    sortKey="customer"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteListCell>
+                <QuoteListCell>
+                  <QuoteListColumnHeader
+                    label="Durum"
+                    sortable
+                    sortKey="status"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteListCell>
+                <QuoteListCell>
+                  <QuoteListColumnHeader
+                    label="Durak"
+                    sortable
+                    sortKey="stops"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteListCell>
+                <QuoteListCell>
+                  {bulkSelectMode && selectedTripIds.length > 0 ? (
+                    <QuoteOrderInlineConfirm
+                      label="Sil"
+                      labelClass="quote-order-undo-sil"
+                      ariaLabel={`${selectedTripIds.length} sevkiyat silinsin mi?`}
+                      onConfirm={handleBulkDeleteTrips}
+                      onCancel={exitBulkSelectMode}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
+                      title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
+                      aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (!bulkSelectMode) {
+                          setBulkSelectMode(true)
+                          setSelectedTripIds([])
+                          return
+                        }
+                        exitBulkSelectMode()
+                      }}
+                    >
+                      <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                    </button>
+                  )}
+                </QuoteListCell>
+              </QuoteListRowPanel>
+
+              {listTrips.map((trip, rowIndex) => {
+                const stamp = formatListDateParts(trip.createdAt)
+                const firstStop = (trip.stops || [])[0]
+                const tripKey = String(trip.id)
+                const isBulkSelected = selectedTripIds.includes(tripKey)
+                const isAnimatingOut = animatingDeleteIds.includes(tripKey)
+                const tripStatus = statusLabel(trip.status)
+                return (
+                  <div
+                    key={trip.id}
+                    className={
+                      isAnimatingOut
+                        ? 'quote-list-row-into-trash-wrap'
+                        : bulkSelectMode
+                          ? undefined
+                          : 'cursor-pointer'
+                    }
+                    style={
+                      isAnimatingOut
+                        ? { animationDelay: `${Math.min(rowIndex, 6) * 70}ms` }
+                        : undefined
+                    }
+                    role={bulkSelectMode && !isAnimatingOut ? undefined : 'button'}
+                    tabIndex={bulkSelectMode && !isAnimatingOut ? undefined : 0}
+                    onClick={() => {
+                      if (isAnimatingOut) return
+                      if (bulkSelectMode) toggleBulkSelect(trip.id)
+                      else navigate(`/sevkiyat/${trip.id}`)
+                    }}
+                    onKeyDown={(event) => {
+                      if (bulkSelectMode || isAnimatingOut) return
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        navigate(`/sevkiyat/${trip.id}`)
+                      }
+                    }}
+                  >
+                    <QuoteListRowPanel
+                      gridTemplate={sevkiyatListColumnGrid}
+                      className={isBulkSelected ? 'ring-1 ring-blue-400/35' : ''}
+                    >
+                      {bulkSelectMode ? (
+                        <QuoteListCell>
+                          <QuoteListSelectionCheckbox
+                            checked={isBulkSelected}
+                            aria-label={`${trip.code || trip.id} sevkiyatını seç`}
+                            onChange={() => toggleBulkSelect(trip.id)}
+                          />
+                        </QuoteListCell>
+                      ) : null}
+                      <QuoteListCell>
+                        {stamp.date ? (
+                          <span className="flex flex-col items-center justify-center gap-0.5 tabular-nums">
+                            <span className="text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+                              {stamp.date}
+                            </span>
+                            {stamp.time ? (
+                              <span className="text-[12px] font-normal leading-tight text-[var(--muted)]/75">
+                                {stamp.time}
+                              </span>
+                            ) : null}
+                          </span>
+                        ) : (
+                          <span className="block text-center text-[14px] font-normal text-[var(--muted)]">
+                            —
+                          </span>
+                        )}
+                      </QuoteListCell>
+                      <QuoteListCell>
+                        <span className={`${YF_TEXT_CLASS} tabular-nums`}>
+                          {trip.code ||
+                            resolveQuoteCode(
+                              trip.id,
+                              trips.map((item) => item.id),
+                            )}
+                        </span>
+                      </QuoteListCell>
+                      <QuoteListCell>
+                        <span className="flex min-w-0 w-full flex-col items-center gap-0.5 py-0.5 text-center">
+                          <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                            {firstStop?.customerLabel || trip.plate || 'Müşteri girilmedi'}
+                          </span>
+                          {trip.plate && firstStop?.customerLabel ? (
+                            <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
+                              {trip.plate}
+                              {trip.driverName ? ` · ${trip.driverName}` : ''}
+                            </span>
+                          ) : trip.driverName ? (
+                            <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
+                              {trip.driverName}
+                            </span>
+                          ) : null}
+                        </span>
+                      </QuoteListCell>
+                      <QuoteListCell>
+                        <span
+                          className="flex w-full items-center justify-center"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <EditableDropdownPill
+                            value={tripStatus}
+                            options={STATUS_FILTER_OPTIONS.filter(
+                              (option) => option.label !== 'Tümü',
+                            )}
+                            includePlaceholderOption={false}
+                            editable={false}
+                            buttonClassName={PAGE_LIST_PILL_CLASS}
+                            wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                            menuClassName={PAGE_FILTER_MENU_CLASS}
+                            menuMatchWidth={false}
+                            openKey={`${trip.id}-status`}
+                            activeMenu={activeMenu}
+                            setActiveMenu={setActiveMenu}
+                            onChange={(value) => {
+                              const next = Object.values(SEVKIYAT_STATUS).find(
+                                (item) => item.label === value,
+                              )
+                              if (next) {
+                                markTripStatus(trip.id, next.id)
+                                setTrips(loadTrips())
+                              }
+                            }}
+                          />
+                        </span>
+                      </QuoteListCell>
+                      <QuoteListCell>
+                        <span className={YF_TEXT_CLASS}>{(trip.stops || []).length}</span>
+                      </QuoteListCell>
+                      <QuoteListCell>
+                        <span
+                          className="inline-flex w-full items-center justify-center"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <ProcessListRowMoreMenu
+                            record={trip}
+                            deleteAriaLabel="Sevkiyat sil"
+                            onEdit={() => navigate(`/sevkiyat/${trip.id}`)}
+                            onDelete={() => softDeleteTripWithAnimation(trip)}
+                            extraItems={[
+                              {
+                                id: 'control',
+                                icon: ExternalLink,
+                                label: 'Detayları Gör',
+                                tone: 'primary',
+                                onClick: () => navigate(`/lojistik/tir-sevkiyat/${trip.id}`),
+                              },
+                              {
+                                id: 'track',
+                                icon: Copy,
+                                label: 'Takip linki',
+                                tone: 'primary',
+                                onClick: async () => {
+                                  shareTrackingLink(trip.id, true)
+                                  const url = getSevkiyatTrackingUrl(trip.trackingToken)
+                                  try {
+                                    await navigator.clipboard.writeText(url)
+                                  } catch {
+                                    window.prompt('Takip linki:', url)
+                                  }
+                                },
+                              },
+                              {
+                                id: 'deliver',
+                                icon: CheckCircle2,
+                                label: 'Teslim et',
+                                tone: 'success',
+                                onClick: () => {
+                                  markTripStatus(trip.id, 'delivered')
+                                  setTrips(loadTrips())
+                                },
+                              },
+                            ]}
+                          />
+                        </span>
+                      </QuoteListCell>
+                    </QuoteListRowPanel>
+                  </div>
+                )
+              })}
+            </div>
+          ) : null}
+
+          <QuoteDeletedArchivedPanel
+            layoutMode="inline"
+            title="Silinenler"
+            collection="sevkiyat"
+            storeEvent={SEVKIYAT_EVENT}
+            restoreRecord={restoreDeletedTrip}
+            permanentlyDelete={permanentlyDeleteTrip}
+            resolveCode={(id, extraIds) => {
+              const trip = trips.find((item) => item.id === id)
+              return trip?.code || resolveQuoteCode(id, extraIds)
+            }}
+            onRestored={() => {
+              setTrips(loadTrips())
+              flushWorkspaceNow()
+            }}
+            emptyMessage="Silinen sevkiyat yok."
+            receivePulseKey={archiveReceiveKey}
+            className="customer-deleted-archived-panel w-full"
+            segmentTabs={[{ id: 'status', label: 'Durum' }]}
+            getProcessValue={(trip) => statusLabel(trip.status)}
+            getProcessOptions={() =>
+              STATUS_FILTER_OPTIONS.filter((option) => option.label !== 'Tümü')
+            }
+            getListAmount={() => 0}
+            columnGrid={sevkiyatListBaseColumnGrid.join(' ')}
+          />
+        </div>
+      </div>
     </AppPageShell>
   )
 }

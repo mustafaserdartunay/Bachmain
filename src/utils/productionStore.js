@@ -16,7 +16,11 @@ import {
   loadWorkflowStages,
   PRODUCTION_ENTRY_STAGE_ID,
 } from './workflowStages'
-import { softDeleteRecord, restoreDeletedRecord } from './deletedRecordsStore'
+import {
+  permanentlyDeleteRecord,
+  restoreDeletedRecord,
+  softDeleteRecord,
+} from './deletedRecordsStore'
 import { loadOrders, updateOrder } from './ordersStore'
 import { addDepoItem, createDepoItemFromRow, getDepoItemByProductionRow } from './depoStore'
 
@@ -231,6 +235,10 @@ export function restoreDeletedProductionJob(jobId) {
   if (jobs.some((item) => item.id === record.id)) return record
   saveProductionJobs([normalizeProductionJob(record), ...jobs])
   return record
+}
+
+export function permanentlyDeleteProductionJob(jobId) {
+  return permanentlyDeleteRecord(DELETED_COLLECTION, jobId)
 }
 
 export function cancelProductionBackToOrder(jobId) {
