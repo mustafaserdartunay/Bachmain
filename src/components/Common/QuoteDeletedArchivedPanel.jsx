@@ -272,8 +272,6 @@ export default function QuoteDeletedArchivedPanel({
 
   useEffect(() => {
     if (!receivePulseKey) return undefined
-    // Silinen kaydı panelde tut — kapalı panelde layout yukarı kaymasın
-    setOpen(true)
     setReceiveActive(true)
     const timer = window.setTimeout(() => setReceiveActive(false), 900)
     return () => window.clearTimeout(timer)
