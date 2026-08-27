@@ -1,27 +1,34 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Calendar,
   CheckCircle2,
   CheckSquare,
   ClipboardList,
   Copy,
-  Eye,
   FileText,
   Handshake,
   Inbox,
   Link2,
   Mail,
+  MoreHorizontal,
   NotebookPen,
   Pencil,
   ScrollText,
   Trash2,
   Truck,
+  UserPlus,
   Users,
   WalletCards,
 } from 'lucide-react'
-import { Button, DataTable, Modal } from '@bachmain/ui'
+import { Button, Dropdown, DropdownItem, DropdownSeparator, EmptyState, Modal } from '@bachmain/ui'
 import SearchInput from '../components/Common/SearchInput'
-import { DeleteConfirmOverlay, captureDeleteConfirmAnchor } from '../components/Common/ListDeleteConfirmPanel'
+import QuoteOrderInlineConfirm from '../components/Common/QuoteOrderInlineConfirm'
+import {
+  QuoteStyleListCell,
+  QuoteStyleListColumnHeader,
+  QuoteStyleListRowPanel,
+  QuoteStyleListSelectionCheckbox,
+} from '../components/Common/QuoteStyleListPrimitives'
 import {
   CustomerColumnVoiceMic,
   CustomerVoiceStatusBar,
@@ -38,13 +45,14 @@ import {
   AppPanelDot,
 } from '../components/Layout/AppPageLayout'
 import {
-  HEADER_QUICK_ACTIONS,
-  HeaderQuickActionCard,
+  HEADER_ACTION_CTA_CLASS,
+  HEADER_ACTION_CTA_ICON_CLASS,
+  HEADER_ACTION_CTA_ICON_WRAP_CLASS,
+  HEADER_ACTION_GRADIENTS,
 } from '../components/Layout/HeaderCashActionsPanel'
 import {
-  APP_PANEL_TITLE_CLASS,
   APP_SURFACE_PANEL_CLASS,
-  PAGE_CENTER_TITLE_CLASS,
+  PAGE_BALANCE_AMOUNT_CLASS,
   PAGE_FILTER_FIELD_CLASS,
   PAGE_FILTER_LABEL_CLASS,
   PAGE_FILTER_MENU_CLASS,
@@ -53,9 +61,10 @@ import {
   PAGE_LIST_MENU_CLASS,
   PAGE_LIST_PILL_CLASS,
   PAGE_LIST_PILL_WRAPPER_CLASS,
-  PAGE_TABLE_HEADER_CLASS,
   YF_TEXT_CLASS,
+  YF_TEXT_ON_COLOR_CLASS,
 } from '../utils/dashboardDesign'
+import { COP_KUTUSU_ICON_CLASS } from '../utils/buttonStyles'
 import { deleteCustomer, getCustomerProfiles } from '../data/customerProfiles'
 import { appendActivity } from '../utils/customerActivity'
 import {
@@ -96,18 +105,7 @@ const balanceFilterOptions = [
   { label: 'Borç', color: 'bg-red-500' },
   { label: 'Sıfır', color: 'bg-orange-500' },
 ]
-const CUSTOMER_FILTER_FIELD_CLASS = PAGE_FILTER_FIELD_CLASS
-const CUSTOMER_TYPE_CLASS = YF_TEXT_CLASS
-const CUSTOMER_TABLE_HEADER_CLASS = PAGE_TABLE_HEADER_CLASS
-const CUSTOMER_FILTER_LABEL_CLASS = PAGE_FILTER_LABEL_CLASS
-const CUSTOMER_CHIP_TEXT_CLASS = YF_TEXT_CLASS
-const CUSTOMER_FILTER_PILL_CLASS = PAGE_FILTER_PILL_CLASS
-const CUSTOMER_FILTER_MENU_CLASS = PAGE_FILTER_MENU_CLASS
-const CUSTOMER_LIST_PILL_CLASS = PAGE_LIST_PILL_CLASS
-const CUSTOMER_LIST_PILL_WRAPPER_CLASS = PAGE_LIST_PILL_WRAPPER_CLASS
-const CUSTOMER_LIST_MENU_CLASS = PAGE_LIST_MENU_CLASS
 
-/** yfb + balance tone: alacak (>) green, borç (<) red, sıfır muted */
 function balanceClass(balance) {
   if (balance > 0) return 'customer-balance-positive'
   if (balance < 0) return 'customer-balance-negative'
@@ -133,6 +131,182 @@ async function copyText(value) {
   textarea.remove()
 }
 
+function CustomerListRowMoreMenu({ customer, onEdit, onDelete, onB2b, navigate }) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const id = customer.id
+
+  return (
+    <Dropdown
+      align="end"
+      menuClassName="az customer-filter-dropdown-menu customers-page-menu quote-record-meta-dropdown min-w-[15rem]"
+      trigger={
+        <Button
+          variant="ghost"
+          size="iconOnly"
+          className="hover:!bg-transparent"
+          aria-label="Diğer işlemler"
+          onClick={() => setConfirmDelete(false)}
+        >
+          <MoreHorizontal className="h-5 w-5" />
+        </Button>
+      }
+    >
+      {({ close }) => (
+        <>
+          <DropdownItem
+            icon={Pencil}
+            label="Düzenle"
+            tone="primary"
+            close={close}
+            onClick={onEdit}
+          />
+          {confirmDelete ? (
+            <div
+              className="quote-menu-delete-confirm flex w-full items-center justify-center px-1 py-1"
+              onClick={(event) => event.stopPropagation()}
+              role="menuitem"
+              aria-label="Silmeyi onayla"
+            >
+              <QuoteOrderInlineConfirm
+                label="Sil"
+                labelClass="quote-order-undo-sil"
+                ariaLabel="Müşteri sil"
+                onConfirm={() => {
+                  onDelete()
+                  setConfirmDelete(false)
+                  close()
+                }}
+                onCancel={() => setConfirmDelete(false)}
+              />
+            </div>
+          ) : (
+            <DropdownItem
+              icon={Trash2}
+              label="Sil"
+              tone="danger"
+              close={close}
+              closeOnClick={false}
+              onClick={() => setConfirmDelete(true)}
+            />
+          )}
+          <DropdownSeparator />
+          <DropdownItem
+            icon={Link2}
+            label="B2B İzin Ver"
+            tone="success"
+            close={close}
+            onClick={onB2b}
+          />
+          <DropdownItem
+            icon={Mail}
+            label="B2B link oluştur"
+            tone="success"
+            close={close}
+            onClick={onB2b}
+          />
+          <DropdownSeparator />
+          <DropdownItem
+            icon={FileText}
+            label="Yeni fatura kes"
+            tone="primary"
+            close={close}
+            onClick={() => navigate(`/musteriler/${id}/belge/satis-faturasi`)}
+          />
+          <DropdownItem
+            icon={Inbox}
+            label="Gelen fatura"
+            tone="primary"
+            close={close}
+            onClick={() => navigate(`/musteriler/${id}/belge/alis-faturasi`)}
+          />
+          <DropdownItem
+            icon={ScrollText}
+            label="Yeni teklif oluştur"
+            tone="primary"
+            close={close}
+            onClick={() => navigate(`/teklifler?yeni=1&customerId=${encodeURIComponent(id)}`)}
+          />
+          <DropdownItem
+            icon={ClipboardList}
+            label="Yeni sipariş oluştur"
+            tone="primary"
+            close={close}
+            onClick={() => navigate(`/siparisler?yeni=1&customerId=${encodeURIComponent(id)}`)}
+          />
+          <DropdownItem
+            icon={NotebookPen}
+            label="Yeni not oluştur"
+            tone="primary"
+            close={close}
+            onClick={() => navigate(`/crm/not-yeni?customerId=${encodeURIComponent(id)}`)}
+          />
+          <DropdownItem
+            icon={CheckSquare}
+            label="Yeni görev oluştur"
+            tone="primary"
+            close={close}
+            onClick={() => navigate(`/crm/gorev-yeni?customerId=${encodeURIComponent(id)}`)}
+          />
+          <DropdownItem
+            icon={Calendar}
+            label="Yeni randevu oluştur"
+            tone="primary"
+            close={close}
+            onClick={() => navigate(`/crm/randevu-yeni?customerId=${encodeURIComponent(id)}`)}
+          />
+          <DropdownItem
+            icon={Truck}
+            label="Yeni sevkiyat oluştur"
+            tone="primary"
+            close={close}
+            onClick={() => navigate(`/lojistik/yukleme-plani?customerId=${encodeURIComponent(id)}`)}
+          />
+        </>
+      )}
+    </Dropdown>
+  )
+}
+
+function sortCustomersByColumn(rows, sort, movements, customerSettings = {}) {
+  if (!sort?.key) return rows
+  const dir = sort.dir === 'asc' ? 1 : -1
+  return [...rows].sort((a, b) => {
+    const displayA = getCustomerDisplay(a)
+    const displayB = getCustomerDisplay(b)
+    const settingsA = customerSettings[a.id] || {}
+    const settingsB = customerSettings[b.id] || {}
+    const metaA = getCustomerMetaSelection(a, settingsA)
+    const metaB = getCustomerMetaSelection(b, settingsB)
+
+    let av
+    let bv
+    switch (sort.key) {
+      case 'name':
+        av = displayA.brandShortName || displayA.companyTitle || a.name || ''
+        bv = displayB.brandShortName || displayB.companyTitle || b.name || ''
+        return String(av).localeCompare(String(bv), 'tr') * dir
+      case 'type':
+        av = metaA.type || ''
+        bv = metaB.type || ''
+        return String(av).localeCompare(String(bv), 'tr') * dir
+      case 'representative':
+        av = metaA.representative || ''
+        bv = metaB.representative || ''
+        return String(av).localeCompare(String(bv), 'tr') * dir
+      case 'scoring':
+        av = metaA.scoring || ''
+        bv = metaB.scoring || ''
+        return String(av).localeCompare(String(bv), 'tr') * dir
+      case 'balance':
+        av = currentBalance(a, movements)
+        bv = currentBalance(b, movements)
+        return (av - bv) * dir
+      default:
+        return 0
+    }
+  })
+}
+
 export default function CustomersPage({
   pageTitle = 'Müşteriler',
   createLabel = 'Yeni Müşteri Oluştur',
@@ -156,12 +330,10 @@ export default function CustomersPage({
   const [customerSettings, setCustomerSettings] = useState(readCustomerMeta)
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
-  const [pendingDeleteCustomerId, setPendingDeleteCustomerId] = useState(null)
-  const [deleteConfirmAnchor, setDeleteConfirmAnchor] = useState(null)
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
-  const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
-  const bulkDeleteButtonRef = useRef(null)
+  const [animatingDeleteIds, setAnimatingDeleteIds] = useState([])
+  const [listColumnSort, setListColumnSort] = useState({ key: 'balance', dir: 'desc' })
   const [b2bDialogCustomer, setB2bDialogCustomer] = useState(null)
   const [b2bBusy, setB2bBusy] = useState(false)
   const [b2bNotice, setB2bNotice] = useState('')
@@ -253,13 +425,18 @@ export default function CustomersPage({
     })
   }, [scopedProfiles, customerSettings, filters, movements, searchQuery])
 
+  const listCustomers = useMemo(
+    () => sortCustomersByColumn(filteredCustomers, listColumnSort, movements, customerSettings),
+    [filteredCustomers, listColumnSort, movements, customerSettings],
+  )
+
   const handleVoiceCommand = useCallback(
     async ({ customer, parsed }) => {
       const amount = Number(parsed.amount)
       const method = parsed.method || 'Nakit'
       const description =
-        parsed.description
-        || (parsed.action === 'payment'
+        parsed.description ||
+        (parsed.action === 'payment'
           ? `${customer.company} ödemesi`
           : `${customer.company} tahsilatı`)
       const formBase = emptyCollectionForm([], readOptionLists())
@@ -327,12 +504,7 @@ export default function CustomersPage({
         />
       )
     },
-    [
-      voice.activeCustomerId,
-      voice.recording,
-      voice.processing,
-      voice.startForCustomer,
-    ],
+    [voice.activeCustomerId, voice.recording, voice.processing, voice.startForCustomer],
   )
 
   const totalReceivable = scopedProfiles.reduce(
@@ -428,16 +600,29 @@ export default function CustomersPage({
     setFilters((current) => ({ ...current, [field]: value }))
   }
 
-  function handleDeleteCustomer(customer) {
-    deleteCustomer(customer.id)
-    setPendingDeleteCustomerId(null)
-    setCustomerProfiles(getCustomerProfiles())
+  function toggleListColumnSort(sortKey) {
+    setListColumnSort((current) => {
+      if (current.key === sortKey) {
+        return { key: sortKey, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key: sortKey, dir: sortKey === 'balance' ? 'desc' : 'asc' }
+    })
+  }
+
+  function softDeleteCustomerWithAnimation(customer) {
+    const key = String(customer.id)
+    if (animatingDeleteIds.includes(key)) return
+    setAnimatingDeleteIds((current) => [...current, key])
+    window.setTimeout(() => {
+      deleteCustomer(customer.id)
+      setAnimatingDeleteIds((current) => current.filter((id) => id !== key))
+      setCustomerProfiles(getCustomerProfiles())
+    }, 420)
   }
 
   function exitBulkSelectMode() {
     setBulkSelectMode(false)
     setSelectedIds([])
-    setPendingBulkDelete(false)
   }
 
   function toggleBulkSelect(id) {
@@ -476,23 +661,50 @@ export default function CustomersPage({
       ? expensesSubMenus.find((item) => item.path.includes('tedarikciler'))?.label || pageTitle
       : customerSubMenus.find((item) => item.path === '/musteriler')?.label || pageTitle
 
+  const CreateIcon = listKind === 'supplier' ? Handshake : UserPlus
+  const createGradient =
+    listKind === 'supplier' ? HEADER_ACTION_GRADIENTS.amber : HEADER_ACTION_GRADIENTS.primary
+
+  const listCustomerIds = listCustomers.map((customer) => String(customer.id))
+  const allVisibleSelected =
+    listCustomerIds.length > 0 && listCustomerIds.every((id) => selectedIds.includes(id))
+  const someVisibleSelected =
+    listCustomerIds.some((id) => selectedIds.includes(id)) && !allVisibleSelected
+
+  const customerListBaseColumnGrid = [
+    'minmax(16rem, 2.4fr)',
+    'minmax(9.25rem, 0.7fr)',
+    'minmax(9.25rem, 0.7fr)',
+    'minmax(9.25rem, 0.7fr)',
+    '6.75rem',
+    '3rem',
+  ]
+
+  const customerListColumnGrid = [
+    ...(bulkSelectMode ? ['2.75rem'] : []),
+    ...customerListBaseColumnGrid.slice(0, -1),
+    bulkSelectMode && selectedIds.length > 0 ? '6.5rem' : '3rem',
+  ].join(' ')
+
   return (
     <AppPageShell className="customers-page-type w-full">
       <AppPageHeader
         showBack={false}
         title={<AppPageBackLink />}
         centerTitle={String(sidebarTitle || '').toLocaleUpperCase('tr-TR')}
-        centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
         titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
         actions={
-          <HeaderQuickActionCard
-            fixed
-            action={
-              HEADER_QUICK_ACTIONS.find(
-                (action) => action.id === (listKind === 'supplier' ? 'supplier' : 'customer'),
-              ) || HEADER_QUICK_ACTIONS.find((action) => action.id === 'customer')
-            }
-          />
+          <button
+            type="button"
+            data-tour="customer-create"
+            onClick={() => navigate(createPath)}
+            className={`${HEADER_ACTION_CTA_CLASS} ${createGradient}`}
+          >
+            <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+              <CreateIcon className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+            </span>
+            <span className={YF_TEXT_ON_COLOR_CLASS}>{createLabel}</span>
+          </button>
         }
       />
 
@@ -533,21 +745,18 @@ export default function CustomersPage({
       <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
         <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
           <div className="flex shrink-0 items-center gap-2 px-1">
-            <span className="relative flex h-1.5 w-1.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-50" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ea580c]" />
-            </span>
-            <span className={CUSTOMER_CHIP_TEXT_CLASS}>Filtre :</span>
+            <AppPanelDot color="blue" />
+            <span className={YF_TEXT_CLASS}>Filtre :</span>
           </div>
           <div className="app-filter-bar grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Tipi :</p>
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Tipi :</p>
               <EditableDropdownPill
                 value={filters.type}
                 options={[filterAllOption, ...typeOptions]}
                 includePlaceholderOption={false}
-                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                menuClassName={CUSTOMER_FILTER_MENU_CLASS}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
                 openKey="filter-type"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -555,14 +764,14 @@ export default function CustomersPage({
                 onOptionsChange={(next) => updateOptionList('type', next)}
               />
             </div>
-            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Temsilci :</p>
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Temsilci :</p>
               <EditableDropdownPill
                 value={filters.representative}
                 options={[filterAllOption, ...optionLists.representative]}
                 includePlaceholderOption={false}
-                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                menuClassName={CUSTOMER_FILTER_MENU_CLASS}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
                 openKey="filter-representative"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -570,14 +779,14 @@ export default function CustomersPage({
                 onOptionsChange={(next) => updateOptionList('representative', next)}
               />
             </div>
-            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Puantaj :</p>
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Puantaj :</p>
               <EditableDropdownPill
                 value={filters.scoring}
                 options={[filterAllOption, ...optionLists.scoring]}
                 includePlaceholderOption={false}
-                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                menuClassName={CUSTOMER_FILTER_MENU_CLASS}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
                 openKey="filter-scoring"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -585,15 +794,15 @@ export default function CustomersPage({
                 onOptionsChange={(next) => updateOptionList('scoring', next)}
               />
             </div>
-            <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-              <p className={CUSTOMER_FILTER_LABEL_CLASS}>Bakiye :</p>
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Bakiye :</p>
               <EditableDropdownPill
                 value={filters.balance}
                 options={balanceFilterOptions}
                 includePlaceholderOption={false}
                 editable={false}
-                buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                menuClassName={CUSTOMER_FILTER_MENU_CLASS}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
                 openKey="filter-balance"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
@@ -604,11 +813,11 @@ export default function CustomersPage({
         </div>
       </AppPagePanel>
 
-      <AppPagePanel className="customer-list-panel w-full">
-        <div className="mb-4 flex min-w-0 items-center gap-3">
+      <AppPagePanel className="customer-filter-panel flex min-h-[4.75rem] w-full items-center">
+        <div className="flex w-full min-w-0 items-center gap-3 px-1">
           <div className="flex shrink-0 items-center gap-2">
             <AppPanelDot color="blue" />
-            <h2 className={APP_PANEL_TITLE_CLASS}>{listTitle}</h2>
+            <span className={YF_TEXT_CLASS}>{listTitle}</span>
           </div>
           <div className="min-w-0 flex-1">
             <SearchInput
@@ -618,356 +827,299 @@ export default function CustomersPage({
               className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
             />
           </div>
-          <span className={`shrink-0 ${CUSTOMER_CHIP_TEXT_CLASS}`}>
-            {filteredCustomers.length} Kayıt
-          </span>
+          <span className={`shrink-0 ${YF_TEXT_CLASS}`}>{filteredCustomers.length} Kayıt</span>
         </div>
-
-        <CustomerVoiceStatusBar
-          customerLabel={voice.activeCustomerLabel}
-          listening={voice.listening}
-          recording={voice.recording}
-          processing={voice.processing}
-          interim={voice.interim}
-          transcript={voice.transcript}
-          message={voice.message}
-          error={voice.error}
-          onStop={voice.stop}
-        />
-
-        {bulkSelectMode ? (
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2">
-            <p className={YF_TEXT_CLASS}>
-              {selectedIds.length > 0
-                ? `${selectedIds.length} kayıt seçildi`
-                : 'Silmek istediğiniz kayıtları seçin'}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={exitBulkSelectMode}
-                className={`${YF_TEXT_CLASS} rounded-lg px-2 py-1 transition-colors hover:bg-black/5`}
-              >
-                İptal
-              </button>
-              <button
-                ref={bulkDeleteButtonRef}
-                type="button"
-                disabled={selectedIds.length === 0}
-                onClick={() => setPendingBulkDelete(true)}
-                className="customer-bulk-delete-action inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#fda4af] via-[#f43f5e] to-[#e11d48] px-2.5 py-1.5 text-[14px] font-bold leading-tight tracking-normal transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
-              >
-                <Trash2
-                  className="h-3.5 w-3.5 shrink-0"
-                  strokeWidth={2.25}
-                  aria-hidden
-                  style={{ color: '#ffffff', stroke: '#ffffff' }}
-                />
-                <span style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
-                  Seçilenleri Sil
-                </span>
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        <DataTable
-          emptyTitle={emptyTitle}
-          emptyDescription="Arama veya segment filtresini değiştirin."
-          headerClassName={CUSTOMER_TABLE_HEADER_CLASS}
-          mobileHeaderClassName={CUSTOMER_TABLE_HEADER_CLASS}
-          data={filteredCustomers}
-          defaultSort={{ key: 'balance', dir: 'desc' }}
-          getRowId={(customer) => customer.id}
-          onRowClick={
-            bulkSelectMode ? undefined : (customer) => navigate(`/musteriler/${customer.id}`)
-          }
-          selectionEnabled={bulkSelectMode}
-          selectedIds={selectedIds}
-          onToggleSelect={toggleBulkSelect}
-          onToggleSelectAll={toggleBulkSelectAll}
-          headerActions={
-            bulkSelectMode
-              ? [
-                  {
-                    id: 'bulk-delete-confirm',
-                    label:
-                      selectedIds.length > 0
-                        ? `Seçilenleri Sil (${selectedIds.length})`
-                        : 'Seçilenleri Sil',
-                    icon: Trash2,
-                    tone: 'danger',
-                    onClick: () => {
-                      if (selectedIds.length > 0) setPendingBulkDelete(true)
-                    },
-                  },
-                  {
-                    id: 'bulk-delete-cancel',
-                    label: 'İptal',
-                    onClick: exitBulkSelectMode,
-                  },
-                ]
-              : [
-                  {
-                    id: 'bulk-delete',
-                    label: 'Toplu Sil',
-                    icon: Trash2,
-                    tone: 'danger',
-                    onClick: () => {
-                      setBulkSelectMode(true)
-                      setSelectedIds([])
-                      setPendingBulkDelete(false)
-                    },
-                  },
-                ]
-          }
-          columns={[
-            {
-              id: 'name',
-              header: String(columnLabel || '').toLocaleUpperCase('tr-TR'),
-              sortable: true,
-              accessorKey: 'name',
-              getSortValue: (customer) => {
-                const display = getCustomerDisplay(customer)
-                return display.brandShortName || display.companyTitle || customer.name || ''
-              },
-              className: 'min-w-[18rem] w-[44%]',
-              cell: (customer) => {
-                const display = getCustomerDisplay(customer)
-                return (
-                  <span className="flex min-w-0 items-start gap-1.5 py-0.5">
-                    <span
-                      className="mt-0.5 inline-flex shrink-0"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {renderRowVoiceMic(customer)}
-                    </span>
-                    <span className="flex min-w-0 flex-col gap-0.5">
-                      <span className="customer-name-primary truncate text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
-                        {display.brandShortName}
-                      </span>
-                      <span className="customer-name-secondary font-sans truncate text-[14px] font-normal leading-tight text-[var(--muted)]">
-                        {display.companyTitle}
-                      </span>
-                    </span>
-                  </span>
-                )
-              },
-            },
-            {
-              id: 'type',
-              header: 'TİPİ',
-              className: 'w-[7.25rem]',
-              hideOnMobile: true,
-              cell: (customer) => {
-                const settings = customerSettings[customer.id] || {}
-                const meta = getCustomerMetaSelection(customer, settings)
-                return (
-                  <span onClick={(event) => event.stopPropagation()}>
-                    <EditableDropdownPill
-                      value={resolveListColumnLabel(meta.type, optionLists.type)}
-                      options={typeOptions}
-                      onOptionsChange={(next) => updateOptionList('type', next)}
-                      buttonClassName={CUSTOMER_LIST_PILL_CLASS}
-                      wrapperClassName={CUSTOMER_LIST_PILL_WRAPPER_CLASS}
-                      menuClassName={CUSTOMER_LIST_MENU_CLASS}
-                      menuMatchWidth={false}
-                      openKey={`${customer.id}-type`}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      onChange={(value) => updateCustomerSetting(customer.id, 'type', value)}
-                    />
-                  </span>
-                )
-              },
-            },
-            {
-              id: 'representative',
-              header: 'TEMSİLCİ',
-              className: 'w-[7.25rem]',
-              hideOnMobile: true,
-              cell: (customer) => {
-                const settings = customerSettings[customer.id] || {}
-                const meta = getCustomerMetaSelection(customer, settings)
-                return (
-                  <span onClick={(event) => event.stopPropagation()}>
-                    <EditableDropdownPill
-                      value={resolveListColumnLabel(
-                        meta.representative,
-                        optionLists.representative,
-                      )}
-                      options={optionLists.representative}
-                      onOptionsChange={(next) => updateOptionList('representative', next)}
-                      buttonClassName={CUSTOMER_LIST_PILL_CLASS}
-                      wrapperClassName={CUSTOMER_LIST_PILL_WRAPPER_CLASS}
-                      menuClassName={CUSTOMER_LIST_MENU_CLASS}
-                      menuMatchWidth={false}
-                      openKey={`${customer.id}-representative`}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      onChange={(value) =>
-                        updateCustomerSetting(customer.id, 'representative', value)
-                      }
-                    />
-                  </span>
-                )
-              },
-            },
-            {
-              id: 'scoring',
-              header: 'PUANTAJ',
-              className: 'w-[7.25rem]',
-              hideOnMobile: true,
-              cell: (customer) => {
-                const settings = customerSettings[customer.id] || {}
-                const meta = getCustomerMetaSelection(customer, settings)
-                return (
-                  <span onClick={(event) => event.stopPropagation()}>
-                    <EditableDropdownPill
-                      value={resolveListColumnLabel(meta.scoring, optionLists.scoring)}
-                      options={optionLists.scoring}
-                      onOptionsChange={(next) => updateOptionList('scoring', next)}
-                      buttonClassName={CUSTOMER_LIST_PILL_CLASS}
-                      wrapperClassName={CUSTOMER_LIST_PILL_WRAPPER_CLASS}
-                      menuClassName={CUSTOMER_LIST_MENU_CLASS}
-                      menuMatchWidth={false}
-                      openKey={`${customer.id}-scoring`}
-                      activeMenu={activeMenu}
-                      setActiveMenu={setActiveMenu}
-                      onChange={(value) => updateCustomerSetting(customer.id, 'scoring', value)}
-                    />
-                  </span>
-                )
-              },
-            },
-            {
-              id: 'balance',
-              header: 'GÜNCEL BAKİYE',
-              sortable: true,
-              accessorKey: 'balance',
-              getSortValue: (customer) => currentBalance(customer, movements),
-              className: 'w-[1%] whitespace-nowrap text-right',
-              cell: (customer) => {
-                const balance = currentBalance(customer, movements)
-                return (
-                  <span
-                    className={`customer-balance-amount tabular-nums text-[14px] font-bold leading-tight tracking-normal ${balanceClass(balance)}`}
-                  >
-                    {formatTreasuryCurrency(balance)}
-                  </span>
-                )
-              },
-            },
-          ]}
-          getRowActions={
-            bulkSelectMode
-              ? undefined
-              : (customer) => {
-                  const portalAccess = b2bMap[customer.id]
-                  const id = customer.id
-                  return [
-                    {
-                      id: 'edit',
-                      label: 'Düzenle',
-                      icon: Pencil,
-                      tone: 'primary',
-                      onClick: () => navigate(`/musteriler/${id}`),
-                    },
-                    {
-                      id: 'delete',
-                      label: 'Sil',
-                      icon: Trash2,
-                      tone: 'danger',
-                      onClick: (event) => {
-                        setDeleteConfirmAnchor(captureDeleteConfirmAnchor(event))
-                        setPendingDeleteCustomerId(id)
-                      },
-                    },
-                    {
-                      id: 'b2b-grant',
-                      label: 'B2B İzin Ver',
-                      icon: Link2,
-                      tone: 'success',
-                      onClick: () => openB2bDialog(customer),
-                    },
-                    {
-                      id: 'b2b-link',
-                      label: 'B2B link oluştur',
-                      icon: Mail,
-                      tone: 'success',
-                      onClick: () => openB2bDialog(customer),
-                    },
-                    { id: 'create-sep', type: 'separator' },
-                    {
-                      id: 'new-invoice',
-                      label: 'Yeni fatura kes',
-                      icon: FileText,
-                      tone: 'primary',
-                      onClick: () => navigate(`/musteriler/${id}/belge/satis-faturasi`),
-                    },
-                    {
-                      id: 'incoming-invoice',
-                      label: 'Gelen fatura',
-                      icon: Inbox,
-                      tone: 'primary',
-                      onClick: () => navigate(`/musteriler/${id}/belge/alis-faturasi`),
-                    },
-                    {
-                      id: 'new-quote',
-                      label: 'Yeni teklif oluştur',
-                      icon: ScrollText,
-                      tone: 'primary',
-                      onClick: () =>
-                        navigate(`/teklifler?yeni=1&customerId=${encodeURIComponent(id)}`),
-                    },
-                    {
-                      id: 'new-order',
-                      label: 'Yeni sipariş oluştur',
-                      icon: ClipboardList,
-                      tone: 'primary',
-                      onClick: () =>
-                        navigate(`/siparisler?yeni=1&customerId=${encodeURIComponent(id)}`),
-                    },
-                    {
-                      id: 'new-note',
-                      label: 'Yeni not oluştur',
-                      icon: NotebookPen,
-                      tone: 'primary',
-                      onClick: () =>
-                        navigate(`/crm/not-yeni?customerId=${encodeURIComponent(id)}`),
-                    },
-                    {
-                      id: 'new-task',
-                      label: 'Yeni görev oluştur',
-                      icon: CheckSquare,
-                      tone: 'primary',
-                      onClick: () =>
-                        navigate(`/crm/gorev-yeni?customerId=${encodeURIComponent(id)}`),
-                    },
-                    {
-                      id: 'new-appointment',
-                      label: 'Yeni randevu oluştur',
-                      icon: Calendar,
-                      tone: 'primary',
-                      onClick: () =>
-                        navigate(`/crm/randevu-yeni?customerId=${encodeURIComponent(id)}`),
-                    },
-                    {
-                      id: 'new-shipment',
-                      label: 'Yeni sevkiyat oluştur',
-                      icon: Truck,
-                      tone: 'primary',
-                      onClick: () =>
-                        navigate(
-                          `/lojistik/yukleme-plani?customerId=${encodeURIComponent(id)}`,
-                        ),
-                    },
-                  ]
-                }
-          }
-        />
       </AppPagePanel>
+
+      <CustomerVoiceStatusBar
+        customerLabel={voice.activeCustomerLabel}
+        listening={voice.listening}
+        recording={voice.recording}
+        processing={voice.processing}
+        interim={voice.interim}
+        transcript={voice.transcript}
+        message={voice.message}
+        error={voice.error}
+        onStop={voice.stop}
+      />
+
+      {listCustomers.length === 0 ? (
+        <AppPagePanel className="customer-filter-panel w-full">
+          <EmptyState title={emptyTitle} description="Arama veya segment filtresini değiştirin." />
+        </AppPagePanel>
+      ) : null}
+
+      <div className="w-full min-w-0 overflow-x-auto overflow-y-visible">
+        <div className="quote-teklifler-list-stack flex min-w-[56rem] w-full flex-col gap-5">
+          {listCustomers.length > 0 ? (
+            <div className="quote-list-board">
+              <QuoteStyleListRowPanel header gridTemplate={customerListColumnGrid}>
+                {bulkSelectMode ? (
+                  <QuoteStyleListCell>
+                    <QuoteStyleListSelectionCheckbox
+                      checked={allVisibleSelected}
+                      indeterminate={someVisibleSelected}
+                      aria-label="Tümünü seç"
+                      onChange={() => toggleBulkSelectAll(listCustomerIds)}
+                    />
+                  </QuoteStyleListCell>
+                ) : null}
+                <QuoteStyleListCell>
+                  <QuoteStyleListColumnHeader
+                    label={columnLabel}
+                    sortable
+                    sortKey="name"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteStyleListCell>
+                <QuoteStyleListCell>
+                  <QuoteStyleListColumnHeader
+                    label="Tipi"
+                    sortable
+                    sortKey="type"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteStyleListCell>
+                <QuoteStyleListCell>
+                  <QuoteStyleListColumnHeader
+                    label="Temsilci"
+                    sortable
+                    sortKey="representative"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteStyleListCell>
+                <QuoteStyleListCell>
+                  <QuoteStyleListColumnHeader
+                    label="Puantaj"
+                    sortable
+                    sortKey="scoring"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteStyleListCell>
+                <QuoteStyleListCell>
+                  <QuoteStyleListColumnHeader
+                    label="Güncel Bakiye"
+                    sortable
+                    sortKey="balance"
+                    sort={listColumnSort}
+                    onToggleSort={toggleListColumnSort}
+                  />
+                </QuoteStyleListCell>
+                <QuoteStyleListCell>
+                  {bulkSelectMode && selectedIds.length > 0 ? (
+                    <QuoteOrderInlineConfirm
+                      label="Sil"
+                      labelClass="quote-order-undo-sil"
+                      ariaLabel={`${selectedIds.length} kayıt silinsin mi?`}
+                      onConfirm={handleBulkDeleteCustomers}
+                      onCancel={exitBulkSelectMode}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      className={`quote-list-bulk-trash-btn${bulkSelectMode ? ' is-active' : ''}`}
+                      title={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil'}
+                      aria-label={bulkSelectMode ? 'Seçim modundan çık' : 'Toplu sil modu'}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (!bulkSelectMode) {
+                          setBulkSelectMode(true)
+                          setSelectedIds([])
+                          return
+                        }
+                        exitBulkSelectMode()
+                      }}
+                    >
+                      <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                    </button>
+                  )}
+                </QuoteStyleListCell>
+              </QuoteStyleListRowPanel>
+
+              {listCustomers.map((customer, rowIndex) => {
+                const display = getCustomerDisplay(customer)
+                const settings = customerSettings[customer.id] || {}
+                const meta = getCustomerMetaSelection(customer, settings)
+                const balance = currentBalance(customer, movements)
+                const customerKey = String(customer.id)
+                const isBulkSelected = selectedIds.includes(customerKey)
+                const isAnimatingOut = animatingDeleteIds.includes(customerKey)
+
+                return (
+                  <div
+                    key={customer.id}
+                    className={
+                      isAnimatingOut
+                        ? 'quote-list-row-into-trash-wrap'
+                        : bulkSelectMode
+                          ? undefined
+                          : 'cursor-pointer'
+                    }
+                    style={
+                      isAnimatingOut
+                        ? { animationDelay: `${Math.min(rowIndex, 6) * 70}ms` }
+                        : undefined
+                    }
+                    role={bulkSelectMode && !isAnimatingOut ? undefined : 'button'}
+                    tabIndex={bulkSelectMode && !isAnimatingOut ? undefined : 0}
+                    onClick={() => {
+                      if (isAnimatingOut) return
+                      if (bulkSelectMode) toggleBulkSelect(customer.id)
+                      else navigate(`/musteriler/${customer.id}`)
+                    }}
+                    onKeyDown={(event) => {
+                      if (bulkSelectMode || isAnimatingOut) return
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        navigate(`/musteriler/${customer.id}`)
+                      }
+                    }}
+                  >
+                    <QuoteStyleListRowPanel
+                      gridTemplate={customerListColumnGrid}
+                      className={isBulkSelected ? 'ring-1 ring-blue-400/35' : ''}
+                    >
+                      {bulkSelectMode ? (
+                        <QuoteStyleListCell>
+                          <QuoteStyleListSelectionCheckbox
+                            checked={isBulkSelected}
+                            aria-label={`${display.brandShortName || customer.name} seç`}
+                            onChange={() => toggleBulkSelect(customer.id)}
+                          />
+                        </QuoteStyleListCell>
+                      ) : null}
+                      <QuoteStyleListCell>
+                        <span className="flex min-w-0 w-full items-center justify-center gap-1.5 py-0.5 text-center">
+                          <span
+                            className="inline-flex shrink-0"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {renderRowVoiceMic(customer)}
+                          </span>
+                          <span className="flex min-w-0 flex-col items-center gap-0.5">
+                            <span className="customer-name-primary whitespace-normal break-words text-[14px] font-bold leading-tight tracking-normal text-[var(--muted)]">
+                              {display.brandShortName}
+                            </span>
+                            {display.companyTitle ? (
+                              <span className="customer-name-secondary font-sans whitespace-normal break-words text-[14px] font-normal leading-tight text-[var(--muted)]">
+                                {display.companyTitle}
+                              </span>
+                            ) : null}
+                          </span>
+                        </span>
+                      </QuoteStyleListCell>
+                      <QuoteStyleListCell>
+                        <span
+                          className="flex w-full items-center justify-center"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <EditableDropdownPill
+                            value={resolveListColumnLabel(meta.type, optionLists.type)}
+                            options={typeOptions}
+                            onOptionsChange={(next) => updateOptionList('type', next)}
+                            buttonClassName={PAGE_LIST_PILL_CLASS}
+                            wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                            menuClassName={PAGE_LIST_MENU_CLASS}
+                            menuMatchWidth={false}
+                            openKey={`${customer.id}-type`}
+                            activeMenu={activeMenu}
+                            setActiveMenu={setActiveMenu}
+                            onChange={(value) => updateCustomerSetting(customer.id, 'type', value)}
+                          />
+                        </span>
+                      </QuoteStyleListCell>
+                      <QuoteStyleListCell>
+                        <span
+                          className="flex w-full items-center justify-center"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <EditableDropdownPill
+                            value={resolveListColumnLabel(
+                              meta.representative,
+                              optionLists.representative,
+                            )}
+                            options={optionLists.representative}
+                            onOptionsChange={(next) => updateOptionList('representative', next)}
+                            buttonClassName={PAGE_LIST_PILL_CLASS}
+                            wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                            menuClassName={PAGE_LIST_MENU_CLASS}
+                            menuMatchWidth={false}
+                            openKey={`${customer.id}-representative`}
+                            activeMenu={activeMenu}
+                            setActiveMenu={setActiveMenu}
+                            onChange={(value) =>
+                              updateCustomerSetting(customer.id, 'representative', value)
+                            }
+                          />
+                        </span>
+                      </QuoteStyleListCell>
+                      <QuoteStyleListCell>
+                        <span
+                          className="flex w-full items-center justify-center"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <EditableDropdownPill
+                            value={resolveListColumnLabel(meta.scoring, optionLists.scoring)}
+                            options={optionLists.scoring}
+                            onOptionsChange={(next) => updateOptionList('scoring', next)}
+                            buttonClassName={PAGE_LIST_PILL_CLASS}
+                            wrapperClassName={PAGE_LIST_PILL_WRAPPER_CLASS}
+                            menuClassName={PAGE_LIST_MENU_CLASS}
+                            menuMatchWidth={false}
+                            openKey={`${customer.id}-scoring`}
+                            activeMenu={activeMenu}
+                            setActiveMenu={setActiveMenu}
+                            onChange={(value) =>
+                              updateCustomerSetting(customer.id, 'scoring', value)
+                            }
+                          />
+                        </span>
+                      </QuoteStyleListCell>
+                      <QuoteStyleListCell>
+                        <span className={`${PAGE_BALANCE_AMOUNT_CLASS} ${balanceClass(balance)}`}>
+                          {formatTreasuryCurrency(balance)}
+                        </span>
+                      </QuoteStyleListCell>
+                      <QuoteStyleListCell>
+                        <span
+                          className="inline-flex w-full items-center justify-center"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {bulkSelectMode ? null : (
+                            <CustomerListRowMoreMenu
+                              customer={customer}
+                              navigate={navigate}
+                              onEdit={() => navigate(`/musteriler/${customer.id}`)}
+                              onDelete={() => softDeleteCustomerWithAnimation(customer)}
+                              onB2b={() => openB2bDialog(customer)}
+                            />
+                          )}
+                        </span>
+                      </QuoteStyleListCell>
+                    </QuoteStyleListRowPanel>
+                  </div>
+                )
+              })}
+            </div>
+          ) : null}
+
+          <CustomerDeletedArchivedPanel
+            title="Silinenler ve Arşivlenenler"
+            listKind={listKind}
+            onRestored={handleRestoreDeletedOrArchived}
+            emptyMessage={
+              listKind === 'supplier'
+                ? 'Silinen veya arşivlenen tedarikçi yok.'
+                : 'Silinen veya arşivlenen müşteri yok.'
+            }
+            className="customer-deleted-archived-panel w-full"
+          />
+        </div>
+      </div>
 
       <Modal
         open={Boolean(b2bDialogCustomer)}
@@ -1038,49 +1190,6 @@ export default function CustomersPage({
           ) : null}
         </div>
       </Modal>
-
-      <DeleteConfirmOverlay
-        open={Boolean(pendingDeleteCustomerId) && !pendingBulkDelete}
-        anchorRect={deleteConfirmAnchor}
-        title="Müşteri silinsin mi?"
-        description="Kayıt silinenler alanına taşınacak."
-        confirmLabel="Evet, Sil"
-        cancelLabel="Vazgeç"
-        onCancel={() => {
-          setPendingDeleteCustomerId(null)
-          setDeleteConfirmAnchor(null)
-        }}
-        onConfirm={() => {
-          const customer = customerProfiles.find(
-            (profile) => profile.id === pendingDeleteCustomerId,
-          )
-          if (customer) handleDeleteCustomer(customer)
-          else setPendingDeleteCustomerId(null)
-          setDeleteConfirmAnchor(null)
-        }}
-      />
-
-      <DeleteConfirmOverlay
-        open={pendingBulkDelete && selectedIds.length > 0}
-        anchorRef={bulkDeleteButtonRef}
-        title={`${selectedIds.length} kayıt silinsin mi?`}
-        description="Seçilen kayıtlar silinenler alanına taşınacak."
-        confirmLabel="Evet, Sil"
-        cancelLabel="Vazgeç"
-        onCancel={() => setPendingBulkDelete(false)}
-        onConfirm={handleBulkDeleteCustomers}
-      />
-
-      <CustomerDeletedArchivedPanel
-        title="Silinenler ve Arşivlenenler"
-        listKind={listKind}
-        onRestored={handleRestoreDeletedOrArchived}
-        emptyMessage={
-          listKind === 'supplier'
-            ? 'Silinen veya arşivlenen tedarikçi yok.'
-            : 'Silinen veya arşivlenen müşteri yok.'
-        }
-      />
     </AppPageShell>
   )
 }
