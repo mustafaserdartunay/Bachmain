@@ -16,9 +16,10 @@ HTML
   exit 0
 fi
 
-API_BASE="${API_BASE:-https://api.bachmain.com}"
+API_BASE="${API_BASE:-https://yonetim.bachmain.com/api}"
 WEB_BASE="${WEB_BASE:-https://bachmain.com}"
 APP_BASE="${APP_BASE:-https://uygulama.bachmain.com}"
+ADMIN_BASE="${ADMIN_BASE:-https://yonetim.bachmain.com}"
 TIERS=(50 100 500 1000)
 
 for vus in "${TIERS[@]}"; do
@@ -36,6 +37,7 @@ for vus in "${TIERS[@]}"; do
     --env "API_BASE=$API_BASE" \
     --env "WEB_BASE=$WEB_BASE" \
     --env "APP_BASE=$APP_BASE" \
+    --env "ADMIN_BASE=$ADMIN_BASE" \
     --summary-export "$OUT/summary.json" \
     --out "json=$OUT/raw.json" \
     "$SCRIPT" || {

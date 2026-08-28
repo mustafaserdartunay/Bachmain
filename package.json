@@ -9,6 +9,8 @@
     "yonetim:open": "bash workspace/scripts/open-system.sh yonetim",
     "uygulama:open": "bash workspace/scripts/open-system.sh uygulama",
     "web:open": "bash workspace/scripts/open-system.sh web",
+    "dropelya:dev": "npm --prefix apps/dropelya run dev",
+    "dropelya:open": "bash workspace/scripts/open-dropelya.sh",
     "ios:open": "bash workspace/scripts/open-system.sh ios",
     "android:open": "bash workspace/scripts/open-system.sh android",
     "bachmain:open-all": "bash workspace/scripts/open-system.sh",
@@ -35,7 +37,13 @@
     "compose:up": "docker compose up -d db redis",
     "compose:down": "docker compose down",
     "prepare": "husky || true",
-    "typecheck:ai": "tsc -p tsconfig.ai.json --noEmit"
+    "typecheck:ai": "tsc -p tsconfig.ai.json --noEmit",
+    "test:e2e": "playwright test",
+    "test:api": "bash scripts/run-bruno.sh",
+    "test:lighthouse": "node scripts/run-lighthouse.mjs",
+    "test:load": "bash scripts/run-k6.sh",
+    "test:report": "node scripts/aggregate-quality-report.mjs",
+    "test:quality": "bash scripts/run-quality.sh"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -59,6 +67,7 @@
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.30.1",
+    "@playwright/test": "^1.62.1",
     "@vitejs/plugin-react": "^4.4.1",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.30.1",

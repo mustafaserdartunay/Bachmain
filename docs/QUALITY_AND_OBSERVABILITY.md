@@ -71,7 +71,7 @@ Dashboard panels: request count, error rate, API latency p95, active users appro
 
 ## CI
 
-`.github/workflows/quality.yml` runs on PR/push to `main`, nightly, and `workflow_dispatch`. Artifacts upload under `tests/reports/*`. Heavy k6 (500/1000) only when manually dispatched with heavy flag.
+`.github/workflows/quality.yml` runs on PR, nightly schedule, and `workflow_dispatch` (not on every `main` push — CI covers push gates). Artifacts upload under `tests/reports/*`. Heavy k6 (500/1000) only when manually dispatched with heavy flag. Live health checks use `yonetim.bachmain.com/api` until `api.bachmain.com` is production.
 
 ## Yönetim Kalite Kontrol Merkezi
 

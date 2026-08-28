@@ -1,5 +1,7 @@
 name: Quality
 
+# Not: main push'ta çalışmaz — her deploy e-posta spam'i üretmesin.
+# Kapı: CI workflow. Bu paket manuel / gece / PR için.
 on:
   workflow_dispatch:
     inputs:
@@ -23,8 +25,6 @@ on:
     - cron: '0 3 * * *'
   pull_request:
     branches: [main, develop, staging]
-  push:
-    branches: [main]
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -34,7 +34,9 @@ env:
   WEB_URL: https://bachmain.com
   APP_URL: https://uygulama.bachmain.com
   ADMIN_URL: https://yonetim.bachmain.com
-  API_BASE: https://api.bachmain.com
+  # api.bachmain.com henüz prod değil — canlı admin API health kullanılır
+  API_BASE: https://yonetim.bachmain.com/api
+  ADMIN_BASE: https://yonetim.bachmain.com
 
 jobs:
   e2e:
@@ -119,6 +121,8 @@ jobs:
         env:
           WEB_BASE: ${{ env.WEB_URL }}
           APP_BASE: ${{ env.APP_URL }}
+          API_BASE: ${{ env.API_BASE }}
+          ADMIN_BASE: ${{ env.ADMIN_BASE }}
           K6_DURATION: 30s
           K6_ALLOW_HEAVY: ${{ github.event_name == 'workflow_dispatch' && inputs.heavy && '1' || '' }}
         run: bash scripts/run-k6.sh

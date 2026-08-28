@@ -2,7 +2,7 @@ import http from 'k6/http'
 import { check, group, sleep } from 'k6'
 import { Rate, Trend } from 'k6/metrics'
 
-const API_BASE = __ENV.API_BASE || 'https://api.bachmain.com'
+const ADMIN_BASE = __ENV.ADMIN_BASE || 'https://yonetim.bachmain.com'
 const WEB_BASE = __ENV.WEB_BASE || 'https://bachmain.com'
 const APP_BASE = __ENV.APP_BASE || 'https://uygulama.bachmain.com'
 const VUS = Number(__ENV.VUS || 50)
@@ -42,7 +42,8 @@ function ok(res, name) {
 
 export default function () {
   group('health', () => {
-    const res = http.get(`${API_BASE}/v1/health`, { tags: { name: 'health' } })
+    // api.bachmain.com henüz canlı değil — yönetim health kullanılır
+    const res = http.get(`${ADMIN_BASE}/api/health`, { tags: { name: 'health' } })
     apiLatency.add(res.timings.duration)
     ok(res, 'health')
   })
