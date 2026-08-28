@@ -15,6 +15,7 @@ import {
   saveRawNoteProcessTemplates,
   updateNoteTemplateStages,
 } from '../../utils/noteProcessTemplatesStore'
+import { matchesProcessSearch } from '../../utils/processSettingsSearch'
 
 function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -37,7 +38,7 @@ function buildCopyLabel(label, templates) {
   return `${base} ${index}`
 }
 
-export default function NoteProcessTemplatesSettingsPanel() {
+export default function NoteProcessTemplatesSettingsPanel({ searchQuery = '' }) {
   const [templates, setTemplates] = useState(() => loadRawNoteProcessTemplates())
   const [activeTemplateId, setActiveTemplateId] = useState(
     () => Object.keys(loadRawNoteProcessTemplates())[0] || '',
@@ -237,6 +238,21 @@ export default function NoteProcessTemplatesSettingsPanel() {
   }
 
   const templateCount = Object.keys(templates).length
+
+  const noteSearchTerms = useMemo(
+    () => [
+      'Not Defteri Süreçleri',
+      'not',
+      'defteri',
+      ...Object.values(templates).flatMap((template) => [
+        template.label,
+        ...(template.stages || []).map((stage) => stage.label),
+      ]),
+    ],
+    [templates],
+  )
+
+  if (!matchesProcessSearch(searchQuery, noteSearchTerms)) return null
 
   return (
     <ProcessSettingsSectionShell

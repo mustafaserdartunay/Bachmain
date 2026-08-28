@@ -16,6 +16,7 @@ import {
   publishCrmProcessTemplates,
   publishCrmTemplateStages,
 } from '../../utils/crmProcessTemplatePublish'
+import { matchesProcessSearch } from '../../utils/processSettingsSearch'
 
 function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -38,7 +39,7 @@ function buildCopyLabel(label, templates) {
   return `${base} ${index}`
 }
 
-export default function CrmProcessTemplatesSettingsPanel() {
+export default function CrmProcessTemplatesSettingsPanel({ searchQuery = '' }) {
   const [crmTemplates, setCrmTemplates] = useState(() => loadRawCrmProcessTemplates())
   const [activeCrmTemplateId, setActiveCrmTemplateId] = useState(
     () => Object.keys(loadRawCrmProcessTemplates())[0] || 'toplanti',
@@ -275,6 +276,24 @@ export default function CrmProcessTemplatesSettingsPanel() {
   }
 
   const templateCount = Object.keys(crmTemplates).length
+
+  const crmSearchTerms = useMemo(
+    () => [
+      'Crm Süreçleri',
+      'crm',
+      'toplantı',
+      'ziyaret',
+      'teklif',
+      'numune',
+      ...Object.values(crmTemplates).flatMap((template) => [
+        template.label,
+        ...(template.stages || []).map((stage) => stage.label),
+      ]),
+    ],
+    [crmTemplates],
+  )
+
+  if (!matchesProcessSearch(searchQuery, crmSearchTerms)) return null
 
   return (
     <ProcessSettingsSectionShell

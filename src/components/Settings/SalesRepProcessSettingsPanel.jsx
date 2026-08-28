@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Percent, Trophy } from 'lucide-react'
 import OptionListPanel from './OptionListPanel'
 import ProcessSettingsSectionShell from './ProcessSettingsSectionShell'
@@ -8,8 +8,9 @@ import {
   saveSalesRepSettings,
   saveSalesRepTaskStages,
 } from '../../utils/salesRepSettingsStore'
+import { matchesProcessSearch } from '../../utils/processSettingsSearch'
 
-export default function SalesRepProcessSettingsPanel() {
+export default function SalesRepProcessSettingsPanel({ searchQuery = '' }) {
   const [settings, setSettings] = useState(() => loadSalesRepSettings())
 
   useEffect(() => {
@@ -19,6 +20,22 @@ export default function SalesRepProcessSettingsPanel() {
     window.addEventListener('bach:sales-rep-settings-updated', refresh)
     return () => window.removeEventListener('bach:sales-rep-settings-updated', refresh)
   }, [])
+
+  const salesRepSearchTerms = useMemo(
+    () => [
+      'Satış Temsilcileri Süreçleri',
+      'satış',
+      'temsilci',
+      'prim',
+      'puan',
+      'görev',
+      'yarış',
+      ...(settings.taskStages || []).map((stage) => stage.label),
+    ],
+    [settings.taskStages],
+  )
+
+  if (!matchesProcessSearch(searchQuery, salesRepSearchTerms)) return null
 
   function updateNumber(field, value) {
     const next = saveSalesRepSettings({ [field]: Math.max(0, Number(value) || 0) })

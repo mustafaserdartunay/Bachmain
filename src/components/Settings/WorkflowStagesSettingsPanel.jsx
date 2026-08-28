@@ -47,6 +47,7 @@ import {
   saveQuoteCustomList,
   saveQuoteSegmentTabs,
 } from '../../utils/quoteSegmentTabs'
+import { matchesProcessSearch } from '../../utils/processSettingsSearch'
 
 const WORKFLOW_SEGMENTS = [{ id: 'depo', label: 'Depo Süreçleri' }]
 
@@ -147,7 +148,7 @@ function uniqueSegmentLabel(label, tabs) {
   return `${base} ${index}`
 }
 
-export default function WorkflowStagesSettingsPanel() {
+export default function WorkflowStagesSettingsPanel({ searchQuery = '' }) {
   const [workflowStages, setWorkflowStages] = useState(() => loadWorkflowStages())
   const [depoStages, setDepoStages] = useState(() => loadDepoWorkflowStages())
   const [partDeliverySituations, setPartDeliverySituations] = useState(() =>
@@ -1061,319 +1062,397 @@ export default function WorkflowStagesSettingsPanel() {
     (segment) => segment.id === activeQuoteSegment,
   )
 
+  const quoteSearchTerms = useMemo(
+    () => [
+      'Teklif Süreçleri',
+      'teklif',
+      'öncelik',
+      'durum',
+      ...quoteSegmentTabs.map((tab) => tab.label),
+      ...getQuoteStageOptions(workflowStages).map((stage) => stage.label),
+      ...(optionLists.status || []).map((item) => item.label),
+      ...Object.values(quoteCustomLists).flatMap((list) => list.map((item) => item.label)),
+    ],
+    [quoteSegmentTabs, workflowStages, optionLists.status, quoteCustomLists],
+  )
+
+  const orderSearchTerms = useMemo(
+    () => [
+      'Sipariş Süreçleri',
+      'sipariş',
+      'order',
+      ...orderSegmentTabs.map((tab) => tab.label),
+      ...getOrderStageOptions(workflowStages).map((stage) => stage.label),
+    ],
+    [orderSegmentTabs, workflowStages],
+  )
+
+  const depoSearchTerms = useMemo(
+    () => [
+      'Depo Süreçleri',
+      'depo',
+      'teslim',
+      'araç',
+      ...workflowSegmentTabs.map((tab) => tab.label),
+      ...depoStages.map((stage) => stage.label),
+    ],
+    [workflowSegmentTabs, depoStages],
+  )
+
+  const productionSearchTerms = useMemo(
+    () => [
+      'Üretim Süreçleri',
+      'üretim',
+      'production',
+      'parça',
+      'teslim',
+      ...productionSegmentTabs.map((tab) => tab.label),
+      ...getProductionStageOptions(workflowStages).map((stage) => stage.label),
+      ...partDeliverySituations.map((item) => item.label),
+    ],
+    [productionSegmentTabs, workflowStages, partDeliverySituations],
+  )
+
+  const dashboardSearchTerms = useMemo(
+    () => [
+      'Dashboard Süreçleri',
+      'dashboard',
+      'finans',
+      'kasa',
+      ...dashboardFinanceCards.map((card) => card.label),
+    ],
+    [dashboardFinanceCards],
+  )
+
+  const showQuote = matchesProcessSearch(searchQuery, quoteSearchTerms)
+  const showOrder = matchesProcessSearch(searchQuery, orderSearchTerms)
+  const showDepo = matchesProcessSearch(searchQuery, depoSearchTerms)
+  const showProduction = matchesProcessSearch(searchQuery, productionSearchTerms)
+  const showDashboard = matchesProcessSearch(searchQuery, dashboardSearchTerms)
+
   return (
     <>
-      <ProcessSettingsSectionShell
-        title="Teklif Süreçleri"
-        description="Teklif akışındaki süreç aşamaları bu ayrı panelden yönetilir. Sekme sırası teklifler sayfasındaki kolon sırasını belirler."
-      >
-        <div className="mt-5 flex items-start gap-2">
-          <SegmentTabs
-            tabs={quoteSegmentTabs}
-            activeId={activeQuoteSegment}
-            onSelect={selectQuoteSegment}
-            onCopy={copyQuoteSegment}
-            onRename={renameQuoteSegment}
-            onDelete={deleteQuoteSegment}
-            onReorder={reorderQuoteSegments}
-            getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
-            editId={editingQuoteSegmentId}
-            setEditId={setEditingQuoteSegmentId}
-            editDraft={editingQuoteSegmentDraft}
-            setEditDraft={setEditingQuoteSegmentDraft}
-            pendingDeleteId={pendingQuoteSegmentDeleteId}
-            setPendingDeleteId={setPendingQuoteSegmentDeleteId}
-          />
-          <button
-            type="button"
-            onClick={addQuoteStatusTab}
-            className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-xl border border-dashed border-blue-400/45 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-wide text-blue-300 transition-colors hover:border-blue-400/70 hover:bg-blue-500/20"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Durum Ekle
-          </button>
-        </div>
-
-        <div className="mt-5">
-          {isQuoteWorkflowSegment(activeQuoteSegmentMeta) ? (
-            <ProcessPanelModule
-              key={activeQuoteSegment}
-              className={PROCESS_PANEL_INNER_CLASS}
-              activeLabel="Aktif Süreç"
-              countSuffix="süreç tanımlı"
-              emptyMessage="Henüz teklif süreci eklenmedi."
-              addPlaceholder="Yeni teklif süreci adı..."
-              record={quoteSegmentRecord}
-              isOpen={isQuoteOpen}
-              onToggle={toggleQuoteEditor}
-              stageInput={quoteStageInput}
-              setStageInput={setQuoteStageInput}
-              onAddStage={addQuoteStage}
-              onSelectStage={selectQuoteStage}
-              onUpdateStageColor={updateQuoteStageColor}
-              onUpdateStageLabel={updateQuoteStageLabel}
-              onCopyStage={copyQuoteStage}
-              onReorderStages={reorderQuoteStages}
-              pendingStageDeleteId={pendingQuoteStageDeleteId}
-              setPendingStageDeleteId={setPendingQuoteStageDeleteId}
-              onRemoveStage={removeQuoteStage}
+      {showQuote ? (
+        <ProcessSettingsSectionShell
+          title="Teklif Süreçleri"
+          description="Teklif akışındaki süreç aşamaları bu ayrı panelden yönetilir. Sekme sırası teklifler sayfasındaki kolon sırasını belirler."
+        >
+          <div className="mt-5 flex items-start gap-2">
+            <SegmentTabs
+              tabs={quoteSegmentTabs}
+              activeId={activeQuoteSegment}
+              onSelect={selectQuoteSegment}
+              onCopy={copyQuoteSegment}
+              onRename={renameQuoteSegment}
+              onDelete={deleteQuoteSegment}
+              onReorder={reorderQuoteSegments}
+              getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
+              editId={editingQuoteSegmentId}
+              setEditId={setEditingQuoteSegmentId}
+              editDraft={editingQuoteSegmentDraft}
+              setEditDraft={setEditingQuoteSegmentDraft}
+              pendingDeleteId={pendingQuoteSegmentDeleteId}
+              setPendingDeleteId={setPendingQuoteSegmentDeleteId}
             />
-          ) : (
-            <OptionListPanel
-              hideHeader
-              title={activeQuoteSegmentMeta?.label || 'Teklif Durumu'}
-              description={
-                isQuoteStatusSegment(activeQuoteSegmentMeta)
-                  ? 'Taslak, onaylandı, reddedildi vb. Teklif listesi ve filtrelerine yansır.'
-                  : 'Bu duruma özel seçenekler teklifler sayfasında ayrı kolon olarak görünür.'
-              }
-              options={
-                isQuoteStatusSegment(activeQuoteSegmentMeta)
-                  ? optionLists.status || []
-                  : quoteCustomLists[activeQuoteSegmentSource] || []
-              }
-              onChange={(next) => {
-                if (isQuoteStatusSegment(activeQuoteSegmentMeta)) {
-                  saveOptionList('status', next)
-                  setOptionLists(readOptionLists())
-                  return
-                }
-                setQuoteCustomLists(saveQuoteCustomList(activeQuoteSegmentSource, next))
-              }}
-              placeholder="Yeni durum adı..."
-              activeLabel="Aktif Durum"
-              countSuffix="durum tanımlı"
-              emptyMessage="Henüz teklif durumu eklenmedi."
-            />
-          )}
-        </div>
-      </ProcessSettingsSectionShell>
-
-      <ProcessSettingsSectionShell
-        title="Sipariş Süreçleri"
-        description="Sipariş akışındaki süreç aşamaları bu ayrı panelden yönetilir. Değişiklikler siparişler sayfasına anında yansır."
-      >
-        <div className="mt-5">
-          <SegmentTabs
-            tabs={orderSegmentTabs}
-            activeId={activeOrderSegment}
-            onSelect={selectOrderSegment}
-            onCopy={copyOrderSegment}
-            onRename={renameOrderSegment}
-            onDelete={deleteOrderSegment}
-            getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
-            editId={editingOrderSegmentId}
-            setEditId={setEditingOrderSegmentId}
-            editDraft={editingOrderSegmentDraft}
-            setEditDraft={setEditingOrderSegmentDraft}
-            pendingDeleteId={pendingOrderSegmentDeleteId}
-            setPendingDeleteId={setPendingOrderSegmentDeleteId}
-          />
-        </div>
-
-        <div className="mt-5">
-          <ProcessPanelModule
-            key={activeOrderSegment}
-            className={PROCESS_PANEL_INNER_CLASS}
-            activeLabel="Aktif Süreç"
-            countSuffix="süreç tanımlı"
-            emptyMessage="Henüz sipariş süreci eklenmedi."
-            addPlaceholder="Yeni sipariş süreci adı..."
-            record={orderSegmentRecord}
-            isOpen={isOrderOpen}
-            onToggle={toggleOrderEditor}
-            stageInput={orderStageInput}
-            setStageInput={setOrderStageInput}
-            onAddStage={addOrderStage}
-            onSelectStage={selectOrderStage}
-            onUpdateStageColor={updateOrderStageColor}
-            onUpdateStageLabel={updateOrderStageLabel}
-            onCopyStage={copyOrderStage}
-            onReorderStages={reorderOrderStages}
-            pendingStageDeleteId={pendingOrderStageDeleteId}
-            setPendingStageDeleteId={setPendingOrderStageDeleteId}
-            onRemoveStage={removeOrderStage}
-          />
-        </div>
-      </ProcessSettingsSectionShell>
-
-      <ProcessSettingsSectionShell
-        title="Depo Süreçleri"
-        description={
-          'Depo akışındaki süreç aşamaları bu ayrı panelden yönetilir. Depo listesinde üretimdeki gibi süreç butonları görünür. "Araç Teslim" ve "Teslim Edildi" aşamalarında fotoğraf yüklenir.'
-        }
-      >
-        <div className="mt-5">
-          <SegmentTabs
-            tabs={workflowSegmentTabs}
-            activeId={activeSegment}
-            onSelect={selectWorkflowSegment}
-            onCopy={copyWorkflowSegment}
-            onRename={renameWorkflowSegment}
-            onDelete={deleteWorkflowSegment}
-            getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
-            editId={editingWorkflowSegmentId}
-            setEditId={setEditingWorkflowSegmentId}
-            editDraft={editingWorkflowSegmentDraft}
-            setEditDraft={setEditingWorkflowSegmentDraft}
-            pendingDeleteId={pendingWorkflowSegmentDeleteId}
-            setPendingDeleteId={setPendingWorkflowSegmentDeleteId}
-          />
-        </div>
-
-        <div className="mt-5">
-          <ProcessPanelModule
-            key={activeSegment}
-            className={PROCESS_PANEL_INNER_CLASS}
-            activeLabel="Aktif Süreç"
-            countSuffix="süreç tanımlı"
-            emptyMessage="Henüz süreç eklenmedi."
-            addPlaceholder="Yeni süreç adı..."
-            record={segmentRecord}
-            isOpen={isOpen}
-            onToggle={toggleEditor}
-            stageInput={stageInput}
-            setStageInput={setStageInput}
-            onAddStage={addStage}
-            onSelectStage={selectStage}
-            onUpdateStageColor={updateStageColor}
-            onUpdateStageLabel={updateStageLabel}
-            onCopyStage={copyStage}
-            onReorderStages={reorderStages}
-            pendingStageDeleteId={pendingStageDeleteId}
-            setPendingStageDeleteId={setPendingStageDeleteId}
-            onRemoveStage={removeStage}
-          />
-        </div>
-      </ProcessSettingsSectionShell>
-
-      <ProcessSettingsSectionShell
-        title="Üretim Süreçleri"
-        description="Üretim akışı ve parça teslim durumları bu ayrı panelden yönetilir. Değişiklikler üretim kayıtlarına yansır."
-      >
-        <div className="mt-5">
-          <SegmentTabs
-            tabs={productionSegmentTabs}
-            activeId={activeProductionSegment}
-            onSelect={selectProductionSegment}
-            onCopy={copyProductionSegment}
-            onRename={renameProductionSegment}
-            onDelete={deleteProductionSegment}
-            getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
-            editId={editingProductionSegmentId}
-            setEditId={setEditingProductionSegmentId}
-            editDraft={editingProductionSegmentDraft}
-            setEditDraft={setEditingProductionSegmentDraft}
-            pendingDeleteId={pendingProductionSegmentDeleteId}
-            setPendingDeleteId={setPendingProductionSegmentDeleteId}
-          />
-        </div>
-
-        <div className="mt-5">
-          {activeProductionSegmentSource === 'partDelivery' ? (
-            <OptionListPanel
-              hideHeader
-              title="Parça teslim durumları"
-              description="Üretim takibindeki kısmi teslimat ve adet satırı durumları buradan yönetilir."
-              options={partDeliverySituations}
-              onChange={(next) => {
-                setPartDeliverySituations(publishPartDeliverySituations(next))
-              }}
-              placeholder="Yeni durum adı..."
-              activeLabel="Aktif Durum"
-              countSuffix="durum tanımlı"
-              emptyMessage="Henüz parça teslim durumu eklenmedi."
-            />
-          ) : (
-            <ProcessPanelModule
-              key={activeProductionSegment}
-              className={PROCESS_PANEL_INNER_CLASS}
-              activeLabel="Aktif Süreç"
-              countSuffix="süreç tanımlı"
-              emptyMessage="Henüz üretim süreci eklenmedi."
-              addPlaceholder="Yeni üretim süreci adı..."
-              record={productionSegmentRecord}
-              isOpen={isProductionOpen}
-              onToggle={toggleProductionEditor}
-              stageInput={productionStageInput}
-              setStageInput={setProductionStageInput}
-              onAddStage={addProductionStage}
-              onSelectStage={selectProductionStage}
-              onUpdateStageColor={updateProductionStageColor}
-              onUpdateStageLabel={updateProductionStageLabel}
-              onCopyStage={copyProductionStage}
-              onReorderStages={reorderProductionStages}
-              pendingStageDeleteId={pendingProductionStageDeleteId}
-              setPendingStageDeleteId={setPendingProductionStageDeleteId}
-              onRemoveStage={removeProductionStage}
-            />
-          )}
-        </div>
-      </ProcessSettingsSectionShell>
-
-      <ProcessSettingsSectionShell
-        title="Dashboard Süreçleri"
-        description="Dashboard finans kartlarının görünürlük durumunu buradan yönetin."
-      >
-        <div className="mt-5">
-          <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-gray-500">
-            Kasa ve Finans Görünümü
-          </h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {dashboardFinanceMetricCards.map((card) => {
-              const config = dashboardFinanceCards.find((item) => item.id === card.id)
-              const isVisible = config?.visible !== false
-              const Icon = card.icon
-              const ToggleIcon = isVisible ? Eye : EyeOff
-              return (
-                <button
-                  key={card.id}
-                  type="button"
-                  onClick={() => toggleDashboardFinanceVisibility(card.id)}
-                  className={`flex min-h-[104px] flex-col justify-between rounded-2xl border p-3 text-left shadow-card transition-colors ${
-                    isVisible
-                      ? 'border-dark-500/55 bg-dark-800/75 hover:border-blue-500/35'
-                      : 'border-dashed border-dark-500/45 bg-dark-700/30 opacity-55 hover:opacity-80'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="max-w-[8rem] text-[10px] font-black uppercase leading-snug tracking-[0.18em] text-gray-400">
-                        {card.label}
-                      </p>
-                      <p
-                        className={`mt-2 break-words text-[1rem] font-black leading-tight tracking-tight ${card.valueTone}`}
-                      >
-                        {card.value}
-                      </p>
-                    </div>
-                    <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-dark-500/65 bg-dark-700/70 ${card.iconTone}`}
-                    >
-                      {Icon && <Icon className="h-3.5 w-3.5" />}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <p className="line-clamp-1 text-[11px] font-semibold leading-snug text-gray-400">
-                      {card.sub || 'Dashboard finans kartı'}
-                    </p>
-                    <span
-                      className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-[12px] font-black ${
-                        isVisible
-                          ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
-                          : 'border-dark-500/50 bg-dark-800/60 text-gray-500'
-                      }`}
-                    >
-                      <ToggleIcon className="h-3 w-3" />
-                      {isVisible ? 'Göster' : 'Gizle'}
-                    </span>
-                  </div>
-                </button>
-              )
-            })}
+            <button
+              type="button"
+              onClick={addQuoteStatusTab}
+              className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-xl border border-dashed border-blue-400/45 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-wide text-blue-300 transition-colors hover:border-blue-400/70 hover:bg-blue-500/20"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Durum Ekle
+            </button>
           </div>
-        </div>
-      </ProcessSettingsSectionShell>
+
+          <div className="mt-5">
+            {isQuoteWorkflowSegment(activeQuoteSegmentMeta) ? (
+              <ProcessPanelModule
+                key={activeQuoteSegment}
+                className={PROCESS_PANEL_INNER_CLASS}
+                activeLabel="Aktif Süreç"
+                countSuffix="süreç tanımlı"
+                emptyMessage="Henüz teklif süreci eklenmedi."
+                addPlaceholder="Yeni teklif süreci adı..."
+                record={quoteSegmentRecord}
+                isOpen={isQuoteOpen}
+                onToggle={toggleQuoteEditor}
+                stageInput={quoteStageInput}
+                setStageInput={setQuoteStageInput}
+                onAddStage={addQuoteStage}
+                onSelectStage={selectQuoteStage}
+                onUpdateStageColor={updateQuoteStageColor}
+                onUpdateStageLabel={updateQuoteStageLabel}
+                onCopyStage={copyQuoteStage}
+                onReorderStages={reorderQuoteStages}
+                pendingStageDeleteId={pendingQuoteStageDeleteId}
+                setPendingStageDeleteId={setPendingQuoteStageDeleteId}
+                onRemoveStage={removeQuoteStage}
+              />
+            ) : (
+              <OptionListPanel
+                hideHeader
+                title={activeQuoteSegmentMeta?.label || 'Teklif Durumu'}
+                description={
+                  isQuoteStatusSegment(activeQuoteSegmentMeta)
+                    ? 'Taslak, onaylandı, reddedildi vb. Teklif listesi ve filtrelerine yansır.'
+                    : 'Bu duruma özel seçenekler teklifler sayfasında ayrı kolon olarak görünür.'
+                }
+                options={
+                  isQuoteStatusSegment(activeQuoteSegmentMeta)
+                    ? optionLists.status || []
+                    : quoteCustomLists[activeQuoteSegmentSource] || []
+                }
+                onChange={(next) => {
+                  if (isQuoteStatusSegment(activeQuoteSegmentMeta)) {
+                    saveOptionList('status', next)
+                    setOptionLists(readOptionLists())
+                    return
+                  }
+                  setQuoteCustomLists(saveQuoteCustomList(activeQuoteSegmentSource, next))
+                }}
+                placeholder="Yeni durum adı..."
+                activeLabel="Aktif Durum"
+                countSuffix="durum tanımlı"
+                emptyMessage="Henüz teklif durumu eklenmedi."
+              />
+            )}
+          </div>
+        </ProcessSettingsSectionShell>
+      ) : null}
+
+      {showOrder ? (
+        <ProcessSettingsSectionShell
+          title="Sipariş Süreçleri"
+          description="Sipariş akışındaki süreç aşamaları bu ayrı panelden yönetilir. Değişiklikler siparişler sayfasına anında yansır."
+        >
+          <div className="mt-5">
+            <SegmentTabs
+              tabs={orderSegmentTabs}
+              activeId={activeOrderSegment}
+              onSelect={selectOrderSegment}
+              onCopy={copyOrderSegment}
+              onRename={renameOrderSegment}
+              onDelete={deleteOrderSegment}
+              getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
+              editId={editingOrderSegmentId}
+              setEditId={setEditingOrderSegmentId}
+              editDraft={editingOrderSegmentDraft}
+              setEditDraft={setEditingOrderSegmentDraft}
+              pendingDeleteId={pendingOrderSegmentDeleteId}
+              setPendingDeleteId={setPendingOrderSegmentDeleteId}
+            />
+          </div>
+
+          <div className="mt-5">
+            <ProcessPanelModule
+              key={activeOrderSegment}
+              className={PROCESS_PANEL_INNER_CLASS}
+              activeLabel="Aktif Süreç"
+              countSuffix="süreç tanımlı"
+              emptyMessage="Henüz sipariş süreci eklenmedi."
+              addPlaceholder="Yeni sipariş süreci adı..."
+              record={orderSegmentRecord}
+              isOpen={isOrderOpen}
+              onToggle={toggleOrderEditor}
+              stageInput={orderStageInput}
+              setStageInput={setOrderStageInput}
+              onAddStage={addOrderStage}
+              onSelectStage={selectOrderStage}
+              onUpdateStageColor={updateOrderStageColor}
+              onUpdateStageLabel={updateOrderStageLabel}
+              onCopyStage={copyOrderStage}
+              onReorderStages={reorderOrderStages}
+              pendingStageDeleteId={pendingOrderStageDeleteId}
+              setPendingStageDeleteId={setPendingOrderStageDeleteId}
+              onRemoveStage={removeOrderStage}
+            />
+          </div>
+        </ProcessSettingsSectionShell>
+      ) : null}
+
+      {showDepo ? (
+        <ProcessSettingsSectionShell
+          title="Depo Süreçleri"
+          description={
+            'Depo akışındaki süreç aşamaları bu ayrı panelden yönetilir. Depo listesinde üretimdeki gibi süreç butonları görünür. "Araç Teslim" ve "Teslim Edildi" aşamalarında fotoğraf yüklenir.'
+          }
+        >
+          <div className="mt-5">
+            <SegmentTabs
+              tabs={workflowSegmentTabs}
+              activeId={activeSegment}
+              onSelect={selectWorkflowSegment}
+              onCopy={copyWorkflowSegment}
+              onRename={renameWorkflowSegment}
+              onDelete={deleteWorkflowSegment}
+              getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
+              editId={editingWorkflowSegmentId}
+              setEditId={setEditingWorkflowSegmentId}
+              editDraft={editingWorkflowSegmentDraft}
+              setEditDraft={setEditingWorkflowSegmentDraft}
+              pendingDeleteId={pendingWorkflowSegmentDeleteId}
+              setPendingDeleteId={setPendingWorkflowSegmentDeleteId}
+            />
+          </div>
+
+          <div className="mt-5">
+            <ProcessPanelModule
+              key={activeSegment}
+              className={PROCESS_PANEL_INNER_CLASS}
+              activeLabel="Aktif Süreç"
+              countSuffix="süreç tanımlı"
+              emptyMessage="Henüz süreç eklenmedi."
+              addPlaceholder="Yeni süreç adı..."
+              record={segmentRecord}
+              isOpen={isOpen}
+              onToggle={toggleEditor}
+              stageInput={stageInput}
+              setStageInput={setStageInput}
+              onAddStage={addStage}
+              onSelectStage={selectStage}
+              onUpdateStageColor={updateStageColor}
+              onUpdateStageLabel={updateStageLabel}
+              onCopyStage={copyStage}
+              onReorderStages={reorderStages}
+              pendingStageDeleteId={pendingStageDeleteId}
+              setPendingStageDeleteId={setPendingStageDeleteId}
+              onRemoveStage={removeStage}
+            />
+          </div>
+        </ProcessSettingsSectionShell>
+      ) : null}
+
+      {showProduction ? (
+        <ProcessSettingsSectionShell
+          title="Üretim Süreçleri"
+          description="Üretim akışı ve parça teslim durumları bu ayrı panelden yönetilir. Değişiklikler üretim kayıtlarına yansır."
+        >
+          <div className="mt-5">
+            <SegmentTabs
+              tabs={productionSegmentTabs}
+              activeId={activeProductionSegment}
+              onSelect={selectProductionSegment}
+              onCopy={copyProductionSegment}
+              onRename={renameProductionSegment}
+              onDelete={deleteProductionSegment}
+              getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
+              editId={editingProductionSegmentId}
+              setEditId={setEditingProductionSegmentId}
+              editDraft={editingProductionSegmentDraft}
+              setEditDraft={setEditingProductionSegmentDraft}
+              pendingDeleteId={pendingProductionSegmentDeleteId}
+              setPendingDeleteId={setPendingProductionSegmentDeleteId}
+            />
+          </div>
+
+          <div className="mt-5">
+            {activeProductionSegmentSource === 'partDelivery' ? (
+              <OptionListPanel
+                hideHeader
+                title="Parça teslim durumları"
+                description="Üretim takibindeki kısmi teslimat ve adet satırı durumları buradan yönetilir."
+                options={partDeliverySituations}
+                onChange={(next) => {
+                  setPartDeliverySituations(publishPartDeliverySituations(next))
+                }}
+                placeholder="Yeni durum adı..."
+                activeLabel="Aktif Durum"
+                countSuffix="durum tanımlı"
+                emptyMessage="Henüz parça teslim durumu eklenmedi."
+              />
+            ) : (
+              <ProcessPanelModule
+                key={activeProductionSegment}
+                className={PROCESS_PANEL_INNER_CLASS}
+                activeLabel="Aktif Süreç"
+                countSuffix="süreç tanımlı"
+                emptyMessage="Henüz üretim süreci eklenmedi."
+                addPlaceholder="Yeni üretim süreci adı..."
+                record={productionSegmentRecord}
+                isOpen={isProductionOpen}
+                onToggle={toggleProductionEditor}
+                stageInput={productionStageInput}
+                setStageInput={setProductionStageInput}
+                onAddStage={addProductionStage}
+                onSelectStage={selectProductionStage}
+                onUpdateStageColor={updateProductionStageColor}
+                onUpdateStageLabel={updateProductionStageLabel}
+                onCopyStage={copyProductionStage}
+                onReorderStages={reorderProductionStages}
+                pendingStageDeleteId={pendingProductionStageDeleteId}
+                setPendingStageDeleteId={setPendingProductionStageDeleteId}
+                onRemoveStage={removeProductionStage}
+              />
+            )}
+          </div>
+        </ProcessSettingsSectionShell>
+      ) : null}
+
+      {showDashboard ? (
+        <ProcessSettingsSectionShell
+          title="Dashboard Süreçleri"
+          description="Dashboard finans kartlarının görünürlük durumunu buradan yönetin."
+        >
+          <div className="mt-5">
+            <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-gray-500">
+              Kasa ve Finans Görünümü
+            </h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {dashboardFinanceMetricCards.map((card) => {
+                const config = dashboardFinanceCards.find((item) => item.id === card.id)
+                const isVisible = config?.visible !== false
+                const Icon = card.icon
+                const ToggleIcon = isVisible ? Eye : EyeOff
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => toggleDashboardFinanceVisibility(card.id)}
+                    className={`flex min-h-[104px] flex-col justify-between rounded-2xl border p-3 text-left shadow-card transition-colors ${
+                      isVisible
+                        ? 'border-dark-500/55 bg-dark-800/75 hover:border-blue-500/35'
+                        : 'border-dashed border-dark-500/45 bg-dark-700/30 opacity-55 hover:opacity-80'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="max-w-[8rem] text-[10px] font-black uppercase leading-snug tracking-[0.18em] text-gray-400">
+                          {card.label}
+                        </p>
+                        <p
+                          className={`mt-2 break-words text-[1rem] font-black leading-tight tracking-tight ${card.valueTone}`}
+                        >
+                          {card.value}
+                        </p>
+                      </div>
+                      <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-dark-500/65 bg-dark-700/70 ${card.iconTone}`}
+                      >
+                        {Icon && <Icon className="h-3.5 w-3.5" />}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <p className="line-clamp-1 text-[11px] font-semibold leading-snug text-gray-400">
+                        {card.sub || 'Dashboard finans kartı'}
+                      </p>
+                      <span
+                        className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-[12px] font-black ${
+                          isVisible
+                            ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
+                            : 'border-dark-500/50 bg-dark-800/60 text-gray-500'
+                        }`}
+                      >
+                        <ToggleIcon className="h-3 w-3" />
+                        {isVisible ? 'Göster' : 'Gizle'}
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </ProcessSettingsSectionShell>
+      ) : null}
     </>
   )
 }
