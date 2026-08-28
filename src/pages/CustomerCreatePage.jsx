@@ -1,41 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import {
-  Building2,
-  Check,
-  ChevronDown,
-  ExternalLink,
-  Facebook,
-  Globe,
-  Hash,
-  Instagram,
-  Landmark,
-  Loader2,
-  Mail,
-  MapPin,
-  Music2,
-  Phone,
-  PhoneCall,
-  Pin,
-  Plus,
-  Save,
-  Smartphone,
-  Twitter,
-  UserRound,
-  WalletCards,
-  X,
-  Youtube,
-} from 'lucide-react'
+import { Check, ChevronDown, ExternalLink, Loader2, Plus, Save, X } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { AppPageBackLink, AppPageHeader } from '../components/Layout/AppPageLayout'
+import { Dropdown, DropdownItem, DropdownSeparator } from '@bachmain/ui'
 import {
-  PAGE_CENTER_TITLE_CLASS,
+  AppPageBackLink,
+  AppPageHeader,
+  AppPagePanel,
+  AppPageShell,
+} from '../components/Layout/AppPageLayout'
+import {
+  PAGE_FILTER_FIELD_CLASS,
+  PAGE_FILTER_LABEL_CLASS,
+  PAGE_FILTER_MENU_CLASS,
+  PAGE_FILTER_PILL_CLASS,
   PAGE_HEADER_TITLE_SLOT_CLASS,
   YF_TEXT_CLASS,
   YF_TEXT_ON_COLOR_CLASS,
 } from '../utils/dashboardDesign'
 import {
-  HEADER_ACTION_CTA_CLASS,
   HEADER_ACTION_CTA_DIVIDER_CLASS,
   HEADER_ACTION_CTA_ICON_CLASS,
   HEADER_ACTION_CTA_ICON_WRAP_CLASS,
@@ -44,11 +26,6 @@ import {
 } from '../components/Layout/HeaderCashActionsPanel'
 import ConfirmModal from '../components/Common/ConfirmModal'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
-import {
-  FormFieldCompact,
-  FormSectionPanel,
-  FORM_FIELD_RULED_STACK_CLASS,
-} from '../components/Common/FormSectionPanel'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
 import { flushWorkspaceNow } from '../utils/workspaceStorage'
 import { publishDomainEvent } from '../workflow/eventBus'
@@ -74,143 +51,24 @@ import {
   saveOptionList,
 } from '../utils/customerMeta'
 import EditableDropdownPill from '../components/EditableDropdownPill'
-import { LIST_PILL_CLASS } from '../components/Common/ListDeleteConfirmPanel'
-import { useAnchoredPortal } from '../hooks/useAnchoredPortal'
-import { DROPDOWN_MENU_PORTAL_CLASS } from '../components/Common/DropdownMenu'
 import { checkCustomerDuplicates } from '../utils/mdmDuplicateCheck'
-import { APP_FILTER_LABEL_CLASS, APP_SURFACE_PANEL_CLASS } from '../utils/dashboardDesign'
 
 const DRAFTS_KEY = 'erlenbox-customer-form-drafts'
 
-const CUSTOMER_FILTER_FIELD_CLASS =
-  'customer-filter-field grid h-9 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-full px-3'
-const CUSTOMER_FILTER_LABEL_CLASS = `${APP_FILTER_LABEL_CLASS} !mb-0 shrink-0 !font-normal !tracking-normal !text-[var(--muted)]`
-const CUSTOMER_FILTER_PILL_CLASS = `${LIST_PILL_CLASS} customer-filter-pill`
-const CUSTOMER_FILTER_MENU_CLASS = 'az customer-filter-dropdown-menu customers-page-menu'
+const FORM_INPUT_CLASS =
+  'form-input !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]'
 
-/** Kırmızı Vazgeç CTA — başlık ve alt panelde aynı. */
-function CancelCta({ onClick }) {
+const DOCUMENT_ADD_CTA_CLASS =
+  'quote-ms-cta-plain group inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--search-border)] bg-transparent text-[14px] font-normal text-[var(--muted)] transition-colors hover:text-[#2563eb] focus:text-[#2563eb] active:text-[#2563eb] [&_svg]:text-[#2563eb]'
+
+const LINE_DELETE_BTN_CLASS =
+  'glass-sidebar-toggle flex h-7 w-7 items-center justify-center rounded-xl text-[var(--muted)] transition-colors'
+
+function Field({ label, children, className = '' }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.danger}`}
-    >
-      <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-        <X className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-      </span>
-      <span className={YF_TEXT_ON_COLOR_CLASS}>Vazgeç</span>
-    </button>
-  )
-}
-
-/** Yeşil split CTA: Kaydet + açılır "Kaydet ve devam et". Başlık ve alt panelde aynı. */
-function SaveSplitAction({ onSaveAndContinue, savePhase = 'idle' }) {
-  const [open, setOpen] = useState(false)
-  const busy = savePhase !== 'idle'
-  const { anchorRef, menuRef, style } = useAnchoredPortal(open, {
-    align: 'right',
-    width: 224,
-    matchWidth: false,
-  })
-
-  const label =
-    savePhase === 'saving'
-      ? 'Kaydediliyor…'
-      : savePhase === 'saved'
-        ? 'Kaydedildi'
-        : 'Kaydet'
-
-  useEffect(() => {
-    if (!open) return undefined
-
-    function closeMenu(event) {
-      if (anchorRef.current?.contains(event.target)) return
-      if (menuRef.current?.contains(event.target)) return
-      setOpen(false)
-    }
-
-    document.addEventListener('click', closeMenu)
-    return () => document.removeEventListener('click', closeMenu)
-  }, [anchorRef, menuRef, open])
-
-  useEffect(() => {
-    if (busy) setOpen(false)
-  }, [busy])
-
-  return (
-    <div ref={anchorRef} className="relative inline-flex items-center">
-      <div
-        className={`${HEADER_ACTION_CTA_SHELL_CLASS} overflow-hidden ${HEADER_ACTION_GRADIENTS.success}`}
-      >
-        <button
-          type="submit"
-          disabled={busy}
-          aria-busy={savePhase === 'saving'}
-          className="inline-flex h-full items-center gap-2.5 bg-transparent px-3"
-        >
-          <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-            {savePhase === 'saving' ? (
-              <Loader2
-                className={`${HEADER_ACTION_CTA_ICON_CLASS} animate-spin`}
-                strokeWidth={2.25}
-                aria-hidden
-              />
-            ) : savePhase === 'saved' ? (
-              <Check className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-            ) : (
-              <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-            )}
-          </span>
-          <span
-            key={label}
-            className={`${YF_TEXT_ON_COLOR_CLASS} min-w-[7.5rem] animate-[saveLabelIn_280ms_ease-out]`}
-          >
-            {label}
-          </span>
-        </button>
-        <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => setOpen((current) => !current)}
-          className="inline-flex h-full w-12 items-center justify-center bg-transparent"
-          aria-label="Kaydet işlemleri"
-          aria-expanded={open}
-        >
-          <ChevronDown
-            className={`${HEADER_ACTION_CTA_ICON_CLASS} transition-transform ${
-              open ? 'rotate-180' : ''
-            }`}
-            aria-hidden="true"
-          />
-        </button>
-      </div>
-      {open &&
-        style &&
-        createPortal(
-          <div
-            ref={menuRef}
-            style={{ ...style, zIndex: 120 }}
-            className={`${DROPDOWN_MENU_PORTAL_CLASS} customer-save-action-menu w-56`}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false)
-                onSaveAndContinue()
-              }}
-              className={`${HEADER_ACTION_CTA_CLASS} w-full ${HEADER_ACTION_GRADIENTS.success}`}
-            >
-              <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
-                <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
-              </span>
-              <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet ve devam et</span>
-            </button>
-          </div>,
-          document.body,
-        )}
+    <div className={`min-w-0 ${className}`.trim()}>
+      <label className={`${YF_TEXT_CLASS} mb-1 block`}>{label}</label>
+      {children}
     </div>
   )
 }
@@ -246,7 +104,6 @@ function initialContactRows(customer, draft) {
   return initialContactRowsFromCustomer(customer)
 }
 
-/** Kayıtlı adresleri satırlara açar; hiç yoksa taslak/müşteri verisiyle tek satır kurar. */
 function initialAddressRows(customer, draft) {
   const saved = Array.isArray(customer?.addresses) ? customer.addresses : []
   if (saved.length) {
@@ -271,7 +128,6 @@ function initialAddressRows(customer, draft) {
   ]
 }
 
-/** Kaydet butonunda her fazın (Kaydediliyor… → Kaydedildi) görünür kalma süresi. */
 const SAVE_PHASE_MS = 1000
 
 function waitMs(ms, timerRef) {
@@ -292,6 +148,306 @@ function formatDateTime() {
   })
 }
 
+function toLeadingLowerCase(raw) {
+  const text = String(raw ?? '')
+  const first = text.search(/\p{L}/u)
+  if (first < 0) return text
+  return (
+    text.slice(0, first) + text.charAt(first).toLocaleLowerCase('tr-TR') + text.slice(first + 1)
+  )
+}
+
+function toSentenceCase(raw) {
+  const text = String(raw ?? '')
+  const first = text.search(/\p{L}/u)
+  if (first < 0) return text.toLocaleLowerCase('tr-TR')
+  return (
+    text.slice(0, first) +
+    text.charAt(first).toLocaleUpperCase('tr-TR') +
+    text.slice(first + 1).toLocaleLowerCase('tr-TR')
+  )
+}
+
+function ContactLinkInput({ name, defaultValue = '', placeholder, platform = 'web' }) {
+  const [value, setValue] = useState(() => toLeadingLowerCase(defaultValue))
+  const href = resolveContactLinkHref(value, { platform })
+
+  return (
+    <div className="flex min-w-0 items-center gap-1">
+      <input
+        name={name}
+        value={value}
+        onChange={(event) => setValue(toLeadingLowerCase(event.target.value))}
+        placeholder={placeholder}
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        className={`${FORM_INPUT_CLASS} min-w-0 flex-1`}
+      />
+      <span className="contact-link-action flex h-10 w-8 shrink-0 items-center justify-center">
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="contact-link-button flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+            title="Sayfaya git"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        ) : null}
+      </span>
+    </div>
+  )
+}
+
+function SentenceCaseInput({ name, defaultValue = '', className = '' }) {
+  const inputRef = useRef(null)
+  const caretRef = useRef(null)
+  const [value, setValue] = useState(() => toSentenceCase(defaultValue))
+
+  useEffect(() => {
+    const caret = caretRef.current
+    if (caret == null || !inputRef.current) return
+    caretRef.current = null
+    inputRef.current.setSelectionRange(caret, caret)
+  }, [value])
+
+  return (
+    <input
+      ref={inputRef}
+      name={name}
+      value={value}
+      onChange={(event) => {
+        caretRef.current = event.target.selectionStart
+        setValue(toSentenceCase(event.target.value))
+      }}
+      className={className}
+    />
+  )
+}
+
+function DeleteConfirmInline({
+  deleteState,
+  onDelete,
+  onCancel,
+  onApprove,
+  title,
+  description = 'Bu işlem geri alınamaz.',
+}) {
+  return (
+    <DeleteTrashButton
+      pending={deleteState}
+      onClick={onDelete}
+      onConfirm={onApprove}
+      onCancel={onCancel}
+      buttonTitle={title}
+      title="Silinsin mi?"
+      description={description}
+      popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
+      wrapperClassName="relative z-10 flex items-center justify-end gap-1.5"
+      buttonClassName={LINE_DELETE_BTN_CLASS}
+    />
+  )
+}
+
+function AddressBlock({
+  id,
+  defaultTitle = '',
+  defaultAddress = '',
+  defaultLocation = '',
+  defaultMapsUrl = '',
+  canDelete = false,
+  deleteState,
+  onDelete,
+  onCancel,
+  onApprove,
+}) {
+  const [city = '', district = ''] = String(defaultLocation)
+    .split('/')
+    .map((part) => part.trim())
+
+  return (
+    <div
+      className={
+        canDelete
+          ? 'grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2 rounded-xl border border-[var(--glass-border)] p-3'
+          : 'rounded-xl border border-[var(--glass-border)] p-3'
+      }
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Adres Başlığı :">
+          <input
+            name={`addressTitle-${id}`}
+            defaultValue={defaultTitle}
+            className={FORM_INPUT_CLASS}
+          />
+        </Field>
+        <Field label="Konum :">
+          <ContactLinkInput name={`mapsUrl-${id}`} defaultValue={defaultMapsUrl} platform="web" />
+        </Field>
+        <Field label="Adres :" className="sm:col-span-2">
+          <input
+            name={`address-${id}`}
+            defaultValue={defaultAddress}
+            className={FORM_INPUT_CLASS}
+          />
+        </Field>
+        <Field label="İlçe :">
+          <input name={`district-${id}`} defaultValue={district} className={FORM_INPUT_CLASS} />
+        </Field>
+        <Field label="İl :">
+          <input name={`city-${id}`} defaultValue={city} className={FORM_INPUT_CLASS} />
+        </Field>
+      </div>
+      {canDelete ? (
+        <DeleteConfirmInline
+          deleteState={deleteState}
+          onDelete={onDelete}
+          onCancel={onCancel}
+          onApprove={onApprove}
+          title="Sil"
+        />
+      ) : null}
+    </div>
+  )
+}
+
+function ContactBlock({
+  id,
+  defaultTitle = '',
+  lockedTitle = false,
+  defaultValue = '',
+  phoneDefault = '',
+  gsmDefault = '',
+  orderLineDefault = '',
+  emailDefault = '',
+  websiteDefault = '',
+  instagramDefault = '',
+  facebookDefault = '',
+  youtubeDefault = '',
+  xDefault = '',
+  pinterestDefault = '',
+  tiktokDefault = '',
+  canDelete = false,
+  deleteState,
+  onDelete,
+  onCancel,
+  onApprove,
+}) {
+  return (
+    <div
+      className={
+        canDelete
+          ? 'grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2 rounded-xl border border-[var(--glass-border)] p-3'
+          : 'rounded-xl border border-[var(--glass-border)] p-3'
+      }
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Field label="Başlık :">
+          {lockedTitle ? (
+            <div className={`${FORM_INPUT_CLASS} flex min-h-10 items-center`}>
+              {defaultTitle}
+              <input type="hidden" name={`contactTitle-${id}`} value={defaultTitle} />
+            </div>
+          ) : (
+            <SentenceCaseInput
+              name={`contactTitle-${id}`}
+              defaultValue={defaultTitle}
+              className={FORM_INPUT_CLASS}
+            />
+          )}
+        </Field>
+        <Field label="İsim :">
+          <input
+            name={`contactName-${id}`}
+            defaultValue={defaultValue}
+            className={FORM_INPUT_CLASS}
+          />
+        </Field>
+        <Field label="Telefon :">
+          <input
+            name={`contactPhone-${id}`}
+            defaultValue={phoneDefault}
+            className={FORM_INPUT_CLASS}
+          />
+        </Field>
+        <Field label="Gsm :">
+          <input name={`contactGsm-${id}`} defaultValue={gsmDefault} className={FORM_INPUT_CLASS} />
+        </Field>
+        <Field label="Sipariş hattı :">
+          <input
+            name={`contactOrderLine-${id}`}
+            defaultValue={orderLineDefault}
+            className={FORM_INPUT_CLASS}
+          />
+        </Field>
+        <Field label="E-posta :">
+          <input
+            name={`contactEmail-${id}`}
+            defaultValue={emailDefault}
+            className={FORM_INPUT_CLASS}
+          />
+        </Field>
+        <Field label="Web :">
+          <ContactLinkInput
+            name={`contactWebsite-${id}`}
+            defaultValue={websiteDefault}
+            platform="web"
+          />
+        </Field>
+        <Field label="Instagram :">
+          <ContactLinkInput
+            name={`contactInstagram-${id}`}
+            defaultValue={instagramDefault}
+            platform="instagram"
+          />
+        </Field>
+        <Field label="Facebook :">
+          <ContactLinkInput
+            name={`contactFacebook-${id}`}
+            defaultValue={facebookDefault}
+            platform="facebook"
+          />
+        </Field>
+        <Field label="YouTube :">
+          <ContactLinkInput
+            name={`contactYoutube-${id}`}
+            defaultValue={youtubeDefault}
+            platform="youtube"
+          />
+        </Field>
+        <Field label="X :">
+          <ContactLinkInput name={`contactX-${id}`} defaultValue={xDefault} platform="x" />
+        </Field>
+        <Field label="Pinterest :">
+          <ContactLinkInput
+            name={`contactPinterest-${id}`}
+            defaultValue={pinterestDefault}
+            platform="pinterest"
+          />
+        </Field>
+        <Field label="TikTok :">
+          <ContactLinkInput
+            name={`contactTiktok-${id}`}
+            defaultValue={tiktokDefault}
+            platform="tiktok"
+          />
+        </Field>
+      </div>
+      {canDelete ? (
+        <DeleteConfirmInline
+          deleteState={deleteState}
+          onDelete={onDelete}
+          onCancel={onCancel}
+          onApprove={onApprove}
+          title="Sil"
+        />
+      ) : null}
+    </div>
+  )
+}
+
 export default function CustomerCreatePage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -303,7 +459,6 @@ export default function CustomerCreatePage() {
   const isSupplierForm = searchParams.get('kind') === 'supplier'
   const defaultPartyType = isSupplierForm ? SUPPLIER_TYPE_LABEL : 'Müşteri'
   const backPath = isSupplierForm ? '/suppliers' : '/musteriler'
-  /** Düzenlemeden vazgeçince müşteri/tedarikçi detayına; yeni kayıtta listeye dön. */
   const cancelPath = editingCustomer?.id
     ? isSupplierForm
       ? `/suppliers/${editingCustomer.id}`
@@ -311,11 +466,12 @@ export default function CustomerCreatePage() {
     : backPath
   const pageHeading = editingCustomer
     ? isSupplierForm
-      ? 'Tedarikçi Düzenle'
-      : 'Müşteri Düzenle'
+      ? 'TEDARİKÇİ DÜZENLE'
+      : 'MÜŞTERİ DÜZENLE'
     : isSupplierForm
-      ? 'Yeni Tedarikçi'
-      : 'Yeni Müşteri'
+      ? 'YENİ TEDARİKÇİ OLUŞTUR'
+      : 'YENİ MÜŞTERİ OLUŞTUR'
+  const listLabel = isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'
   const incomingDraft = !editingCustomer ? location.state?.customerDraft : null
   const [openingEnabled, setOpeningEnabled] = useState(() =>
     Boolean(editingCustomer?.hasOpeningBalance),
@@ -327,9 +483,7 @@ export default function CustomerCreatePage() {
     initialContactRows(editingCustomer, incomingDraft),
   )
   const [deleteDialog, setDeleteDialog] = useState(null)
-  /** idle | saving | saved — Kaydet CTA metin fazları */
   const [savePhase, setSavePhase] = useState('idle')
-  /** Kaydetmeyi engelleyen durumların sayfa içi bildirimi (tarayıcı diyaloğu değil). */
   const [formNotice, setFormNotice] = useState(null)
   const [duplicatePrompt, setDuplicatePrompt] = useState(null)
   const [formEpoch, setFormEpoch] = useState(0)
@@ -341,9 +495,7 @@ export default function CustomerCreatePage() {
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const saveTimer = useRef(null)
-  /** Çift kayıt onayının sonucunu kaydetme akışına geri veren çözümleyici. */
   const duplicateResolveRef = useRef(null)
-  /** "Kaydet ve devam et" sonrası imleci ilk alana taşımak için işaret. */
   const focusFirstFieldRef = useRef(false)
 
   useEffect(
@@ -375,11 +527,9 @@ export default function CustomerCreatePage() {
 
   useEffect(() => {
     if (!activeMenu) return undefined
-
     function closeActiveMenu() {
       setActiveMenu(null)
     }
-
     document.addEventListener('click', closeActiveMenu)
     return () => document.removeEventListener('click', closeActiveMenu)
   }, [activeMenu])
@@ -434,7 +584,6 @@ export default function CustomerCreatePage() {
     )
   }
 
-  /** Formdaki her adres satırını toplar; ilk satır kartın birincil adresi olur. */
   function parseAddresses(payload) {
     return addressRows
       .map((row) => ({
@@ -516,10 +665,6 @@ export default function CustomerCreatePage() {
     ])
   }
 
-  /**
-   * Olası çift kayıtları sayfa içi onay kutusuyla sorar. Tarayıcı diyaloglarını
-   * engelleyen ayarlar kaydetmeyi sessizce iptal edemesin diye window.confirm yok.
-   */
   async function assertNoStrongDuplicates(payload) {
     if (editingCustomer?.id) return true
     let matches = []
@@ -536,7 +681,6 @@ export default function CustomerCreatePage() {
       )
       matches = result?.matches || []
     } catch (error) {
-      // Çift kayıt kontrolü yardımcı bir adım: başarısızsa kaydetmeyi engellemez.
       console.warn('Çift kayıt kontrolü yapılamadı', error)
       return true
     }
@@ -546,7 +690,6 @@ export default function CustomerCreatePage() {
       .slice(0, 5)
       .map((m) => `${m.name || m.id} (%${Math.round(m.score * 100)})`)
       .join(' · ')
-    // Onay kullanıcıda: buton "Kaydediliyor…" durumunda beklemesin.
     setSavePhase('idle')
     return new Promise((resolve) => {
       duplicateResolveRef.current = resolve
@@ -561,10 +704,6 @@ export default function CustomerCreatePage() {
     resolve?.(confirmed)
   }
 
-  /**
-   * Her iki kaydet akışının paylaştığı rutin: doğrula, formun tamamını kalıcı hale
-   * getir, alanları boşalt. Kaydedip kaydetmediğini döndürür.
-   */
   async function saveForm(form) {
     if (!String(meta.type || '').trim()) {
       setFormNotice('Kaydetmeden önce Tipi alanını seçin.')
@@ -574,7 +713,6 @@ export default function CustomerCreatePage() {
       return false
     }
     setFormNotice(null)
-    // Geri bildirim ilk adımda görünür: sonraki adımlar beklerse buton sessiz kalmaz.
     setSavePhase('saving')
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
@@ -613,7 +751,6 @@ export default function CustomerCreatePage() {
     return true
   }
 
-  /** saveForm'un beklenmedik hatası butonu sessizce ölü bırakmasın. */
   async function runSave(form) {
     try {
       return await saveForm(form)
@@ -625,7 +762,6 @@ export default function CustomerCreatePage() {
     }
   }
 
-  /** Kaydediliyor… en az 1 sn, ardından Kaydedildi 1 sn — kullanıcı geçişi görsün. */
   async function playSaveButtonPhases(startedAt) {
     const remainingSaving = Math.max(0, SAVE_PHASE_MS - (Date.now() - startedAt))
     if (remainingSaving > 0) await waitMs(remainingSaving, saveTimer)
@@ -633,11 +769,10 @@ export default function CustomerCreatePage() {
     await waitMs(SAVE_PHASE_MS, saveTimer)
   }
 
-  async function collectAndSave(event) {
-    event?.preventDefault()
+  async function saveAndReturnToList() {
     if (savePhase !== 'idle') return
-    // currentTarget await sonrası boşalır; formu şimdi yakala.
-    const form = event.currentTarget
+    const form = document.getElementById('customer-edit-form')
+    if (!form) return
     const startedAt = Date.now()
     if (!(await runSave(form))) return
     await playSaveButtonPhases(startedAt)
@@ -660,6 +795,11 @@ export default function CustomerCreatePage() {
     setSavePhase('idle')
   }
 
+  async function collectAndSave(event) {
+    event?.preventDefault()
+    await saveAndReturnToList()
+  }
+
   function confirmTwoStepDelete(label, onConfirm, key) {
     setDeleteDialog({ key, label, onConfirm })
   }
@@ -673,13 +813,12 @@ export default function CustomerCreatePage() {
     setDeleteDialog(null)
   }
 
+  const busy = savePhase !== 'idle'
+  const saveLabel =
+    savePhase === 'saving' ? 'Kaydediliyor...' : savePhase === 'saved' ? 'Kaydedildi' : 'Kaydet'
+
   return (
-    <form
-      key={`customer-edit-form-${editingCustomer?.id || 'new'}-${formEpoch}`}
-      id="customer-edit-form"
-      onSubmit={collectAndSave}
-      className="space-y-5"
-    >
+    <AppPageShell className="customers-page-type w-full">
       <ConfirmModal
         open={Boolean(duplicatePrompt)}
         title="Olası çift kayıt"
@@ -690,245 +829,338 @@ export default function CustomerCreatePage() {
         onCancel={() => resolveDuplicatePrompt(false)}
       />
 
-      <div className="space-y-5">
-        <AppPageHeader
-          showBack={false}
-          title={
-            <AppPageBackLink to={backPath} label={isSupplierForm ? 'Tedarikçiler' : 'Müşteriler'} />
-          }
-          centerTitle={String(pageHeading || '').toLocaleUpperCase('tr-TR')}
-          centerTitleClassName={PAGE_CENTER_TITLE_CLASS}
-          titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
-          actions={
-            <div className="relative flex items-center gap-2.5 bg-transparent">
-              <CancelCta onClick={() => navigate(cancelPath)} />
-              <SaveSplitAction onSaveAndContinue={saveAndContinue} savePhase={savePhase} />
+      <AppPageHeader
+        showBack={false}
+        title={<AppPageBackLink to={backPath} label={listLabel} />}
+        centerTitle={pageHeading}
+        titleClassName={PAGE_HEADER_TITLE_SLOT_CLASS}
+        actions={
+          <div className="relative flex shrink-0 items-center gap-2" data-customer-dropdown>
+            <div
+              className={`relative inline-flex overflow-hidden ${HEADER_ACTION_CTA_SHELL_CLASS} ${HEADER_ACTION_GRADIENTS.success}`}
+            >
+              <button
+                type="button"
+                onClick={saveAndReturnToList}
+                disabled={busy}
+                aria-busy={savePhase === 'saving'}
+                className="inline-flex h-full items-center gap-2.5 bg-transparent px-3 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
+                  {savePhase === 'saving' ? (
+                    <Loader2
+                      className={`${HEADER_ACTION_CTA_ICON_CLASS} animate-spin`}
+                      strokeWidth={2.25}
+                      aria-hidden
+                    />
+                  ) : savePhase === 'saved' ? (
+                    <Check
+                      className={HEADER_ACTION_CTA_ICON_CLASS}
+                      strokeWidth={2.25}
+                      aria-hidden
+                    />
+                  ) : (
+                    <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} aria-hidden />
+                  )}
+                </span>
+                <span className={YF_TEXT_ON_COLOR_CLASS}>{saveLabel}</span>
+              </button>
+              <span className={HEADER_ACTION_CTA_DIVIDER_CLASS} aria-hidden="true" />
+              <Dropdown
+                align="end"
+                className="h-full"
+                menuClassName={PAGE_FILTER_MENU_CLASS}
+                trigger={
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className="inline-flex h-full w-12 items-center justify-center bg-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Kaydet seçenekleri"
+                    aria-label="Kaydet seçenekleri"
+                  >
+                    <ChevronDown className={HEADER_ACTION_CTA_ICON_CLASS} aria-hidden="true" />
+                  </button>
+                }
+              >
+                {({ close }) => (
+                  <>
+                    <DropdownItem
+                      icon={Save}
+                      label="Kaydet ve Düzenlemeye Devam Et"
+                      tone="primary"
+                      close={close}
+                      onClick={saveAndContinue}
+                    />
+                    <DropdownSeparator />
+                    <DropdownItem
+                      icon={X}
+                      label="Vazgeç"
+                      tone="danger"
+                      close={close}
+                      onClick={() => navigate(cancelPath)}
+                    />
+                  </>
+                )}
+              </Dropdown>
             </div>
-          }
-        />
+          </div>
+        }
+      />
 
-        {formNotice ? (
-          <p
-            role="alert"
-            className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-[14px] font-normal leading-tight tracking-normal text-rose-600"
-          >
-            {formNotice}
-          </p>
-        ) : null}
+      {formNotice ? (
+        <p
+          role="alert"
+          className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-[14px] font-normal leading-tight tracking-normal text-rose-600"
+        >
+          {formNotice}
+        </p>
+      ) : null}
 
-        <div className="space-y-5">
-        <div data-tour="customer-form">
-          <FormSectionPanel
-            compact
-            title={isSupplierForm ? 'Tedarikçi Bilgileri' : 'Müşteri Bilgileri'}
-            dotColor="blue"
-            className="customer-form-primary-panel"
-          >
-            <div className="app-filter-bar grid min-w-0 w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Tipi :</p>
-                <EditableDropdownPill
-                  value={meta.type}
-                  options={optionLists.type}
-                  onOptionsChange={(next) => updateOptionList('type', next)}
-                  openKey="create-type"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateMetaField('type', value)}
-                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                  menuClassName={CUSTOMER_FILTER_MENU_CLASS}
-                />
-              </div>
-              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Temsilci :</p>
-                <EditableDropdownPill
-                  value={meta.representative}
-                  options={optionLists.representative}
-                  onOptionsChange={(next) => updateOptionList('representative', next)}
-                  openKey="create-representative"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateMetaField('representative', value)}
-                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                  menuClassName={CUSTOMER_FILTER_MENU_CLASS}
-                />
-              </div>
-              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Puantaj :</p>
-                <EditableDropdownPill
-                  value={meta.scoring}
-                  options={optionLists.scoring}
-                  onOptionsChange={(next) => updateOptionList('scoring', next)}
-                  openKey="create-scoring"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateMetaField('scoring', value)}
-                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                  menuClassName={CUSTOMER_FILTER_MENU_CLASS}
-                />
-              </div>
-              <div className={CUSTOMER_FILTER_FIELD_CLASS}>
-                <p className={CUSTOMER_FILTER_LABEL_CLASS}>Kategori :</p>
-                <EditableDropdownPill
-                  value={meta.category}
-                  options={optionLists.category}
-                  onOptionsChange={(next) => updateOptionList('category', next)}
-                  openKey="create-category"
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  onChange={(value) => updateMetaField('category', value)}
-                  buttonClassName={CUSTOMER_FILTER_PILL_CLASS}
-                  menuClassName={CUSTOMER_FILTER_MENU_CLASS}
-                />
-              </div>
+      <form
+        key={`customer-edit-form-${editingCustomer?.id || 'new'}-${formEpoch}`}
+        id="customer-edit-form"
+        onSubmit={collectAndSave}
+        className="space-y-5 document-compact-controls"
+        data-tour="customer-form"
+      >
+        <AppPagePanel
+          className="customer-list-panel customer-form-primary-panel w-full"
+          title={isSupplierForm ? 'Tedarikçi Bilgileri :' : 'Müşteri Bilgileri :'}
+          dotColor="blue"
+        >
+          <div className="app-filter-bar grid min-w-0 w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Tipi :</p>
+              <EditableDropdownPill
+                value={meta.type}
+                options={optionLists.type}
+                onOptionsChange={(next) => updateOptionList('type', next)}
+                openKey="create-type"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => updateMetaField('type', value)}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
+              />
             </div>
-          </FormSectionPanel>
-        </div>
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Temsilci :</p>
+              <EditableDropdownPill
+                value={meta.representative}
+                options={optionLists.representative}
+                onOptionsChange={(next) => updateOptionList('representative', next)}
+                openKey="create-representative"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => updateMetaField('representative', value)}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
+              />
+            </div>
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Puantaj :</p>
+              <EditableDropdownPill
+                value={meta.scoring}
+                options={optionLists.scoring}
+                onOptionsChange={(next) => updateOptionList('scoring', next)}
+                openKey="create-scoring"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => updateMetaField('scoring', value)}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
+              />
+            </div>
+            <div className={PAGE_FILTER_FIELD_CLASS}>
+              <p className={PAGE_FILTER_LABEL_CLASS}>Kategori :</p>
+              <EditableDropdownPill
+                value={meta.category}
+                options={optionLists.category}
+                onOptionsChange={(next) => updateOptionList('category', next)}
+                openKey="create-category"
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onChange={(value) => updateMetaField('category', value)}
+                buttonClassName={PAGE_FILTER_PILL_CLASS}
+                menuClassName={PAGE_FILTER_MENU_CLASS}
+              />
+            </div>
+          </div>
+        </AppPagePanel>
 
-          <FormSectionPanel compact icon={Building2} title="Firma Bilgileri" dotColor="violet">
-            <div className={FORM_FIELD_RULED_STACK_CLASS}>
-              <FieldLine
-                icon={Building2}
-                label="Kısa Marka Adı:"
+        <AppPagePanel
+          className="customer-list-panel w-full"
+          title="Firma Bilgileri :"
+          dotColor="blue"
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Kısa Marka Adı :">
+              <input
                 name="shortBrandName"
                 defaultValue={
                   editingCustomer
                     ? getCustomerDisplay(editingCustomer).brandShortName
                     : incomingDraft?.shortBrandName || ''
                 }
+                className={FORM_INPUT_CLASS}
               />
-              <FieldLine
-                icon={Building2}
-                label="Firma Ünvanı:"
+            </Field>
+            <Field label="Firma Ünvanı :">
+              <input
                 name="companyTitle"
                 defaultValue={
                   editingCustomer
                     ? getCustomerDisplay(editingCustomer).companyTitle
                     : incomingDraft?.companyTitle || ''
                 }
+                className={FORM_INPUT_CLASS}
               />
-              <FieldLine
-                icon={Landmark}
-                label="Vergi Dairesi:"
+            </Field>
+            <Field label="Vergi Dairesi :">
+              <input
                 name="taxOffice"
                 defaultValue={editingCustomer?.taxOffice || ''}
+                className={FORM_INPUT_CLASS}
               />
-              <FieldLine
-                icon={Landmark}
-                label="Vergi Numarası:"
+            </Field>
+            <Field label="Vergi Numarası :">
+              <input
                 name="taxNumber"
                 defaultValue={editingCustomer?.taxNumber || ''}
+                className={FORM_INPUT_CLASS}
               />
-            </div>
-          </FormSectionPanel>
+            </Field>
+          </div>
+        </AppPagePanel>
 
-          <FormSectionPanel compact icon={MapPin} title="Adres Bilgileri" dotColor="emerald">
-            <div className="space-y-2">
-              {addressRows.map((row) => (
-                <AddressLine
-                  key={row.id}
-                  id={row.id}
-                  defaultTitle={row.defaultTitle || ''}
-                  defaultAddress={row.defaultAddress || ''}
-                  defaultLocation={row.defaultLocation || ''}
-                  defaultMapsUrl={row.defaultMapsUrl || ''}
-                  canDelete={addressRows.length > 1}
-                  deleteState={deleteDialog?.key === `address-${row.id}` ? deleteDialog : null}
-                  onDelete={() =>
-                    confirmTwoStepDelete(
-                      'Adres',
-                      () => setAddressRows((rows) => rows.filter((item) => item.id !== row.id)),
-                      `address-${row.id}`,
-                    )
-                  }
-                  onCancel={closeDeleteDialog}
-                  onApprove={approveDeleteDialog}
-                />
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setAddressRows((rows) => [...rows, { id: Date.now() }])}
-              className={`btn-ghost mt-2 inline-flex items-center gap-2 !px-3 !py-1.5 ${YF_TEXT_CLASS}`}
-            >
-              <Plus className="h-3.5 w-3.5" /> Yeni Adres Ekle
-            </button>
-          </FormSectionPanel>
+        <AppPagePanel
+          className="customer-list-panel w-full"
+          title="Adres Bilgileri :"
+          dotColor="blue"
+        >
+          <div className="space-y-3">
+            {addressRows.map((row) => (
+              <AddressBlock
+                key={row.id}
+                id={row.id}
+                defaultTitle={row.defaultTitle || ''}
+                defaultAddress={row.defaultAddress || ''}
+                defaultLocation={row.defaultLocation || ''}
+                defaultMapsUrl={row.defaultMapsUrl || ''}
+                canDelete={addressRows.length > 1}
+                deleteState={deleteDialog?.key === `address-${row.id}` ? deleteDialog : null}
+                onDelete={() =>
+                  confirmTwoStepDelete(
+                    'Adres',
+                    () => setAddressRows((rows) => rows.filter((item) => item.id !== row.id)),
+                    `address-${row.id}`,
+                  )
+                }
+                onCancel={closeDeleteDialog}
+                onApprove={approveDeleteDialog}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setAddressRows((rows) => [...rows, { id: Date.now() }])}
+            className={`${DOCUMENT_ADD_CTA_CLASS} mt-3 w-full`}
+          >
+            <Plus className="h-3.5 w-3.5" /> Yeni Adres Ekle
+          </button>
+        </AppPagePanel>
 
-          <FormSectionPanel compact icon={Phone} title="İletişim Bilgileri" dotColor="blue">
-            <div className="space-y-2">
-              {contactRows.map((row) => (
-                <ContactLine
-                  key={row.id}
-                  id={row.id}
-                  defaultTitle={row.title}
-                  lockedTitle={row.locked}
-                  defaultValue={row.defaultName || ''}
-                  phoneDefault={row.defaultPhone || ''}
-                  gsmDefault={row.defaultGsm || ''}
-                  orderLineDefault={row.defaultOrderLine || ''}
-                  emailDefault={row.defaultEmail || ''}
-                  websiteDefault={row.defaultWebsite || ''}
-                  instagramDefault={row.defaultInstagram || ''}
-                  facebookDefault={row.defaultFacebook || ''}
-                  youtubeDefault={row.defaultYoutube || ''}
-                  xDefault={row.defaultX || ''}
-                  pinterestDefault={row.defaultPinterest || ''}
-                  tiktokDefault={row.defaultTiktok || ''}
-                  canDelete={contactRows.length > 1}
-                  deleteState={deleteDialog?.key === `contact-${row.id}` ? deleteDialog : null}
-                  onDelete={() =>
-                    confirmTwoStepDelete(
-                      'İletişim satırı',
-                      () => setContactRows((rows) => rows.filter((item) => item.id !== row.id)),
-                      `contact-${row.id}`,
-                    )
-                  }
-                  onCancel={closeDeleteDialog}
-                  onApprove={approveDeleteDialog}
-                />
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setContactRows((rows) => [...rows, createNextContactRow()])}
-              className={`btn-ghost mt-2 inline-flex items-center gap-2 !px-3 !py-1.5 ${YF_TEXT_CLASS}`}
-            >
-              <Plus className="h-3.5 w-3.5" /> İletişim Ekle
-            </button>
-          </FormSectionPanel>
+        <AppPagePanel
+          className="customer-list-panel w-full"
+          title="İletişim Bilgileri :"
+          dotColor="blue"
+        >
+          <div className="space-y-3">
+            {contactRows.map((row) => (
+              <ContactBlock
+                key={row.id}
+                id={row.id}
+                defaultTitle={row.title}
+                lockedTitle={row.locked}
+                defaultValue={row.defaultName || ''}
+                phoneDefault={row.defaultPhone || ''}
+                gsmDefault={row.defaultGsm || ''}
+                orderLineDefault={row.defaultOrderLine || ''}
+                emailDefault={row.defaultEmail || ''}
+                websiteDefault={row.defaultWebsite || ''}
+                instagramDefault={row.defaultInstagram || ''}
+                facebookDefault={row.defaultFacebook || ''}
+                youtubeDefault={row.defaultYoutube || ''}
+                xDefault={row.defaultX || ''}
+                pinterestDefault={row.defaultPinterest || ''}
+                tiktokDefault={row.defaultTiktok || ''}
+                canDelete={contactRows.length > 1}
+                deleteState={deleteDialog?.key === `contact-${row.id}` ? deleteDialog : null}
+                onDelete={() =>
+                  confirmTwoStepDelete(
+                    'İletişim satırı',
+                    () => setContactRows((rows) => rows.filter((item) => item.id !== row.id)),
+                    `contact-${row.id}`,
+                  )
+                }
+                onCancel={closeDeleteDialog}
+                onApprove={approveDeleteDialog}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setContactRows((rows) => [...rows, createNextContactRow()])}
+            className={`${DOCUMENT_ADD_CTA_CLASS} mt-3 w-full`}
+          >
+            <Plus className="h-3.5 w-3.5" /> İletişim Ekle
+          </button>
+        </AppPagePanel>
 
-          <FormSectionPanel compact icon={WalletCards} title="Finans Ayarları" dotColor="orange">
-            <div className={FORM_FIELD_RULED_STACK_CLASS}>
-              <SelectLine
-                icon={WalletCards}
-                label="Fiyat Listesi:"
+        <AppPagePanel
+          className="customer-list-panel w-full"
+          title="Finans Ayarları :"
+          dotColor="blue"
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Fiyat Listesi :">
+              <select
                 name="priceList"
-                options={['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi']}
                 defaultValue={editingCustomer?.priceList || ''}
-              />
-              <SelectLine
-                icon={WalletCards}
-                label="Döviz Kuru:"
+                className={FORM_INPUT_CLASS}
+              >
+                <option value="">Seçiniz</option>
+                {['Hiçbiri', 'Standart Liste', 'Bayi Liste', 'Özel Fiyat Listesi'].map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Döviz Kuru :">
+              <select
                 name="currencyRate"
-                options={['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur']}
                 defaultValue={editingCustomer?.currencyRate || ''}
-              />
-              <FormFieldCompact icon={WalletCards} label="Açılış Bakiyesi:">
-                <label className="flex min-h-8 items-center gap-3 text-[14px] font-normal leading-tight tracking-normal text-[var(--ink)]">
-                  <input
-                    name="hasOpeningBalance"
-                    type="checkbox"
-                    checked={openingEnabled}
-                    onChange={(event) => setOpeningEnabled(event.target.checked)}
-                    className="h-4 w-4 rounded border-dark-500 bg-dark-700 accent-blue-500"
-                  />
-                  Hareketlere eklensin
-                </label>
-              </FormFieldCompact>
-              <FieldLine
-                icon={WalletCards}
-                label="Açılış Tutarı:"
+                className={FORM_INPUT_CLASS}
+              >
+                <option value="">Seçiniz</option>
+                {['Alış', 'Satış', 'Merkez Bankası', 'Sabit Kur'].map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Açılış Bakiyesi :">
+              <label className="flex min-h-10 items-center gap-3 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+                <input
+                  name="hasOpeningBalance"
+                  type="checkbox"
+                  checked={openingEnabled}
+                  onChange={(event) => setOpeningEnabled(event.target.checked)}
+                  className="h-4 w-4 cursor-pointer rounded border-ds-border accent-[var(--ds-ink,#1e2338)]"
+                />
+                Hareketlere eklensin
+              </label>
+            </Field>
+            <Field label="Açılış Tutarı :">
+              <input
                 name="openingBalanceAmount"
                 type="number"
                 defaultValue={
@@ -937,352 +1169,12 @@ export default function CustomerCreatePage() {
                     : ''
                 }
                 disabled={!openingEnabled}
+                className={`${FORM_INPUT_CLASS} ${!openingEnabled ? 'opacity-60' : ''}`}
               />
-            </div>
-          </FormSectionPanel>
-        </div>
-      </div>
-
-      <section
-        className={`${APP_SURFACE_PANEL_CLASS} flex h-[4.625rem] items-center justify-between px-5`}
-      >
-        <div className="flex min-w-0 items-center gap-3 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
-          <UserRound className="h-4 w-4 shrink-0" />
-          <span className="truncate">
-            Kaydettiğiniz bilgiler müşteri kartı taslak kayıtlarına işlenir.
-          </span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2.5 bg-transparent">
-          <CancelCta onClick={() => navigate(cancelPath)} />
-          <SaveSplitAction onSaveAndContinue={saveAndContinue} savePhase={savePhase} />
-        </div>
-      </section>
-    </form>
-  )
-}
-
-function FieldLine({
-  icon: Icon,
-  label,
-  name,
-  defaultValue = '',
-  type = 'text',
-  disabled = false,
-}) {
-  return (
-    <FormFieldCompact icon={Icon} label={label} as="label">
-      <input
-        name={name}
-        type={type}
-        defaultValue={defaultValue}
-        disabled={disabled}
-        className={`form-input !h-8 !min-h-8 !py-1 ${disabled ? 'opacity-60' : ''}`}
-      />
-    </FormFieldCompact>
-  )
-}
-
-function DeleteConfirmInline({
-  deleteState,
-  onDelete,
-  onCancel,
-  onApprove,
-  title,
-  description = 'Bu işlem geri alınamaz.',
-}) {
-  return (
-    <DeleteTrashButton
-      pending={deleteState}
-      onClick={onDelete}
-      onConfirm={onApprove}
-      onCancel={onCancel}
-      buttonTitle={title}
-      title="Silinsin mi?"
-      description={description}
-      popoverClassName="absolute right-0 top-1/2 z-20 -translate-y-1/2"
-      wrapperClassName="relative z-10 flex items-center justify-end gap-1.5"
-    />
-  )
-}
-
-function AddressLine({
-  id,
-  defaultTitle = '',
-  defaultAddress = '',
-  defaultLocation = '',
-  defaultMapsUrl = '',
-  canDelete = false,
-  deleteState,
-  onDelete,
-  onCancel,
-  onApprove,
-}) {
-  const [city = '', district = ''] = String(defaultLocation)
-    .split('/')
-    .map((part) => part.trim())
-
-  return (
-    <div className={canDelete ? 'grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2' : 'w-full'}>
-      <div className={FORM_FIELD_RULED_STACK_CLASS}>
-        <FieldLine
-          icon={Hash}
-          label="Adres Başlığı:"
-          name={`addressTitle-${id}`}
-          defaultValue={defaultTitle}
-        />
-        <FieldLine
-          icon={MapPin}
-          label="Adres:"
-          name={`address-${id}`}
-          defaultValue={defaultAddress}
-        />
-        <FieldLine icon={MapPin} label="İlçe:" name={`district-${id}`} defaultValue={district} />
-        <FieldLine icon={MapPin} label="İl:" name={`city-${id}`} defaultValue={city} />
-        <FormFieldCompact icon={MapPin} label="Konum:" as="label">
-          <ContactLinkInput name={`mapsUrl-${id}`} defaultValue={defaultMapsUrl} platform="web" />
-        </FormFieldCompact>
-      </div>
-      {canDelete ? (
-        <DeleteConfirmInline
-          deleteState={deleteState}
-          onDelete={onDelete}
-          onCancel={onCancel}
-          onApprove={onApprove}
-          title="Sil"
-        />
-      ) : null}
-    </div>
-  )
-}
-
-function SelectLine({ icon: Icon, label, name, options, defaultValue = '' }) {
-  return (
-    <FormFieldCompact icon={Icon} label={label} as="label">
-      <select name={name} defaultValue={defaultValue} className="form-input !h-8 !min-h-8 !py-1">
-        <option value="">Seçiniz</option>
-        {options.map((option) => (
-          <option key={option}>{option}</option>
-        ))}
-      </select>
-    </FormFieldCompact>
-  )
-}
-
-/** Adres ve kullanıcı adları küçük harfle başlar; ilk harfi büyütmeyi engeller. */
-function toLeadingLowerCase(raw) {
-  const text = String(raw ?? '')
-  const first = text.search(/\p{L}/u)
-  if (first < 0) return text
-  return (
-    text.slice(0, first) + text.charAt(first).toLocaleLowerCase('tr-TR') + text.slice(first + 1)
-  )
-}
-
-function ContactLinkInput({ name, defaultValue = '', placeholder, platform = 'web' }) {
-  const [value, setValue] = useState(() => toLeadingLowerCase(defaultValue))
-  const href = resolveContactLinkHref(value, { platform })
-
-  return (
-    <div className="flex min-w-0 items-center gap-1">
-      <input
-        name={name}
-        value={value}
-        onChange={(event) => setValue(toLeadingLowerCase(event.target.value))}
-        placeholder={placeholder}
-        autoCapitalize="none"
-        autoCorrect="off"
-        spellCheck={false}
-        className="form-input min-w-0 flex-1 !h-8 !min-h-8 !py-1"
-      />
-      {/* Slot her zaman ayrılır: bağlantı ikonu belirince satır büyümez, kaymaz. */}
-      <span className="contact-link-action flex h-8 w-8 shrink-0 items-center justify-center">
-        {href ? (
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="contact-link-button flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
-            title="Sayfaya git"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-        ) : null}
-      </span>
-    </div>
-  )
-}
-
-/** Cümle düzeni: yalnızca ilk harf büyük, kalanı küçük (Türkçe kurallı). */
-function toSentenceCase(raw) {
-  const text = String(raw ?? '')
-  const first = text.search(/\p{L}/u)
-  if (first < 0) return text.toLocaleLowerCase('tr-TR')
-  return (
-    text.slice(0, first) +
-    text.charAt(first).toLocaleUpperCase('tr-TR') +
-    text.slice(first + 1).toLocaleLowerCase('tr-TR')
-  )
-}
-
-/**
- * Yazarken cümle düzenine çeviren metin alanı. Dönüşüm uzunluğu değiştirmediği
- * için imleç konumu korunur — aksi halde her tuşta sonuna atlar.
- */
-function SentenceCaseInput({ name, defaultValue = '', className = '' }) {
-  const inputRef = useRef(null)
-  const caretRef = useRef(null)
-  const [value, setValue] = useState(() => toSentenceCase(defaultValue))
-
-  useEffect(() => {
-    const caret = caretRef.current
-    if (caret == null || !inputRef.current) return
-    caretRef.current = null
-    inputRef.current.setSelectionRange(caret, caret)
-  }, [value])
-
-  return (
-    <input
-      ref={inputRef}
-      name={name}
-      value={value}
-      onChange={(event) => {
-        caretRef.current = event.target.selectionStart
-        setValue(toSentenceCase(event.target.value))
-      }}
-      className={className}
-    />
-  )
-}
-
-function ContactLine({
-  id,
-  defaultTitle = '',
-  lockedTitle = false,
-  defaultValue = '',
-  phoneDefault = '',
-  gsmDefault = '',
-  orderLineDefault = '',
-  emailDefault = '',
-  websiteDefault = '',
-  instagramDefault = '',
-  facebookDefault = '',
-  youtubeDefault = '',
-  xDefault = '',
-  pinterestDefault = '',
-  tiktokDefault = '',
-  canDelete = false,
-  deleteState,
-  onDelete,
-  onCancel,
-  onApprove,
-}) {
-  return (
-    <div className={canDelete ? 'grid grid-cols-[minmax(0,1fr)_28px] items-start gap-2' : 'w-full'}>
-      <div className={FORM_FIELD_RULED_STACK_CLASS}>
-        <FormFieldCompact icon={Hash} label="Başlık:">
-          {lockedTitle ? (
-            <div className="flex min-h-8 items-center text-[14px] font-normal leading-tight tracking-normal text-[var(--ink)]">
-              {defaultTitle}
-              <input type="hidden" name={`contactTitle-${id}`} value={defaultTitle} />
-            </div>
-          ) : (
-            <SentenceCaseInput
-              name={`contactTitle-${id}`}
-              defaultValue={defaultTitle}
-              className="form-input !h-8 !min-h-8 !py-1"
-            />
-          )}
-        </FormFieldCompact>
-        <FormFieldCompact icon={UserRound} label="İsim:" as="label">
-          <input
-            name={`contactName-${id}`}
-            defaultValue={defaultValue}
-            className="form-input !h-8 !min-h-8 !py-1"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Phone} label="Telefon:" as="label">
-          <input
-            name={`contactPhone-${id}`}
-            defaultValue={phoneDefault}
-            className="form-input !h-8 !min-h-8 !py-1"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Smartphone} label="Gsm:" as="label">
-          <input
-            name={`contactGsm-${id}`}
-            defaultValue={gsmDefault}
-            className="form-input !h-8 !min-h-8 !py-1"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={PhoneCall} label="Sipariş hattı:" as="label">
-          <input
-            name={`contactOrderLine-${id}`}
-            defaultValue={orderLineDefault}
-            className="form-input !h-8 !min-h-8 !py-1"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Mail} label="E-posta:" as="label">
-          <input
-            name={`contactEmail-${id}`}
-            defaultValue={emailDefault}
-            className="form-input !h-8 !min-h-8 !py-1"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Globe} label="Web:" as="label">
-          <ContactLinkInput
-            name={`contactWebsite-${id}`}
-            defaultValue={websiteDefault}
-            platform="web"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Instagram} label="Instagram:" as="label">
-          <ContactLinkInput
-            name={`contactInstagram-${id}`}
-            defaultValue={instagramDefault}
-            platform="instagram"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Facebook} label="Facebook:" as="label">
-          <ContactLinkInput
-            name={`contactFacebook-${id}`}
-            defaultValue={facebookDefault}
-            platform="facebook"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Youtube} label="YouTube:" as="label">
-          <ContactLinkInput
-            name={`contactYoutube-${id}`}
-            defaultValue={youtubeDefault}
-            platform="youtube"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Twitter} label="X:" as="label">
-          <ContactLinkInput name={`contactX-${id}`} defaultValue={xDefault} platform="x" />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Pin} label="Pinterest:" as="label">
-          <ContactLinkInput
-            name={`contactPinterest-${id}`}
-            defaultValue={pinterestDefault}
-            platform="pinterest"
-          />
-        </FormFieldCompact>
-        <FormFieldCompact icon={Music2} label="TikTok:" as="label">
-          <ContactLinkInput
-            name={`contactTiktok-${id}`}
-            defaultValue={tiktokDefault}
-            platform="tiktok"
-          />
-        </FormFieldCompact>
-      </div>
-      {canDelete ? (
-        <DeleteConfirmInline
-          deleteState={deleteState}
-          onDelete={onDelete}
-          onCancel={onCancel}
-          onApprove={onApprove}
-          title="Sil"
-        />
-      ) : null}
-    </div>
+            </Field>
+          </div>
+        </AppPagePanel>
+      </form>
+    </AppPageShell>
   )
 }

@@ -601,104 +601,17 @@ textarea:not(.form-input)::placeholder {
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-/* Müşteri formu: satırlar panel zeminine karışsın (beyaz hücre yok) */
-#customer-edit-form .app-form-field-surface {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-}
-
-#customer-edit-form .glass-pill {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-#customer-edit-form .glass-pill:hover {
-  background: transparent !important;
-}
-
-#customer-edit-form .app-form-row {
-  min-height: 2.25rem;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-/* Form tipografisi: panel başlığı, etiket ve yazılan metin — hepsi yf ölçeğinde
-   (14px / 400 / 1.25), başlıktaki "Müşteriler" geri linkiyle aynı. */
-#customer-edit-form .app-form-row > span,
-#customer-edit-form .app-surface-panel h3,
-#customer-edit-form .glass-pill,
-#customer-edit-form .form-input,
-#customer-edit-form .form-input option,
-#customer-edit-form .app-form-row label {
-  font-size: 14px !important;
-  font-weight: 400 !important;
-  line-height: 1.25 !important;
-  letter-spacing: normal !important;
-}
-
-#customer-edit-form .app-form-row > span,
-#customer-edit-form .app-surface-panel h3 {
-  color: var(--muted) !important;
-}
-
-#customer-edit-form .form-input {
-  min-height: 2rem !important;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-#customer-edit-form .form-input:focus,
-#customer-edit-form .form-input:focus-visible {
-  border: 0 !important;
-  outline: 0 !important;
-  box-shadow: none !important;
-}
-
-#customer-edit-form .customer-form-primary-panel .customer-filter-field {
+/* Müşteri formu — teklifler document-compact diline hizalı; meta filtre satırı */
+#customer-edit-form .customer-form-primary-panel .customer-filter-field,
+#customer-edit-form .customer-form-primary-panel .app-filter-field {
   border: 1px solid var(--search-border);
   background: transparent;
   box-shadow: none;
 }
 
-#customer-edit-form .customer-form-primary-panel .customer-filter-field:hover {
+#customer-edit-form .customer-form-primary-panel .customer-filter-field:hover,
+#customer-edit-form .customer-form-primary-panel .app-filter-field:hover {
   border-color: var(--ds-border-strong, rgba(148, 163, 184, 0.28));
-}
-
-#customer-edit-form .customer-form-primary-panel {
-  min-height: 4.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-}
-
-#customer-edit-form .customer-form-primary-panel > div:first-child {
-  flex: 0 0 auto;
-}
-
-#customer-edit-form .customer-form-primary-panel > div:nth-child(2) {
-  flex: 1 1 auto;
-  margin-top: 0;
-}
-
-@media (max-width: 1023px) {
-  #customer-edit-form .customer-form-primary-panel {
-    min-height: auto;
-    align-items: stretch;
-    flex-direction: column;
-  }
 }
 
 .glass-inset-hover {
@@ -7211,22 +7124,6 @@ html.night .app-form-field-surface {
     0 1px 2px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
   color: var(--ink) !important;
-}
-
-html.night #customer-edit-form .app-form-field-surface {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-}
-
-html.night #customer-edit-form .glass-pill {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-}
-
-html.night #customer-edit-form .glass-pill:hover {
-  background: transparent !important;
 }
 
 html.night .app-responsive .card [class*='bg-dark-900'],
