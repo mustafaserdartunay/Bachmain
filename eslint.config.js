@@ -28,6 +28,10 @@ export default [
       'restore-backups/**',
       'BACHMAIN_DOCUMENT_CENTER/**',
       '**/*.min.js',
+      // TypeScript is typechecked by tsc (npm run typecheck:api / typecheck:ai).
+      // Default ESLint parser cannot parse .ts/.tsx; CLI globs that only match
+      // ignored files also fail ESLint 9 ("all files matching glob are ignored").
+      '**/*.{ts,tsx}',
     ],
   },
   js.configs.recommended,
@@ -67,17 +71,6 @@ export default [
       'react/jsx-uses-vars': 'warn',
       'react-hooks/rules-of-hooks': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
-    },
-  },
-  {
-    files: ['apps/api/src/**/*.{ts,tsx}', 'src/ai/**/*.{ts,tsx}'],
-    languageOptions: {
-      globals: globals.node,
-    },
-    rules: {
-      // TS handled by tsc; keep JS rules soft here
-      'no-undef': 'off',
-      'no-unused-vars': 'off',
     },
   },
 ]

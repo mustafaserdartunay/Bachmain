@@ -190,11 +190,16 @@ export function getExchangeRatesSnapshot() {
   return readCachedRates() || FALLBACK
 }
 
-export function useExchangeRates() {
+export function useExchangeRates({ enabled = true } = {}) {
   const [rates, setRates] = useState(() => readCachedRates() || FALLBACK)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => Boolean(enabled) && !readCachedRates())
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false)
+      return undefined
+    }
+
     let cancelled = false
 
     async function fetchRates({ showLoading = false } = {}) {
@@ -232,7 +237,7 @@ export function useExchangeRates() {
       document.removeEventListener('visibilitychange', refreshWhenVisible)
       window.removeEventListener('bach:exchange-rates-refresh', fetchRates)
     }
-  }, [])
+  }, [enabled])
 
   return {
     rates,

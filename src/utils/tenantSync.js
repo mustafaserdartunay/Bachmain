@@ -11,6 +11,7 @@
 import { getStoredSession } from './platformAuth'
 
 const API_BASE = import.meta.env.VITE_PLATFORM_API_URL || 'https://yonetim.bachmain.com/api'
+const TENANT_TIMEOUT_MS = 12_000
 
 const pendingTimers = new Map()
 const pendingPayloads = new Map()
@@ -20,10 +21,27 @@ const pushChains = new Map()
 /** Latest payload (or factory) waiting to be sent for each collection. */
 const latestPayloads = new Map()
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = TENANT_TIMEOUT_MS) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      const err = new Error('İstek zaman aşımına uğradı')
+      err.code = 'TIMEOUT'
+      throw err
+    }
+    throw error
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 async function tenantFetch(path, { method = 'GET', body } = {}) {
   const { token } = getStoredSession()
   if (!token) throw new Error('Oturum yok')
-  const res = await fetch(`${API_BASE}/tenant/${path}`, {
+  const res = await fetchWithTimeout(`${API_BASE}/tenant/${path}`, {
     method,
     credentials: 'include',
     headers: {

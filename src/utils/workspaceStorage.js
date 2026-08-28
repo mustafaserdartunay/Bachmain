@@ -19,8 +19,8 @@ export const WORKSPACE_HYDRATED_EVENT = 'bach:workspace-hydrated'
 export const WORKSPACE_CLEARED_EVENT = 'bach:workspace-cleared'
 export const WORKSPACE_REMOTE_SYNC_EVENT = 'bach:workspace-remote-synced'
 
-const LIVE_PULL_VISIBLE_MS = 3000
-const LIVE_PULL_HIDDEN_MS = 15000
+const LIVE_PULL_VISIBLE_MS = 30_000
+const LIVE_PULL_HIDDEN_MS = 60_000
 const LIVE_PULL_IDE_MS = 60_000
 const SAFETY_FLUSH_MS = 60_000
 
@@ -33,6 +33,8 @@ const EXCLUDED_KEYS = new Set([
   'bach-app-version-seen',
   'bach-app-build-seen',
   'bach-app-version-transitions',
+  'erlenbox-live-exchange-rates',
+  'bach:market-rate-series-v1',
 ])
 
 /** Known CRM storage keys (also any erlenbox-* / bach-* prefix except excluded). */
