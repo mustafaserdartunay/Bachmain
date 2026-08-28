@@ -1,4 +1,4 @@
-import { ExternalLink, FolderOpen, Plus } from 'lucide-react'
+import { FolderOpen, Plus } from 'lucide-react'
 import { YF_TEXT_CLASS } from '../../utils/dashboardDesign'
 
 function noteCount(category) {
@@ -8,15 +8,13 @@ function noteCount(category) {
 
 /**
  * Form altı buton şeridi.
- * Tek tık: seç / tekrar tık: seçimi kaldır (genel listeye kaydeder).
- * Sayfa açmak için yanındaki aç ikonu.
+ * Tek tık: seç + notları göster · tekrar tık: genel listeye dön.
  */
 export default function NotebookCategorySection({
   categories = [],
   selectedId = null,
   onSelect,
   onClearSelect,
-  onOpenCategory,
   onCreateCategory,
 }) {
   return (
@@ -24,7 +22,7 @@ export default function NotebookCategorySection({
       <div className="mb-2 flex items-center justify-between gap-2">
         <p className="min-w-0 truncate text-[12px] font-normal leading-tight text-[var(--muted)]">
           {selectedId
-            ? 'Seçili butona kaydedilecek · tekrar tıkla → genel liste'
+            ? 'Seçili buton notları · tekrar tıkla → genel liste'
             : 'Buton seçilmezse genel listeye kaydedilir'}
         </p>
         <button
@@ -47,41 +45,28 @@ export default function NotebookCategorySection({
             const isSelected = selectedId === category.id
             const count = noteCount(category)
             return (
-              <div
+              <button
                 key={category.id}
-                className={`inline-flex max-w-full items-center overflow-hidden rounded-xl border transition-colors ${
+                type="button"
+                onClick={() => {
+                  if (isSelected) onClearSelect?.()
+                  else onSelect?.(category)
+                }}
+                className={`inline-flex max-w-full items-center gap-1.5 overflow-hidden rounded-xl border px-2.5 py-1.5 text-left transition-colors ${
                   isSelected
                     ? 'border-blue-500/50 bg-blue-500/15 text-blue-700'
-                    : 'border-[rgba(140,145,165,0.18)] bg-white/45 text-[var(--ink)]'
+                    : 'border-[rgba(140,145,165,0.18)] bg-white/45 text-[var(--ink)] hover:bg-blue-500/5'
                 }`}
+                title={
+                  isSelected
+                    ? `${category.title} seçili · tekrar tıklayınca genel liste`
+                    : `${category.title} · notları göster ve buraya kaydet`
+                }
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isSelected) onClearSelect?.()
-                    else onSelect?.(category)
-                  }}
-                  className="inline-flex min-w-0 items-center gap-1.5 px-2.5 py-1.5 text-left transition-colors hover:bg-blue-500/5"
-                  title={
-                    isSelected
-                      ? `${category.title} seçili · tekrar tıklayınca seçim kalkar`
-                      : `${category.title} · seçince notlar bu sayfaya gider`
-                  }
-                >
-                  <FolderOpen className="h-3.5 w-3.5 shrink-0" strokeWidth={2.1} />
-                  <span className="truncate text-[12px] font-semibold">{category.title}</span>
-                  <span className={`${YF_TEXT_CLASS} !text-[11px] tabular-nums`}>{count}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onOpenCategory?.(category)}
-                  className="inline-flex h-full items-center border-l border-[rgba(140,145,165,0.16)] px-2 text-[var(--muted)] transition-colors hover:bg-blue-500/10 hover:text-blue-700"
-                  title="Buton sayfasını aç"
-                  aria-label={`${category.title} sayfasını aç`}
-                >
-                  <ExternalLink className="h-3.5 w-3.5" strokeWidth={2.1} />
-                </button>
-              </div>
+                <FolderOpen className="h-3.5 w-3.5 shrink-0" strokeWidth={2.1} />
+                <span className="truncate text-[12px] font-semibold">{category.title}</span>
+                <span className={`${YF_TEXT_CLASS} !text-[11px] tabular-nums`}>{count}</span>
+              </button>
             )
           })}
         </div>

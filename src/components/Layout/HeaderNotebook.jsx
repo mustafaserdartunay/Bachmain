@@ -8,7 +8,7 @@ import AgendaNoteBoard, {
   sortAgendaNotes,
 } from '../Crm/AgendaNoteBoard'
 import NotebookCategorySection from './NotebookCategorySection'
-import NotebookCategoryDetailModal from './NotebookCategoryDetailModal'
+import NotebookCategoryInlinePanel from './NotebookCategoryInlinePanel'
 import {
   deleteAgendaNote,
   deleteCompletedAgendaNotes,
@@ -41,7 +41,7 @@ export default function HeaderNotebook({ hideTrigger = false }) {
     sortNotebookCategories(loadNotebookCategories()),
   )
   const [selectedCategoryId, setSelectedCategoryId] = useState(null)
-  const [detailCategory, setDetailCategory] = useState(null)
+  const [viewCategory, setViewCategory] = useState(null)
   const [focusToken, setFocusToken] = useState(0)
   const {
     anchorRef,
@@ -81,14 +81,24 @@ export default function HeaderNotebook({ hideTrigger = false }) {
     if (!selectedCategoryId) return
     if (!categories.some((item) => item.id === selectedCategoryId)) {
       setSelectedCategoryId(null)
+      setViewCategory(null)
     }
   }, [categories, selectedCategoryId])
+
+  useEffect(() => {
+    if (!viewCategory?.id) return
+    const fresh = categories.find((item) => item.id === viewCategory.id)
+    if (fresh && fresh !== viewCategory) {
+      setViewCategory(fresh)
+    }
+  }, [categories, viewCategory])
 
   const sortedNotes = useMemo(() => sortAgendaNotes(notes), [notes])
   const incompleteCount = useMemo(() => countIncompleteAgendaNotes(notes), [notes])
   const portalStyle = mobileHandoff
     ? styleFromMobileToolsHandoff(mobileHandoff, { maxBottomInset: 16 })
     : menuStyle
+  const viewingCategory = Boolean(viewCategory)
 
   function refreshNotes() {
     setNotes(loadAgendaNotes())
@@ -102,6 +112,11 @@ export default function HeaderNotebook({ hideTrigger = false }) {
     if (selectedCategoryId) {
       appendNotebookCategoryNote(selectedCategoryId, content)
       refreshCategories()
+      if (viewCategory?.id === selectedCategoryId) {
+        const fresh =
+          loadNotebookCategories().find((item) => item.id === selectedCategoryId) || viewCategory
+        setViewCategory(fresh)
+      }
       return
     }
     const stamp = getAgendaNoteStamp()
@@ -161,20 +176,32 @@ export default function HeaderNotebook({ hideTrigger = false }) {
   }
 
   function handleCreateCategory() {
-    setDetailCategory({
+    setViewCategory({
       title: uniqueNotebookCategoryTitle('Yeni Buton', categories),
       notes: [],
     })
+    setSelectedCategoryId(null)
+  }
+
+  function handleSelectCategory(category) {
+    const fresh = loadNotebookCategories().find((item) => item.id === category.id) || category
+    setSelectedCategoryId(fresh.id)
+    setViewCategory(fresh)
+  }
+
+  function handleClearCategory() {
+    setSelectedCategoryId(null)
+    setViewCategory(null)
   }
 
   function handleCategoryChanged(nextCategory) {
     refreshCategories()
     if (nextCategory?.id) {
-      setDetailCategory(nextCategory)
+      setViewCategory(nextCategory)
       setSelectedCategoryId(nextCategory.id)
       return
     }
-    setDetailCategory(null)
+    setViewCategory(null)
     setSelectedCategoryId(null)
   }
 
@@ -257,6 +284,7 @@ export default function HeaderNotebook({ hideTrigger = false }) {
                 enterToSave
                 showRecordCount={false}
                 focusToken={focusToken}
+                composerOnly={viewingCategory}
                 onSave={handleSave}
                 onToggleComplete={handleToggleComplete}
                 onUpdate={handleUpdateNote}
@@ -264,31 +292,34 @@ export default function HeaderNotebook({ hideTrigger = false }) {
                 onDeleteCompleted={handleDeleteCompleted}
                 onReorder={handleReorder}
                 afterComposer={
-                  <NotebookCategorySection
-                    categories={categories}
-                    selectedId={selectedCategoryId}
-                    onSelect={(category) => setSelectedCategoryId(category.id)}
-                    onClearSelect={() => setSelectedCategoryId(null)}
-                    onOpenCategory={(category) => {
-                      const fresh =
-                        loadNotebookCategories().find((item) => item.id === category.id) || category
-                      setDetailCategory(fresh)
-                    }}
-                    onCreateCategory={handleCreateCategory}
-                  />
+                  <div
+                    className={
+                      viewingCategory ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : undefined
+                    }
+                  >
+                    <NotebookCategorySection
+                      categories={categories}
+                      selectedId={selectedCategoryId}
+                      onSelect={handleSelectCategory}
+                      onClearSelect={handleClearCategory}
+                      onCreateCategory={handleCreateCategory}
+                    />
+                    {viewCategory ? (
+                      <NotebookCategoryInlinePanel
+                        category={viewCategory}
+                        onClose={handleClearCategory}
+                        onChanged={handleCategoryChanged}
+                        showComposer={false}
+                        fill
+                      />
+                    ) : null}
+                  </div>
                 }
               />
             </div>
           </div>,
           document.body,
         )}
-
-      <NotebookCategoryDetailModal
-        open={Boolean(detailCategory)}
-        category={detailCategory}
-        onClose={() => setDetailCategory(null)}
-        onChanged={handleCategoryChanged}
-      />
     </div>
   )
 }
