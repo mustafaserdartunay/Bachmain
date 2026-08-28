@@ -92,7 +92,7 @@ export default function LabelsSettingsPage() {
     'Sipariş Süreçleri',
     'Depo Süreçleri',
     'Üretim Süreçleri',
-    'Dashboard Süreçleri',
+    'Güncel Durum',
   ])
 
   const crmVisible = matchesProcessSearch(searchQuery, 'Crm Süreçleri')
@@ -106,7 +106,7 @@ export default function LabelsSettingsPage() {
       if (matchesProcessSearch(searchQuery, 'Sipariş Süreçleri')) count += 1
       if (matchesProcessSearch(searchQuery, 'Depo Süreçleri')) count += 1
       if (matchesProcessSearch(searchQuery, 'Üretim Süreçleri')) count += 1
-      if (matchesProcessSearch(searchQuery, 'Dashboard Süreçleri')) count += 1
+      if (matchesProcessSearch(searchQuery, 'Güncel Durum')) count += 1
     }
     if (crmVisible) count += 1
     if (noteVisible) count += 1

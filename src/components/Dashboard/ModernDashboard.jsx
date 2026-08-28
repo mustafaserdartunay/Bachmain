@@ -326,28 +326,9 @@ function CrmCategoryMetricRow({ category }) {
   )
 }
 
-const FINANCE_STRIP_ORDER = [
-  'receivables',
-  'payables',
-  'stock-value',
-  'cash',
-  'bank',
-  'cheques',
-  'promissory-notes',
-  'live-assets',
-  'future',
-  'possible',
-]
-
-function sortFinanceStripCards(cards) {
-  const orderMap = new Map(FINANCE_STRIP_ORDER.map((id, index) => [id, index]))
-  return [...cards].sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999))
-}
-
 function FinanceMetricsPanel({ cards = [], className = '' }) {
   if (!cards.length) return null
 
-  const orderedCards = sortFinanceStripCards(cards)
   const panelTitleClass = APP_PANEL_TITLE_CLASS
 
   return (
@@ -361,7 +342,7 @@ function FinanceMetricsPanel({ cards = [], className = '' }) {
       </div>
 
       <div className={APP_DASHBOARD_PANEL_BODY_CLASS}>
-        {orderedCards.map((card) => (
+        {cards.map((card) => (
           <FinanceMetricCell key={card.id} card={card} />
         ))}
       </div>

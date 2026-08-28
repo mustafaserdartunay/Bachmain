@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Eye, EyeOff, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import ProcessPanelModule from '../DocumentEditor/ProcessPanelModule'
 import OptionListPanel from './OptionListPanel'
+import GuncelDurumFinanceSettings from './GuncelDurumFinanceSettings'
 import ProcessSettingsSectionShell, {
   PROCESS_PANEL_INNER_CLASS,
 } from './ProcessSettingsSectionShell'
@@ -31,6 +32,7 @@ import {
   DASHBOARD_FINANCE_CARDS_EVENT,
   loadDashboardFinanceCards,
   publishDashboardFinanceCards,
+  reorderDashboardFinanceCards,
 } from '../../utils/dashboardFinanceCards'
 import { buildFinanceMetricCards } from '../Dashboard/StatusAnalysisBoard'
 import { readOptionLists, saveOptionList } from '../../utils/customerMeta'
@@ -1058,6 +1060,10 @@ export default function WorkflowStagesSettingsPanel({ searchQuery = '' }) {
     )
   }
 
+  function reorderDashboardFinance(orderedIds) {
+    setDashboardFinanceCards(reorderDashboardFinanceCards(orderedIds))
+  }
+
   const activeQuoteSegmentMeta = quoteSegmentTabs.find(
     (segment) => segment.id === activeQuoteSegment,
   )
@@ -1066,7 +1072,7 @@ export default function WorkflowStagesSettingsPanel({ searchQuery = '' }) {
   const showOrder = matchesProcessSearch(searchQuery, 'Sipariş Süreçleri')
   const showDepo = matchesProcessSearch(searchQuery, 'Depo Süreçleri')
   const showProduction = matchesProcessSearch(searchQuery, 'Üretim Süreçleri')
-  const showDashboard = matchesProcessSearch(searchQuery, 'Dashboard Süreçleri')
+  const showDashboard = matchesProcessSearch(searchQuery, 'Güncel Durum')
 
   return (
     <>
@@ -1328,66 +1334,16 @@ export default function WorkflowStagesSettingsPanel({ searchQuery = '' }) {
 
       {showDashboard ? (
         <ProcessSettingsSectionShell
-          title="Dashboard Süreçleri"
-          description="Dashboard finans kartlarının görünürlük durumunu buradan yönetin."
+          title="Güncel Durum"
+          description="Finans özeti satırlarının sırasını ve görünürlüğünü buradan yönetin. Değişiklikler Güncel Durum sayfasına anında yansır."
         >
           <div className="mt-5">
-            <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-gray-500">
-              Kasa ve Finans Görünümü
-            </h3>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {dashboardFinanceMetricCards.map((card) => {
-                const config = dashboardFinanceCards.find((item) => item.id === card.id)
-                const isVisible = config?.visible !== false
-                const Icon = card.icon
-                const ToggleIcon = isVisible ? Eye : EyeOff
-                return (
-                  <button
-                    key={card.id}
-                    type="button"
-                    onClick={() => toggleDashboardFinanceVisibility(card.id)}
-                    className={`flex min-h-[104px] flex-col justify-between rounded-2xl border p-3 text-left shadow-card transition-colors ${
-                      isVisible
-                        ? 'border-dark-500/55 bg-dark-800/75 hover:border-blue-500/35'
-                        : 'border-dashed border-dark-500/45 bg-dark-700/30 opacity-55 hover:opacity-80'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="max-w-[8rem] text-[10px] font-black uppercase leading-snug tracking-[0.18em] text-gray-400">
-                          {card.label}
-                        </p>
-                        <p
-                          className={`mt-2 break-words text-[1rem] font-black leading-tight tracking-tight ${card.valueTone}`}
-                        >
-                          {card.value}
-                        </p>
-                      </div>
-                      <span
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-dark-500/65 bg-dark-700/70 ${card.iconTone}`}
-                      >
-                        {Icon && <Icon className="h-3.5 w-3.5" />}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <p className="line-clamp-1 text-[11px] font-semibold leading-snug text-gray-400">
-                        {card.sub || 'Dashboard finans kartı'}
-                      </p>
-                      <span
-                        className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-[12px] font-black ${
-                          isVisible
-                            ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
-                            : 'border-dark-500/50 bg-dark-800/60 text-gray-500'
-                        }`}
-                      >
-                        <ToggleIcon className="h-3 w-3" />
-                        {isVisible ? 'Göster' : 'Gizle'}
-                      </span>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
+            <GuncelDurumFinanceSettings
+              metricCards={dashboardFinanceMetricCards}
+              configCards={dashboardFinanceCards}
+              onToggleVisibility={toggleDashboardFinanceVisibility}
+              onReorder={reorderDashboardFinance}
+            />
           </div>
         </ProcessSettingsSectionShell>
       ) : null}

@@ -27,26 +27,28 @@ function normalizeCard(card, index) {
   }
 }
 
+/** Kayıtlı sırayı koru; eksik varsayılan kartları sona ekle. */
 function mergeWithDefaults(cards) {
   const normalized = Array.isArray(cards) ? cards.map(normalizeCard).filter(Boolean) : []
   const byId = new Map(normalized.map((card) => [card.id, card]))
-  const savedKnownIds = normalized
-    .filter((card) => DEFAULT_DASHBOARD_FINANCE_CARDS.some((defaultCard) => defaultCard.id === card.id))
-    .map((card) => card.id)
-    .join('|')
-  const defaultKnownIds = DEFAULT_DASHBOARD_FINANCE_CARDS.map((card) => card.id).join('|')
-  const orderedDefaults = savedKnownIds === defaultKnownIds
-    ? normalized.filter((card) => DEFAULT_DASHBOARD_FINANCE_CARDS.some((defaultCard) => defaultCard.id === card.id))
-    : DEFAULT_DASHBOARD_FINANCE_CARDS
-  const merged = orderedDefaults.map((card) => ({
-    ...card,
-    ...(byId.get(card.id) || {}),
-  }))
+  const seen = new Set()
+  const merged = []
+
   normalized.forEach((card) => {
-    if (!DEFAULT_DASHBOARD_FINANCE_CARDS.some((defaultCard) => defaultCard.id === card.id)) {
-      merged.push(card)
-    }
+    if (seen.has(card.id)) return
+    seen.add(card.id)
+    merged.push({
+      ...(DEFAULT_DASHBOARD_FINANCE_CARDS.find((item) => item.id === card.id) || {}),
+      ...card,
+    })
   })
+
+  DEFAULT_DASHBOARD_FINANCE_CARDS.forEach((card) => {
+    if (seen.has(card.id)) return
+    seen.add(card.id)
+    merged.push({ ...card, ...(byId.get(card.id) || {}) })
+  })
+
   return merged
 }
 
@@ -63,7 +65,9 @@ export function loadDashboardFinanceCards() {
 }
 
 export function publishDashboardFinanceCards(cards) {
-  const normalized = Array.isArray(cards) ? mergeWithDefaults(cards) : DEFAULT_DASHBOARD_FINANCE_CARDS.map((card) => ({ ...card }))
+  const normalized = Array.isArray(cards)
+    ? mergeWithDefaults(cards)
+    : DEFAULT_DASHBOARD_FINANCE_CARDS.map((card) => ({ ...card }))
   try {
     localStorage.setItem(DASHBOARD_FINANCE_CARDS_STORAGE_KEY, JSON.stringify(normalized))
   } catch {
@@ -71,4 +75,22 @@ export function publishDashboardFinanceCards(cards) {
   }
   window.dispatchEvent(new CustomEvent(DASHBOARD_FINANCE_CARDS_EVENT, { detail: normalized }))
   return normalized
+}
+
+export function reorderDashboardFinanceCards(orderedIds = []) {
+  const cards = loadDashboardFinanceCards()
+  const byId = new Map(cards.map((card) => [card.id, card]))
+  const next = []
+  const seen = new Set()
+  orderedIds.forEach((id) => {
+    const card = byId.get(id)
+    if (!card || seen.has(id)) return
+    next.push(card)
+    seen.add(id)
+  })
+  cards.forEach((card) => {
+    if (seen.has(card.id)) return
+    next.push(card)
+  })
+  return publishDashboardFinanceCards(next)
 }
