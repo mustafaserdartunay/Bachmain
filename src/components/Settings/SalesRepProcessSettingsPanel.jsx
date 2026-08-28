@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Percent, Trophy } from 'lucide-react'
 import OptionListPanel from './OptionListPanel'
+import ProcessSettingsSectionShell from './ProcessSettingsSectionShell'
 import {
   DEFAULT_SALES_REP_SETTINGS,
   loadSalesRepSettings,
@@ -30,16 +31,13 @@ export default function SalesRepProcessSettingsPanel() {
   }
 
   return (
-    <section className="card space-y-4">
-      <div>
-        <h2 className="text-base font-black text-white">Satış Temsilcileri Süreçleri</h2>
-        <p className="mt-1 text-xs font-semibold text-gray-500">
-          Puantaj oranları, puanlama ve temsilci görev süreç aşamaları.
-        </p>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-dark-500/45 bg-dark-800/55 p-4">
+    <ProcessSettingsSectionShell
+      title="Satış Temsilcileri Süreçleri"
+      description="Puantaj oranları, puanlama ve temsilci görev süreç aşamaları."
+      meta={`${settings.taskStages?.length || 0} görev aşaması tanımlı`}
+    >
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-white/10 bg-dark-900/35 p-4 shadow-inner">
           <div className="mb-3 flex items-center gap-2 text-emerald-300">
             <Percent className="h-4 w-4" />
             <p className="text-sm font-black">Prim Oranları</p>
@@ -72,7 +70,7 @@ export default function SalesRepProcessSettingsPanel() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-dark-500/45 bg-dark-800/55 p-4">
+        <div className="rounded-2xl border border-white/10 bg-dark-900/35 p-4 shadow-inner">
           <div className="mb-3 flex items-center gap-2 text-amber-300">
             <Trophy className="h-4 w-4" />
             <p className="text-sm font-black">Yarış Puanları</p>
@@ -80,34 +78,56 @@ export default function SalesRepProcessSettingsPanel() {
           <div className="space-y-3">
             <label className="block">
               <span className="form-label">Satış Başına Puan</span>
-              <input type="number" min="0" className="form-input text-sm" value={settings.pointsPerSale} onChange={(e) => updateNumber('pointsPerSale', e.target.value)} />
+              <input
+                type="number"
+                min="0"
+                className="form-input text-sm"
+                value={settings.pointsPerSale}
+                onChange={(e) => updateNumber('pointsPerSale', e.target.value)}
+              />
             </label>
             <label className="block">
               <span className="form-label">Teklif Başına Puan</span>
-              <input type="number" min="0" className="form-input text-sm" value={settings.pointsPerQuote} onChange={(e) => updateNumber('pointsPerQuote', e.target.value)} />
+              <input
+                type="number"
+                min="0"
+                className="form-input text-sm"
+                value={settings.pointsPerQuote}
+                onChange={(e) => updateNumber('pointsPerQuote', e.target.value)}
+              />
             </label>
             <label className="block">
               <span className="form-label">Tamamlanan Görev Puanı</span>
-              <input type="number" min="0" className="form-input text-sm" value={settings.pointsPerTask} onChange={(e) => updateNumber('pointsPerTask', e.target.value)} />
+              <input
+                type="number"
+                min="0"
+                className="form-input text-sm"
+                value={settings.pointsPerTask}
+                onChange={(e) => updateNumber('pointsPerTask', e.target.value)}
+              />
             </label>
           </div>
         </div>
       </div>
 
-      <OptionListPanel
-        title="Görev Süreç Aşamaları"
-        description="Satış temsilcisi görevlerinde kullanılan süreç adımları."
-        options={settings.taskStages}
-        onChange={updateStages}
-        placeholder="Yeni görev aşaması..."
-        activeLabel="Aktif Aşama"
-        countSuffix="aşama tanımlı"
-        emptyMessage="Henüz görev aşaması eklenmedi."
-      />
+      <div className="mt-5">
+        <OptionListPanel
+          hideHeader
+          title="Görev Süreç Aşamaları"
+          description="Satış temsilcisi görevlerinde kullanılan süreç adımları."
+          options={settings.taskStages}
+          onChange={updateStages}
+          placeholder="Yeni görev aşaması..."
+          activeLabel="Aktif Aşama"
+          countSuffix="aşama tanımlı"
+          emptyMessage="Henüz görev aşaması eklenmedi."
+        />
+      </div>
 
-      <p className="text-[13px] text-gray-500">
-        Varsayılan prim: %{DEFAULT_SALES_REP_SETTINGS.baseCommissionRate} · Ay birincisi: %{DEFAULT_SALES_REP_SETTINGS.winnerCommissionRate}
+      <p className="mt-4 text-[13px] text-gray-500">
+        Varsayılan prim: %{DEFAULT_SALES_REP_SETTINGS.baseCommissionRate} · Ay birincisi: %
+        {DEFAULT_SALES_REP_SETTINGS.winnerCommissionRate}
       </p>
-    </section>
+    </ProcessSettingsSectionShell>
   )
 }

@@ -1,26 +1,37 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Copy, Pencil, X } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import ProcessPanelModule from '../DocumentEditor/ProcessPanelModule'
-import InlineDeleteConfirm from '../Common/InlineDeleteConfirm'
+import ProcessSettingsSectionShell, {
+  PROCESS_PANEL_INNER_CLASS,
+} from './ProcessSettingsSectionShell'
+import SegmentTabs from './SegmentTabs'
 import { isReservedPlaceholderLabel } from '../DocumentEditor/processPanelUtils'
 import { stageColors } from '../DocumentEditor/stageColors'
 import {
   addCrmProcessTemplate,
   loadRawCrmProcessTemplates,
 } from '../../utils/crmProcessTemplatesStore'
-import { publishCrmProcessTemplateRemoval, publishCrmProcessTemplates, publishCrmTemplateStages } from '../../utils/crmProcessTemplatePublish'
+import {
+  publishCrmProcessTemplateRemoval,
+  publishCrmProcessTemplates,
+  publishCrmTemplateStages,
+} from '../../utils/crmProcessTemplatePublish'
 
 function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 }
 
 function normalizeLabel(label) {
-  return String(label || '').trim().toLocaleLowerCase('tr-TR')
+  return String(label || '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
 }
 
 function buildCopyLabel(label, templates) {
   const base = `${String(label || 'Süreç').trim()} Kopya`
-  const used = new Set(Object.values(templates || {}).map((template) => normalizeLabel(template.label)))
+  const used = new Set(
+    Object.values(templates || {}).map((template) => normalizeLabel(template.label)),
+  )
   if (!used.has(normalizeLabel(base))) return base
   let index = 2
   while (used.has(normalizeLabel(`${base} ${index}`))) index += 1
@@ -41,6 +52,16 @@ export default function CrmProcessTemplatesSettingsPanel() {
   const [editingCrmTemplateId, setEditingCrmTemplateId] = useState(null)
   const [editingCrmTemplateDraft, setEditingCrmTemplateDraft] = useState('')
 
+  const crmTabs = useMemo(
+    () =>
+      Object.values(crmTemplates).map((template) => ({
+        id: template.id,
+        label: template.label,
+        sourceId: template.id,
+      })),
+    [crmTemplates],
+  )
+
   useEffect(() => {
     function refreshCrmTemplates() {
       const next = loadRawCrmProcessTemplates()
@@ -50,7 +71,8 @@ export default function CrmProcessTemplatesSettingsPanel() {
       }
     }
     window.addEventListener('bach:crm-process-templates-updated', refreshCrmTemplates)
-    return () => window.removeEventListener('bach:crm-process-templates-updated', refreshCrmTemplates)
+    return () =>
+      window.removeEventListener('bach:crm-process-templates-updated', refreshCrmTemplates)
   }, [activeCrmTemplateId])
 
   function getActiveCrmStages() {
@@ -64,11 +86,20 @@ export default function CrmProcessTemplatesSettingsPanel() {
 
   const segmentRecord = useMemo(() => {
     const stages = getActiveCrmStages()
-    const currentStageId = previewStageId && stages.some((stage) => stage.id === previewStageId)
-      ? previewStageId
-      : ''
+    const currentStageId =
+      previewStageId && stages.some((stage) => stage.id === previewStageId) ? previewStageId : ''
     return { stages, currentStageId }
   }, [crmTemplates, activeCrmTemplateId, previewStageId])
+
+  function selectCrmSegment(segment) {
+    setActiveCrmTemplateId(segment.id)
+    setPreviewStageId(null)
+    setPendingStageDeleteId(null)
+    setPendingCrmTemplateDeleteId(null)
+    setStageInput('')
+    setEditingCrmTemplateId(null)
+    setEditingCrmTemplateDraft('')
+  }
 
   function addStage(chosenColor, inputLabel) {
     const label = String(inputLabel ?? stageInput ?? '').trim()
@@ -104,7 +135,9 @@ export default function CrmProcessTemplatesSettingsPanel() {
   }
 
   function updateStageColor(stage, color) {
-    persistCrmStages(getActiveCrmStages().map((item) => (item.id === stage.id ? { ...item, color } : item)))
+    persistCrmStages(
+      getActiveCrmStages().map((item) => (item.id === stage.id ? { ...item, color } : item)),
+    )
   }
 
   function updateStageLabel(stage, label) {
@@ -113,7 +146,9 @@ export default function CrmProcessTemplatesSettingsPanel() {
 
     const segmentStages = getActiveCrmStages()
     if (segmentStages.some((item) => item.id !== stage.id && item.label === clean)) return
-    persistCrmStages(segmentStages.map((item) => (item.id === stage.id ? { ...item, label: clean } : item)))
+    persistCrmStages(
+      segmentStages.map((item) => (item.id === stage.id ? { ...item, label: clean } : item)),
+    )
   }
 
   function copyStage(stage) {
@@ -161,34 +196,37 @@ export default function CrmProcessTemplatesSettingsPanel() {
     }
   }
 
-  function startEditCrmTemplate(template) {
-    setEditingCrmTemplateId(template.id)
-    setEditingCrmTemplateDraft(template.label)
-    setPendingCrmTemplateDeleteId(null)
-  }
-
-  function cancelEditCrmTemplate() {
-    setEditingCrmTemplateId(null)
-    setEditingCrmTemplateDraft('')
-  }
-
-  function commitEditCrmTemplate(templateId) {
-    const clean = editingCrmTemplateDraft.trim()
+  function renameCrmSegment(segment, label) {
+    const clean = String(label || '').trim()
     const current = loadRawCrmProcessTemplates()
-    if (!clean || !current[templateId]) {
-      cancelEditCrmTemplate()
+    if (!clean || !current[segment.id]) {
+      setEditingCrmTemplateId(null)
+      setEditingCrmTemplateDraft('')
       return
     }
-    if (Object.values(current).some((template) => template.id !== templateId && normalizeLabel(template.label) === normalizeLabel(clean))) {
-      cancelEditCrmTemplate()
+    if (
+      Object.values(current).some(
+        (template) =>
+          template.id !== segment.id && normalizeLabel(template.label) === normalizeLabel(clean),
+      )
+    ) {
+      setEditingCrmTemplateId(null)
+      setEditingCrmTemplateDraft('')
       return
     }
     const next = publishCrmProcessTemplates({
       ...current,
-      [templateId]: { ...current[templateId], label: clean },
+      [segment.id]: { ...current[segment.id], label: clean },
     })
     setCrmTemplates(next)
-    cancelEditCrmTemplate()
+    setEditingCrmTemplateId(null)
+    setEditingCrmTemplateDraft('')
+  }
+
+  function copyCrmSegment(segment) {
+    const template = crmTemplates[segment.id]
+    if (!template) return
+    copyCrmTemplate(template)
   }
 
   function copyCrmTemplate(template) {
@@ -212,7 +250,23 @@ export default function CrmProcessTemplatesSettingsPanel() {
     setActiveCrmTemplateId(nextId)
     setPreviewStageId(null)
     setPendingCrmTemplateDeleteId(null)
-    cancelEditCrmTemplate()
+    setEditingCrmTemplateId(null)
+    setEditingCrmTemplateDraft('')
+  }
+
+  function deleteCrmSegment(segment) {
+    removeCrmTemplate(segment.id)
+  }
+
+  function submitNewTemplate(event) {
+    event.preventDefault()
+    const label = crmTemplateInput.trim()
+    if (!label) return
+    const next = addCrmProcessTemplate(label)
+    setCrmTemplates(next)
+    const created = Object.values(next).find((template) => template.label === label)
+    if (created) setActiveCrmTemplateId(created.id)
+    setCrmTemplateInput('')
   }
 
   function toggleEditor() {
@@ -223,172 +277,71 @@ export default function CrmProcessTemplatesSettingsPanel() {
   const templateCount = Object.keys(crmTemplates).length
 
   return (
-    <section className="card space-y-4">
-      <div>
-        <h2 className="text-base font-black text-white">Crm Süreçleri</h2>
-        <p className="mt-1 text-xs font-semibold text-gray-500">
-          CRM süreç panosundaki aşama butonları buradan yönetilir. Her süreç türü için aşamalar ayrı tanımlanır.
-        </p>
-        <p className="mt-1 text-[13px] font-bold text-gray-600">
-          {templateCount} süreç türü · {getActiveCrmStages().length} aktif aşama
-        </p>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {Object.values(crmTemplates).map((template) => {
-          const isActive = activeCrmTemplateId === template.id
-          const canDelete = Object.keys(crmTemplates).length > 1
-
-          if (pendingCrmTemplateDeleteId === template.id) {
-            return (
-              <div
-                key={template.id}
-                className="inline-flex items-center gap-2 rounded-xl border border-red-500/35 bg-red-500/10 px-2 py-1.5"
-              >
-                <span className="text-[13px] font-black uppercase tracking-wide text-red-200">
-                  {template.label}
-                </span>
-                <InlineDeleteConfirm
-                  onConfirm={() => removeCrmTemplate(template.id)}
-                  onCancel={() => setPendingCrmTemplateDeleteId(null)}
-                />
-              </div>
-            )
-          }
-
-          return (
-            <div
-              key={template.id}
-              className={`inline-flex items-center overflow-hidden rounded-xl border transition-colors ${
-                isActive
-                  ? 'border-violet-500/50 bg-violet-500/15'
-                  : 'border-dark-500/50 bg-dark-700/50'
-              }`}
-            >
-              {editingCrmTemplateId === template.id ? (
-                <form
-                  className="flex items-center gap-1 px-1 py-1"
-                  onSubmit={(event) => {
-                    event.preventDefault()
-                    commitEditCrmTemplate(template.id)
-                  }}
-                >
-                  <input
-                    value={editingCrmTemplateDraft}
-                    onChange={(event) => setEditingCrmTemplateDraft(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Escape') cancelEditCrmTemplate()
-                    }}
-                    className="h-7 w-32 rounded-lg border border-violet-500/40 bg-dark-900/70 px-2 text-[13px] font-black uppercase text-white outline-none"
-                    autoFocus
-                  />
-                  <button type="submit" className="rounded-md p-1 text-emerald-300 hover:bg-emerald-500/15" title="Kaydet">
-                    <Check className="h-3 w-3" />
-                  </button>
-                  <button type="button" onClick={cancelEditCrmTemplate} className="rounded-md p-1 text-gray-500 hover:bg-dark-600 hover:text-gray-300" title="Vazgeç">
-                    <X className="h-3 w-3" />
-                  </button>
-                </form>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveCrmTemplateId(template.id)
-                    setPreviewStageId(null)
-                    setPendingStageDeleteId(null)
-                    setPendingCrmTemplateDeleteId(null)
-                    setStageInput('')
-                    cancelEditCrmTemplate()
-                  }}
-                  className={`px-3 py-1.5 text-[13px] font-black uppercase tracking-wide transition-colors ${
-                    isActive ? 'text-violet-300' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {template.label}
-                  <span className="ml-1 text-[12px] font-bold text-gray-500">({template.stages.length})</span>
-                </button>
-              )}
-              {editingCrmTemplateId !== template.id && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => copyCrmTemplate(template)}
-                    className="rounded-md p-1 text-gray-500 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300"
-                    aria-label={`${template.label} sürecini kopyala`}
-                    title="Süreç türünü kopyala"
-                  >
-                    <Copy className="h-3 w-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => startEditCrmTemplate(template)}
-                    className="rounded-md p-1 text-gray-500 transition-colors hover:bg-blue-500/15 hover:text-blue-300"
-                    aria-label={`${template.label} sürecini düzenle`}
-                    title="Süreç türünü düzenle"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
-                </>
-              )}
-              {canDelete && (
-                <button
-                  type="button"
-                  onClick={() => setPendingCrmTemplateDeleteId(template.id)}
-                  className="mr-1.5 rounded-md p-0.5 text-gray-500 transition-colors hover:bg-red-500/20 hover:text-red-300"
-                  aria-label={`${template.label} sürecini sil`}
-                  title="Süreç türünü sil"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      <form
-        className="flex flex-wrap items-center gap-2"
-        onSubmit={(event) => {
-          event.preventDefault()
-          const next = addCrmProcessTemplate(crmTemplateInput)
-          setCrmTemplates(next)
-          const created = Object.values(next).find((template) => template.label === crmTemplateInput.trim())
-          if (created) setActiveCrmTemplateId(created.id)
-          setCrmTemplateInput('')
-        }}
-      >
-        <input
-          value={crmTemplateInput}
-          onChange={(event) => setCrmTemplateInput(event.target.value)}
-          placeholder="Yeni CRM süreç türü..."
-          className="form-input min-w-[220px] flex-1"
+    <ProcessSettingsSectionShell
+      title="Crm Süreçleri"
+      description="CRM süreç panosundaki aşama butonları buradan yönetilir. Her süreç türü için aşamalar ayrı tanımlanır."
+      meta={`${templateCount} süreç türü · ${getActiveCrmStages().length} aktif aşama`}
+    >
+      <div className="mt-5 flex items-start gap-2">
+        <SegmentTabs
+          tabs={crmTabs}
+          activeId={activeCrmTemplateId}
+          onSelect={selectCrmSegment}
+          onCopy={copyCrmSegment}
+          onRename={renameCrmSegment}
+          onDelete={deleteCrmSegment}
+          getCount={(segment) => crmTemplates[segment.id]?.stages?.length || 0}
+          editId={editingCrmTemplateId}
+          setEditId={setEditingCrmTemplateId}
+          editDraft={editingCrmTemplateDraft}
+          setEditDraft={setEditingCrmTemplateDraft}
+          pendingDeleteId={pendingCrmTemplateDeleteId}
+          setPendingDeleteId={setPendingCrmTemplateDeleteId}
         />
-        <button type="submit" className="btn-primary px-4 py-2 text-xs font-black uppercase">
-          Tür Ekle
-        </button>
-      </form>
+        <form
+          className="inline-flex h-[34px] shrink-0 items-center gap-1.5"
+          onSubmit={submitNewTemplate}
+        >
+          <input
+            value={crmTemplateInput}
+            onChange={(event) => setCrmTemplateInput(event.target.value)}
+            placeholder="Yeni tür..."
+            className="h-[34px] w-28 rounded-xl border border-dashed border-blue-400/45 bg-blue-500/10 px-2.5 text-xs font-bold text-blue-200 placeholder:text-blue-300/50 outline-none focus:border-blue-400/70 sm:w-36"
+          />
+          <button
+            type="submit"
+            className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-xl border border-dashed border-blue-400/45 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-wide text-blue-300 transition-colors hover:border-blue-400/70 hover:bg-blue-500/20"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Tür Ekle
+          </button>
+        </form>
+      </div>
 
-      <ProcessPanelModule
-        key={activeCrmTemplateId}
-        activeLabel="Aktif Süreç"
-        countSuffix="süreç tanımlı"
-        emptyMessage="Henüz süreç eklenmedi."
-        addPlaceholder="Yeni süreç adı..."
-        record={segmentRecord}
-        isOpen={isOpen}
-        onToggle={toggleEditor}
-        stageInput={stageInput}
-        setStageInput={setStageInput}
-        onAddStage={addStage}
-        onSelectStage={selectStage}
-        onUpdateStageColor={updateStageColor}
-        onUpdateStageLabel={updateStageLabel}
-        onCopyStage={copyStage}
-        onReorderStages={reorderStages}
-        pendingStageDeleteId={pendingStageDeleteId}
-        setPendingStageDeleteId={setPendingStageDeleteId}
-        onRemoveStage={removeStage}
-      />
-    </section>
+      <div className="mt-5">
+        <ProcessPanelModule
+          key={activeCrmTemplateId}
+          className={PROCESS_PANEL_INNER_CLASS}
+          activeLabel="Aktif Süreç"
+          countSuffix="süreç tanımlı"
+          emptyMessage="Henüz süreç eklenmedi."
+          addPlaceholder="Yeni süreç adı..."
+          record={segmentRecord}
+          isOpen={isOpen}
+          onToggle={toggleEditor}
+          stageInput={stageInput}
+          setStageInput={setStageInput}
+          onAddStage={addStage}
+          onSelectStage={selectStage}
+          onUpdateStageColor={updateStageColor}
+          onUpdateStageLabel={updateStageLabel}
+          onCopyStage={copyStage}
+          onReorderStages={reorderStages}
+          pendingStageDeleteId={pendingStageDeleteId}
+          setPendingStageDeleteId={setPendingStageDeleteId}
+          onRemoveStage={removeStage}
+        />
+      </div>
+    </ProcessSettingsSectionShell>
   )
 }

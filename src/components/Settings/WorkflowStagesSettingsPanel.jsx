@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Copy, Eye, EyeOff, GripVertical, Pencil, Plus, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Eye, EyeOff, Plus } from 'lucide-react'
 import ProcessPanelModule from '../DocumentEditor/ProcessPanelModule'
 import OptionListPanel from './OptionListPanel'
-import InlineDeleteConfirm from '../Common/InlineDeleteConfirm'
+import ProcessSettingsSectionShell, {
+  PROCESS_PANEL_INNER_CLASS,
+} from './ProcessSettingsSectionShell'
+import SegmentTabs from './SegmentTabs'
 import { isReservedPlaceholderLabel } from '../DocumentEditor/processPanelUtils'
 import { stageColors } from '../DocumentEditor/stageColors'
 import { publishWorkflowStages } from '../../utils/workflowStagePublish'
@@ -45,13 +48,9 @@ import {
   saveQuoteSegmentTabs,
 } from '../../utils/quoteSegmentTabs'
 
-const WORKFLOW_SEGMENTS = [
-  { id: 'depo', label: 'Depo Süreçleri' },
-]
+const WORKFLOW_SEGMENTS = [{ id: 'depo', label: 'Depo Süreçleri' }]
 
-const ORDER_SEGMENTS = [
-  { id: 'order', label: 'Sipariş Süreci' },
-]
+const ORDER_SEGMENTS = [{ id: 'order', label: 'Sipariş Süreci' }]
 
 const PRODUCTION_SEGMENTS = [
   { id: 'production', label: 'Üretim Süreci' },
@@ -67,7 +66,9 @@ function createId(prefix) {
 }
 
 function normalizeLabel(label) {
-  return String(label || '').trim().toLocaleLowerCase('tr-TR')
+  return String(label || '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
 }
 
 function buildCopyLabel(label, stages) {
@@ -146,236 +147,23 @@ function uniqueSegmentLabel(label, tabs) {
   return `${base} ${index}`
 }
 
-function SegmentTabs({
-  tabs,
-  activeId,
-  onSelect,
-  onCopy,
-  onRename,
-  onDelete,
-  onReorder,
-  getCount,
-  editId,
-  setEditId,
-  editDraft,
-  setEditDraft,
-  pendingDeleteId,
-  setPendingDeleteId,
-}) {
-  const [draggedIndex, setDraggedIndex] = useState(null)
-  const [dragOverIndex, setDragOverIndex] = useState(null)
-  const draggedIndexRef = useRef(null)
-  const suppressClickRef = useRef(false)
-  const canReorder = typeof onReorder === 'function'
-
-  function beginDrag(index, event) {
-    if (!canReorder || editId) return
-    draggedIndexRef.current = index
-    setDraggedIndex(index)
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/plain', String(index))
-    if (event.dataTransfer.setDragImage && event.currentTarget instanceof HTMLElement) {
-      const chip = event.currentTarget.closest('[data-segment-chip]')
-      if (chip) event.dataTransfer.setDragImage(chip, 24, 16)
-    }
-  }
-
-  function handleDrop(targetIndex, event) {
-    event.preventDefault()
-    event.stopPropagation()
-    if (!canReorder) return
-    const transferRaw = event.dataTransfer?.getData('text/plain')
-    const fromIndex = transferRaw !== '' && transferRaw != null
-      ? Number(transferRaw)
-      : draggedIndexRef.current
-    if (fromIndex == null || Number.isNaN(fromIndex) || fromIndex === targetIndex) {
-      setDraggedIndex(null)
-      setDragOverIndex(null)
-      return
-    }
-    const next = [...tabs]
-    const [moved] = next.splice(fromIndex, 1)
-    next.splice(targetIndex, 0, moved)
-    onReorder(next)
-    suppressClickRef.current = true
-    draggedIndexRef.current = null
-    setDraggedIndex(null)
-    setDragOverIndex(null)
-  }
-
-  function endDrag() {
-    window.setTimeout(() => {
-      draggedIndexRef.current = null
-      setDraggedIndex(null)
-      setDragOverIndex(null)
-    }, 0)
-  }
-
-  return (
-    <div className="flex min-w-0 flex-1 flex-wrap gap-2">
-      {tabs.map((segment, index) => {
-        const isActive = activeId === segment.id
-        const isDragging = draggedIndex === index
-        const isDragOver = dragOverIndex === index && draggedIndex !== index
-        if (pendingDeleteId === segment.id) {
-          return (
-            <div
-              key={segment.id}
-              className="inline-flex items-center gap-2 rounded-xl border border-red-500/35 bg-red-500/10 px-2 py-1.5"
-            >
-              <span className="text-[13px] font-black uppercase tracking-wide text-red-200">{segment.label}</span>
-              <InlineDeleteConfirm
-                onConfirm={() => onDelete(segment)}
-                onCancel={() => setPendingDeleteId(null)}
-              />
-            </div>
-          )
-        }
-
-        return (
-          <div
-            key={segment.id}
-            data-segment-chip
-            onDragOver={(event) => {
-              if (!canReorder) return
-              event.preventDefault()
-              event.dataTransfer.dropEffect = 'move'
-              setDragOverIndex(index)
-            }}
-            onDrop={(event) => handleDrop(index, event)}
-            className={`inline-flex items-center overflow-hidden rounded-xl border transition-all ${
-              isDragging ? 'opacity-45' : ''
-            } ${
-              isDragOver
-                ? 'border-blue-400/70 bg-blue-500/20 ring-2 ring-blue-400/35'
-                : isActive
-                  ? 'border-blue-500/50 bg-blue-500/15 shadow-[0_0_18px_rgba(59,130,246,0.12)]'
-                  : 'border-white/10 bg-dark-800/80 hover:border-white/20'
-            }`}
-          >
-            {editId === segment.id ? (
-              <form
-                className="flex items-center gap-1 px-1 py-1"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  onRename(segment, editDraft)
-                }}
-              >
-                <input
-                  value={editDraft}
-                  onChange={(event) => setEditDraft(event.target.value)}
-                  onBlur={() => onRename(segment, editDraft)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Escape') {
-                      event.preventDefault()
-                      setEditId(null)
-                      setEditDraft('')
-                    }
-                  }}
-                  className="h-7 w-40 rounded-lg border border-blue-500/40 bg-dark-900/70 px-2 text-[13px] font-black uppercase text-white outline-none"
-                  autoFocus
-                />
-                <button type="submit" className="rounded-md p-1 text-emerald-300 hover:bg-emerald-500/15" title="Kaydet">
-                  <Check className="h-3 w-3" />
-                </button>
-                <button
-                  type="button"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => { setEditId(null); setEditDraft('') }}
-                  className="rounded-md p-1 text-gray-500 hover:bg-dark-600 hover:text-gray-300"
-                  title="Vazgeç"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </form>
-            ) : (
-              <>
-                {canReorder && (
-                  <div
-                    draggable
-                    onDragStart={(event) => beginDrag(index, event)}
-                    onDragEnd={endDrag}
-                    className="cursor-grab px-1.5 py-2 text-gray-500 opacity-70 transition-opacity hover:text-gray-300 hover:opacity-100 active:cursor-grabbing"
-                    title="Sürükleyerek sırala"
-                    aria-label={`${segment.label} sürükle`}
-                  >
-                    <GripVertical className="h-3.5 w-3.5 pointer-events-none" />
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (suppressClickRef.current) {
-                      suppressClickRef.current = false
-                      return
-                    }
-                    onSelect(segment)
-                  }}
-                  className={`px-2.5 py-2 text-xs font-black uppercase tracking-wide transition-colors ${
-                    isActive ? 'text-blue-300' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {segment.label}
-                  <span className="ml-1.5 text-[12px] font-bold text-gray-500">({getCount(segment)})</span>
-                </button>
-              </>
-            )}
-            {editId !== segment.id && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onCopy(segment)}
-                  className="rounded-md p-1 text-gray-500 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300"
-                  aria-label={`${segment.label} kopyala`}
-                  title="Sekmeyi kopyala"
-                >
-                  <Copy className="h-3 w-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditId(segment.id)
-                    setEditDraft(segment.label)
-                    setPendingDeleteId(null)
-                  }}
-                  className="rounded-md p-1 text-gray-500 transition-colors hover:bg-blue-500/15 hover:text-blue-300"
-                  aria-label={`${segment.label} düzenle`}
-                  title="Sekmeyi düzenle"
-                >
-                  <Pencil className="h-3 w-3" />
-                </button>
-                {tabs.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPendingDeleteId(segment.id)
-                      setEditId(null)
-                    }}
-                    className="mr-1.5 rounded-md p-1 text-gray-500 transition-colors hover:bg-red-500/20 hover:text-red-300"
-                    aria-label={`${segment.label} sil`}
-                    title="Sekmeyi sil"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 export default function WorkflowStagesSettingsPanel() {
   const [workflowStages, setWorkflowStages] = useState(() => loadWorkflowStages())
   const [depoStages, setDepoStages] = useState(() => loadDepoWorkflowStages())
-  const [partDeliverySituations, setPartDeliverySituations] = useState(() => loadPartDeliverySituations())
-  const [workflowSegmentTabs, setWorkflowSegmentTabs] = useState(() => readSegmentTabs(WORKFLOW_SEGMENT_TABS_KEY, WORKFLOW_SEGMENTS))
+  const [partDeliverySituations, setPartDeliverySituations] = useState(() =>
+    loadPartDeliverySituations(),
+  )
+  const [workflowSegmentTabs, setWorkflowSegmentTabs] = useState(() =>
+    readSegmentTabs(WORKFLOW_SEGMENT_TABS_KEY, WORKFLOW_SEGMENTS),
+  )
   const [quoteSegmentTabs, setQuoteSegmentTabs] = useState(() => readQuoteSegmentTabs())
   const [quoteCustomLists, setQuoteCustomLists] = useState(() => readQuoteCustomLists())
-  const [orderSegmentTabs, setOrderSegmentTabs] = useState(() => readSegmentTabs(ORDER_SEGMENT_TABS_KEY, ORDER_SEGMENTS))
-  const [productionSegmentTabs, setProductionSegmentTabs] = useState(() => readSegmentTabs(PRODUCTION_SEGMENT_TABS_KEY, PRODUCTION_SEGMENTS))
+  const [orderSegmentTabs, setOrderSegmentTabs] = useState(() =>
+    readSegmentTabs(ORDER_SEGMENT_TABS_KEY, ORDER_SEGMENTS),
+  )
+  const [productionSegmentTabs, setProductionSegmentTabs] = useState(() =>
+    readSegmentTabs(PRODUCTION_SEGMENT_TABS_KEY, PRODUCTION_SEGMENTS),
+  )
   const [activeSegment, setActiveSegment] = useState('depo')
   const [stageInput, setStageInput] = useState('')
   const [pendingStageDeleteId, setPendingStageDeleteId] = useState(null)
@@ -409,7 +197,9 @@ export default function WorkflowStagesSettingsPanel() {
   const [editingProductionSegmentDraft, setEditingProductionSegmentDraft] = useState('')
   const [pendingProductionSegmentDeleteId, setPendingProductionSegmentDeleteId] = useState(null)
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
-  const [dashboardFinanceCards, setDashboardFinanceCards] = useState(() => loadDashboardFinanceCards())
+  const [dashboardFinanceCards, setDashboardFinanceCards] = useState(() =>
+    loadDashboardFinanceCards(),
+  )
   const [dashboardFinanceInput, setDashboardFinanceInput] = useState('')
   const [pendingDashboardFinanceDeleteId, setPendingDashboardFinanceDeleteId] = useState(null)
   const [isDashboardFinanceOpen, setIsDashboardFinanceOpen] = useState(false)
@@ -417,7 +207,10 @@ export default function WorkflowStagesSettingsPanel() {
   const activeSegmentSource = getSegmentSourceId(workflowSegmentTabs, activeSegment)
   const activeQuoteSegmentSource = getSegmentSourceId(quoteSegmentTabs, activeQuoteSegment)
   const activeOrderSegmentSource = getSegmentSourceId(orderSegmentTabs, activeOrderSegment)
-  const activeProductionSegmentSource = getSegmentSourceId(productionSegmentTabs, activeProductionSegment)
+  const activeProductionSegmentSource = getSegmentSourceId(
+    productionSegmentTabs,
+    activeProductionSegment,
+  )
 
   useEffect(() => {
     function refresh() {
@@ -487,43 +280,55 @@ export default function WorkflowStagesSettingsPanel() {
 
   const segmentRecord = useMemo(() => {
     const stages = getSegmentStages(activeSegmentSource)
-    const currentStageId = previewStageId && stages.some((stage) => stage.id === previewStageId)
-      ? previewStageId
-      : ''
+    const currentStageId =
+      previewStageId && stages.some((stage) => stage.id === previewStageId) ? previewStageId : ''
     return { stages, currentStageId }
   }, [workflowStages, depoStages, activeSegmentSource, previewStageId, partDeliverySituations])
 
   const quoteSegmentRecord = useMemo(() => {
     const stages = getSegmentStages(activeQuoteSegmentSource)
-    const currentStageId = previewQuoteStageId && stages.some((stage) => stage.id === previewQuoteStageId)
-      ? previewQuoteStageId
-      : ''
+    const currentStageId =
+      previewQuoteStageId && stages.some((stage) => stage.id === previewQuoteStageId)
+        ? previewQuoteStageId
+        : ''
     return { stages, currentStageId }
   }, [workflowStages, activeQuoteSegmentSource, previewQuoteStageId, optionLists, quoteCustomLists])
 
   const orderSegmentRecord = useMemo(() => {
     const stages = getSegmentStages(activeOrderSegmentSource)
-    const currentStageId = previewOrderStageId && stages.some((stage) => stage.id === previewOrderStageId)
-      ? previewOrderStageId
-      : ''
+    const currentStageId =
+      previewOrderStageId && stages.some((stage) => stage.id === previewOrderStageId)
+        ? previewOrderStageId
+        : ''
     return { stages, currentStageId }
   }, [workflowStages, activeOrderSegmentSource, previewOrderStageId])
 
   const productionSegmentRecord = useMemo(() => {
     const stages = getSegmentStages(activeProductionSegmentSource)
-    const currentStageId = previewProductionStageId && stages.some((stage) => stage.id === previewProductionStageId)
-      ? previewProductionStageId
-      : ''
+    const currentStageId =
+      previewProductionStageId && stages.some((stage) => stage.id === previewProductionStageId)
+        ? previewProductionStageId
+        : ''
     return { stages, currentStageId }
-  }, [workflowStages, activeProductionSegmentSource, previewProductionStageId, partDeliverySituations])
+  }, [
+    workflowStages,
+    activeProductionSegmentSource,
+    previewProductionStageId,
+    partDeliverySituations,
+  ])
 
   const dashboardFinanceRecord = useMemo(() => {
-    const currentStageId = previewDashboardFinanceId && dashboardFinanceCards.some((card) => card.id === previewDashboardFinanceId)
-      ? previewDashboardFinanceId
-      : ''
+    const currentStageId =
+      previewDashboardFinanceId &&
+      dashboardFinanceCards.some((card) => card.id === previewDashboardFinanceId)
+        ? previewDashboardFinanceId
+        : ''
     return { stages: dashboardFinanceCards, currentStageId }
   }, [dashboardFinanceCards, previewDashboardFinanceId])
-  const dashboardFinanceMetricCards = useMemo(() => buildFinanceMetricCards({ includeHidden: true }), [dashboardFinanceCards])
+  const dashboardFinanceMetricCards = useMemo(
+    () => buildFinanceMetricCards({ includeHidden: true }),
+    [dashboardFinanceCards],
+  )
 
   function persistDepo(nextDepoStages) {
     publishDepoWorkflowStages(nextDepoStages)
@@ -552,11 +357,12 @@ export default function WorkflowStagesSettingsPanel() {
     }
 
     const fullStages = loadWorkflowStages()
-    const segmentStages = activeSegmentSource === 'quote'
-      ? getQuoteStageOptions(fullStages)
-      : activeSegmentSource === 'order'
-        ? getOrderStageOptions(fullStages)
-        : getProductionStageOptions(fullStages)
+    const segmentStages =
+      activeSegmentSource === 'quote'
+        ? getQuoteStageOptions(fullStages)
+        : activeSegmentSource === 'order'
+          ? getOrderStageOptions(fullStages)
+          : getProductionStageOptions(fullStages)
     if (segmentStages.some((item) => item.label === label)) return
     const nextStage = {
       id: createId('stage'),
@@ -564,11 +370,12 @@ export default function WorkflowStagesSettingsPanel() {
       color: chosenColor || stageColors[segmentStages.length % stageColors.length],
       note: 'Yeni süreç aşaması eklendi.',
     }
-    const nextSegmentStages = activeSegmentSource === 'order'
-      ? appendOrderStage(segmentStages, nextStage)
-      : activeSegmentSource === 'quote'
-        ? appendQuoteStage(segmentStages, nextStage)
-        : appendProductionStage(segmentStages, nextStage)
+    const nextSegmentStages =
+      activeSegmentSource === 'order'
+        ? appendOrderStage(segmentStages, nextStage)
+        : activeSegmentSource === 'quote'
+          ? appendQuoteStage(segmentStages, nextStage)
+          : appendProductionStage(segmentStages, nextStage)
     persist(mergeSegmentStages(activeSegmentSource, nextSegmentStages, fullStages))
     setPreviewStageId(nextStage.id)
     setStageInput('')
@@ -592,9 +399,9 @@ export default function WorkflowStagesSettingsPanel() {
       return
     }
     const fullStages = loadWorkflowStages()
-    const segmentStages = getSegmentStagesFrom(fullStages).map((item) => (
-      item.id === stage.id ? { ...item, color } : item
-    ))
+    const segmentStages = getSegmentStagesFrom(fullStages).map((item) =>
+      item.id === stage.id ? { ...item, color } : item,
+    )
     persist(mergeSegmentStages(activeSegmentSource, segmentStages, fullStages))
   }
 
@@ -603,15 +410,17 @@ export default function WorkflowStagesSettingsPanel() {
     if (!clean || isReservedPlaceholderLabel(clean)) return
     if (activeSegmentSource === 'depo') {
       if (depoStages.some((item) => item.id !== stage.id && item.label === clean)) return
-      persistDepo(depoStages.map((item) => (item.id === stage.id ? { ...item, label: clean } : item)))
+      persistDepo(
+        depoStages.map((item) => (item.id === stage.id ? { ...item, label: clean } : item)),
+      )
       return
     }
     const fullStages = loadWorkflowStages()
     const segmentStages = getSegmentStagesFrom(fullStages)
     if (segmentStages.some((item) => item.id !== stage.id && item.label === clean)) return
-    const nextSegmentStages = segmentStages.map((item) => (
-      item.id === stage.id ? { ...item, label: clean } : item
-    ))
+    const nextSegmentStages = segmentStages.map((item) =>
+      item.id === stage.id ? { ...item, label: clean } : item,
+    )
     persist(mergeSegmentStages(activeSegmentSource, nextSegmentStages, fullStages))
   }
 
@@ -667,7 +476,9 @@ export default function WorkflowStagesSettingsPanel() {
       return
     }
     const fullStages = loadWorkflowStages()
-    const nextSegmentStages = getSegmentStagesFrom(fullStages).filter((item) => item.id !== stage.id)
+    const nextSegmentStages = getSegmentStagesFrom(fullStages).filter(
+      (item) => item.id !== stage.id,
+    )
     persist(mergeSegmentStages(activeSegmentSource, nextSegmentStages, fullStages))
     if (previewStageId === stage.id) setPreviewStageId(null)
     setPendingStageDeleteId(null)
@@ -711,9 +522,9 @@ export default function WorkflowStagesSettingsPanel() {
 
   function updateQuoteStageColor(stage, color) {
     const fullStages = loadWorkflowStages()
-    const segmentStages = getQuoteStageOptions(fullStages).map((item) => (
-      item.id === stage.id ? { ...item, color } : item
-    ))
+    const segmentStages = getQuoteStageOptions(fullStages).map((item) =>
+      item.id === stage.id ? { ...item, color } : item,
+    )
     persist(mergeSegmentStages('quote', segmentStages, fullStages))
   }
 
@@ -723,9 +534,9 @@ export default function WorkflowStagesSettingsPanel() {
     const fullStages = loadWorkflowStages()
     const segmentStages = getQuoteStageOptions(fullStages)
     if (segmentStages.some((item) => item.id !== stage.id && item.label === clean)) return
-    const nextSegmentStages = segmentStages.map((item) => (
-      item.id === stage.id ? { ...item, label: clean } : item
-    ))
+    const nextSegmentStages = segmentStages.map((item) =>
+      item.id === stage.id ? { ...item, label: clean } : item,
+    )
     persist(mergeSegmentStages('quote', nextSegmentStages, fullStages))
   }
 
@@ -754,7 +565,9 @@ export default function WorkflowStagesSettingsPanel() {
 
   function removeQuoteStage(stage) {
     const fullStages = loadWorkflowStages()
-    const nextSegmentStages = getQuoteStageOptions(fullStages).filter((item) => item.id !== stage.id)
+    const nextSegmentStages = getQuoteStageOptions(fullStages).filter(
+      (item) => item.id !== stage.id,
+    )
     persist(mergeSegmentStages('quote', nextSegmentStages, fullStages))
     if (previewQuoteStageId === stage.id) setPreviewQuoteStageId(null)
     setPendingQuoteStageDeleteId(null)
@@ -798,9 +611,9 @@ export default function WorkflowStagesSettingsPanel() {
 
   function updateOrderStageColor(stage, color) {
     const fullStages = loadWorkflowStages()
-    const segmentStages = getOrderStageOptions(fullStages).map((item) => (
-      item.id === stage.id ? { ...item, color } : item
-    ))
+    const segmentStages = getOrderStageOptions(fullStages).map((item) =>
+      item.id === stage.id ? { ...item, color } : item,
+    )
     persist(mergeSegmentStages('order', segmentStages, fullStages))
   }
 
@@ -810,9 +623,9 @@ export default function WorkflowStagesSettingsPanel() {
     const fullStages = loadWorkflowStages()
     const segmentStages = getOrderStageOptions(fullStages)
     if (segmentStages.some((item) => item.id !== stage.id && item.label === clean)) return
-    const nextSegmentStages = segmentStages.map((item) => (
-      item.id === stage.id ? { ...item, label: clean } : item
-    ))
+    const nextSegmentStages = segmentStages.map((item) =>
+      item.id === stage.id ? { ...item, label: clean } : item,
+    )
     persist(mergeSegmentStages('order', nextSegmentStages, fullStages))
   }
 
@@ -841,7 +654,9 @@ export default function WorkflowStagesSettingsPanel() {
 
   function removeOrderStage(stage) {
     const fullStages = loadWorkflowStages()
-    const nextSegmentStages = getOrderStageOptions(fullStages).filter((item) => item.id !== stage.id)
+    const nextSegmentStages = getOrderStageOptions(fullStages).filter(
+      (item) => item.id !== stage.id,
+    )
     persist(mergeSegmentStages('order', nextSegmentStages, fullStages))
     if (previewOrderStageId === stage.id) setPreviewOrderStageId(null)
     setPendingOrderStageDeleteId(null)
@@ -854,7 +669,12 @@ export default function WorkflowStagesSettingsPanel() {
 
   function addProductionStage(chosenColor, inputLabel) {
     const label = String(inputLabel ?? productionStageInput ?? '').trim()
-    if (!label || isReservedPlaceholderLabel(label) || activeProductionSegmentSource !== 'production') return
+    if (
+      !label ||
+      isReservedPlaceholderLabel(label) ||
+      activeProductionSegmentSource !== 'production'
+    )
+      return
 
     const fullStages = loadWorkflowStages()
     const segmentStages = getProductionStageOptions(fullStages)
@@ -885,9 +705,9 @@ export default function WorkflowStagesSettingsPanel() {
 
   function updateProductionStageColor(stage, color) {
     const fullStages = loadWorkflowStages()
-    const segmentStages = getProductionStageOptions(fullStages).map((item) => (
-      item.id === stage.id ? { ...item, color } : item
-    ))
+    const segmentStages = getProductionStageOptions(fullStages).map((item) =>
+      item.id === stage.id ? { ...item, color } : item,
+    )
     persist(mergeSegmentStages('production', segmentStages, fullStages))
   }
 
@@ -897,9 +717,9 @@ export default function WorkflowStagesSettingsPanel() {
     const fullStages = loadWorkflowStages()
     const segmentStages = getProductionStageOptions(fullStages)
     if (segmentStages.some((item) => item.id !== stage.id && item.label === clean)) return
-    const nextSegmentStages = segmentStages.map((item) => (
-      item.id === stage.id ? { ...item, label: clean } : item
-    ))
+    const nextSegmentStages = segmentStages.map((item) =>
+      item.id === stage.id ? { ...item, label: clean } : item,
+    )
     persist(mergeSegmentStages('production', nextSegmentStages, fullStages))
   }
 
@@ -928,7 +748,9 @@ export default function WorkflowStagesSettingsPanel() {
 
   function removeProductionStage(stage) {
     const fullStages = loadWorkflowStages()
-    const nextSegmentStages = getProductionStageOptions(fullStages).filter((item) => item.id !== stage.id)
+    const nextSegmentStages = getProductionStageOptions(fullStages).filter(
+      (item) => item.id !== stage.id,
+    )
     persist(mergeSegmentStages('production', nextSegmentStages, fullStages))
     if (previewProductionStageId === stage.id) setPreviewProductionStageId(null)
     setPendingProductionStageDeleteId(null)
@@ -1053,9 +875,11 @@ export default function WorkflowStagesSettingsPanel() {
   function renameWorkflowSegment(segment, label) {
     const clean = String(label || '').trim()
     if (!clean) return
-    updateWorkflowSegmentTabs(workflowSegmentTabs.map((item) => (
-      item.id === segment.id ? { ...item, label: clean } : item
-    )))
+    updateWorkflowSegmentTabs(
+      workflowSegmentTabs.map((item) =>
+        item.id === segment.id ? { ...item, label: clean } : item,
+      ),
+    )
     setEditingWorkflowSegmentId(null)
     setEditingWorkflowSegmentDraft('')
   }
@@ -1063,9 +887,9 @@ export default function WorkflowStagesSettingsPanel() {
   function renameQuoteSegment(segment, label) {
     const clean = String(label || '').trim()
     if (!clean) return
-    updateQuoteSegmentTabs(quoteSegmentTabs.map((item) => (
-      item.id === segment.id ? { ...item, label: clean } : item
-    )))
+    updateQuoteSegmentTabs(
+      quoteSegmentTabs.map((item) => (item.id === segment.id ? { ...item, label: clean } : item)),
+    )
     setEditingQuoteSegmentId(null)
     setEditingQuoteSegmentDraft('')
   }
@@ -1073,9 +897,9 @@ export default function WorkflowStagesSettingsPanel() {
   function renameOrderSegment(segment, label) {
     const clean = String(label || '').trim()
     if (!clean) return
-    updateOrderSegmentTabs(orderSegmentTabs.map((item) => (
-      item.id === segment.id ? { ...item, label: clean } : item
-    )))
+    updateOrderSegmentTabs(
+      orderSegmentTabs.map((item) => (item.id === segment.id ? { ...item, label: clean } : item)),
+    )
     setEditingOrderSegmentId(null)
     setEditingOrderSegmentDraft('')
   }
@@ -1083,9 +907,11 @@ export default function WorkflowStagesSettingsPanel() {
   function renameProductionSegment(segment, label) {
     const clean = String(label || '').trim()
     if (!clean) return
-    updateProductionSegmentTabs(productionSegmentTabs.map((item) => (
-      item.id === segment.id ? { ...item, label: clean } : item
-    )))
+    updateProductionSegmentTabs(
+      productionSegmentTabs.map((item) =>
+        item.id === segment.id ? { ...item, label: clean } : item,
+      ),
+    )
     setEditingProductionSegmentId(null)
     setEditingProductionSegmentDraft('')
   }
@@ -1152,7 +978,8 @@ export default function WorkflowStagesSettingsPanel() {
   function addDashboardFinanceCard(chosenColor, inputLabel) {
     const label = String(inputLabel ?? dashboardFinanceInput ?? '').trim()
     if (!label || isReservedPlaceholderLabel(label)) return
-    if (dashboardFinanceCards.some((card) => normalizeLabel(card.label) === normalizeLabel(label))) return
+    if (dashboardFinanceCards.some((card) => normalizeLabel(card.label) === normalizeLabel(label)))
+      return
     const nextCard = {
       id: createId('dashboard-finance-card'),
       label,
@@ -1172,18 +999,23 @@ export default function WorkflowStagesSettingsPanel() {
   }
 
   function updateDashboardFinanceCardColor(card, color) {
-    persistDashboardFinanceCards(dashboardFinanceCards.map((item) => (
-      item.id === card.id ? { ...item, color } : item
-    )))
+    persistDashboardFinanceCards(
+      dashboardFinanceCards.map((item) => (item.id === card.id ? { ...item, color } : item)),
+    )
   }
 
   function updateDashboardFinanceCardLabel(card, label) {
     const clean = String(label || '').trim()
     if (!clean || isReservedPlaceholderLabel(clean)) return
-    if (dashboardFinanceCards.some((item) => item.id !== card.id && normalizeLabel(item.label) === normalizeLabel(clean))) return
-    persistDashboardFinanceCards(dashboardFinanceCards.map((item) => (
-      item.id === card.id ? { ...item, label: clean } : item
-    )))
+    if (
+      dashboardFinanceCards.some(
+        (item) => item.id !== card.id && normalizeLabel(item.label) === normalizeLabel(clean),
+      )
+    )
+      return
+    persistDashboardFinanceCards(
+      dashboardFinanceCards.map((item) => (item.id === card.id ? { ...item, label: clean } : item)),
+    )
   }
 
   function copyDashboardFinanceCard(card) {
@@ -1218,334 +1050,330 @@ export default function WorkflowStagesSettingsPanel() {
   }
 
   function toggleDashboardFinanceVisibility(cardId) {
-    persistDashboardFinanceCards(dashboardFinanceCards.map((card) => (
-      card.id === cardId ? { ...card, visible: card.visible === false } : card
-    )))
+    persistDashboardFinanceCards(
+      dashboardFinanceCards.map((card) =>
+        card.id === cardId ? { ...card, visible: card.visible === false } : card,
+      ),
+    )
   }
 
-  const activeSegmentMeta = workflowSegmentTabs.find((segment) => segment.id === activeSegment)
-  const activeQuoteSegmentMeta = quoteSegmentTabs.find((segment) => segment.id === activeQuoteSegment)
-  const activeOrderSegmentMeta = orderSegmentTabs.find((segment) => segment.id === activeOrderSegment)
+  const activeQuoteSegmentMeta = quoteSegmentTabs.find(
+    (segment) => segment.id === activeQuoteSegment,
+  )
 
   return (
     <>
-    <section className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-dark-800/95 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.35)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.18),transparent_46%)]" />
-      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(96,165,250,0.6),transparent)]" />
-      <div className="relative z-10">
-        <h2 className="text-4xl font-black tracking-tight text-blue-400 sm:text-5xl">Teklif Süreçleri</h2>
-        <p className="mt-2 max-w-2xl text-sm font-semibold text-gray-400">
-          Teklif akışındaki süreç aşamaları bu ayrı panelden yönetilir. Sekme sırası teklifler sayfasındaki kolon sırasını belirler.
-        </p>
-
-      <div className="mt-5 flex items-start gap-2">
-        <SegmentTabs
-          tabs={quoteSegmentTabs}
-          activeId={activeQuoteSegment}
-          onSelect={selectQuoteSegment}
-          onCopy={copyQuoteSegment}
-          onRename={renameQuoteSegment}
-          onDelete={deleteQuoteSegment}
-          onReorder={reorderQuoteSegments}
-          getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
-          editId={editingQuoteSegmentId}
-          setEditId={setEditingQuoteSegmentId}
-          editDraft={editingQuoteSegmentDraft}
-          setEditDraft={setEditingQuoteSegmentDraft}
-          pendingDeleteId={pendingQuoteSegmentDeleteId}
-          setPendingDeleteId={setPendingQuoteSegmentDeleteId}
-        />
-        <button
-          type="button"
-          onClick={addQuoteStatusTab}
-          className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-xl border border-dashed border-blue-400/45 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-wide text-blue-300 transition-colors hover:border-blue-400/70 hover:bg-blue-500/20"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Durum Ekle
-        </button>
-      </div>
-
-      <div className="mt-5">
-        {isQuoteWorkflowSegment(activeQuoteSegmentMeta) ? (
-          <ProcessPanelModule
-            key={activeQuoteSegment}
-            className="rounded-2xl border-white/10 bg-dark-900/35 shadow-inner"
-            activeLabel="Aktif Süreç"
-            countSuffix="süreç tanımlı"
-            emptyMessage="Henüz teklif süreci eklenmedi."
-            addPlaceholder="Yeni teklif süreci adı..."
-            record={quoteSegmentRecord}
-            isOpen={isQuoteOpen}
-            onToggle={toggleQuoteEditor}
-            stageInput={quoteStageInput}
-            setStageInput={setQuoteStageInput}
-            onAddStage={addQuoteStage}
-            onSelectStage={selectQuoteStage}
-            onUpdateStageColor={updateQuoteStageColor}
-            onUpdateStageLabel={updateQuoteStageLabel}
-            onCopyStage={copyQuoteStage}
-            onReorderStages={reorderQuoteStages}
-            pendingStageDeleteId={pendingQuoteStageDeleteId}
-            setPendingStageDeleteId={setPendingQuoteStageDeleteId}
-            onRemoveStage={removeQuoteStage}
+      <ProcessSettingsSectionShell
+        title="Teklif Süreçleri"
+        description="Teklif akışındaki süreç aşamaları bu ayrı panelden yönetilir. Sekme sırası teklifler sayfasındaki kolon sırasını belirler."
+      >
+        <div className="mt-5 flex items-start gap-2">
+          <SegmentTabs
+            tabs={quoteSegmentTabs}
+            activeId={activeQuoteSegment}
+            onSelect={selectQuoteSegment}
+            onCopy={copyQuoteSegment}
+            onRename={renameQuoteSegment}
+            onDelete={deleteQuoteSegment}
+            onReorder={reorderQuoteSegments}
+            getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
+            editId={editingQuoteSegmentId}
+            setEditId={setEditingQuoteSegmentId}
+            editDraft={editingQuoteSegmentDraft}
+            setEditDraft={setEditingQuoteSegmentDraft}
+            pendingDeleteId={pendingQuoteSegmentDeleteId}
+            setPendingDeleteId={setPendingQuoteSegmentDeleteId}
           />
-        ) : (
-          <OptionListPanel
-            hideHeader
-            title={activeQuoteSegmentMeta?.label || 'Teklif Durumu'}
-            description={
-              isQuoteStatusSegment(activeQuoteSegmentMeta)
-                ? 'Taslak, onaylandı, reddedildi vb. Teklif listesi ve filtrelerine yansır.'
-                : 'Bu duruma özel seçenekler teklifler sayfasında ayrı kolon olarak görünür.'
-            }
-            options={
-              isQuoteStatusSegment(activeQuoteSegmentMeta)
-                ? (optionLists.status || [])
-                : (quoteCustomLists[activeQuoteSegmentSource] || [])
-            }
-            onChange={(next) => {
-              if (isQuoteStatusSegment(activeQuoteSegmentMeta)) {
-                saveOptionList('status', next)
-                setOptionLists(readOptionLists())
-                return
+          <button
+            type="button"
+            onClick={addQuoteStatusTab}
+            className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-xl border border-dashed border-blue-400/45 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-wide text-blue-300 transition-colors hover:border-blue-400/70 hover:bg-blue-500/20"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Durum Ekle
+          </button>
+        </div>
+
+        <div className="mt-5">
+          {isQuoteWorkflowSegment(activeQuoteSegmentMeta) ? (
+            <ProcessPanelModule
+              key={activeQuoteSegment}
+              className={PROCESS_PANEL_INNER_CLASS}
+              activeLabel="Aktif Süreç"
+              countSuffix="süreç tanımlı"
+              emptyMessage="Henüz teklif süreci eklenmedi."
+              addPlaceholder="Yeni teklif süreci adı..."
+              record={quoteSegmentRecord}
+              isOpen={isQuoteOpen}
+              onToggle={toggleQuoteEditor}
+              stageInput={quoteStageInput}
+              setStageInput={setQuoteStageInput}
+              onAddStage={addQuoteStage}
+              onSelectStage={selectQuoteStage}
+              onUpdateStageColor={updateQuoteStageColor}
+              onUpdateStageLabel={updateQuoteStageLabel}
+              onCopyStage={copyQuoteStage}
+              onReorderStages={reorderQuoteStages}
+              pendingStageDeleteId={pendingQuoteStageDeleteId}
+              setPendingStageDeleteId={setPendingQuoteStageDeleteId}
+              onRemoveStage={removeQuoteStage}
+            />
+          ) : (
+            <OptionListPanel
+              hideHeader
+              title={activeQuoteSegmentMeta?.label || 'Teklif Durumu'}
+              description={
+                isQuoteStatusSegment(activeQuoteSegmentMeta)
+                  ? 'Taslak, onaylandı, reddedildi vb. Teklif listesi ve filtrelerine yansır.'
+                  : 'Bu duruma özel seçenekler teklifler sayfasında ayrı kolon olarak görünür.'
               }
-              setQuoteCustomLists(saveQuoteCustomList(activeQuoteSegmentSource, next))
-            }}
-            placeholder="Yeni durum adı..."
-            activeLabel="Aktif Durum"
-            countSuffix="durum tanımlı"
-            emptyMessage="Henüz teklif durumu eklenmedi."
+              options={
+                isQuoteStatusSegment(activeQuoteSegmentMeta)
+                  ? optionLists.status || []
+                  : quoteCustomLists[activeQuoteSegmentSource] || []
+              }
+              onChange={(next) => {
+                if (isQuoteStatusSegment(activeQuoteSegmentMeta)) {
+                  saveOptionList('status', next)
+                  setOptionLists(readOptionLists())
+                  return
+                }
+                setQuoteCustomLists(saveQuoteCustomList(activeQuoteSegmentSource, next))
+              }}
+              placeholder="Yeni durum adı..."
+              activeLabel="Aktif Durum"
+              countSuffix="durum tanımlı"
+              emptyMessage="Henüz teklif durumu eklenmedi."
+            />
+          )}
+        </div>
+      </ProcessSettingsSectionShell>
+
+      <ProcessSettingsSectionShell
+        title="Sipariş Süreçleri"
+        description="Sipariş akışındaki süreç aşamaları bu ayrı panelden yönetilir. Değişiklikler siparişler sayfasına anında yansır."
+      >
+        <div className="mt-5">
+          <SegmentTabs
+            tabs={orderSegmentTabs}
+            activeId={activeOrderSegment}
+            onSelect={selectOrderSegment}
+            onCopy={copyOrderSegment}
+            onRename={renameOrderSegment}
+            onDelete={deleteOrderSegment}
+            getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
+            editId={editingOrderSegmentId}
+            setEditId={setEditingOrderSegmentId}
+            editDraft={editingOrderSegmentDraft}
+            setEditDraft={setEditingOrderSegmentDraft}
+            pendingDeleteId={pendingOrderSegmentDeleteId}
+            setPendingDeleteId={setPendingOrderSegmentDeleteId}
           />
-        )}
-      </div>
-      </div>
-    </section>
+        </div>
 
-    <section className="card space-y-4">
-      <div>
-        <h2 className="text-base font-black text-white">Sipariş Süreçleri</h2>
-        <p className="mt-1 text-xs font-semibold text-gray-500">
-          Sipariş akışındaki süreç aşamaları bu ayrı panelden yönetilir.
-        </p>
-      </div>
-
-      <SegmentTabs
-        tabs={orderSegmentTabs}
-        activeId={activeOrderSegment}
-        onSelect={selectOrderSegment}
-        onCopy={copyOrderSegment}
-        onRename={renameOrderSegment}
-        onDelete={deleteOrderSegment}
-        getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
-        editId={editingOrderSegmentId}
-        setEditId={setEditingOrderSegmentId}
-        editDraft={editingOrderSegmentDraft}
-        setEditDraft={setEditingOrderSegmentDraft}
-        pendingDeleteId={pendingOrderSegmentDeleteId}
-        setPendingDeleteId={setPendingOrderSegmentDeleteId}
-      />
-
-      <div>
-        <h3 className="mb-1.5 text-xs font-black uppercase tracking-wider text-gray-500">
-          {activeOrderSegmentMeta?.label || 'Sipariş Süreci'}
-        </h3>
-        <ProcessPanelModule
-          key={activeOrderSegment}
-          activeLabel="Aktif Süreç"
-          countSuffix="süreç tanımlı"
-          emptyMessage="Henüz sipariş süreci eklenmedi."
-          addPlaceholder="Yeni sipariş süreci adı..."
-          record={orderSegmentRecord}
-          isOpen={isOrderOpen}
-          onToggle={toggleOrderEditor}
-          stageInput={orderStageInput}
-          setStageInput={setOrderStageInput}
-          onAddStage={addOrderStage}
-          onSelectStage={selectOrderStage}
-          onUpdateStageColor={updateOrderStageColor}
-          onUpdateStageLabel={updateOrderStageLabel}
-          onCopyStage={copyOrderStage}
-          onReorderStages={reorderOrderStages}
-          pendingStageDeleteId={pendingOrderStageDeleteId}
-          setPendingStageDeleteId={setPendingOrderStageDeleteId}
-          onRemoveStage={removeOrderStage}
-        />
-      </div>
-    </section>
-
-    <section className="card space-y-4">
-      <div>
-        <h2 className="text-base font-black text-white">Depo Süreçleri</h2>
-        <p className="mt-1 text-xs font-semibold text-gray-500">
-          Depo akışındaki süreç aşamaları bu ayrı panelden yönetilir.
-        </p>
-      </div>
-
-      <SegmentTabs
-        tabs={workflowSegmentTabs}
-        activeId={activeSegment}
-        onSelect={selectWorkflowSegment}
-        onCopy={copyWorkflowSegment}
-        onRename={renameWorkflowSegment}
-        onDelete={deleteWorkflowSegment}
-        getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
-        editId={editingWorkflowSegmentId}
-        setEditId={setEditingWorkflowSegmentId}
-        editDraft={editingWorkflowSegmentDraft}
-        setEditDraft={setEditingWorkflowSegmentDraft}
-        pendingDeleteId={pendingWorkflowSegmentDeleteId}
-        setPendingDeleteId={setPendingWorkflowSegmentDeleteId}
-      />
-
-      <div>
-        <h3 className="mb-1.5 text-xs font-black uppercase tracking-wider text-gray-500">
-          {activeSegmentMeta?.label || 'Süreç'}
-        </h3>
-        {activeSegmentSource === 'depo' && (
-          <p className="mb-2 text-[13px] font-semibold text-gray-500">
-            Depo listesinde üretimdeki gibi süreç butonları görünür. &quot;Araç Teslim&quot; ve &quot;Teslim Edildi&quot; aşamalarında fotoğraf yüklenir.
-          </p>
-        )}
-        <ProcessPanelModule
-          key={activeSegment}
-          activeLabel="Aktif Süreç"
-          countSuffix="süreç tanımlı"
-          emptyMessage="Henüz süreç eklenmedi."
-          addPlaceholder="Yeni süreç adı..."
-          record={segmentRecord}
-          isOpen={isOpen}
-          onToggle={toggleEditor}
-          stageInput={stageInput}
-          setStageInput={setStageInput}
-          onAddStage={addStage}
-          onSelectStage={selectStage}
-          onUpdateStageColor={updateStageColor}
-          onUpdateStageLabel={updateStageLabel}
-          onCopyStage={copyStage}
-          onReorderStages={reorderStages}
-          pendingStageDeleteId={pendingStageDeleteId}
-          setPendingStageDeleteId={setPendingStageDeleteId}
-          onRemoveStage={removeStage}
-        />
-      </div>
-    </section>
-    <section className="card space-y-4">
-      <div>
-        <h2 className="text-base font-black text-white">Üretim Süreçleri</h2>
-        <p className="mt-1 text-xs font-semibold text-gray-500">
-          Üretim akışı ve parça teslim durumları bu ayrı panelden yönetilir.
-        </p>
-      </div>
-
-      <SegmentTabs
-        tabs={productionSegmentTabs}
-        activeId={activeProductionSegment}
-        onSelect={selectProductionSegment}
-        onCopy={copyProductionSegment}
-        onRename={renameProductionSegment}
-        onDelete={deleteProductionSegment}
-        getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
-        editId={editingProductionSegmentId}
-        setEditId={setEditingProductionSegmentId}
-        editDraft={editingProductionSegmentDraft}
-        setEditDraft={setEditingProductionSegmentDraft}
-        pendingDeleteId={pendingProductionSegmentDeleteId}
-        setPendingDeleteId={setPendingProductionSegmentDeleteId}
-      />
-
-      {activeProductionSegmentSource === 'partDelivery' ? (
-        <OptionListPanel
-          title="Parça teslim durumları"
-          description="Üretim takibindeki kısmi teslimat ve adet satırı durumları buradan yönetilir. Değişiklikler üretim kayıtlarına yansır."
-          options={partDeliverySituations}
-          onChange={(next) => {
-            setPartDeliverySituations(publishPartDeliverySituations(next))
-          }}
-          placeholder="Yeni durum adı..."
-          activeLabel="Aktif Durum"
-          countSuffix="durum tanımlı"
-          emptyMessage="Henüz parça teslim durumu eklenmedi."
-        />
-      ) : (
-        <div>
-          <h3 className="mb-1.5 text-xs font-black uppercase tracking-wider text-gray-500">Üretim Süreci</h3>
+        <div className="mt-5">
           <ProcessPanelModule
-            key={activeProductionSegment}
+            key={activeOrderSegment}
+            className={PROCESS_PANEL_INNER_CLASS}
             activeLabel="Aktif Süreç"
             countSuffix="süreç tanımlı"
-            emptyMessage="Henüz üretim süreci eklenmedi."
-            addPlaceholder="Yeni üretim süreci adı..."
-            record={productionSegmentRecord}
-            isOpen={isProductionOpen}
-            onToggle={toggleProductionEditor}
-            stageInput={productionStageInput}
-            setStageInput={setProductionStageInput}
-            onAddStage={addProductionStage}
-            onSelectStage={selectProductionStage}
-            onUpdateStageColor={updateProductionStageColor}
-            onUpdateStageLabel={updateProductionStageLabel}
-            onCopyStage={copyProductionStage}
-            onReorderStages={reorderProductionStages}
-            pendingStageDeleteId={pendingProductionStageDeleteId}
-            setPendingStageDeleteId={setPendingProductionStageDeleteId}
-            onRemoveStage={removeProductionStage}
+            emptyMessage="Henüz sipariş süreci eklenmedi."
+            addPlaceholder="Yeni sipariş süreci adı..."
+            record={orderSegmentRecord}
+            isOpen={isOrderOpen}
+            onToggle={toggleOrderEditor}
+            stageInput={orderStageInput}
+            setStageInput={setOrderStageInput}
+            onAddStage={addOrderStage}
+            onSelectStage={selectOrderStage}
+            onUpdateStageColor={updateOrderStageColor}
+            onUpdateStageLabel={updateOrderStageLabel}
+            onCopyStage={copyOrderStage}
+            onReorderStages={reorderOrderStages}
+            pendingStageDeleteId={pendingOrderStageDeleteId}
+            setPendingStageDeleteId={setPendingOrderStageDeleteId}
+            onRemoveStage={removeOrderStage}
           />
         </div>
-      )}
-    </section>
-    <section className="card space-y-4">
-      <div>
-        <h2 className="text-base font-black text-white">Dashboard Süreçleri</h2>
-        <p className="mt-1 text-xs font-semibold text-gray-500">
-          Dashboard finans kartlarının görünürlük durumunu buradan yönetin.
-        </p>
-      </div>
+      </ProcessSettingsSectionShell>
 
-      <div>
-        <h3 className="mb-1.5 text-xs font-black uppercase tracking-wider text-gray-500">Kasa ve Finans Görünümü</h3>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {dashboardFinanceMetricCards.map((card) => {
-            const config = dashboardFinanceCards.find((item) => item.id === card.id)
-            const isVisible = config?.visible !== false
-            const Icon = card.icon
-            const ToggleIcon = isVisible ? Eye : EyeOff
-            return (
-              <button
-                key={card.id}
-                type="button"
-                onClick={() => toggleDashboardFinanceVisibility(card.id)}
-                className={`flex min-h-[104px] flex-col justify-between rounded-2xl border p-3 text-left shadow-card transition-colors ${
-                  isVisible
-                    ? 'border-dark-500/55 bg-dark-800/75 hover:border-blue-500/35'
-                    : 'border-dashed border-dark-500/45 bg-dark-700/30 opacity-55 hover:opacity-80'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="max-w-[8rem] text-[10px] font-black uppercase leading-snug tracking-[0.18em] text-gray-400">{card.label}</p>
-                    <p className={`mt-2 break-words text-[1rem] font-black leading-tight tracking-tight ${card.valueTone}`}>{card.value}</p>
-                  </div>
-                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-dark-500/65 bg-dark-700/70 ${card.iconTone}`}>
-                    {Icon && <Icon className="h-3.5 w-3.5" />}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <p className="line-clamp-1 text-[11px] font-semibold leading-snug text-gray-400">{card.sub || 'Dashboard finans kartı'}</p>
-                  <span className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-[12px] font-black ${
-                    isVisible
-                      ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
-                      : 'border-dark-500/50 bg-dark-800/60 text-gray-500'
-                  }`}>
-                    <ToggleIcon className="h-3 w-3" />
-                    {isVisible ? 'Göster' : 'Gizle'}
-                  </span>
-                </div>
-              </button>
-            )
-          })}
+      <ProcessSettingsSectionShell
+        title="Depo Süreçleri"
+        description={
+          'Depo akışındaki süreç aşamaları bu ayrı panelden yönetilir. Depo listesinde üretimdeki gibi süreç butonları görünür. "Araç Teslim" ve "Teslim Edildi" aşamalarında fotoğraf yüklenir.'
+        }
+      >
+        <div className="mt-5">
+          <SegmentTabs
+            tabs={workflowSegmentTabs}
+            activeId={activeSegment}
+            onSelect={selectWorkflowSegment}
+            onCopy={copyWorkflowSegment}
+            onRename={renameWorkflowSegment}
+            onDelete={deleteWorkflowSegment}
+            getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
+            editId={editingWorkflowSegmentId}
+            setEditId={setEditingWorkflowSegmentId}
+            editDraft={editingWorkflowSegmentDraft}
+            setEditDraft={setEditingWorkflowSegmentDraft}
+            pendingDeleteId={pendingWorkflowSegmentDeleteId}
+            setPendingDeleteId={setPendingWorkflowSegmentDeleteId}
+          />
         </div>
-      </div>
-    </section>
+
+        <div className="mt-5">
+          <ProcessPanelModule
+            key={activeSegment}
+            className={PROCESS_PANEL_INNER_CLASS}
+            activeLabel="Aktif Süreç"
+            countSuffix="süreç tanımlı"
+            emptyMessage="Henüz süreç eklenmedi."
+            addPlaceholder="Yeni süreç adı..."
+            record={segmentRecord}
+            isOpen={isOpen}
+            onToggle={toggleEditor}
+            stageInput={stageInput}
+            setStageInput={setStageInput}
+            onAddStage={addStage}
+            onSelectStage={selectStage}
+            onUpdateStageColor={updateStageColor}
+            onUpdateStageLabel={updateStageLabel}
+            onCopyStage={copyStage}
+            onReorderStages={reorderStages}
+            pendingStageDeleteId={pendingStageDeleteId}
+            setPendingStageDeleteId={setPendingStageDeleteId}
+            onRemoveStage={removeStage}
+          />
+        </div>
+      </ProcessSettingsSectionShell>
+
+      <ProcessSettingsSectionShell
+        title="Üretim Süreçleri"
+        description="Üretim akışı ve parça teslim durumları bu ayrı panelden yönetilir. Değişiklikler üretim kayıtlarına yansır."
+      >
+        <div className="mt-5">
+          <SegmentTabs
+            tabs={productionSegmentTabs}
+            activeId={activeProductionSegment}
+            onSelect={selectProductionSegment}
+            onCopy={copyProductionSegment}
+            onRename={renameProductionSegment}
+            onDelete={deleteProductionSegment}
+            getCount={(segment) => getSegmentStages(segment.sourceId || segment.id).length}
+            editId={editingProductionSegmentId}
+            setEditId={setEditingProductionSegmentId}
+            editDraft={editingProductionSegmentDraft}
+            setEditDraft={setEditingProductionSegmentDraft}
+            pendingDeleteId={pendingProductionSegmentDeleteId}
+            setPendingDeleteId={setPendingProductionSegmentDeleteId}
+          />
+        </div>
+
+        <div className="mt-5">
+          {activeProductionSegmentSource === 'partDelivery' ? (
+            <OptionListPanel
+              hideHeader
+              title="Parça teslim durumları"
+              description="Üretim takibindeki kısmi teslimat ve adet satırı durumları buradan yönetilir."
+              options={partDeliverySituations}
+              onChange={(next) => {
+                setPartDeliverySituations(publishPartDeliverySituations(next))
+              }}
+              placeholder="Yeni durum adı..."
+              activeLabel="Aktif Durum"
+              countSuffix="durum tanımlı"
+              emptyMessage="Henüz parça teslim durumu eklenmedi."
+            />
+          ) : (
+            <ProcessPanelModule
+              key={activeProductionSegment}
+              className={PROCESS_PANEL_INNER_CLASS}
+              activeLabel="Aktif Süreç"
+              countSuffix="süreç tanımlı"
+              emptyMessage="Henüz üretim süreci eklenmedi."
+              addPlaceholder="Yeni üretim süreci adı..."
+              record={productionSegmentRecord}
+              isOpen={isProductionOpen}
+              onToggle={toggleProductionEditor}
+              stageInput={productionStageInput}
+              setStageInput={setProductionStageInput}
+              onAddStage={addProductionStage}
+              onSelectStage={selectProductionStage}
+              onUpdateStageColor={updateProductionStageColor}
+              onUpdateStageLabel={updateProductionStageLabel}
+              onCopyStage={copyProductionStage}
+              onReorderStages={reorderProductionStages}
+              pendingStageDeleteId={pendingProductionStageDeleteId}
+              setPendingStageDeleteId={setPendingProductionStageDeleteId}
+              onRemoveStage={removeProductionStage}
+            />
+          )}
+        </div>
+      </ProcessSettingsSectionShell>
+
+      <ProcessSettingsSectionShell
+        title="Dashboard Süreçleri"
+        description="Dashboard finans kartlarının görünürlük durumunu buradan yönetin."
+      >
+        <div className="mt-5">
+          <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-gray-500">
+            Kasa ve Finans Görünümü
+          </h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {dashboardFinanceMetricCards.map((card) => {
+              const config = dashboardFinanceCards.find((item) => item.id === card.id)
+              const isVisible = config?.visible !== false
+              const Icon = card.icon
+              const ToggleIcon = isVisible ? Eye : EyeOff
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => toggleDashboardFinanceVisibility(card.id)}
+                  className={`flex min-h-[104px] flex-col justify-between rounded-2xl border p-3 text-left shadow-card transition-colors ${
+                    isVisible
+                      ? 'border-dark-500/55 bg-dark-800/75 hover:border-blue-500/35'
+                      : 'border-dashed border-dark-500/45 bg-dark-700/30 opacity-55 hover:opacity-80'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="max-w-[8rem] text-[10px] font-black uppercase leading-snug tracking-[0.18em] text-gray-400">
+                        {card.label}
+                      </p>
+                      <p
+                        className={`mt-2 break-words text-[1rem] font-black leading-tight tracking-tight ${card.valueTone}`}
+                      >
+                        {card.value}
+                      </p>
+                    </div>
+                    <span
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-dark-500/65 bg-dark-700/70 ${card.iconTone}`}
+                    >
+                      {Icon && <Icon className="h-3.5 w-3.5" />}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <p className="line-clamp-1 text-[11px] font-semibold leading-snug text-gray-400">
+                      {card.sub || 'Dashboard finans kartı'}
+                    </p>
+                    <span
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-[12px] font-black ${
+                        isVisible
+                          ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
+                          : 'border-dark-500/50 bg-dark-800/60 text-gray-500'
+                      }`}
+                    >
+                      <ToggleIcon className="h-3 w-3" />
+                      {isVisible ? 'Göster' : 'Gizle'}
+                    </span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </ProcessSettingsSectionShell>
     </>
   )
 }
