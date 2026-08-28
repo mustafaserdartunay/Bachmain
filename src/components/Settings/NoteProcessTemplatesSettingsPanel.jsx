@@ -3,12 +3,10 @@ import { FolderOpen, Plus } from 'lucide-react'
 import ProcessSettingsSectionShell from './ProcessSettingsSectionShell'
 import NotebookCategoryDetailModal from '../Layout/NotebookCategoryDetailModal'
 import {
-  deleteNotebookCategory,
   loadNotebookCategories,
   NOTEBOOK_CATEGORIES_EVENT,
   sortNotebookCategories,
   uniqueNotebookCategoryTitle,
-  upsertNotebookCategory,
 } from '../../utils/notebookCategoryStore'
 import { matchesProcessSearch } from '../../utils/processSettingsSearch'
 import { APP_LABEL_CLASS, APP_METRIC_ROW_CLASS, YF_TEXT_CLASS } from '../../utils/dashboardDesign'
@@ -23,7 +21,7 @@ function previewContent(content = '') {
     .split('\n')
     .map((row) => row.trim())
     .find(Boolean)
-  if (!line) return 'Boş sayfa · tıklayınca pencere açılır'
+  if (!line) return 'Boş sayfa · aç ikonu veya satıra tıklayın'
   return line.length > 80 ? `${line.slice(0, 80)}…` : line
 }
 
@@ -56,20 +54,16 @@ export default function NoteProcessTemplatesSettingsPanel({ searchQuery = '' }) 
   function handleCreate() {
     setDetailCategory({
       title: uniqueNotebookCategoryTitle('Yeni Buton', sorted),
-      content: '',
       notes: [],
     })
   }
 
-  function handleSave(category) {
-    upsertNotebookCategory(category)
+  function handleChanged(nextCategory) {
     setCategories(sortNotebookCategories(loadNotebookCategories()))
-    setDetailCategory(null)
-  }
-
-  function handleDelete(categoryId) {
-    deleteNotebookCategory(categoryId)
-    setCategories(sortNotebookCategories(loadNotebookCategories()))
+    if (nextCategory?.id) {
+      setDetailCategory(nextCategory)
+      return
+    }
     setDetailCategory(null)
   }
 
@@ -135,8 +129,7 @@ export default function NoteProcessTemplatesSettingsPanel({ searchQuery = '' }) 
         open={Boolean(detailCategory)}
         category={detailCategory}
         onClose={() => setDetailCategory(null)}
-        onSave={handleSave}
-        onDelete={handleDelete}
+        onChanged={handleChanged}
       />
     </>
   )

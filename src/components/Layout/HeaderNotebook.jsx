@@ -18,12 +18,10 @@ import {
 } from '../../utils/crmStore'
 import {
   appendNotebookCategoryNote,
-  deleteNotebookCategory,
   loadNotebookCategories,
   NOTEBOOK_CATEGORIES_EVENT,
   sortNotebookCategories,
   uniqueNotebookCategoryTitle,
-  upsertNotebookCategory,
 } from '../../utils/notebookCategoryStore'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
@@ -165,23 +163,19 @@ export default function HeaderNotebook({ hideTrigger = false }) {
   function handleCreateCategory() {
     setDetailCategory({
       title: uniqueNotebookCategoryTitle('Yeni Buton', categories),
-      content: '',
       notes: [],
     })
   }
 
-  function handleSaveCategory(category) {
-    const saved = upsertNotebookCategory(category)
+  function handleCategoryChanged(nextCategory) {
     refreshCategories()
-    setSelectedCategoryId(saved.id)
+    if (nextCategory?.id) {
+      setDetailCategory(nextCategory)
+      setSelectedCategoryId(nextCategory.id)
+      return
+    }
     setDetailCategory(null)
-  }
-
-  function handleDeleteCategory(categoryId) {
-    deleteNotebookCategory(categoryId)
-    refreshCategories()
-    if (selectedCategoryId === categoryId) setSelectedCategoryId(null)
-    setDetailCategory(null)
+    setSelectedCategoryId(null)
   }
 
   return (
@@ -274,6 +268,7 @@ export default function HeaderNotebook({ hideTrigger = false }) {
                     categories={categories}
                     selectedId={selectedCategoryId}
                     onSelect={(category) => setSelectedCategoryId(category.id)}
+                    onClearSelect={() => setSelectedCategoryId(null)}
                     onOpenCategory={(category) => {
                       const fresh =
                         loadNotebookCategories().find((item) => item.id === category.id) || category
@@ -292,8 +287,7 @@ export default function HeaderNotebook({ hideTrigger = false }) {
         open={Boolean(detailCategory)}
         category={detailCategory}
         onClose={() => setDetailCategory(null)}
-        onSave={handleSaveCategory}
-        onDelete={handleDeleteCategory}
+        onChanged={handleCategoryChanged}
       />
     </div>
   )
