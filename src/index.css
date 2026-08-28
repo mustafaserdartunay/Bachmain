@@ -839,27 +839,37 @@ html:not(.night)
   .app-responsive
   .page-type-shell
   .document-compact-controls
-  [class*='bg-dark-']:not(.app-panel-dot *),
+  [class*='bg-dark-']:not(.app-panel-dot *):not(.dropdown-option-dot):not(
+    .dropdown-color-rail *
+  ):not(.customer-filter-color-swatches *),
 html:not(.night)
   .app-responsive
   .page-type-shell
   .document-compact-controls
-  [class*='bg-black/']:not(.app-panel-dot *),
+  [class*='bg-black/']:not(.app-panel-dot *):not(.dropdown-option-dot):not(
+    .dropdown-color-rail *
+  ):not(.customer-filter-color-swatches *),
 html:not(.night)
   .app-responsive
   .page-type-shell
   .document-compact-controls
-  [class*='bg-white']:not(.app-panel-dot *),
+  [class*='bg-white']:not(.app-panel-dot *):not(.dropdown-option-dot):not(
+    .dropdown-option-icon
+  ):not(.dropdown-color-rail *):not(.customer-filter-color-swatches *),
 html:not(.night)
   .app-responsive
   .page-type-shell
   .document-compact-controls
-  [class*='bg-emerald-']:not(.app-panel-dot *),
+  [class*='bg-emerald-']:not(.app-panel-dot *):not(.dropdown-option-dot):not(
+    .dropdown-color-rail *
+  ):not(.customer-filter-color-swatches *),
 html:not(.night)
   .app-responsive
   .page-type-shell
   .document-compact-controls
-  [class*='bg-blue-']:not(.app-panel-dot *),
+  [class*='bg-blue-']:not(.app-panel-dot *):not(.dropdown-option-dot):not(
+    .dropdown-color-rail *
+  ):not(.customer-filter-color-swatches *),
 html.night .app-responsive .page-type-shell .document-compact-controls .glass-inset,
 html.night .app-responsive .page-type-shell .document-compact-controls .document-frame-only {
   background: transparent !important;
@@ -1699,6 +1709,12 @@ html
   -ms-overflow-style: none;
 }
 
+/* Renk rayı açıkken kırpma / scroll menüyü ezmesin */
+.app-dropdown-portal.customers-page-menu:has(.dropdown-color-rail) {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
 .app-dropdown-portal.customers-page-menu::-webkit-scrollbar {
   display: none;
   width: 0;
@@ -2442,13 +2458,27 @@ html body .customer-filter-dropdown-menu button.dropdown-add-action:hover span {
 }
 
 /* Keep Tailwind bg-* fills from StageColorSwatches (same as Settings RENK rail) */
-.customer-filter-dropdown-menu .customer-filter-color-swatches button {
+.customer-filter-dropdown-menu .customer-filter-color-swatches button,
+.app-dropdown-portal .customer-filter-color-swatches button,
+.customers-page-menu .customer-filter-color-swatches button {
   font-weight: 400 !important;
   font-size: inherit !important;
   color: inherit !important;
+  height: 0.625rem !important;
+  width: 0.625rem !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  /* Menü nötrleştirme kuralları Tailwind bg-* dolgusunu silmesin */
+  background-clip: padding-box !important;
 }
 
-.customer-filter-dropdown-menu .customer-filter-color-swatches button:hover {
+.customer-filter-dropdown-menu .customer-filter-color-swatches button:hover,
+.app-dropdown-portal .customer-filter-color-swatches button:hover,
+.customers-page-menu .customer-filter-color-swatches button:hover {
   transform: scale(1.05);
 }
 
@@ -2488,7 +2518,13 @@ html body .customer-filter-dropdown-menu .dropdown-color-rail button {
   font-weight: 400 !important;
   font-size: inherit !important;
   color: inherit !important;
-  transform: none !important;
+  height: 0.625rem !important;
+  width: 0.625rem !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 9999px !important;
 }
 
 .customer-filter-dropdown-menu button span.truncate {
@@ -8739,6 +8775,21 @@ html .dropdown-option-dot {
   flex-shrink: 0 !important;
   border-radius: 9999px !important;
   padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Form şeffaf-zemin kuralı renk noktalarını yine de ezerse Tailwind bg-* kalsın */
+html .page-type-shell .document-compact-controls span.dropdown-option-dot,
+html .app-responsive .page-type-shell .document-compact-controls span.dropdown-option-dot,
+html .app-dropdown-portal span.dropdown-option-dot,
+html .customers-page-menu span.dropdown-option-dot {
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 html .dropdown-option-icon {

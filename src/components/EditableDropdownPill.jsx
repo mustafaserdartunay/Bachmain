@@ -152,7 +152,8 @@ export default function EditableDropdownPill({
 
   function reorderOptions(fromIndex, toIndex) {
     if (fromIndex == null || toIndex == null || fromIndex === toIndex) return
-    if (fromIndex < 0 || toIndex < 0 || fromIndex >= options.length || toIndex >= options.length) return
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= options.length || toIndex >= options.length)
+      return
     const next = [...options]
     const [moved] = next.splice(fromIndex, 1)
     next.splice(toIndex, 0, moved)
@@ -176,9 +177,8 @@ export default function EditableDropdownPill({
     event.stopPropagation()
     if (!canReorder) return
     const transferRaw = event.dataTransfer?.getData('text/plain')
-    const fromIndex = transferRaw !== '' && transferRaw != null
-      ? Number(transferRaw)
-      : draggedIndexRef.current
+    const fromIndex =
+      transferRaw !== '' && transferRaw != null ? Number(transferRaw) : draggedIndexRef.current
     reorderOptions(fromIndex, targetIndex)
     draggedIndexRef.current = null
     setDraggedIndex(null)
@@ -272,231 +272,238 @@ export default function EditableDropdownPill({
         ref={usePortal ? menuRef : undefined}
         className={`${menuShellClass} ${menuClassName} ${
           expandedEditor
-            ? '!flex !h-auto !w-max !min-w-[210px] !max-w-none items-stretch overflow-visible'
+            ? '!flex !h-auto !w-max !min-w-[210px] !max-w-none !overflow-visible items-stretch'
             : ''
         }`.trim()}
       >
         <div className={expandedEditor ? 'min-w-[13.125rem] flex-1' : undefined}>
-        {searchable && (
-          <input
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder={searchPlaceholder}
-            className={`mb-1.5 w-full rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none ${
-              isLightMenu
-                ? 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-strong)] placeholder:text-[var(--text-muted)] focus:border-blue-400/60'
-                : 'border-white/55 bg-white/42 text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-white/75 focus:bg-white/52'
-            }`}
-            autoFocus
-          />
-        )}
-        <div
-          className={
-            menuMaxHeight
-              ? `${menuMaxHeight} overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`
-              : ''
-          }
-        >
-          {includePlaceholderOption && (
-            <button
-              type="button"
-              onClick={() => {
-                onChange('')
-                setActiveMenu(null)
-              }}
-              className={placeholderButtonClass}
-            >
-              <OptionLeading empty isLightMenu={isLightMenu} />
-              {placeholder}
-            </button>
+          {searchable && (
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder={searchPlaceholder}
+              className={`mb-1.5 w-full rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none ${
+                isLightMenu
+                  ? 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-strong)] placeholder:text-[var(--text-muted)] focus:border-blue-400/60'
+                  : 'border-white/55 bg-white/42 text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-white/75 focus:bg-white/52'
+              }`}
+              autoFocus
+            />
           )}
-
-          {visibleOptions.map(({ option, index }) =>
-            editingIndex === index ? (
-              <div key={`edit-${index}`} className="space-y-1.5 rounded-xl bg-white/35 px-2 py-1.5">
-                <div className="flex items-center gap-1.5">
-                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${draftColor}`} />
-                  <input
-                    autoFocus
-                    value={draftName}
-                    onChange={(event) => setDraftName(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') commitEdit()
-                      if (event.key === 'Escape') {
-                        setEditingIndex(null)
-                        setDraftName('')
-                        setDraftColor(COLOR_PALETTE[0])
-                      }
-                    }}
-                    className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/42 px-2 py-1 text-xs font-bold text-[var(--ink)] focus:outline-none focus:border-white/75 focus:bg-white/52"
-                  />
-                  <button
-                    type="button"
-                    onClick={commitEdit}
-                    className="rounded-lg p-1 text-emerald-700 transition-colors hover:bg-emerald-500/15"
-                    title="Kaydet"
-                  >
-                    <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingIndex(null)
-                      setDraftName('')
-                      setDraftColor(COLOR_PALETTE[0])
-                    }}
-                    className="rounded-lg bg-red-500/15 p-1 text-red-500 transition-colors hover:bg-red-500/25 hover:text-red-600"
-                    title="Vazgeç"
-                  >
-                    <X className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div
-                key={option.label}
-                data-option-row
-                onDragOver={(event) => {
-                  if (!canReorder || option.locked) return
-                  event.preventDefault()
-                  event.dataTransfer.dropEffect = 'move'
-                  setDragOverIndex(index)
+          <div
+            className={
+              menuMaxHeight
+                ? `${menuMaxHeight} overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`
+                : ''
+            }
+          >
+            {includePlaceholderOption && (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange('')
+                  setActiveMenu(null)
                 }}
-                onDrop={(event) => handleDrop(index, event)}
-                className={`group relative flex items-center gap-0.5 rounded-xl ${
-                  draggedIndex === index ? 'opacity-45' : ''
-                } ${
-                  dragOverIndex === index && draggedIndex !== index
-                    ? 'bg-blue-500/10 ring-1 ring-blue-400/40'
-                    : ''
-                }`}
+                className={placeholderButtonClass}
               >
-                {canReorder && !option.locked && (
-                  <div
-                    draggable
-                    onDragStart={(event) => beginDrag(index, event)}
-                    onDragEnd={endDrag}
-                    className="cursor-grab px-1 py-2 text-gray-400 opacity-70 transition-opacity hover:text-gray-600 hover:opacity-100 active:cursor-grabbing"
-                    title="Sürükleyerek sırala"
-                    aria-label={`${option.label} sürükle`}
-                  >
-                    <GripVertical className="h-3.5 w-3.5 pointer-events-none" />
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(option.label)
-                    setActiveMenu(null)
-                  }}
-                  className={`${optionButtonClass} origin-left transition-[transform,font-weight,background-color] hover:scale-[1.03] hover:font-bold hover:bg-transparent`}
+                <OptionLeading empty isLightMenu={isLightMenu} />
+                {placeholder}
+              </button>
+            )}
+
+            {visibleOptions.map(({ option, index }) =>
+              editingIndex === index ? (
+                <div
+                  key={`edit-${index}`}
+                  className="space-y-1.5 rounded-xl bg-white/35 px-2 py-1.5"
                 >
-                  <OptionLeading option={option} isLightMenu={isLightMenu} />
-                  <span className="truncate">{option.label}</span>
-                </button>
-                {canEdit && !option.locked && (
-                  <span className="flex shrink-0 items-center gap-0.5 pr-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`dropdown-option-dot h-2.5 w-2.5 shrink-0 rounded-full ${draftColor}`}
+                    />
+                    <input
+                      autoFocus
+                      value={draftName}
+                      onChange={(event) => setDraftName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') commitEdit()
+                        if (event.key === 'Escape') {
+                          setEditingIndex(null)
+                          setDraftName('')
+                          setDraftColor(COLOR_PALETTE[0])
+                        }
+                      }}
+                      className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/42 px-2 py-1 text-xs font-bold text-[var(--ink)] focus:outline-none focus:border-white/75 focus:bg-white/52"
+                    />
                     <button
                       type="button"
-                      onClick={() => startEdit(index)}
-                      className={KALEM_BUTTON_CLASS}
-                      title="Düzenle"
+                      onClick={commitEdit}
+                      className="rounded-lg p-1 text-emerald-700 transition-colors hover:bg-emerald-500/15"
+                      title="Kaydet"
                     >
-                      <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
+                      <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                     </button>
                     <button
                       type="button"
                       onClick={() => {
                         setEditingIndex(null)
-                        setConfirmIndex(index)
+                        setDraftName('')
+                        setDraftColor(COLOR_PALETTE[0])
                       }}
-                      className={COP_KUTUSU_BUTTON_CLASS}
-                      title="Sil"
+                      className="rounded-lg bg-red-500/15 p-1 text-red-500 transition-colors hover:bg-red-500/25 hover:text-red-600"
+                      title="Vazgeç"
                     >
-                      <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+                      <X className="h-3.5 w-3.5" strokeWidth={2.5} />
                     </button>
-                  </span>
-                )}
-                {confirmIndex === index && !option.locked ? (
-                  <DeleteConfirmPopover
-                    inline={false}
-                    title={`"${option.label}" silinsin mi?`}
-                    description="Bu işlem geri alınamaz."
-                    confirmLabel="Evet, Sil"
-                    onConfirm={() => removeOption(index)}
-                    onCancel={() => setConfirmIndex(null)}
-                  />
-                ) : null}
-              </div>
-            ),
-          )}
-          {visibleOptions.length === 0 && (
-            <p className="px-3 py-2 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
-              Sonuç bulunamadı.
-            </p>
-          )}
-        </div>
-
-        {canEdit && (
-          <div className="mt-1 border-t border-white/50 pt-1">
-            {adding ? (
-              <div className="space-y-2 rounded-xl border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.05)] px-2.5 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
-                  Yeni seçenek
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${newColor}`} />
-                  <input
-                    autoFocus
-                    value={newName}
-                    placeholder="Seçenek adı yazın…"
-                    onChange={(event) => setNewName(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') commitAdd()
-                      if (event.key === 'Escape') {
-                        setAdding(false)
-                        setNewName('')
-                      }
-                    }}
-                    className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/55 px-2.5 py-1.5 text-xs font-bold text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[rgba(37,99,235,0.35)] focus:bg-white/70"
-                  />
+                  </div>
                 </div>
-                <div className="flex items-center justify-end gap-1.5 pt-0.5">
+              ) : (
+                <div
+                  key={option.label}
+                  data-option-row
+                  onDragOver={(event) => {
+                    if (!canReorder || option.locked) return
+                    event.preventDefault()
+                    event.dataTransfer.dropEffect = 'move'
+                    setDragOverIndex(index)
+                  }}
+                  onDrop={(event) => handleDrop(index, event)}
+                  className={`group relative flex items-center gap-0.5 rounded-xl ${
+                    draggedIndex === index ? 'opacity-45' : ''
+                  } ${
+                    dragOverIndex === index && draggedIndex !== index
+                      ? 'bg-blue-500/10 ring-1 ring-blue-400/40'
+                      : ''
+                  }`}
+                >
+                  {canReorder && !option.locked && (
+                    <div
+                      draggable
+                      onDragStart={(event) => beginDrag(index, event)}
+                      onDragEnd={endDrag}
+                      className="cursor-grab px-1 py-2 text-gray-400 opacity-70 transition-opacity hover:text-gray-600 hover:opacity-100 active:cursor-grabbing"
+                      title="Sürükleyerek sırala"
+                      aria-label={`${option.label} sürükle`}
+                    >
+                      <GripVertical className="h-3.5 w-3.5 pointer-events-none" />
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
-                      setAdding(false)
-                      setNewName('')
+                      onChange(option.label)
+                      setActiveMenu(null)
                     }}
-                    className="inline-flex h-7 items-center rounded-lg px-2.5 text-[11px] font-bold text-red-600 transition-colors hover:bg-red-500/10"
+                    className={`${optionButtonClass} origin-left transition-[transform,font-weight,background-color] hover:scale-[1.03] hover:font-bold hover:bg-transparent`}
                   >
-                    Vazgeç
+                    <OptionLeading option={option} isLightMenu={isLightMenu} />
+                    <span className="truncate">{option.label}</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={commitAdd}
-                    className="inline-flex h-7 items-center rounded-lg bg-[rgba(37,99,235,0.12)] px-2.5 text-[11px] font-bold text-blue-700 transition-colors hover:bg-[rgba(37,99,235,0.2)]"
-                  >
-                    Ekle
-                  </button>
+                  {canEdit && !option.locked && (
+                    <span className="customer-option-actions flex shrink-0 items-center gap-0.5 pr-1.5 opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(index)}
+                        className={KALEM_BUTTON_CLASS}
+                        title="Düzenle"
+                      >
+                        <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingIndex(null)
+                          setConfirmIndex(index)
+                        }}
+                        className={COP_KUTUSU_BUTTON_CLASS}
+                        title="Sil"
+                      >
+                        <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+                      </button>
+                    </span>
+                  )}
+                  {confirmIndex === index && !option.locked ? (
+                    <DeleteConfirmPopover
+                      inline={false}
+                      title={`"${option.label}" silinsin mi?`}
+                      description="Bu işlem geri alınamaz."
+                      confirmLabel="Evet, Sil"
+                      onConfirm={() => removeOption(index)}
+                      onCancel={() => setConfirmIndex(null)}
+                    />
+                  ) : null}
                 </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingIndex(null)
-                  setNewColor(COLOR_PALETTE[options.length % COLOR_PALETTE.length])
-                  setAdding(true)
-                }}
-                className="dropdown-add-action flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-semibold leading-tight tracking-normal"
-              >
-                <Plus className="h-4 w-4 shrink-0" />
-                <span>Ekle</span>
-              </button>
+              ),
+            )}
+            {visibleOptions.length === 0 && (
+              <p className="px-3 py-2 text-[14px] font-normal leading-tight tracking-normal text-[var(--muted)]">
+                Sonuç bulunamadı.
+              </p>
             )}
           </div>
-        )}
+
+          {canEdit && (
+            <div className="mt-1 border-t border-white/50 pt-1">
+              {adding ? (
+                <div className="space-y-2 rounded-xl border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.05)] px-2.5 py-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                    Yeni seçenek
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`dropdown-option-dot h-2.5 w-2.5 shrink-0 rounded-full ${newColor}`}
+                    />
+                    <input
+                      autoFocus
+                      value={newName}
+                      placeholder="Seçenek adı yazın…"
+                      onChange={(event) => setNewName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') commitAdd()
+                        if (event.key === 'Escape') {
+                          setAdding(false)
+                          setNewName('')
+                        }
+                      }}
+                      className="min-w-0 flex-1 rounded-lg border border-white/55 bg-white/55 px-2.5 py-1.5 text-xs font-bold text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[rgba(37,99,235,0.35)] focus:bg-white/70"
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAdding(false)
+                        setNewName('')
+                      }}
+                      className="inline-flex h-7 items-center rounded-lg px-2.5 text-[11px] font-bold text-red-600 transition-colors hover:bg-red-500/10"
+                    >
+                      Vazgeç
+                    </button>
+                    <button
+                      type="button"
+                      onClick={commitAdd}
+                      className="inline-flex h-7 items-center rounded-lg bg-[rgba(37,99,235,0.12)] px-2.5 text-[11px] font-bold text-blue-700 transition-colors hover:bg-[rgba(37,99,235,0.2)]"
+                    >
+                      Ekle
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingIndex(null)
+                    setNewColor(COLOR_PALETTE[options.length % COLOR_PALETTE.length])
+                    setAdding(true)
+                  }}
+                  className="dropdown-add-action flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] font-semibold leading-tight tracking-normal"
+                >
+                  <Plus className="h-4 w-4 shrink-0" />
+                  <span>Ekle</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
         {expandedEditor ? (
           <div className="dropdown-color-rail customer-filter-color-swatches flex w-8 shrink-0 flex-col items-center gap-2 self-stretch border-l border-dark-500/35 pl-2.5">
