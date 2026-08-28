@@ -99,6 +99,8 @@ export default function NotebookCategoryInlinePanel({
   const [pendingDeleteNoteId, setPendingDeleteNoteId] = useState(null)
   const [draggedIndex, setDraggedIndex] = useState(null)
   const [dragOverIndex, setDragOverIndex] = useState(null)
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [savedTitle, setSavedTitle] = useState('')
 
   const categoryId = category?.id
 
@@ -113,6 +115,7 @@ export default function NotebookCategoryInlinePanel({
       return null
     }
     setTitleDraft(fresh.title || '')
+    setSavedTitle(fresh.title || '')
     setNotes(sortNotebookNotes(fresh.notes || []))
     return fresh
   }
@@ -125,10 +128,13 @@ export default function NotebookCategoryInlinePanel({
     setPendingDeleteNoteId(null)
     if (categoryId) {
       syncFromStore(categoryId)
+      setEditingTitle(false)
       return
     }
     setTitleDraft(category?.title || 'Yeni Buton')
+    setSavedTitle('')
     setNotes([])
+    setEditingTitle(true)
   }, [categoryId, category?.title])
 
   useEffect(() => {
@@ -140,6 +146,7 @@ export default function NotebookCategoryInlinePanel({
   }, [categoryId])
 
   const canSaveTitle = Boolean(titleDraft.trim())
+  const titleDirty = titleDraft.trim() !== savedTitle.trim()
 
   function notifyChanged(nextCategory) {
     onChanged?.(nextCategory)
@@ -164,8 +171,19 @@ export default function NotebookCategoryInlinePanel({
       title,
       notes: categoryId ? getNotebookCategory(categoryId)?.notes || notes : notes,
     })
+    setSavedTitle(title)
+    setEditingTitle(false)
     notifyChanged(saved)
     syncFromStore(saved.id)
+  }
+
+  function startTitleEdit() {
+    setSavedTitle(titleDraft.trim())
+    setEditingTitle(true)
+  }
+
+  function stopInteractiveEvent(event) {
+    event.stopPropagation()
   }
 
   function handleAddNote() {
@@ -279,30 +297,57 @@ export default function NotebookCategoryInlinePanel({
       <div className="border-b border-[rgba(140,145,165,0.14)] px-3 py-2.5">
         <label className="block">
           <span className={`${YF_TEXT_CLASS} mb-1.5 block`}>Buton Başlığı</span>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <input
               type="text"
               value={titleDraft}
+              readOnly={!editingTitle}
               onChange={(event) => setTitleDraft(event.target.value)}
-              onBlur={handleSaveTitle}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') {
+                if (event.key === 'Enter' && editingTitle) {
                   event.preventDefault()
                   handleSaveTitle()
                 }
+                if (event.key === 'Escape' && editingTitle) {
+                  event.preventDefault()
+                  setTitleDraft(savedTitle || category?.title || 'Yeni Buton')
+                  setEditingTitle(false)
+                }
               }}
               placeholder="Başlık yazın..."
-              className="form-input min-w-0 flex-1 rounded-xl px-3 py-2 text-sm"
+              className={`form-input min-w-0 flex-1 rounded-xl px-3 py-2 text-sm ${
+                !editingTitle ? 'cursor-default bg-white/35' : ''
+              }`}
             />
-            <button
-              type="button"
-              disabled={!canSaveTitle}
-              onClick={handleSaveTitle}
-              className="inline-flex h-9 shrink-0 items-center gap-1 rounded-xl bg-gradient-to-r from-[#8ad9ff] via-[#60a5fa] to-[#3b82f6] px-3 text-[12px] font-semibold text-white disabled:opacity-50"
-            >
-              <Check className="h-3.5 w-3.5" />
-              Başlık
-            </button>
+            <div className="flex shrink-0 items-center gap-0.5 self-center">
+              {editingTitle ? (
+                <button
+                  type="button"
+                  disabled={!canSaveTitle || !titleDirty}
+                  onClick={(event) => {
+                    stopInteractiveEvent(event)
+                    handleSaveTitle()
+                  }}
+                  className="agenda-note-action-btn inline-flex h-[26px] w-[26px] items-center justify-center rounded-lg text-[#10b981] transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                  title="Başlığı kaydet"
+                  aria-label="Başlığı kaydet"
+                >
+                  <Check className="h-3.5 w-3.5" strokeWidth={2.25} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    stopInteractiveEvent(event)
+                    startTitleEdit()
+                  }}
+                  className={KALEM_BUTTON_CLASS}
+                  title="Başlığı düzenle"
+                >
+                  <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
+                </button>
+              )}
+            </div>
           </div>
         </label>
       </div>
@@ -390,7 +435,8 @@ export default function NotebookCategoryInlinePanel({
                         <div className="mt-2 flex items-center justify-end gap-1.5">
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={(event) => {
+                              stopInteractiveEvent(event)
                               setEditingId(null)
                               setEditDraft('')
                             }}
@@ -401,7 +447,10 @@ export default function NotebookCategoryInlinePanel({
                           <button
                             type="button"
                             disabled={!editDraft.trim()}
-                            onClick={() => handleSaveEdit(note)}
+                            onClick={(event) => {
+                              stopInteractiveEvent(event)
+                              handleSaveEdit(note)
+                            }}
                             className="inline-flex h-7 items-center gap-1.5 rounded-xl px-3 text-[12px] font-semibold text-[#10b981] disabled:opacity-50"
                           >
                             <Check className="h-3.5 w-3.5" />
@@ -421,60 +470,64 @@ export default function NotebookCategoryInlinePanel({
                             onDragEnd: endDrag,
                           }}
                         />
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                            {formatStamp(note.createdAt) ? (
-                              <p className="text-[11px] font-semibold text-[var(--muted)]">
-                                {formatStamp(note.createdAt)}
-                              </p>
-                            ) : null}
-                            <UrgencyPill
-                              value={note.urgency || 'normal'}
-                              onChange={(urgency) => handleUrgency(note, urgency)}
-                            />
+                        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                              {formatStamp(note.createdAt) ? (
+                                <p className="text-[11px] font-semibold text-[var(--muted)]">
+                                  {formatStamp(note.createdAt)}
+                                </p>
+                              ) : null}
+                              <UrgencyPill
+                                value={note.urgency || 'normal'}
+                                onChange={(urgency) => handleUrgency(note, urgency)}
+                              />
+                            </div>
+                            <p className="whitespace-pre-wrap text-sm font-normal leading-snug text-[var(--ink)]">
+                              {note.content}
+                            </p>
                           </div>
-                          <p className="whitespace-pre-wrap text-sm font-normal leading-snug text-[var(--ink)]">
-                            {note.content}
-                          </p>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-0.5 self-start">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingId(note.id)
-                              setEditDraft(note.content || '')
-                            }}
-                            className={KALEM_BUTTON_CLASS}
-                            title="Düzenle"
-                          >
-                            <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
-                          </button>
-                          <div className="relative">
+                          <div className="flex shrink-0 items-center gap-0.5 self-start">
                             <button
                               type="button"
-                              onClick={() =>
-                                setPendingDeleteNoteId((current) =>
-                                  current === note.id ? null : note.id,
-                                )
-                              }
-                              className={COP_KUTUSU_BUTTON_CLASS}
-                              title="Sil"
-                              aria-label="Notu sil"
+                              onClick={(event) => {
+                                stopInteractiveEvent(event)
+                                setEditingId(note.id)
+                                setEditDraft(note.content || '')
+                              }}
+                              className={KALEM_BUTTON_CLASS}
+                              title="Düzenle"
                             >
-                              <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+                              <Pencil className={KALEM_ICON_CLASS} strokeWidth={2.25} />
                             </button>
-                            {pendingDeleteNoteId === note.id ? (
-                              <DeleteConfirmPopover
-                                title="Not silinsin mi?"
-                                description="Bu not kalıcı olarak kaldırılacak."
-                                confirmLabel="Evet"
-                                cancelLabel="Hayır"
-                                variant="warm"
-                                onCancel={() => setPendingDeleteNoteId(null)}
-                                onConfirm={() => handleDeleteNote(note.id)}
-                                className="absolute right-0 top-[calc(100%+0.35rem)] z-40 w-[min(16rem,calc(100vw-2rem))]"
-                              />
-                            ) : null}
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  stopInteractiveEvent(event)
+                                  setPendingDeleteNoteId((current) =>
+                                    current === note.id ? null : note.id,
+                                  )
+                                }}
+                                className={COP_KUTUSU_BUTTON_CLASS}
+                                title="Sil"
+                                aria-label="Notu sil"
+                              >
+                                <Trash2 className={COP_KUTUSU_ICON_CLASS} strokeWidth={2.25} />
+                              </button>
+                              {pendingDeleteNoteId === note.id ? (
+                                <DeleteConfirmPopover
+                                  title="Not silinsin mi?"
+                                  description="Bu not kalıcı olarak kaldırılacak."
+                                  confirmLabel="Evet"
+                                  cancelLabel="Hayır"
+                                  variant="warm"
+                                  onCancel={() => setPendingDeleteNoteId(null)}
+                                  onConfirm={() => handleDeleteNote(note.id)}
+                                  className="absolute right-0 top-[calc(100%+0.35rem)] z-[10060] w-[min(16rem,calc(100vw-2rem))]"
+                                />
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                       </div>

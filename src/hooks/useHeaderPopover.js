@@ -27,15 +27,32 @@ export function toggleHeaderPopover(popoverId) {
 
 export function HeaderPopoverProvider({ children }) {
   useEffect(() => {
+    let pointerDownInsidePopover = false
+
+    function handleDocumentPointerDown(event) {
+      pointerDownInsidePopover = Boolean(
+        event.target.closest('[data-header-popover]') ||
+        event.target.closest('[data-header-popover-trigger]'),
+      )
+    }
+
     function handleDocumentClick(event) {
+      const startedInside = pointerDownInsidePopover
+      pointerDownInsidePopover = false
+
       if (!activeHeaderPopoverId) return
       if (event.target.closest('[data-header-popover]')) return
       if (event.target.closest('[data-header-popover-trigger]')) return
+      if (startedInside) return
       setActiveHeaderPopoverId(null)
     }
 
+    document.addEventListener('pointerdown', handleDocumentPointerDown, true)
     document.addEventListener('click', handleDocumentClick)
-    return () => document.removeEventListener('click', handleDocumentClick)
+    return () => {
+      document.removeEventListener('pointerdown', handleDocumentPointerDown, true)
+      document.removeEventListener('click', handleDocumentClick)
+    }
   }, [])
 
   return children
@@ -52,16 +69,17 @@ export function useHeaderPopover(popoverId) {
 
   const open = activeId === popoverId
 
-  const setOpen = useCallback((next) => {
-    const resolved = typeof next === 'function'
-      ? next(activeHeaderPopoverId === popoverId)
-      : next
-    if (resolved) {
-      setActiveHeaderPopoverId(popoverId)
-    } else if (activeHeaderPopoverId === popoverId) {
-      setActiveHeaderPopoverId(null)
-    }
-  }, [popoverId])
+  const setOpen = useCallback(
+    (next) => {
+      const resolved = typeof next === 'function' ? next(activeHeaderPopoverId === popoverId) : next
+      if (resolved) {
+        setActiveHeaderPopoverId(popoverId)
+      } else if (activeHeaderPopoverId === popoverId) {
+        setActiveHeaderPopoverId(null)
+      }
+    },
+    [popoverId],
+  )
 
   const toggle = useCallback(() => {
     toggleHeaderPopover(popoverId)
