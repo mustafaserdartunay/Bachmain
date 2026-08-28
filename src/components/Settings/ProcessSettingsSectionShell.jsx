@@ -1,4 +1,4 @@
-import { APP_SURFACE_PANEL_CLASS, PAGE_CENTER_TITLE_CLASS } from '../../utils/dashboardDesign'
+import { APP_SURFACE_PANEL_CLASS, PROCESS_SECTION_TITLE_CLASS } from '../../utils/dashboardDesign'
 
 /**
  * Süreçler Yönetimi — Teklif Süreçleri referans kabuğu.
@@ -18,9 +18,9 @@ export default function ProcessSettingsSectionShell({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_46%)]" />
       <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(96,165,250,0.45),transparent)]" />
       <div className="relative z-10">
-        <h2 className={PAGE_CENTER_TITLE_CLASS}>
+        <span data-process-section-title="true" className={PROCESS_SECTION_TITLE_CLASS}>
           {String(title || '').toLocaleUpperCase('tr-TR')}
-        </h2>
+        </span>
         {description ? (
           <p className="mt-2 max-w-2xl text-sm font-semibold text-[var(--muted)]">{description}</p>
         ) : null}

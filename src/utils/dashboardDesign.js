@@ -46,6 +46,8 @@ export const APP_FILTER_LABEL_CLASS =
 export const PAGE_TYPE_SHELL_CLASS = 'page-type-shell customers-page-type w-full'
 export const PAGE_CENTER_TITLE_CLASS =
   'customer-page-center-title yfb min-w-0 truncate text-[14px] font-bold uppercase leading-tight tracking-normal text-[var(--muted)]'
+/** Süreçler Yönetimi panel başlığı — bp merkez başlığı ile aynı tipografi */
+export const PROCESS_SECTION_TITLE_CLASS = `${PAGE_CENTER_TITLE_CLASS} process-section-title`
 export const PAGE_HEADER_CENTER_SLOT_CLASS =
   'app-page-header-center pointer-events-none absolute left-1/2 top-1/2 z-0 w-max max-w-none -translate-x-1/2 -translate-y-1/2'
 /** Merkez başlık — tek seçilebilir hücre (yalnızca yazı) */

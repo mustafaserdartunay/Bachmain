@@ -2048,6 +2048,21 @@ html body .customers-page-type .app-page-header [data-page-center-title] {
   color: var(--muted) !important;
 }
 
+.page-type-shell .process-settings-section-shell [data-process-section-title],
+.customers-page-type .process-settings-section-shell [data-process-section-title],
+html body .page-type-shell .process-settings-section-shell [data-process-section-title].yfb,
+html body .customers-page-type .process-settings-section-shell [data-process-section-title].yfb,
+html body .page-type-shell .process-settings-section-shell .process-section-title,
+html body .customers-page-type .process-settings-section-shell .process-section-title {
+  display: block;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
+}
+
 html body .page-type-shell .app-page-header .customer-page-back-link,
 html body .page-type-shell .app-page-header .customer-page-back-link-label,
 html body .customers-page-type .app-page-header .customer-page-back-link,
