@@ -1062,73 +1062,11 @@ export default function WorkflowStagesSettingsPanel({ searchQuery = '' }) {
     (segment) => segment.id === activeQuoteSegment,
   )
 
-  const quoteSearchTerms = useMemo(
-    () => [
-      'Teklif Süreçleri',
-      'teklif',
-      'öncelik',
-      'durum',
-      ...quoteSegmentTabs.map((tab) => tab.label),
-      ...getQuoteStageOptions(workflowStages).map((stage) => stage.label),
-      ...(optionLists.status || []).map((item) => item.label),
-      ...Object.values(quoteCustomLists).flatMap((list) => list.map((item) => item.label)),
-    ],
-    [quoteSegmentTabs, workflowStages, optionLists.status, quoteCustomLists],
-  )
-
-  const orderSearchTerms = useMemo(
-    () => [
-      'Sipariş Süreçleri',
-      'sipariş',
-      'order',
-      ...orderSegmentTabs.map((tab) => tab.label),
-      ...getOrderStageOptions(workflowStages).map((stage) => stage.label),
-    ],
-    [orderSegmentTabs, workflowStages],
-  )
-
-  const depoSearchTerms = useMemo(
-    () => [
-      'Depo Süreçleri',
-      'depo',
-      'teslim',
-      'araç',
-      ...workflowSegmentTabs.map((tab) => tab.label),
-      ...depoStages.map((stage) => stage.label),
-    ],
-    [workflowSegmentTabs, depoStages],
-  )
-
-  const productionSearchTerms = useMemo(
-    () => [
-      'Üretim Süreçleri',
-      'üretim',
-      'production',
-      'parça',
-      'teslim',
-      ...productionSegmentTabs.map((tab) => tab.label),
-      ...getProductionStageOptions(workflowStages).map((stage) => stage.label),
-      ...partDeliverySituations.map((item) => item.label),
-    ],
-    [productionSegmentTabs, workflowStages, partDeliverySituations],
-  )
-
-  const dashboardSearchTerms = useMemo(
-    () => [
-      'Dashboard Süreçleri',
-      'dashboard',
-      'finans',
-      'kasa',
-      ...dashboardFinanceCards.map((card) => card.label),
-    ],
-    [dashboardFinanceCards],
-  )
-
-  const showQuote = matchesProcessSearch(searchQuery, quoteSearchTerms)
-  const showOrder = matchesProcessSearch(searchQuery, orderSearchTerms)
-  const showDepo = matchesProcessSearch(searchQuery, depoSearchTerms)
-  const showProduction = matchesProcessSearch(searchQuery, productionSearchTerms)
-  const showDashboard = matchesProcessSearch(searchQuery, dashboardSearchTerms)
+  const showQuote = matchesProcessSearch(searchQuery, 'Teklif Süreçleri')
+  const showOrder = matchesProcessSearch(searchQuery, 'Sipariş Süreçleri')
+  const showDepo = matchesProcessSearch(searchQuery, 'Depo Süreçleri')
+  const showProduction = matchesProcessSearch(searchQuery, 'Üretim Süreçleri')
+  const showDashboard = matchesProcessSearch(searchQuery, 'Dashboard Süreçleri')
 
   return (
     <>

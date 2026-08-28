@@ -4,7 +4,7 @@ export function normalizeProcessSearch(value) {
     .toLocaleLowerCase('tr-TR')
 }
 
-/** Süreçler Yönetimi araması — boş sorguda tüm bölümler görünür. */
+/** Süreçler Yönetimi araması — yalnızca panel başlıkları; boş sorguda tüm bölümler görünür. */
 export function matchesProcessSearch(query, terms = []) {
   const q = normalizeProcessSearch(query)
   if (!q) return true

@@ -239,20 +239,7 @@ export default function NoteProcessTemplatesSettingsPanel({ searchQuery = '' }) 
 
   const templateCount = Object.keys(templates).length
 
-  const noteSearchTerms = useMemo(
-    () => [
-      'Not Defteri Süreçleri',
-      'not',
-      'defteri',
-      ...Object.values(templates).flatMap((template) => [
-        template.label,
-        ...(template.stages || []).map((stage) => stage.label),
-      ]),
-    ],
-    [templates],
-  )
-
-  if (!matchesProcessSearch(searchQuery, noteSearchTerms)) return null
+  if (!matchesProcessSearch(searchQuery, 'Not Defteri Süreçleri')) return null
 
   return (
     <ProcessSettingsSectionShell

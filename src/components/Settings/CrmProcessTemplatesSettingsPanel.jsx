@@ -277,23 +277,7 @@ export default function CrmProcessTemplatesSettingsPanel({ searchQuery = '' }) {
 
   const templateCount = Object.keys(crmTemplates).length
 
-  const crmSearchTerms = useMemo(
-    () => [
-      'Crm Süreçleri',
-      'crm',
-      'toplantı',
-      'ziyaret',
-      'teklif',
-      'numune',
-      ...Object.values(crmTemplates).flatMap((template) => [
-        template.label,
-        ...(template.stages || []).map((stage) => stage.label),
-      ]),
-    ],
-    [crmTemplates],
-  )
-
-  if (!matchesProcessSearch(searchQuery, crmSearchTerms)) return null
+  if (!matchesProcessSearch(searchQuery, 'Crm Süreçleri')) return null
 
   return (
     <ProcessSettingsSectionShell

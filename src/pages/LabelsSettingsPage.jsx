@@ -75,85 +75,62 @@ export default function LabelsSettingsPage() {
     return true
   }
 
-  const showStatus = matchesProcessSearch(searchQuery, [
-    'Durum',
-    'teklif durumu',
-    'sipariş durumu',
-    'öncelik',
-    ...(optionLists.status || []).map((item) => item.label),
-    ...(optionLists.orderStatus || []).map((item) => item.label),
-    ...(optionLists.priority || []).map((item) => item.label),
+  const showStatus = matchesProcessSearch(searchQuery, 'Durum')
+
+  const showCustomer = matchesProcessSearch(searchQuery, 'Müşteri Süreçleri')
+
+  const showCategory = matchesProcessSearch(searchQuery, 'Kategori Süreçleri')
+
+  const showCash = matchesProcessSearch(searchQuery, 'Kasa Oluşturma Süreçleri')
+
+  const showTags = matchesProcessSearch(searchQuery, 'Etiketler')
+
+  const showArchive = matchesProcessSearch(searchQuery, 'Süreçler Arşiv ve İşlem Geçmişi')
+
+  const workflowVisible = matchesProcessSearch(searchQuery, [
+    'Teklif Süreçleri',
+    'Sipariş Süreçleri',
+    'Depo Süreçleri',
+    'Üretim Süreçleri',
+    'Dashboard Süreçleri',
   ])
 
-  const showCustomer = matchesProcessSearch(searchQuery, [
-    'Müşteri Süreçleri',
-    'müşteri',
-    'tipi',
-    'puantaj',
-    ...(optionLists.type || []).map((item) => item.label),
-    ...(optionLists.scoring || []).map((item) => item.label),
+  const crmVisible = matchesProcessSearch(searchQuery, 'Crm Süreçleri')
+  const noteVisible = matchesProcessSearch(searchQuery, 'Not Defteri Süreçleri')
+  const salesRepVisible = matchesProcessSearch(searchQuery, 'Satış Temsilcileri Süreçleri')
+
+  const visibleSectionCount = useMemo(() => {
+    let count = 0
+    if (workflowVisible) {
+      if (matchesProcessSearch(searchQuery, 'Teklif Süreçleri')) count += 1
+      if (matchesProcessSearch(searchQuery, 'Sipariş Süreçleri')) count += 1
+      if (matchesProcessSearch(searchQuery, 'Depo Süreçleri')) count += 1
+      if (matchesProcessSearch(searchQuery, 'Üretim Süreçleri')) count += 1
+      if (matchesProcessSearch(searchQuery, 'Dashboard Süreçleri')) count += 1
+    }
+    if (crmVisible) count += 1
+    if (noteVisible) count += 1
+    if (salesRepVisible) count += 1
+    if (showStatus) count += 1
+    if (showCustomer) count += 1
+    if (showCategory) count += 1
+    if (showCash) count += 1
+    if (showTags) count += 1
+    if (showArchive) count += 1
+    return count
+  }, [
+    searchQuery,
+    workflowVisible,
+    crmVisible,
+    noteVisible,
+    salesRepVisible,
+    showStatus,
+    showCustomer,
+    showCategory,
+    showCash,
+    showTags,
+    showArchive,
   ])
-
-  const showCategory = matchesProcessSearch(searchQuery, [
-    'Kategori Süreçleri',
-    'kategori',
-    'sektör',
-    'ürün',
-    ...(optionLists.category || []).map((item) => item.label),
-    ...(optionLists.productCategory || []).map((item) => item.label),
-  ])
-
-  const showCash = matchesProcessSearch(searchQuery, [
-    'Kasa Oluşturma Süreçleri',
-    'kasa',
-    'banka',
-    'çek',
-    ...(optionLists.account || []).map((item) => item.label),
-  ])
-
-  const showTags = matchesProcessSearch(searchQuery, [
-    'Etiketler',
-    'etiket',
-    'tag',
-    ...(optionLists.tags || []).map((item) => item.label),
-  ])
-
-  const showArchive = matchesProcessSearch(searchQuery, [
-    'Süreçler Arşiv',
-    'arşiv',
-    'geçmiş',
-    'işlem',
-    'silinen',
-  ])
-
-  const visibleSectionFlags = useMemo(
-    () => ({
-      workflow: matchesProcessSearch(searchQuery, [
-        'teklif',
-        'sipariş',
-        'depo',
-        'üretim',
-        'dashboard',
-        'finans',
-        'süreç',
-      ]),
-      crm: matchesProcessSearch(searchQuery, ['crm', 'toplantı', 'ziyaret', 'numune']),
-      note: matchesProcessSearch(searchQuery, ['not', 'defteri']),
-      salesRep: matchesProcessSearch(searchQuery, ['satış', 'temsilci', 'prim', 'puan', 'görev']),
-      status: showStatus,
-      customer: showCustomer,
-      category: showCategory,
-      cash: showCash,
-      tags: showTags,
-      archive: showArchive,
-    }),
-    [searchQuery, showStatus, showCustomer, showCategory, showCash, showTags, showArchive],
-  )
-
-  const visibleSectionCount = useMemo(
-    () => Object.values(visibleSectionFlags).filter(Boolean).length,
-    [visibleSectionFlags],
-  )
 
   const hasActiveSearch = Boolean(searchQuery.trim())
 
@@ -171,18 +148,18 @@ export default function LabelsSettingsPage() {
         <div className="flex w-full min-w-0 items-center gap-3 px-1">
           <div className="flex shrink-0 items-center gap-2">
             <AppPanelDot color="blue" />
-            <span className={YF_TEXT_CLASS}>Süreç Ara :</span>
+            <span className={YF_TEXT_CLASS}>Süreç Başlığı :</span>
           </div>
           <div className="min-w-0 flex-1">
             <SearchInput
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Süreç adı, durum, tip, kategori veya etiket ara..."
+              placeholder="Süreç adı veya süreç başlığı ara..."
               className="customer-filter-search !text-[14px] !font-normal !leading-tight !tracking-normal !text-[var(--muted)]"
             />
           </div>
           <span className={`shrink-0 ${YF_TEXT_CLASS}`}>
-            {hasActiveSearch ? `${visibleSectionCount} Bölüm` : 'Tüm Süreçler'}
+            {hasActiveSearch ? `${visibleSectionCount} Başlık` : 'Tüm Süreçler'}
           </span>
         </div>
       </AppPagePanel>
@@ -190,8 +167,8 @@ export default function LabelsSettingsPage() {
       {hasActiveSearch && visibleSectionCount === 0 ? (
         <AppPagePanel className="customer-filter-panel w-full">
           <EmptyState
-            title="Eşleşen süreç bulunamadı."
-            description="Arama terimini değiştirin veya süreç adını kısaltın."
+            title="Eşleşen süreç başlığı bulunamadı."
+            description="Arama yalnızca süreç panel başlıklarında yapılır. Başlık adını deneyin."
           />
         </AppPagePanel>
       ) : null}
