@@ -299,6 +299,7 @@ export default function AgendaNoteBoard({
   autoFocusComposer = false,
   enterToSave = false,
   focusToken = 0,
+  afterComposer = null,
 }) {
   const [draft, setDraft] = useState('')
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
@@ -458,6 +459,8 @@ export default function AgendaNoteBoard({
           ) : null}
         </form>
       ) : null}
+
+      {afterComposer}
 
       {!composerOnly ? (
         <div className={fill ? 'min-h-0 flex-1 overflow-y-auto p-2' : listClassName}>

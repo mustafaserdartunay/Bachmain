@@ -7,6 +7,8 @@ import AgendaNoteBoard, {
   getAgendaNoteStamp,
   sortAgendaNotes,
 } from '../Crm/AgendaNoteBoard'
+import NotebookCategorySection from './NotebookCategorySection'
+import NotebookCategoryDetailModal from './NotebookCategoryDetailModal'
 import {
   deleteAgendaNote,
   deleteCompletedAgendaNotes,
@@ -14,6 +16,15 @@ import {
   reorderAgendaNotes,
   upsertAgendaNote,
 } from '../../utils/crmStore'
+import {
+  appendNotebookCategoryNote,
+  deleteNotebookCategory,
+  loadNotebookCategories,
+  NOTEBOOK_CATEGORIES_EVENT,
+  sortNotebookCategories,
+  uniqueNotebookCategoryTitle,
+  upsertNotebookCategory,
+} from '../../utils/notebookCategoryStore'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { useAnchoredPortal } from '../../hooks/useAnchoredPortal'
 import { useHeaderPopover } from '../../hooks/useHeaderPopover'
@@ -28,6 +39,11 @@ export default function HeaderNotebook({ hideTrigger = false }) {
   const { open, setOpen, toggle } = useHeaderPopover('notebook')
   const mobileHandoff = useMobileToolsHandoff('notebook')
   const [notes, setNotes] = useState(() => loadAgendaNotes())
+  const [categories, setCategories] = useState(() =>
+    sortNotebookCategories(loadNotebookCategories()),
+  )
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null)
+  const [detailCategory, setDetailCategory] = useState(null)
   const [focusToken, setFocusToken] = useState(0)
   const {
     anchorRef,
@@ -38,7 +54,6 @@ export default function HeaderNotebook({ hideTrigger = false }) {
     matchWidth: false,
     offset: 8,
     flip: false,
-    // Match glass-sidebar bottom: bottom-[var(--shell-gap)]
     maxBottomInset: 'var(--shell-gap)',
     getAnchor: hideTrigger ? getHeaderAgendaAnchor : null,
   })
@@ -46,9 +61,14 @@ export default function HeaderNotebook({ hideTrigger = false }) {
   useEffect(() => {
     function refresh() {
       setNotes(loadAgendaNotes())
+      setCategories(sortNotebookCategories(loadNotebookCategories()))
     }
     window.addEventListener('bach:crm-updated', refresh)
-    return () => window.removeEventListener('bach:crm-updated', refresh)
+    window.addEventListener(NOTEBOOK_CATEGORIES_EVENT, refresh)
+    return () => {
+      window.removeEventListener('bach:crm-updated', refresh)
+      window.removeEventListener(NOTEBOOK_CATEGORIES_EVENT, refresh)
+    }
   }, [])
 
   useEffect(() => {
@@ -58,6 +78,13 @@ export default function HeaderNotebook({ hideTrigger = false }) {
     }
     setFocusToken((value) => value + 1)
   }, [open])
+
+  useEffect(() => {
+    if (!selectedCategoryId) return
+    if (!categories.some((item) => item.id === selectedCategoryId)) {
+      setSelectedCategoryId(null)
+    }
+  }, [categories, selectedCategoryId])
 
   const sortedNotes = useMemo(() => sortAgendaNotes(notes), [notes])
   const incompleteCount = useMemo(() => countIncompleteAgendaNotes(notes), [notes])
@@ -69,7 +96,16 @@ export default function HeaderNotebook({ hideTrigger = false }) {
     setNotes(loadAgendaNotes())
   }
 
+  function refreshCategories() {
+    setCategories(sortNotebookCategories(loadNotebookCategories()))
+  }
+
   function handleSave(content) {
+    if (selectedCategoryId) {
+      appendNotebookCategoryNote(selectedCategoryId, content)
+      refreshCategories()
+      return
+    }
     const stamp = getAgendaNoteStamp()
     const title =
       content
@@ -126,6 +162,28 @@ export default function HeaderNotebook({ hideTrigger = false }) {
     refreshNotes()
   }
 
+  function handleCreateCategory() {
+    setDetailCategory({
+      title: uniqueNotebookCategoryTitle('Yeni Buton', categories),
+      content: '',
+      notes: [],
+    })
+  }
+
+  function handleSaveCategory(category) {
+    const saved = upsertNotebookCategory(category)
+    refreshCategories()
+    setSelectedCategoryId(saved.id)
+    setDetailCategory(null)
+  }
+
+  function handleDeleteCategory(categoryId) {
+    deleteNotebookCategory(categoryId)
+    refreshCategories()
+    if (selectedCategoryId === categoryId) setSelectedCategoryId(null)
+    setDetailCategory(null)
+  }
+
   return (
     <div
       className={
@@ -179,7 +237,7 @@ export default function HeaderNotebook({ hideTrigger = false }) {
                   Not Defteri
                 </p>
                 <p className="text-[11px] font-normal text-[var(--muted)]">
-                  {sortedNotes.length} kayıt
+                  {sortedNotes.length} hızlı not · {categories.length} buton
                 </p>
               </div>
               <button
@@ -211,11 +269,32 @@ export default function HeaderNotebook({ hideTrigger = false }) {
                 onDelete={handleDelete}
                 onDeleteCompleted={handleDeleteCompleted}
                 onReorder={handleReorder}
+                afterComposer={
+                  <NotebookCategorySection
+                    categories={categories}
+                    selectedId={selectedCategoryId}
+                    onSelect={(category) => setSelectedCategoryId(category.id)}
+                    onOpenCategory={(category) => {
+                      const fresh =
+                        loadNotebookCategories().find((item) => item.id === category.id) || category
+                      setDetailCategory(fresh)
+                    }}
+                    onCreateCategory={handleCreateCategory}
+                  />
+                }
               />
             </div>
           </div>,
           document.body,
         )}
+
+      <NotebookCategoryDetailModal
+        open={Boolean(detailCategory)}
+        category={detailCategory}
+        onClose={() => setDetailCategory(null)}
+        onSave={handleSaveCategory}
+        onDelete={handleDeleteCategory}
+      />
     </div>
   )
 }
