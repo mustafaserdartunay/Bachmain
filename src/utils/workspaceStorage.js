@@ -10,6 +10,7 @@ import {
   fetchTenantCollection,
   pushTenantCollection,
   isTenantPushBusy,
+  cancelScheduledTenantPush,
 } from './tenantSync'
 import { isIdeWebview } from './ideWebview'
 
@@ -232,10 +233,13 @@ export function applyRemoteWorkspace(payload, { reason = 'pull', updatedAt = nul
   const lastAppliedSavedAt = globalThis.__bachLastAppliedSavedAt || ''
 
   // Local edits waiting for push, or already pushed but newer than remote blob.
-  if (pendingSavedAt && remoteSavedAt && pendingSavedAt > remoteSavedAt) {
-    return false
+  if (pendingSavedAt) {
+    if (!remoteSavedAt || pendingSavedAt > remoteSavedAt) return false
   }
   if (lastAppliedSavedAt && remoteSavedAt && remoteSavedAt < lastAppliedSavedAt) {
+    return false
+  }
+  if (lastAppliedSavedAt && !remoteSavedAt && pendingSavedAt) {
     return false
   }
 
@@ -330,12 +334,20 @@ export async function hydrateTenantWorkspace({ ownerChanged = false } = {}) {
 
 export async function flushWorkspaceNow() {
   try {
+    cancelScheduledTenantPush('workspace')
     const snap = snapshotWorkspace()
     globalThis.__bachWorkspacePendingSavedAt = snap.savedAt
     const result = await pushTenantCollection('workspace', snap)
+    if (result?.skipped) {
+      // Superseded by a newer push — keep pending until that push-ok clears it.
+      return
+    }
     globalThis.__bachLastAppliedSavedAt = snap.savedAt
     if (result?.updatedAt) globalThis.__bachLastRemoteUpdatedAt = result.updatedAt
-    globalThis.__bachWorkspacePendingSavedAt = ''
+    // Keep pending until push-ok if another write landed during the PUT.
+    if (globalThis.__bachWorkspacePendingSavedAt === snap.savedAt) {
+      globalThis.__bachWorkspacePendingSavedAt = ''
+    }
   } catch (err) {
     if (err?.code === 'DATABASE_REQUIRED' || err?.status === 503) return
     console.warn('[workspace] flush failed', err?.message || err)
@@ -438,10 +450,14 @@ function installWorkspaceLiveSync() {
 
   window.addEventListener('bach:tenant-push-ok', (event) => {
     if (event.detail?.collection !== 'workspace') return
-    const savedAt = event.detail?.payload?.savedAt
+    const savedAt = event.detail?.savedAt || event.detail?.payload?.savedAt
     if (savedAt) {
-      globalThis.__bachLastAppliedSavedAt = savedAt
-      if (globalThis.__bachWorkspacePendingSavedAt === savedAt) {
+      const last = globalThis.__bachLastAppliedSavedAt || ''
+      if (!last || savedAt >= last) {
+        globalThis.__bachLastAppliedSavedAt = savedAt
+      }
+      const pending = globalThis.__bachWorkspacePendingSavedAt || ''
+      if (pending && savedAt >= pending) {
         globalThis.__bachWorkspacePendingSavedAt = ''
       }
     }

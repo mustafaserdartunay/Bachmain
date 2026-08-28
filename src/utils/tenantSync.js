@@ -4,6 +4,9 @@
  *
  * Phase 4 dual-write: enable via VITE_CRM_DUAL_WRITE=1 (see crmApiDualWrite.js).
  * Cutover checklist: docs/54_CRM_TENANT_CUTOVER.md
+ *
+ * Workspace PUTs are serialized per collection: concurrent callers coalesce to the
+ * latest snapshot so a stale older PUT cannot finish last and wipe fresher CRM rows.
  */
 import { getStoredSession } from './platformAuth'
 
@@ -12,6 +15,10 @@ const API_BASE = import.meta.env.VITE_PLATFORM_API_URL || 'https://yonetim.bachm
 const pendingTimers = new Map()
 const pendingPayloads = new Map()
 const inFlight = new Set()
+/** @type {Map<string, Promise<unknown>>} */
+const pushChains = new Map()
+/** Latest payload (or factory) waiting to be sent for each collection. */
+const latestPayloads = new Map()
 
 async function tenantFetch(path, { method = 'GET', body } = {}) {
   const { token } = getStoredSession()
@@ -40,6 +47,16 @@ export function isTenantPushBusy(collection) {
   return pendingTimers.has(collection) || inFlight.has(collection)
 }
 
+/** Drop debounced timer so flush can send immediately with the latest snapshot. */
+export function cancelScheduledTenantPush(collection) {
+  if (!collection) return
+  if (pendingTimers.has(collection)) {
+    clearTimeout(pendingTimers.get(collection))
+    pendingTimers.delete(collection)
+  }
+  pendingPayloads.delete(collection)
+}
+
 export async function pullTenantCollection(collection) {
   const data = await tenantFetch(collection)
   return data.payload
@@ -53,13 +70,81 @@ export async function pullTenantCollectionMeta(collection) {
   return tenantFetch(`${collection}/meta`)
 }
 
+function resolvePayload(payload) {
+  return typeof payload === 'function' ? payload() : payload
+}
+
+function payloadSavedAt(body) {
+  return String(body?.savedAt || '')
+}
+
+/**
+ * Serialized PUT with coalesce: wait for prior pushes, always send the newest
+ * claimed body, and re-loop if a newer snapshot arrived during the request.
+ */
 export async function pushTenantCollection(collection, payload) {
-  inFlight.add(collection)
-  try {
-    return await tenantFetch(collection, { method: 'PUT', body: payload })
-  } finally {
-    inFlight.delete(collection)
-  }
+  latestPayloads.set(collection, payload)
+
+  const previous = pushChains.get(collection) || Promise.resolve()
+  const run = previous
+    .catch(() => {})
+    .then(async () => {
+      let lastResult = { skipped: true, reason: 'empty' }
+
+      while (latestPayloads.has(collection)) {
+        const raw = latestPayloads.get(collection)
+        latestPayloads.delete(collection)
+        let body
+        try {
+          body = resolvePayload(raw)
+        } catch (err) {
+          console.warn('[tenant-sync] payload resolve failed', collection, err?.message || err)
+          continue
+        }
+        if (!body) continue
+
+        inFlight.add(collection)
+        try {
+          const result = await tenantFetch(collection, { method: 'PUT', body })
+          lastResult = result
+
+          // Newer write landed mid-flight — loop and push again.
+          if (latestPayloads.has(collection)) continue
+
+          window.dispatchEvent(
+            new CustomEvent('bach:tenant-push-ok', {
+              detail: {
+                collection,
+                updatedAt: result?.updatedAt || null,
+                payload: body,
+                savedAt: payloadSavedAt(body),
+              },
+            }),
+          )
+          return result
+        } catch (err) {
+          if (err?.code === 'DATABASE_REQUIRED') {
+            return { skipped: true, reason: 'database' }
+          }
+          if (err?.code === 'READ_ONLY_COMPANY') {
+            window.dispatchEvent(new CustomEvent('bach:company-read-only-write-blocked'))
+            return { skipped: true, reason: 'read-only' }
+          }
+          // Keep latest for a retrying caller; re-queue this body if nothing newer.
+          if (!latestPayloads.has(collection)) {
+            latestPayloads.set(collection, body)
+          }
+          throw err
+        } finally {
+          inFlight.delete(collection)
+        }
+      }
+
+      return lastResult
+    })
+
+  pushChains.set(collection, run)
+  return run
 }
 
 /** Debounced push helper for localStorage-backed stores. */
@@ -72,24 +157,11 @@ export function scheduleTenantPush(collection, payload, delayMs = 800) {
       pendingTimers.delete(collection)
       const raw = pendingPayloads.get(collection)
       pendingPayloads.delete(collection)
-      const body = typeof raw === 'function' ? raw() : raw
-      if (!body) return
-      pushTenantCollection(collection, body)
-        .then((result) => {
-          window.dispatchEvent(
-            new CustomEvent('bach:tenant-push-ok', {
-              detail: { collection, updatedAt: result?.updatedAt || null, payload: body },
-            }),
-          )
-        })
-        .catch((err) => {
-          if (err?.code === 'DATABASE_REQUIRED') return
-          if (err?.code === 'READ_ONLY_COMPANY') {
-            window.dispatchEvent(new CustomEvent('bach:company-read-only-write-blocked'))
-            return
-          }
-          console.warn('[tenant-sync]', collection, err.message)
-        })
+      if (!raw) return
+      pushTenantCollection(collection, raw).catch((err) => {
+        if (err?.code === 'DATABASE_REQUIRED') return
+        console.warn('[tenant-sync]', collection, err.message)
+      })
     }, delayMs),
   )
 }
