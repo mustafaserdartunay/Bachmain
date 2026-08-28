@@ -25,7 +25,7 @@ import AppearanceToggle from './AppearanceToggle'
 import HeaderMessageCenter from './HeaderMessageCenter'
 import HeaderNotebook from './HeaderNotebook'
 import HeaderCalendar from './HeaderCalendar'
-import HeaderAgendaSwitch from './HeaderAgendaSwitch'
+import SidebarAgendaHub from './SidebarAgendaHub'
 import HeaderAiAssistant from './HeaderAiAssistant'
 import HeaderOmniSearch from './HeaderOmniSearch'
 import HeaderSupport from './HeaderSupport'
@@ -130,7 +130,7 @@ function MobileHeaderTools({ onNavigate }) {
                   <HeaderB2BBadge />
                 </MobileToolItem>
                 <MobileToolItem label="Ajanda">
-                  <HeaderAgendaSwitch />
+                  <SidebarAgendaHub compact />
                 </MobileToolItem>
                 <MobileToolItem label="Asistan">
                   <HeaderAiAssistant />
@@ -257,9 +257,6 @@ function HeaderBar({ onMenuClick }) {
             <OrgSwitcher />
             <HeaderMessageCenter />
             <HeaderB2BBadge />
-            <HeaderAgendaSwitch />
-            <HeaderNotebook hideTrigger />
-            <HeaderCalendar hideTrigger />
             <HeaderAiAssistant />
             <AppearanceToggle />
           </div>
@@ -432,9 +429,7 @@ function HeaderBar({ onMenuClick }) {
                             <Icon className="h-4 w-4 shrink-0 text-[var(--muted)]" />
                             <span className="min-w-0 flex-1">{label}</span>
                             {badge > 0 ? (
-                              <span className={UNREAD_PILL_CLASS}>
-                                {badge > 9 ? '9+' : badge}
-                              </span>
+                              <span className={UNREAD_PILL_CLASS}>{badge > 9 ? '9+' : badge}</span>
                             ) : null}
                           </button>
                         ))}

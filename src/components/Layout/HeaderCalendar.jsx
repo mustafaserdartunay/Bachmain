@@ -36,7 +36,8 @@ function todayIso() {
 function selectionHint(selectedDateFrom, selectedDateTo) {
   if (!selectedDateFrom) return 'Başlangıç tarihini seçin'
   if (!selectedDateTo) return 'Bitiş tarihini seçin · aynı güne tıklayınca tek gün olur'
-  if (selectedDateTo === selectedDateFrom) return 'Tek gün seçildi · yeni aralık için tekrar tıklayın'
+  if (selectedDateTo === selectedDateFrom)
+    return 'Tek gün seçildi · yeni aralık için tekrar tıklayın'
   return 'Aralık seçildi · yeni aralık için tekrar tıklayın'
 }
 
@@ -102,7 +103,9 @@ function GlassMonthCalendar({
               {includeTime && timeFrom ? ` · ${timeFrom}` : ''}
             </span>
           </span>
-          <span className={`header-calendar-range-chip ${selectedDateTo ? 'is-end' : 'is-pending'}`}>
+          <span
+            className={`header-calendar-range-chip ${selectedDateTo ? 'is-end' : 'is-pending'}`}
+          >
             <span className="header-calendar-range-chip-label">Bitiş</span>
             <span className="header-calendar-range-chip-value">
               {selectedDateTo
@@ -353,7 +356,7 @@ function HeaderCalendarCreatePanel({
   )
 }
 
-export default function HeaderCalendar({ hideTrigger = false }) {
+export default function HeaderCalendar({ hideTrigger = false, sidebarAnchor = false }) {
   const { open, setOpen, toggle } = useHeaderPopover('calendar')
   const [selectedDateFrom, setSelectedDateFrom] = useState('')
   const [selectedDateTo, setSelectedDateTo] = useState('')
@@ -370,9 +373,10 @@ export default function HeaderCalendar({ hideTrigger = false }) {
     style: menuStyle,
     updatePosition,
   } = useAnchoredPortal(open, {
-    align: 'center',
+    placement: sidebarAnchor ? 'left' : 'below',
+    align: sidebarAnchor ? 'right' : 'center',
     matchWidth: false,
-    offset: 8,
+    offset: sidebarAnchor ? 12 : 8,
     getAnchor: hideTrigger ? getHeaderAgendaAnchor : null,
   })
 

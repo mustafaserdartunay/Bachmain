@@ -78,6 +78,51 @@ export function useAnchoredPortal(
     }
 
     let top = placement === 'above' ? rect.top - menuHeight - offset : rect.bottom + offset
+    let left =
+      align === 'right'
+        ? rect.right - menuWidth
+        : align === 'center'
+          ? rect.left + rect.width / 2 - menuWidth / 2
+          : rect.left
+
+    if (placement === 'left') {
+      top = rect.top
+      left = rect.left - menuWidth - offset
+      if (left < 8) {
+        left = Math.max(8, rect.right + offset)
+      }
+      const maxHeightLeft = Math.max(120, bottomLimit - top)
+      const contentHeightLeft = menuEl?.scrollHeight || measuredHeight
+      const needsScrollLeft = contentHeightLeft > maxHeightLeft + 1
+      if (left + menuWidth > window.innerWidth - 8) {
+        left = Math.max(8, window.innerWidth - menuWidth - 8)
+      }
+
+      setStyle({
+        position: 'fixed',
+        top: `${top}px`,
+        left: `${left}px`,
+        width: matchWidth ? `${rect.width}px` : width ? `${width}px` : undefined,
+        minWidth: !matchWidth && !width ? '210px' : undefined,
+        ...(needsScrollLeft
+          ? {
+              maxHeight: `${maxHeightLeft}px`,
+              overflowX: 'hidden',
+              overflowY: 'auto',
+            }
+          : {
+              overflow: 'visible',
+            }),
+        visibility: 'visible',
+        pointerEvents: 'auto',
+        zIndex: DROPDOWN_Z_INDEX,
+      })
+      if (menuEl) {
+        menuEl.dataset.scroll = needsScrollLeft ? 'true' : 'false'
+      }
+      setIsPositioned(true)
+      return
+    }
 
     if (
       flip &&
@@ -92,13 +137,6 @@ export function useAnchoredPortal(
     const maxHeight = Math.max(120, bottomLimit - top)
     const contentHeight = menuEl?.scrollHeight || measuredHeight
     const needsScroll = contentHeight > maxHeight + 1
-
-    let left =
-      align === 'right'
-        ? rect.right - menuWidth
-        : align === 'center'
-          ? rect.left + rect.width / 2 - menuWidth / 2
-          : rect.left
 
     if (left + menuWidth > window.innerWidth - 8) {
       left = Math.max(8, window.innerWidth - menuWidth - 8)

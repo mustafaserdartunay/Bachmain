@@ -33,7 +33,7 @@ import {
 } from '../../hooks/useMobileToolsHandoff'
 import { getHeaderAgendaAnchor } from '../../utils/headerAgendaAnchor'
 
-export default function HeaderNotebook({ hideTrigger = false }) {
+export default function HeaderNotebook({ hideTrigger = false, sidebarAnchor = false }) {
   const { open, setOpen, toggle } = useHeaderPopover('notebook')
   const mobileHandoff = useMobileToolsHandoff('notebook')
   const [notes, setNotes] = useState(() => loadAgendaNotes())
@@ -48,10 +48,11 @@ export default function HeaderNotebook({ hideTrigger = false }) {
     menuRef,
     style: menuStyle,
   } = useAnchoredPortal(open && !mobileHandoff, {
-    align: 'center',
+    placement: sidebarAnchor ? 'left' : 'below',
+    align: sidebarAnchor ? 'right' : 'center',
     matchWidth: false,
-    offset: 8,
-    flip: false,
+    offset: sidebarAnchor ? 12 : 8,
+    flip: !sidebarAnchor,
     maxBottomInset: 'var(--shell-gap)',
     getAnchor: hideTrigger ? getHeaderAgendaAnchor : null,
   })

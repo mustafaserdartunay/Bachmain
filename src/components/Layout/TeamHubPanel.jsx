@@ -23,6 +23,9 @@ import {
 import { WhatsAppIcon } from './SocialBrandIcons'
 import UccChatPane from '../Communication/UccChatPane'
 import TeamHubWhatsAppPane from '../Communication/TeamHubWhatsAppPane'
+import SidebarAgendaHub from './SidebarAgendaHub'
+import HeaderNotebook from './HeaderNotebook'
+import HeaderCalendar from './HeaderCalendar'
 import { openCommunicationCenter, UCC_OPEN_EVENT } from '../../ucc/uccClient'
 import { fetchAccountNotifications } from '../../utils/platformApi'
 import { TASK_CATEGORIES, TASK_PRIORITIES } from '../../utils/crmStore'
@@ -768,7 +771,7 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
           ) : null}
         </div>
       ) : (
-        <div className="mt-3 flex flex-1 flex-col items-center gap-2">
+        <div className="mt-3 flex flex-1 flex-col items-center gap-2 min-h-0">
           {members.slice(0, 4).map((employee) => {
             const badgeCount = getEmployeeHubBadgeCount(
               employee,
@@ -795,6 +798,13 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
           })}
         </div>
       )}
+
+      <div className="sidebar-agenda-hub-shell mt-auto shrink-0 border-t border-white/45 pt-3">
+        <SidebarAgendaHub collapsed={collapsed} />
+      </div>
+
+      <HeaderNotebook hideTrigger sidebarAnchor />
+      <HeaderCalendar hideTrigger sidebarAnchor />
     </aside>
   )
 }
