@@ -27,7 +27,7 @@ import {
 import ConfirmModal from '../components/Common/ConfirmModal'
 import { DeleteTrashButton } from '../components/Common/ListDeleteConfirmPanel'
 import { findCustomerProfile, saveCustomerProfile } from '../data/customerProfiles'
-import { flushWorkspaceNow } from '../utils/workspaceStorage'
+import { flushWorkspaceNow, scheduleWorkspacePush } from '../utils/workspaceStorage'
 import { publishDomainEvent } from '../workflow/eventBus'
 import {
   getTreasuryAccounts,
@@ -736,13 +736,15 @@ export default function CustomerCreatePage() {
         },
         { source: 'CustomerCreatePage' },
       )
-      flushWorkspaceNow()
+      scheduleWorkspacePush(0)
+      await flushWorkspaceNow()
     } catch (error) {
       console.error('Müşteri kaydedilemedi', error)
       setSavePhase('idle')
       setFormNotice('Kayıt tamamlanamadı. Bilgileri kontrol edip yeniden deneyin.')
       return false
     }
+    // Formu ancak kalıcı yazımdan sonra sıfırla — aksi halde senkron yarışı kayıt siler gibi görünür.
     form.reset()
     setAddressRows(initialAddressRows(null, null))
     setContactRows(initialContactRows(null, null))

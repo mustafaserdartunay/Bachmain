@@ -181,7 +181,11 @@ export function readOptionLists() {
 
 export function saveOptionList(field, options) {
   const current = readOptionLists()
-  const next = { ...current, [field]: normalizeOptionList(options) }
+  // Boş dizi bilinçli silmedir — varsayılana geri düşürme.
+  const next = {
+    ...current,
+    [field]: normalizeOptionList(Array.isArray(options) ? options : []),
+  }
   localStorage.setItem(OPTION_LISTS_KEY, JSON.stringify(next))
   window.dispatchEvent(new CustomEvent('bach:option-lists-updated', { detail: { field } }))
   return next

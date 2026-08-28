@@ -89,12 +89,21 @@ function mapLegacyOrder(order) {
 export function loadOrders() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (!saved) return detailedOrders.map(mapLegacyOrder).map(normalizeOrder)
+    if (!saved) {
+      if (localStorage.getItem('bach-workspace-owner')) return []
+      return detailedOrders.map(mapLegacyOrder).map(normalizeOrder)
+    }
     const parsed = JSON.parse(saved)
-    const orders = Array.isArray(parsed) ? parsed : detailedOrders.map(mapLegacyOrder)
-    return orders.map(normalizeOrder)
+    if (!Array.isArray(parsed)) {
+      return localStorage.getItem('bach-workspace-owner')
+        ? []
+        : detailedOrders.map(mapLegacyOrder).map(normalizeOrder)
+    }
+    return parsed.map(normalizeOrder)
   } catch {
-    return detailedOrders.map(mapLegacyOrder).map(normalizeOrder)
+    return localStorage.getItem('bach-workspace-owner')
+      ? []
+      : detailedOrders.map(mapLegacyOrder).map(normalizeOrder)
   }
 }
 

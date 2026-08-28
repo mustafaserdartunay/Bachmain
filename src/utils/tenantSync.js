@@ -64,15 +64,16 @@ export async function pushTenantCollection(collection, payload) {
 
 /** Debounced push helper for localStorage-backed stores. */
 export function scheduleTenantPush(collection, payload, delayMs = 800) {
-  const nextPayload = typeof payload === 'function' ? payload() : payload
-  pendingPayloads.set(collection, nextPayload)
+  pendingPayloads.set(collection, payload)
   if (pendingTimers.has(collection)) clearTimeout(pendingTimers.get(collection))
   pendingTimers.set(
     collection,
     setTimeout(() => {
       pendingTimers.delete(collection)
-      const body = pendingPayloads.get(collection)
+      const raw = pendingPayloads.get(collection)
       pendingPayloads.delete(collection)
+      const body = typeof raw === 'function' ? raw() : raw
+      if (!body) return
       pushTenantCollection(collection, body)
         .then((result) => {
           window.dispatchEvent(

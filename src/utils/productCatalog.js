@@ -67,19 +67,24 @@ function cloneProduct(product) {
 export function getCatalogProducts() {
   try {
     const saved = localStorage.getItem(PRODUCT_STORAGE_KEY)
-    if (!saved)
-      return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), {
-        loose: true,
-      })
-    const parsed = JSON.parse(saved)
-    if (!Array.isArray(parsed) || parsed.length === 0) {
+    // Workspace sahibi boş listeyi bilinçli tutar — demo ürünlere geri düşme.
+    if (!saved) {
+      if (localStorage.getItem('bach-workspace-owner')) return []
       return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), {
         loose: true,
       })
     }
+    const parsed = JSON.parse(saved)
+    if (!Array.isArray(parsed)) {
+      return localStorage.getItem('bach-workspace-owner')
+        ? []
+        : filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), { loose: true })
+    }
     return filterByOrgScope(parsed.map(cloneProduct), getActiveOrgScope(), { loose: true })
   } catch {
-    return filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), { loose: true })
+    return localStorage.getItem('bach-workspace-owner')
+      ? []
+      : filterByOrgScope(sampleProducts.map(cloneProduct), getActiveOrgScope(), { loose: true })
   }
 }
 

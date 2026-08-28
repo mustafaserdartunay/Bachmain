@@ -220,6 +220,8 @@ export function restoreWorkspace(payload) {
 /**
  * Soft-merge remote workspace into localStorage and refresh open screens in place.
  * Returns true when at least one key changed.
+ *
+ * Stale remote must never wipe fresher local CRM rows (customers, products, options…).
  */
 export function applyRemoteWorkspace(payload, { reason = 'pull', updatedAt = null } = {}) {
   const keys = payload?.keys
@@ -227,17 +229,21 @@ export function applyRemoteWorkspace(payload, { reason = 'pull', updatedAt = nul
 
   const remoteSavedAt = payload?.savedAt || ''
   const pendingSavedAt = globalThis.__bachWorkspacePendingSavedAt || ''
+  const lastAppliedSavedAt = globalThis.__bachLastAppliedSavedAt || ''
+
+  // Local edits waiting for push, or already pushed but newer than remote blob.
   if (pendingSavedAt && remoteSavedAt && pendingSavedAt > remoteSavedAt) {
+    return false
+  }
+  if (lastAppliedSavedAt && remoteSavedAt && remoteSavedAt < lastAppliedSavedAt) {
     return false
   }
 
   globalThis.__bachWorkspaceRestoring = true
   let changed = false
   try {
-    const remoteKeys = new Set()
     Object.entries(keys).forEach(([key, value]) => {
       if (!isWorkspaceKey(key) || typeof value !== 'string') return
-      remoteKeys.add(key)
       try {
         if (localStorage.getItem(key) !== value) {
           localStorage.setItem(key, value)
@@ -248,15 +254,8 @@ export function applyRemoteWorkspace(payload, { reason = 'pull', updatedAt = nul
       }
     })
 
-    const toRemove = []
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i)
-      if (isWorkspaceKey(key) && !remoteKeys.has(key)) toRemove.push(key)
-    }
-    toRemove.forEach((key) => {
-      localStorage.removeItem(key)
-      changed = true
-    })
+    // Do NOT delete local-only keys. A lagging remote snapshot often omits
+    // freshly written collections; removing them made new customers/products vanish.
 
     if (remoteSavedAt) globalThis.__bachLastAppliedSavedAt = remoteSavedAt
     if (updatedAt) globalThis.__bachLastRemoteUpdatedAt = updatedAt
@@ -344,9 +343,14 @@ export async function flushWorkspaceNow() {
 }
 
 export function scheduleWorkspacePush(delayMs = 800) {
-  const snap = snapshotWorkspace()
-  globalThis.__bachWorkspacePendingSavedAt = snap.savedAt
-  scheduleTenantPush('workspace', snap, delayMs)
+  // Snapshot at flush time so debounced pushes include the latest local writes.
+  const buildSnap = () => {
+    const snap = snapshotWorkspace()
+    globalThis.__bachWorkspacePendingSavedAt = snap.savedAt
+    return snap
+  }
+  buildSnap()
+  scheduleTenantPush('workspace', buildSnap, delayMs)
 }
 
 async function pullWorkspaceIfRemoteNewer() {
@@ -372,12 +376,14 @@ async function pullWorkspaceIfRemoteNewer() {
     const remoteSavedAt = meta?.savedAt || null
     const lastUpdated = globalThis.__bachLastRemoteUpdatedAt || ''
     const lastSaved = globalThis.__bachLastAppliedSavedAt || ''
+    const pendingSavedAt = globalThis.__bachWorkspacePendingSavedAt || ''
+
+    if (pendingSavedAt && remoteSavedAt && pendingSavedAt > remoteSavedAt) return false
+    if (lastSaved && remoteSavedAt && remoteSavedAt < lastSaved) return false
+    if (lastUpdated && remoteUpdatedAt && remoteUpdatedAt < lastUpdated) return false
 
     if (remoteUpdatedAt && remoteUpdatedAt === lastUpdated) return false
     if (!remoteUpdatedAt && remoteSavedAt && remoteSavedAt === lastSaved) return false
-
-    const pendingSavedAt = globalThis.__bachWorkspacePendingSavedAt || ''
-    if (pendingSavedAt && remoteSavedAt && pendingSavedAt > remoteSavedAt) return false
 
     const payload = await pullTenantCollection('workspace')
     if (!payload?.keys) {

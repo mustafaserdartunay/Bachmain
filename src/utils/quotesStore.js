@@ -30,13 +30,23 @@ function normalizeQuoteStages(quote) {
 export function loadQuotes() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (!saved) return initialQuotes.map(normalizeQuoteStages)
+    if (!saved) {
+      // Oturumlu workspace boş başlar; demo tekliflere geri düşme.
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('bach-workspace-owner')) {
+        return []
+      }
+      return initialQuotes.map(normalizeQuoteStages)
+    }
     const parsed = JSON.parse(saved)
     return Array.isArray(parsed)
       ? parsed.map(normalizeQuoteStages)
-      : initialQuotes.map(normalizeQuoteStages)
+      : localStorage.getItem('bach-workspace-owner')
+        ? []
+        : initialQuotes.map(normalizeQuoteStages)
   } catch {
-    return initialQuotes.map(normalizeQuoteStages)
+    return typeof localStorage !== 'undefined' && localStorage.getItem('bach-workspace-owner')
+      ? []
+      : initialQuotes.map(normalizeQuoteStages)
   }
 }
 
