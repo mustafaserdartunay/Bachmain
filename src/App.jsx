@@ -218,6 +218,7 @@ import WebStudioOrdersPage from './pages/web/WebStudioOrdersPage'
 import WebStudioDomainConnectPage from './pages/web/WebStudioDomainConnectPage'
 import WebStudioPage from './pages/web/WebStudioPage'
 import WebStudioBuilderPage from './pages/web/WebStudioBuilderPage'
+import StandaloneStudioPage from './pages/web/StandaloneStudioPage'
 import WebStorefrontPublishPage from './pages/web/WebStorefrontPublishPage'
 
 function LegacyKasaAccountRedirect() {
@@ -275,6 +276,8 @@ export default function App() {
             <Route path="/sevkiyat-takip/:token" element={<SevkiyatTrackingPage />} />
             <Route path="/vitrin" element={<WebStorefrontPublishPage />} />
             <Route path="/vitrin/*" element={<WebStorefrontPublishPage />} />
+            <Route path="/studio" element={<StandaloneStudioPage />} />
+            <Route path="/studio/*" element={<StandaloneStudioPage />} />
             <Route
               path="*"
               element={

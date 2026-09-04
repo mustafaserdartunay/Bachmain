@@ -109,7 +109,7 @@ export default function StudioPage() {
           </p>
           <div className="studio-hero-actions">
             <a
-              href="https://uygulama.bachmain.com/web/studio/yonetim/tasarim"
+              href="https://uygulama.bachmain.com/studio"
               className="studio-btn studio-btn-primary"
             >
               Studio'yu aç
@@ -213,7 +213,7 @@ export default function StudioPage() {
           </p>
           <div className="studio-hero-actions">
             <a
-              href="https://uygulama.bachmain.com/web/studio/yonetim/tasarim"
+              href="https://uygulama.bachmain.com/studio"
               className="studio-btn studio-btn-primary"
             >
               Studio'yu aç
