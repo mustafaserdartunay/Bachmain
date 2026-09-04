@@ -17,7 +17,6 @@ import {
 import BrandLogo from '../../components/Layout/BrandLogo'
 import WebStudioDashboardPanels from '../../components/web/WebStudioDashboardPanels'
 import GiftStorefront from '../../storefront/GiftStorefront'
-import GiftStorefrontDesigner from '../../storefront/GiftStorefrontDesigner'
 import WebStudioCategoryCreatePage from './WebStudioCategoryCreatePage'
 import WebStudioDomainConnectPage from './WebStudioDomainConnectPage'
 import WebStudioOrdersPage from './WebStudioOrdersPage'
@@ -57,17 +56,12 @@ function readCollapsed() {
 function DesignView({ selectedBlock, onSelectBlock }) {
   return (
     <div className="standalone-studio-body">
-      <div className="standalone-studio-canvas">
-        <GiftStorefront
-          preview
-          editable
-          selectedBlock={selectedBlock}
-          onSelectBlock={onSelectBlock}
-        />
-      </div>
-      <aside className="standalone-studio-rail">
-        <GiftStorefrontDesigner selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} />
-      </aside>
+      <GiftStorefront
+        preview
+        editable
+        selectedBlock={selectedBlock}
+        onSelectBlock={onSelectBlock}
+      />
     </div>
   )
 }
@@ -116,8 +110,6 @@ export default function StandaloneStudioPage() {
     setMobileOpen(false)
     if (collapsed) setStudioOpen(true)
   }
-
-  const activePage = STUDIO_PAGES.find((item) => item.id === view) || STUDIO_PAGES[0]
 
   return (
     <div className="app-shell standalone-studio min-h-screen">
@@ -232,26 +224,14 @@ export default function StandaloneStudioPage() {
         className="app-shell-content standalone-studio-content min-w-0 transition-all duration-page"
         data-sidebar-collapsed={!isDesktop || sidebarCollapsed ? 'true' : 'false'}
       >
-        <header className="standalone-studio-bar">
-          <button
-            type="button"
-            className="glass-sidebar-toggle flex h-9 w-9 items-center justify-center rounded-xl lg:hidden"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Menüyü aç"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
-          <p className="standalone-studio-hint">
-            {activePage.label}
-            {view === 'tasarim'
-              ? ' — banner veya butonun üzerine gelin, tıklayın, sağdaki kartı uygulayın.'
-              : ''}
-          </p>
-          <span className="standalone-studio-badge">Studio</span>
-          <a href="https://bachmain.com" className="standalone-studio-switch">
-            BACHMAIN
-          </a>
-        </header>
+        <button
+          type="button"
+          className="standalone-studio-menu-fab glass-sidebar-toggle lg:hidden"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Menüyü aç"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
 
         <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4">
           {view === 'tasarim' ? (
