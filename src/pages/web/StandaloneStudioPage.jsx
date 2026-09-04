@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import {
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CreditCard,
@@ -30,8 +29,6 @@ const SIDEBAR_KEY = 'bach-studio-sidebar'
 
 const MENU_BUTTON =
   'sidebar-menu-button sidebar-item w-full flex items-center gap-2.5 transition-colors'
-const SUBMENU_BUTTON =
-  'sidebar-submenu-leaf sidebar-menu-button flex w-full items-center gap-2 px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-colors whitespace-nowrap'
 
 const STUDIO_PAGES = [
   { id: 'tasarim', label: 'Tasarım', icon: Palette },
@@ -68,7 +65,6 @@ function DesignView({ selectedBlock, onSelectBlock }) {
 
 export default function StandaloneStudioPage() {
   const [view, setView] = useState('tasarim')
-  const [studioOpen, setStudioOpen] = useState(true)
   const [selectedBlock, setSelectedBlock] = useState('hero')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readCollapsed)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -108,7 +104,6 @@ export default function StandaloneStudioPage() {
   function openView(id) {
     setView(id)
     setMobileOpen(false)
-    if (collapsed) setStudioOpen(true)
   }
 
   return (
@@ -155,68 +150,27 @@ export default function StandaloneStudioPage() {
         <nav
           className={`flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 ${collapsed ? 'px-0' : 'px-1'}`}
         >
-          {!collapsed ? (
-            <div className="sidebar-section-label" role="presentation">
-              STUDIO
-            </div>
-          ) : (
-            <div className="sidebar-section-divider" aria-hidden />
-          )}
-
-          <div className={`sidebar-menu-group ${studioOpen ? 'is-open' : ''}`}>
-            <button
-              type="button"
-              onClick={() => {
-                if (collapsed) {
-                  openView('tasarim')
-                  return
-                }
-                setStudioOpen((open) => !open)
-              }}
-              className={`${MENU_BUTTON} ${collapsed ? 'justify-center' : ''} ${
-                collapsed ? 'sidebar-menu-active font-medium' : ''
-              }`}
-            >
-              <span className={`icon-wrap ${collapsed ? 'mx-auto' : ''}`}>
-                <Globe2 className="w-4 h-4 shrink-0" />
-              </span>
-              {!collapsed ? (
-                <>
-                  <span className="sidebar-menu-label flex-1 text-left">Studio</span>
-                  {studioOpen ? (
-                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  )}
-                </>
-              ) : null}
-            </button>
-
-            {studioOpen && !collapsed ? (
-              <div className="sidebar-submenu">
-                {STUDIO_PAGES.map((item, index) => {
-                  const Icon = item.icon
-                  return (
-                    <div
-                      key={item.id}
-                      className={`sidebar-submenu-row${index === STUDIO_PAGES.length - 1 ? ' is-last' : ''}`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => openView(item.id)}
-                        className={`${SUBMENU_BUTTON} ${view === item.id ? 'sidebar-menu-active font-medium' : ''}`}
-                      >
-                        <span className="submenu-icon-wrap shrink-0">
-                          <Icon className="h-3.5 w-3.5" />
-                        </span>
-                        {item.label}
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : null}
-          </div>
+          {STUDIO_PAGES.map((item) => {
+            const Icon = item.icon
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => openView(item.id)}
+                className={`${MENU_BUTTON} ${collapsed ? 'justify-center' : ''} ${
+                  view === item.id ? 'sidebar-menu-active font-medium' : ''
+                }`}
+                title={item.label}
+              >
+                <span className={`icon-wrap ${collapsed ? 'mx-auto' : ''}`}>
+                  <Icon className="w-4 h-4 shrink-0" />
+                </span>
+                {!collapsed ? (
+                  <span className="sidebar-menu-label flex-1 text-left">{item.label}</span>
+                ) : null}
+              </button>
+            )
+          })}
         </nav>
       </aside>
 
