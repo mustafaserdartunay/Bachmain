@@ -55,6 +55,7 @@ import {
   CreditCard,
   Store,
   Palette,
+  Paintbrush,
 } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -163,6 +164,7 @@ const logisticsSubMenuIcons = {
   bike: Bike,
 }
 const studioSubMenuIcons = {
+  brush: Paintbrush,
   dashboard: LayoutDashboard,
   palette: Palette,
   folder: FolderKanban,

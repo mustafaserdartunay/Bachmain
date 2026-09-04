@@ -108,13 +108,16 @@ export default function StudioPage() {
             araçlarıyla markanıza özel siteleri tek panelden tasarlamanızı sağlar.
           </p>
           <div className="studio-hero-actions">
-            <a href="#studio-features" className="studio-btn studio-btn-primary">
-              Özellikleri keşfet
+            <a
+              href="https://uygulama.bachmain.com/website-os/website/builder"
+              className="studio-btn studio-btn-primary"
+            >
+              Studio'yu aç
               <ArrowRight className="h-4 w-4" aria-hidden />
             </a>
-            <Link to="/" className="studio-btn studio-btn-ghost">
-              Ana sayfaya dön
-            </Link>
+            <a href="#studio-features" className="studio-btn studio-btn-ghost">
+              Özellikleri keşfet
+            </a>
           </div>
         </motion.div>
 
@@ -206,16 +209,21 @@ export default function StudioPage() {
         >
           <h2>Web sitenizi Studio ile şekillendirin</h2>
           <p>
-            Yönetim paneli yakında hesabınızla açılacak. Şimdilik ana sayfadan BACHMAIN CRM & ERP
-            platformunu da keşfedebilirsiniz.
+            Sürükle-bırak editör canlı. Sayfaları yerinde düzenleyin, şablon seçin ve yayınlayın.
           </p>
           <div className="studio-hero-actions">
-            <Link to="/" className="studio-btn studio-btn-primary">
-              Ana sayfaya dön
-            </Link>
-            <Link to="/demo" className="studio-btn studio-btn-ghost">
-              Demo talep et
-            </Link>
+            <a
+              href="https://uygulama.bachmain.com/website-os/website/builder"
+              className="studio-btn studio-btn-primary"
+            >
+              Studio'yu aç
+            </a>
+            <a
+              href="https://uygulama.bachmain.com/web/studio"
+              className="studio-btn studio-btn-ghost"
+            >
+              Hesabımla aç
+            </a>
           </div>
         </motion.div>
       </section>

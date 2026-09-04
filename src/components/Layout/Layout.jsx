@@ -24,15 +24,15 @@ function readSidebarCollapsed() {
 export default function Layout({ children }) {
   const { pathname } = useLocation()
 
-  const hideChrome =
-    pathname === '/paketler' ||
-    pathname.startsWith('/paketler/')
+  const hideChrome = pathname === '/paketler' || pathname.startsWith('/paketler/')
 
   const fullscreenWorkspace =
     pathname === '/otomasyon/designer' ||
     pathname.startsWith('/otomasyon/designer/') ||
     pathname === '/mes/operator' ||
-    pathname.startsWith('/mes/operator/')
+    pathname.startsWith('/mes/operator/') ||
+    pathname === '/web/studio' ||
+    pathname === '/web/studio/builder'
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed)
   const [teamHubCollapsed, setTeamHubCollapsed] = useState(
@@ -109,7 +109,13 @@ export default function Layout({ children }) {
     })
   }
 
-  const effectiveCollapsed = tourUnlockSidebar ? false : isTablet ? true : isMobile ? false : sidebarCollapsed
+  const effectiveCollapsed = tourUnlockSidebar
+    ? false
+    : isTablet
+      ? true
+      : isMobile
+        ? false
+        : sidebarCollapsed
 
   if (fullscreenWorkspace) {
     return (
@@ -140,9 +146,7 @@ export default function Layout({ children }) {
         data-sidebar-collapsed={!isMobile && effectiveCollapsed ? 'true' : 'false'}
         data-teamhub-collapsed={teamHubCollapsed ? 'true' : 'false'}
       >
-        {!hideChrome ? (
-          <Header onMenuClick={() => setMobileSidebarOpen(true)} />
-        ) : null}
+        {!hideChrome ? <Header onMenuClick={() => setMobileSidebarOpen(true)} /> : null}
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
         <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">
           {children}

@@ -217,6 +217,7 @@ import WebStudioTemplatePage from './pages/web/WebStudioTemplatePage'
 import WebStudioOrdersPage from './pages/web/WebStudioOrdersPage'
 import WebStudioDomainConnectPage from './pages/web/WebStudioDomainConnectPage'
 import WebStudioPage from './pages/web/WebStudioPage'
+import WebStudioBuilderPage from './pages/web/WebStudioBuilderPage'
 import WebStorefrontPublishPage from './pages/web/WebStorefrontPublishPage'
 
 function LegacyKasaAccountRedirect() {
@@ -306,14 +307,9 @@ export default function App() {
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/finans" element={<FinanceCenterPage />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
-                      <Route
-                        path="/web"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
-                      <Route
-                        path="/web/studio"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
+                      <Route path="/web" element={<Navigate to="/web/studio" replace />} />
+                      <Route path="/web/studio" element={<WebStudioBuilderPage />} />
+                      <Route path="/web/studio/builder" element={<WebStudioBuilderPage />} />
                       <Route
                         path="/web/studio/yonetim"
                         element={<Navigate to="/web/studio/yonetim/panel" replace />}
@@ -372,14 +368,8 @@ export default function App() {
                         element={<WebStudioDomainConnectPage />}
                       />
                       <Route path="/web/studio/siteler" element={<WebStudioPage />} />
-                      <Route
-                        path="/website-os"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
-                      <Route
-                        path="/website"
-                        element={<Navigate to="/web/studio/yonetim/panel" replace />}
-                      />
+                      <Route path="/website-os" element={<Navigate to="/web/studio" replace />} />
+                      <Route path="/website" element={<Navigate to="/web/studio" replace />} />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
                       <Route path="/platform" element={<Navigate to="/" replace />} />
                       <Route path="/cekirdek" element={<Navigate to="/" replace />} />

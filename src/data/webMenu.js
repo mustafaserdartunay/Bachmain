@@ -1,5 +1,6 @@
 export const WEB_HOME_PATH = '/web'
-export const WEB_STUDIO_PATH = '/web/studio/yonetim/panel'
+export const WEB_STUDIO_PATH = '/web/studio'
+export const WEB_STUDIO_BUILDER_PATH = '/web/studio'
 export const WEB_STUDIO_MANAGEMENT_PATH = '/web/studio/yonetim/panel'
 export const WEB_STUDIO_ADMIN_PATH = '/web/studio/yonetim/panel'
 export const WEB_STUDIO_DESIGN_PATH = '/web/studio/yonetim/tasarim'
@@ -32,7 +33,6 @@ export function isWebSettingsRoute() {
   return false
 }
 
-/** Studio BachMain kabuğunda kalır; tam ekran / harici uygulama yok. */
-export function isStudioFullscreenRoute() {
-  return false
+export function isStudioFullscreenRoute(pathname = '') {
+  return pathname === WEB_STUDIO_PATH || pathname === '/web/studio/builder'
 }
