@@ -1,6 +1,6 @@
 export const WEB_HOME_PATH = '/web'
-export const WEB_STUDIO_PATH = '/web/studio'
-export const WEB_STUDIO_BUILDER_PATH = '/web/studio'
+export const WEB_STUDIO_PATH = '/web/studio/yonetim/tasarim'
+export const WEB_STUDIO_BUILDER_PATH = '/web/studio/builder'
 export const WEB_STUDIO_MANAGEMENT_PATH = '/web/studio/yonetim/panel'
 export const WEB_STUDIO_ADMIN_PATH = '/web/studio/yonetim/panel'
 export const WEB_STUDIO_DESIGN_PATH = '/web/studio/yonetim/tasarim'
@@ -34,5 +34,5 @@ export function isWebSettingsRoute() {
 }
 
 export function isStudioFullscreenRoute(pathname = '') {
-  return pathname === WEB_STUDIO_PATH || pathname === '/web/studio/builder'
+  return pathname === '/web/studio/builder'
 }

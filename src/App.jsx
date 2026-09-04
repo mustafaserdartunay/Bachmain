@@ -307,8 +307,14 @@ export default function App() {
                       <Route path="/mes/operator" element={<MesOperatorTabletPage />} />
                       <Route path="/finans" element={<FinanceCenterPage />} />
                       <Route path="/analitik" element={<AnalyticsCenterPage />} />
-                      <Route path="/web" element={<Navigate to="/web/studio" replace />} />
-                      <Route path="/web/studio" element={<WebStudioBuilderPage />} />
+                      <Route
+                        path="/web"
+                        element={<Navigate to="/web/studio/yonetim/tasarim" replace />}
+                      />
+                      <Route
+                        path="/web/studio"
+                        element={<Navigate to="/web/studio/yonetim/tasarim" replace />}
+                      />
                       <Route path="/web/studio/builder" element={<WebStudioBuilderPage />} />
                       <Route
                         path="/web/studio/yonetim"
@@ -368,8 +374,14 @@ export default function App() {
                         element={<WebStudioDomainConnectPage />}
                       />
                       <Route path="/web/studio/siteler" element={<WebStudioPage />} />
-                      <Route path="/website-os" element={<Navigate to="/web/studio" replace />} />
-                      <Route path="/website" element={<Navigate to="/web/studio" replace />} />
+                      <Route
+                        path="/website-os"
+                        element={<Navigate to="/web/studio/yonetim/tasarim" replace />}
+                      />
+                      <Route
+                        path="/website"
+                        element={<Navigate to="/web/studio/yonetim/tasarim" replace />}
+                      />
                       <Route path="/raporlar" element={<Navigate to="/analitik" replace />} />
                       <Route path="/platform" element={<Navigate to="/" replace />} />
                       <Route path="/cekirdek" element={<Navigate to="/" replace />} />

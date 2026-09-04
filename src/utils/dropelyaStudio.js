@@ -1,7 +1,6 @@
 export const STUDIO_ADMIN_PAGES = [
-  { path: '/web/studio', label: 'Website Builder', exact: true, icon: 'brush' },
-  { path: '/web/studio/yonetim/panel', label: 'Güncel Durum', exact: true, icon: 'dashboard' },
   { path: '/web/studio/yonetim/tasarim', label: 'Tasarım', icon: 'palette' },
+  { path: '/web/studio/yonetim/panel', label: 'Güncel Durum', exact: true, icon: 'dashboard' },
   { path: '/web/studio/yonetim/kategoriler', label: 'Kategoriler', icon: 'folder' },
   { path: '/web/studio/yonetim/urunler', label: 'Ürünler', icon: 'bag' },
   { path: '/web/studio/yonetim/profil', label: 'Mağaza profili', icon: 'store' },
@@ -10,7 +9,7 @@ export const STUDIO_ADMIN_PAGES = [
 
 /** @deprecated — Studio artık BachMain içinde native sayfa */
 export function dropelyaPathForStudio() {
-  return '/web/studio'
+  return '/web/studio/yonetim/tasarim'
 }
 
 export function getDropelyaAdminBase() {
@@ -18,11 +17,11 @@ export function getDropelyaAdminBase() {
 }
 
 export function getDropelyaPageUrl() {
-  return '/web/studio'
+  return '/web/studio/yonetim/tasarim'
 }
 
 export function getDropelyaYonetimUrl() {
-  return '/web/studio'
+  return '/web/studio/yonetim/tasarim'
 }
 
 export function startStudioJump() {}

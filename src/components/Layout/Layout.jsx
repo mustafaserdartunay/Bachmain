@@ -31,7 +31,6 @@ export default function Layout({ children }) {
     pathname.startsWith('/otomasyon/designer/') ||
     pathname === '/mes/operator' ||
     pathname.startsWith('/mes/operator/') ||
-    pathname === '/web/studio' ||
     pathname === '/web/studio/builder'
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed)
