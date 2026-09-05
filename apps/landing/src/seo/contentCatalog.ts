@@ -74,7 +74,7 @@ export const SEO_CONTENT: Record<string, PageSeo> = {
     path: '/studio',
     title: 'BACHMAIN Studio | Web Sitesi Yapma & Yönetim Paneli',
     description:
-      'Bachmain Studio ile sürükle-bırak editör, şablonlar, domain ve SEO paneliyle istediğiniz web sitesini tasarlayın. Uygulamadan ayrı satın alın; canlı adres uygulama.bachmain.com/studio.',
+      'Bachmain Studio ile sürükle-bırak editör, şablonlar, domain ve SEO paneliyle istediğiniz web sitesini tasarlayın. Uygulamadan ayrı satın alın; canlı adres studio.bachmain.com.',
     ogTitle: 'BACHMAIN Studio | Web Sitesi Builder',
     ogDescription:
       'Görsel builder, şablonlar ve yayın paneli — markanıza özel web siteleri Bachmain Studio’da.',
@@ -89,7 +89,7 @@ export const SEO_CONTENT: Record<string, PageSeo> = {
     aiSearchDescription:
       'Bachmain Studio, kullanıcıların sürükle-bırak editör ve yönetim paneliyle kendi web sitelerini oluşturup yayınlamasını sağlayan Bachmain ürünüdür.',
     intro:
-      'Kod yazmadan sayfa tasarlayın, içerikleri yönetin ve sitenizi canlıya alın — Bachmain Studio (uygulama.bachmain.com/studio). Uygulama ve Studio ayrı satın alınır.',
+      'Kod yazmadan sayfa tasarlayın, içerikleri yönetin ve sitenizi canlıya alın — Bachmain Studio (studio.bachmain.com). Uygulama ve Studio ayrı satın alınır.',
     sections: [
       {
         h2: 'Görsel builder',

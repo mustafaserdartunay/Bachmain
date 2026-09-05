@@ -218,8 +218,22 @@ export function redirectToAppWithToken(token) {
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
   const nextRaw = params.get('next')
 
-  if (nextRaw === 'studio') {
-    const url = new URL('https://uygulama.bachmain.com/studio')
+  const nextNorm = String(nextRaw || '').trim()
+  if (nextNorm === 'studio' || nextNorm === '/studio' || nextNorm.startsWith('/studio/')) {
+    try {
+      const cookie = [
+        `bachmain_token=${encodeURIComponent(token)}`,
+        'Path=/',
+        'Max-Age=604800',
+        'SameSite=None',
+        'Secure',
+        'Domain=.bachmain.com',
+      ].join('; ')
+      document.cookie = cookie
+    } catch {
+      /* ignore */
+    }
+    const url = new URL('https://studio.bachmain.com/')
     url.searchParams.set('authToken', token)
     window.location.replace(url.toString())
     return

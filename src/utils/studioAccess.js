@@ -1,6 +1,6 @@
 /** Cross-product Studio URLs and license (separate from CRM packages). */
 
-export const STUDIO_ORIGIN = 'https://uygulama.bachmain.com/studio'
+export const STUDIO_ORIGIN = 'https://studio.bachmain.com'
 export const STUDIO_TRIAL_PATH = '/paketler?urun=studio'
 export const STUDIO_LICENSE_KEY = 'bach-studio-license'
 export const STUDIO_COOKIE = 'bach_studio_access'

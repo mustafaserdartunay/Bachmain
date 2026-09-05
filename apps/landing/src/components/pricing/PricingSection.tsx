@@ -69,7 +69,7 @@ export default function PricingSection() {
                   </h2>
                   <p className="mt-1 max-w-xl text-[14px] leading-relaxed font-medium text-[#64748B]">
                     Web sitesi tasarımı ve yayın paneli. Uygulama paketinden bağımsız satın alınır.
-                    Canlı adres: uygulama.bachmain.com/studio · 7 gün deneme.
+                    Canlı adres: studio.bachmain.com · 7 gün deneme.
                   </p>
                 </div>
               </div>
