@@ -114,7 +114,7 @@ export const STUDIO_PRICING_PLAN = {
     '7 gün ücretsiz deneme',
     'Kendi workspace’iniz — başka hesapların verisi yok',
     'Şablonlar, yayın ve domain',
-    'studio.bachmain.com',
+    'uygulama.bachmain.com/studio',
     'studio@bachmain.com kimliği',
   ],
   details: [

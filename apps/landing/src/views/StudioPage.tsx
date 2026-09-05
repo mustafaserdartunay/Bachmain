@@ -143,7 +143,7 @@ export default function StudioPage() {
             <span />
             <span />
             <span />
-            <p>studio.bachmain.com · canlı önizleme</p>
+            <p>uygulama.bachmain.com/studio · canlı önizleme</p>
           </div>
           <div className="studio-canvas-stage">
             {previewBlocks.map((block, i) => (
@@ -220,12 +220,15 @@ export default function StudioPage() {
         >
           <h2>Web sitenizi Studio ile şekillendirin</h2>
           <p>
-            Studio, Bachmain uygulamasından ayrı bir üründür. Üyeliğiniz varsa doğrudan
-            studio.bachmain.com açılır; yoksa 7 günlük deneme ile başlayın.
+            Studio, Bachmain uygulamasından ayrı bir üründür. Üyeliğiniz varsa doğrudan uygulama
+            içinden Studio açılır; yoksa 7 günlük deneme ile başlayın.
           </p>
           <div className="studio-hero-actions">
-            <a href="https://studio.bachmain.com" className="studio-btn studio-btn-primary">
-              studio.bachmain.com
+            <a
+              href="https://uygulama.bachmain.com/studio"
+              className="studio-btn studio-btn-primary"
+            >
+              Studio’yu aç
             </a>
             <Link to="/giris?next=studio" className="studio-btn studio-btn-ghost">
               Giriş yap

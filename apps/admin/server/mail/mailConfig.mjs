@@ -26,7 +26,7 @@ export const MAIL_BRAND = {
   appUrl: () => process.env.APP_URL || process.env.CRM_URL || 'https://uygulama.bachmain.com',
   adminUrl: () => process.env.ADMIN_URL || 'https://yonetim.bachmain.com',
   webUrl: () => process.env.WEB_URL || 'https://bachmain.com',
-  studioUrl: () => process.env.STUDIO_URL || 'https://studio.bachmain.com',
+  studioUrl: () => process.env.STUDIO_URL || 'https://uygulama.bachmain.com/studio',
   supportEmail: () => process.env.SUPPORT_EMAIL || 'destek@bachmain.com',
   adminEmail: () => process.env.ADMIN_EMAIL || 'admin@bachmain.com',
 }

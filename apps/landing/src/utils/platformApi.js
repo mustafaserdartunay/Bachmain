@@ -219,7 +219,7 @@ export function redirectToAppWithToken(token) {
   const nextRaw = params.get('next')
 
   if (nextRaw === 'studio') {
-    const url = new URL('https://studio.bachmain.com')
+    const url = new URL('https://uygulama.bachmain.com/studio')
     url.searchParams.set('authToken', token)
     window.location.replace(url.toString())
     return

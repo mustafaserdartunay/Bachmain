@@ -2,14 +2,16 @@
 
 ## Domain map
 
-| Domain                  | App                          | Vercel project    | Root directory                      |
-| ----------------------- | ---------------------------- | ----------------- | ----------------------------------- |
-| bachmain.com / www      | Kurumsal web                 | `bachmain-web`    | `apps/landing`                      |
-| uygulama.bachmain.com   | CRM                          | `bachmain`        | `.` (repo root)                     |
-| studio.bachmain.com     | Bachmain Studio              | `bachmain-studio` | `bachmain-studio` (Erlenbox nested) |
-| yonetim.bachmain.com    | Admin                        | `bachmain-admin`  | `apps/admin`                        |
-| iosapp.bachmain.com     | iOS (App Store / TestFlight) | —                 | `~/Documents/Bachmain/bachmain.ios` |
-| androidapp.bachmain.com | Android (Play Store)         | —                 | `apps/android`                      |
+| Domain                  | App                          | Vercel project   | Root directory                      |
+| ----------------------- | ---------------------------- | ---------------- | ----------------------------------- |
+| bachmain.com / www      | Kurumsal web                 | `bachmain-web`   | `apps/landing`                      |
+| uygulama.bachmain.com   | CRM + Studio                 | `bachmain`       | `.` (repo root)                     |
+| yonetim.bachmain.com    | Admin                        | `bachmain-admin` | `apps/admin`                        |
+| iosapp.bachmain.com     | iOS (App Store / TestFlight) | —                | `~/Documents/Bachmain/bachmain.ios` |
+| androidapp.bachmain.com | Android (Play Store)         | —                | `apps/android`                      |
+
+Studio canlı adresi (yeni DNS yok): `https://uygulama.bachmain.com/studio`  
+Tanıtım: `https://bachmain.com/studio`
 
 Cursor çok köklü workspace: `workspace/WORKSPACE BACHMAIN.code-workspace`  
 SSD kopyası: `/Volumes/DevDisk/WORKSPACE BACHMAIN/`
@@ -23,7 +25,6 @@ Keep nameservers on Squarespace. Add/edit:
 | A     | `@`        | `76.76.21.21`                                |
 | CNAME | `www`      | `cname.vercel-dns.com` **or** `bachmain.com` |
 | CNAME | `uygulama` | `cname.vercel-dns.com`                       |
-| CNAME | `studio`   | `cname.vercel-dns.com`                       |
 | CNAME | `yonetim`  | `cname.vercel-dns.com`                       |
 
 Do **not** change MX / SPF / DKIM (Google Workspace mail).

@@ -177,8 +177,9 @@ export const VERSION_CHANGELOG = [
         title: 'Studio',
         features: [
           {
-            title: 'studio.bachmain.com',
-            detail: 'Bachmain Studio kendi alan adında; uygulamadan ayrı üyelik ve deneme.',
+            title: 'Studio uygulama içinde',
+            detail:
+              'Bachmain Studio, ayrı alan adı olmadan uygulama.bachmain.com/studio adresinde.',
           },
         ],
       },

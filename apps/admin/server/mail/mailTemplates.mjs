@@ -66,7 +66,7 @@ function layout({ title, preview, bodyHtml, cta }) {
     activeProduct === 'studio'
       ? 'Bu e-posta Bachmain Studio hesabınızla ilişkilidir.'
       : 'Bu e-posta BACHMAIN hesabınızla ilişkilidir.'
-  const homeLabel = activeProduct === 'studio' ? 'studio.bachmain.com' : 'bachmain.com'
+  const homeLabel = activeProduct === 'studio' ? 'uygulama.bachmain.com/studio' : 'bachmain.com'
 
   return {
     subject: title,

@@ -12,6 +12,7 @@ function mailProductFrom(body = {}, account = null) {
   if (product === 'studio' || String(body.plan || '').toLowerCase() === 'studio') return 'studio'
   if (Array.isArray(account?.products) && account.products.includes('studio')) return 'studio'
   if (origin.includes('studio.bachmain') || referer.includes('studio.bachmain.com')) return 'studio'
+  if (referer.includes('uygulama.bachmain.com/studio')) return 'studio'
   return undefined
 }
 
