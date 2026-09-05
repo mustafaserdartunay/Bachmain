@@ -5,15 +5,85 @@ import { mailConfig, MAIL_BRAND } from './mail/mailConfig.mjs'
 import { sendTemplateMail } from './mail/mailService.mjs'
 import { notifyStaffAdmin, rowsFromFields } from './staffNotify.mjs'
 
-function mailProductFrom(body = {}, account = null) {
+export function requestedProduct(body = {}) {
+  const raw = String(body.product || body.next || body.plan || '')
+    .trim()
+    .toLowerCase()
+  if (raw === 'studio' || raw === '/studio' || raw.startsWith('/studio/')) return 'studio'
   const origin = String(body.origin || '')
   const referer = String(body.referer || '')
-  const product = String(body.product || body.next || account?.product || '').toLowerCase()
-  if (product === 'studio' || String(body.plan || '').toLowerCase() === 'studio') return 'studio'
-  if (Array.isArray(account?.products) && account.products.includes('studio')) return 'studio'
-  if (origin.includes('studio.bachmain') || referer.includes('studio.bachmain.com')) return 'studio'
-  if (referer.includes('uygulama.bachmain.com/studio')) return 'studio'
+  const hay = `${origin} ${referer}`.toLowerCase()
+  if (hay.includes('studio.bachmain') || hay.includes('bachmain-studio')) return 'studio'
+  if (hay.includes('next=studio')) return 'studio'
+  return 'app'
+}
+
+export function accountProduct(account) {
+  if (!account) return 'app'
+  const explicit = String(account.product || '').toLowerCase()
+  if (explicit === 'studio') return 'studio'
+  if (explicit === 'app') return 'app'
+  const source = String(account.source || '').toLowerCase()
+  if (source === 'studio_demo' || source === 'studio_signup' || source === 'studio_from_app') {
+    return 'studio'
+  }
+  const products = Array.isArray(account.products) ? account.products.map(String) : []
+  if (products.includes('studio') && !products.includes('app') && products.length > 0) {
+    return 'studio'
+  }
+  return 'app'
+}
+
+export function findAccountByEmailProduct(store, email, product = 'app') {
+  const normalized = String(email || '')
+    .trim()
+    .toLowerCase()
+  const wanted = product === 'studio' ? 'studio' : 'app'
+  return (
+    (store.accounts || []).find(
+      (row) => row.email === normalized && accountProduct(row) === wanted,
+    ) || null
+  )
+}
+
+export function isLicenseExpired(licenseExpiry) {
+  if (!licenseExpiry) return false
+  const end = new Date(`${String(licenseExpiry).slice(0, 10)}T23:59:59.999`)
+  if (Number.isNaN(end.getTime())) return false
+  return end.getTime() < Date.now()
+}
+
+export function studioMembershipSnapshot(store, studioAccount) {
+  if (!studioAccount) return { status: 'none', expiresAt: null, isDemo: false }
+  const customer =
+    (store.customers || []).find((row) => row.id === studioAccount.customerId) || null
+  const expiry = customer?.licenseExpiry || studioAccount.licenseExpiry || null
+  const expired = isLicenseExpired(expiry)
+  const isDemo =
+    studioAccount.role === 'demo_lead' ||
+    customer?.subscriptionStatus === 'trialing' ||
+    customer?.status === 'trial'
+  if (expired) return { status: 'expired', expiresAt: expiry, isDemo }
+  if (studioAccount.canLogin === false || studioAccount.paymentPending) {
+    return { status: 'pending', expiresAt: expiry, isDemo }
+  }
+  return { status: isDemo ? 'trial' : 'active', expiresAt: expiry, isDemo }
+}
+
+function mailProductFrom(body = {}, account = null) {
+  if (accountProduct(account) === 'studio' || requestedProduct(body) === 'studio') return 'studio'
   return undefined
+}
+
+function tokenFields(account) {
+  return {
+    sub: account.id,
+    email: account.email,
+    customerId: account.customerId,
+    tenantCode: account.tenantCode,
+    role: account.role,
+    product: accountProduct(account),
+  }
 }
 
 const COOKIE_NAME = 'bachmain_session'
@@ -218,6 +288,26 @@ function publicUser(account, customer, entitlements = null, companySession = nul
     address: account.address || customer?.address || '',
     city: account.city || customer?.city || '',
     district: account.district || customer?.district || '',
+    product: accountProduct(account),
+    products:
+      Array.isArray(account.products) && account.products.length
+        ? account.products
+        : [accountProduct(account)],
+    isDemo: account.role === 'demo_lead',
+  }
+}
+
+function withStudioFields(store, account, user) {
+  const studioAccount =
+    accountProduct(account) === 'studio'
+      ? account
+      : findAccountByEmailProduct(store, account.email, 'studio')
+  const linkedStudio = studioMembershipSnapshot(store, studioAccount)
+  return {
+    ...user,
+    linkedStudio,
+    studioStatus: linkedStudio.status,
+    hasStudioAccess: linkedStudio.status === 'active' || linkedStudio.status === 'trial',
   }
 }
 
@@ -225,17 +315,21 @@ function enrichUser(store, account, customer, companySession = null) {
   try {
     seedBillingIfEmpty(store)
     if (customer?.id) {
-      return publicUser(
+      return withStudioFields(
+        store,
         account,
-        customer,
-        entitlementPayloadForCustomer(store, customer.id),
-        companySession,
+        publicUser(
+          account,
+          customer,
+          entitlementPayloadForCustomer(store, customer.id),
+          companySession,
+        ),
       )
     }
   } catch {
     // fallback below
   }
-  return publicUser(account, customer, null, companySession)
+  return withStudioFields(store, account, publicUser(account, customer, null, companySession))
 }
 
 function ensureCollections(store) {
@@ -284,6 +378,109 @@ export function consumeSsoTicket(store, code) {
   const session = getAccountFromToken(store, row.token)
   if (!session) return null
   return { ...session, token: row.token }
+}
+
+export function issueStudioSsoTicket(store, incomingToken) {
+  ensureCollections(store)
+  const session = getAccountFromToken(store, incomingToken)
+  if (!session?.account) {
+    const err = new Error('Oturum bulunamadı')
+    err.code = 'UNAUTHORIZED'
+    throw err
+  }
+  const studioAccount = findAccountByEmailProduct(store, session.account.email, 'studio')
+  const snap = studioMembershipSnapshot(store, studioAccount)
+  if (!studioAccount || snap.status === 'none') {
+    const err = new Error(
+      'Studio üyeliğiniz yok. Studio paketi alın veya 7 gün demo ile ayrı bir Studio hesabı açın.',
+    )
+    err.code = 'STUDIO_REQUIRED'
+    throw err
+  }
+  if (snap.status === 'expired') {
+    const err = new Error('Studio paket süreniz dolmuş. Yenilemek için paket sayfasına gidin.')
+    err.code = 'STUDIO_EXPIRED'
+    throw err
+  }
+  if (snap.status === 'pending') {
+    const err = new Error('Studio ödemeniz henüz onaylanmadı.')
+    err.code = 'PAYMENT_PENDING'
+    throw err
+  }
+  return createSsoTicket(store, signToken(tokenFields(studioAccount)))
+}
+
+export function ensureStudioAccountFromApp(store, appAccount) {
+  ensureCollections(store)
+  if (!appAccount?.email) {
+    const err = new Error('Hesap bulunamadı')
+    err.code = 'NOT_FOUND'
+    throw err
+  }
+  const existing = findAccountByEmailProduct(store, appAccount.email, 'studio')
+  if (existing) {
+    return {
+      account: existing,
+      customer: store.customers.find((row) => row.id === existing.customerId) || null,
+    }
+  }
+  const nowIso = new Date().toISOString()
+  const tenantCode = makeTenantCode(store)
+  const customerId = newId('c')
+  const customer = {
+    id: customerId,
+    company: appAccount.companyName || '',
+    contact: appAccount.fullName || '',
+    email: appAccount.email,
+    phone: appAccount.phone || '',
+    gsm: appAccount.gsm || appAccount.phone || '',
+    taxNo: appAccount.taxNo || '',
+    taxOffice: appAccount.taxOffice || '',
+    address: appAccount.address || '',
+    city: appAccount.city || '',
+    district: appAccount.district || '',
+    status: 'pending_payment',
+    subscriptionStatus: 'pending_payment',
+    plan: 'Studio',
+    planCode: 'studio',
+    product: 'studio',
+    products: ['studio'],
+    mrr: 0,
+    users: 1,
+    createdAt: nowIso.slice(0, 10),
+    licenseExpiry: null,
+    balance: 0,
+    source: 'studio_from_app',
+    tenantCode,
+  }
+  const account = {
+    id: newId('acc'),
+    email: appAccount.email,
+    fullName: appAccount.fullName,
+    companyName: appAccount.companyName,
+    phone: appAccount.phone,
+    gsm: appAccount.gsm || appAccount.phone,
+    taxNo: appAccount.taxNo,
+    taxOffice: appAccount.taxOffice,
+    address: appAccount.address,
+    city: appAccount.city,
+    district: appAccount.district,
+    passwordHash: appAccount.passwordHash,
+    role: 'owner',
+    canLogin: false,
+    paymentPending: true,
+    customerId,
+    tenantCode,
+    plan: 'Studio',
+    product: 'studio',
+    products: ['studio'],
+    source: 'studio_from_app',
+    onboardingCompleted: true,
+    createdAt: nowIso,
+  }
+  store.customers.unshift(customer)
+  store.accounts.unshift(account)
+  return { account, customer }
 }
 
 function primaryCompanySession(account) {
@@ -346,6 +543,7 @@ export async function registerAccount(store, body) {
   const district = String(body.district || '').trim()
   const companySize = String(body.companySize || body.size || '').trim()
   const sourceTag = String(body.source || 'self_signup').trim() || 'self_signup'
+  const product = requestedProduct(body)
 
   if (!email || !email.includes('@')) {
     const err = new Error('Geçerli bir e-posta girin')
@@ -388,15 +586,28 @@ export async function registerAccount(store, body) {
     throw err
   }
   if (
-    store.accounts.some((a) => a.email === email && a.canLogin !== false && a.role !== 'demo_lead')
+    store.accounts.some(
+      (a) =>
+        a.email === email &&
+        accountProduct(a) === product &&
+        a.canLogin !== false &&
+        a.role !== 'demo_lead',
+    )
   ) {
-    const err = new Error('Bu e-posta ile zaten üyelik var')
+    const err = new Error(
+      product === 'studio'
+        ? 'Bu e-posta ile zaten Studio üyeliği var'
+        : 'Bu e-posta ile zaten üyelik var',
+    )
     err.code = 'EMAIL_TAKEN'
     throw err
   }
 
   const existingLead = store.accounts.find(
-    (a) => a.email === email && (a.role === 'demo_lead' || a.canLogin === false),
+    (a) =>
+      a.email === email &&
+      accountProduct(a) === product &&
+      (a.role === 'demo_lead' || a.canLogin === false),
   )
   const now = new Date()
   const licenseExpiry = new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10)
@@ -437,7 +648,8 @@ export async function registerAccount(store, body) {
         ? 'self_signup'
         : sourceTag || 'self_signup',
     paymentPending: requirePayment,
-    products: mailProductFrom(body) === 'studio' ? ['studio'] : [],
+    product,
+    products: [product],
   }
 
   let customer = store.customers.find((c) => c.id === customerId)
@@ -466,6 +678,9 @@ export async function registerAccount(store, body) {
       source: existingLead ? 'demo_converted' : 'self_signup',
       tenantCode,
       subscriptionStatus: requirePayment ? 'pending_payment' : 'trialing',
+      product,
+      products: [product],
+      planCode: product === 'studio' ? 'studio' : undefined,
     }
     store.customers.unshift(customer)
   } else {
@@ -487,6 +702,9 @@ export async function registerAccount(store, body) {
     customer.subscriptionStatus = requirePayment ? 'pending_payment' : 'trialing'
     customer.source = existingLead ? 'demo_converted' : customer.source || 'self_signup'
     customer.tenantCode = tenantCode
+    customer.product = product
+    customer.products = [product]
+    if (product === 'studio') customer.planCode = 'studio'
   }
 
   if (existingLead) {
@@ -582,13 +800,7 @@ export async function registerAccount(store, body) {
     meta: { source: account.source, requirePayment },
   })
 
-  const token = signToken({
-    sub: account.id,
-    email: account.email,
-    customerId,
-    tenantCode,
-    role: account.role,
-  })
+  const token = signToken(tokenFields(account))
 
   return {
     token,
@@ -601,8 +813,16 @@ export async function loginAccount(store, body) {
   ensureCollections(store)
   const email = normalizeEmail(body.email)
   const password = String(body.password || '')
-  const account = store.accounts.find((a) => a.email === email)
+  const product = requestedProduct(body)
+  const account = findAccountByEmailProduct(store, email, product)
   if (!account) {
+    if (product === 'studio') {
+      const err = new Error(
+        'Bu e-posta ile Studio üyeliği yok. Studio demosu veya paketi alın. Uygulama üyeliği Studio girişi vermez.',
+      )
+      err.code = 'STUDIO_REQUIRED'
+      throw err
+    }
     const err = new Error('E-posta veya şifre hatalı')
     err.code = 'INVALID_CREDENTIALS'
     throw err
@@ -634,7 +854,14 @@ export async function loginAccount(store, body) {
   }
   const customerForExpiry = store.customers.find((c) => c.id === account.customerId) || null
   const expiry = customerForExpiry?.licenseExpiry || account.licenseExpiry
-  if (account.role === 'demo_lead' && expiry) {
+  if (product === 'studio') {
+    const snap = studioMembershipSnapshot(store, account)
+    if (snap.status === 'expired') {
+      const err = new Error('Studio paket süreniz dolmuş. Yenilemek için paket sayfasına gidin.')
+      err.code = 'STUDIO_EXPIRED'
+      throw err
+    }
+  } else if (account.role === 'demo_lead' && expiry) {
     const end = new Date(`${String(expiry).slice(0, 10)}T23:59:59.999`)
     if (!Number.isNaN(end.getTime()) && end.getTime() < Date.now()) {
       const err = new Error('Demo süreniz dolmuş. Yönetim süreyi uzatana kadar giriş yapılamaz.')
@@ -699,13 +926,7 @@ export async function loginAccount(store, body) {
   })
   store.authEvents = store.authEvents.slice(0, 2000)
 
-  const token = signToken({
-    sub: account.id,
-    email: account.email,
-    customerId: account.customerId,
-    tenantCode: account.tenantCode,
-    role: account.role,
-  })
+  const token = signToken(tokenFields(account))
 
   return {
     token,
@@ -776,6 +997,7 @@ export function switchCompanySession(store, accountId, tenantCode) {
     tenantCode: companySession.tenantCode,
     role: companySession.accessLevel,
     accessLevel: companySession.accessLevel,
+    product: accountProduct(account),
   })
   return {
     token,
@@ -827,8 +1049,12 @@ export function setCompanyUserAccess(store, session, { email, accessLevel }) {
     throw err
   }
   const normalizedEmail = normalizeEmail(email)
+  const sessionProduct = accountProduct(session.account)
   const target = store.accounts.find(
-    (account) => account.email === normalizedEmail && account.canLogin !== false,
+    (account) =>
+      account.email === normalizedEmail &&
+      accountProduct(account) === sessionProduct &&
+      account.canLogin !== false,
   )
   if (!target) {
     const err = new Error('Bu e-posta ile giriş yapabilen bir kullanıcı bulunamadı')
@@ -867,13 +1093,13 @@ export function setCompanyUserAccess(store, session, { email, accessLevel }) {
   return listCompanyUsers(store, session)
 }
 
-export async function requestPasswordReset(store, emailRaw) {
+export async function requestPasswordReset(store, emailRaw, body = {}) {
   ensureCollections(store)
   if (!Array.isArray(store.authEvents)) store.authEvents = []
   const email = normalizeEmail(emailRaw)
-  const account = store.accounts.find((a) => a.email === email && a.role !== 'demo_lead')
-  // Always succeed to avoid account enumeration
-  if (!account) {
+  const product = requestedProduct(body)
+  const account = findAccountByEmailProduct(store, email, product)
+  if (!account || account.canLogin === false) {
     store.authEvents.unshift({
       id: newId('aev'),
       type: 'password_reset_request',
@@ -901,7 +1127,8 @@ export async function requestPasswordReset(store, emailRaw) {
   store.emailTokens = store.emailTokens.slice(0, 2000)
 
   const cfg = mailConfig()
-  const resetUrl = `${cfg.webUrl}/sifre-sifirla?token=${encodeURIComponent(token)}`
+  const resetQuery = `token=${encodeURIComponent(token)}${product === 'studio' ? '&next=studio' : ''}`
+  const resetUrl = `${cfg.webUrl}/sifre-sifirla?${resetQuery}`
   await sendTemplateMail(store, {
     to: account.email,
     template: 'password_reset',

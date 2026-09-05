@@ -46,6 +46,15 @@ export function seedBillingIfEmpty(store) {
       updatedAt: new Date().toISOString(),
     }))
   }
+  const studioSeed = DEFAULT_PLANS.find((p) => p.code === 'studio')
+  if (studioSeed && !b.plans.some((p) => p.code === 'studio')) {
+    b.plans.push({
+      id: newId('plan'),
+      ...studioSeed,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+  }
   if (!b.addons.length) {
     b.addons = DEFAULT_ADDONS.map((a) => ({
       id: newId('addon'),
@@ -277,7 +286,8 @@ export function createModuleStoreCheckout(store, input) {
   }
 
   let amount = selected.reduce(
-    (sum, a) => sum + (period === 'year' ? Number(a.yearlyPrice) || 0 : Number(a.monthlyPrice) || 0),
+    (sum, a) =>
+      sum + (period === 'year' ? Number(a.yearlyPrice) || 0 : Number(a.monthlyPrice) || 0),
     0,
   )
   let coupon = null
@@ -357,7 +367,11 @@ export function createModuleStoreCheckout(store, input) {
   }
 }
 
-export function activateModuleStorePayment(store, paymentId, { provider = 'manual', raw = {} } = {}) {
+export function activateModuleStorePayment(
+  store,
+  paymentId,
+  { provider = 'manual', raw = {} } = {},
+) {
   const b = seedBillingIfEmpty(store)
   const payment = b.payments.find((p) => p.id === paymentId)
   if (!payment) {
@@ -804,7 +818,9 @@ export async function createCheckout(store, input) {
   const kontorPackageId = input.kontorPackageId || input.kontorId || null
   const kontorAmount = Number(input.kontorAmount || 0) || 0
   const kontorPriceTry = Number(input.kontorPriceTry || 0) || 0
-  const kontorKind = String(input.kontorKind || input.kontorType || '').trim() || (kontorPackageId ? 'efatura_kontor' : null)
+  const kontorKind =
+    String(input.kontorKind || input.kontorType || '').trim() ||
+    (kontorPackageId ? 'efatura_kontor' : null)
   if (kontorPriceTry > 0) amount += kontorPriceTry
   let coupon = null
   if (input.couponCode) {

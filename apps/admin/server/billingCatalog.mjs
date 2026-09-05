@@ -135,6 +135,7 @@ export function modulesForPlan(code) {
   if (c === 'professional' || c === 'pro' || c === 'profesyonel') {
     return [...new Set([...STARTER_MODULES, ...PROFESSIONAL_EXTRA])]
   }
+  if (c === 'studio') return ['website_os']
   return [...STARTER_MODULES]
 }
 
@@ -747,6 +748,24 @@ export const DEFAULT_PLANS = [
     active: true,
     modules: modulesForPlan('enterprise'),
   },
+  {
+    code: 'studio',
+    name: 'Bachmain Studio',
+    description: 'Web sitesi tasarımı ve yayın — Bachmain uygulamasından bağımsız.',
+    prices: {
+      month: 790,
+      year: 7900,
+    },
+    maxUsers: 0,
+    storageGb: 20,
+    maxCompanies: 1,
+    maxBranches: 1,
+    maxWarehouses: 1,
+    sortOrder: 4,
+    active: true,
+    product: 'studio',
+    modules: ['website_os'],
+  },
 ]
 
 export const PERIOD_MONTHS = {
@@ -763,15 +782,21 @@ export function normalizePlanCode(raw) {
   const s = String(raw || '')
     .trim()
     .toLowerCase()
+  if (s === 'studio' || s === 'bachmain-studio' || s === 'bachmain_studio') return 'studio'
   if (/enter|kurum/.test(s)) return 'enterprise'
   if (/pro|profesyonel|professional|business/.test(s)) return 'professional'
   if (/free|trial|deneme/.test(s)) return 'starter'
   if (/start|başlangıç|baslangic/.test(s)) return 'starter'
-  if (['starter', 'professional', 'enterprise'].includes(s)) return s
+  if (['starter', 'professional', 'enterprise', 'studio'].includes(s)) return s
   return 'professional'
 }
 
 export function displayPlanName(code) {
-  const map = { starter: 'Starter', professional: 'Professional', enterprise: 'Enterprise' }
+  const map = {
+    starter: 'Starter',
+    professional: 'Professional',
+    enterprise: 'Enterprise',
+    studio: 'Bachmain Studio',
+  }
   return map[normalizePlanCode(code)] || 'Professional'
 }

@@ -3,7 +3,7 @@
  */
 import { withStore, loadStore, newId } from './store.mjs'
 import { sendJson } from './authRoutes.mjs'
-import { getAccountFromToken, getBearerOrCookieToken } from './auth.mjs'
+import { getAccountFromToken, getBearerOrCookieToken, ensureStudioAccountFromApp } from './auth.mjs'
 import { getStaffSession } from './staffAuth.mjs'
 import { insertPaymentEvent, getTenantCollection, hasDatabase } from './db.mjs'
 import {
@@ -38,7 +38,9 @@ function formatTry(amount) {
 async function alertStaffCheckout(store, result, session, body = {}) {
   const payment = result.payment || {}
   const planName = result.plan?.name || payment.planCode || 'Paket'
-  const hasKontor = Boolean(payment.kontorPackageId || payment.kontorAmount || payment.kontorPriceTry)
+  const hasKontor = Boolean(
+    payment.kontorPackageId || payment.kontorAmount || payment.kontorPriceTry,
+  )
   const kontorLabel =
     payment.kontorKind === 'ai_token'
       ? 'AI token kontör'
@@ -360,13 +362,25 @@ export async function handleBillingApi(req, res, path, body = {}) {
       const store = await loadStore()
       const session = requireTenant(req, store)
       const result = await withStore(async (s) => {
+        const wantsStudio =
+          normalizePlanCode(body.planCode || body.plan || body.product) === 'studio' ||
+          String(body.product || '').toLowerCase() === 'studio'
+        let customerId = session.user.customerId
+        let accountId = session.user.id
+        if (wantsStudio) {
+          const studio = ensureStudioAccountFromApp(s, session.account)
+          customerId = studio.customer?.id || customerId
+          accountId = studio.account?.id || accountId
+          body.planCode = 'studio'
+        }
         const checkout = createCheckout(s, {
           ...body,
-          customerId: session.user.customerId,
-          accountId: session.user.id,
+          customerId,
+          accountId,
           email: session.user.email,
           companyName: session.user.companyName,
           phone: session.user.phone,
+          source: wantsStudio ? 'studio_checkout' : body.source || 'billing_checkout',
         })
         await alertStaffCheckout(s, checkout, session, body)
         return checkout
@@ -408,7 +422,7 @@ export async function handleBillingApi(req, res, path, body = {}) {
             plan: result.plan,
             period: body.period || 'month',
             amountTry: result.amountTry,
-            customerId: session.user.customerId,
+            customerId: result.payment.customerId || session.user.customerId,
             email: session.user.email,
             paymentId: result.payment.id,
             successUrl: body.successUrl,

@@ -5,6 +5,7 @@ import crypto from 'node:crypto'
 import { newId } from './store.mjs'
 import { mailConfig } from './mail/mailConfig.mjs'
 import { sendTemplateMail } from './mail/mailService.mjs'
+import { accountProduct } from './auth.mjs'
 
 function normalizeEmail(value) {
   return String(value || '')
@@ -175,7 +176,10 @@ export async function completeEmailChange(store, { token, newEmail: newEmailRaw 
   }
 
   const taken = (store.accounts || []).some(
-    (a) => a.id !== account.id && normalizeEmail(a.email) === newEmail,
+    (a) =>
+      a.id !== account.id &&
+      normalizeEmail(a.email) === newEmail &&
+      accountProduct(a) === accountProduct(account),
   )
   if (taken) {
     const err = new Error('Bu e-posta başka bir hesapta kayıtlı')

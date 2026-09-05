@@ -6,7 +6,7 @@ import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
-import { yonetimPost, redirectToAppWithToken } from '../../utils/platformApi'
+import { yonetimPost, redirectToAppWithToken, authLocationMeta } from '../../utils/platformApi'
 
 export default function LoginPanel() {
   const [form, setForm] = useState({ email: '', password: '' })
@@ -15,6 +15,8 @@ export default function LoginPanel() {
   const [busy, setBusy] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [done, setDone] = useState(false)
+  const authMeta = authLocationMeta()
+  const isStudio = authMeta.product === 'studio'
 
   const onChange = (key: 'email' | 'password') => (e: ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }))
@@ -35,6 +37,7 @@ export default function LoginPanel() {
         email: form.email.trim().toLowerCase(),
         password: form.password,
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        ...authMeta,
       })
       const token = data?.token || data?.tokens?.accessToken || ''
       if (!token) {
@@ -59,7 +62,7 @@ export default function LoginPanel() {
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <h2 className="mb-8 text-center text-4xl font-extrabold tracking-[-0.04em] text-[#2563EB] uppercase sm:text-5xl">
-        Giriş Yap
+        {isStudio ? 'Studio Giriş' : 'Giriş Yap'}
       </h2>
 
       <div className="relative rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-10">
@@ -69,11 +72,18 @@ export default function LoginPanel() {
               Giriş başarılı
             </p>
             <p className="mt-2 text-[14px] font-medium text-[#64748B]">
-              Uygulamaya yönlendiriliyorsunuz… Güvenlik için e-postanıza giriş bildirimi gönderildi.
+              {isStudio
+                ? 'Studio’ya yönlendiriliyorsunuz… Güvenlik için Studio e-postanıza giriş bildirimi gönderildi.'
+                : 'Uygulamaya yönlendiriliyorsunuz… Güvenlik için e-postanıza giriş bildirimi gönderildi.'}
             </p>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4" noValidate>
+            {isStudio ? (
+              <p className="text-center text-[13px] font-medium text-[#64748B]">
+                Yalnızca Studio üyeliği. Uygulama hesabı buradan giriş vermez.
+              </p>
+            ) : null}
             <Input
               name="email"
               type="email"
@@ -113,7 +123,7 @@ export default function LoginPanel() {
 
             <div className="flex justify-center">
               <Link
-                to="/sifremi-unuttum"
+                to={isStudio ? '/sifremi-unuttum?next=studio' : '/sifremi-unuttum'}
                 className="text-[13px] font-bold text-[#2563EB] hover:underline"
               >
                 Şifremi unuttum
@@ -132,8 +142,11 @@ export default function LoginPanel() {
 
             <p className="pt-1 text-center text-[14px] font-medium text-[#64748B]">
               Hesabınız yok mu?{' '}
-              <Link to="/register" className="font-bold text-[#2563EB] hover:underline">
-                Üye Ol
+              <Link
+                to={isStudio ? '/demo?next=studio' : '/register'}
+                className="font-bold text-[#2563EB] hover:underline"
+              >
+                {isStudio ? 'Studio demo' : 'Üye Ol'}
               </Link>
             </p>
           </form>

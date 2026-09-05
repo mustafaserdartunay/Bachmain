@@ -6,7 +6,7 @@ import { Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
-import { yonetimPost } from '../../utils/platformApi'
+import { yonetimPost, authLocationMeta } from '../../utils/platformApi'
 
 export default function ForgotPasswordPanel() {
   const [email, setEmail] = useState('')
@@ -32,6 +32,7 @@ export default function ForgotPasswordPanel() {
       await yonetimPost('auth/forgot-password', {
         email: email.trim().toLowerCase(),
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        ...authLocationMeta(),
       })
       setDone(true)
     } catch (err) {
@@ -63,7 +64,7 @@ export default function ForgotPasswordPanel() {
               ve spam klasörünü kontrol edin. Bağlantı 30 dakika geçerlidir.
             </p>
             <div className="mt-6">
-              <Link to="/giris">
+              <Link to={authLocationMeta().product === 'studio' ? '/giris?next=studio' : '/giris'}>
                 <Button type="button" fullWidth>
                   Girişe dön
                 </Button>
@@ -103,7 +104,10 @@ export default function ForgotPasswordPanel() {
             </Button>
 
             <p className="pt-1 text-center text-[14px] font-medium text-[#64748B]">
-              <Link to="/giris" className="font-bold text-[#2563EB] hover:underline">
+              <Link
+                to={authLocationMeta().product === 'studio' ? '/giris?next=studio' : '/giris'}
+                className="font-bold text-[#2563EB] hover:underline"
+              >
                 Girişe dön
               </Link>
             </p>

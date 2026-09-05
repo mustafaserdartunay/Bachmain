@@ -177,9 +177,9 @@ export const VERSION_CHANGELOG = [
         title: 'Studio',
         features: [
           {
-            title: 'Studio uygulama içinde',
+            title: 'Studio ayrı üyelik',
             detail:
-              'Bachmain Studio canlı adresi studio.bachmain.com — uygulama ve yönetim ile aynı alt alan adı modeli.',
+              'Studio girişi uygulama paketinden bağımsızdır. Aynı e-posta iki üründe ayrı kayıt olabilir; uygulama içinden Studio ancak aktif Studio paketi varsa açılır.',
           },
         ],
       },

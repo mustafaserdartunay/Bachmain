@@ -18,7 +18,7 @@ import { motion } from 'framer-motion'
 import Button from './ui/Button'
 import Input from './ui/Input'
 import PasswordStrength, { passwordIssues } from './register/PasswordStrength'
-import { yonetimPost, redirectToAppWithToken } from '../utils/platformApi'
+import { yonetimPost, redirectToAppWithToken, authLocationMeta } from '../utils/platformApi'
 import { trackCta } from '../analytics/track'
 
 const bandInputCls =
@@ -73,6 +73,7 @@ export default function DemoForm({ variant = 'panel' } = {}) {
   const [showPw2, setShowPw2] = useState(false)
   const [sessionToken, setSessionToken] = useState('')
   const [licenseExpiry, setLicenseExpiry] = useState('')
+  const isStudioDemo = authLocationMeta().product === 'studio'
 
   useEffect(() => {
     const pre = readPrefill()
@@ -130,11 +131,12 @@ export default function DemoForm({ variant = 'panel' } = {}) {
         phone: form.phone.trim(),
         email: form.email.trim(),
         password: form.password,
-        source: 'bachmain_demo',
+        source: isStudioDemo ? 'studio_demo' : 'bachmain_demo',
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
         language: typeof navigator !== 'undefined' ? navigator.language : 'tr',
+        ...authLocationMeta(),
       })
-      trackCta('demo_submit', { source: 'demo_panel' })
+      trackCta('demo_submit', { source: isStudioDemo ? 'studio_demo_panel' : 'demo_panel' })
       const token = data.token || data.tokens?.accessToken || ''
       if (!token) {
         throw new Error('Demo oluşturuldu ancak oturum alınamadı. Giriş sayfasından deneyin.')
@@ -229,12 +231,13 @@ export default function DemoForm({ variant = 'panel' } = {}) {
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <h2 className="text-center text-4xl font-extrabold tracking-[-0.04em] text-[#2563EB] uppercase sm:text-5xl">
-        Demo Oluştur
+        {isStudioDemo ? 'Studio Demo' : 'Demo Oluştur'}
       </h2>
       {!done ? (
         <p className="mx-auto mt-4 max-w-xl text-center text-[14px] leading-relaxed font-medium text-[#64748B]">
-          Firma ve hesap bilgilerinizi girin. Demo 7 gün aktiftir; oluşturduktan sonra Giriş Yap ile
-          boş çalışma alanınıza girersiniz.
+          {isStudioDemo
+            ? 'Studio üyeliği uygulamadan ayrıdır. Aynı e-posta ile uygulama hesabınız olsa da buradan yeni bir Studio demosu açılır.'
+            : 'Firma ve hesap bilgilerinizi girin. Demo 7 gün aktiftir; oluşturduktan sonra Giriş Yap ile boş çalışma alanınıza girersiniz.'}
         </p>
       ) : null}
 
@@ -243,7 +246,7 @@ export default function DemoForm({ variant = 'panel' } = {}) {
           <div className="py-6 text-center">
             <CheckCircle className="mx-auto h-14 w-14 text-[#16A34A]" aria-hidden />
             <p className="mt-5 text-[28px] font-extrabold tracking-tight text-[#0F172A]">
-              Demonuz oluşturuldu
+              {isStudioDemo ? 'Studio demonuz oluşturuldu' : 'Demonuz oluşturuldu'}
             </p>
             <p className="mt-2 text-[15px] font-medium text-[#64748B]">
               Teşekkür ederiz. 7 günlük demo hesabınız hazır
@@ -257,14 +260,17 @@ export default function DemoForm({ variant = 'panel' } = {}) {
               .
             </p>
             <p className="mt-4 text-[14px] font-medium text-[#64748B]">
-              Giriş Yap ile boş çalışma alanınıza gidin. Verileriniz üyelik e-postanıza bağlı
-              saklanır; paket satın aldığınızda kaldığınız yerden devam edersiniz.
+              {isStudioDemo
+                ? 'Giriş Yap ile Studio çalışma alanınıza gidin. Bu kayıt uygulama üyeliğinizden ayrıdır.'
+                : 'Giriş Yap ile boş çalışma alanınıza gidin. Verileriniz üyelik e-postanıza bağlı saklanır; paket satın aldığınızda kaldığınız yerden devam edersiniz.'}
             </p>
             <Button type="button" fullWidth className="mt-6" onClick={enterApp}>
               Giriş Yap
             </Button>
             <p className="mt-4 text-[13px] font-medium text-[#64748B]">
-              Aynı e-posta ile ikinci demo açılamaz. Süre bitince yönetim uzatabilir.
+              {isStudioDemo
+                ? 'Aynı e-posta ile ikinci Studio demosu açılamaz. Süre bitince yönetim uzatabilir.'
+                : 'Aynı e-posta ile ikinci demo açılamaz. Süre bitince yönetim uzatabilir.'}
             </p>
           </div>
         ) : (
@@ -450,7 +456,10 @@ export default function DemoForm({ variant = 'panel' } = {}) {
 
             <p className="pt-1 text-center text-[14px] font-medium text-[#64748B]">
               Hesabınız var mı?{' '}
-              <Link to="/login" className="font-bold text-[#2563EB] hover:underline">
+              <Link
+                to={isStudioDemo ? '/giris?next=studio' : '/login'}
+                className="font-bold text-[#2563EB] hover:underline"
+              >
                 Giriş Yap
               </Link>
             </p>

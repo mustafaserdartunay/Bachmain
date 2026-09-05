@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { getPlatformApiBase, getStoredSession } from '../../utils/platformAuth'
-import { activateStudioLicense, STUDIO_ORIGIN } from '../../utils/studioAccess'
+import { openStudioOrTrial } from '../../utils/studioAccess'
 
 async function billingFetch(path, { method = 'GET', body } = {}) {
   const base = getPlatformApiBase()
@@ -193,13 +193,20 @@ export function CheckoutPage() {
             window.location.href = data.url
             return
           }
-        } catch {
-          /* Studio can be licensed locally until billing catalog includes the plan. */
+          await refreshUser?.()
+          if (data.status === 'pending_payment' || data.payment?.status === 'pending_payment') {
+            return
+          }
+          await openStudioOrTrial(user)
+          return
+        } catch (e) {
+          setError(
+            e instanceof Error
+              ? e.message
+              : 'Studio paketi alınamadı. Demo için ayrı Studio üyeliği açın.',
+          )
+          return
         }
-        activateStudioLicense(user, 'active')
-        await refreshUser?.()
-        window.location.href = STUDIO_ORIGIN
-        return
       }
       const data = await billingFetch('billing/checkout', {
         method: 'POST',

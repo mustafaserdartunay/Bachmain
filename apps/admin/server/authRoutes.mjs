@@ -7,6 +7,7 @@ import {
   buildSessionCookie,
   createSsoTicket,
   consumeSsoTicket,
+  issueStudioSsoTicket,
   completeOnboarding,
   requestPasswordReset,
   resetPasswordWithToken,
@@ -49,6 +50,7 @@ function allowedOrigins() {
     'https://www.bachmain.com',
     'https://yonetim.bachmain.com',
     'https://studio.bachmain.com',
+    'https://bachmain-studio.vercel.app',
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:5180',
@@ -197,7 +199,8 @@ export async function handleAuthApi(req, res, path, body = {}) {
       )
       return true
     } catch (error) {
-      sendJson(req, res, 401, { error: error.code || 'LOGIN_FAILED', message: error.message })
+      const status = error.code === 'STUDIO_REQUIRED' || error.code === 'STUDIO_EXPIRED' ? 403 : 401
+      sendJson(req, res, status, { error: error.code || 'LOGIN_FAILED', message: error.message })
       return true
     }
   }
@@ -259,6 +262,31 @@ export async function handleAuthApi(req, res, path, body = {}) {
       sendJson(req, res, 401, {
         error: error.code || 'INVALID_TOKEN',
         message: error.message || 'Oturum anahtarı geçersiz',
+      })
+      return true
+    }
+  }
+
+  if (method === 'POST' && path === 'auth/studio-sso') {
+    const token = getBearerOrCookieToken(req) || String(body.token || '').trim()
+    if (!token) {
+      sendJson(req, res, 401, { error: 'UNAUTHORIZED', message: 'Oturum bulunamadı' })
+      return true
+    }
+    try {
+      const ticket = await withStore((store) => issueStudioSsoTicket(store, token))
+      sendJson(req, res, 200, { ok: true, code: ticket.code, expiresIn: ticket.expiresIn })
+      return true
+    } catch (error) {
+      const status =
+        error.code === 'STUDIO_REQUIRED' || error.code === 'STUDIO_EXPIRED'
+          ? 403
+          : error.code === 'PAYMENT_PENDING'
+            ? 403
+            : 401
+      sendJson(req, res, status, {
+        error: error.code || 'STUDIO_SSO_FAILED',
+        message: error.message || 'Studio girişi yapılamadı',
       })
       return true
     }
@@ -642,7 +670,7 @@ export async function handleAuthApi(req, res, path, body = {}) {
       return true
     }
     try {
-      await withStore((store) => requestPasswordReset(store, body.email))
+      await withStore((store) => requestPasswordReset(store, body.email, body))
       sendJson(req, res, 200, {
         ok: true,
         message: 'Eşleşen hesap varsa sıfırlama bağlantısı e-posta ile gönderildi.',

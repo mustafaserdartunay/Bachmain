@@ -5,7 +5,17 @@
 import { withStore, newId } from './store.mjs'
 import { sendJson } from './authRoutes.mjs'
 import { hitRateLimit } from './db.mjs'
-import { hashPassword, signToken, validateSignupPassword, buildSessionCookie } from './auth.mjs'
+import {
+  hashPassword,
+  signToken,
+  validateSignupPassword,
+  buildSessionCookie,
+  requestedProduct,
+  findAccountByEmailProduct,
+  accountProduct,
+  isLicenseExpired,
+} from './auth.mjs'
+import { sendTemplateMail } from './mail/mailService.mjs'
 import { ensureLegalStore, assertPackConsents, recordConsentBatch } from './legal.mjs'
 import { notifyStaffAdmin, rowsFromFields } from './staffNotify.mjs'
 import { MAIL_BRAND } from './mail/mailConfig.mjs'
@@ -29,13 +39,6 @@ function makeTenantCode(store) {
   return code
 }
 
-function isLicenseExpired(licenseExpiry) {
-  if (!licenseExpiry) return false
-  const end = new Date(`${String(licenseExpiry).slice(0, 10)}T23:59:59.999`)
-  if (Number.isNaN(end.getTime())) return false
-  return end.getTime() < Date.now()
-}
-
 function sessionPayload(account, customer) {
   const token = signToken({
     sub: account.id,
@@ -43,7 +46,9 @@ function sessionPayload(account, customer) {
     customerId: account.customerId,
     tenantCode: account.tenantCode,
     role: account.role,
+    product: accountProduct(account),
   })
+  const product = accountProduct(account)
   return {
     token,
     user: {
@@ -54,12 +59,19 @@ function sessionPayload(account, customer) {
       phone: account.phone || customer?.phone || '',
       role: account.role || 'demo_lead',
       customerId: account.customerId,
-      plan: customer?.plan || account.plan || 'Starter',
+      plan: customer?.plan || account.plan || (product === 'studio' ? 'Studio' : 'Starter'),
       status: 'trial',
       subscriptionStatus: customer?.subscriptionStatus || 'trialing',
       licenseExpiry: customer?.licenseExpiry || null,
       tenantCode: account.tenantCode,
       isDemo: true,
+      product,
+      products: [product],
+      hasStudioAccess: product === 'studio',
+      linkedStudio:
+        product === 'studio'
+          ? { status: 'trial', expiresAt: customer?.licenseExpiry || null, isDemo: true }
+          : { status: 'none', expiresAt: null, isDemo: false },
       onboardingCompleted: account.onboardingCompleted !== false,
       taxNo: account.taxNo || customer?.taxNo || '',
       taxOffice: account.taxOffice || customer?.taxOffice || '',
@@ -94,7 +106,9 @@ export function createDemoLead(store, body = {}) {
   const companySize = String(body.size || body.companySize || '').trim()
   const message = String(body.message || '').trim()
   const password = String(body.password || '')
-  const source = String(body.source || 'bachmain_demo').trim() || 'bachmain_demo'
+  const product = requestedProduct(body)
+  const isStudio = product === 'studio'
+  const source = String(body.source || '').trim() || (isStudio ? 'studio_demo' : 'bachmain_demo')
 
   if (!fullName) {
     const err = new Error('Ad soyad gerekli')
@@ -143,22 +157,29 @@ export function createDemoLead(store, body = {}) {
     throw err
   }
 
-  const existingAccount = store.accounts.find((a) => a.email === email)
+  const existingAccount = findAccountByEmailProduct(store, email, product)
   if (existingAccount) {
     const isPaidMember = existingAccount.role !== 'demo_lead' && existingAccount.canLogin !== false
     if (isPaidMember || existingAccount.role === 'owner') {
-      const err = new Error('Bu e-posta ile zaten üyelik var. Giriş yapabilirsiniz.')
+      const err = new Error(
+        isStudio
+          ? 'Bu e-posta ile zaten Studio üyeliği var. Studio girişinden devam edin.'
+          : 'Bu e-posta ile zaten üyelik var. Giriş yapabilirsiniz.',
+      )
       err.code = 'EMAIL_TAKEN'
       throw err
     }
-    // Already activated demo (loginable) — no second demo signup
     if (existingAccount.role === 'demo_lead' && existingAccount.canLogin !== false) {
       const customer = store.customers.find((c) => c.id === existingAccount.customerId)
       const expired = isLicenseExpired(customer?.licenseExpiry || existingAccount.licenseExpiry)
       const err = new Error(
         expired
-          ? 'Bu e-posta ile demo süreniz dolmuş. Yönetim süreyi uzatmadan yeni demo açılamaz.'
-          : 'Bu e-posta ile zaten demo hesabınız var. Giriş yaparak devam edin.',
+          ? isStudio
+            ? 'Bu e-posta ile Studio demo süreniz dolmuş. Yönetim uzatmadan yeni Studio demosu açılamaz.'
+            : 'Bu e-posta ile demo süreniz dolmuş. Yönetim süreyi uzatmadan yeni demo açılamaz.'
+          : isStudio
+            ? 'Bu e-posta ile zaten Studio demo hesabınız var. Studio girişinden devam edin.'
+            : 'Bu e-posta ile zaten demo hesabınız var. Giriş yaparak devam edin.',
       )
       err.code = expired ? 'DEMO_EXPIRED' : 'DEMO_ALREADY_EXISTS'
       throw err
@@ -184,6 +205,7 @@ export function createDemoLead(store, body = {}) {
     companySize,
     message,
     source,
+    product,
     status: 'activated',
     createdAt: nowIso,
   }
@@ -191,9 +213,7 @@ export function createDemoLead(store, body = {}) {
   store.demoRequests = store.demoRequests.slice(0, 1000)
 
   let account = existingAccount || null
-  let customer = account
-    ? store.customers.find((c) => c.id === account.customerId)
-    : store.customers.find((c) => normalizeEmail(c.email) === email)
+  let customer = account ? store.customers.find((c) => c.id === account.customerId) : null
 
   if (!customer) {
     const customerId = newId('c')
@@ -212,13 +232,16 @@ export function createDemoLead(store, body = {}) {
       district,
       status: 'trial',
       subscriptionStatus: 'trialing',
-      plan: 'Starter',
+      plan: isStudio ? 'Studio' : 'Starter',
+      planCode: isStudio ? 'studio' : undefined,
+      product,
+      products: [product],
       mrr: 0,
       users: 1,
       createdAt: nowIso.slice(0, 10),
       licenseExpiry,
       balance: 0,
-      source: 'demo_request',
+      source: isStudio ? 'studio_demo' : 'demo_request',
       tenantCode,
       companySize,
       demoMessage: message,
@@ -252,7 +275,13 @@ export function createDemoLead(store, body = {}) {
     customer.status = 'trial'
     customer.subscriptionStatus = 'trialing'
     customer.licenseExpiry = licenseExpiry
-    customer.source = 'demo_request'
+    customer.source = isStudio ? 'studio_demo' : 'demo_request'
+    customer.product = product
+    customer.products = [product]
+    if (isStudio) {
+      customer.plan = 'Studio'
+      customer.planCode = 'studio'
+    }
     const moduleRow = store.modules.customers.find((c) => c.id === customer.id)
     if (moduleRow) {
       moduleRow.company = customer.company
@@ -281,8 +310,10 @@ export function createDemoLead(store, body = {}) {
       canLogin: true,
       customerId: customer.id,
       tenantCode: customer.tenantCode,
-      plan: 'Starter',
-      source: 'demo_request',
+      plan: isStudio ? 'Studio' : 'Starter',
+      product,
+      products: [product],
+      source: isStudio ? 'studio_demo' : 'demo_request',
       companySize,
       demoMessage: message,
       createdAt: nowIso,
@@ -307,7 +338,10 @@ export function createDemoLead(store, body = {}) {
     account.passwordHash = hashPassword(password)
     account.role = 'demo_lead'
     account.canLogin = true
-    account.source = 'demo_request'
+    account.source = isStudio ? 'studio_demo' : 'demo_request'
+    account.product = product
+    account.products = [product]
+    account.plan = isStudio ? 'Studio' : account.plan || 'Starter'
     account.companySize = companySize || account.companySize
     account.demoMessage = message || account.demoMessage
     account.lastDemoAt = nowIso
@@ -396,22 +430,46 @@ export async function handleLeadsApi(req, res, path, body = {}) {
         const created = createDemoLead(store, {
           ...body,
           ip,
+          origin: body.origin || req.headers?.origin || '',
+          referer: body.referer || req.headers?.referer || '',
           userAgent: req.headers?.['user-agent'] || body.userAgent || '',
           language: body.language || req.headers?.['accept-language']?.split?.(',')[0] || 'tr',
         })
+        const product = accountProduct(created.account)
+        try {
+          await sendTemplateMail(store, {
+            to: created.account.email,
+            template: 'welcome',
+            type: 'welcome',
+            customerId: created.customer.id,
+            accountId: created.account.id,
+            data: {
+              name: created.account.fullName,
+              company: created.customer.company,
+              plan: created.account.plan,
+              licenseExpiry: created.customer.licenseExpiry,
+              appUrl: product === 'studio' ? MAIL_BRAND.studioUrl() : MAIL_BRAND.appUrl(),
+              product: product === 'studio' ? 'studio' : undefined,
+            },
+          })
+        } catch (mailError) {
+          console.warn('[bachmain] demo welcome mail failed', mailError?.message || mailError)
+        }
         await notifyStaffAdmin(store, {
           type: 'demo_request',
-          eventLabel: 'Yeni demo kullanıcı',
-          title: `Yeni demo: ${created.customer.company}`,
-          body: `${created.account.fullName} · ${created.account.email} · 7 gün demo`,
+          eventLabel: product === 'studio' ? 'Yeni Studio demo' : 'Yeni demo kullanıcı',
+          title: `${product === 'studio' ? 'Studio demo' : 'Yeni demo'}: ${created.customer.company}`,
+          body: `${created.account.fullName} · ${created.account.email} · 7 gün ${product === 'studio' ? 'Studio ' : ''}demo`,
           rows: created.staffAlertRows,
           customerId: created.customer.id,
           accountId: created.account.id,
           link: `${MAIL_BRAND.adminUrl()}/uyeler/${created.account.id}`,
           ctaLabel: 'Üye hesabını aç',
           intro:
-            'bachmain.com üzerinden yeni bir demo hesabı oluşturuldu. Tablodaki bilgiler yalnızca bu formun kendi verileridir.',
-          meta: { source: 'bachmain_demo', requestId: created.request.id },
+            product === 'studio'
+              ? 'Studio tanıtım sayfasından ayrı bir Studio demo hesabı oluşturuldu. Uygulama üyeliği ile karıştırılmamalıdır.'
+              : 'bachmain.com üzerinden yeni bir demo hesabı oluşturuldu. Tablodaki bilgiler yalnızca bu formun kendi verileridir.',
+          meta: { source: created.account.source, requestId: created.request.id, product },
         })
         return created
       })

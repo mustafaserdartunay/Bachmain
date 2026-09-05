@@ -7,7 +7,7 @@ import {
   checkoutPath,
   formatTry,
 } from '../../data/pricingPlans'
-import { startStudioTrial, STUDIO_ORIGIN, hasStudioAccess } from '../../utils/studioAccess'
+import { openStudioOrTrial, hasStudioAccess, STUDIO_DEMO_URL } from '../../utils/studioAccess'
 import { useAuth } from '../../auth/AuthContext'
 import BrandLogo from '../../components/Layout/BrandLogo'
 import {
@@ -61,7 +61,7 @@ export default function PackagesPage() {
         </h1>
         <p className="crm-pricing-hero-sub">
           {studioFocus
-            ? 'Studio, uygulamadan ayrı satın alınır. 7 gün deneme ile kendi web sitenizi kurun — verileriniz yalnızca size aittir.'
+            ? 'Studio, uygulamadan ayrı bir üründür. Uygulama paketi Studio girişi vermez. 7 gün Studio demosu veya paket alın.'
             : 'Starter, Professional veya Enterprise — her sütunda özet özellikler ve detaylı açıklamalar yukarıdan aşağıya sıralıdır. Studio ayrı üründür.'}
         </p>
 
@@ -156,20 +156,17 @@ export default function PackagesPage() {
           </ul>
           <div className="mt-4 flex flex-wrap gap-2">
             {hasStudioAccess(user) ? (
-              <a href={STUDIO_ORIGIN} className="crm-pricing-cta is-primary">
-                Studio’yu aç
-              </a>
-            ) : (
               <button
                 type="button"
                 className="crm-pricing-cta is-primary"
-                onClick={() => {
-                  startStudioTrial(user)
-                  window.location.href = STUDIO_ORIGIN
-                }}
+                onClick={() => openStudioOrTrial(user)}
               >
-                7 gün ücretsiz dene
+                Studio’yu aç
               </button>
+            ) : (
+              <a href={STUDIO_DEMO_URL} className="crm-pricing-cta is-primary">
+                7 gün Studio demo
+              </a>
             )}
             <Link to={checkoutPath('studio', period)} className="crm-pricing-cta is-ghost">
               Studio satın al

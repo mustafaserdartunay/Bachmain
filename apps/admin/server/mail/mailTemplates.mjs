@@ -167,6 +167,14 @@ function formTable(rows = []) {
 /** @type {Record<string, (data: Record<string, any>) => {subject:string,html:string,text:string}>} */
 export const MAIL_TEMPLATES = {
   welcome(data) {
+    if (activeProduct === 'studio') {
+      return layout({
+        title: 'Bachmain Studio’ya hoş geldiniz',
+        preview: 'Studio hesabınız hazır. Bu üyelik uygulamadan ayrıdır.',
+        bodyHtml: `${p(`Merhaba ${data.name || 'değerli kullanıcımız'},`)}${p('Bachmain Studio hesabınız oluşturuldu. Studio üyeliği Bachmain uygulamasından bağımsızdır; uygulama paketi Studio girişi vermez.')}${strongLine('Firma', data.company || '—')}${strongLine('Plan', data.plan || 'Studio')}${data.licenseExpiry ? strongLine('Demo bitiş', data.licenseExpiry) : ''}`,
+        cta: { href: data.appUrl || STUDIO_MAIL_BRAND.studioUrl(), label: 'Studio’yu aç' },
+      })
+    }
     return layout({
       title: 'BACHMAIN’e hoş geldiniz',
       preview: 'Hesabınız hazır. ERP yolculuğunuza başlayın.',
@@ -199,6 +207,14 @@ export const MAIL_TEMPLATES = {
     })
   },
   new_login(data) {
+    if (activeProduct === 'studio') {
+      return layout({
+        title: 'Studio giriş bildirimi',
+        preview: 'Bachmain Studio hesabınıza yeni bir oturum açıldı.',
+        bodyHtml: `${p(`Merhaba ${data.name || ''},`)}${p('Bachmain Studio hesabınıza yeni bir giriş yapıldı. Bu bildirim uygulama üyeliğinizden ayrıdır.')}${strongLine('Zaman', data.at || new Date().toLocaleString('tr-TR'))}${strongLine('Cihaz / Tarayıcı', data.userAgent || '—')}${strongLine('IP', data.ip || '—')}${p('Siz değilseniz Studio şifrenizi hemen değiştirin.')}`,
+        cta: { href: `${STUDIO_MAIL_BRAND.webUrl()}/giris?next=studio`, label: 'Studio girişi' },
+      })
+    }
     return layout({
       title: 'Yeni giriş bildirimi',
       preview: 'Hesabınıza yeni bir oturum açıldı.',

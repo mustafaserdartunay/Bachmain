@@ -41,6 +41,31 @@ function uniqueBases(list) {
   return out
 }
 
+export function authProductFromSearch(search) {
+  try {
+    const q = new URLSearchParams(
+      search || (typeof window !== 'undefined' ? window.location.search : ''),
+    )
+    const next = String(q.get('next') || '')
+      .trim()
+      .toLowerCase()
+    if (next === 'studio' || next === '/studio' || next.startsWith('/studio/')) return 'studio'
+  } catch {
+    /* ignore */
+  }
+  return 'app'
+}
+
+export function authLocationMeta() {
+  const product = authProductFromSearch()
+  return {
+    product,
+    next: product === 'studio' ? 'studio' : undefined,
+    origin: typeof window !== 'undefined' ? window.location.origin : '',
+    referer: typeof window !== 'undefined' ? window.location.href : '',
+  }
+}
+
 /** Prefer centralized apps/api (/v1). Fall back to legacy yonetim API. */
 export function getPlatformApiBase() {
   if (DEFAULT_V1_API) return stripSlash(DEFAULT_V1_API)
@@ -237,6 +262,11 @@ function persistClientToken(token) {
 }
 
 async function issueStudioSsoCode(token) {
+  const data = await yonetimPost('auth/studio-sso', { token }, { token })
+  return String(data?.code || '').trim()
+}
+
+async function issueAppSsoCode(token) {
   try {
     const data = await yonetimPost('auth/sso-ticket', { token }, { token })
     return String(data?.code || '').trim()
@@ -270,12 +300,21 @@ export async function redirectToAppWithToken(token) {
   const nextNorm = String(nextRaw || '').trim()
   if (nextNorm === 'studio' || nextNorm === '/studio' || nextNorm.startsWith('/studio/')) {
     persistClientToken(token)
-    const code = await issueStudioSsoCode(token)
-    const origin = await resolveStudioOrigin()
-    const url = new URL(`${origin}/`)
-    if (code) url.searchParams.set('sso', code)
-    else url.searchParams.set('authToken', token)
-    window.location.replace(url.toString())
+    try {
+      const code = await issueStudioSsoCode(token)
+      const origin = await resolveStudioOrigin()
+      const url = new URL(`${origin}/`)
+      if (code) url.searchParams.set('sso', code)
+      else url.searchParams.set('authToken', token)
+      window.location.replace(url.toString())
+    } catch (err) {
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : 'Studio üyeliğiniz yok veya süresi dolmuş. Paket sayfasına yönlendiriliyorsunuz.',
+      )
+      window.location.replace('https://bachmain.com/paketler?urun=studio')
+    }
     return
   }
 
@@ -288,7 +327,7 @@ export async function redirectToAppWithToken(token) {
   }
 
   const url = new URL(path, APP_URL)
-  const code = await issueStudioSsoCode(token)
+  const code = await issueAppSsoCode(token)
   if (code) url.searchParams.set('sso', code)
   url.searchParams.set('authToken', token)
   window.location.replace(url.toString())
