@@ -1,15 +1,11 @@
 'use client'
 
-import { useSearchParams } from 'react-router-dom'
 import AuthAmbient from '../components/auth/AuthAmbient'
 import LoginPanel from '../components/auth/LoginPanel'
 import StudioAuthShell from '../components/studio/StudioAuthShell'
 
 export default function LoginPage({ isStudio = false }: { isStudio?: boolean }) {
-  const [params] = useSearchParams()
-  const studio = isStudio || params.get('next') === 'studio'
-
-  if (studio) {
+  if (isStudio) {
     return (
       <StudioAuthShell
         kicker="Üye girişi"

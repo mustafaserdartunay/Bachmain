@@ -5,7 +5,6 @@ import AuthAmbient from '../components/auth/AuthAmbient'
 import StudioAuthShell from '../components/studio/StudioAuthShell'
 import { CheckCircle } from 'lucide-react'
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import Button from '../components/Button'
 import { platformPost } from '../utils/platformApi'
 
@@ -13,10 +12,7 @@ const inputCls =
   'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15'
 
 export function DemoPage({ isStudio = false }) {
-  const [params] = useSearchParams()
-  const studio = isStudio || params.get('next') === 'studio'
-
-  if (studio) {
+  if (isStudio) {
     return (
       <StudioAuthShell
         wide
