@@ -14,6 +14,14 @@ export function requestedProduct(body = {}) {
   const referer = String(body.referer || '')
   const hay = `${origin} ${referer}`.toLowerCase()
   if (hay.includes('studio.bachmain') || hay.includes('bachmain-studio')) return 'studio'
+  if (hay.includes('studio.yonetim.bachmain')) return 'studio'
+  if (
+    hay.includes('/studio/giris') ||
+    hay.includes('/studio/demo') ||
+    hay.includes('/studio/paket')
+  ) {
+    return 'studio'
+  }
   if (hay.includes('next=studio')) return 'studio'
   return 'app'
 }

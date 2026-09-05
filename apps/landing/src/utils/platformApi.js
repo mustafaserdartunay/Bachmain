@@ -299,24 +299,18 @@ export async function redirectToAppWithToken(token) {
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
   const nextRaw = params.get('next')
 
-  const nextNorm = String(nextRaw || '').trim()
-  if (nextNorm === 'studio' || nextNorm === '/studio' || nextNorm.startsWith('/studio/')) {
+  if (authProductFromSearch() === 'studio') {
     persistClientToken(token)
+    const origin = resolveStudioOrigin()
+    const url = new URL(`${origin}/`)
+    url.searchParams.set('authToken', token)
     try {
       const code = await issueStudioSsoCode(token)
-      const origin = resolveStudioOrigin()
-      const url = new URL(`${origin}/`)
       if (code) url.searchParams.set('sso', code)
-      else url.searchParams.set('authToken', token)
-      window.location.replace(url.toString())
-    } catch (err) {
-      window.alert(
-        err instanceof Error
-          ? err.message
-          : 'Studio üyeliğiniz yok veya süresi dolmuş. Paket sayfasına yönlendiriliyorsunuz.',
-      )
-      window.location.replace('https://bachmain.com/paketler?urun=studio')
+    } catch {
+      /* Token is enough for studio.bachmain.com — do not bounce to CRM packages. */
     }
+    window.location.replace(url.toString())
     return
   }
 

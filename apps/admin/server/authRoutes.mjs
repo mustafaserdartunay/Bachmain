@@ -50,6 +50,7 @@ function allowedOrigins() {
     'https://www.bachmain.com',
     'https://yonetim.bachmain.com',
     'https://studio.bachmain.com',
+    'https://studio.yonetim.bachmain.com',
     'https://bachmain-studio.vercel.app',
     'http://localhost:5173',
     'http://127.0.0.1:5173',
@@ -69,6 +70,7 @@ function isAllowedOrigin(origin) {
   try {
     const { protocol, hostname } = new URL(origin)
     if (protocol !== 'https:' && protocol !== 'http:') return false
+    if (hostname === 'bachmain.com' || hostname.endsWith('.bachmain.com')) return true
     if (hostname.endsWith('.vercel.app') && hostname.includes('bachmain')) return true
   } catch {
     return false

@@ -179,7 +179,10 @@ export default function DemoForm({ variant = 'panel', studio = false } = {}) {
 
   const enterApp = () => {
     if (sessionToken) redirectToAppWithToken(sessionToken)
-    else window.location.href = 'https://bachmain.com/giris'
+    else
+      window.location.href = isStudioDemo
+        ? 'https://bachmain.com/studio/giris'
+        : 'https://bachmain.com/giris'
   }
 
   if (variant === 'band') {

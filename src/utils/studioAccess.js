@@ -2,9 +2,9 @@
 
 export const STUDIO_ORIGIN = 'https://studio.bachmain.com'
 export const STUDIO_CANONICAL = 'https://studio.bachmain.com'
-export const STUDIO_TRIAL_PATH = '/paketler?urun=studio'
-export const STUDIO_PACKAGES_URL = 'https://bachmain.com/paketler?urun=studio'
-export const STUDIO_DEMO_URL = 'https://bachmain.com/demo?next=studio'
+export const STUDIO_TRIAL_PATH = '/studio/paket'
+export const STUDIO_PACKAGES_URL = 'https://bachmain.com/studio/paket'
+export const STUDIO_DEMO_URL = 'https://bachmain.com/studio/demo'
 const PLATFORM_API = 'https://yonetim.bachmain.com/api'
 
 export function hasStudioAccess(user) {
@@ -16,7 +16,7 @@ export function hasStudioAccess(user) {
 }
 
 export function studioLoginUrl() {
-  return 'https://bachmain.com/giris?next=studio'
+  return 'https://bachmain.com/studio/giris'
 }
 
 function readCrmToken() {
@@ -31,8 +31,7 @@ function readCrmToken() {
 
 function goStudioPackages(navigate, message) {
   if (message) window.alert(message)
-  if (typeof navigate === 'function') navigate(STUDIO_TRIAL_PATH)
-  else window.location.href = `https://uygulama.bachmain.com${STUDIO_TRIAL_PATH}`
+  window.location.href = STUDIO_PACKAGES_URL
 }
 
 export async function openStudioOrTrial(user, navigate) {
@@ -58,7 +57,7 @@ export async function openStudioOrTrial(user, navigate) {
     const data = await res.json().catch(() => ({}))
     const code = String(data?.code || '').trim()
     if (res.ok && code) {
-      window.location.href = `${STUDIO_ORIGIN}/?sso=${encodeURIComponent(code)}`
+      window.location.href = `${STUDIO_ORIGIN}/?sso=${encodeURIComponent(code)}&authToken=${encodeURIComponent(token)}`
       return
     }
     goStudioPackages(
