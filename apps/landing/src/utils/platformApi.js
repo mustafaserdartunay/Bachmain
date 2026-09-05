@@ -275,17 +275,8 @@ async function issueAppSsoCode(token) {
   }
 }
 
-async function resolveStudioOrigin() {
-  try {
-    await fetch('https://studio.bachmain.com/', {
-      method: 'HEAD',
-      mode: 'no-cors',
-      signal: AbortSignal.timeout(1200),
-    })
-    return 'https://studio.bachmain.com'
-  } catch {
-    return 'https://bachmain-studio.vercel.app'
-  }
+function resolveStudioOrigin() {
+  return 'https://studio.bachmain.com'
 }
 
 export async function redirectToAppWithToken(token) {
@@ -302,7 +293,7 @@ export async function redirectToAppWithToken(token) {
     persistClientToken(token)
     try {
       const code = await issueStudioSsoCode(token)
-      const origin = await resolveStudioOrigin()
+      const origin = resolveStudioOrigin()
       const url = new URL(`${origin}/`)
       if (code) url.searchParams.set('sso', code)
       else url.searchParams.set('authToken', token)

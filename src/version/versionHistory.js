@@ -179,7 +179,7 @@ export const VERSION_CHANGELOG = [
           {
             title: 'Studio ayrı üyelik',
             detail:
-              'Studio girişi uygulama paketinden bağımsızdır. Aynı e-posta iki üründe ayrı kayıt olabilir; uygulama içinden Studio ancak aktif Studio paketi varsa açılır.',
+              'Studio girişi uygulama paketinden bağımsızdır. Canlı adres studio.bachmain.com; uygulama içinden Studio ancak aktif Studio paketi varsa açılır.',
           },
         ],
       },

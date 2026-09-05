@@ -1,6 +1,6 @@
 /** Cross-product Studio URLs and license (separate from CRM packages). */
 
-export const STUDIO_ORIGIN = 'https://bachmain-studio.vercel.app'
+export const STUDIO_ORIGIN = 'https://studio.bachmain.com'
 export const STUDIO_CANONICAL = 'https://studio.bachmain.com'
 export const STUDIO_TRIAL_PATH = '/paketler?urun=studio'
 export const STUDIO_PACKAGES_URL = 'https://bachmain.com/paketler?urun=studio'
