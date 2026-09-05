@@ -21,13 +21,13 @@ SSD kopyası: `/Volumes/DevDisk/WORKSPACE BACHMAIN/`
 
 Keep nameservers on Squarespace. Add/edit:
 
-| Type  | Host       | Value                                        |
-| ----- | ---------- | -------------------------------------------- |
-| A     | `@`        | `76.76.21.21`                                |
-| CNAME | `www`      | `cname.vercel-dns.com` **or** `bachmain.com` |
-| CNAME | `uygulama` | `cname.vercel-dns.com`                       |
-| CNAME | `yonetim`  | `cname.vercel-dns.com`                       |
-| A     | `studio`   | `76.76.21.21`                                |
+| Type  | Host       | Value          |
+| ----- | ---------- | -------------- |
+| A     | `@`        | `76.76.21.21`  |
+| A     | `uygulama` | `76.76.21.21`  |
+| A     | `yonetim`  | `76.76.21.21`  |
+| A     | `studio`   | `76.76.21.21`  |
+| CNAME | `www`      | `bachmain.com` |
 
 Do **not** change MX / SPF / DKIM (Google Workspace mail).
 

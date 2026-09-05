@@ -178,7 +178,8 @@ export const VERSION_CHANGELOG = [
         features: [
           {
             title: 'Studio uygulama içinde',
-            detail: 'Bachmain Studio canlı adresi studio.bachmain.com.',
+            detail:
+              'Bachmain Studio canlı adresi studio.bachmain.com — uygulama ve yönetim ile aynı alt alan adı modeli.',
           },
         ],
       },
