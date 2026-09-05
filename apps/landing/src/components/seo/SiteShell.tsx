@@ -45,19 +45,22 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || ''
   const isAuth = AUTH_PATHS.has(pathname)
   const isChromeless = CHROMELESS_PATHS.has(pathname)
+  const isStudioSite = pathname === '/studio' || pathname.startsWith('/studio/')
   const hideChrome = isAuth || isChromeless
   const isCineHome = pathname === '/'
-  const isCineSite = !isAuth && !isChromeless
+  const isCineSite = !isAuth && !isChromeless && !isStudioSite
 
   useEffect(() => {
     const root = document.documentElement
     root.classList.toggle('cine-home', isCineHome)
     root.classList.toggle('cine-site', isCineSite && !isCineHome)
+    root.classList.toggle('studio-site', isStudioSite)
     return () => {
       root.classList.remove('cine-home')
       root.classList.remove('cine-site')
+      root.classList.remove('studio-site')
     }
-  }, [isCineHome, isCineSite])
+  }, [isCineHome, isCineSite, isStudioSite])
 
   return (
     <>
@@ -71,13 +74,19 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
       {hideChrome ? null : <Header />}
       <main
         id="main-content"
-        className={hideChrome ? 'flex min-h-[100dvh] flex-col p-0' : 'pt-0 pb-24'}
+        className={
+          hideChrome
+            ? 'flex min-h-[100dvh] flex-col p-0'
+            : isStudioSite
+              ? 'pt-0 pb-8'
+              : 'pt-0 pb-24'
+        }
         role="main"
       >
         {children}
       </main>
-      {hideChrome ? null : <Footer />}
-      {hideChrome ? null : <StickyCta />}
+      {hideChrome || isStudioSite ? null : <Footer />}
+      {hideChrome || isStudioSite ? null : <StickyCta />}
       {isChromeless ? null : <CookieBanner />}
     </>
   )

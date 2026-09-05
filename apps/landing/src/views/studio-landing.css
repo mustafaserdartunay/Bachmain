@@ -1,3 +1,20 @@
+html.studio-site,
+html.studio-site body {
+  background: #fff;
+  color: #0b1f3a;
+}
+
+.site-nav-studio {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.82));
+  border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+}
+.site-nav-studio.scrolled {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+}
+
 .spl {
   position: relative;
   overflow-x: hidden;
@@ -5,11 +22,39 @@
   font-family: var(--font-poppins), Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
+.spl-simple {
+  min-height: 100dvh;
+  color: #0b1f3a;
+  background: linear-gradient(180deg, #ffffff 0%, #eef6ff 22%, #93c5fd 58%, #1f4e9a 100%);
+  background-size: 100% 160%;
+  animation: spl-sky 18s ease-in-out infinite alternate;
+}
+
+.spl-simple .spl-title {
+  margin-top: 0;
+  color: #0b1f3a;
+}
+
+.spl-simple .spl-title em {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.spl-simple .spl-lead {
+  color: #334155;
+}
+
+.spl-simple .spl-notes {
+  color: #1e3a5f;
+}
+
 .spl-hero {
   position: relative;
   isolation: isolate;
-  min-height: min(100dvh, 920px);
-  padding: calc(68px + clamp(1.5rem, 4vw, 3.5rem)) clamp(1rem, 4vw, 3rem) 4rem;
+  min-height: min(88dvh, 760px);
+  padding: calc(68px + clamp(1.5rem, 4vw, 3.5rem)) clamp(1rem, 4vw, 3rem) 2.5rem;
 }
 
 .spl-hero-veil {
@@ -18,8 +63,17 @@
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 70% 55% at 82% 18%, rgba(125, 211, 252, 0.28), transparent 58%),
-    radial-gradient(ellipse 50% 45% at 8% 72%, rgba(167, 139, 250, 0.22), transparent 55%);
+    radial-gradient(ellipse 70% 50% at 88% 0%, rgba(255, 255, 255, 0.9), transparent 55%),
+    radial-gradient(ellipse 55% 45% at 8% 30%, rgba(191, 219, 254, 0.55), transparent 58%);
+}
+
+@keyframes spl-sky {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 100%;
+  }
 }
 
 .spl-hero .cine-particles {
@@ -352,9 +406,9 @@
 
 .spl-logo-mark {
   display: block;
-  height: 2.4rem;
+  height: 2.2rem;
   width: auto;
-  margin: 0 auto 1.1rem;
+  margin: 0 auto 0.35rem;
   object-fit: contain;
 }
 
@@ -539,6 +593,93 @@
   justify-content: center;
 }
 
+.spl-pack,
+.spl-paket-wrap {
+  position: relative;
+  z-index: 3;
+  padding: 0 clamp(1rem, 4vw, 3rem) 4.5rem;
+}
+
+.spl-paket-wrap {
+  padding-top: calc(68px + 2.5rem);
+  text-align: center;
+}
+
+.spl-paket-wrap h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  color: #0b1f3a;
+}
+
+.spl-paket-kicker {
+  margin: 0;
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.spl-paket-lead {
+  margin: 0.5rem 0 1.5rem;
+  color: #334155;
+}
+
+.spl-pack-card {
+  max-width: 28rem;
+  margin: 0 auto;
+  text-align: center;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 22px 50px rgba(15, 40, 90, 0.16);
+  padding: 1.6rem 1.4rem 1.5rem;
+}
+
+.spl-pack-card h2 {
+  margin: 0.35rem 0 0;
+  font-size: 1.35rem;
+  color: #0b1f3a;
+}
+
+.spl-pack-card p {
+  margin: 0.6rem 0 0;
+  color: #54708f;
+  line-height: 1.55;
+}
+
+.spl-price {
+  display: block;
+  margin-top: 1.1rem;
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0b1f3a;
+}
+
+.spl-price-note {
+  display: block;
+  margin: 0.15rem 0 1.1rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.spl-pack-card .spl-btn {
+  width: 100%;
+}
+
+.spl-pack-card .spl-actions {
+  justify-content: center;
+  margin-top: 0.2rem;
+}
+
+.spl-pack-card .spl-btn-ghost {
+  color: #0b1f3a;
+  background: #fff;
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+}
+
 @keyframes spl-float {
   0%,
   100% {
@@ -599,6 +740,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .spl-simple,
   .spl-block-hero,
   .spl-canvas-rail em.is-on,
   .spl-cursor,

@@ -129,6 +129,17 @@ h1,
   box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04);
 }
 
+.site-nav-studio {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.82));
+  border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+}
+.site-nav-studio.scrolled {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+}
+
 .brand-logo {
   display: flex;
   align-items: center;

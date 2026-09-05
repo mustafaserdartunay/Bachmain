@@ -169,13 +169,19 @@ function Dropdown({ label, items, href, rich, cine }) {
   )
 }
 
+const STUDIO_NAV = [
+  { label: 'Studio', href: '/studio' },
+  { label: 'Özellikler', href: '/studio#ozellikler' },
+  { label: 'Paket', href: '/studio/paket' },
+  { label: 'Demo', href: '/demo?next=studio' },
+]
+
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname() || '/'
-  /* Header yalnızca pazarlama sayfalarında görünür; zemin mavi → cine nav */
-  const cine = true
-  const isStudio = pathname === '/studio'
+  const isStudio = pathname === '/studio' || pathname.startsWith('/studio/')
+  const cine = !isStudio
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 12)
@@ -184,15 +190,19 @@ export default function Header() {
   }, [])
 
   return (
-    <header className={`site-nav ${scrolled ? 'scrolled' : ''} ${cine ? 'site-nav-cine' : ''}`}>
+    <header
+      className={`site-nav ${scrolled ? 'scrolled' : ''} ${
+        isStudio ? 'site-nav-studio' : cine ? 'site-nav-cine' : ''
+      }`}
+    >
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
         <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-          <Logo onDark={cine} studio={isStudio} />
+          <Logo onDark={!isStudio && cine} studio={isStudio} />
         </div>
 
         <nav className="hidden items-center xl:flex">
-          {nav.map((item) =>
-            item.items ? (
+          {(isStudio ? STUDIO_NAV : nav).map((item) =>
+            !isStudio && item.items ? (
               <Dropdown
                 key={item.label}
                 label={item.label}
@@ -206,7 +216,11 @@ export default function Header() {
                 key={item.label}
                 to={item.href}
                 className={`px-2.5 py-2 text-[13px] font-semibold transition ${
-                  cine ? 'text-white/85 hover:text-white' : 'text-slate-600 hover:text-blue-600'
+                  isStudio
+                    ? 'text-slate-700 hover:text-blue-600'
+                    : cine
+                      ? 'text-white/85 hover:text-white'
+                      : 'text-slate-600 hover:text-blue-600'
                 }`}
               >
                 {item.label}
@@ -216,20 +230,38 @@ export default function Header() {
         </nav>
 
         <div className="nav-cta-group hidden items-center lg:flex">
-          <Link to="/demo" className="nav-cta nav-cta-demo">
-            Demo Girişi
-          </Link>
-          <Link to="/giris" className="nav-cta nav-cta-login">
-            Giriş Yap
-          </Link>
-          <Link to="/paketler/moduller" className="nav-cta nav-cta-buy">
-            Modül Seç
-          </Link>
+          {isStudio ? (
+            <>
+              <Link to="/demo?next=studio" className="nav-cta nav-cta-demo">
+                Demo oluştur
+              </Link>
+              <Link to="/giris?next=studio" className="nav-cta nav-cta-login">
+                Üye girişi
+              </Link>
+              <Link to="/studio/paket" className="nav-cta nav-cta-buy">
+                Modül Seç
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/demo" className="nav-cta nav-cta-demo">
+                Demo Girişi
+              </Link>
+              <Link to="/giris" className="nav-cta nav-cta-login">
+                Giriş Yap
+              </Link>
+              <Link to="/paketler/moduller" className="nav-cta nav-cta-buy">
+                Modül Seç
+              </Link>
+            </>
+          )}
         </div>
 
         <button
           type="button"
-          className={`rounded-lg p-2 xl:hidden ${cine ? 'text-white' : 'text-slate-700'}`}
+          className={`rounded-lg p-2 xl:hidden ${
+            isStudio || !cine ? 'text-slate-700' : 'text-white'
+          }`}
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Menü"
         >
@@ -240,7 +272,7 @@ export default function Header() {
       {mobileOpen && (
         <div className="cine-mobile-panel absolute left-0 right-0 top-[68px] border-b border-slate-100 bg-white px-4 py-4 shadow-lg xl:hidden">
           <div className="flex flex-col gap-1">
-            {nav.map((item) => (
+            {(isStudio ? STUDIO_NAV : nav).map((item) => (
               <div key={item.label}>
                 {item.href && !item.items ? (
                   <Link
@@ -275,27 +307,55 @@ export default function Header() {
               </div>
             ))}
             <div className="nav-cta-group mt-3 flex flex-col gap-2 sm:flex-row">
-              <Link
-                to="/demo"
-                className="nav-cta nav-cta-demo flex-1"
-                onClick={() => setMobileOpen(false)}
-              >
-                Demo Girişi
-              </Link>
-              <Link
-                to="/giris"
-                className="nav-cta nav-cta-login flex-1"
-                onClick={() => setMobileOpen(false)}
-              >
-                Giriş Yap
-              </Link>
-              <Link
-                to="/paketler/moduller"
-                className="nav-cta nav-cta-buy flex-1"
-                onClick={() => setMobileOpen(false)}
-              >
-                Modül Seç
-              </Link>
+              {isStudio ? (
+                <>
+                  <Link
+                    to="/demo?next=studio"
+                    className="nav-cta nav-cta-demo flex-1"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Demo oluştur
+                  </Link>
+                  <Link
+                    to="/giris?next=studio"
+                    className="nav-cta nav-cta-login flex-1"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Üye girişi
+                  </Link>
+                  <Link
+                    to="/studio/paket"
+                    className="nav-cta nav-cta-buy flex-1"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Modül Seç
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/demo"
+                    className="nav-cta nav-cta-demo flex-1"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Demo Girişi
+                  </Link>
+                  <Link
+                    to="/giris"
+                    className="nav-cta nav-cta-login flex-1"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Giriş Yap
+                  </Link>
+                  <Link
+                    to="/paketler/moduller"
+                    className="nav-cta nav-cta-buy flex-1"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Modül Seç
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
