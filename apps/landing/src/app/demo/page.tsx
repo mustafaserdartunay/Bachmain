@@ -10,6 +10,7 @@ const PATH = '/demo'
 const seo = SEO_CONTENT[PATH]
 
 export const metadata: Metadata = buildMetadata(seo)
+export const dynamic = 'force-dynamic'
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const sp = await searchParams
