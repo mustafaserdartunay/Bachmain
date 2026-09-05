@@ -28,7 +28,7 @@ export default function LoginPage({ isStudio = false }: { isStudio?: boolean }) 
     <div className="auth-ds relative flex min-h-[100dvh] flex-1 flex-col overflow-hidden bg-[#F8FAFC]">
       <h1 className="sr-only">Giriş Yap</h1>
       <AuthAmbient />
-      <section className="relative z-10 flex min-h-[100dvh] flex-1 items-center justify-center px-4 py-20 sm:px-6 lg:px-10">
+      <section className="relative z-10 flex min-h-[100dvh] flex-1 items-center justify-center px-4 pb-20 pt-32 sm:px-6 lg:px-10 xl:pt-40">
         <div className="w-full max-w-[1600px]">
           <LoginPanel />
         </div>

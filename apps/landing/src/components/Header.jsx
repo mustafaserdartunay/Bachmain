@@ -179,6 +179,12 @@ export default function Header() {
   const pathname = usePathname() || '/'
   const isStudio = pathname === '/studio' || pathname.startsWith('/studio/')
   const cine = !isStudio
+  const cineSolid =
+    cine &&
+    (pathname === '/demo' ||
+      pathname === '/giris' ||
+      pathname === '/login' ||
+      pathname.startsWith('/paketler/'))
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 12)
@@ -186,105 +192,126 @@ export default function Header() {
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
+  const cineLinks = (
+    <nav className="site-nav-cine-links hidden w-full items-center justify-between xl:flex">
+      {nav.map((item) =>
+        item.items ? (
+          <Dropdown
+            key={item.label}
+            label={item.label}
+            items={item.items}
+            href={item.href}
+            rich={item.rich}
+            cine={cine}
+          />
+        ) : (
+          <Link
+            key={item.label}
+            to={item.href}
+            className="px-2.5 py-2 text-[13px] font-semibold text-white/85 transition hover:text-white"
+          >
+            {item.label}
+          </Link>
+        ),
+      )}
+    </nav>
+  )
+
+  const cineCtas = (
+    <>
+      <Link to="/studio" className="nav-cta nav-cta-home" aria-label="Bachmain Studio">
+        <img
+          src="/assets/bachmain-studio-logo.png"
+          alt="Bachmain Studio"
+          width={160}
+          height={28}
+          className="nav-cta-home-logo"
+          draggable={false}
+        />
+      </Link>
+      <Link to="/demo" className="nav-cta nav-cta-demo">
+        Demo Girişi
+      </Link>
+      <Link to="/giris" className="nav-cta nav-cta-login">
+        Giriş Yap
+      </Link>
+      <Link to="/paketler/moduller" className="nav-cta nav-cta-buy">
+        Modül Seç
+      </Link>
+    </>
+  )
+
   return (
     <header
       className={`site-nav ${scrolled ? 'scrolled' : ''} ${
         isStudio ? 'site-nav-studio' : cine ? 'site-nav-cine' : ''
-      }`}
+      } ${cine && !isStudio ? 'site-nav-cine-stack' : ''} ${cineSolid ? 'site-nav-cine-solid' : ''}`}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
-        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-          <Logo onDark={!isStudio && cine} studio={isStudio} />
-        </div>
-
-        <nav className="hidden items-center xl:flex">
-          {(isStudio ? STUDIO_NAV : nav).map((item) =>
-            !isStudio && item.items ? (
-              <Dropdown
-                key={item.label}
-                label={item.label}
-                items={item.items}
-                href={item.href}
-                rich={item.rich}
-                cine={cine}
-              />
-            ) : (
+      {isStudio ? (
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <Logo onDark={false} studio />
+          </div>
+          <nav className="hidden items-center xl:flex">
+            {STUDIO_NAV.map((item) => (
               <Link
                 key={item.label}
                 to={item.href}
-                className={`px-2.5 py-2 text-[13px] font-semibold transition ${
-                  isStudio
-                    ? 'text-slate-700 hover:text-blue-600'
-                    : cine
-                      ? 'text-white/85 hover:text-white'
-                      : 'text-slate-600 hover:text-blue-600'
-                }`}
+                className="px-2.5 py-2 text-[13px] font-semibold text-slate-700 transition hover:text-blue-600"
               >
                 {item.label}
               </Link>
-            ),
-          )}
-        </nav>
-
-        <div className="nav-cta-group hidden items-center lg:flex">
-          {isStudio ? (
-            <>
-              <Link to="/" className="nav-cta nav-cta-home" aria-label="BACHMAIN ana sayfa">
-                <img
-                  src="/assets/bachmain-logo.png"
-                  alt="BACHMAIN"
-                  width={140}
-                  height={28}
-                  className="nav-cta-home-logo"
-                  draggable={false}
-                />
-              </Link>
-              <Link to="/studio/demo" className="nav-cta nav-cta-demo">
-                Demo oluştur
-              </Link>
-              <Link to="/studio/giris" className="nav-cta nav-cta-login">
-                Üye girişi
-              </Link>
-              <Link to="/studio/paket" className="nav-cta nav-cta-buy">
-                Modül Seç
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link to="/studio" className="nav-cta nav-cta-home" aria-label="Bachmain Studio">
-                <img
-                  src="/assets/bachmain-studio-logo.png"
-                  alt="Bachmain Studio"
-                  width={160}
-                  height={28}
-                  className="nav-cta-home-logo"
-                  draggable={false}
-                />
-              </Link>
-              <Link to="/demo" className="nav-cta nav-cta-demo">
-                Demo Girişi
-              </Link>
-              <Link to="/giris" className="nav-cta nav-cta-login">
-                Giriş Yap
-              </Link>
-              <Link to="/paketler/moduller" className="nav-cta nav-cta-buy">
-                Modül Seç
-              </Link>
-            </>
-          )}
+            ))}
+          </nav>
+          <div className="nav-cta-group hidden items-center lg:flex">
+            <Link to="/" className="nav-cta nav-cta-home" aria-label="BACHMAIN ana sayfa">
+              <img
+                src="/assets/bachmain-logo.png"
+                alt="BACHMAIN"
+                width={140}
+                height={28}
+                className="nav-cta-home-logo"
+                draggable={false}
+              />
+            </Link>
+            <Link to="/studio/demo" className="nav-cta nav-cta-demo">
+              Demo oluştur
+            </Link>
+            <Link to="/studio/giris" className="nav-cta nav-cta-login">
+              Üye girişi
+            </Link>
+            <Link to="/studio/paket" className="nav-cta nav-cta-buy">
+              Modül Seç
+            </Link>
+          </div>
+          <button
+            type="button"
+            className="rounded-lg p-2 text-slate-700 xl:hidden"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Menü"
+          >
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
-
-        <button
-          type="button"
-          className={`rounded-lg p-2 xl:hidden ${
-            isStudio || !cine ? 'text-slate-700' : 'text-white'
-          }`}
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Menü"
-        >
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
+      ) : (
+        <>
+          <div className="site-nav-cine-top mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+              <Logo onDark={cine} studio={false} />
+            </div>
+            <div className="nav-cta-group hidden items-center lg:flex">{cineCtas}</div>
+            <button
+              type="button"
+              className={`rounded-lg p-2 xl:hidden ${cine ? 'text-white' : 'text-slate-700'}`}
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Menü"
+            >
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+          {cineLinks}
+        </>
+      )}
 
       {mobileOpen && (
         <div className="cine-mobile-panel absolute left-0 right-0 top-[68px] border-b border-slate-100 bg-white px-4 py-4 shadow-lg xl:hidden">

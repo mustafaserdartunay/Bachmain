@@ -17,9 +17,6 @@ const CookieBanner = dynamic(() => import('../legal/CookieBanner'), {
 })
 
 const AUTH_PATHS = new Set([
-  '/giris',
-  '/login',
-  '/demo',
   '/register',
   '/uye-ol',
   '/forgot-password',
@@ -47,6 +44,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   const isChromeless = CHROMELESS_PATHS.has(pathname)
   const isStudioSite = pathname === '/studio' || pathname.startsWith('/studio/')
   const isStudioAuth = pathname === '/studio/giris' || pathname === '/studio/demo'
+  const isCineAuth = pathname === '/demo' || pathname === '/giris' || pathname === '/login'
   const hideChrome = isAuth || isChromeless
   const isCineHome = pathname === '/'
   const isCineSite = !isAuth && !isChromeless && !isStudioSite
@@ -78,16 +76,18 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
         className={
           hideChrome
             ? 'flex min-h-[100dvh] flex-col p-0'
-            : isStudioSite
-              ? 'pt-0 pb-0'
-              : 'pt-0 pb-24'
+            : isCineAuth
+              ? 'flex min-h-[100dvh] flex-col p-0'
+              : isStudioSite
+                ? 'pt-0 pb-0'
+                : 'pt-0 pb-24'
         }
         role="main"
       >
         {children}
       </main>
-      {hideChrome || isStudioAuth ? null : <Footer />}
-      {hideChrome || isStudioSite ? null : <StickyCta />}
+      {hideChrome || isStudioAuth || isCineAuth ? null : <Footer />}
+      {hideChrome || isStudioSite || isCineAuth ? null : <StickyCta />}
       {isChromeless ? null : <CookieBanner />}
     </>
   )
