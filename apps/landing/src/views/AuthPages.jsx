@@ -12,11 +12,11 @@ import { platformPost } from '../utils/platformApi'
 const inputCls =
   'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15'
 
-export function DemoPage() {
+export function DemoPage({ isStudio = false }) {
   const [params] = useSearchParams()
-  const isStudio = params.get('next') === 'studio'
+  const studio = isStudio || params.get('next') === 'studio'
 
-  if (isStudio) {
+  if (studio) {
     return (
       <StudioAuthShell
         wide
@@ -24,7 +24,7 @@ export function DemoPage() {
         title="Studio demosu"
         lead="Firma bilgilerinizi girin. 7 günlük Studio çalışma alanınız hazır olur; uygulama üyeliğinizden ayrıdır."
       >
-        <DemoForm variant="panel" />
+        <DemoForm variant="panel" studio />
       </StudioAuthShell>
     )
   }

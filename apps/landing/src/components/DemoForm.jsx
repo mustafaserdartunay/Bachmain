@@ -63,7 +63,7 @@ function readPrefill() {
  * - panel (/demo): firma bilgileri + şifre → demo oluştur → teşekkür → Giriş Yap
  * - band (homepage): kısa form → /demo’ya prefill ile yönlendir
  */
-export default function DemoForm({ variant = 'panel' } = {}) {
+export default function DemoForm({ variant = 'panel', studio = false } = {}) {
   const [form, setForm] = useState(() => ({ ...emptyForm, ...readPrefill() }))
   const [errors, setErrors] = useState({})
   const [done, setDone] = useState(false)
@@ -73,7 +73,7 @@ export default function DemoForm({ variant = 'panel' } = {}) {
   const [showPw2, setShowPw2] = useState(false)
   const [sessionToken, setSessionToken] = useState('')
   const [licenseExpiry, setLicenseExpiry] = useState('')
-  const isStudioDemo = authLocationMeta().product === 'studio'
+  const isStudioDemo = studio || authLocationMeta().product === 'studio'
 
   useEffect(() => {
     const pre = readPrefill()

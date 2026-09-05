@@ -8,7 +8,7 @@ import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { yonetimPost, redirectToAppWithToken, authLocationMeta } from '../../utils/platformApi'
 
-export default function LoginPanel() {
+export default function LoginPanel({ isStudio: studioProp = false }: { isStudio?: boolean }) {
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPw, setShowPw] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -16,7 +16,7 @@ export default function LoginPanel() {
   const [submitError, setSubmitError] = useState('')
   const [done, setDone] = useState(false)
   const authMeta = authLocationMeta()
-  const isStudio = authMeta.product === 'studio'
+  const isStudio = studioProp || authMeta.product === 'studio'
 
   const onChange = (key: 'email' | 'password') => (e: ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }))

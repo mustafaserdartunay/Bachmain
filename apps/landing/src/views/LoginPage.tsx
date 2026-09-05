@@ -5,18 +5,18 @@ import AuthAmbient from '../components/auth/AuthAmbient'
 import LoginPanel from '../components/auth/LoginPanel'
 import StudioAuthShell from '../components/studio/StudioAuthShell'
 
-export default function LoginPage() {
+export default function LoginPage({ isStudio = false }: { isStudio?: boolean }) {
   const [params] = useSearchParams()
-  const isStudio = params.get('next') === 'studio'
+  const studio = isStudio || params.get('next') === 'studio'
 
-  if (isStudio) {
+  if (studio) {
     return (
       <StudioAuthShell
         kicker="Üye girişi"
         title="Studio hesabınız"
         lead="Yalnızca Studio üyeliği. Bachmain uygulama hesabı buradan giriş vermez."
       >
-        <LoginPanel />
+        <LoginPanel isStudio />
       </StudioAuthShell>
     )
   }
