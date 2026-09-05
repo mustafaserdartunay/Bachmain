@@ -1,10 +1,12 @@
 /** Cross-product Studio URLs and license (separate from CRM packages). */
 
-export const STUDIO_ORIGIN = 'https://studio.bachmain.com'
+export const STUDIO_ORIGIN = 'https://bachmain-studio.vercel.app'
+export const STUDIO_CANONICAL = 'https://studio.bachmain.com'
 export const STUDIO_TRIAL_PATH = '/paketler?urun=studio'
 export const STUDIO_LICENSE_KEY = 'bach-studio-license'
 export const STUDIO_COOKIE = 'bach_studio_access'
 const TRIAL_MS = 7 * 24 * 60 * 60 * 1000
+const PLATFORM_API = 'https://yonetim.bachmain.com/api'
 
 function readLicense() {
   try {
@@ -82,9 +84,44 @@ export function studioLoginUrl() {
   return 'https://bachmain.com/giris?next=studio'
 }
 
-export function openStudioOrTrial(user, navigate) {
+function readCrmToken() {
+  try {
+    return (
+      localStorage.getItem('bachmain_auth_token') || localStorage.getItem('bachmain_token') || ''
+    )
+  } catch {
+    return ''
+  }
+}
+
+export async function openStudioOrTrial(user, navigate) {
   if (!user) {
     window.location.href = studioLoginUrl()
+    return
+  }
+  const token = readCrmToken()
+  if (token && (hasStudioAccess(user) || user?.role === 'demo_lead' || user?.isDemo)) {
+    startStudioTrial(user)
+    try {
+      const res = await fetch(`${PLATFORM_API}/auth/sso-ticket`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ token }),
+      })
+      const data = await res.json().catch(() => ({}))
+      const code = String(data?.code || '').trim()
+      if (code) {
+        window.location.href = `${STUDIO_ORIGIN}/?sso=${encodeURIComponent(code)}`
+        return
+      }
+    } catch {
+      /* fall through */
+    }
+    window.location.href = `${STUDIO_ORIGIN}/?authToken=${encodeURIComponent(token)}`
     return
   }
   if (hasStudioAccess(user)) {

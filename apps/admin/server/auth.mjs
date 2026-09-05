@@ -243,10 +243,47 @@ function ensureCollections(store) {
   if (!Array.isArray(store.customers)) store.customers = []
   if (!Array.isArray(store.companyAccess)) store.companyAccess = []
   if (!Array.isArray(store.emailTokens)) store.emailTokens = []
+  if (!Array.isArray(store.ssoTickets)) store.ssoTickets = []
   if (!store.modules) store.modules = {}
   if (!Array.isArray(store.modules.customers)) store.modules.customers = []
   if (!store.customerExtras) store.customerExtras = {}
   if (!Array.isArray(store.customerExtras.loginHistory)) store.customerExtras.loginHistory = []
+}
+
+const SSO_TTL_MS = 2 * 60 * 1000
+
+export function createSsoTicket(store, token) {
+  ensureCollections(store)
+  const payload = verifyToken(token)
+  if (!payload?.sub) {
+    const err = new Error('Oturum anahtarı geçersiz')
+    err.code = 'INVALID_TOKEN'
+    throw err
+  }
+  const now = Date.now()
+  store.ssoTickets = store.ssoTickets.filter((row) => row && !row.used && Number(row.exp) > now)
+  const code = crypto.randomBytes(24).toString('hex')
+  store.ssoTickets.push({
+    code,
+    token,
+    sub: payload.sub,
+    exp: now + SSO_TTL_MS,
+    used: false,
+  })
+  return { code, expiresIn: Math.floor(SSO_TTL_MS / 1000) }
+}
+
+export function consumeSsoTicket(store, code) {
+  ensureCollections(store)
+  const key = String(code || '').trim()
+  if (!key) return null
+  const now = Date.now()
+  const row = store.ssoTickets.find((item) => item && item.code === key)
+  if (!row || row.used || Number(row.exp) <= now) return null
+  row.used = true
+  const session = getAccountFromToken(store, row.token)
+  if (!session) return null
+  return { ...session, token: row.token }
 }
 
 function primaryCompanySession(account) {

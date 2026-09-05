@@ -209,7 +209,56 @@ function isWebsiteLocalPath(path) {
   )
 }
 
-export function redirectToAppWithToken(token) {
+function persistClientToken(token) {
+  try {
+    localStorage.setItem('bachmain_token', token)
+    localStorage.setItem('bachmain_access_token', token)
+  } catch {
+    /* ignore */
+  }
+  try {
+    const cookie = [
+      `bachmain_token=${encodeURIComponent(token)}`,
+      'Path=/',
+      'Max-Age=604800',
+      'SameSite=None',
+      'Secure',
+    ]
+    if (
+      typeof location !== 'undefined' &&
+      (location.hostname === 'bachmain.com' || location.hostname.endsWith('.bachmain.com'))
+    ) {
+      cookie.push('Domain=.bachmain.com')
+    }
+    document.cookie = cookie.join('; ')
+  } catch {
+    /* ignore */
+  }
+}
+
+async function issueStudioSsoCode(token) {
+  try {
+    const data = await yonetimPost('auth/sso-ticket', { token }, { token })
+    return String(data?.code || '').trim()
+  } catch {
+    return ''
+  }
+}
+
+async function resolveStudioOrigin() {
+  try {
+    await fetch('https://studio.bachmain.com/', {
+      method: 'HEAD',
+      mode: 'no-cors',
+      signal: AbortSignal.timeout(1200),
+    })
+    return 'https://studio.bachmain.com'
+  } catch {
+    return 'https://bachmain-studio.vercel.app'
+  }
+}
+
+export async function redirectToAppWithToken(token) {
   if (!token) {
     console.warn('[bachmain] redirectToAppWithToken called without token')
     window.location.replace(LOGIN_URL)
@@ -220,41 +269,28 @@ export function redirectToAppWithToken(token) {
 
   const nextNorm = String(nextRaw || '').trim()
   if (nextNorm === 'studio' || nextNorm === '/studio' || nextNorm.startsWith('/studio/')) {
-    try {
-      const cookie = [
-        `bachmain_token=${encodeURIComponent(token)}`,
-        'Path=/',
-        'Max-Age=604800',
-        'SameSite=None',
-        'Secure',
-        'Domain=.bachmain.com',
-      ].join('; ')
-      document.cookie = cookie
-    } catch {
-      /* ignore */
-    }
-    const url = new URL('https://studio.bachmain.com/')
-    url.searchParams.set('authToken', token)
+    persistClientToken(token)
+    const code = await issueStudioSsoCode(token)
+    const origin = await resolveStudioOrigin()
+    const url = new URL(`${origin}/`)
+    if (code) url.searchParams.set('sso', code)
+    else url.searchParams.set('authToken', token)
     window.location.replace(url.toString())
     return
   }
 
+  persistClientToken(token)
   const path = safeAppPath(nextRaw)
 
   if (isWebsiteLocalPath(path)) {
-    try {
-      localStorage.setItem('bachmain_token', token)
-      localStorage.setItem('bachmain_access_token', token)
-    } catch {
-      /* ignore */
-    }
     window.location.replace(path)
     return
   }
 
   const url = new URL(path, APP_URL)
+  const code = await issueStudioSsoCode(token)
+  if (code) url.searchParams.set('sso', code)
   url.searchParams.set('authToken', token)
-  // replace avoids bouncing back to /giris via browser history after SSO handoff
   window.location.replace(url.toString())
 }
 

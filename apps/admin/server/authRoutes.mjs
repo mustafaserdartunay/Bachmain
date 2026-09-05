@@ -5,6 +5,8 @@ import {
   getAccountFromToken,
   getBearerOrCookieToken,
   buildSessionCookie,
+  createSsoTicket,
+  consumeSsoTicket,
   completeOnboarding,
   requestPasswordReset,
   resetPasswordWithToken,
@@ -241,6 +243,58 @@ export async function handleAuthApi(req, res, path, body = {}) {
   if (method === 'POST' && path === 'staff/logout') {
     sendJson(req, res, 200, { ok: true }, { cookie: buildStaffCookie('', { clear: true }) })
     return true
+  }
+
+  if (method === 'POST' && path === 'auth/sso-ticket') {
+    const token = getBearerOrCookieToken(req) || String(body.token || '').trim()
+    if (!token) {
+      sendJson(req, res, 401, { error: 'UNAUTHORIZED', message: 'Oturum bulunamadı' })
+      return true
+    }
+    try {
+      const ticket = await withStore((store) => createSsoTicket(store, token))
+      sendJson(req, res, 200, { ok: true, code: ticket.code, expiresIn: ticket.expiresIn })
+      return true
+    } catch (error) {
+      sendJson(req, res, 401, {
+        error: error.code || 'INVALID_TOKEN',
+        message: error.message || 'Oturum anahtarı geçersiz',
+      })
+      return true
+    }
+  }
+
+  if (method === 'POST' && path === 'auth/sso-exchange') {
+    const code = String(body.code || body.sso || '').trim()
+    if (!code) {
+      sendJson(req, res, 400, { error: 'INVALID_TOKEN', message: 'Giriş kodu eksik' })
+      return true
+    }
+    try {
+      const exchanged = await withStore((store) => consumeSsoTicket(store, code))
+      if (!exchanged) {
+        sendJson(req, res, 401, {
+          error: 'INVALID_TOKEN',
+          message: 'Giriş kodu geçersiz veya süresi doldu. Tekrar giriş yapın.',
+        })
+        return true
+      }
+      await withLegalUser(null, exchanged.user, exchanged.account)
+      sendJson(
+        req,
+        res,
+        200,
+        { ok: true, token: exchanged.token, user: exchanged.user },
+        { cookie: buildSessionCookie(exchanged.token) },
+      )
+      return true
+    } catch (error) {
+      sendJson(req, res, 401, {
+        error: error.code || 'INVALID_TOKEN',
+        message: error.message || 'Giriş kodu geçersiz',
+      })
+      return true
+    }
   }
 
   if (method === 'GET' && path === 'auth/me') {

@@ -20,12 +20,12 @@
     },
     {
       "source": "/studio",
-      "destination": "https://studio.bachmain.com/",
+      "destination": "https://bachmain-studio.vercel.app/",
       "permanent": false
     },
     {
       "source": "/studio/:path*",
-      "destination": "https://studio.bachmain.com/:path*",
+      "destination": "https://bachmain-studio.vercel.app/:path*",
       "permanent": false
     }
   ],
