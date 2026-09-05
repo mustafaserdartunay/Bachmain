@@ -11,19 +11,13 @@ const seo = SEO_CONTENT[PATH]
 
 export const metadata: Metadata = buildMetadata(seo)
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const sp = await searchParams
-  const isStudio =
-    String(sp.next || '')
-      .trim()
-      .toLowerCase() === 'studio'
-
+export default function Page() {
   return (
     <>
-      {seo.breadcrumbs && !isStudio ? <Breadcrumbs items={seo.breadcrumbs} /> : null}
+      {seo.breadcrumbs ? <Breadcrumbs items={seo.breadcrumbs} /> : null}
       <RouteSchemas path={PATH} seo={seo} />
       <Suspense fallback={null}>
-        <PageView isStudio={isStudio} />
+        <PageView />
       </Suspense>
     </>
   )
