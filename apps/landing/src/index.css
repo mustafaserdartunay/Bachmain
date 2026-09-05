@@ -3310,6 +3310,11 @@ html.cine-home .home-page-orbs {
   box-shadow: 0 10px 32px rgba(20, 50, 110, 0.18);
 }
 
+.site-nav-cine .nav-cta-home {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
 .site-nav-cine .nav-cta-demo {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
@@ -5821,6 +5826,55 @@ html.cine-home .mod-foot.night .mod-theme-preview {
   height: 100%;
   object-fit: contain;
   object-position: top center;
+}
+
+.live-app-panel--cinematic .live-app-panel-frame {
+  aspect-ratio: 16 / 10;
+  min-height: min(78vh, 860px);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 40px 90px rgba(8, 24, 70, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: perspective(1400px) rotateX(1.4deg);
+  transform-origin: 50% 100%;
+}
+
+.live-app-panel--cinematic .live-app-panel-img {
+  width: 108%;
+  height: 108%;
+  max-width: none;
+  object-fit: cover;
+  object-position: top left;
+  image-rendering: -webkit-optimize-contrast;
+  animation: guncel-kenburns 18s ease-in-out infinite alternate;
+}
+
+.live-app-panel--cinematic .live-app-panel-shine {
+  background: linear-gradient(
+    108deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.16) 48%,
+    transparent 64%
+  );
+  background-size: 240% 100%;
+  animation: cine-light-scan 7s ease-in-out infinite;
+}
+
+@keyframes guncel-kenburns {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.1) translate(-4.5%, -3%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-app-panel--cinematic .live-app-panel-img,
+  .live-app-panel--cinematic .live-app-panel-shine {
+    animation: none;
+  }
 }
 .live-app-panel-shine {
   pointer-events: none;

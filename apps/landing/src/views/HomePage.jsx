@@ -23,9 +23,6 @@ import {
 } from '../data/premiumLanding'
 import { faqItems } from '../data/navigation'
 
-const ScrollStory = dynamic(() => import('../components/cinematic/story/ScrollStory'), {
-  loading: () => <div className="cine-story cine-story-skeleton" aria-hidden />,
-})
 const AISection = dynamic(() => import('../components/cinematic/story/AISection'), {
   loading: () => <div className="section-pad min-h-[280px]" aria-hidden />,
 })
@@ -77,7 +74,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <ScrollStory />
         <AISection />
         <MobileSection />
 

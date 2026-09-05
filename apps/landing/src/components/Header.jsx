@@ -58,7 +58,6 @@ const nav = [
   { label: 'Referanslar', href: '/referanslar' },
   { label: 'Başarı Hikayeleri', href: '/basari-hikayeleri' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Studio', href: '/studio' },
   { label: 'İletişim', href: '/iletisim' },
 ]
 
@@ -252,6 +251,16 @@ export default function Header() {
             </>
           ) : (
             <>
+              <Link to="/studio" className="nav-cta nav-cta-home" aria-label="Bachmain Studio">
+                <img
+                  src="/assets/bachmain-studio-logo.png"
+                  alt="Bachmain Studio"
+                  width={160}
+                  height={28}
+                  className="nav-cta-home-logo"
+                  draggable={false}
+                />
+              </Link>
               <Link to="/demo" className="nav-cta nav-cta-demo">
                 Demo Girişi
               </Link>
@@ -356,6 +365,21 @@ export default function Header() {
                 </>
               ) : (
                 <>
+                  <Link
+                    to="/studio"
+                    className="nav-cta nav-cta-home flex-1"
+                    aria-label="Bachmain Studio"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <img
+                      src="/assets/bachmain-studio-logo.png"
+                      alt="Bachmain Studio"
+                      width={160}
+                      height={28}
+                      className="nav-cta-home-logo"
+                      draggable={false}
+                    />
+                  </Link>
                   <Link
                     to="/demo"
                     className="nav-cta nav-cta-demo flex-1"
