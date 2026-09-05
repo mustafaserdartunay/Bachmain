@@ -175,6 +175,7 @@ export default function Header() {
   const pathname = usePathname() || '/'
   /* Header yalnızca pazarlama sayfalarında görünür; zemin mavi → cine nav */
   const cine = true
+  const isStudio = pathname === '/studio'
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 12)
@@ -186,7 +187,7 @@ export default function Header() {
     <header className={`site-nav ${scrolled ? 'scrolled' : ''} ${cine ? 'site-nav-cine' : ''}`}>
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
         <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-          <Logo onDark={cine} />
+          <Logo onDark={cine} studio={isStudio} />
         </div>
 
         <nav className="hidden items-center xl:flex">

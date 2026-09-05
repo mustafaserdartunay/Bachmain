@@ -2,14 +2,12 @@
 
 import { motion, useReducedMotion } from 'framer-motion'
 import {
-  ArrowRight,
   Globe2,
   Layers3,
   MousePointer2,
   Palette,
   Rocket,
   Search,
-  Sparkles,
   Type,
   Image as ImageIcon,
   Link2,
@@ -127,10 +125,6 @@ export default function StudioPage() {
         {reduceMotion ? null : <ParticleField />}
         <div className="spl-hero-layout">
           <motion.div {...enter(0.08)}>
-            <p className="spl-kicker">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
-              Bachmain Studio
-            </p>
             <h1 id="studio-hero-heading" className="spl-title">
               Markanızın sitesini <em>sürükleyip</em> kurun.
             </h1>
@@ -139,24 +133,6 @@ export default function StudioPage() {
               tasarlayın, yerinde düzenleyin, tek tıkla yayınlayın. Paketiniz varsa girin; yoksa
               demo veya üyelikle başlayın.
             </p>
-            <div className="spl-actions">
-              <a href="/giris?next=studio" className="spl-btn spl-btn-login">
-                Üye girişi
-              </a>
-              <a href="/uye-ol?next=studio" className="spl-btn spl-btn-ghost">
-                Üye ol
-              </a>
-              <a href="/demo?next=studio" className="spl-btn spl-btn-primary">
-                Demo oluştur
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </a>
-              <a
-                href="https://uygulama.bachmain.com/paketler?urun=studio"
-                className="spl-btn spl-btn-buy"
-              >
-                Paket satın al
-              </a>
-            </div>
             <ul className="spl-notes">
               <li>
                 <Rocket className="h-3.5 w-3.5" aria-hidden /> Canlı sürükle-bırak tuval
@@ -227,8 +203,8 @@ export default function StudioPage() {
             transition={{ duration: 0.5, ease }}
           >
             <img
-              src="/assets/bachmain-logo.png"
-              alt="BACHMAIN"
+              src="/assets/bachmain-studio-logo.png"
+              alt="Bachmain Studio"
               width={220}
               height={48}
               className="spl-logo-mark"
@@ -258,7 +234,7 @@ export default function StudioPage() {
           >
             <div className="spl-canvas-chrome">
               <img
-                src="/assets/bachmain-logo-on-dark.png"
+                src="/assets/bachmain-studio-logo.png"
                 alt=""
                 width={140}
                 height={28}
