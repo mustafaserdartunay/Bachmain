@@ -38,7 +38,12 @@ export function saveWebTemplate(patch) {
   const next = {
     ...getWebTemplate(),
     ...patch,
-    logoText: String(patch.logoText !== undefined && patch.logoText !== null ? patch.logoText : (getWebTemplate().logoText || 'LOGO')).trim() || 'LOGO',
+    logoText:
+      String(
+        patch.logoText !== undefined && patch.logoText !== null
+          ? patch.logoText
+          : getWebTemplate().logoText || 'LOGO',
+      ).trim() || 'LOGO',
     design: normalizeGiftDesign({
       ...getWebTemplate().design,
       ...(patch.design && typeof patch.design === 'object' ? patch.design : {}),
@@ -59,6 +64,16 @@ export function selectWebTemplate() {
     templateId: WEB_GIFT_TEMPLATE_ID,
     selected: true,
     published: true,
+  })
+}
+
+export function selectReadySiteTemplate(template) {
+  return saveWebTemplate({
+    templateId: template?.id || 'furni-1.0.0',
+    selected: true,
+    published: false,
+    logoText: template?.logoText || 'Furni',
+    slogan: template?.slogan || 'Modern Interior Design Studio',
   })
 }
 

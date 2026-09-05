@@ -27,6 +27,7 @@ export default [
       '.tmp-vercel/**',
       'restore-backups/**',
       'BACHMAIN_DOCUMENT_CENTER/**',
+      'public/Templates/**',
       '**/*.min.js',
     ],
   },

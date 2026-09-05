@@ -4,6 +4,16 @@
   "framework": "vite",
   "redirects": [
     {
+      "source": "/studio",
+      "destination": "https://bachmain-studio.vercel.app",
+      "permanent": false
+    },
+    {
+      "source": "/studio/:path*",
+      "destination": "https://bachmain-studio.vercel.app/:path*",
+      "permanent": false
+    },
+    {
       "source": "/giris",
       "destination": "https://bachmain.com/giris",
       "permanent": false
@@ -22,7 +32,7 @@
   "rewrites": [
     { "source": "/website-os/assets/:path*", "destination": "/website-os/assets/:path*" },
     { "source": "/website-os/:path*", "destination": "/website-os/index.html" },
-    { "source": "/((?!api/|website-os/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|website-os/|Templates/|templates/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

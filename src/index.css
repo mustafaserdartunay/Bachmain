@@ -450,8 +450,12 @@ html.space #root {
 /* Colored CTAs keep true white (logo/header quick actions, primary buttons) */
 .app-header-banner a[class*='bg-gradient'],
 .app-header-banner a[class*='bg-gradient'] *,
+.app-header-banner button[class*='bg-gradient'],
+.app-header-banner button[class*='bg-gradient'] *,
 .app-page-header a[class*='bg-gradient'],
 .app-page-header a[class*='bg-gradient'] *,
+.app-page-header button[class*='bg-gradient'],
+.app-page-header button[class*='bg-gradient'] *,
 .glass-team-hub [class*='bg-gradient'] svg,
 .glass-team-hub nav button span[class*='bg-gradient'] svg,
 .btn-primary,
@@ -9152,7 +9156,12 @@ html
 
 .standalone-studio .standalone-studio-content {
   margin-right: 0 !important;
+  padding-top: var(--shell-gap);
   padding-right: var(--shell-gap);
+}
+
+.standalone-studio-bar {
+  margin: 0 0 0.65rem;
 }
 
 .standalone-studio-menu-fab {

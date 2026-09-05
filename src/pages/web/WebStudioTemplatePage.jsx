@@ -9,48 +9,56 @@ import {
   HEADER_ACTION_GRADIENTS,
 } from '../../components/Layout/HeaderCashActionsPanel'
 import { FormFieldCompact, FormSectionPanel } from '../../components/Common/FormSectionPanel'
-import {
-  WEB_STUDIO_ADMIN_PATH,
-  WEB_STUDIO_DOMAIN_CONNECT_PATH,
-} from '../../data/webMenu'
-import GiftStorefront from '../../storefront/GiftStorefront'
-import GiftStorefrontDesigner from '../../storefront/GiftStorefrontDesigner'
+import { WEB_STUDIO_ADMIN_PATH, WEB_STUDIO_DOMAIN_CONNECT_PATH } from '../../data/webMenu'
+import HtmlPackSite from '../../templates/HtmlPackSite'
+import { getHtmlPack } from '../../templates/htmlPacks'
 import { YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesign'
-import { getWebTemplate, saveWebTemplate, selectWebTemplate } from '../../utils/webTemplateStorage'
+import {
+  getWebTemplate,
+  saveWebTemplate,
+  selectReadySiteTemplate,
+} from '../../utils/webTemplateStorage'
+
+const FURNI_ID = 'furni-1.0.0'
 
 export default function WebStudioTemplatePage() {
   const [tpl, setTpl] = useState(() => getWebTemplate())
-  const [logoText, setLogoText] = useState(tpl.logoText || 'LOGO')
-  const [slogan, setSlogan] = useState(tpl.slogan || 'More Than a Gift')
-  const [selectedBlock, setSelectedBlock] = useState('hero')
+  const pack = getHtmlPack(FURNI_ID)
+  const [logoText, setLogoText] = useState(tpl.logoText || pack?.logoText || 'Furni')
+  const [slogan, setSlogan] = useState(tpl.slogan || pack?.slogan || '')
 
   useEffect(() => {
     const refresh = () => {
       const next = getWebTemplate()
       setTpl(next)
-      setLogoText(next.logoText || 'LOGO')
-      setSlogan(next.slogan || 'More Than a Gift')
+      setLogoText(next.logoText || pack?.logoText || 'Furni')
+      setSlogan(next.slogan || pack?.slogan || '')
     }
     window.addEventListener('bach:web-template-updated', refresh)
     return () => window.removeEventListener('bach:web-template-updated', refresh)
-  }, [])
+  }, [pack])
 
   function handleSave(event) {
     event.preventDefault()
-    const next = saveWebTemplate({ logoText, slogan })
+    const next = saveWebTemplate({
+      templateId: FURNI_ID,
+      logoText,
+      slogan,
+      selected: true,
+    })
     setTpl(next)
   }
 
   function handleSelect() {
-    const next = selectWebTemplate()
-    const saved = saveWebTemplate({
-      ...next,
-      logoText: logoText || 'LOGO',
+    const saved = selectReadySiteTemplate(pack || { id: FURNI_ID, logoText, slogan })
+    const next = saveWebTemplate({
+      ...saved,
+      logoText: logoText || 'Furni',
       slogan,
       selected: true,
       published: true,
     })
-    setTpl(saved)
+    setTpl(next)
   }
 
   return (
@@ -93,32 +101,31 @@ export default function WebStudioTemplatePage() {
               />
             </FormFieldCompact>
             <p className="px-1 text-[12px] font-semibold text-[var(--muted)]">
-              Vitrin üzerinde bir alanı seçin, sağdaki font veya banner kartını sürükleyip bırakın. Değişiklik canlı vitrine yazılır.
+              Furni HTML5 teması birebir gösterilir. Sayfa sekmelerinden mağaza, sepet ve iletişime
+              geçin.
             </p>
           </div>
         </FormSectionPanel>
         <div className="flex flex-wrap items-start gap-2 xl:flex-col">
-          <button type="submit" className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}>
+          <button
+            type="submit"
+            className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.primary}`}
+          >
             <span className={HEADER_ACTION_CTA_ICON_WRAP_CLASS}>
               <Save className={HEADER_ACTION_CTA_ICON_CLASS} strokeWidth={2.25} />
             </span>
             <span className={YF_TEXT_ON_COLOR_CLASS}>Kaydet</span>
           </button>
-          <Link to={WEB_STUDIO_DOMAIN_CONNECT_PATH} className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.violet}`}>
+          <Link
+            to={WEB_STUDIO_DOMAIN_CONNECT_PATH}
+            className={`${HEADER_ACTION_CTA_CLASS} ${HEADER_ACTION_GRADIENTS.violet}`}
+          >
             <span className={YF_TEXT_ON_COLOR_CLASS}>Domain bağla</span>
           </Link>
         </div>
       </form>
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <GiftStorefront
-          preview
-          editable
-          selectedBlock={selectedBlock}
-          onSelectBlock={setSelectedBlock}
-        />
-        <GiftStorefrontDesigner selectedBlock={selectedBlock} onSelectBlock={setSelectedBlock} />
-      </div>
+      <HtmlPackSite templateId={FURNI_ID} editable />
     </AppPageShell>
   )
 }

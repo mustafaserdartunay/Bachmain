@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
+  Eye,
   FolderKanban,
   Globe2,
   LayoutDashboard,
@@ -10,12 +11,27 @@ import {
   Menu,
   Package,
   Palette,
+  Pencil,
+  Rocket,
+  Save,
   ShoppingBag,
   Store,
 } from 'lucide-react'
 import BrandLogo from '../../components/Layout/BrandLogo'
+import {
+  HEADER_ACTION_GRADIENTS,
+  HEADER_QUICK_ACTION_CHIP_CLASS,
+  HEADER_QUICK_ACTION_CHIP_ICON_CLASS,
+} from '../../components/Layout/HeaderCashActionsPanel'
 import WebStudioDashboardPanels from '../../components/web/WebStudioDashboardPanels'
-import GiftStorefront from '../../storefront/GiftStorefront'
+import HtmlPackSite from '../../templates/HtmlPackSite'
+import { getHtmlPack, htmlPackGalleryItems } from '../../templates/htmlPacks'
+import { YF_TEXT_ON_COLOR_CLASS } from '../../utils/dashboardDesign'
+import {
+  getWebTemplate,
+  saveWebTemplate,
+  selectReadySiteTemplate,
+} from '../../utils/webTemplateStorage'
 import WebStudioCategoryCreatePage from './WebStudioCategoryCreatePage'
 import WebStudioDomainConnectPage from './WebStudioDomainConnectPage'
 import WebStudioOrdersPage from './WebStudioOrdersPage'
@@ -23,9 +39,9 @@ import WebStudioPage from './WebStudioPage'
 import WebStudioPaymentPage from './WebStudioPaymentPage'
 import WebStudioProductCreatePage from './WebStudioProductCreatePage'
 import WebStudioSettingsPage from './WebStudioSettingsPage'
-import '../../storefront/gift-storefront.css'
 
 const SIDEBAR_KEY = 'bach-studio-sidebar'
+const FURNI_ID = 'furni-1.0.0'
 
 const MENU_BUTTON =
   'sidebar-menu-button sidebar-item w-full flex items-center gap-2.5 transition-colors'
@@ -50,22 +66,171 @@ function readCollapsed() {
   }
 }
 
-function DesignView({ selectedBlock, onSelectBlock }) {
+function StudioActionBar({ editing, onToggleEdit, onOpenMenu }) {
+  const [busy, setBusy] = useState('')
+
+  function handleSave() {
+    setBusy('save')
+    try {
+      const pack = getHtmlPack(FURNI_ID)
+      selectReadySiteTemplate(pack || { id: FURNI_ID })
+      saveWebTemplate({ selected: true })
+    } finally {
+      setBusy('')
+    }
+  }
+
+  function handlePreview() {
+    setBusy('preview')
+    try {
+      saveWebTemplate({ selected: true })
+      window.open('/vitrin', 'bach-studio-preview')
+    } finally {
+      setBusy('')
+    }
+  }
+
+  function handlePublish() {
+    setBusy('publish')
+    try {
+      const pack = getHtmlPack(FURNI_ID)
+      selectReadySiteTemplate(pack || { id: FURNI_ID })
+      saveWebTemplate({ selected: true, published: true })
+      window.open('/vitrin', 'bach-studio-live')
+    } finally {
+      setBusy('')
+    }
+  }
+
+  const actions = [
+    {
+      id: 'edit',
+      label: editing ? 'Bitir' : 'Düzenle',
+      gradient: HEADER_ACTION_GRADIENTS.amber,
+      icon: Pencil,
+      pressed: editing,
+      onClick: onToggleEdit,
+    },
+    {
+      id: 'save',
+      label: 'Kaydet',
+      gradient: HEADER_ACTION_GRADIENTS.primary,
+      icon: Save,
+      disabled: Boolean(busy),
+      onClick: handleSave,
+    },
+    {
+      id: 'preview',
+      label: 'Canlı göster',
+      gradient: HEADER_ACTION_GRADIENTS.quote,
+      icon: Eye,
+      disabled: Boolean(busy),
+      onClick: handlePreview,
+    },
+    {
+      id: 'publish',
+      label: 'Yayınla',
+      gradient: HEADER_ACTION_GRADIENTS.success,
+      icon: Rocket,
+      disabled: Boolean(busy),
+      onClick: handlePublish,
+    },
+  ]
+
   return (
-    <div className="standalone-studio-body">
-      <GiftStorefront
-        preview
-        editable
-        selectedBlock={selectedBlock}
-        onSelectBlock={onSelectBlock}
-      />
+    <header className="app-header-banner standalone-studio-bar flex h-[var(--ds-header-h,4.75rem)] min-h-[var(--ds-header-h,4.75rem)] shrink-0 items-center gap-2 px-4 py-2 sm:px-6">
+      <button
+        type="button"
+        className="standalone-studio-menu-fab glass-sidebar-toggle lg:hidden"
+        onClick={onOpenMenu}
+        aria-label="Menüyü aç"
+      >
+        <Menu className="h-4 w-4" />
+      </button>
+      <div className="flex w-full gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-4 lg:gap-2 lg:overflow-visible">
+        {actions.map((action) => {
+          const Icon = action.icon
+          return (
+            <button
+              key={action.id}
+              type="button"
+              onClick={action.onClick}
+              disabled={action.disabled}
+              aria-pressed={action.pressed}
+              className={`header-action-cta ${HEADER_QUICK_ACTION_CHIP_CLASS} flex-1 sm:min-w-0 ${action.gradient} ${
+                action.pressed ? 'is-pressed' : ''
+              }`}
+            >
+              <span className={HEADER_QUICK_ACTION_CHIP_ICON_CLASS}>
+                <Icon className="h-4 w-4 shrink-0 text-[#ffffff]" strokeWidth={2.25} aria-hidden />
+              </span>
+              <span className={YF_TEXT_ON_COLOR_CLASS}>{action.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </header>
+  )
+}
+
+function FurniGallery({ onSelect }) {
+  const items = htmlPackGalleryItems()
+  const activeId = getWebTemplate().templateId
+  return (
+    <div className="space-y-3 px-4 pt-4 lg:px-6">
+      <div>
+        <h2 className="text-xl font-bold text-[#203375]">Hazır web siteleri</h2>
+        <p className="mt-0.5 text-sm text-[#64748b]">
+          Furni HTML5 temasını seçin. Canvas ve yayın aynı site state’ini kullanır.
+        </p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {items.map((template) => {
+          const selected = activeId === template.id
+          return (
+            <article
+              key={template.id}
+              className={`overflow-hidden rounded-2xl border border-[var(--glass-border,rgba(255,255,255,0.75))] bg-[var(--glass-bg,rgba(255,255,255,0.72))] shadow-[0_10px_36px_-14px_rgba(30,35,60,0.14)] ${
+                selected ? 'ring-2 ring-[#203375]' : ''
+              }`}
+            >
+              <div
+                className="relative h-48 bg-cover bg-center"
+                style={{ backgroundImage: `url(${template.preview.sky})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#203375]">
+                  {template.category}
+                </span>
+                <span className="absolute right-4 top-4 rounded-full bg-[#3b5d50] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white">
+                  HTML5
+                </span>
+                <div className="absolute bottom-4 left-4 right-4 text-white">
+                  <p className="text-lg font-black tracking-tight">{template.name}</p>
+                  <p className="text-sm text-white/80">{template.title}</p>
+                </div>
+              </div>
+              <div className="flex items-end justify-between gap-3 p-4">
+                <p className="text-sm text-[#55657d]">{template.description}</p>
+                <button
+                  type="button"
+                  className="inline-flex items-center rounded-xl bg-[#203375] px-3 py-2 text-xs font-semibold text-white"
+                  onClick={() => onSelect(template)}
+                >
+                  {selected ? 'Düzenle' : 'Seç'}
+                </button>
+              </div>
+            </article>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
 export default function StandaloneStudioPage() {
   const [view, setView] = useState('tasarim')
-  const [selectedBlock, setSelectedBlock] = useState('hero')
+  const [editing, setEditing] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readCollapsed)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isDesktop, setIsDesktop] = useState(() =>
@@ -103,6 +268,13 @@ export default function StandaloneStudioPage() {
 
   function openView(id) {
     setView(id)
+    setMobileOpen(false)
+    setEditing(false)
+  }
+
+  function handleSelectFurni(template) {
+    selectReadySiteTemplate(template)
+    setView('tasarim')
     setMobileOpen(false)
   }
 
@@ -178,21 +350,25 @@ export default function StandaloneStudioPage() {
         className="app-shell-content standalone-studio-content min-w-0 transition-all duration-page"
         data-sidebar-collapsed={!isDesktop || sidebarCollapsed ? 'true' : 'false'}
       >
-        <button
-          type="button"
-          className="standalone-studio-menu-fab glass-sidebar-toggle lg:hidden"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Menüyü aç"
-        >
-          <Menu className="h-4 w-4" />
-        </button>
+        <StudioActionBar
+          editing={editing}
+          onToggleEdit={() => setEditing((current) => !current)}
+          onOpenMenu={() => setMobileOpen(true)}
+        />
 
         <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4">
           {view === 'tasarim' ? (
-            <DesignView selectedBlock={selectedBlock} onSelectBlock={setSelectedBlock} />
+            <div className="standalone-studio-body">
+              <HtmlPackSite templateId={FURNI_ID} editable={editing} />
+            </div>
           ) : null}
           {view === 'panel' ? <WebStudioDashboardPanels /> : null}
-          {view === 'siteler' ? <WebStudioPage /> : null}
+          {view === 'siteler' ? (
+            <>
+              <FurniGallery onSelect={handleSelectFurni} />
+              <WebStudioPage />
+            </>
+          ) : null}
           {view === 'kategoriler' ? <WebStudioCategoryCreatePage /> : null}
           {view === 'urunler' ? <WebStudioProductCreatePage /> : null}
           {view === 'siparisler' ? <WebStudioOrdersPage /> : null}
