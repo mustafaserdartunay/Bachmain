@@ -1,9 +1,7 @@
 'use client'
 
-import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
-  ArrowLeft,
   ArrowRight,
   Globe2,
   Layers3,
@@ -47,144 +45,109 @@ const features = [
   },
 ]
 
-const previewBlocks = [
-  { label: 'Hero', w: '72%', h: 56 },
-  { label: 'Hizmetler', w: '48%', h: 40 },
-  { label: 'Galeri', w: '58%', h: 48 },
-  { label: 'İletişim', w: '40%', h: 36 },
-]
-
 export default function StudioPage() {
   const reduceMotion = useReducedMotion()
 
   return (
     <div className="studio-page">
-      <div className="studio-bg" aria-hidden>
-        <span className="studio-grid" />
-        <span className="studio-beam studio-beam-a" />
-        <span className="studio-beam studio-beam-b" />
-        <span className="studio-noise" />
-      </div>
-
       <header className="studio-topbar">
-        <Link to="/" className="studio-back">
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Ana sayfa
-        </Link>
-        <div className="studio-topbar-brand">
-          <img
-            src="/assets/bachmain-studio-logo.png"
-            alt="Bachmain Studio"
-            width={168}
-            height={36}
-            className="studio-topbar-logo"
-            draggable={false}
-          />
-          <img
-            src="/assets/bachmain-logo-on-dark.png"
-            alt="BACHMAIN"
-            width={88}
-            height={18}
-            className="studio-topbar-bachmark"
-            draggable={false}
-          />
-        </div>
-        <Link to="/" className="studio-switch">
-          BACHMAIN
-          <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-        </Link>
+        <img
+          src="/assets/bachmain-studio-logo.png"
+          alt="Bachmain Studio"
+          width={220}
+          height={48}
+          className="studio-topbar-logo"
+          draggable={false}
+        />
       </header>
 
       <section className="studio-hero">
         <motion.div
           className="studio-hero-copy"
-          initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         >
           <span className="studio-pill">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            Web sitesi yapma & yönetim paneli
+            Web sitesi yapma ve yönetim paneli
           </span>
-          <h1>
-            İstediğiniz web sayfasını
-            <span className="studio-hero-accent"> Studio</span> ile kurun
-          </h1>
+          <h1>Markanıza özel siteyi Studio ile kurun</h1>
           <p>
-            Bachmain Studio; sürükle-bırak editör, şablon kütüphanesi, domain yönetimi ve SEO
-            araçlarıyla markanıza özel siteleri tek panelden tasarlamanızı sağlar. Uygulamadan ayrı
-            satın alınır — her hesap kendi temiz çalışma alanı ile açılır.
+            Sürükle-bırak editör, şablonlar, domain ve SEO — tek panelde. Paketiniz varsa
+            hesabınızla girin; yoksa 7 günlük demo ile Studio yöneticisine bağlanın. Her hesap kendi
+            temiz çalışma alanı ile açılır.
           </p>
           <div className="studio-hero-actions">
-            <a
-              href="https://bachmain.com/giris?next=studio"
-              className="studio-btn studio-btn-primary"
-            >
+            <a href="/giris?next=studio" className="studio-btn studio-btn-navy">
               Hesabımla aç
               <ArrowRight className="h-4 w-4" aria-hidden />
             </a>
-            <a
-              href="https://uygulama.bachmain.com/paketler?urun=studio"
-              className="studio-btn studio-btn-ghost"
-            >
-              7 gün dene / satın al
+            <a href="/demo?next=studio" className="studio-btn studio-btn-ghost">
+              7 gün demo ile gir
             </a>
           </div>
+          <ul className="studio-hero-notes">
+            <li>Satın alınmış Studio paketi → hesabınızla panele girin</li>
+            <li>Demo üyelik → 7 gün Studio yöneticisine bağlanın</li>
+          </ul>
         </motion.div>
 
         <motion.div
           className="studio-canvas"
-          initial={reduceMotion ? false : { opacity: 0, scale: 0.94, x: 24 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          transition={{ duration: 0.85, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
           aria-hidden
         >
           <div className="studio-canvas-chrome">
-            <span />
-            <span />
-            <span />
-            <p>studio.bachmain.com · canlı önizleme</p>
+            <img
+              src="/assets/bachmain-studio-logo.png"
+              alt=""
+              width={112}
+              height={24}
+              className="studio-canvas-logo"
+              draggable={false}
+            />
+            <span className="studio-canvas-chip">Yönetici paneli</span>
           </div>
           <div className="studio-canvas-stage">
-            {previewBlocks.map((block, i) => (
-              <motion.div
-                key={block.label}
-                className="studio-canvas-block"
-                style={{ width: block.w, minHeight: block.h }}
-                animate={
-                  reduceMotion
-                    ? undefined
-                    : { y: [0, i % 2 === 0 ? -8 : 8, 0], opacity: [0.85, 1, 0.85] }
-                }
-                transition={{
-                  duration: 4 + i * 0.45,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  delay: i * 0.2,
-                }}
-              >
-                <strong>{block.label}</strong>
-                <em />
-                <em />
-              </motion.div>
-            ))}
-            <motion.div
-              className="studio-cursor"
-              animate={reduceMotion ? undefined : { x: [12, 120, 70, 12], y: [20, 90, 150, 20] }}
-              transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <MousePointer2 className="h-5 w-5" />
-            </motion.div>
+            <div className="studio-canvas-rail">
+              <em />
+              <em />
+              <em className="is-active" />
+              <em />
+            </div>
+            <div className="studio-canvas-board">
+              <div className="studio-canvas-hero-block">
+                <strong>Ana sayfa</strong>
+                <span />
+              </div>
+              <div className="studio-canvas-row">
+                <article>
+                  <b>Hizmetler</b>
+                  <i />
+                </article>
+                <article>
+                  <b>Galeri</b>
+                  <i />
+                </article>
+                <article>
+                  <b>İletişim</b>
+                  <i />
+                </article>
+              </div>
+            </div>
           </div>
         </motion.div>
       </section>
 
       <section id="studio-features" className="studio-features">
         <div className="studio-section-head">
-          <h2>Tasarım paneli, yayın paneli — tek Studio</h2>
+          <h2>Tasarım ve yayın — tek Studio</h2>
           <p>
-            Kod yazmadan sayfa kurun, içerikleri yönetin ve sitenizi canlıya alın. Bachmain
-            ekosisteminin web yüzü.
+            Kod yazmadan sayfa kurun, içerikleri yönetin ve sitenizi canlıya alın. Çalışma alanınız
+            yalnızca size aittir.
           </p>
         </div>
         <div className="studio-feature-grid">
@@ -194,10 +157,10 @@ export default function StudioPage() {
               <motion.article
                 key={feature.title}
                 className="studio-feature-card"
-                initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+                initial={reduceMotion ? false : { opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.45, delay: index * 0.05 }}
+                transition={{ duration: 0.4, delay: index * 0.04 }}
               >
                 <div className="studio-feature-icon">
                   <Icon className="h-5 w-5" aria-hidden />
@@ -211,30 +174,21 @@ export default function StudioPage() {
       </section>
 
       <section className="studio-cta-band">
-        <motion.div
-          className="studio-cta-card"
-          initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2>Web sitenizi Studio ile şekillendirin</h2>
+        <div className="studio-cta-card">
+          <h2>Studio paneline bağlanın</h2>
           <p>
-            Studio, Bachmain uygulamasından ayrı bir üründür. Üyeliğiniz varsa doğrudan uygulama
-            içinden Studio açılır; yoksa 7 günlük deneme ile başlayın.
+            Paket üyeliğiniz varsa hesabınızla giriş yapın. Yeni başlıyorsanız 7 günlük demo ile
+            yönetici paneline geçin.
           </p>
           <div className="studio-hero-actions">
-            <a href="https://studio.bachmain.com/" className="studio-btn studio-btn-primary">
-              Studio’yu aç
+            <a href="/giris?next=studio" className="studio-btn studio-btn-navy">
+              Hesabımla aç
             </a>
-            <Link to="/giris?next=studio" className="studio-btn studio-btn-ghost">
-              Giriş yap
-            </Link>
-            <Link to="/fiyatlar" className="studio-btn studio-btn-ghost">
-              Uygulama paketleri
-            </Link>
+            <a href="/demo?next=studio" className="studio-btn studio-btn-ghost">
+              7 gün demo ile gir
+            </a>
           </div>
-        </motion.div>
+        </div>
       </section>
     </div>
   )

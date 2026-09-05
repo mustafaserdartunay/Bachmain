@@ -166,6 +166,12 @@ export default function DemoForm({ variant = 'panel' } = {}) {
       phone: form.phone.trim(),
       company: form.companyName.trim(),
     })
+    try {
+      const next = new URLSearchParams(window.location.search).get('next')
+      if (next) params.set('next', next)
+    } catch {
+      /* ignore */
+    }
     window.location.href = `/demo?${params.toString()}`
   }
 

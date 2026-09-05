@@ -16,6 +16,7 @@ function readLicense() {
 }
 
 export function hasStudioAccess(user) {
+  if (user?.role === 'demo_lead' || user?.isDemo === true) return true
   const entitlements = user?.entitlements
   if (
     Array.isArray(entitlements) &&
