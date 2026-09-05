@@ -216,7 +216,16 @@ export function redirectToAppWithToken(token) {
     return
   }
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
-  const path = safeAppPath(params.get('next'))
+  const nextRaw = params.get('next')
+
+  if (nextRaw === 'studio') {
+    const url = new URL('https://studio.bachmain.com')
+    url.searchParams.set('authToken', token)
+    window.location.replace(url.toString())
+    return
+  }
+
+  const path = safeAppPath(nextRaw)
 
   if (isWebsiteLocalPath(path)) {
     try {

@@ -5,6 +5,16 @@ import { mailConfig, MAIL_BRAND } from './mail/mailConfig.mjs'
 import { sendTemplateMail } from './mail/mailService.mjs'
 import { notifyStaffAdmin, rowsFromFields } from './staffNotify.mjs'
 
+function mailProductFrom(body = {}, account = null) {
+  const origin = String(body.origin || '')
+  const referer = String(body.referer || '')
+  const product = String(body.product || body.next || account?.product || '').toLowerCase()
+  if (product === 'studio' || String(body.plan || '').toLowerCase() === 'studio') return 'studio'
+  if (Array.isArray(account?.products) && account.products.includes('studio')) return 'studio'
+  if (origin.includes('studio.bachmain') || referer.includes('studio.bachmain.com')) return 'studio'
+  return undefined
+}
+
 const COOKIE_NAME = 'bachmain_session'
 const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 14
 
@@ -389,6 +399,7 @@ export async function registerAccount(store, body) {
         ? 'self_signup'
         : sourceTag || 'self_signup',
     paymentPending: requirePayment,
+    products: mailProductFrom(body) === 'studio' ? ['studio'] : [],
   }
 
   let customer = store.customers.find((c) => c.id === customerId)
@@ -485,7 +496,13 @@ export async function registerAccount(store, body) {
     type: 'welcome',
     customerId,
     accountId: account.id,
-    data: { name: fullName, company: companyName, plan: account.plan, appUrl: cfg.appUrl },
+    data: {
+      name: fullName,
+      company: companyName,
+      plan: account.plan,
+      appUrl: cfg.appUrl,
+      product: mailProductFrom(body, account),
+    },
   })
   await sendTemplateMail(store, {
     to: account.email,
@@ -493,7 +510,7 @@ export async function registerAccount(store, body) {
     type: 'email_verification',
     customerId,
     accountId: account.id,
-    data: { name: fullName, verifyUrl },
+    data: { name: fullName, verifyUrl, product: mailProductFrom(body, account) },
   })
 
   await notifyStaffAdmin(store, {
@@ -616,6 +633,7 @@ export async function loginAccount(store, body) {
         at: account.lastLoginAt,
         userAgent: body.userAgent || '—',
         ip: body.ip || '—',
+        product: mailProductFrom(body, account),
       },
       immediate: true,
       meta: { quiet: true },
@@ -852,7 +870,7 @@ export async function requestPasswordReset(store, emailRaw) {
     type: 'password_reset',
     customerId: account.customerId,
     accountId: account.id,
-    data: { name: account.fullName, resetUrl },
+    data: { name: account.fullName, resetUrl, product: mailProductFrom({}, account) },
   })
   store.authEvents.unshift({
     id: newId('aev'),
@@ -902,7 +920,11 @@ export async function resetPasswordWithToken(store, { token, password }) {
     type: 'password_changed',
     customerId: account.customerId,
     accountId: account.id,
-    data: { name: account.fullName, appUrl: mailConfig().webUrl + '/login' },
+    data: {
+      name: account.fullName,
+      appUrl: mailConfig().webUrl + '/login',
+      product: mailProductFrom({}, account),
+    },
   })
   if (!Array.isArray(store.authEvents)) store.authEvents = []
   store.authEvents.unshift({

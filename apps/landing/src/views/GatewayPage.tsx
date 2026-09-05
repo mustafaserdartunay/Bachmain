@@ -37,7 +37,7 @@ export default function GatewayPage() {
 
       <div className="gateway-brand-bar">
         <p className="gateway-brand-kicker">bachmain.com</p>
-        <p className="gateway-brand-sub">İki ürün · tek ekosistem</p>
+        <p className="gateway-brand-sub">İki ürün · ayrı satın alın · tek ekosistem</p>
       </div>
 
       <div className="gateway-split" onMouseLeave={() => setActive(null)}>
@@ -124,7 +124,7 @@ export default function GatewayPage() {
             </h2>
             <p className="gateway-lead gateway-lead-light">
               Bachmain Studio; sürükle-bırak editör, şablonlar ve yayın paneliyle markanıza özel web
-              siteleri kurmanızı sağlar.
+              siteleri kurmanızı sağlar. Uygulamadan ayrı satın alınır.
             </p>
 
             <ul className="gateway-points gateway-points-light">

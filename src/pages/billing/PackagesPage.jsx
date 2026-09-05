@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Check, HardDrive, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { CRM_PRICING_PLANS, checkoutPath, formatTry } from '../../data/pricingPlans'
+import {
+  CRM_PRICING_PLANS,
+  STUDIO_PRICING_PLAN,
+  checkoutPath,
+  formatTry,
+} from '../../data/pricingPlans'
+import { startStudioTrial, STUDIO_ORIGIN, hasStudioAccess } from '../../utils/studioAccess'
+import { useAuth } from '../../auth/AuthContext'
 import BrandLogo from '../../components/Layout/BrandLogo'
 import {
   fetchProductUpdates,
@@ -14,11 +21,12 @@ import {
 } from '../../utils/productUpdates'
 
 export default function PackagesPage() {
+  const { user } = useAuth()
   const [period, setPeriod] = useState('month')
+  const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
+  const studioFocus = params.get('urun') === 'studio'
   const cachedItems = readUpdatesCache().items
-  const [notices, setNotices] = useState(() =>
-    filterChannel(cachedItems, UPDATE_CHANNELS.package),
-  )
+  const [notices, setNotices] = useState(() => filterChannel(cachedItems, UPDATE_CHANNELS.package))
   const [freshIds, setFreshIds] = useState(
     () => new Set(getUnreadIds(cachedItems, UPDATE_CHANNELS.package)),
   )
@@ -48,9 +56,13 @@ export default function PackagesPage() {
         <div className="crm-pricing-brand">
           <BrandLogo />
         </div>
-        <h1 className="crm-pricing-hero-title">İşinize uyan paket</h1>
+        <h1 className="crm-pricing-hero-title">
+          {studioFocus ? 'Bachmain Studio denemesi' : 'İşinize uyan paket'}
+        </h1>
         <p className="crm-pricing-hero-sub">
-          Starter, Professional veya Enterprise — her sütunda özet özellikler ve detaylı açıklamalar yukarıdan aşağıya sıralıdır.
+          {studioFocus
+            ? 'Studio, uygulamadan ayrı satın alınır. 7 gün deneme ile kendi web sitenizi kurun — verileriniz yalnızca size aittir.'
+            : 'Starter, Professional veya Enterprise — her sütunda özet özellikler ve detaylı açıklamalar yukarıdan aşağıya sıralıdır. Studio ayrı üründür.'}
         </p>
 
         <div className="crm-pricing-period" role="group" aria-label="Fatura dönemi">
@@ -78,7 +90,9 @@ export default function PackagesPage() {
             <h2 className="inline-flex items-center justify-center gap-2 text-center text-[14px] font-bold text-[var(--muted)]">
               Fiyat ve paket bildirimleri
               {freshIds.size ? (
-                <span className={UNREAD_PILL_CLASS}>{freshIds.size > 9 ? '9+' : freshIds.size}</span>
+                <span className={UNREAD_PILL_CLASS}>
+                  {freshIds.size > 9 ? '9+' : freshIds.size}
+                </span>
               ) : null}
             </h2>
             {notices.map((item) => (
@@ -115,12 +129,69 @@ export default function PackagesPage() {
       ) : null}
 
       <section className="crm-pricing-plans">
+        <article
+          className={`crm-pricing-card crm-pricing-card-full ${studioFocus ? 'is-featured' : ''}`}
+          style={{ maxWidth: 720, margin: '0 auto 2rem' }}
+        >
+          {STUDIO_PRICING_PLAN.badge ? (
+            <div className="crm-pricing-badge">{STUDIO_PRICING_PLAN.badge}</div>
+          ) : null}
+          <header className="crm-pricing-card-head">
+            <h2 className="crm-pricing-plan-name">{STUDIO_PRICING_PLAN.plan}</h2>
+            <p className="crm-pricing-tagline">{STUDIO_PRICING_PLAN.tagline}</p>
+          </header>
+          <div className="crm-pricing-amount-row">
+            <span className="crm-pricing-amount">
+              {formatTry(STUDIO_PRICING_PLAN.prices[period])}
+            </span>
+            <span className="crm-pricing-per">{perLabel}</span>
+          </div>
+          <ul className="crm-pricing-features">
+            {STUDIO_PRICING_PLAN.features.map((f) => (
+              <li key={f}>
+                <Check className="crm-pricing-check" strokeWidth={2.5} aria-hidden />
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {hasStudioAccess(user) ? (
+              <a href={STUDIO_ORIGIN} className="crm-pricing-cta is-primary">
+                Studio’yu aç
+              </a>
+            ) : (
+              <button
+                type="button"
+                className="crm-pricing-cta is-primary"
+                onClick={() => {
+                  startStudioTrial(user)
+                  window.location.href = STUDIO_ORIGIN
+                }}
+              >
+                7 gün ücretsiz dene
+              </button>
+            )}
+            <Link to={checkoutPath('studio', period)} className="crm-pricing-cta is-ghost">
+              Studio satın al
+            </Link>
+          </div>
+        </article>
+      </section>
+
+      <section className="crm-pricing-plans">
         <div className="crm-pricing-grid">
           {CRM_PRICING_PLANS.map((p) => {
             const amount = p.prices[period]
-            const ctaClass = p.featured ? 'is-primary' : p.id === 'enterprise' ? 'is-navy' : 'is-ghost'
+            const ctaClass = p.featured
+              ? 'is-primary'
+              : p.id === 'enterprise'
+                ? 'is-navy'
+                : 'is-ghost'
             return (
-              <article key={p.id} className={`crm-pricing-card crm-pricing-card-full ${p.featured ? 'is-featured' : ''}`}>
+              <article
+                key={p.id}
+                className={`crm-pricing-card crm-pricing-card-full ${p.featured ? 'is-featured' : ''}`}
+              >
                 {p.badge ? <div className="crm-pricing-badge">{p.badge}</div> : null}
 
                 <header className="crm-pricing-card-head">
@@ -181,7 +252,8 @@ export default function PackagesPage() {
           })}
         </div>
         <p className="crm-pricing-footnote">
-          Fiyatlar katalog fiyatlarıdır. Satın Al ile ödeme sayfasına geçersiniz; seçtiğiniz dönem korunur.
+          Fiyatlar katalog fiyatlarıdır. Satın Al ile ödeme sayfasına geçersiniz; seçtiğiniz dönem
+          korunur.
         </p>
       </section>
     </div>

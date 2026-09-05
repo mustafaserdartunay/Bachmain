@@ -52,10 +52,6 @@ import {
   Bike,
   Globe2,
   Sparkles,
-  CreditCard,
-  Store,
-  Palette,
-  Paintbrush,
 } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { readCompanySettings } from '../../utils/companySettings'
@@ -82,14 +78,14 @@ import {
   DOCUMENT_CENTER_BASE,
 } from '../../data/documentCenterMenu'
 import { getMessageCenterBadge } from '../../omnichannel/store'
-import { isWebRoute, WEB_STUDIO_PATH } from '../../data/webMenu'
-import { STUDIO_ADMIN_PAGES } from '../../utils/dropelyaStudio'
+import { isWebRoute } from '../../data/webMenu'
 import BrandLogo from './BrandLogo'
 import TrialBanner from '../TrialBanner'
 import { APP_VERSION } from '../../version/appVersion'
 import { useAuth } from '../../auth/AuthContext'
 import { filterMenuByEntitlements } from '../../utils/entitlements'
 import { canUseMultiCompany } from '../../utils/orgScope'
+import { openStudioOrTrial } from '../../utils/studioAccess'
 
 const projectsMenuGate = {
   label: 'Projeler',
@@ -162,15 +158,6 @@ const logisticsSubMenuIcons = {
   docs: PackageCheck,
   dashboard: LayoutDashboard,
   bike: Bike,
-}
-const studioSubMenuIcons = {
-  brush: Paintbrush,
-  dashboard: LayoutDashboard,
-  palette: Palette,
-  folder: FolderKanban,
-  bag: ShoppingBag,
-  store: Store,
-  card: CreditCard,
 }
 const hrSubMenuIcons = {
   gauge: Gauge,
@@ -922,12 +909,7 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             type="button"
             onClick={() => {
               handleNavigate()
-              if (collapsed) {
-                navigate(WEB_STUDIO_PATH)
-                return
-              }
-              if (!webOpen) toggleMenu('web')
-              navigate(WEB_STUDIO_PATH)
+              openStudioOrTrial(user, navigate)
             }}
             className={`${menuButtonBase} ${collapsed ? 'justify-center' : ''} ${
               isWebRouteActive ? 'sidebar-menu-active font-medium' : ''
@@ -939,42 +921,9 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
             {!collapsed && (
               <>
                 <span className={menuLabelClass}>Studio</span>
-                {webOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                )}
               </>
             )}
           </button>
-
-          {webOpen && !collapsed && (
-            <SidebarSubMenu>
-              {STUDIO_ADMIN_PAGES.map((sub) => {
-                const SubIcon = sub.icon ? studioSubMenuIcons[sub.icon] : null
-                return (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    end={Boolean(sub.exact)}
-                    onClick={handleNavigate}
-                    className={({ isActive }) =>
-                      `${subMenuButtonBase} flex items-center gap-2 ${
-                        isActive ? 'sidebar-menu-active font-medium' : ''
-                      }`
-                    }
-                  >
-                    {SubIcon ? (
-                      <SubMenuIcon>
-                        <SubIcon className="h-3.5 w-3.5" />
-                      </SubMenuIcon>
-                    ) : null}
-                    {sub.label}
-                  </NavLink>
-                )
-              })}
-            </SidebarSubMenu>
-          )}
         </div>
 
         <SidebarSection label="İK" collapsed={collapsed} />

@@ -33,6 +33,7 @@ const envSchema = z.object({
   API_PUBLIC_URL: z.string().default('http://127.0.0.1:8080'),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('BACHMAIN <noreply@bachmain.com>'),
+  STUDIO_EMAIL_FROM: z.string().default('Bachmain Studio <studio@bachmain.com>'),
   EDOCUMENTS_ENCRYPTION_KEY: z.string().optional(),
   EDOCUMENTS_CRON_SECRET: z.string().optional(),
   NILVERA_WEBHOOK_SECRET: z.string().optional(),

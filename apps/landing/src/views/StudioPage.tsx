@@ -73,14 +73,21 @@ export default function StudioPage() {
         </Link>
         <div className="studio-topbar-brand">
           <img
-            src="/assets/bachmain-logo-on-dark.png"
-            alt="BACHMAIN"
-            width={148}
-            height={32}
+            src="/assets/bachmain-studio-logo.png"
+            alt="Bachmain Studio"
+            width={168}
+            height={36}
             className="studio-topbar-logo"
             draggable={false}
           />
-          <span className="studio-topbar-badge">Studio</span>
+          <img
+            src="/assets/bachmain-logo-on-dark.png"
+            alt="BACHMAIN"
+            width={88}
+            height={18}
+            className="studio-topbar-bachmark"
+            draggable={false}
+          />
         </div>
         <Link to="/" className="studio-switch">
           BACHMAIN
@@ -105,18 +112,22 @@ export default function StudioPage() {
           </h1>
           <p>
             Bachmain Studio; sürükle-bırak editör, şablon kütüphanesi, domain yönetimi ve SEO
-            araçlarıyla markanıza özel siteleri tek panelden tasarlamanızı sağlar.
+            araçlarıyla markanıza özel siteleri tek panelden tasarlamanızı sağlar. Uygulamadan ayrı
+            satın alınır — her hesap kendi temiz çalışma alanı ile açılır.
           </p>
           <div className="studio-hero-actions">
             <a
-              href="https://uygulama.bachmain.com/studio"
+              href="https://bachmain.com/giris?next=studio"
               className="studio-btn studio-btn-primary"
             >
-              Studio'yu aç
+              Hesabımla aç
               <ArrowRight className="h-4 w-4" aria-hidden />
             </a>
-            <a href="#studio-features" className="studio-btn studio-btn-ghost">
-              Özellikleri keşfet
+            <a
+              href="https://uygulama.bachmain.com/paketler?urun=studio"
+              className="studio-btn studio-btn-ghost"
+            >
+              7 gün dene / satın al
             </a>
           </div>
         </motion.div>
@@ -132,7 +143,7 @@ export default function StudioPage() {
             <span />
             <span />
             <span />
-            <p>studio.bachmain · canlı önizleme</p>
+            <p>studio.bachmain.com · canlı önizleme</p>
           </div>
           <div className="studio-canvas-stage">
             {previewBlocks.map((block, i) => (
@@ -209,17 +220,18 @@ export default function StudioPage() {
         >
           <h2>Web sitenizi Studio ile şekillendirin</h2>
           <p>
-            Sürükle-bırak editör canlı. Sayfaları yerinde düzenleyin, şablon seçin ve yayınlayın.
+            Studio, Bachmain uygulamasından ayrı bir üründür. Üyeliğiniz varsa doğrudan
+            studio.bachmain.com açılır; yoksa 7 günlük deneme ile başlayın.
           </p>
           <div className="studio-hero-actions">
-            <a
-              href="https://uygulama.bachmain.com/studio"
-              className="studio-btn studio-btn-primary"
-            >
-              Studio'yu aç
+            <a href="https://studio.bachmain.com" className="studio-btn studio-btn-primary">
+              studio.bachmain.com
             </a>
-            <Link to="/giris" className="studio-btn studio-btn-ghost">
+            <Link to="/giris?next=studio" className="studio-btn studio-btn-ghost">
               Giriş yap
+            </Link>
+            <Link to="/fiyatlar" className="studio-btn studio-btn-ghost">
+              Uygulama paketleri
             </Link>
           </div>
         </motion.div>

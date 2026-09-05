@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, Coins, Sparkles } from 'lucide-react'
+import { Check, Coins, Sparkles, Palette } from 'lucide-react'
 import PricingBadge from './PricingBadge'
 import FeatureGroupList from './FeatureGroupList'
 import {
@@ -53,6 +53,48 @@ export default function PricingSection() {
               </p>
             )}
           </div>
+
+          <article className="rounded-[28px] border border-[#E2E8F0] bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.06)] sm:p-8">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0b1f3a] text-white">
+                  <Palette className="h-5 w-5" aria-hidden />
+                </span>
+                <div>
+                  <p className="text-[12px] font-bold tracking-wide text-[#64748B] uppercase">
+                    Ayrı ürün
+                  </p>
+                  <h2 className="text-[22px] font-bold tracking-tight text-[#0F172A]">
+                    Bachmain Studio
+                  </h2>
+                  <p className="mt-1 max-w-xl text-[14px] leading-relaxed font-medium text-[#64748B]">
+                    Web sitesi tasarımı ve yayın paneli. Uygulama paketinden bağımsız satın alınır.
+                    Canlı adres: studio.bachmain.com · 7 gün deneme.
+                  </p>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+                <p className="text-center text-[22px] font-extrabold tabular-nums text-[#0F172A] sm:pr-2">
+                  {formatMoneyTry(period === 'year' ? 7900 : 790)}
+                  <span className="ml-1 text-[13px] font-semibold text-[#64748B]">
+                    {period === 'year' ? '/ yıl' : '/ ay'}
+                  </span>
+                </p>
+                <Link
+                  to="/studio"
+                  className="inline-flex h-[48px] items-center justify-center rounded-[14px] border border-[#E2E8F0] px-5 text-[14px] font-bold text-[#0F172A]"
+                >
+                  Tanıtımı gör
+                </Link>
+                <a
+                  href="https://uygulama.bachmain.com/paketler?urun=studio"
+                  className="inline-flex h-[48px] items-center justify-center rounded-[14px] bg-[#0b1f3a] px-5 text-[14px] font-bold text-white"
+                >
+                  Studio’yu dene / al
+                </a>
+              </div>
+            </div>
+          </article>
 
           <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8">
             {/* Sol — Enterprise Full Paket */}

@@ -43,6 +43,7 @@ export function persistSession({ token, user }) {
   }
   if (user) {
     localStorage.setItem(USER_KEY, JSON.stringify(user))
+    if (user.id) setAuthCookie('bachmain_uid', String(user.id))
     window.dispatchEvent(new CustomEvent('bachmain:auth-changed', { detail: { user } }))
   }
 }
@@ -51,6 +52,7 @@ export function clearSession() {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
   clearAuthCookie('bachmain_token')
+  clearAuthCookie('bachmain_uid')
   window.dispatchEvent(new CustomEvent('bachmain:auth-changed', { detail: { user: null } }))
 }
 

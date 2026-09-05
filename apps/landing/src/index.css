@@ -2923,6 +2923,14 @@ html.cine-home .mod-section:not(.mod-section-night)::before {
   width: auto;
 }
 
+.studio-topbar-bachmark {
+  display: block;
+  height: 0.85rem;
+  width: auto;
+  max-width: 5rem;
+  opacity: 0.72;
+}
+
 .studio-topbar-badge {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.22);

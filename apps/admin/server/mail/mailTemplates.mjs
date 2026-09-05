@@ -1,5 +1,7 @@
-import { MAIL_BRAND } from './mailConfig.mjs'
-import { logoImgSrc, publicLogoUrl } from './mailAssets.mjs'
+import { MAIL_BRAND, STUDIO_MAIL_BRAND } from './mailConfig.mjs'
+import { logoImgSrc, publicLogoUrl, studioLogoImgSrc, publicStudioLogoUrl } from './mailAssets.mjs'
+
+let activeProduct = 'app'
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -10,10 +12,30 @@ function escapeHtml(value) {
 }
 
 function logoBlock() {
-  const b = MAIL_BRAND
+  const b = activeProduct === 'studio' ? STUDIO_MAIL_BRAND : MAIL_BRAND
+  if (activeProduct === 'studio') {
+    const studioSrc = studioLogoImgSrc()
+    const markSrc = logoImgSrc()
+    return `<a href="${escapeHtml(b.studioUrl())}" style="text-decoration:none;border:0;outline:none" target="_blank" rel="noopener">
+            <img
+              src="${escapeHtml(studioSrc)}"
+              alt="Bachmain Studio"
+              width="220"
+              height="36"
+              style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;height:36px;width:auto;max-width:240px"
+            />
+          </a>
+          <img
+            src="${escapeHtml(markSrc)}"
+            alt="BACHMAIN"
+            width="88"
+            height="12"
+            style="display:block;margin:0 auto;border:0;outline:none;height:12px;width:auto;max-width:88px;opacity:0.72"
+          />
+          <!-- fallback url: ${escapeHtml(publicStudioLogoUrl())} -->`
+  }
   const src = logoImgSrc()
   const fallback = publicLogoUrl()
-  // CID primary; HTTPS also listed for clients that prefer remote (same file).
   return `<a href="${escapeHtml(b.webUrl())}" style="text-decoration:none;border:0;outline:none" target="_blank" rel="noopener">
             <img
               src="${escapeHtml(src)}"
@@ -27,20 +49,28 @@ function logoBlock() {
 }
 
 function layout({ title, preview, bodyHtml, cta }) {
-  const b = MAIL_BRAND
-  const ctaHtml = cta?.href
+  const b = activeProduct === 'studio' ? STUDIO_MAIL_BRAND : MAIL_BRAND
+  const homeUrl = activeProduct === 'studio' ? b.studioUrl() : b.webUrl()
+  const ctaHref = cta?.href || (activeProduct === 'studio' ? b.studioUrl() : '')
+  const ctaHtml = ctaHref
     ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px auto 8px">
         <tr>
           <td align="center" style="border-radius:12px;background:${b.accent}">
-            <a href="${escapeHtml(cta.href)}" style="display:inline-block;padding:14px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;line-height:1.2">${escapeHtml(cta.label || 'Devam et')}</a>
+            <a href="${escapeHtml(ctaHref)}" style="display:inline-block;padding:14px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;line-height:1.2">${escapeHtml(cta?.label || (activeProduct === 'studio' ? 'Studio’yu aç' : 'Devam et'))}</a>
           </td>
         </tr>
       </table>`
     : ''
 
+  const footerNote =
+    activeProduct === 'studio'
+      ? 'Bu e-posta Bachmain Studio hesabınızla ilişkilidir.'
+      : 'Bu e-posta BACHMAIN hesabınızla ilişkilidir.'
+  const homeLabel = activeProduct === 'studio' ? 'studio.bachmain.com' : 'bachmain.com'
+
   return {
     subject: title,
-    text: [title, preview, cta?.href, `${b.name} — ${b.slogan}`, b.webUrl()]
+    text: [title, preview, ctaHref, `${b.name} — ${b.slogan}`, homeUrl]
       .filter(Boolean)
       .join('\n\n'),
     html: `<!DOCTYPE html>
@@ -86,18 +116,18 @@ function layout({ title, preview, bodyHtml, cta }) {
           <td style="padding:20px 32px 28px">
             <div style="height:1px;background:${b.border};margin-bottom:18px;line-height:1px;font-size:0">&nbsp;</div>
             <p style="margin:0 0 8px;font-size:12px;line-height:1.55;color:${b.muted};text-align:center">
-              Bu e-posta BACHMAIN hesabınızla ilişkilidir.
+              ${footerNote}
             </p>
             <p style="margin:0;font-size:12px;line-height:1.55;color:${b.muted};text-align:center">
               Yardım: <a href="mailto:${escapeHtml(b.supportEmail())}" style="color:${b.accent};text-decoration:none;font-weight:600">${escapeHtml(b.supportEmail())}</a>
               &nbsp;·&nbsp;
-              <a href="${escapeHtml(b.webUrl())}" style="color:${b.accent};text-decoration:none;font-weight:600">bachmain.com</a>
+              <a href="${escapeHtml(homeUrl)}" style="color:${b.accent};text-decoration:none;font-weight:600">${homeLabel}</a>
             </p>
           </td>
         </tr>
       </table>
       <p style="margin:16px 0 0;font-size:11px;color:#94a3b8;text-align:center">
-        © ${new Date().getFullYear()} BACHMAIN · ${escapeHtml(b.slogan)}
+        © ${new Date().getFullYear()} ${escapeHtml(b.name)} · ${escapeHtml(b.slogan)}
       </p>
     </td></tr>
   </table>
@@ -405,7 +435,12 @@ export function renderMailTemplate(templateKey, data = {}) {
     err.code = 'UNKNOWN_TEMPLATE'
     throw err
   }
-  return fn(data)
+  activeProduct = data.product === 'studio' ? 'studio' : 'app'
+  try {
+    return fn(data)
+  } finally {
+    activeProduct = 'app'
+  }
 }
 
 export function listMailTemplates() {

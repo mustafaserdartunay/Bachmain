@@ -174,6 +174,15 @@ export const VERSION_CHANGELOG = [
     title: 'BM-V1.826 — Yük ve Sevkiyat',
     categories: [
       {
+        title: 'Studio',
+        features: [
+          {
+            title: 'studio.bachmain.com',
+            detail: 'Bachmain Studio kendi alan adında; uygulamadan ayrı üyelik ve deneme.',
+          },
+        ],
+      },
+      {
         title: 'Lojistik',
         features: [
           {

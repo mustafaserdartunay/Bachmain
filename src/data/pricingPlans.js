@@ -100,6 +100,35 @@ export function formatTry(amount) {
   return `₺${Number(amount).toLocaleString('tr-TR')}`
 }
 
+/** Studio is sold separately from the CRM/ERP packages. */
+export const STUDIO_PRICING_PLAN = {
+  id: 'studio',
+  plan: 'Bachmain Studio',
+  tagline: 'Web sitesi tasarımı ve yayın — uygulamadan bağımsız',
+  prices: { month: 790, year: 7900 },
+  users: 'Sınırsız site',
+  storage: '20 GB medya',
+  featured: true,
+  badge: 'Ayrı ürün',
+  features: [
+    '7 gün ücretsiz deneme',
+    'Kendi workspace’iniz — başka hesapların verisi yok',
+    'Şablonlar, yayın ve domain',
+    'studio.bachmain.com',
+    'studio@bachmain.com kimliği',
+  ],
+  details: [
+    {
+      title: 'Uygulamadan ayrı',
+      body: 'Bachmain uygulamasını ve Studio’yu ayrı ayrı satın alabilirsiniz. Studio üyeliği CRM paketini zorunlu kılmaz.',
+    },
+    {
+      title: 'Temiz başlangıç',
+      body: 'Her yeni Studio kullanıcısı kendi boş çalışma alanıyla açılır. Siteler, şablon seçimleri ve ayarlar yalnızca size aittir.',
+    },
+  ],
+}
+
 export function checkoutPath(planId, period = 'month') {
   return `/profil/odeme?plan=${encodeURIComponent(planId)}&period=${encodeURIComponent(period)}`
 }

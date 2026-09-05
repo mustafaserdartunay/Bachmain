@@ -4,7 +4,12 @@
 import { newId, saveStore } from '../store.mjs'
 import { mailConfig } from './mailConfig.mjs'
 import { listMailTemplates, renderMailTemplate } from './mailTemplates.mjs'
-import { logoAttachments, publicLogoUrl, LOGO_CONTENT_ID } from './mailAssets.mjs'
+import {
+  logoAttachments,
+  studioLogoAttachments,
+  publicLogoUrl,
+  LOGO_CONTENT_ID,
+} from './mailAssets.mjs'
 
 function ensureMailStore(store) {
   if (!store.mail) store.mail = {}
@@ -115,10 +120,11 @@ export async function enqueueMail(store, input = {}) {
   const cfg = mailConfig()
   const template = input.template || 'announcement'
   const data = input.data || {}
+  const product = input.product || data.product || input.meta?.product
   const rendered =
     input.html || input.subject
       ? { subject: input.subject, html: input.html, text: input.text || '' }
-      : renderMailTemplate(template, data)
+      : renderMailTemplate(template, { ...data, product })
 
   const row = {
     id: input.id || newId('mail'),
@@ -138,7 +144,7 @@ export async function enqueueMail(store, input = {}) {
     provider: 'resend',
     providerId: null,
     error: null,
-    meta: input.meta || {},
+    meta: { ...(input.meta || {}), product: product || input.meta?.product || null },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     sentAt: null,
@@ -192,11 +198,12 @@ export async function sendQueuedMail(store, mailId) {
   }
 
   try {
-    const attachments = logoAttachments()
+    const isStudio = row.meta?.product === 'studio' || row.template?.startsWith?.('studio_')
+    const attachments = isStudio ? studioLogoAttachments() : logoAttachments()
     const result = await resendSend({
       apiKey: cfg.apiKey,
-      from: mail.settings.defaultFrom || cfg.from,
-      replyTo: cfg.replyTo,
+      from: isStudio ? cfg.studioFrom : mail.settings.defaultFrom || cfg.from,
+      replyTo: isStudio ? 'studio@bachmain.com' : cfg.replyTo,
       to: row.to,
       subject: row.subject,
       html: row.html,
@@ -341,9 +348,19 @@ export function updateMailSettings(store, patch = {}) {
 /** Fire-and-forget helper that still persists via withStore when caller wraps it. */
 export async function sendTemplateMail(
   store,
-  { to, template, data, type, customerId, accountId, immediate = true, meta },
+  { to, template, data, type, customerId, accountId, immediate = true, meta, product },
 ) {
-  return enqueueMail(store, { to, template, data, type, customerId, accountId, immediate, meta })
+  return enqueueMail(store, {
+    to,
+    template,
+    data: { ...data, product: product || data?.product },
+    type,
+    customerId,
+    accountId,
+    immediate,
+    meta: { ...meta, product: product || data?.product || meta?.product },
+    product: product || data?.product,
+  })
 }
 
 export { listMailTemplates, renderMailTemplate }

@@ -5,12 +5,12 @@
   "redirects": [
     {
       "source": "/studio",
-      "destination": "https://bachmain-studio.vercel.app",
+      "destination": "https://studio.bachmain.com",
       "permanent": false
     },
     {
       "source": "/studio/:path*",
-      "destination": "https://bachmain-studio.vercel.app/:path*",
+      "destination": "https://studio.bachmain.com/:path*",
       "permanent": false
     },
     {

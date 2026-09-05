@@ -46,6 +46,7 @@ function allowedOrigins() {
     'https://bachmain.com',
     'https://www.bachmain.com',
     'https://yonetim.bachmain.com',
+    'https://studio.bachmain.com',
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:5180',
@@ -100,6 +101,11 @@ export function sendJson(req, res, status, data, { cookie } = {}) {
  */
 export async function handleAuthApi(req, res, path, body = {}) {
   const method = req.method
+  body = {
+    ...body,
+    origin: body.origin || req.headers?.origin || '',
+    referer: body.referer || req.headers?.referer || '',
+  }
 
   if (method === 'OPTIONS') {
     applyCors(req, res)

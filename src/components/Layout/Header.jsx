@@ -13,12 +13,14 @@ import {
   ShoppingBag,
   Package,
   LayoutGrid,
+  Palette,
 } from 'lucide-react'
 import { ensureUserProfile, readUserProfile } from '../../utils/userProfile'
 import { readCompanySettings } from '../../utils/companySettings'
 import { useAuth } from '../../auth/AuthContext'
 import { HEADER_CONTROL_BUTTON_CLASS } from '../../utils/themeMode'
 import { isLocalDevHost, redirectToMarketingLogin } from '../../utils/marketingLogin'
+import { openStudioOrTrial } from '../../utils/studioAccess'
 import NotificationDropdown from './NotificationDropdown'
 import HeaderB2BBadge from './HeaderB2BBadge'
 import AppearanceToggle from './AppearanceToggle'
@@ -61,7 +63,7 @@ function MobileToolItem({ label, children }) {
   )
 }
 
-function MobileHeaderTools({ onNavigate }) {
+function MobileHeaderTools({ onNavigate, user }) {
   const [open, setOpen] = useState(false)
   const {
     anchorRef,
@@ -141,6 +143,22 @@ function MobileHeaderTools({ onNavigate }) {
                 <MobileToolItem label="Destek">
                   <HeaderSupport />
                 </MobileToolItem>
+                <MobileToolItem label="Studio">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false)
+                      openStudioOrTrial(user, onNavigate)
+                    }}
+                    className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only`}
+                    aria-label="Studio"
+                    title="Bachmain Studio"
+                  >
+                    <span className="icon-wrap">
+                      <Palette className="h-4 w-4 shrink-0" />
+                    </span>
+                  </button>
+                </MobileToolItem>
                 <MobileToolItem label="POS">
                   <button
                     type="button"
@@ -181,7 +199,7 @@ export default function Header({ onMenuClick }) {
 
 function HeaderBar({ onMenuClick }) {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const compactHeader = useCompactHeader()
   const { open: menuOpen, setOpen: setMenuOpen, toggle: toggleMenu } = useHeaderPopover('user-menu')
   const [pendingLogout, setPendingLogout] = useState(false)
@@ -267,7 +285,7 @@ function HeaderBar({ onMenuClick }) {
         {compactHeader ? (
           <>
             <HeaderMarketRates />
-            <MobileHeaderTools onNavigate={navigate} />
+            <MobileHeaderTools onNavigate={navigate} user={user} />
             <HeaderNotebook hideTrigger />
             <HeaderCalendar hideTrigger />
           </>
@@ -275,6 +293,17 @@ function HeaderBar({ onMenuClick }) {
           <>
             <HeaderMarketRates />
             <HeaderSupport />
+            <button
+              type="button"
+              onClick={() => openStudioOrTrial(user, navigate)}
+              className={`${HEADER_CONTROL_BUTTON_CLASS} icon-only`}
+              aria-label="Studio"
+              title="Bachmain Studio"
+            >
+              <span className="icon-wrap">
+                <Palette className="h-4 w-4 shrink-0" />
+              </span>
+            </button>
             <button
               type="button"
               onClick={() => navigate('/shopping')}
