@@ -1,8 +1,6 @@
 'use client'
 
-import { Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { ArrowLeft } from 'lucide-react'
 import '../../views/studio-landing.css'
 
 type Props = {
@@ -17,10 +15,6 @@ export default function StudioAuthShell({ kicker, title, lead, wide, children }:
   return (
     <div className="spl spl-simple spl-paket">
       <section className={`spl-paket-wrap ${wide ? 'spl-auth-wide' : ''}`}>
-        <Link to="/" className="spl-home-btn">
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Bachmain ana sayfa
-        </Link>
         <img
           src="/assets/bachmain-studio-logo.png"
           alt="Bachmain Studio"

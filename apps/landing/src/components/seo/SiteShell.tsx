@@ -20,8 +20,6 @@ const AUTH_PATHS = new Set([
   '/giris',
   '/login',
   '/demo',
-  '/studio/giris',
-  '/studio/demo',
   '/register',
   '/uye-ol',
   '/forgot-password',
@@ -48,6 +46,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   const isAuth = AUTH_PATHS.has(pathname)
   const isChromeless = CHROMELESS_PATHS.has(pathname)
   const isStudioSite = pathname === '/studio' || pathname.startsWith('/studio/')
+  const isStudioAuth = pathname === '/studio/giris' || pathname === '/studio/demo'
   const hideChrome = isAuth || isChromeless
   const isCineHome = pathname === '/'
   const isCineSite = !isAuth && !isChromeless && !isStudioSite
@@ -87,7 +86,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
-      {hideChrome ? null : <Footer />}
+      {hideChrome || isStudioAuth ? null : <Footer />}
       {hideChrome || isStudioSite ? null : <StickyCta />}
       {isChromeless ? null : <CookieBanner />}
     </>

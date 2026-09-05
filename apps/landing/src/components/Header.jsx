@@ -230,8 +230,15 @@ export default function Header() {
         <div className="nav-cta-group hidden items-center lg:flex">
           {isStudio ? (
             <>
-              <Link to="/" className="nav-cta nav-cta-home">
-                Bachmain
+              <Link to="/" className="nav-cta nav-cta-home" aria-label="BACHMAIN ana sayfa">
+                <img
+                  src="/assets/bachmain-logo.png"
+                  alt="BACHMAIN"
+                  width={140}
+                  height={28}
+                  className="nav-cta-home-logo"
+                  draggable={false}
+                />
               </Link>
               <Link to="/studio/demo" className="nav-cta nav-cta-demo">
                 Demo oluştur
@@ -313,9 +320,17 @@ export default function Header() {
                   <Link
                     to="/"
                     className="nav-cta nav-cta-home flex-1"
+                    aria-label="BACHMAIN ana sayfa"
                     onClick={() => setMobileOpen(false)}
                   >
-                    Bachmain ana sayfa
+                    <img
+                      src="/assets/bachmain-logo.png"
+                      alt="BACHMAIN"
+                      width={140}
+                      height={28}
+                      className="nav-cta-home-logo"
+                      draggable={false}
+                    />
                   </Link>
                   <Link
                     to="/studio/demo"
