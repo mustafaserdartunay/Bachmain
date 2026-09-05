@@ -35,7 +35,7 @@ export default function StudioPaketPage() {
             <Link to="/uye-ol?next=studio" className="spl-btn spl-btn-buy">
               Satın al
             </Link>
-            <Link to="/demo?next=studio" className="spl-btn spl-btn-ghost">
+            <Link to="/studio/demo" className="spl-btn spl-btn-ghost">
               Demo oluştur
             </Link>
           </div>

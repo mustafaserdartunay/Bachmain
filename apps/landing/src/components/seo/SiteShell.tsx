@@ -20,6 +20,8 @@ const AUTH_PATHS = new Set([
   '/giris',
   '/login',
   '/demo',
+  '/studio/giris',
+  '/studio/demo',
   '/register',
   '/uye-ol',
   '/forgot-password',

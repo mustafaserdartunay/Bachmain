@@ -1,10 +1,17 @@
 'use client'
 
+import { useEffect } from 'react'
 import AuthAmbient from '../components/auth/AuthAmbient'
 import LoginPanel from '../components/auth/LoginPanel'
 import StudioAuthShell from '../components/studio/StudioAuthShell'
+import { authProductFromSearch } from '../utils/platformApi'
 
 export default function LoginPage({ isStudio = false }: { isStudio?: boolean }) {
+  useEffect(() => {
+    if (isStudio) return
+    if (authProductFromSearch() === 'studio') window.location.replace('/studio/giris')
+  }, [isStudio])
+
   if (isStudio) {
     return (
       <StudioAuthShell

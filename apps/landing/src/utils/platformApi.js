@@ -43,6 +43,17 @@ function uniqueBases(list) {
 
 export function authProductFromSearch(search) {
   try {
+    if (typeof window !== 'undefined') {
+      const path = (window.location.pathname || '/').replace(/\/$/, '') || '/'
+      if (
+        path === '/studio/giris' ||
+        path === '/studio/demo' ||
+        path === '/studio/uye-ol' ||
+        path === '/studio/sifremi-unuttum'
+      ) {
+        return 'studio'
+      }
+    }
     const q = new URLSearchParams(
       search || (typeof window !== 'undefined' ? window.location.search : ''),
     )

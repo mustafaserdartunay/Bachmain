@@ -466,7 +466,7 @@ export default function DemoForm({ variant = 'panel', studio = false } = {}) {
             <p className="pt-1 text-center text-[14px] font-medium text-[#64748B]">
               Hesabınız var mı?{' '}
               <Link
-                to={isStudioDemo ? '/giris?next=studio' : '/login'}
+                to={isStudioDemo ? '/studio/giris' : '/login'}
                 className="font-bold text-[#2563EB] hover:underline"
               >
                 Giriş Yap

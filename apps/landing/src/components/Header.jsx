@@ -233,10 +233,10 @@ export default function Header() {
               <Link to="/" className="nav-cta nav-cta-home">
                 Bachmain
               </Link>
-              <Link to="/demo?next=studio" className="nav-cta nav-cta-demo">
+              <Link to="/studio/demo" className="nav-cta nav-cta-demo">
                 Demo oluştur
               </Link>
-              <Link to="/giris?next=studio" className="nav-cta nav-cta-login">
+              <Link to="/studio/giris" className="nav-cta nav-cta-login">
                 Üye girişi
               </Link>
               <Link to="/studio/paket" className="nav-cta nav-cta-buy">
@@ -318,14 +318,14 @@ export default function Header() {
                     Bachmain ana sayfa
                   </Link>
                   <Link
-                    to="/demo?next=studio"
+                    to="/studio/demo"
                     className="nav-cta nav-cta-demo flex-1"
                     onClick={() => setMobileOpen(false)}
                   >
                     Demo oluştur
                   </Link>
                   <Link
-                    to="/giris?next=studio"
+                    to="/studio/giris"
                     className="nav-cta nav-cta-login flex-1"
                     onClick={() => setMobileOpen(false)}
                   >

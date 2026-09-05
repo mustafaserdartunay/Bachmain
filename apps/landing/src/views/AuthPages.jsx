@@ -4,14 +4,19 @@ import DemoForm from '../components/DemoForm'
 import AuthAmbient from '../components/auth/AuthAmbient'
 import StudioAuthShell from '../components/studio/StudioAuthShell'
 import { CheckCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Button from '../components/Button'
-import { platformPost } from '../utils/platformApi'
+import { platformPost, authProductFromSearch } from '../utils/platformApi'
 
 const inputCls =
   'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15'
 
 export function DemoPage({ isStudio = false }) {
+  useEffect(() => {
+    if (isStudio) return
+    if (authProductFromSearch() === 'studio') window.location.replace('/studio/demo')
+  }, [isStudio])
+
   if (isStudio) {
     return (
       <StudioAuthShell

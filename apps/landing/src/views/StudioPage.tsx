@@ -104,7 +104,7 @@ export default function StudioPage() {
                 <Rocket className="h-4 w-4" aria-hidden />
                 Modül Seç
               </Link>
-              <Link to="/demo?next=studio" className="spl-btn spl-btn-ghost-dark">
+              <Link to="/studio/demo" className="spl-btn spl-btn-ghost-dark">
                 Demo oluştur
               </Link>
             </div>

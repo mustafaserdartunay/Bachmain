@@ -151,7 +151,7 @@ export default function LoginPanel({ isStudio: studioProp = false }: { isStudio?
             <p className="pt-1 text-center text-[14px] font-medium text-[#64748B]">
               Hesabınız yok mu?{' '}
               <Link
-                to={isStudio ? '/demo?next=studio' : '/register'}
+                to={isStudio ? '/studio/demo' : '/register'}
                 className="font-bold text-[#2563EB] hover:underline"
               >
                 {isStudio ? 'Studio demo' : 'Üye Ol'}
