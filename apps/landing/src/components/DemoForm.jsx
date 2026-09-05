@@ -225,23 +225,32 @@ export default function DemoForm({ variant = 'panel' } = {}) {
 
   return (
     <motion.div
-      className="relative mx-auto w-full max-w-[640px]"
+      className={isStudioDemo ? 'relative w-full' : 'relative mx-auto w-full max-w-[640px]'}
       initial={{ opacity: 0, y: 28, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
-      <h2 className="text-center text-4xl font-extrabold tracking-[-0.04em] text-[#2563EB] uppercase sm:text-5xl">
-        {isStudioDemo ? 'Studio Demo' : 'Demo Oluştur'}
-      </h2>
-      {!done ? (
-        <p className="mx-auto mt-4 max-w-xl text-center text-[14px] leading-relaxed font-medium text-[#64748B]">
-          {isStudioDemo
-            ? 'Studio üyeliği uygulamadan ayrıdır. Aynı e-posta ile uygulama hesabınız olsa da buradan yeni bir Studio demosu açılır.'
-            : 'Firma ve hesap bilgilerinizi girin. Demo 7 gün aktiftir; oluşturduktan sonra Giriş Yap ile boş çalışma alanınıza girersiniz.'}
-        </p>
-      ) : null}
+      {isStudioDemo ? null : (
+        <>
+          <h2 className="text-center text-4xl font-extrabold tracking-[-0.04em] text-[#2563EB] uppercase sm:text-5xl">
+            Demo Oluştur
+          </h2>
+          {!done ? (
+            <p className="mx-auto mt-4 max-w-xl text-center text-[14px] leading-relaxed font-medium text-[#64748B]">
+              Firma ve hesap bilgilerinizi girin. Demo 7 gün aktiftir; oluşturduktan sonra Giriş Yap
+              ile boş çalışma alanınıza girersiniz.
+            </p>
+          ) : null}
+        </>
+      )}
 
-      <div className="relative mt-10 rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:mt-12 sm:p-10">
+      <div
+        className={
+          isStudioDemo
+            ? 'relative'
+            : 'relative mt-10 rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:mt-12 sm:p-10'
+        }
+      >
         {done ? (
           <div className="py-6 text-center">
             <CheckCircle className="mx-auto h-14 w-14 text-[#16A34A]" aria-hidden />

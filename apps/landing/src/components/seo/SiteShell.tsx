@@ -78,14 +78,14 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
           hideChrome
             ? 'flex min-h-[100dvh] flex-col p-0'
             : isStudioSite
-              ? 'pt-0 pb-8'
+              ? 'pt-0 pb-0'
               : 'pt-0 pb-24'
         }
         role="main"
       >
         {children}
       </main>
-      {hideChrome || isStudioSite ? null : <Footer />}
+      {hideChrome ? null : <Footer />}
       {hideChrome || isStudioSite ? null : <StickyCta />}
       {isChromeless ? null : <CookieBanner />}
     </>

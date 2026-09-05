@@ -170,10 +170,8 @@ function Dropdown({ label, items, href, rich, cine }) {
 }
 
 const STUDIO_NAV = [
-  { label: 'Studio', href: '/studio' },
   { label: 'Özellikler', href: '/studio#ozellikler' },
-  { label: 'Paket', href: '/studio/paket' },
-  { label: 'Demo', href: '/demo?next=studio' },
+  { label: 'Paketler', href: '/studio/paket' },
 ]
 
 export default function Header() {
@@ -232,6 +230,9 @@ export default function Header() {
         <div className="nav-cta-group hidden items-center lg:flex">
           {isStudio ? (
             <>
+              <Link to="/" className="nav-cta nav-cta-home">
+                Bachmain
+              </Link>
               <Link to="/demo?next=studio" className="nav-cta nav-cta-demo">
                 Demo oluştur
               </Link>
@@ -309,6 +310,13 @@ export default function Header() {
             <div className="nav-cta-group mt-3 flex flex-col gap-2 sm:flex-row">
               {isStudio ? (
                 <>
+                  <Link
+                    to="/"
+                    className="nav-cta nav-cta-home flex-1"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Bachmain ana sayfa
+                  </Link>
                   <Link
                     to="/demo?next=studio"
                     className="nav-cta nav-cta-demo flex-1"

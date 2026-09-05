@@ -4,6 +4,10 @@ html.studio-site body {
   color: #0b1f3a;
 }
 
+html.studio-site .site-footer {
+  background: linear-gradient(180deg, #2a5eb0 0%, #1e4c96 100%);
+}
+
 .site-nav-studio {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.82));
   border-bottom: 1px solid rgba(37, 99, 235, 0.1);
@@ -25,6 +29,10 @@ html.studio-site body {
 .spl-simple {
   min-height: 100dvh;
   color: #0b1f3a;
+  background: #f4f7fb;
+}
+
+.spl-paket.spl-simple {
   background: linear-gradient(180deg, #ffffff 0%, #eef6ff 22%, #93c5fd 58%, #1f4e9a 100%);
   background-size: 100% 160%;
   animation: spl-sky 18s ease-in-out infinite alternate;
@@ -46,6 +54,10 @@ html.studio-site body {
   color: #334155;
 }
 
+.spl-lead-more {
+  margin-top: 0.7rem;
+}
+
 .spl-simple .spl-notes {
   color: #1e3a5f;
 }
@@ -53,8 +65,11 @@ html.studio-site body {
 .spl-hero {
   position: relative;
   isolation: isolate;
-  min-height: min(88dvh, 760px);
-  padding: calc(68px + clamp(1.5rem, 4vw, 3.5rem)) clamp(1rem, 4vw, 3rem) 2.5rem;
+  min-height: min(92dvh, 860px);
+  padding: calc(68px + clamp(1.5rem, 4vw, 3.5rem)) clamp(1rem, 4vw, 3rem) 3.5rem;
+  background: linear-gradient(180deg, #ffffff 0%, #eef6ff 24%, #93c5fd 62%, #1d4ed8 100%);
+  background-size: 100% 170%;
+  animation: spl-sky 16s ease-in-out infinite alternate;
 }
 
 .spl-hero-veil {
@@ -84,11 +99,20 @@ html.studio-site body {
   position: relative;
   z-index: 3;
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: clamp(1.5rem, 4vw, 3.5rem);
+  grid-template-columns: 0.92fr 1.08fr;
+  gap: clamp(1.5rem, 4vw, 3.2rem);
   align-items: center;
-  max-width: 1180px;
+  max-width: 1240px;
   margin: 0 auto;
+}
+
+.spl-hero-kicker {
+  margin: 0 0 0.85rem;
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .spl-kicker {
@@ -188,6 +212,12 @@ html.studio-site body {
   border-color: rgba(255, 255, 255, 0.55);
 }
 
+.spl-btn-ghost-dark {
+  color: #0b1f3a;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+}
+
 .spl-btn-buy {
   color: #fff;
   background: linear-gradient(135deg, #fb923c 0%, #f97316 48%, #ea580c 100%);
@@ -215,14 +245,34 @@ html.studio-site body {
 
 .spl-canvas {
   position: relative;
-  border-radius: 1.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  border-radius: 1.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06));
   box-shadow:
-    0 24px 60px rgba(15, 40, 90, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 32px 80px rgba(15, 40, 90, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
   overflow: hidden;
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(18px);
+}
+
+.spl-canvas-live {
+  min-height: 460px;
+  animation: spl-canvas-bob 7s ease-in-out infinite;
+}
+
+.spl-canvas-glow {
+  position: absolute;
+  inset: auto -20% -35% -20%;
+  height: 70%;
+  background: radial-gradient(circle, rgba(125, 211, 252, 0.45), transparent 62%);
+  animation: spl-glow 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.spl-canvas-wordmark {
+  height: 1.15rem;
+  width: auto;
 }
 
 .spl-canvas-chrome {
@@ -266,10 +316,14 @@ html.studio-site body {
   padding: 0.22rem 0.65rem;
 }
 
+.spl-canvas-chip-live {
+  animation: spl-pulse 1.8s ease-in-out infinite;
+}
+
 .spl-canvas-stage {
   display: grid;
-  grid-template-columns: 3.6rem 1fr;
-  min-height: 320px;
+  grid-template-columns: 3.8rem 1fr;
+  min-height: 420px;
 }
 
 .spl-canvas-rail {
@@ -293,6 +347,10 @@ html.studio-site body {
   animation: spl-pulse 2.4s ease-in-out infinite;
 }
 
+.spl-canvas-rail em.is-pulse {
+  animation: spl-rail 2.8s ease-in-out infinite;
+}
+
 .spl-canvas-board {
   position: relative;
   padding: 1rem;
@@ -305,10 +363,37 @@ html.studio-site body {
   padding: 0.85rem 1rem;
 }
 
+.spl-live-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.75rem;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.spl-live-nav b {
+  margin-right: auto;
+  font-size: 0.82rem;
+}
+
+.spl-live-nav span {
+  opacity: 0.72;
+}
+
 .spl-block-hero {
-  min-height: 6.2rem;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.55), rgba(14, 165, 233, 0.35));
+  min-height: 8.2rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.7), rgba(14, 165, 233, 0.42));
   animation: spl-float 5.5s ease-in-out infinite;
+  color: #fff;
+}
+
+.spl-block-hero p {
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  opacity: 0.85;
 }
 
 .spl-block-hero strong {
@@ -333,25 +418,81 @@ html.studio-site body {
 }
 
 .spl-block-row article {
-  min-height: 4.4rem;
+  min-height: 5.1rem;
   border-radius: 0.8rem;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.08);
   padding: 0.7rem;
   font-size: 0.72rem;
   font-weight: 700;
+  color: #fff;
+}
+
+.spl-tile i {
+  display: block;
+  width: 2.2rem;
+  height: 0.55rem;
+  margin-bottom: 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.spl-tile-a {
+  animation: spl-tile 6s ease-in-out infinite;
+}
+.spl-tile-b {
+  animation: spl-tile 6s ease-in-out 0.4s infinite;
+}
+.spl-tile-c {
+  animation: spl-tile 6s ease-in-out 0.8s infinite;
+}
+
+.spl-live-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.spl-live-bar span {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.28rem 0.6rem;
+}
+
+.spl-live-bar .is-pub {
+  background: #16a34a;
+  animation: spl-pulse 1.6s ease-in-out infinite;
+}
+
+.spl-float-card {
+  position: absolute;
+  right: 1.1rem;
+  top: 4.4rem;
+  z-index: 3;
+  border-radius: 0.8rem;
+  background: #fff;
+  color: #0b1f3a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.55rem 0.75rem;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2);
+  animation: spl-pop 4.2s ease-in-out infinite;
 }
 
 .spl-cursor {
   position: absolute;
-  top: 38%;
-  left: 28%;
+  top: 34%;
+  left: 22%;
   z-index: 4;
   display: flex;
   align-items: center;
   gap: 0.35rem;
   color: #fff;
-  animation: spl-drag 4.8s ease-in-out infinite;
+  animation: spl-drag 5.2s ease-in-out infinite;
   pointer-events: none;
   filter: drop-shadow(0 8px 16px rgba(15, 23, 42, 0.35));
 }
@@ -680,6 +821,126 @@ html.studio-site body {
   border: 1.5px solid rgba(15, 23, 42, 0.14);
 }
 
+.spl-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 1.1rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(37, 99, 235, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1d4ed8;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.spl-home-btn:hover {
+  border-color: #2563eb;
+  background: #fff;
+}
+
+.spl-auth-wide {
+  text-align: center;
+}
+
+.spl-auth-card {
+  max-width: 42rem;
+  text-align: left;
+}
+
+.spl-auth-form h2,
+.spl-auth-form .spl-auth-hide {
+  display: none;
+}
+
+.spl-feat-list {
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.spl-feat {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: clamp(1.2rem, 3vw, 2.4rem);
+  align-items: center;
+}
+
+.spl-feat.is-flip {
+  grid-template-columns: 1.05fr 1fr;
+}
+
+.spl-feat.is-flip .spl-feat-copy {
+  order: 2;
+}
+
+.spl-feat-kicker {
+  margin: 0;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.spl-feat-copy h3 {
+  margin: 0.4rem 0 0;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0b1f3a;
+}
+
+.spl-feat-copy p {
+  margin: 0.8rem 0 0;
+  color: #54708f;
+  line-height: 1.65;
+}
+
+.spl-feat-copy ul {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.spl-feat-copy li {
+  position: relative;
+  padding-left: 1.15rem;
+  font-weight: 650;
+  color: #1e3a5f;
+}
+
+.spl-feat-copy li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+.spl-feat-visual {
+  margin: 0;
+  border-radius: 1.4rem;
+  overflow: hidden;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  box-shadow: 0 22px 50px rgba(15, 40, 90, 0.12);
+  background: #fff;
+}
+
+.spl-feat-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
 @keyframes spl-float {
   0%,
   100% {
@@ -706,10 +967,68 @@ html.studio-site body {
     transform: translate(0, 0);
   }
   40% {
-    transform: translate(92px, 48px);
+    transform: translate(110px, 58px);
   }
   70% {
     transform: translate(48px, 18px);
+  }
+}
+
+@keyframes spl-canvas-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.4deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(0.6deg);
+  }
+}
+
+@keyframes spl-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes spl-tile {
+  0%,
+  100% {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    transform: translateY(-7px);
+    background: rgba(255, 255, 255, 0.16);
+  }
+}
+
+@keyframes spl-pop {
+  0%,
+  18%,
+  100% {
+    opacity: 0;
+    transform: translate(8px, 12px) scale(0.9);
+  }
+  32%,
+  62% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes spl-rail {
+  0%,
+  100% {
+    background: rgba(255, 255, 255, 0.12);
+  }
+  50% {
+    background: linear-gradient(135deg, #7dd3fc, #2563eb);
   }
 }
 
@@ -726,8 +1045,14 @@ html.studio-site body {
   .spl-hero-layout,
   .spl-drag-grid,
   .spl-feature-grid,
-  .spl-steps {
+  .spl-steps,
+  .spl-feat,
+  .spl-feat.is-flip {
     grid-template-columns: 1fr;
+  }
+
+  .spl-feat.is-flip .spl-feat-copy {
+    order: 0;
   }
 
   .spl-block-row {
@@ -737,13 +1062,31 @@ html.studio-site body {
   .spl-hero {
     min-height: auto;
   }
+
+  .spl-canvas-live {
+    min-height: 360px;
+  }
+
+  .spl-canvas-stage {
+    min-height: 320px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .spl-simple,
+  .spl-hero,
   .spl-block-hero,
+  .spl-canvas-live,
+  .spl-canvas-glow,
+  .spl-canvas-chip-live,
   .spl-canvas-rail em.is-on,
+  .spl-canvas-rail em.is-pulse,
+  .spl-tile-a,
+  .spl-tile-b,
+  .spl-tile-c,
+  .spl-float-card,
   .spl-cursor,
+  .spl-live-bar .is-pub,
   .spl-marquee-track {
     animation: none;
   }

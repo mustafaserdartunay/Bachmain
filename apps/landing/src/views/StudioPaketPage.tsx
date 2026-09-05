@@ -1,12 +1,17 @@
 'use client'
 
 import { Link } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import './studio-landing.css'
 
 export default function StudioPaketPage() {
   return (
     <div className="spl spl-simple spl-paket">
       <section className="spl-paket-wrap">
+        <Link to="/" className="spl-home-btn">
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Bachmain ana sayfa
+        </Link>
         <p className="spl-paket-kicker">Modül Seç</p>
         <h1>Studio paketi</h1>
         <p className="spl-paket-lead">Yalnızca Studio. Tek paket.</p>

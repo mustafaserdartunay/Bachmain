@@ -56,16 +56,24 @@ export default function LoginPanel() {
 
   return (
     <motion.div
-      className="relative mx-auto w-full max-w-[440px]"
+      className={isStudio ? 'relative w-full' : 'relative mx-auto w-full max-w-[440px]'}
       initial={{ opacity: 0, y: 28, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
-      <h2 className="mb-8 text-center text-4xl font-extrabold tracking-[-0.04em] text-[#2563EB] uppercase sm:text-5xl">
-        {isStudio ? 'Studio Giriş' : 'Giriş Yap'}
-      </h2>
+      {isStudio ? null : (
+        <h2 className="mb-8 text-center text-4xl font-extrabold tracking-[-0.04em] text-[#2563EB] uppercase sm:text-5xl">
+          Giriş Yap
+        </h2>
+      )}
 
-      <div className="relative rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-10">
+      <div
+        className={
+          isStudio
+            ? 'relative'
+            : 'relative rounded-[32px] border-[3px] border-[#2563EB] bg-white/95 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-10'
+        }
+      >
         {done ? (
           <div className="py-12 text-center">
             <p className="text-[22px] font-extrabold tracking-tight text-[#0F172A]">
