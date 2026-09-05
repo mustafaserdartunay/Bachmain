@@ -9,7 +9,7 @@ import { trackCta } from '../../analytics/track'
 export default function StickyCta() {
   const [visible, setVisible] = useState(false)
   const pathname = usePathname() || '/'
-  const cine = pathname === '/'
+  const cine = pathname === '/' || pathname === '/studio'
 
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 480)

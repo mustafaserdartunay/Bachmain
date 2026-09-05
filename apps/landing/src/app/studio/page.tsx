@@ -6,7 +6,14 @@ import StudioPage from '../../views/StudioPage'
 
 const seo = SEO_CONTENT['/studio']
 
-export const metadata: Metadata = buildMetadata(seo)
+export const metadata: Metadata = {
+  ...buildMetadata(seo),
+  icons: {
+    icon: [{ url: '/assets/logo-icon.svg', type: 'image/svg+xml' }],
+    shortcut: '/assets/logo-icon.svg',
+    apple: '/assets/logo-icon.svg',
+  },
+}
 
 export default function Page() {
   return (

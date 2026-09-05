@@ -29,8 +29,8 @@ const AUTH_PATHS = new Set([
   '/email-degistir',
 ])
 
-/** Full-bleed Studio — no marketing chrome */
-const CHROMELESS_PATHS = new Set(['/studio'])
+/** Full-bleed auth screens — no marketing chrome */
+const CHROMELESS_PATHS = new Set<string>()
 
 function ScrollToTop() {
   const pathname = usePathname()
