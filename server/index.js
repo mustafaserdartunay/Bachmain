@@ -16,6 +16,7 @@ import {
   handleGrowthHealthRequest,
   handleGrowthModelsRequest,
 } from './growthAi.js'
+import { handleGrowthImageRequest } from './growthImage.js'
 import { resolveChatModel, resolveTranscribeModel } from './openaiModels.js'
 import { handleIntentRequest, handleToolCallRequest } from './ai/actionEngine.js'
 import { handleRealtimeSessionRequest } from './ai/realtimeSession.js'
@@ -127,6 +128,15 @@ app.post('/api/growth/chat', async (req, res) => {
   try {
     guardAi(req)
     res.json(await handleGrowthChatRequest(req.body, req.headers))
+  } catch (error) {
+    sendAiError(res, error)
+  }
+})
+
+app.post('/api/growth/image', async (req, res) => {
+  try {
+    guardAi(req)
+    res.json(await handleGrowthImageRequest(req.body, req.headers))
   } catch (error) {
     sendAiError(res, error)
   }
