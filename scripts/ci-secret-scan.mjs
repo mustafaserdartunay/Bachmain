@@ -10,7 +10,8 @@ const patterns = [
   { name: 'OpenAI live-ish key', re: /sk-[a-zA-Z0-9]{20,}/g },
   { name: 'Stripe live secret', re: /sk_live_[a-zA-Z0-9]+/g },
   { name: 'AWS access key', re: /AKIA[0-9A-Z]{16}/g },
-  { name: 'Generic private key header', re: /-----BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY-----/g },
+  { name: 'Mapbox secret-ish token', re: /sk\.eyJ[a-zA-Z0-9._-]{20,}/g },
+  { name: 'Mapbox public token literal', re: /pk\.eyJ[a-zA-Z0-9._-]{40,}/g },
 ]
 
 const roots = ['src', 'server', 'api', 'apps', 'scripts', '.github']

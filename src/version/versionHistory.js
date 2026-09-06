@@ -97,6 +97,10 @@ export const VERSION_FEATURES = {
       title: 'Lojistik ve saha',
       features: [
         { title: 'Lojistik', detail: 'Planlanan, yoldaki ve teslim edilen sevkiyatlar.' },
+        {
+          title: 'LIVE harita',
+          detail: 'Personel, sürücü ve araç konumları Mapbox üzerinde canlı izlenir.',
+        },
         { title: 'Kamyon yük hesaplama', detail: 'Yük planı ve kapasite hesabı.' },
         { title: 'Kurye takip', detail: 'Müşteri bağlantılı kurye izleme.' },
         { title: 'Saha satış', detail: 'Saha ziyaret, müşteri ve raporlar.' },
@@ -189,6 +193,11 @@ export const VERSION_CHANGELOG = [
           {
             title: 'Yük ve Sevkiyat tek sayfa',
             detail: 'Müşteri kartından yük planı + sevkiyat; marka adı header ortasında.',
+          },
+          {
+            title: 'LIVE operasyon haritası',
+            detail:
+              'Sevkiyat → LIVE: Mapbox canlı konum, geofence ve saha GPS. Token Ayarlar → Harita.',
           },
         ],
       },

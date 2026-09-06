@@ -51,6 +51,7 @@ import {
   PackageCheck,
   Bike,
   Globe2,
+  Radio,
   Sparkles,
 } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
@@ -156,6 +157,7 @@ const logisticsSubMenuIcons = {
   shipments: Truck,
   delivery: MapPinned,
   docs: PackageCheck,
+  live: Radio,
   dashboard: LayoutDashboard,
   bike: Bike,
 }

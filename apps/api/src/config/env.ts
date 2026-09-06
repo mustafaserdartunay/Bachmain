@@ -37,6 +37,8 @@ const envSchema = z.object({
   EDOCUMENTS_ENCRYPTION_KEY: z.string().optional(),
   EDOCUMENTS_CRON_SECRET: z.string().optional(),
   NILVERA_WEBHOOK_SECRET: z.string().optional(),
+  MAPBOX_SECRET_TOKEN: z.string().optional(),
+  MAPBOX_PUBLIC_TOKEN: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>

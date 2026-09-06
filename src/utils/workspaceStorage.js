@@ -101,6 +101,12 @@ export const WORKSPACE_STORAGE_KEYS = [
   'erlenbox-sales-invoices',
   'erlenbox-incoming-e-invoices',
   'bach-org-structure',
+  'bach-live-locations',
+  'bach-live-geofences',
+  'bach-live-geofence-events',
+  'bach-live-routes',
+  'bach-live-audit',
+  'bach-live-settings',
   'bach-org-context',
 ]
 
@@ -126,6 +132,7 @@ const LIVE_REFRESH_EVENTS = [
   'bach:sevkiyat-updated',
   'bach:omni-updated',
   'bach:personnel-updated',
+  'bach:live-updated',
   'bach:workflow-stages-updated',
   'bach:sectoral-settings-updated',
   'bach:deleted-records-updated',

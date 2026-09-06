@@ -34,7 +34,7 @@ export function registerRealtime(io: Server) {
     })
 
     /** Bach AI V2 — client asks to refetch after metadata-only sync events. */
-    socket.on('ai:sync:subscribe', () => {
+    socket.on('live:subscribe', () => {
       if (auth.cid) socket.join(`company:${auth.cid}`)
     })
 

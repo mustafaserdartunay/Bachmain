@@ -103,6 +103,9 @@ const DeliveredLogisticsPage = lazyPage(() =>
 )
 const TirSevkiyatPage = lazyPage(() => import('./pages/logistics/TirSevkiyatPage'))
 const TirSevkiyatDetailPage = lazyPage(() => import('./pages/logistics/TirSevkiyatDetailPage'))
+const LiveOperationsPage = lazyPage(() => import('./pages/live/LiveOperationsPage'))
+const LiveFieldPage = lazyPage(() => import('./pages/live/LiveFieldPage'))
+const MapboxSettingsPage = lazyPage(() => import('./pages/settings/MapboxSettingsPage'))
 import ProductsPage from './pages/stock/ProductsPage'
 import WarehousesPage from './pages/stock/WarehousesPage'
 import WarehouseTransferPage from './pages/stock/WarehouseTransferPage'
@@ -639,6 +642,23 @@ export default function App() {
                         }
                       />
                       <Route
+                        path="/live"
+                        element={
+                          <PageSuspense>
+                            <LiveOperationsPage />
+                          </PageSuspense>
+                        }
+                      />
+                      <Route
+                        path="/live/saha"
+                        element={
+                          <PageSuspense>
+                            <LiveFieldPage />
+                          </PageSuspense>
+                        }
+                      />
+                      <Route path="/lojistik/live" element={<Navigate to="/live" replace />} />
+                      <Route
                         path="/lojistik"
                         element={
                           <PageSuspense>
@@ -763,6 +783,14 @@ export default function App() {
                         element={<ProjectsListPage scope="cancelled" />}
                       />
                       <Route path="/ayarlar" element={<SettingsPage />} />
+                      <Route
+                        path="/ayarlar/harita"
+                        element={
+                          <PageSuspense>
+                            <MapboxSettingsPage />
+                          </PageSuspense>
+                        }
+                      />
                       <Route path="/ayarlar/kullanicilar" element={<TeamUsersPage />} />
                       <Route path="/ayarlar/master-data" element={<MasterDataHubPage />} />
                       <Route path="/otomasyon" element={<WorkflowHubPage />} />

@@ -12,6 +12,65 @@ import { APP_VERSION, APP_BUILD, APP_VERSION_META } from './src/version/appVersi
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+function serveMedia(req, res, filePath, contentType) {
+  fs.stat(filePath, (err, stat) => {
+    if (err || !stat.isFile()) {
+      res.statusCode = 404
+      res.end()
+      return
+    }
+    const range = req.headers.range
+    res.setHeader('Content-Type', contentType)
+    res.setHeader('Accept-Ranges', 'bytes')
+    res.setHeader('Cache-Control', 'public, max-age=3600')
+    if (!range) {
+      res.setHeader('Content-Length', stat.size)
+      fs.createReadStream(filePath).pipe(res)
+      return
+    }
+    const match = /bytes=(\d*)-(\d*)/.exec(range)
+    const start = match && match[1] ? Number(match[1]) : 0
+    const end = match && match[2] ? Number(match[2]) : stat.size - 1
+    if (start >= stat.size || end >= stat.size) {
+      res.statusCode = 416
+      res.setHeader('Content-Range', `bytes */${stat.size}`)
+      res.end()
+      return
+    }
+    res.statusCode = 206
+    res.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`)
+    res.setHeader('Content-Length', end - start + 1)
+    fs.createReadStream(filePath, { start, end }).pipe(res)
+  })
+}
+
+function heroMediaPlugin() {
+  const files = {
+    '/media/hero-loop.webm': {
+      path: path.resolve(__dirname, 'public/media/hero-loop.webm'),
+      type: 'video/webm',
+    },
+    '/media/hero-loop.mp4': {
+      path: path.resolve(__dirname, 'public/media/hero-loop.mp4'),
+      type: 'video/mp4',
+    },
+  }
+  return {
+    name: 'hero-media',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = (req.url || '').split('?')[0]
+        const hit = files[url]
+        if (!hit) {
+          next()
+          return
+        }
+        serveMedia(req, res, hit.path, hit.type)
+      })
+    },
+  }
+}
+
 function appVersionPlugin() {
   const payload = `${JSON.stringify(
     {
@@ -46,6 +105,45 @@ function readRequestHeaders(req) {
   return Object.fromEntries(
     Object.entries(req.headers || {}).map(([key, value]) => [key.toLowerCase(), value]),
   )
+}
+
+function mapboxApiPlugin() {
+  const routes = {
+    '/api/mapbox/status': 'status.js',
+    '/api/mapbox/test': 'test.js',
+    '/api/mapbox/geocode': 'geocode.js',
+    '/api/mapbox/reverse': 'reverse.js',
+    '/api/mapbox/directions': 'directions.js',
+    '/api/mapbox/matrix': 'matrix.js',
+    '/api/mapbox/optimize': 'optimize.js',
+    '/api/mapbox/match': 'match.js',
+  }
+  return {
+    name: 'mapbox-api-dev',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = (req.url || '').split('?')[0]
+        const file = routes[url]
+        if (!file) {
+          next()
+          return
+        }
+        try {
+          const mod = await import(`./api/mapbox/${file}`)
+          await mod.default(req, res)
+        } catch (error) {
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(
+            JSON.stringify({
+              error: 'MAPBOX_PROXY',
+              message: error.message || 'Harita servisine şu anda ulaşılamıyor.',
+            }),
+          )
+        }
+      })
+    },
+  }
 }
 
 function voiceApiPlugin() {
@@ -132,7 +230,7 @@ export default defineConfig({
   optimizeDeps: {
     entries: ['index.html'],
   },
-  plugins: [react(), voiceApiPlugin(), appVersionPlugin()],
+  plugins: [heroMediaPlugin(), react(), voiceApiPlugin(), mapboxApiPlugin(), appVersionPlugin()],
   define: {
     __BACH_APP_VERSION__: JSON.stringify(APP_VERSION),
   },

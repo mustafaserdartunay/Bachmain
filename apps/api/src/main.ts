@@ -31,7 +31,7 @@ import { analyticsRoutes } from './modules/analytics/analyticsRoutes.js'
 import { platformRoutes } from './modules/platform/platformRoutes.js'
 import { marketplaceRoutes } from './modules/marketplace/marketplaceRoutes.js'
 import { integrationRoutes } from './modules/integrations/integrationRoutes.js'
-import { edocumentRoutes } from './modules/edocuments/edocumentRoutes.js'
+import { liveRoutes } from './modules/live/liveRoutes.js'
 import { registerMetrics } from './shared/metrics.js'
 import { captureApiException, initApiSentry } from './shared/sentry.js'
 
@@ -150,6 +150,7 @@ async function main() {
   await app.register(marketplaceRoutes)
   await app.register(integrationRoutes)
   await app.register(edocumentRoutes)
+  await app.register(liveRoutes)
 
   await app.ready()
 
@@ -161,6 +162,7 @@ async function main() {
   })
   registerRealtime(io)
   bindNotificationIo(io)
+  ;(app as typeof app & { io?: typeof io }).io = io
   await supportRoutes(app, io)
 
   await app.listen({ port: env.PORT, host: env.HOST })

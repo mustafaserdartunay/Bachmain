@@ -32,6 +32,8 @@ export const ROUTE_MODULE_MAP = {
   '/saha-satis': 'field_sales',
   '/kurye': 'courier',
   '/ik': 'hr',
+  '/live': 'logistics',
+  '/lojistik': 'logistics',
   '/ai-buyume': 'ai_growth',
   '/aios': 'ai_growth',
   '/ai-beyin': 'ai_growth',

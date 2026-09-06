@@ -232,6 +232,11 @@ async function issueSession(
             'social.create',
             'social.approve',
             'social.publish',
+            'live.view',
+            'live.track',
+            'live.history',
+            'live.geofence',
+            'live.route',
           ],
   })
   const refreshToken = await signRefreshToken(userId)

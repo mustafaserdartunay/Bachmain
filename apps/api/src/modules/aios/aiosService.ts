@@ -275,11 +275,18 @@ export async function invokeTool(input: {
   }
 
   // AIOS-0: safe tools return simulated success (real adapters in AIOS-1)
-  const output = {
+  let output: Record<string, unknown> = {
     ok: true,
     simulated: true,
     toolId: tool.id,
     message: `${tool.label} simüle edildi (AIOS-0).`,
+  }
+  if (tool.id.startsWith('live.') && !tool.requiresHumanApproval) {
+    const { liveAssistantSummary } = await import('../live/liveService.js')
+    const kind =
+      tool.id === 'live.delayed' ? 'delayed' : tool.id === 'live.offline' ? 'offline' : 'region'
+    const rows = await liveAssistantSummary(input.companyId, kind)
+    output = { ok: true, simulated: false, toolId: tool.id, rows }
   }
 
   await db.insert(aiosRunSteps).values({

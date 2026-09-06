@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Building2, ImagePlus, Save, ShieldCheck } from 'lucide-react'
+import { Building2, ImagePlus, MapPinned, Save, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
   defaultCompanySettings,
@@ -95,7 +95,12 @@ export default function SettingsPage() {
               <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-dark-500/50 bg-dark-700/70 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-gray-300 transition-colors hover:bg-dark-700 hover:text-white">
                 <ImagePlus className="h-4 w-4" />
                 Logo Yükle
-                <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoUpload}
+                />
               </label>
               <p className="text-[11px] font-semibold text-gray-500">
                 Önerilen ölçü: {QUOTE_PRINT_LOGO_SIZE_LABEL} (teklif yazdırma logosu)
@@ -171,6 +176,13 @@ export default function SettingsPage() {
             >
               <ShieldCheck className="h-4 w-4" />
               Yönetici Kontrol Paneli
+            </Link>
+            <Link
+              to="/ayarlar/harita"
+              className="inline-flex items-center gap-2 rounded-xl border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-xs font-black uppercase tracking-wide text-sky-300 transition-colors hover:bg-sky-500/20"
+            >
+              <MapPinned className="h-4 w-4" />
+              Harita & Konum
             </Link>
           </div>
           <div className="flex items-center gap-2">

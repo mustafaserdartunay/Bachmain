@@ -2964,3 +2964,183 @@ export const eDocumentPlatform = pgTable('e_document_platform', {
   meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
+
+export const liveEntities = pgTable(
+  'live_entities',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    entityKind: text('entity_kind').notNull(),
+    externalId: text('external_id').notNull(),
+    name: text('name'),
+    status: text('status'),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('live_entities_company_ext_uidx').on(t.companyId, t.entityKind, t.externalId),
+    index('live_entities_company_kind_idx').on(t.companyId, t.entityKind),
+  ],
+)
+
+export const locationSamples = pgTable(
+  'location_samples',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    entityId: uuid('entity_id')
+      .notNull()
+      .references(() => liveEntities.id),
+    latitude: numeric('latitude', { precision: 10, scale: 7 }).notNull(),
+    longitude: numeric('longitude', { precision: 10, scale: 7 }).notNull(),
+    accuracy: numeric('accuracy', { precision: 10, scale: 2 }),
+    speed: numeric('speed', { precision: 10, scale: 2 }),
+    heading: numeric('heading', { precision: 6, scale: 2 }),
+    altitude: numeric('altitude', { precision: 10, scale: 2 }),
+    recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull(),
+    batteryLevel: numeric('battery_level', { precision: 5, scale: 2 }),
+    isMoving: boolean('is_moving').default(false).notNull(),
+    deviceId: text('device_id'),
+    platform: text('platform'),
+    activity: text('activity'),
+    permissionStatus: text('permission_status'),
+    idempotencyKey: text('idempotency_key').notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('location_samples_idem_uidx').on(t.companyId, t.idempotencyKey),
+    index('location_samples_entity_time_idx').on(t.companyId, t.entityId, t.recordedAt),
+  ],
+)
+
+export const locationSessions = pgTable(
+  'location_sessions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    entityId: uuid('entity_id')
+      .notNull()
+      .references(() => liveEntities.id),
+    startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
+    endedAt: timestamp('ended_at', { withTimezone: true }),
+    platform: text('platform'),
+    deviceId: text('device_id'),
+    ...timestamps,
+  },
+  (t) => [index('location_sessions_company_idx').on(t.companyId, t.startedAt)],
+)
+
+export const liveGeofences = pgTable(
+  'live_geofences',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name').notNull(),
+    kind: text('kind').default('depo').notNull(),
+    shape: text('shape').default('circle').notNull(),
+    centerLat: numeric('center_lat', { precision: 10, scale: 7 }),
+    centerLng: numeric('center_lng', { precision: 10, scale: 7 }),
+    radiusMeters: integer('radius_meters'),
+    polygon: jsonb('polygon').$type<Array<{ lat: number; lng: number }>>().default([]),
+    autoArrive: boolean('auto_arrive').default(false).notNull(),
+    ...timestamps,
+  },
+  (t) => [index('live_geofences_company_idx').on(t.companyId)],
+)
+
+export const liveGeofenceEvents = pgTable(
+  'live_geofence_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    geofenceId: uuid('geofence_id')
+      .notNull()
+      .references(() => liveGeofences.id),
+    entityId: uuid('entity_id')
+      .notNull()
+      .references(() => liveEntities.id),
+    eventType: text('event_type').notNull(),
+    message: text('message'),
+    ...timestamps,
+  },
+  (t) => [index('live_geofence_events_company_idx').on(t.companyId, t.createdAt)],
+)
+
+export const liveRoutes = pgTable(
+  'live_routes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    name: text('name'),
+    entityId: uuid('entity_id').references(() => liveEntities.id),
+    distanceKm: numeric('distance_km', { precision: 10, scale: 2 }),
+    durationMin: integer('duration_min'),
+    geometry: jsonb('geometry').$type<number[][]>().default([]),
+    meta: jsonb('meta').$type<Record<string, unknown>>().default({}),
+    ...timestamps,
+  },
+  (t) => [index('live_routes_company_idx').on(t.companyId)],
+)
+
+export const liveRouteStops = pgTable(
+  'live_route_stops',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    routeId: uuid('route_id')
+      .notNull()
+      .references(() => liveRoutes.id),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    seq: integer('seq').notNull(),
+    label: text('label'),
+    latitude: numeric('latitude', { precision: 10, scale: 7 }),
+    longitude: numeric('longitude', { precision: 10, scale: 7 }),
+    ...timestamps,
+  },
+  (t) => [index('live_route_stops_route_idx').on(t.routeId, t.seq)],
+)
+
+export const liveTrackingTokens = pgTable(
+  'live_tracking_tokens',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id),
+    token: text('token').notNull(),
+    source: text('source').default('live').notNull(),
+    entityId: uuid('entity_id').references(() => liveEntities.id),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('live_tracking_tokens_token_uidx').on(t.token),
+    index('live_tracking_tokens_company_idx').on(t.companyId),
+  ],
+)
+
+export const mapboxUsageCounters = pgTable(
+  'mapbox_usage_counters',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    companyId: uuid('company_id').references(() => companies.id),
+    kind: text('kind').notNull(),
+    count: integer('count').default(0).notNull(),
+    day: text('day').notNull(),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('mapbox_usage_company_kind_day_uidx').on(t.companyId, t.kind, t.day)],
+)

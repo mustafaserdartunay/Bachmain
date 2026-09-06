@@ -1,5 +1,5 @@
 export const settingsSubMenus = [
-  { label: 'Yönetici Ayarları', path: '/ayarlar' },
+  { label: 'Harita & Konum', path: '/ayarlar/harita' },
   { label: 'AI Ayarları', path: '/ayarlar/ai' },
   { label: 'OpenAI', path: '/ayarlar/ai/openai' },
   { label: 'Kurumsal Yapı', path: '/ayarlar/kurumsal-yapi', moduleCode: 'multi_company' },
