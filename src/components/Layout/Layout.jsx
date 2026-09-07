@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import HeaderCashActionsPanel from './HeaderCashActionsPanel'
-import TeamHubPanel from './TeamHubPanel'
 import BottomNav from './BottomNav'
-import AppGuidedTour from '../Onboarding/AppGuidedTour'
 import { GUIDED_TOUR_SIDEBAR_EVENT } from '../Onboarding/guidedTourStorage'
+import AppErrorBoundary from '../Common/AppErrorBoundary'
+
+const TeamHubPanel = lazy(() => import('./TeamHubPanel'))
+const AppGuidedTour = lazy(() => import('../Onboarding/AppGuidedTour'))
 
 const SIDEBAR_KEY = 'bach-sidebar'
 const LEGACY_SIDEBAR_KEY = 'erlenbox-sidebar'
@@ -121,7 +123,9 @@ export default function Layout({ children }) {
   if (fullscreenWorkspace) {
     return (
       <div className="app-shell min-h-screen bg-[var(--ds-bg,var(--app-bg))]">
-        <main className="min-h-screen w-full overflow-auto p-0">{children}</main>
+        <main className="min-h-screen w-full overflow-auto p-0">
+          <AppErrorBoundary key={pathname}>{children}</AppErrorBoundary>
+        </main>
       </div>
     )
   }
@@ -150,12 +154,18 @@ export default function Layout({ children }) {
         {!hideChrome ? <Header onMenuClick={() => setMobileSidebarOpen(true)} /> : null}
         {!hideChrome ? <HeaderCashActionsPanel /> : null}
         <main className="app-responsive min-w-0 flex-1 overflow-x-hidden px-3 sm:px-4 lg:px-0">
-          {children}
+          <AppErrorBoundary key={pathname}>{children}</AppErrorBoundary>
         </main>
       </div>
-      <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
+      <Suspense fallback={null}>
+        <TeamHubPanel collapsed={teamHubCollapsed} onToggle={toggleTeamHub} />
+      </Suspense>
       {!hideChrome ? <BottomNav /> : null}
-      {!hideChrome ? <AppGuidedTour /> : null}
+      {!hideChrome ? (
+        <Suspense fallback={null}>
+          <AppGuidedTour />
+        </Suspense>
+      ) : null}
     </div>
   )
 }

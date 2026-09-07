@@ -199,6 +199,11 @@ export const VERSION_CHANGELOG = [
             detail:
               'Sevkiyat → LIVE: Mapbox canlı konum, geofence ve saha GPS. Token Ayarlar → Harita.',
           },
+          {
+            title: 'Daha hafif uygulama',
+            detail:
+              'Sayfalar ihtiyaç olunca yüklenir; Güncel Durum açık kalır, diğer ekranlar sekmeyi kilitlemez.',
+          },
         ],
       },
     ],

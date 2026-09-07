@@ -33,6 +33,16 @@ export function installChunkLoadRecovery() {
   window.addEventListener('unhandledrejection', (event) => {
     if (isStaleChunkError(event.reason)) reloadOnce()
   })
+
+  window.addEventListener('load', () => {
+    window.setTimeout(() => {
+      try {
+        sessionStorage.removeItem(CHUNK_RELOAD_KEY)
+      } catch {
+        /* ignore */
+      }
+    }, 4000)
+  })
 }
 
 export default class AppErrorBoundary extends Component {

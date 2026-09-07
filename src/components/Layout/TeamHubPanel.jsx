@@ -803,8 +803,12 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
         <SidebarAgendaHub collapsed={collapsed} />
       </div>
 
-      <HeaderNotebook hideTrigger sidebarAnchor />
-      <HeaderCalendar hideTrigger sidebarAnchor />
+      {!collapsed ? (
+        <>
+          <HeaderNotebook hideTrigger sidebarAnchor />
+          <HeaderCalendar hideTrigger sidebarAnchor />
+        </>
+      ) : null}
     </aside>
   )
 }

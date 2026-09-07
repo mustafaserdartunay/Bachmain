@@ -19,8 +19,8 @@ export const WORKSPACE_HYDRATED_EVENT = 'bach:workspace-hydrated'
 export const WORKSPACE_CLEARED_EVENT = 'bach:workspace-cleared'
 export const WORKSPACE_REMOTE_SYNC_EVENT = 'bach:workspace-remote-synced'
 
-const LIVE_PULL_VISIBLE_MS = 3000
-const LIVE_PULL_HIDDEN_MS = 15000
+const LIVE_PULL_VISIBLE_MS = 20000
+const LIVE_PULL_HIDDEN_MS = 60000
 const LIVE_PULL_IDE_MS = 60_000
 const SAFETY_FLUSH_MS = 60_000
 
@@ -160,12 +160,54 @@ function canSyncWithServer() {
   return true
 }
 
-function notifyLiveRefresh(reason = 'remote') {
+function notifyLiveRefresh(reason = 'remote', changedKeys = null) {
   window.dispatchEvent(new CustomEvent(WORKSPACE_HYDRATED_EVENT, { detail: { reason } }))
   window.dispatchEvent(new CustomEvent(WORKSPACE_REMOTE_SYNC_EVENT, { detail: { reason } }))
-  LIVE_REFRESH_EVENTS.forEach((name) => {
+  const events =
+    Array.isArray(changedKeys) && changedKeys.length > 0
+      ? eventsForChangedKeys(changedKeys)
+      : LIVE_REFRESH_EVENTS
+  events.forEach((name) => {
     window.dispatchEvent(new CustomEvent(name, { detail: { reason: 'workspace-live-sync' } }))
   })
+}
+
+const STORAGE_KEY_EVENTS = {
+  'erlenbox-created-customers': ['bach:customers-updated'],
+  'erlenbox-archived-customers': ['bach:customers-updated'],
+  'erlenbox-deleted-customers': ['bach:customers-updated', 'bach:deleted-records-updated'],
+  'erlenbox-customer-option-lists': ['bach:option-lists-updated'],
+  'erlenbox-customer-activity': ['bach:customer-meta-updated'],
+  'erlenbox-quotes': ['bach:quotes-updated'],
+  'erlenbox-orders': ['bach:orders-updated'],
+  'erlenbox-production': ['bach:production-updated'],
+  'erlenbox-depo': ['bach:depo-updated'],
+  'erlenbox-products': ['bach:products-updated'],
+  'erlenbox-personnel': ['bach:personnel-updated'],
+  'erlenbox-workflow-stages': ['bach:workflow-stages-updated'],
+  'erlenbox-company-settings': ['bach:sectoral-settings-updated'],
+  'erlenbox-deleted-records': ['bach:deleted-records-updated'],
+  'bach-crm-tasks': ['bach:crm-updated'],
+  'bach-crm-appointments': ['bach:crm-updated'],
+  'bach-crm-agenda-notes': ['bach:crm-updated'],
+  'bach-omni-conversations': ['bach:omni-updated'],
+  'bach-omni-messages': ['bach:omni-updated'],
+  'bach-logistics-vehicles': ['bach:logistics-updated'],
+  'bach-logistics-shipments': ['bach:logistics-updated'],
+  'bach-logistics-load-plans': ['bach:logistics-updated'],
+  'bach-sevkiyat-trips': ['bach:sevkiyat-updated'],
+  'bach-live-locations': ['bach:live-updated'],
+  'bach-live-geofences': ['bach:live-updated'],
+  'bach-live-routes': ['bach:live-updated'],
+}
+
+function eventsForChangedKeys(keys) {
+  const events = new Set()
+  keys.forEach((key) => {
+    const mapped = STORAGE_KEY_EVENTS[key]
+    if (mapped) mapped.forEach((name) => events.add(name))
+  })
+  return events
 }
 
 export function snapshotWorkspace() {
@@ -252,6 +294,7 @@ export function applyRemoteWorkspace(payload, { reason = 'pull', updatedAt = nul
 
   globalThis.__bachWorkspaceRestoring = true
   let changed = false
+  const changedKeys = []
   try {
     Object.entries(keys).forEach(([key, value]) => {
       if (!isWorkspaceKey(key) || typeof value !== 'string') return
@@ -259,6 +302,7 @@ export function applyRemoteWorkspace(payload, { reason = 'pull', updatedAt = nul
         if (localStorage.getItem(key) !== value) {
           localStorage.setItem(key, value)
           changed = true
+          changedKeys.push(key)
         }
       } catch {
         // quota / private mode
@@ -271,7 +315,7 @@ export function applyRemoteWorkspace(payload, { reason = 'pull', updatedAt = nul
     if (remoteSavedAt) globalThis.__bachLastAppliedSavedAt = remoteSavedAt
     if (updatedAt) globalThis.__bachLastRemoteUpdatedAt = updatedAt
 
-    if (changed) notifyLiveRefresh(reason)
+    if (changed) notifyLiveRefresh(reason, changedKeys)
     return changed
   } finally {
     globalThis.__bachWorkspaceRestoring = false
@@ -509,6 +553,7 @@ export function installWorkspaceAutoSync() {
   // Periodic safety flush while tab is open
   globalThis.__bachWorkspaceFlushTimer = setInterval(() => {
     if (!canSyncWithServer()) return
+    if (!globalThis.__bachWorkspacePendingSavedAt) return
     scheduleWorkspacePush(0)
   }, SAFETY_FLUSH_MS)
 

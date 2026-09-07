@@ -264,4 +264,17 @@ export default defineConfig({
     host: true,
     port: 4173,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined
+          if (id.includes('/lucide-react')) return 'lucide'
+          if (id.includes('/three') || id.includes('/@react-three')) return 'three'
+          if (id.includes('/jspdf') || id.includes('/html2canvas')) return 'pdf'
+          return undefined
+        },
+      },
+    },
+  },
 })
