@@ -1,6 +1,13 @@
 import { getCustomerProfiles, getArchivedCustomers } from '../data/customerProfiles'
 import { loadOrders, orderTotals } from './ordersStore'
-import { getTreasuryMovements, getCustomerLiveBalance, getCashTreasuryAccounts, getBankTreasuryAccounts, getChequeTreasuryAccounts, getTreasuryAccounts } from './treasuryStore'
+import {
+  getTreasuryMovements,
+  getCustomerLiveBalance,
+  getCashTreasuryAccounts,
+  getBankTreasuryAccounts,
+  getChequeTreasuryAccounts,
+  getTreasuryAccounts,
+} from './treasuryStore'
 import { loadQuotes } from './quotesStore'
 import { loadProductionJobs } from './productionStore'
 import { loadTasks, loadAppointments, loadAgendaNotes } from './crmStore'
@@ -9,7 +16,12 @@ import { loadDepoItems } from './depoStore'
 import { computeDepoLineTotals } from './depoHelpers'
 import { isDepoItemDelivered } from './depoStageHelpers'
 import { loadDepoWorkflowStages } from './depoWorkflowStages'
-import { getQuoteStageOptions, getOrderStageOptions, getProductionStageOptions, loadWorkflowStages } from './workflowStages'
+import {
+  getQuoteStageOptions,
+  getOrderStageOptions,
+  getProductionStageOptions,
+  loadWorkflowStages,
+} from './workflowStages'
 import { readLeads } from '../omnichannel/store'
 import { getCustomerMetaSelection, readCustomerMeta, SUPPLIER_TYPE_LABEL } from './customerMeta'
 import { documentTotals } from './documentTotals'
@@ -74,10 +86,16 @@ export function buildSalesPerformanceSeries(monthCount = 7) {
     const key = monthKey(date)
     const orderTotal = orders
       .filter((order) => parseMovementDate(order.createdAt || order.date)?.slice(0, 7) === key)
-      .reduce((sum, order) => sum + (Number(order.amount) || documentTotals(order).grandTotal || 0), 0)
+      .reduce(
+        (sum, order) => sum + (Number(order.amount) || documentTotals(order).grandTotal || 0),
+        0,
+      )
     const quoteTotal = quotes
       .filter((quote) => parseMovementDate(quote.createdAt || quote.date)?.slice(0, 7) === key)
-      .reduce((sum, quote) => sum + (Number(quote.amount) || documentTotals(quote).grandTotal || 0), 0)
+      .reduce(
+        (sum, quote) => sum + (Number(quote.amount) || documentTotals(quote).grandTotal || 0),
+        0,
+      )
 
     series.push({
       key,
@@ -92,7 +110,7 @@ export function buildSalesPerformanceSeries(monthCount = 7) {
 
 function buildSparkline(seed, direction = 1) {
   const points = []
-  let value = 38 + (seed * 5.5)
+  let value = 38 + seed * 5.5
   const waveA = 0.65 + (seed % 3) * 0.15
   const waveB = 1.1 + (seed % 4) * 0.2
   for (let index = 0; index < 16; index += 1) {
@@ -132,35 +150,43 @@ export function enrichFinanceCards(cards = []) {
       if (card.id === 'cash') return cashAccountIds.has(movement.accountId)
       if (card.id === 'bank') return bankAccountIds.has(movement.accountId)
       if (card.id === 'cheques') {
-        return chequeAccountIds.has(movement.accountId)
-          && movement.direction === 'in'
-          && (
-            String(movement.type || '').includes('Müşteri Tahsilatı')
-            || String(movement.type || '').includes('Çek Girişi')
-          )
+        return (
+          chequeAccountIds.has(movement.accountId) &&
+          movement.direction === 'in' &&
+          (String(movement.type || '').includes('Müşteri Tahsilatı') ||
+            String(movement.type || '').includes('Çek Girişi'))
+        )
       }
       if (card.id === 'promissory-notes') {
-        return chequeAccountIds.has(movement.accountId)
-          && movement.direction === 'in'
-          && String(movement.method || '').includes('Senet')
+        return (
+          chequeAccountIds.has(movement.accountId) &&
+          movement.direction === 'in' &&
+          String(movement.method || '').includes('Senet')
+        )
       }
       if (card.id === 'live-assets') {
-        return cashAccountIds.has(movement.accountId)
-          || bankAccountIds.has(movement.accountId)
-          || chequeAccountIds.has(movement.accountId)
+        return (
+          cashAccountIds.has(movement.accountId) ||
+          bankAccountIds.has(movement.accountId) ||
+          chequeAccountIds.has(movement.accountId)
+        )
       }
       if (card.id === 'future') {
         return type.includes('sipariş') || type.includes('üretim') || type.includes('uretim')
       }
       if (card.id === 'possible') {
-        return cashAccountIds.has(movement.accountId)
-          || bankAccountIds.has(movement.accountId)
-          || chequeAccountIds.has(movement.accountId)
-          || type.includes('sipariş')
-          || type.includes('üretim')
-          || type.includes('uretim')
+        return (
+          cashAccountIds.has(movement.accountId) ||
+          bankAccountIds.has(movement.accountId) ||
+          chequeAccountIds.has(movement.accountId) ||
+          type.includes('sipariş') ||
+          type.includes('üretim') ||
+          type.includes('uretim')
+        )
       }
-      return label.includes(type) || type.includes(String(card.label || '').toLocaleLowerCase('tr-TR'))
+      return (
+        label.includes(type) || type.includes(String(card.label || '').toLocaleLowerCase('tr-TR'))
+      )
     })
 
     const currentMonthTotal = relatedMovements
@@ -172,7 +198,9 @@ export function enrichFinanceCards(cards = []) {
 
     let changePercent = 0
     if (previousMonthTotal > 0) {
-      changePercent = Math.round(((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100)
+      changePercent = Math.round(
+        ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100,
+      )
     } else if (currentMonthTotal > 0) {
       changePercent = 100
     } else {
@@ -281,7 +309,13 @@ export const QUICK_ACTIONS = [
 ]
 
 const TERMINAL_STAGE_LABELS = new Set([
-  'Olumsuz', 'Reddedildi', 'İptal', 'Onaylandı', 'Sipariş Alındı', 'Üretime Alındı', 'Tamamlandı',
+  'Olumsuz',
+  'Reddedildi',
+  'İptal',
+  'Onaylandı',
+  'Sipariş Alındı',
+  'Üretime Alındı',
+  'Tamamlandı',
 ])
 const PENDING_STAGE_LABELS = new Set(['Taslak', 'Yeni Teklif', 'Bekliyor', 'Yeni', 'Beklemede'])
 
@@ -303,7 +337,12 @@ const PRODUCTION_CANCELLED_STATUSES = new Set(['İptal'])
 const PRODUCTION_CLOSED_LABELS = new Set(['Tamamlandı', 'Kapalı'])
 const PRODUCTION_CLOSED_STATUSES = new Set(['Tamamlandı'])
 const PRODUCTION_APPROVED_LABELS = new Set(['Onaylandı', 'Üretime Alındı', 'Üretimde'])
-const PRODUCTION_APPROVED_STATUSES = new Set(['Devam Ediyor', 'Üretimde', 'Kısmi Üretim', 'Kısmi Üretim Bitti'])
+const PRODUCTION_APPROVED_STATUSES = new Set([
+  'Devam Ediyor',
+  'Üretimde',
+  'Kısmi Üretim',
+  'Kısmi Üretim Bitti',
+])
 const PRODUCTION_PENDING_STATUSES = new Set(['Bekliyor'])
 
 function resolveDocumentAmount(document) {
@@ -372,10 +411,10 @@ function isOrderClosed(order, label) {
 function isOrderApproved(order, label) {
   if (ORDER_APPROVED_LABELS.has(label) || ORDER_APPROVED_STATUSES.has(order.status)) return true
   if (
-    order.status
-    && order.status !== 'Yeni'
-    && !ORDER_CANCELLED_STATUSES.has(order.status)
-    && !ORDER_CLOSED_STATUSES.has(order.status)
+    order.status &&
+    order.status !== 'Yeni' &&
+    !ORDER_CANCELLED_STATUSES.has(order.status) &&
+    !ORDER_CLOSED_STATUSES.has(order.status)
   ) {
     return true
   }
@@ -396,9 +435,15 @@ function isProductionClosed(job, label) {
 }
 
 function isProductionApproved(job, label, productionStages) {
-  if (PRODUCTION_APPROVED_LABELS.has(label) || PRODUCTION_APPROVED_STATUSES.has(job.status)) return true
+  if (PRODUCTION_APPROVED_LABELS.has(label) || PRODUCTION_APPROVED_STATUSES.has(job.status))
+    return true
   const firstStageId = productionStages[0]?.id
-  if (job.currentStageId && firstStageId && job.currentStageId !== firstStageId && !PRODUCTION_PENDING_STATUSES.has(job.status)) {
+  if (
+    job.currentStageId &&
+    firstStageId &&
+    job.currentStageId !== firstStageId &&
+    !PRODUCTION_PENDING_STATUSES.has(job.status)
+  ) {
     return true
   }
   return false
@@ -492,19 +537,18 @@ function classifyOrderStats() {
 function classifyCustomerStats() {
   const customerMeta = readCustomerMeta()
   const movements = getTreasuryMovements()
-  const isCustomer = (customer) => (
+  const profiles = getCustomerProfiles()
+  const isCustomer = (customer) =>
     getCustomerMetaSelection(customer, customerMeta[customer.id] || {}).type !== SUPPLIER_TYPE_LABEL
-  )
-  const pendingAmount = getCustomerProfiles()
-    .filter(isCustomer)
-    .reduce((sum, customer) => {
-      const balance = getCustomerLiveBalance(customer, movements)
-      return balance > 0 ? sum + balance : sum
-    }, 0)
+  const customers = profiles.filter(isCustomer)
+  const pendingAmount = customers.reduce((sum, customer) => {
+    const balance = getCustomerLiveBalance(customer, movements)
+    return balance > 0 ? sum + balance : sum
+  }, 0)
 
   return {
     pending: readLeads().length,
-    ongoing: getCustomerProfiles().filter(isCustomer).length,
+    ongoing: customers.length,
     completed: getArchivedCustomers().length,
     pendingAmount,
   }
@@ -512,9 +556,8 @@ function classifyCustomerStats() {
 
 function classifySupplierStats() {
   const customerMeta = readCustomerMeta()
-  const isSupplier = (customer) => (
+  const isSupplier = (customer) =>
     getCustomerMetaSelection(customer, customerMeta[customer.id] || {}).type === SUPPLIER_TYPE_LABEL
-  )
   const active = getCustomerProfiles().filter(isSupplier)
   const archived = getArchivedCustomers()
     .map((entry) => entry.customer)
@@ -525,7 +568,10 @@ function classifySupplierStats() {
     pending: pendingSuppliers.length,
     ongoing: active.length - pendingSuppliers.length,
     completed: archived.length,
-    pendingAmount: pendingSuppliers.reduce((sum, supplier) => sum + (Number(supplier.payableDueAmount) || 0), 0),
+    pendingAmount: pendingSuppliers.reduce(
+      (sum, supplier) => sum + (Number(supplier.payableDueAmount) || 0),
+      0,
+    ),
   }
 }
 
@@ -539,8 +585,7 @@ function classifyDepoStats() {
     else if (item.currentStageId === firstStageId) {
       stats.pending += 1
       stats.pendingAmount += amount
-    }
-    else {
+    } else {
       stats.ongoing += 1
       stats.pendingAmount += amount
     }
@@ -556,7 +601,9 @@ function classifyDeliveredStats() {
   return items.reduce((stats, item) => {
     if (!isDepoItemDelivered(item, stages)) return stats
     const amount = computeDepoLineTotals(item).gross
-    const deliveredAt = String(item.deliveredAt || item.updatedAt || item.completedAt || item.date || '').slice(0, 10)
+    const deliveredAt = String(
+      item.deliveredAt || item.updatedAt || item.completedAt || item.date || '',
+    ).slice(0, 10)
     stats.completed += 1
     stats.pendingAmount += amount
     if (deliveredAt >= today) stats.pending += 1
@@ -608,14 +655,54 @@ export function buildConfiguredQuickActionCards(layoutQuickActions = []) {
 
       const tone = config.tone || 'blue'
       const toneStyleMap = {
-        blue: { surface: 'from-blue-500/10 via-blue-50 to-white', border: 'border-blue-100 hover:border-blue-200', text: 'text-blue-700', chip: 'bg-blue-500/10 text-blue-700' },
-        emerald: { surface: 'from-emerald-500/10 via-emerald-50 to-white', border: 'border-emerald-100 hover:border-emerald-200', text: 'text-emerald-700', chip: 'bg-emerald-500/10 text-emerald-700' },
-        fuchsia: { surface: 'from-fuchsia-500/10 via-fuchsia-50 to-white', border: 'border-fuchsia-100 hover:border-fuchsia-200', text: 'text-fuchsia-700', chip: 'bg-fuchsia-500/10 text-fuchsia-700' },
-        cyan: { surface: 'from-cyan-500/10 via-cyan-50 to-white', border: 'border-cyan-100 hover:border-cyan-200', text: 'text-cyan-700', chip: 'bg-cyan-500/10 text-cyan-700' },
-        amber: { surface: 'from-amber-500/10 via-amber-50 to-white', border: 'border-amber-100 hover:border-amber-200', text: 'text-amber-700', chip: 'bg-amber-500/10 text-amber-700' },
-        orange: { surface: 'from-orange-500/10 via-orange-50 to-white', border: 'border-orange-100 hover:border-orange-200', text: 'text-orange-700', chip: 'bg-orange-500/10 text-orange-700' },
-        violet: { surface: 'from-violet-500/10 via-violet-50 to-white', border: 'border-violet-100 hover:border-violet-200', text: 'text-violet-700', chip: 'bg-violet-500/10 text-violet-700' },
-        teal: { surface: 'from-teal-500/10 via-teal-50 to-white', border: 'border-teal-100 hover:border-teal-200', text: 'text-teal-700', chip: 'bg-teal-500/10 text-teal-700' },
+        blue: {
+          surface: 'from-blue-500/10 via-blue-50 to-white',
+          border: 'border-blue-100 hover:border-blue-200',
+          text: 'text-blue-700',
+          chip: 'bg-blue-500/10 text-blue-700',
+        },
+        emerald: {
+          surface: 'from-emerald-500/10 via-emerald-50 to-white',
+          border: 'border-emerald-100 hover:border-emerald-200',
+          text: 'text-emerald-700',
+          chip: 'bg-emerald-500/10 text-emerald-700',
+        },
+        fuchsia: {
+          surface: 'from-fuchsia-500/10 via-fuchsia-50 to-white',
+          border: 'border-fuchsia-100 hover:border-fuchsia-200',
+          text: 'text-fuchsia-700',
+          chip: 'bg-fuchsia-500/10 text-fuchsia-700',
+        },
+        cyan: {
+          surface: 'from-cyan-500/10 via-cyan-50 to-white',
+          border: 'border-cyan-100 hover:border-cyan-200',
+          text: 'text-cyan-700',
+          chip: 'bg-cyan-500/10 text-cyan-700',
+        },
+        amber: {
+          surface: 'from-amber-500/10 via-amber-50 to-white',
+          border: 'border-amber-100 hover:border-amber-200',
+          text: 'text-amber-700',
+          chip: 'bg-amber-500/10 text-amber-700',
+        },
+        orange: {
+          surface: 'from-orange-500/10 via-orange-50 to-white',
+          border: 'border-orange-100 hover:border-orange-200',
+          text: 'text-orange-700',
+          chip: 'bg-orange-500/10 text-orange-700',
+        },
+        violet: {
+          surface: 'from-violet-500/10 via-violet-50 to-white',
+          border: 'border-violet-100 hover:border-violet-200',
+          text: 'text-violet-700',
+          chip: 'bg-violet-500/10 text-violet-700',
+        },
+        teal: {
+          surface: 'from-teal-500/10 via-teal-50 to-white',
+          border: 'border-teal-100 hover:border-teal-200',
+          text: 'text-teal-700',
+          chip: 'bg-teal-500/10 text-teal-700',
+        },
       }
       const toneStyles = toneStyleMap[tone] || toneStyleMap.blue
 
@@ -709,11 +796,14 @@ export function buildCrmActivitySummary() {
     },
   ]
 
-  const totals = categories.reduce((summary, category) => ({
-    new: summary.new + category.newCount,
-    ongoing: summary.ongoing + category.ongoingCount,
-    completed: summary.completed + category.completedCount,
-  }), { new: 0, ongoing: 0, completed: 0 })
+  const totals = categories.reduce(
+    (summary, category) => ({
+      new: summary.new + category.newCount,
+      ongoing: summary.ongoing + category.ongoingCount,
+      completed: summary.completed + category.completedCount,
+    }),
+    { new: 0, ongoing: 0, completed: 0 },
+  )
 
   const recentItems = [
     ...tasks.map((item) => ({
@@ -734,7 +824,11 @@ export function buildCrmActivitySummary() {
       href: '/crm/randevular',
       tone: 'blue',
       date: item.date || item.createdAt,
-      state: isAppointmentCompleted(item) ? 'completed' : isAppointmentOngoing(item) ? 'ongoing' : 'new',
+      state: isAppointmentCompleted(item)
+        ? 'completed'
+        : isAppointmentOngoing(item)
+          ? 'ongoing'
+          : 'new',
     })),
     ...notes.map((item) => ({
       id: item.id,

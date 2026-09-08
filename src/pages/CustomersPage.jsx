@@ -93,6 +93,7 @@ import {
   enableB2bAccess,
   getB2bAccess,
   getPortalUrl,
+  readB2bAccessMap,
 } from '../utils/b2bPortalStore'
 import { publishB2bPortal } from '../utils/platformAuth'
 import { customerSubMenus } from '../data/customerMenu'
@@ -325,9 +326,9 @@ export default function CustomersPage({
     scoring: 'Tümü',
     balance: 'Tümü',
   })
-  const [movements, setMovements] = useState(() => getTreasuryMovements())
-  const [customerProfiles, setCustomerProfiles] = useState(() => getCustomerProfiles())
-  const [customerSettings, setCustomerSettings] = useState(readCustomerMeta)
+  const [movements, setMovements] = useState([])
+  const [customerProfiles, setCustomerProfiles] = useState([])
+  const [customerSettings, setCustomerSettings] = useState({})
   const [optionLists, setOptionLists] = useState(() => readOptionLists())
   const [activeMenu, setActiveMenu] = useState(null)
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
@@ -338,13 +339,7 @@ export default function CustomersPage({
   const [b2bBusy, setB2bBusy] = useState(false)
   const [b2bNotice, setB2bNotice] = useState('')
   const [b2bError, setB2bError] = useState('')
-  const [b2bMap, setB2bMap] = useState(() => {
-    const map = {}
-    getCustomerProfiles().forEach((customer) => {
-      map[customer.id] = getB2bAccess(customer.id)
-    })
-    return map
-  })
+  const [b2bMap, setB2bMap] = useState({})
 
   function updateOptionList(field, nextOptions) {
     setOptionLists((current) => ({ ...current, [field]: nextOptions }))
@@ -360,9 +355,21 @@ export default function CustomersPage({
   }, [])
 
   useEffect(() => {
+    const loadList = () => {
+      setCustomerProfiles(getCustomerProfiles())
+      setCustomerSettings(readCustomerMeta())
+      setMovements(getTreasuryMovements())
+      setB2bMap(readB2bAccessMap())
+    }
+    const idle = window.setTimeout(loadList, 0)
+    return () => window.clearTimeout(idle)
+  }, [])
+
+  useEffect(() => {
     function refreshProfiles() {
       setCustomerProfiles(getCustomerProfiles())
       setCustomerSettings(readCustomerMeta())
+      setB2bMap(readB2bAccessMap())
     }
     window.addEventListener('bach:customers-updated', refreshProfiles)
     window.addEventListener('bach:customer-meta-updated', refreshProfiles)

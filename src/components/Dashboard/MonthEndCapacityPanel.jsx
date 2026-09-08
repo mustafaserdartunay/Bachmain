@@ -16,6 +16,7 @@ import { APP_SURFACE_PANEL_CLASS } from '../../utils/dashboardDesign'
 import { buildMonthEndPaymentCapacity } from '../../utils/monthEndPaymentCapacity'
 import { downloadMonthEndCapacityReport } from '../../utils/monthEndCapacityReport'
 import { RECURRING_PAYMENTS_EVENT } from '../../utils/recurringPaymentsStore'
+import { runWhenIdle } from '../../utils/idleWork'
 
 const STATUS_STYLES = {
   red: {
@@ -259,23 +260,21 @@ function OperationalCapacity({ operational, projected }) {
 }
 
 export default function MonthEndCapacityPanel() {
-  const [snapshot, setSnapshot] = useState(() => buildMonthEndPaymentCapacity())
+  const [snapshot, setSnapshot] = useState(null)
   const [reportBusy, setReportBusy] = useState(false)
 
   useEffect(() => {
     const refresh = () => setSnapshot(buildMonthEndPaymentCapacity())
+    const stopIdle = runWhenIdle(refresh, 700)
     REFRESH_EVENTS.forEach((event) => window.addEventListener(event, refresh))
-    window.addEventListener('storage', refresh)
-    const timer = window.setInterval(refresh, 60_000)
     return () => {
+      stopIdle()
       REFRESH_EVENTS.forEach((event) => window.removeEventListener(event, refresh))
-      window.removeEventListener('storage', refresh)
-      window.clearInterval(timer)
     }
   }, [])
 
   async function handleReport() {
-    if (reportBusy) return
+    if (reportBusy || !snapshot) return
     setReportBusy(true)
     try {
       await downloadMonthEndCapacityReport(snapshot)
@@ -284,6 +283,21 @@ export default function MonthEndCapacityPanel() {
     } finally {
       setReportBusy(false)
     }
+  }
+
+  if (!snapshot) {
+    return (
+      <section className={`${APP_SURFACE_PANEL_CLASS} overflow-hidden p-3.5`}>
+        <div className="mb-3 flex items-center gap-2">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          </span>
+          <p className="truncate text-sm font-black text-[var(--ink)]">Ay Sonu Nakit Dengesi</p>
+        </div>
+        <div className="h-24 rounded-2xl bg-white/35" />
+      </section>
+    )
   }
 
   return (

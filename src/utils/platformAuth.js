@@ -56,26 +56,41 @@ export function clearSession() {
   window.dispatchEvent(new CustomEvent('bachmain:auth-changed', { detail: { user: null } }))
 }
 
-async function authRequest(path, { method = 'GET', body } = {}) {
+async function authRequest(path, { method = 'GET', body, timeoutMs = 12000 } = {}) {
   const base = getPlatformApiBase()
   const { token } = getStoredSession()
-  const res = await fetch(`${base}/${path.replace(/^\//, '')}`, {
-    method,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const err = new Error(data.message || data.error || `HTTP_${res.status}`)
-    err.code = data.error
-    err.status = res.status
-    throw err
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+  const timer = controller && timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : null
+  try {
+    const res = await fetch(`${base}/${path.replace(/^\//, '')}`, {
+      method,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller?.signal,
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      const err = new Error(data.message || data.error || `HTTP_${res.status}`)
+      err.code = data.error
+      err.status = res.status
+      throw err
+    }
+    return data
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      const err = new Error('AUTH_TIMEOUT')
+      err.code = 'AUTH_TIMEOUT'
+      err.status = 408
+      throw err
+    }
+    throw error
+  } finally {
+    if (timer) clearTimeout(timer)
   }
-  return data
 }
 
 export async function submitSupportTicket(payload) {

@@ -25,6 +25,7 @@ import {
   buildCrmActivitySummary,
   enrichFinanceCards,
   formatQuickActionAmount,
+  QUICK_ACTIONS,
 } from '../../utils/dashboardModernData'
 import {
   DASHBOARD_FINANCE_CARDS_EVENT,
@@ -51,6 +52,7 @@ import {
 } from '../../utils/dashboardDesign'
 import MonthEndCapacityPanel from './MonthEndCapacityPanel'
 import WebStudioDashboardPanels from '../web/WebStudioDashboardPanels'
+import { runWhenIdle } from '../../utils/idleWork'
 
 const FINANCE_METRIC_COLORS = {
   cash: { text: 'text-emerald-600', stroke: '#10b981' },
@@ -182,11 +184,18 @@ const CRM_METRIC_STAT_LABELS = ['Yeni', 'Devam', 'Biten']
 
 function collectDashboardMetricStatLabels(quickActions = []) {
   const labels = new Set(CRM_METRIC_STAT_LABELS)
-  buildConfiguredQuickActionCards(quickActions).forEach((action) => {
-    labels.add(action.statLabels?.pending || 'Bekleyen')
-    labels.add(action.statLabels?.ongoing || 'İşleme Alındı')
-    labels.add(action.statLabels?.completed || 'Bitti')
-  })
+  const processIds = new Set(['quote', 'order', 'production', 'depo', 'delivered'])
+  const byId = new Map(QUICK_ACTIONS.map((action) => [action.id, action]))
+  const source = Array.isArray(quickActions) && quickActions.length ? quickActions : QUICK_ACTIONS
+  source
+    .filter((action) => action.visible !== false && (processIds.has(action.id) || action.isCustom))
+    .slice(0, 5)
+    .forEach((action) => {
+      const base = byId.get(action.id)
+      labels.add(action.statLabels?.pending || base?.statLabels?.pending || 'Bekleyen')
+      labels.add(action.statLabels?.ongoing || base?.statLabels?.ongoing || 'İşleme Alındı')
+      labels.add(action.statLabels?.completed || base?.statLabels?.completed || 'Bitti')
+    })
   return [...labels]
 }
 
@@ -382,6 +391,7 @@ function ActivationRowAccent({ item }) {
 
 function ModernTimeline({ className = '' }) {
   const [revision, setRevision] = useState(0)
+  const [items, setItems] = useState([])
 
   useEffect(() => {
     function refresh() {
@@ -397,9 +407,16 @@ function ModernTimeline({ className = '' }) {
     }
   }, [])
 
-  void revision
-
-  const items = getPaymentActionTimeline()
+  useEffect(() => {
+    let cancelled = false
+    const stopIdle = runWhenIdle(() => {
+      if (!cancelled) setItems(getPaymentActionTimeline())
+    }, 900)
+    return () => {
+      cancelled = true
+      stopIdle()
+    }
+  }, [revision])
 
   return (
     <section className={`glass flex h-full min-h-0 flex-col px-4 py-3 ${className}`}>
@@ -608,14 +625,21 @@ function CustomDashboardBlocks({ blocks = [] }) {
 
 function QuickActionsPanel({ quickActions = [], className = '' }) {
   const [tick, setTick] = useState(0)
+  const [ready, setReady] = useState(false)
   const processIds = new Set(['quote', 'order', 'production', 'depo', 'delivered'])
   const actions = useMemo(
     () =>
-      buildConfiguredQuickActionCards(quickActions)
-        .filter((action) => processIds.has(action.id) || action.isCustom)
-        .slice(0, 5),
-    [quickActions, tick],
+      ready
+        ? buildConfiguredQuickActionCards(quickActions)
+            .filter((action) => processIds.has(action.id) || action.isCustom)
+            .slice(0, 5)
+        : [],
+    [quickActions, tick, ready],
   )
+
+  useEffect(() => {
+    return runWhenIdle(() => setReady(true), 1000)
+  }, [])
 
   useEffect(() => {
     const events = [
@@ -659,7 +683,15 @@ function QuickActionsPanel({ quickActions = [], className = '' }) {
 
 function CrmActivityPanel({ className = '' }) {
   const [tick, setTick] = useState(0)
-  const summary = useMemo(() => buildCrmActivitySummary(), [tick])
+  const [ready, setReady] = useState(false)
+  const summary = useMemo(
+    () => (ready ? buildCrmActivitySummary() : { categories: [] }),
+    [tick, ready],
+  )
+
+  useEffect(() => {
+    return runWhenIdle(() => setReady(true), 1200)
+  }, [])
 
   useEffect(() => {
     const refresh = () => setTick((value) => value + 1)

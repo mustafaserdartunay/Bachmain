@@ -79,6 +79,23 @@ function syncLocalProfile(user) {
   }
 }
 
+function usersLookSame(a, b) {
+  if (a === b) return true
+  if (!a || !b) return false
+  return (
+    a.id === b.id &&
+    a.status === b.status &&
+    a.subscriptionStatus === b.subscriptionStatus &&
+    a.licenseExpiry === b.licenseExpiry &&
+    a.plan === b.plan &&
+    a.planCode === b.planCode &&
+    a.onboardingCompleted === b.onboardingCompleted &&
+    a.tenantCode === b.tenantCode &&
+    a.fullName === b.fullName &&
+    String(a.entitlements || '') === String(b.entitlements || '')
+  )
+}
+
 async function activateWorkspace(user) {
   if (!user) return
   await bindUserWorkspace(user)
@@ -141,10 +158,10 @@ export function AuthProvider({ children }) {
         persistSession({ token: LOCAL_DEV_TOKEN, user: LOCAL_DEV_USER })
         if (!cancelled) {
           setUser(LOCAL_DEV_USER)
-          await activateWorkspace(LOCAL_DEV_USER)
           setLoading(false)
           setBootstrapped(true)
         }
+        void activateWorkspace(LOCAL_DEV_USER)
         return
       }
 
@@ -156,33 +173,36 @@ export function AuthProvider({ children }) {
         }
         return
       }
-      if (!cancelled) setLoading(true)
+
+      // Cached session: paint CRM immediately. Workspace JSON must not block routes.
+      if (cached && !cancelled) {
+        setUser(cached)
+        setLoading(false)
+        setBootstrapped(true)
+        void activateWorkspace(cached)
+      } else if (!cancelled) {
+        setLoading(true)
+      }
+
       try {
         if (token === LOCAL_DEV_TOKEN) {
           if (!cancelled) {
             setUser(cached || LOCAL_DEV_USER)
-            await activateWorkspace(cached || LOCAL_DEV_USER)
+            void activateWorkspace(cached || LOCAL_DEV_USER)
           }
         } else {
           const next = await fetchCurrentUser()
           if (!cancelled) {
             setUser(next)
-            try {
-              await activateWorkspace(next)
-            } catch (workspaceError) {
-              // Workspace sync must not undo a valid login.
+            void activateWorkspace(next).catch((workspaceError) => {
               console.warn('[auth] workspace activate failed', workspaceError)
-            }
+            })
           }
         }
       } catch (error) {
         if (cached && !cancelled) {
           setUser(cached)
-          try {
-            await activateWorkspace(cached)
-          } catch {
-            /* ignore */
-          }
+          void activateWorkspace(cached)
         } else if (arrivedViaHandoff && !cancelled) {
           // Fresh SSO handoff: keep the token and retry once before giving up.
           try {
@@ -190,11 +210,7 @@ export function AuthProvider({ children }) {
             const retry = await fetchCurrentUser()
             if (!cancelled && retry) {
               setUser(retry)
-              try {
-                await activateWorkspace(retry)
-              } catch {
-                /* ignore */
-              }
+              void activateWorkspace(retry)
               return
             }
           } catch {
@@ -225,7 +241,10 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    const onChange = (event) => setUser(event.detail?.user || null)
+    const onChange = (event) => {
+      const next = event.detail?.user || null
+      setUser((current) => (usersLookSame(current, next) ? current : next))
+    }
     window.addEventListener('bachmain:auth-changed', onChange)
     return () => window.removeEventListener('bachmain:auth-changed', onChange)
   }, [])
@@ -237,7 +256,7 @@ export function AuthProvider({ children }) {
     const tick = async () => {
       try {
         const next = await fetchCurrentUser()
-        setUser(next)
+        setUser((current) => (usersLookSame(current, next) ? current : next))
       } catch {
         /* ignore poll errors */
       }

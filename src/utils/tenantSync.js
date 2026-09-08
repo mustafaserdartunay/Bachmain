@@ -20,26 +20,42 @@ const pushChains = new Map()
 /** Latest payload (or factory) waiting to be sent for each collection. */
 const latestPayloads = new Map()
 
-async function tenantFetch(path, { method = 'GET', body } = {}) {
+async function tenantFetch(path, { method = 'GET', body, timeoutMs } = {}) {
   const { token } = getStoredSession()
   if (!token) throw new Error('Oturum yok')
-  const res = await fetch(`${API_BASE}/tenant/${path}`, {
-    method,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: body ? JSON.stringify({ payload: body }) : undefined,
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const err = new Error(data.message || data.error || 'Tenant sync failed')
-    err.code = data.error
-    err.status = res.status
-    throw err
+  const ms = timeoutMs ?? (method === 'GET' ? 10000 : 25000)
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+  const timer = controller ? setTimeout(() => controller.abort(), ms) : null
+  try {
+    const res = await fetch(`${API_BASE}/tenant/${path}`, {
+      method,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: body ? JSON.stringify({ payload: body }) : undefined,
+      signal: controller?.signal,
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      const err = new Error(data.message || data.error || 'Tenant sync failed')
+      err.code = data.error
+      err.status = res.status
+      throw err
+    }
+    return data
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      const err = new Error('TENANT_TIMEOUT')
+      err.code = 'TENANT_TIMEOUT'
+      err.status = 408
+      throw err
+    }
+    throw error
+  } finally {
+    if (timer) clearTimeout(timer)
   }
-  return data
 }
 
 export function isTenantPushBusy(collection) {
