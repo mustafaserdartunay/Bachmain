@@ -3336,8 +3336,13 @@ html.cine-home .home-page-orbs {
 }
 
 .site-nav-cine .nav-cta-home {
-  background: rgba(255, 255, 255, 0.96);
-  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.36);
+  box-shadow: none;
+}
+.site-nav-cine .nav-cta-home:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .site-nav-cine .nav-cta-demo {
