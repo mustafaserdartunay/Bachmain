@@ -1,4 +1,5 @@
 import { findCustomerProfileByReference } from '../data/customerProfiles'
+import { readCachedJson } from './storageCache'
 import { stageColors } from '../components/DocumentEditor/stageColors'
 
 export const CUSTOMER_META_KEY = 'erlenbox-customer-list-settings'
@@ -196,12 +197,8 @@ export function getOptionLabels(field) {
 }
 
 export function readCustomerMeta() {
-  try {
-    const saved = localStorage.getItem(CUSTOMER_META_KEY)
-    return saved ? JSON.parse(saved) : {}
-  } catch {
-    return {}
-  }
+  const parsed = readCachedJson(CUSTOMER_META_KEY, {})
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
 }
 
 export function getDefaultCustomerType(customer) {

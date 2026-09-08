@@ -18,6 +18,7 @@ import {
   restoreDeletedRecord,
   softDeleteRecord,
 } from './deletedRecordsStore'
+import { readCachedJson, writeCachedJson } from './storageCache'
 
 const DELETED_COLLECTION = 'depo'
 
@@ -32,17 +33,11 @@ function nowStamp() {
 }
 
 function readRaw() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
+  return readCachedJson(STORAGE_KEY, null)
 }
 
 function writeRaw(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  writeCachedJson(STORAGE_KEY, data)
   window.dispatchEvent(new CustomEvent('bach:depo-updated'))
 }
 

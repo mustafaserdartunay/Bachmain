@@ -11,6 +11,7 @@ import {
   adminRestorePurgedRecord,
 } from '../utils/deletedRecordsStore'
 import { filterByOrgScope, getActiveOrgScope, withOrgScope } from '../utils/orgScope'
+import { readCachedJson, writeCachedJson } from '../utils/storageCache'
 
 const CREATED_CUSTOMERS_KEY = 'erlenbox-created-customers'
 
@@ -21,26 +22,17 @@ const DELETED_CUSTOMERS_KEY = 'erlenbox-deleted-customers'
 const DELETED_COLLECTION = 'customers'
 
 function readCreatedCustomers() {
-  try {
-    const saved = localStorage.getItem(CREATED_CUSTOMERS_KEY)
-    const parsed = saved ? JSON.parse(saved) : []
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
+  const parsed = readCachedJson(CREATED_CUSTOMERS_KEY, [])
+  return Array.isArray(parsed) ? parsed : []
 }
 
 function writeCreatedCustomers(profiles) {
-  localStorage.setItem(CREATED_CUSTOMERS_KEY, JSON.stringify(profiles))
+  writeCachedJson(CREATED_CUSTOMERS_KEY, profiles)
 }
 
 function readArchivedMap() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(ARCHIVED_CUSTOMERS_KEY) || '{}')
-    return parsed && typeof parsed === 'object' ? parsed : {}
-  } catch {
-    return {}
-  }
+  const parsed = readCachedJson(ARCHIVED_CUSTOMERS_KEY, {})
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
 }
 
 function writeArchivedMap(map) {

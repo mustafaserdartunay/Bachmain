@@ -22,8 +22,7 @@ import {
   X,
 } from 'lucide-react'
 import ModernDashboard from '../components/Dashboard/ModernDashboard'
-import { buildFinanceMetricCards } from '../components/Dashboard/StatusAnalysisBoard'
-import { DASHBOARD_FINANCE_CARDS_EVENT } from '../utils/dashboardFinanceCards'
+import { loadDashboardFinanceCards } from '../utils/dashboardFinanceCards'
 import { formatCurrency } from '../utils/dashboardAlerts'
 import { loadOrders } from '../utils/ordersStore'
 import { documentTotals } from '../utils/documentTotals'
@@ -48,9 +47,7 @@ import {
   buildTaxDashboardSummary,
   readTaxVatSettings,
   splitGrossAmount,
-  TAX_VAT_SETTINGS_EVENT,
 } from '../utils/taxVatSettingsStore'
-import { runWhenIdle } from '../utils/idleWork'
 
 const processToneMap = {
   quote: {
@@ -873,76 +870,31 @@ function DashboardNotesPanel({ entries, onSubmit, onDelete, onReorder, onToggleC
   )
 }
 
+const EMPTY_TAX_ANALYTICS = { rows: [], net: 0, vat: 0, total: 0 }
+
 export default function DashboardPage({ studioMode = false }) {
   const [taxDetail, setTaxDetail] = useState(null)
-  const [financeTick, setFinanceTick] = useState(0)
-  const [taxSettingsTick, setTaxSettingsTick] = useState(0)
-  const [metricsReady, setMetricsReady] = useState(false)
-
-  useEffect(() => {
-    return runWhenIdle(() => setMetricsReady(true), 400)
-  }, [])
-
-  const financeCards = useMemo(
-    () => (metricsReady ? buildFinanceMetricCards() : []),
-    [financeTick, metricsReady],
-  )
-  const issuedInvoiceAnalytics = useMemo(
-    () =>
-      metricsReady
-        ? buildIssuedInvoiceAnalytics(loadOrders(), loadDepoItems())
-        : { rows: [], net: 0, vat: 0, total: 0 },
-    [financeTick, taxSettingsTick, metricsReady],
-  )
-  const supplierPurchaseAnalytics = useMemo(
-    () =>
-      metricsReady ? buildSupplierPurchaseAnalytics() : { rows: [], net: 0, vat: 0, total: 0 },
-    [financeTick, taxSettingsTick, metricsReady],
-  )
-  const taxSettings = useMemo(() => readTaxVatSettings(), [taxSettingsTick])
+  const financeCards = useMemo(() => loadDashboardFinanceCards(), [])
+  const taxSettings = useMemo(() => readTaxVatSettings(), [])
   const taxSummary = useMemo(
-    () => buildTaxDashboardSummary(issuedInvoiceAnalytics, supplierPurchaseAnalytics, taxSettings),
-    [issuedInvoiceAnalytics, supplierPurchaseAnalytics, taxSettings],
+    () => buildTaxDashboardSummary(EMPTY_TAX_ANALYTICS, EMPTY_TAX_ANALYTICS, taxSettings),
+    [taxSettings],
   )
-
-  useEffect(() => {
-    function refreshFinanceCards() {
-      setFinanceTick((current) => current + 1)
-    }
-    function refreshTaxSettings() {
-      setTaxSettingsTick((current) => current + 1)
-    }
-    const events = [
-      DASHBOARD_FINANCE_CARDS_EVENT,
-      'erlenbox:treasury-updated',
-      'bach:customers-updated',
-      'bach:customer-meta-updated',
-      'bachmain:org-scope-changed',
-      'bach:org-context-changed',
-      TAX_VAT_SETTINGS_EVENT,
-    ]
-    events.forEach((event) => window.addEventListener(event, refreshFinanceCards))
-    window.addEventListener(TAX_VAT_SETTINGS_EVENT, refreshTaxSettings)
-    return () => {
-      events.forEach((event) => window.removeEventListener(event, refreshFinanceCards))
-      window.removeEventListener(TAX_VAT_SETTINGS_EVENT, refreshTaxSettings)
-    }
-  }, [])
 
   return (
     <>
       <ModernDashboard
         studioMode={studioMode}
         financeCards={financeCards}
-        issuedInvoiceAnalytics={issuedInvoiceAnalytics}
-        supplierPurchaseAnalytics={supplierPurchaseAnalytics}
+        issuedInvoiceAnalytics={EMPTY_TAX_ANALYTICS}
+        supplierPurchaseAnalytics={EMPTY_TAX_ANALYTICS}
         estimatedVatDue={taxSummary.payableVat}
         estimatedIncomeTaxDue={taxSummary.incomeTax}
         onOpenIssuedTax={() =>
-          setTaxDetail({ title: 'Kesilen Faturalar Detayı', data: issuedInvoiceAnalytics })
+          setTaxDetail({ title: 'Kesilen Faturalar Detayı', data: EMPTY_TAX_ANALYTICS })
         }
         onOpenSupplierTax={() =>
-          setTaxDetail({ title: 'Tedarikçi Alışları Detayı', data: supplierPurchaseAnalytics })
+          setTaxDetail({ title: 'Tedarikçi Alışları Detayı', data: EMPTY_TAX_ANALYTICS })
         }
       />
       <TaxDetailModal

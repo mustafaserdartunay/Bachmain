@@ -13,7 +13,7 @@ import {
   cancelScheduledTenantPush,
 } from './tenantSync'
 import { isIdeWebview } from './ideWebview'
-import { runWhenIdle } from './idleWork'
+import { invalidateStorageCache } from './storageCache'
 
 export const WORKSPACE_OWNER_KEY = 'bach-workspace-owner'
 export const WORKSPACE_HYDRATED_EVENT = 'bach:workspace-hydrated'
@@ -21,10 +21,11 @@ export const WORKSPACE_CLEARED_EVENT = 'bach:workspace-cleared'
 export const WORKSPACE_REMOTE_SYNC_EVENT = 'bach:workspace-remote-synced'
 const WORKSPACE_APPLIED_AT_KEY = 'bach-workspace-applied-at'
 
-const LIVE_PULL_VISIBLE_MS = 20000
-const LIVE_PULL_HIDDEN_MS = 60000
-const LIVE_PULL_IDE_MS = 60_000
-const SAFETY_FLUSH_MS = 60_000
+const LIVE_PULL_VISIBLE_MS = 90_000
+const LIVE_PULL_HIDDEN_MS = 180_000
+const LIVE_PULL_IDE_MS = 180_000
+const SAFETY_FLUSH_MS = 120_000
+const PUSH_DEBOUNCE_MS = 3_000
 
 /** Auth / control keys — never part of tenant workspace blob. */
 const EXCLUDED_KEYS = new Set([
@@ -248,7 +249,40 @@ function eventsForChangedKeys(keys) {
   return events
 }
 
+function workspaceMirror() {
+  if (!globalThis.__bachWorkspaceMirror) globalThis.__bachWorkspaceMirror = Object.create(null)
+  return globalThis.__bachWorkspaceMirror
+}
+
+function updateWorkspaceMirror(key, value) {
+  const mirror = workspaceMirror()
+  if (value == null) delete mirror[key]
+  else mirror[key] = value
+}
+
+function rebuildWorkspaceMirrorFromStorage() {
+  const mirror = Object.create(null)
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i)
+      if (!isWorkspaceKey(key)) continue
+      mirror[key] = localStorage.getItem(key)
+    }
+  } catch {
+    // storage unavailable
+  }
+  globalThis.__bachWorkspaceMirror = mirror
+  return mirror
+}
+
+function noteWorkspaceInteract() {
+  globalThis.__bachLastInteractAt = Date.now()
+}
+
 export function countWorkspaceKeys() {
+  if (globalThis.__bachWorkspaceMirror) {
+    return Object.keys(globalThis.__bachWorkspaceMirror).length
+  }
   let count = 0
   try {
     for (let i = 0; i < localStorage.length; i += 1) {
@@ -262,16 +296,7 @@ export function countWorkspaceKeys() {
 }
 
 export function snapshotWorkspace() {
-  const keys = {}
-  try {
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i)
-      if (!isWorkspaceKey(key)) continue
-      keys[key] = localStorage.getItem(key)
-    }
-  } catch {
-    // storage unavailable
-  }
+  const keys = { ...(globalThis.__bachWorkspaceMirror || rebuildWorkspaceMirrorFromStorage()) }
   return {
     version: 1,
     savedAt: new Date().toISOString(),
@@ -289,6 +314,8 @@ export function clearWorkspaceStorage({ silent = false } = {}) {
     toRemove.forEach((key) => localStorage.removeItem(key))
     SESSION_KEYS.forEach((key) => sessionStorage.removeItem(key))
     deleteProductMediaDb()
+    globalThis.__bachWorkspaceMirror = Object.create(null)
+    invalidateStorageCache()
     if (!silent) window.dispatchEvent(new CustomEvent(WORKSPACE_CLEARED_EVENT))
   } catch {
     // ignore
@@ -305,10 +332,12 @@ export function restoreWorkspace(payload) {
       if (!isWorkspaceKey(key) || typeof value !== 'string') return
       try {
         localStorage.setItem(key, value)
+        updateWorkspaceMirror(key, value)
       } catch {
         // quota / private mode
       }
     })
+    invalidateStorageCache()
     if (payload?.savedAt) writeAppliedStamp(payload.savedAt)
     window.dispatchEvent(
       new CustomEvent(WORKSPACE_HYDRATED_EVENT, { detail: { reason: 'restore' } }),
@@ -352,6 +381,8 @@ export function applyRemoteWorkspace(payload, { reason = 'pull', updatedAt = nul
       try {
         if (localStorage.getItem(key) !== value) {
           localStorage.setItem(key, value)
+          updateWorkspaceMirror(key, value)
+          invalidateStorageCache(key)
           changed = true
           changedKeys.push(key)
         }
@@ -413,13 +444,24 @@ export async function bindUserWorkspace(user) {
   void hydrateTenantWorkspace({ ownerChanged })
 }
 
+async function stampWorkspaceMetaOnly() {
+  try {
+    const meta = await pullTenantCollectionMeta('workspace')
+    if (meta?.savedAt) writeAppliedStamp(meta.savedAt)
+    if (meta?.updatedAt) globalThis.__bachLastRemoteUpdatedAt = meta.updatedAt
+  } catch (err) {
+    if (err?.code === 'DATABASE_REQUIRED' || err?.status === 503 || err?.status === 401) return
+    console.warn('[workspace] meta stamp failed', err?.message || err)
+  }
+}
+
 export async function hydrateTenantWorkspace({ ownerChanged = false } = {}) {
   try {
     globalThis.__bachLastAppliedSavedAt = readAppliedStamp()
     const localCount = countWorkspaceKeys()
     if (!ownerChanged && localCount > 0) {
-      // Meta is small. Full workspace GET is deferred unless remote is newer.
-      await pullWorkspaceIfRemoteNewer()
+      // Returning tab already has CRM rows. Full workspace GET/parse locks the UI.
+      await stampWorkspaceMetaOnly()
       return
     }
 
@@ -434,14 +476,9 @@ export async function hydrateTenantWorkspace({ ownerChanged = false } = {}) {
         if (payload.savedAt) writeAppliedStamp(payload.savedAt)
         return
       }
-      await new Promise((resolve) => {
-        runWhenIdle(() => {
-          restoreWorkspace(payload)
-          rememberPushedKeys(payload.keys)
-          notifyLiveRefresh('hydrate', [])
-          resolve()
-        }, 800)
-      })
+      restoreWorkspace(payload)
+      rememberPushedKeys(payload.keys)
+      notifyLiveRefresh('hydrate', [])
       return
     }
 
@@ -495,9 +532,13 @@ export async function flushWorkspaceNow() {
   }
 }
 
-export function scheduleWorkspacePush(delayMs = 800) {
-  // Snapshot at flush time so debounced pushes include the latest local writes.
+export function scheduleWorkspacePush(delayMs = PUSH_DEBOUNCE_MS) {
+  const wait = delayMs === 0 ? 0 : Math.max(delayMs, PUSH_DEBOUNCE_MS)
   const buildSnap = () => {
+    if (wait > 0 && Date.now() - (globalThis.__bachLastInteractAt || 0) < 1000) {
+      scheduleWorkspacePush(1500)
+      return null
+    }
     const snap = snapshotWorkspace()
     if (workspaceKeysEqual(snap.keys, globalThis.__bachLastPushedKeys)) {
       return null
@@ -505,8 +546,7 @@ export function scheduleWorkspacePush(delayMs = 800) {
     globalThis.__bachWorkspacePendingSavedAt = snap.savedAt
     return snap
   }
-  if (delayMs === 0 && !buildSnap()) return
-  scheduleTenantPush('workspace', buildSnap, delayMs)
+  scheduleTenantPush('workspace', buildSnap, wait)
 }
 
 async function pullWorkspaceIfRemoteNewer() {
@@ -544,15 +584,9 @@ async function pullWorkspaceIfRemoteNewer() {
     if (remoteSavedAt && lastSaved && remoteSavedAt === lastSaved) return false
     if (!remoteUpdatedAt && !remoteSavedAt) return false
 
-    // Returning browser already has CRM rows. Parsing the full tenant blob here
-    // is the open-tab lock. Stamp the meta clock; a later savedAt change pulls.
     const localCount = countWorkspaceKeys()
-    if (!lastSaved && localCount > 0) {
+    if (localCount > 0) {
       if (remoteSavedAt) writeAppliedStamp(remoteSavedAt)
-      if (remoteUpdatedAt) globalThis.__bachLastRemoteUpdatedAt = remoteUpdatedAt
-      return false
-    }
-    if (localCount > 0 && lastSaved && remoteSavedAt && remoteSavedAt <= lastSaved) {
       if (remoteUpdatedAt) globalThis.__bachLastRemoteUpdatedAt = remoteUpdatedAt
       return false
     }
@@ -562,15 +596,9 @@ async function pullWorkspaceIfRemoteNewer() {
       if (remoteUpdatedAt) globalThis.__bachLastRemoteUpdatedAt = remoteUpdatedAt
       return false
     }
-    return new Promise((resolve) => {
-      runWhenIdle(() => {
-        resolve(
-          applyRemoteWorkspace(payload, {
-            reason: 'live-pull',
-            updatedAt: remoteUpdatedAt,
-          }),
-        )
-      }, 800)
+    return applyRemoteWorkspace(payload, {
+      reason: 'live-pull',
+      updatedAt: remoteUpdatedAt,
     })
   } catch (err) {
     if (err?.code === 'DATABASE_REQUIRED' || err?.status === 503 || err?.status === 401) {
@@ -649,17 +677,24 @@ function installWorkspaceLiveSync() {
 export function installWorkspaceAutoSync() {
   if (typeof window === 'undefined' || globalThis.__bachWorkspaceSyncInstalled) return
   globalThis.__bachWorkspaceSyncInstalled = true
+  rebuildWorkspaceMirrorFromStorage()
+  window.addEventListener('pointerdown', noteWorkspaceInteract, true)
+  window.addEventListener('keydown', noteWorkspaceInteract, true)
 
   const originalSetItem = localStorage.setItem.bind(localStorage)
   localStorage.setItem = (key, value) => {
     originalSetItem(key, value)
-    if (isWorkspaceKey(key) && !globalThis.__bachWorkspaceRestoring) scheduleWorkspacePush()
+    if (!isWorkspaceKey(key)) return
+    updateWorkspaceMirror(key, value)
+    if (!globalThis.__bachWorkspaceRestoring) scheduleWorkspacePush()
   }
 
   const originalRemoveItem = localStorage.removeItem.bind(localStorage)
   localStorage.removeItem = (key) => {
     originalRemoveItem(key)
-    if (isWorkspaceKey(key) && !globalThis.__bachWorkspaceRestoring) scheduleWorkspacePush()
+    if (!isWorkspaceKey(key)) return
+    updateWorkspaceMirror(key, null)
+    if (!globalThis.__bachWorkspaceRestoring) scheduleWorkspacePush()
   }
 
   window.addEventListener('bach:company-read-only-write-blocked', () => {

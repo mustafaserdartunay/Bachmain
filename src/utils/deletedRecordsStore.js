@@ -5,32 +5,26 @@
  * "Kalıcı sil" kullanıcıya geri getirilemez görünür; kayıt `erlenbox-purged-records`
  * kasasına alınır — teknik destek / yönetim tarafı geri getirebilir.
  */
+import { readCachedJson, writeCachedJson } from './storageCache'
+
 const STORAGE_KEY = 'erlenbox-deleted-records'
 const PURGED_STORAGE_KEY = 'erlenbox-purged-records'
 export const DELETED_RECORDS_EVENT = 'bach:deleted-records-updated'
 export const PURGED_RECORDS_EVENT = 'bach:purged-records-updated'
 
 function readAll() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
-  } catch {
-    return {}
-  }
+  const parsed = readCachedJson(STORAGE_KEY, {})
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
 }
 
 function writeAll(map) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
+  writeCachedJson(STORAGE_KEY, map)
   window.dispatchEvent(new CustomEvent(DELETED_RECORDS_EVENT))
 }
 
 function readPurgedAll() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(PURGED_STORAGE_KEY) || '{}')
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
-  } catch {
-    return {}
-  }
+  const parsed = readCachedJson(PURGED_STORAGE_KEY, {})
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
 }
 
 function writePurgedAll(map) {

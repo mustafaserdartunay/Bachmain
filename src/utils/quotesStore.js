@@ -8,6 +8,7 @@ import {
 } from './deletedRecordsStore'
 import { withQuotePreparedBy, getActiveUserLabel } from './quotePreparedBy'
 import { readUserProfile } from './userProfile'
+import { readCachedJson } from './storageCache'
 
 const STORAGE_KEY = 'erlenbox-quotes'
 const DELETED_COLLECTION = 'quotes'
@@ -37,12 +38,13 @@ export function loadQuotes() {
       }
       return initialQuotes.map(normalizeQuoteStages)
     }
-    const parsed = JSON.parse(saved)
-    return Array.isArray(parsed)
-      ? parsed.map(normalizeQuoteStages)
-      : localStorage.getItem('bach-workspace-owner')
-        ? []
-        : initialQuotes.map(normalizeQuoteStages)
+    const mapped = readCachedJson(STORAGE_KEY, null, (parsed) =>
+      Array.isArray(parsed) ? parsed.map(normalizeQuoteStages) : null,
+    )
+    if (mapped) return mapped
+    return localStorage.getItem('bach-workspace-owner')
+      ? []
+      : initialQuotes.map(normalizeQuoteStages)
   } catch {
     return typeof localStorage !== 'undefined' && localStorage.getItem('bach-workspace-owner')
       ? []

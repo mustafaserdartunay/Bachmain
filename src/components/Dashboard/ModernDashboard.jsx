@@ -18,19 +18,14 @@ import {
   Warehouse,
 } from 'lucide-react'
 import { toTitleCaseTr } from '../../utils/autoCapitalize'
-import { formatCurrency, getPaymentActionTimeline } from '../../utils/paymentTimeline'
+import { formatCurrency } from '../../utils/paymentTimeline'
 import { RECURRING_PAYMENTS_EVENT } from '../../utils/recurringPaymentsStore'
 import {
-  buildConfiguredQuickActionCards,
-  buildCrmActivitySummary,
   enrichFinanceCards,
   formatQuickActionAmount,
   QUICK_ACTIONS,
 } from '../../utils/dashboardModernData'
-import {
-  DASHBOARD_FINANCE_CARDS_EVENT,
-  loadDashboardFinanceCards,
-} from '../../utils/dashboardFinanceCards'
+import { DASHBOARD_FINANCE_CARDS_EVENT } from '../../utils/dashboardFinanceCards'
 import {
   DASHBOARD_LAYOUT_EVENT,
   isDashboardSectionVisible,
@@ -52,7 +47,6 @@ import {
 } from '../../utils/dashboardDesign'
 import MonthEndCapacityPanel from './MonthEndCapacityPanel'
 import WebStudioDashboardPanels from '../web/WebStudioDashboardPanels'
-import { runWhenIdle } from '../../utils/idleWork'
 
 const FINANCE_METRIC_COLORS = {
   cash: { text: 'text-emerald-600', stroke: '#10b981' },
@@ -408,14 +402,7 @@ function ModernTimeline({ className = '' }) {
   }, [])
 
   useEffect(() => {
-    let cancelled = false
-    const stopIdle = runWhenIdle(() => {
-      if (!cancelled) setItems(getPaymentActionTimeline())
-    }, 900)
-    return () => {
-      cancelled = true
-      stopIdle()
-    }
+    setItems([])
   }, [revision])
 
   return (
@@ -623,42 +610,22 @@ function CustomDashboardBlocks({ blocks = [] }) {
   )
 }
 
-function QuickActionsPanel({ quickActions = [], className = '' }) {
-  const [tick, setTick] = useState(0)
-  const [ready, setReady] = useState(false)
+function staticQuickActionCards(quickActions = []) {
   const processIds = new Set(['quote', 'order', 'production', 'depo', 'delivered'])
-  const actions = useMemo(
-    () =>
-      ready
-        ? buildConfiguredQuickActionCards(quickActions)
-            .filter((action) => processIds.has(action.id) || action.isCustom)
-            .slice(0, 5)
-        : [],
-    [quickActions, tick, ready],
-  )
+  const empty = { pending: 0, ongoing: 0, completed: 0, pendingAmount: 0 }
+  const byId = new Map(QUICK_ACTIONS.map((action) => [action.id, action]))
+  const source = Array.isArray(quickActions) && quickActions.length ? quickActions : QUICK_ACTIONS
+  return source
+    .filter((action) => action.visible !== false && (processIds.has(action.id) || action.isCustom))
+    .slice(0, 5)
+    .map((config) => {
+      const base = byId.get(config.id) || config
+      return { ...base, ...config, stats: empty }
+    })
+}
 
-  useEffect(() => {
-    return runWhenIdle(() => setReady(true), 1000)
-  }, [])
-
-  useEffect(() => {
-    const events = [
-      'bach:crm-updated',
-      'bach:quotes-updated',
-      'bach:orders-updated',
-      'bach:depo-updated',
-      'bach:production-updated',
-      'bach:customers-updated',
-      'bach:customer-meta-updated',
-      'bach:omni-updated',
-      'erlenbox:treasury-updated',
-      'erlenbox:company-settings-updated',
-      DASHBOARD_LAYOUT_EVENT,
-    ]
-    const refresh = () => setTick((value) => value + 1)
-    events.forEach((event) => window.addEventListener(event, refresh))
-    return () => events.forEach((event) => window.removeEventListener(event, refresh))
-  }, [])
+function QuickActionsPanel({ quickActions = [], className = '' }) {
+  const actions = useMemo(() => staticQuickActionCards(quickActions), [quickActions])
 
   return (
     <section className={`${APP_PANEL_CLASS} ${APP_DASHBOARD_PANEL_SIZE_CLASS} ${className}`}>
@@ -682,22 +649,7 @@ function QuickActionsPanel({ quickActions = [], className = '' }) {
 }
 
 function CrmActivityPanel({ className = '' }) {
-  const [tick, setTick] = useState(0)
-  const [ready, setReady] = useState(false)
-  const summary = useMemo(
-    () => (ready ? buildCrmActivitySummary() : { categories: [] }),
-    [tick, ready],
-  )
-
-  useEffect(() => {
-    return runWhenIdle(() => setReady(true), 1200)
-  }, [])
-
-  useEffect(() => {
-    const refresh = () => setTick((value) => value + 1)
-    window.addEventListener('bach:crm-updated', refresh)
-    return () => window.removeEventListener('bach:crm-updated', refresh)
-  }, [])
+  const summary = useMemo(() => ({ categories: [] }), [])
 
   return (
     <section className={`${APP_PANEL_CLASS} ${APP_DASHBOARD_PANEL_SIZE_CLASS} ${className}`}>
@@ -728,7 +680,10 @@ export default function ModernDashboard({
   onOpenSupplierTax,
   studioMode = false,
 }) {
-  const metricCards = useMemo(() => enrichFinanceCards(financeCards), [financeCards])
+  const metricCards = useMemo(
+    () => enrichFinanceCards(financeCards, { lite: true }),
+    [financeCards],
+  )
   const [layout, setLayout] = useState(() => loadDashboardLayout())
 
   useEffect(() => {

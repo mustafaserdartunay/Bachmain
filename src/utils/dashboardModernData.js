@@ -133,7 +133,18 @@ function parseCurrencyValue(value) {
   return Number(normalized) || 0
 }
 
-export function enrichFinanceCards(cards = []) {
+export function enrichFinanceCards(cards = [], { lite = false } = {}) {
+  if (!Array.isArray(cards) || cards.length === 0) return []
+  if (lite) {
+    return cards.map((card) => ({
+      ...card,
+      numericValue: 0,
+      changePercent: 0,
+      trendUp: true,
+      sparkline: [],
+      value: card.value || '0,00₺',
+    }))
+  }
   const movements = getTreasuryMovements()
   const cashAccountIds = new Set(getCashTreasuryAccounts().map((account) => account.id))
   const bankAccountIds = new Set(getBankTreasuryAccounts().map((account) => account.id))

@@ -7,6 +7,7 @@ import { normalizeStagePhotos } from './productionStagePhotos'
 import { getLoggedInUserDisplayName } from './userProfile'
 import { appendActivityEntry } from './activityArchiveStore'
 import { scheduleTenantPush } from './tenantSync'
+import { readCachedJson, writeCachedJson } from './storageCache'
 
 const TASKS_KEY = 'bach-crm-tasks'
 const APPOINTMENTS_KEY = 'bach-crm-appointments'
@@ -23,18 +24,12 @@ function createId(prefix) {
 }
 
 function readJson(key, fallback) {
-  try {
-    const saved = localStorage.getItem(key)
-    if (!saved) return fallback
-    const parsed = JSON.parse(saved)
-    return parsed ?? fallback
-  } catch {
-    return fallback
-  }
+  const parsed = readCachedJson(key, fallback)
+  return parsed ?? fallback
 }
 
 function writeJson(key, value) {
-  localStorage.setItem(key, JSON.stringify(value))
+  writeCachedJson(key, value)
   window.dispatchEvent(new CustomEvent('bach:crm-updated'))
   try {
     scheduleTenantPush('crmRecords', {

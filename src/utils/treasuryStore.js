@@ -2,6 +2,7 @@ import { appendActivityEntry } from './activityArchiveStore'
 import { getCustomerProfiles } from '../data/customerProfiles'
 import { getCustomerMetaSelection, matchesPartyListFilter, readCustomerMeta } from './customerMeta'
 import { filterByOrgScope, getActiveOrgScope, withOrgScope } from './orgScope'
+import { readCachedJson, writeCachedJson } from './storageCache'
 
 const ACCOUNTS_KEY = 'erlenbox-treasury-accounts'
 const MOVEMENTS_KEY = 'erlenbox-treasury-movements'
@@ -44,18 +45,13 @@ export function todayForTreasury() {
 }
 
 function readJson(key, fallback) {
-  try {
-    const saved = localStorage.getItem(key)
-    if (!saved) return fallback
-    const parsed = JSON.parse(saved)
-    return Array.isArray(fallback) ? (Array.isArray(parsed) ? parsed : fallback) : parsed
-  } catch {
-    return fallback
-  }
+  const parsed = readCachedJson(key, fallback)
+  if (Array.isArray(fallback)) return Array.isArray(parsed) ? parsed : fallback
+  return parsed
 }
 
 function writeJson(key, value) {
-  localStorage.setItem(key, JSON.stringify(value))
+  writeCachedJson(key, value)
   window.dispatchEvent(new CustomEvent('erlenbox:treasury-updated'))
 }
 

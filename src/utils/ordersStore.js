@@ -15,6 +15,7 @@ import {
   isOrderReceivedStage,
   loadWorkflowStages,
 } from './workflowStages'
+import { readCachedJson } from './storageCache'
 
 export { DEFAULT_ORDER_STAGE_ID }
 
@@ -93,13 +94,13 @@ export function loadOrders() {
       if (localStorage.getItem('bach-workspace-owner')) return []
       return detailedOrders.map(mapLegacyOrder).map(normalizeOrder)
     }
-    const parsed = JSON.parse(saved)
-    if (!Array.isArray(parsed)) {
-      return localStorage.getItem('bach-workspace-owner')
-        ? []
-        : detailedOrders.map(mapLegacyOrder).map(normalizeOrder)
-    }
-    return parsed.map(normalizeOrder)
+    const mapped = readCachedJson(STORAGE_KEY, null, (parsed) =>
+      Array.isArray(parsed) ? parsed.map((order) => normalizeOrder(order)) : null,
+    )
+    if (mapped) return mapped
+    return localStorage.getItem('bach-workspace-owner')
+      ? []
+      : detailedOrders.map(mapLegacyOrder).map(normalizeOrder)
   } catch {
     return localStorage.getItem('bach-workspace-owner')
       ? []

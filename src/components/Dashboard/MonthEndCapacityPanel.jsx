@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CircleAlert,
@@ -13,10 +13,11 @@ import {
   Warehouse,
 } from 'lucide-react'
 import { APP_SURFACE_PANEL_CLASS } from '../../utils/dashboardDesign'
-import { buildMonthEndPaymentCapacity } from '../../utils/monthEndPaymentCapacity'
+import {
+  buildMonthEndPaymentCapacity,
+  calculateCapacityStatus,
+} from '../../utils/monthEndPaymentCapacity'
 import { downloadMonthEndCapacityReport } from '../../utils/monthEndCapacityReport'
-import { RECURRING_PAYMENTS_EVENT } from '../../utils/recurringPaymentsStore'
-import { runWhenIdle } from '../../utils/idleWork'
 
 const STATUS_STYLES = {
   red: {
@@ -38,19 +39,6 @@ const STATUS_STYLES = {
     marker: 'border-emerald-600 bg-emerald-500',
   },
 }
-
-const REFRESH_EVENTS = [
-  'erlenbox:treasury-updated',
-  'bach:personnel-updated',
-  RECURRING_PAYMENTS_EVENT,
-  'bach:customers-updated',
-  'bach:customer-meta-updated',
-  'bach:orders-updated',
-  'bach:production-updated',
-  'bach:depo-updated',
-  'bachmain:org-scope-changed',
-  'bach:org-context-changed',
-]
 
 function money(value) {
   return new Intl.NumberFormat('tr-TR', {
@@ -259,25 +247,42 @@ function OperationalCapacity({ operational, projected }) {
   )
 }
 
-export default function MonthEndCapacityPanel() {
-  const [snapshot, setSnapshot] = useState(null)
-  const [reportBusy, setReportBusy] = useState(false)
+function emptyMonthEndSnapshot() {
+  const now = new Date()
+  const status = calculateCapacityStatus(0, 0)
+  return {
+    monthKey: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+    monthLabel: now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
+    current: {
+      ...status,
+      liveAssets: 0,
+      receivables: 0,
+      supplierPayables: 0,
+      payroll: 0,
+      fixedExpenses: 0,
+    },
+    operational: {
+      orders: 0,
+      production: 0,
+      depot: 0,
+      total: 0,
+      counts: { orders: 0, production: 0, depot: 0 },
+    },
+    projected: status,
+    guidance:
+      'Güncel durum rakamları sayfa geçişini kilitlememek için ertelendi. Rapor ile tam hesap alınır.',
+  }
+}
 
-  useEffect(() => {
-    const refresh = () => setSnapshot(buildMonthEndPaymentCapacity())
-    const stopIdle = runWhenIdle(refresh, 700)
-    REFRESH_EVENTS.forEach((event) => window.addEventListener(event, refresh))
-    return () => {
-      stopIdle()
-      REFRESH_EVENTS.forEach((event) => window.removeEventListener(event, refresh))
-    }
-  }, [])
+export default function MonthEndCapacityPanel() {
+  const [snapshot] = useState(emptyMonthEndSnapshot)
+  const [reportBusy, setReportBusy] = useState(false)
 
   async function handleReport() {
     if (reportBusy || !snapshot) return
     setReportBusy(true)
     try {
-      await downloadMonthEndCapacityReport(snapshot)
+      await downloadMonthEndCapacityReport(buildMonthEndPaymentCapacity())
     } catch (error) {
       window.alert(error?.message || 'Rapor PDF olarak oluşturulamadı.')
     } finally {
