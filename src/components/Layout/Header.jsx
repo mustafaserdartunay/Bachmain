@@ -27,7 +27,7 @@ import AppearanceToggle from './AppearanceToggle'
 import HeaderMessageCenter from './HeaderMessageCenter'
 import HeaderNotebook from './HeaderNotebook'
 import HeaderCalendar from './HeaderCalendar'
-import SidebarAgendaHub from './SidebarAgendaHub'
+import HeaderAgendaSwitch from './HeaderAgendaSwitch'
 import HeaderAiAssistant from './HeaderAiAssistant'
 import HeaderOmniSearch from './HeaderOmniSearch'
 import HeaderSupport from './HeaderSupport'
@@ -130,9 +130,6 @@ function MobileHeaderTools({ onNavigate, user }) {
                 </MobileToolItem>
                 <MobileToolItem label="B2B">
                   <HeaderB2BBadge />
-                </MobileToolItem>
-                <MobileToolItem label="Ajanda">
-                  <SidebarAgendaHub compact />
                 </MobileToolItem>
                 <MobileToolItem label="Asistan">
                   <HeaderAiAssistant />
@@ -275,6 +272,7 @@ function HeaderBar({ onMenuClick }) {
             <OrgSwitcher />
             <HeaderMessageCenter />
             <HeaderB2BBadge />
+            <HeaderAgendaSwitch />
             <HeaderAiAssistant />
             <AppearanceToggle />
           </div>
@@ -286,8 +284,7 @@ function HeaderBar({ onMenuClick }) {
           <>
             <HeaderMarketRates />
             <MobileHeaderTools onNavigate={navigate} user={user} />
-            <HeaderNotebook hideTrigger />
-            <HeaderCalendar hideTrigger />
+            <HeaderAgendaSwitch />
           </>
         ) : (
           <>
@@ -318,6 +315,8 @@ function HeaderBar({ onMenuClick }) {
             <NotificationDropdown />
           </>
         )}
+        <HeaderNotebook hideTrigger />
+        <HeaderCalendar hideTrigger />
 
         <div className="flex items-center gap-1 sm:gap-1.5">
           <div

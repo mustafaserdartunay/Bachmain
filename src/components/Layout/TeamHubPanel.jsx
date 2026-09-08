@@ -23,9 +23,6 @@ import {
 import { WhatsAppIcon } from './SocialBrandIcons'
 import UccChatPane from '../Communication/UccChatPane'
 import TeamHubWhatsAppPane from '../Communication/TeamHubWhatsAppPane'
-import SidebarAgendaHub from './SidebarAgendaHub'
-import HeaderNotebook from './HeaderNotebook'
-import HeaderCalendar from './HeaderCalendar'
 import { openCommunicationCenter, UCC_OPEN_EVENT } from '../../ucc/uccClient'
 import { fetchAccountNotifications } from '../../utils/platformApi'
 import { TASK_CATEGORIES, TASK_PRIORITIES } from '../../utils/crmStore'
@@ -798,17 +795,6 @@ export default function TeamHubPanel({ collapsed, onToggle, className = '' }) {
           })}
         </div>
       )}
-
-      <div className="sidebar-agenda-hub-shell mt-auto shrink-0 border-t border-white/45 pt-3">
-        <SidebarAgendaHub collapsed={collapsed} />
-      </div>
-
-      {!collapsed ? (
-        <>
-          <HeaderNotebook hideTrigger sidebarAnchor />
-          <HeaderCalendar hideTrigger sidebarAnchor />
-        </>
-      ) : null}
     </aside>
   )
 }
