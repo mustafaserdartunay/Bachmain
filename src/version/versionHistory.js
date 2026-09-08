@@ -185,6 +185,11 @@ export const VERSION_CHANGELOG = [
             detail:
               'Studio girişi uygulama paketinden bağımsızdır. Canlı adres studio.bachmain.com; uygulama içinden Studio ancak aktif Studio paketi varsa açılır.',
           },
+          {
+            title: 'Studio sayfa çubuğu',
+            detail:
+              'bachmain.com/studio ana sitedeki üst menü ve alt bilgi ile aynı; footer’da Studio sütunu görünür.',
+          },
         ],
       },
       {

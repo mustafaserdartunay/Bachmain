@@ -17,6 +17,9 @@ const CookieBanner = dynamic(() => import('../legal/CookieBanner'), {
 })
 
 const AUTH_PATHS = new Set([
+  '/giris',
+  '/login',
+  '/demo',
   '/register',
   '/uye-ol',
   '/forgot-password',
@@ -26,8 +29,9 @@ const AUTH_PATHS = new Set([
   '/email-degistir',
 ])
 
-/** Full-bleed auth screens — no marketing chrome */
-const CHROMELESS_PATHS = new Set<string>()
+function isStudioPath(pathname: string) {
+  return pathname === '/studio' || pathname.startsWith('/studio/')
+}
 
 function ScrollToTop() {
   const pathname = usePathname()
@@ -41,25 +45,22 @@ function ScrollToTop() {
 export default function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || ''
   const isAuth = AUTH_PATHS.has(pathname)
-  const isChromeless = CHROMELESS_PATHS.has(pathname)
-  const isStudioSite = pathname === '/studio' || pathname.startsWith('/studio/')
-  const isStudioAuth = pathname === '/studio/giris' || pathname === '/studio/demo'
-  const isCineAuth = pathname === '/demo' || pathname === '/giris' || pathname === '/login'
-  const hideChrome = isAuth || isChromeless
+  const isStudio = isStudioPath(pathname)
+  const hideChrome = isAuth
   const isCineHome = pathname === '/'
-  const isCineSite = !isAuth && !isChromeless && !isStudioSite
+  const isCineSite = !isAuth && !isStudio && !isCineHome
 
   useEffect(() => {
     const root = document.documentElement
     root.classList.toggle('cine-home', isCineHome)
-    root.classList.toggle('cine-site', isCineSite && !isCineHome)
-    root.classList.toggle('studio-site', isStudioSite)
+    root.classList.toggle('cine-site', isCineSite)
+    root.classList.toggle('studio-site', isStudio && !isAuth)
     return () => {
       root.classList.remove('cine-home')
       root.classList.remove('cine-site')
       root.classList.remove('studio-site')
     }
-  }, [isCineHome, isCineSite, isStudioSite])
+  }, [isCineHome, isCineSite, isStudio, isAuth])
 
   return (
     <>
@@ -73,22 +74,14 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
       {hideChrome ? null : <Header />}
       <main
         id="main-content"
-        className={
-          hideChrome
-            ? 'flex min-h-[100dvh] flex-col p-0'
-            : isCineAuth
-              ? 'flex min-h-[100dvh] flex-col p-0'
-              : isStudioSite
-                ? 'pt-0 pb-0'
-                : 'pt-0 pb-24'
-        }
+        className={hideChrome ? 'flex min-h-[100dvh] flex-col p-0' : 'pt-0 pb-24'}
         role="main"
       >
         {children}
       </main>
-      {hideChrome || isStudioAuth || isCineAuth ? null : <Footer />}
-      {hideChrome || isStudioSite || isCineAuth ? null : <StickyCta />}
-      {isChromeless ? null : <CookieBanner />}
+      {hideChrome ? null : <Footer />}
+      {hideChrome || isStudio ? null : <StickyCta />}
+      <CookieBanner />
     </>
   )
 }

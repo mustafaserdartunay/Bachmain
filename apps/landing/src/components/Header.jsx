@@ -177,11 +177,12 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname() || '/'
-  const isStudio = pathname === '/studio' || pathname.startsWith('/studio/')
+  const isStudio = pathname.startsWith('/studio/')
   const cine = !isStudio
   const cineSolid =
     cine &&
-    (pathname === '/demo' ||
+    (pathname === '/studio' ||
+      pathname === '/demo' ||
       pathname === '/giris' ||
       pathname === '/login' ||
       pathname.startsWith('/paketler/'))

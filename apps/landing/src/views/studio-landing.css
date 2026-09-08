@@ -72,6 +72,12 @@ html.studio-site .site-footer {
   animation: spl-sky 16s ease-in-out infinite alternate;
 }
 
+@media (min-width: 1280px) {
+  html.studio-site .spl-hero {
+    padding-top: calc(118px + clamp(1.5rem, 4vw, 3.5rem));
+  }
+}
+
 .spl-hero-veil {
   position: absolute;
   inset: 0;

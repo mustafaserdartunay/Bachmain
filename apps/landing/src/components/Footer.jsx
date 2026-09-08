@@ -64,7 +64,14 @@ const PRODUCT_LINKS = [
   { label: 'E-Ticaret', href: '/siparis' },
   { label: 'Raporlama', href: '/raporlar' },
   { label: 'Fiyatlandırma', href: '/fiyatlar' },
+]
+
+const STUDIO_LINKS = [
   { label: 'Studio', href: '/studio' },
+  { label: 'Özellikler', href: '/studio#ozellikler' },
+  { label: 'Paketler', href: '/studio/paket' },
+  { label: 'Demo oluştur', href: '/studio/demo' },
+  { label: 'Üye girişi', href: '/studio/giris' },
 ]
 
 const SECURITY_LINKS = [
@@ -80,7 +87,7 @@ const SECURITY_LINKS = [
 export default function Footer() {
   return (
     <footer className="site-footer" role="contentinfo">
-      <div className="site-footer-inner mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:grid-cols-2 lg:grid-cols-5 lg:px-8">
+      <div className="site-footer-inner mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:grid-cols-2 lg:grid-cols-6 lg:px-8">
         <div className="lg:col-span-1">
           <div className="site-footer-logo">
             <Logo onDark />
@@ -105,6 +112,19 @@ export default function Footer() {
           <strong className="site-footer-heading">ÜRÜNLER</strong>
           <ul className="site-footer-list">
             {PRODUCT_LINKS.map((l) => (
+              <li key={l.label}>
+                <Link to={l.href} className="site-footer-link">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <strong className="site-footer-heading">STUDIO</strong>
+          <ul className="site-footer-list">
+            {STUDIO_LINKS.map((l) => (
               <li key={l.label}>
                 <Link to={l.href} className="site-footer-link">
                   {l.label}
