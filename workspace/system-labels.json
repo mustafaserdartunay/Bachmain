@@ -4,27 +4,40 @@
     "domain": "uygulama.bachmain.com",
     "localUrl": "http://127.0.0.1:5173",
     "devCommand": "npm run dev",
-    "cwd": "."
+    "cwd": ".",
+    "desktopWorkspace": "Uygulama - Bachmain.code-workspace"
   },
   "yonetim": {
     "label": "YÖNETİM - BACHMAIN",
     "domain": "yonetim.bachmain.com",
     "localUrl": "http://127.0.0.1:5200",
     "devCommand": "npm run dev:all",
-    "cwd": "apps/admin"
+    "cwd": "apps/admin",
+    "desktopWorkspace": "Yönetim - Bachmain.code-workspace"
   },
   "web": {
     "label": "WEB - BACHMAIN",
     "domain": "bachmain.com",
     "localUrl": "http://127.0.0.1:5180",
     "devCommand": "npm run dev",
-    "cwd": "apps/landing"
+    "cwd": "apps/landing",
+    "desktopWorkspace": "Web - Bachmain.code-workspace"
+  },
+  "studio": {
+    "label": "STUDIO - BACHMAIN",
+    "domain": "studio.bachmain.com",
+    "localUrl": "http://127.0.0.1:5190",
+    "devCommand": "npm run dev -- --port 5190",
+    "cwd": "../Studio - Bachmain",
+    "repo": "mustafaserdartunay/bachmain-studio",
+    "desktopWorkspace": "Studio - Bachmain.code-workspace",
+    "note": "Ayrı GitHub deposu. Yönetim ile karıştırma."
   },
   "ios": {
     "label": "IOS - BACHMAIN",
     "domain": "iosapp.bachmain.com",
     "localUrl": "http://127.0.0.1:5173/preview-ios-bachmain.html",
-    "note": "Native: ~/Documents/Bachmain/bachmain.ios"
+    "note": "Native: ~/Desktop/BACHMAIN/IOS - Bachmain"
   },
   "android": {
     "label": "ANDROID - BACHMAIN",

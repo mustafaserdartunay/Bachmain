@@ -5,16 +5,17 @@ alwaysApply: true
 
 # Cursor kararlılığı
 
-- Çalışma kökü: `/Users/serdartunay/Bachmain`
+- Çalışma kökü: `~/BACHMAIN/Bachmain` (Masaüstü iCloud — git oraya clone etme)
 - NTFS `BachmainData` ve iCloud Documents kopyasını workspace yapma.
 
 ## Workspace açma (KRİTİK — OOM önleme)
 
 **Tercih sırası (8GB Mac):**
-1. **Belgeler** → `~/Documents/Bachmain/` içinden **tek** workspace seç:
-   - `UYGULAMA - BACHMAIN.code-workspace` (CRM)
-   - `YÖNETİM - BACHMAIN.code-workspace` (admin)
-   - `WEB - BACHMAIN.code-workspace` (landing)
+1. **Masaüstü** → `~/Desktop/BACHMAIN/` içinden **tek** workspace seç (çift tık):
+   - `Uygulama - Bachmain.code-workspace` (CRM)
+   - `Yönetim - Bachmain.code-workspace` (admin)
+   - `Web - Bachmain.code-workspace` (landing)
+   - `Studio - Bachmain.code-workspace` (studio.bachmain.com — ayrı repo)
 2. Kurulum: `npm run cursor:workspaces`
 3. Repo içi alternatif: `workspace/UYGULAMA - BACHMAIN.code-workspace` (veya YÖNETİM / WEB)
 

@@ -173,8 +173,26 @@ export const VERSION_FEATURES = {
 export const VERSION_CHANGELOG = [
   {
     version: APP_VERSION,
-    previousVersion: 'BM-V1.726',
+    previousVersion: 'BM-V1.826.317',
     releasedAt: APP_VERSION_META.releasedAt,
+    title: 'BM-V1.826.318 — Masaüstü workspace',
+    categories: [
+      {
+        title: 'Geliştirme',
+        features: [
+          {
+            title: 'Tek Masaüstü klasörü',
+            detail:
+              'Cursor workspace’leri ~/Desktop/BACHMAIN altında: Uygulama, Yönetim, Web, Studio. Müşteri siteleri ayrı klasörde.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    version: 'BM-V1.826.317',
+    previousVersion: 'BM-V1.726',
+    releasedAt: '2026-09-08T21:35:00+03:00',
     title: 'BM-V1.826 — Yük ve Sevkiyat',
     categories: [
       {

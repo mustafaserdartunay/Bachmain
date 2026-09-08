@@ -1,25 +1,36 @@
 # Workspace location
 
-**Canonical root (2026-08):**
+**Kaynak (git, npm, deploy):**
 
 ```text
-~/Documents/bachmain/BachMain Tüm Proje
+~/BACHMAIN
 ```
 
-(“Belgelerim” → `Documents` → `bachmain` → `BachMain Tüm Proje`)
+Masaüstü iCloud Drive olduğu için git deposu orada tutulmaz (pack bozulur).
+
+**Tıklanabilir workspace’ler:**
+
+```text
+~/Desktop/BACHMAIN
+```
+
+| Workspace                            | Açtığı klasör                      |
+| ------------------------------------ | ---------------------------------- |
+| `Uygulama - Bachmain.code-workspace` | `~/BACHMAIN/Bachmain`              |
+| `Yönetim - Bachmain.code-workspace`  | `~/BACHMAIN/Bachmain/apps/admin`   |
+| `Web - Bachmain.code-workspace`      | `~/BACHMAIN/Bachmain/apps/landing` |
+| `Studio - Bachmain.code-workspace`   | `~/BACHMAIN/Studio - Bachmain`     |
+
+Müşteri siteleri: `~/BACHMAIN/Müşteri Web Siteleri/`
+
+```bash
+cd ~/BACHMAIN/Bachmain
+npm run cursor:workspaces
+```
 
 ## Do not use
 
-- `~/Library/Mobile Documents/com~apple~CloudDocs/Bachmain/...` (eski iCloud kopyası)
-- `~/Developer/Bach Crm` (eski symlink hedefi)
-
-Cursor / terminal / deploy komutları bu Documents kökünden çalıştırılmalı.
-
-## Deploy
-
-```bash
-cd ~/Documents/bachmain/BachMain\ Tüm\ Proje
-./scripts/ship.sh
-```
-
-Vercel CLI oturumu gerekli: `vercel login` (veya `vercel login --future`).
+- `~/Library/Mobile Documents/com~apple~CloudDocs/Bachmain/...`
+- `~/Developer/Bach Crm`
+- Masaüstü’ne git clone
+- Eski `~/Bachmain` kopyaları

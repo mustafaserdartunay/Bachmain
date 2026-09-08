@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Belgeler/Bachmain içine 3 ayrı workspace kopyalar (mutlak yollar — 8GB RAM).
+# Masaüstü/BACHMAIN içine workspace dosyaları yazar (mutlak yollar — 8GB RAM).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-DEST="${BACHMAIN_DOCUMENTS_DIR:-$HOME/Documents/Bachmain}"
-mkdir -p "$DEST"
+DEST="${BACHMAIN_DOCUMENTS_DIR:-$HOME/Desktop/BACHMAIN}"
+mkdir -p "$DEST" "$DEST/Müşteri Web Siteleri"
 
 write_ws() {
   local name="$1"
@@ -108,7 +108,17 @@ write_ws "UYGULAMA - BACHMAIN" "$ROOT"
 write_ws "YÖNETİM - BACHMAIN" "$ROOT/apps/admin"
 write_ws "WEB - BACHMAIN" "$ROOT/apps/landing"
 
+if [ -f "$DEST/UYGULAMA - BACHMAIN.code-workspace" ]; then
+  cp "$DEST/UYGULAMA - BACHMAIN.code-workspace" "$DEST/Uygulama - Bachmain.code-workspace"
+fi
+if [ -f "$DEST/YÖNETİM - BACHMAIN.code-workspace" ]; then
+  cp "$DEST/YÖNETİM - BACHMAIN.code-workspace" "$DEST/Yönetim - Bachmain.code-workspace"
+fi
+if [ -f "$DEST/WEB - BACHMAIN.code-workspace" ]; then
+  cp "$DEST/WEB - BACHMAIN.code-workspace" "$DEST/Web - Bachmain.code-workspace"
+fi
+
 echo ""
-echo "Belgeler workspace dosyaları hazır: $DEST"
-echo "Cursor: File → Open Workspace from File… → istediğiniz .code-workspace"
+echo "Masaüstü workspace dosyaları hazır: $DEST"
+echo "Cursor: çift tık → Uygulama / Yönetim / Web / Studio - Bachmain.code-workspace"
 echo "Repo kökü: $ROOT"
